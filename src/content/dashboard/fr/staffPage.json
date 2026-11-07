@@ -1,0 +1,105 @@
+{
+  "title": "Équipe",
+  "help": "La modération par modérateur, quand l’équipe est active, l’activité de la semaine, la discipline de l’équipe et les blocages de la limite de sécurité (trop de bannissements ou d’expulsions en 10 minutes).",
+  "settings": "Paramètres des sanctions",
+  "period": {
+    "7d": "7 derniers jours",
+    "30d": "30 derniers jours",
+    "90d": "90 derniers jours",
+    "all": "depuis toujours"
+  },
+  "stats": {
+    "period": "Période",
+    "title": "Statistiques de modération · {period}",
+    "moderator": "Modérateur",
+    "total": "Total",
+    "bans": "Bannissements",
+    "kicks": "Expulsions",
+    "mutes": "Sourdines",
+    "warns": "Avertissements",
+    "accepted": "Appels acceptés",
+    "denied": "Appels refusés",
+    "removed": "Retirés",
+    "note": "Les dossiers automatiques (bot) et de test sont exclus ; les dossiers retirés ne sont pas dans les totaux.",
+    "empty": "Aucune action de modération sur cette période."
+  },
+  "coverage": {
+    "period": "Période de couverture",
+    "days": {
+      "one": "{count} jour",
+      "other": "{count} jours",
+      "many": "{count} jours"
+    },
+    "title": {
+      "one": "Couverture · dernier {count} jour ({zone})",
+      "other": "Couverture · {count} derniers jours ({zone})",
+      "many": "Couverture · {count} derniers jours ({zone})"
+    },
+    "incidents": "Incidents (dossiers créés, automatiques compris) : {count}",
+    "staff": "Activité de l’équipe (dossiers des modérateurs humains + appels décidés) : {count}",
+    "note": "Plus foncé = plus chargé, par quarts jusqu’à l’heure la plus chargée. Les colonnes sont les heures 0–23 en {zone} (le fuseau des anniversaires du serveur, réglé dans Anniversaires ; UTC si aucun n’est défini).",
+    "gaps": "Créneaux les moins couverts",
+    "incidentCount": {
+      "one": "{count} incident",
+      "other": "{count} incidents",
+      "many": "{count} incidents"
+    },
+    "actionCount": {
+      "one": "{count} action de l’équipe",
+      "other": "{count} actions de l’équipe",
+      "many": "{count} actions de l’équipe"
+    },
+    "none": "Aucun incident sur cette période."
+  },
+  "blocks": {
+    "title": "Blocages de la limite de sécurité ({count})",
+    "until": "Bloqué jusqu’au",
+    "count": "Bannissements/expulsions",
+    "lift": "Lever le blocage",
+    "ownersOnly": "Seuls les propriétaires du bot peuvent lever un blocage (comme /staff restore).",
+    "none": "Personne n’est bloqué."
+  },
+  "activity": {
+    "week": "Semaine",
+    "weeks": {
+      "this": "Cette semaine",
+      "last": "Semaine dernière"
+    },
+    "error": "L’activité n’a pas pu être chargée (base de données indisponible).",
+    "member": "Membre de l’équipe",
+    "messages": "Messages",
+    "actions": "Actions",
+    "appeals": "Appels",
+    "reviews": "Vérifications",
+    "tickets": "Tickets",
+    "owner": "propriétaire",
+    "inactive": "Inactif",
+    "warnings": "Avertissements",
+    "note": "Inactif = aucun travail de modération et moins de 20 messages. Les actions sont les dossiers qu’ils ont créés ; les vérifications sont les cartes d’automod et de vérification.",
+    "none": "Aucun membre de l’équipe trouvé.",
+    "title": "Activité de l’équipe · semaine du {start}"
+  },
+  "discipline": {
+    "title": "Discipline de l’équipe",
+    "ownersOnly": "Seuls les propriétaires du bot peuvent avertir des membres de l’équipe, voir leurs avertissements d’équipe ou redonner des rôles d’équipe retirés (comme /staff warn, warnings et restore).",
+    "reason": "Raison : quelle règle d’admin a été enfreinte (envoyée à la personne)",
+    "give": "Donner un avertissement d’équipe",
+    "giveConfirm": "Donner un avertissement à ce membre de l’équipe ? À {limit} avertissements actifs, ses rôles d’équipe sont retirés.",
+    "showOf": "Afficher les avertissements de",
+    "warningsError": "Les avertissements n’ont pas pu être chargés (base de données indisponible).",
+    "warningsOf": "Avertissements d’équipe : {name}",
+    "given": "Donné",
+    "active": "actif",
+    "expired": "expiré",
+    "removedError": "Les rôles d’équipe retirés n’ont pas pu être chargés (base de données indisponible).",
+    "removedRoles": "Rôles retirés",
+    "why": "Pourquoi",
+    "restore": "Redonner les rôles",
+    "restoreConfirm": "Redonner ces rôles d’équipe ?",
+    "noneSaved": "Aucun rôle d’équipe retiré n’est enregistré.",
+    "restoreOf": "Redonner les rôles de",
+    "help": "Les avertissements d’équipe expirent ; à {limit} avertissements actifs, les rôles d’équipe sont retirés (la protection de l’équipe les retire aussi). Le membre reçoit un MP et le journal de modération une ligne.",
+    "removedTitle": "Rôles d’équipe retirés",
+    "restoreNote": "Redonner rend les rôles enregistrés que le bot peut encore gérer. Un blocage de la limite de sécurité (trop de bannissements ou d’expulsions en 10 minutes) se lève à part (Blocages de la limite de sécurité)."
+  }
+}

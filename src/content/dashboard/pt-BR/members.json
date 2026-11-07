@@ -1,0 +1,284 @@
+{
+  "back": "← Membros",
+  "notice": {
+    "readOnly": "Somente leitura: a edição pelo painel está desativada (DASHBOARD_EDIT_ENABLED não é true). Use os comandos do bot.",
+    "viewOnly": {
+      "actions": "Só visualização: você precisa de Administrador no servidor principal para punir aqui.",
+      "cases": "Só visualização: você precisa de Administrador no servidor principal para alterar casos aqui.",
+      "appeals": "Só visualização: você precisa de Administrador no servidor principal para decidir apelações aqui.",
+      "orders": "Só visualização: você precisa de Administrador no servidor principal para iniciar ou encerrar ordens aqui."
+    }
+  },
+  "form": {
+    "save": "Salvar",
+    "choose": "Escolher…",
+    "for": "Por",
+    "permanently": "Para sempre",
+    "timeoutLength": "Duração do castigo",
+    "custom": "Personalizado…",
+    "customReason": "Motivo personalizado",
+    "reasonAudit": "Motivo (opcional, registro de auditoria do Discord)",
+    "preview": "Prévia",
+    "remove": "Remover"
+  },
+  "confirm": {
+    "cancel": "Cancelar",
+    "back": "← Voltar (cancelar)",
+    "nothingYet": "Nada mudou ainda. Esta confirmação funciona uma vez e expira em 5 minutos.",
+    "once": "Esta confirmação funciona uma vez e expira em 5 minutos.",
+    "heading": "Confirmar: {action}",
+    "title": "Confirmar: {action}",
+    "submit": "Confirmar: {action}",
+    "evidence": "Provas",
+    "unreadable": "(mensagem ilegível, só o link)",
+    "effect": "Efeito",
+    "blocked": "Você está bloqueado pelo limite de segurança (banimentos ou expulsões demais em 10 minutos) até {date}; isto será recusado."
+  },
+  "tabs": {
+    "label": "Área de membros",
+    "list": "Membros",
+    "rules": "Regras de cargos",
+    "insights": "Estatísticas"
+  },
+  "list": {
+    "title": "Membros",
+    "help": "abra um membro para mudar os cargos dele ou tomar uma ação.",
+    "count": {
+      "one": "{count} membro",
+      "other": "{count} membros",
+      "many": "{count} membros"
+    },
+    "ofTotal": " de {total}",
+    "noRoles": "sem cargos",
+    "level": "etapa {n}",
+    "warns": {
+      "one": "{count} advertência",
+      "other": "{count} advertências",
+      "many": "{count} advertências"
+    },
+    "warnsOf": "{n} de 3",
+    "select": "Selecionar {name}",
+    "selectAll": "Selecionar todos nesta página",
+    "member": "Membro",
+    "roles": "Cargos",
+    "joined": "Entrou",
+    "warnsHead": "Advertências",
+    "state": "Estado",
+    "unknown": "desconhecido",
+    "muted": "Silenciado",
+    "noMatch": "Nenhum membro corresponde a esses filtros.",
+    "clearFilters": "Limpar filtros",
+    "empty": "Ainda não há membros para mostrar. A lista se preenche quando o bot carregar o servidor principal.",
+    "show": "Mostrar",
+    "stillLoading": "Mostrando {cached} de {total} membros: a lista ainda está carregando. Recarregue em um minuto.",
+    "unavailable": "A lista de membros não está disponível agora (o bot não vê o servidor principal).",
+    "search": "Buscar",
+    "searchPlaceholder": "Nome, apelido ou ID de usuário",
+    "role": "Cargo",
+    "anyRole": "Qualquer cargo",
+    "sort": "Ordenar",
+    "apply": "Aplicar",
+    "clear": "Limpar"
+  },
+  "bulk": {
+    "summary": "Ação em massa",
+    "summaryHint": " · marque membros abaixo ou use todos que correspondem aos filtros",
+    "which": "Quais membros",
+    "ticked": "Os membros marcados abaixo",
+    "everyone": "Todos que correspondem a esses filtros ({count})",
+    "tooMany": "mais de {max}: refine os filtros",
+    "doThis": "Ação",
+    "customHint": "Só usado com “Personalizado…”. Cada membro recebe a mesma DM e o mesmo caso que um por um.",
+    "banLength": "Duração do banimento",
+    "banLengthPlaceholder": "ex.: 7d, 1mo, permanent",
+    "note": "Nada acontece ainda: a próxima página mostra exatamente quem será alterado, quem será pulado e por quê. No máximo {max} membros; expulsões e banimentos só quantos o limite de segurança (banimentos ou expulsões demais em 10 minutos) ainda permitir.",
+    "forLength": " por {length}",
+    "verb": {
+      "roleAdd": "Dar @{role} a {members}",
+      "roleRemove": "Tirar @{role} de {members}",
+      "timeout": "Dar castigo a {members}",
+      "kick": "Expulsar {members}",
+      "ban": "Banir {members}"
+    },
+    "check": "Confira a lista. Nada foi alterado ainda.",
+    "guard": {
+      "one": "O limite de segurança (banimentos ou expulsões demais em 10 minutos) permite mais {count} banimento/expulsão nesta janela de 10 minutos; os membros além disso são pulados.",
+      "other": "O limite de segurança (banimentos ou expulsões demais em 10 minutos) permite mais {count} banimentos/expulsões nesta janela de 10 minutos; os membros além disso são pulados.",
+      "many": "O limite de segurança (banimentos ou expulsões demais em 10 minutos) permite mais {count} banimentos/expulsões nesta janela de 10 minutos; os membros além disso são pulados."
+    },
+    "willChange": "Serão alterados ({count})",
+    "nobody": "Ninguém: todos os membros selecionados são pulados.",
+    "skipped": "Pulados ({count})",
+    "runs": "Roda um membro por vez (limites do Discord); você pode sair da página e voltar para ver o progresso.",
+    "sameDm": "Cada membro recebe a mesma DM e o mesmo caso que numa ação individual.",
+    "title": "Em massa: {what}"
+  },
+  "job": {
+    "working": "Trabalhando… {done} de {total} feitos. Esta página se atualiza sozinha.",
+    "finished": "Concluído: {done} feitos, {failed} com falha.",
+    "progress": "Progresso",
+    "failed": "Com falha ({count})",
+    "done": "Feitos ({count})"
+  },
+  "bans": {
+    "title": "Banidos",
+    "noCase": "sem caso (banido fora do bot)",
+    "permanent": "Permanente",
+    "until": "Até {date}",
+    "ban": "Banimento",
+    "noReason": "nenhum motivo informado",
+    "appealPending": "apelação pendente",
+    "by": "por {name}, {date}",
+    "unban": "Desbanir…",
+    "open": "Abrir",
+    "count": {
+      "one": "{count} banimento",
+      "other": "{count} banimentos",
+      "many": "{count} banimentos"
+    },
+    "noMatch": "Nenhum banimento corresponde.",
+    "showAll": "Mostrar todos os banidos",
+    "empty": "Ninguém está banido no servidor principal.",
+    "bannedCount": "{count} banidos no servidor principal",
+    "help": "Desbanir abre a página do membro: você vê o efeito e depois confirma. O membro recebe uma DM com um convite para voltar.",
+    "searchPlaceholder": "Nome ou ID de usuário"
+  },
+  "standing": {
+    "banEnds": "banimento {case}, termina {date}",
+    "banPermanent": "banimento {case}, permanente",
+    "bannedOutside": "banido fora do bot (sem registro)",
+    "muteEnds": "silenciamento {case}, termina {date}",
+    "mutedRole": "tem o cargo de silenciado (sem registro)",
+    "counted": "Advertências contadas",
+    "stage": "Etapa de advertências",
+    "next": "Próxima advertência",
+    "active": "Punição ativa",
+    "pending": "Apelações pendentes",
+    "none": "nenhuma"
+  },
+  "header": {
+    "joined": "Entrou em {date}",
+    "inServer": "No servidor",
+    "notInServer": "Fora do servidor",
+    "id": "ID {id}",
+    "active": "Ativo",
+    "none": "Nada",
+    "banned": "Banido",
+    "muted": "Silenciado"
+  },
+  "profile": {
+    "username": "Nome de usuário",
+    "displayName": "Nome de exibição",
+    "nickname": "Apelido",
+    "created": "Conta criada",
+    "dateAgo": "{date} (há {age})",
+    "inServer": "No servidor",
+    "yesJoined": "sim, entrou em {date} (há {age})",
+    "yesUnknown": "sim, entrou numa data desconhecida",
+    "no": "não",
+    "roles": "Cargos ({count})"
+  },
+  "edit": {
+    "until": "até {date}",
+    "noRoles": "Sem cargos.",
+    "needsAdminEditing": "Mudar cargos exige Administrador e a edição ativada.",
+    "needsAdmin": "Mudar cargos exige Administrador.",
+    "giveRole": "Dar um cargo",
+    "giveRoleHint": "Só cargos abaixo do seu cargo mais alto e do cargo do Mewvo; cargos da equipe só para o dono do servidor ou os donos do bot.",
+    "timedHint": "Cargos temporários são tirados sozinhos, e devolvidos se o membro voltar antes do fim.",
+    "giveRoleSubmit": "Dar cargo",
+    "noOtherRole": "Não há outro cargo que você possa dar.",
+    "nicknameHint": "Vazio remove o apelido.",
+    "saveNickname": "Salvar apelido",
+    "timedOutUntil": "De castigo até {date}.",
+    "removeTimeout": "Tirar castigo",
+    "timeoutHint": "O castigo do próprio Discord (máx. 28 dias): pode ler, mas não escrever nem falar. Para mais tempo, use Silenciar.",
+    "changeTimeout": "Mudar castigo",
+    "timeOut": "Dar castigo",
+    "timeOutConfirm": "Dar castigo a {name}?",
+    "verification": "Verificação",
+    "verified": "Verificado (@{role}).",
+    "unverifyReason": "Motivo (opcional, registro de auditoria do Discord e registro de verificação)",
+    "unverify": "Tirar verificação",
+    "unverifyConfirm": "Tirar a verificação de {name}? A pessoa perde @{role} e precisa se verificar de novo.",
+    "timeout": "Castigo"
+  },
+  "notes": {
+    "note": "Nota",
+    "empty": "Ainda não há notas da equipe. Adicione uma abaixo; só a equipe vê.",
+    "new": "Nova nota (só a equipe vê)",
+    "add": "Adicionar nota"
+  },
+  "cases": {
+    "all": {
+      "one": "O {count} caso →",
+      "other": "Todos os {count} casos →",
+      "many": "Todos os {count} casos →"
+    },
+    "none": "Sem casos."
+  },
+  "keepApart": {
+    "item": "com {name} {id} até {date} (ordem #{order})",
+    "title": "Manter separados",
+    "heading": "Manter separados ({count})",
+    "help": "Mantenha dois membros separados: eles não podem se mencionar nem responder um ao outro; mensagens que violem isso são apagadas e registradas. Os dois recebem uma DM quando uma ordem começa e termina.",
+    "active": "Ordens ativas ({count})",
+    "members": "Membros",
+    "endNow": "Encerrar agora",
+    "none": "Nenhuma ordem ativa.",
+    "start": "Iniciar uma ordem",
+    "first": "Primeiro membro",
+    "second": "Segundo membro",
+    "days": "Dias",
+    "reason": "Motivo (mostrado aos dois membros)",
+    "startSubmit": "Iniciar ordem"
+  },
+  "precedent": {
+    "question": "Como este motivo foi tratado antes?",
+    "choose": "escolha um motivo",
+    "show": "Mostrar",
+    "none": "Nenhum caso anterior com este motivo para comparar."
+  },
+  "action": {
+    "severe": " (grave: sem apelação por padrão)",
+    "customHint": "Só usado com “Personalizado…”.",
+    "banDurationHint": "ex.: 30m, 24h, 7d, 1mo. Vazio = permanente.",
+    "muteDurationHint": "Obrigatório. ex.: 30m, 24h, 7d, 1mo.",
+    "appealDefault": "Padrão (motivos graves: Não)",
+    "name": "Nome (opcional)",
+    "nameHint": "Padrão: {name} {type} <n>",
+    "evidence": "Provas (links de mensagens, opcional)",
+    "evidenceHint": "Até {max} links, um por linha. O texto deles é salvo agora. Imagens podem ser enviadas depois na página do caso.",
+    "warning": "Advertência",
+    "reasonOptional": "Motivo (opcional)"
+  },
+  "timeline": {
+    "error": "Não foi possível carregar a linha do tempo (banco de dados). Recarregue a página para tentar de novo.",
+    "empty": "Nada registrado ainda. Entradas e saídas ficam guardadas por 90 dias.",
+    "note": "Mais recentes primeiro. Entradas e saídas ficam guardadas por 90 dias."
+  },
+  "member": {
+    "moderatorCan": "Moderador: aqui você pode {actions}. Banir, desbanir, cargos, apelido e notas exigem Administrador.",
+    "profile": "Perfil",
+    "record": "Histórico até agora",
+    "roles": "Cargos ({count}), apelido e castigo",
+    "keepApart": "Manter separados",
+    "actions": "Ações",
+    "blocked": "Você está bloqueado pelo limite de segurança (banimentos ou expulsões demais em 10 minutos) até {date}; as ações serão recusadas.",
+    "sameActions": "As mesmas ações, DMs, escada e verificações do /enforcements. Cada uma mostra antes uma confirmação.",
+    "noActions": "Nenhuma ação disponível.",
+    "available": "Disponíveis: {actions}.",
+    "precedent": "O que a equipe costuma dar por este motivo",
+    "timeline": "Linha do tempo",
+    "caseHistory": "Histórico de casos ({count})",
+    "staffNotes": "Notas da equipe ({count})"
+  },
+  "watch": {
+    "title": "Lista de observação ({count})",
+    "help": "Só para a equipe; o membro nunca fica sabendo. As entradas, novos casos e alertas do automod dele são postados no registro de moderação (no máximo uma vez por minuto). Adicione membros com {command}.",
+    "since": "Desde",
+    "until": "Até",
+    "noEnd": "Sem data de fim",
+    "empty": "Ninguém está na lista de observação."
+  }
+}

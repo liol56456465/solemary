@@ -1,0 +1,18 @@
+{
+  "title": "Journal d’audit",
+  "help": "Chaque modification faite depuis le tableau de bord : qui, quand, ancienne valeur → nouvelle valeur. Chaque formulaire enregistré est aussi publié dans le journal de modération.",
+  "count": {
+    "one": "{count} modification",
+    "other": "{count} modifications",
+    "many": "{count} modifications"
+  },
+  "who": "Qui",
+  "anyone": "tout le monde",
+  "module": "Module",
+  "filter": "Filtrer",
+  "setting": "Paramètre",
+  "noMatch": "Aucune modification ne correspond à ces filtres.",
+  "empty": "Aucune modification pour l’instant. Chaque enregistrement depuis le tableau de bord est listé ici.",
+  "none": "(aucun)",
+  "showAll": "Tout afficher ({count} caractères)"
+}

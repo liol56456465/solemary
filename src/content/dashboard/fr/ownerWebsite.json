@@ -1,0 +1,108 @@
+{
+  "common": {
+    "readOnly": "Lecture seule : la modification depuis le tableau de bord est désactivée (DASHBOARD_EDIT_ENABLED n’est pas true).",
+    "clear": "Effacer"
+  },
+  "state": {
+    "translated": "Traduit",
+    "needs-update": "À mettre à jour",
+    "missing": "Manquant (anglais affiché)",
+    "edited": "Modifié",
+    "default": "Par défaut"
+  },
+  "filter": {
+    "all": "Tous",
+    "needs-update": "À mettre à jour",
+    "missing": "Manquants",
+    "edited": "Modifiés"
+  },
+  "tabs": {
+    "label": "Éditeur du site",
+    "text": "Textes",
+    "images": "Images"
+  },
+  "markup": {
+    "formatting": "Mise en forme :",
+    "bold": "gras",
+    "italic": "italique",
+    "code": "code",
+    "text": "texte",
+    "rest1": "pour un lien, une ligne vide pour un nouveau paragraphe, des lignes commençant par",
+    "rest2": "pour une liste. Le HTML n’est pas pris en charge (les balises s’affichent telles quelles). Les mots entre accolades comme",
+    "rest3": "sont remplis par le site : gardez les mêmes que dans le texte anglais."
+  },
+  "home": {
+    "title": "Site web",
+    "help": "Modifiez les textes du site dans chaque langue et remplacez ses images, sans code. Les changements sont en ligne dès l’enregistrement. Chaque groupe de textes est une partie du site ; ouvrez-en un pour voir et modifier ses textes.",
+    "toUpdate": "{count} à mettre à jour",
+    "missing": "{count} manquants",
+    "byGroup": "Textes par groupe",
+    "byGroupHelp": "Par langue : textes traduits / tous les textes. **À mettre à jour** : le texte anglais a changé après la traduction. **Manquant** : le site y affiche l’anglais. Pour l’anglais, le nombre de textes que vous avez modifiés.",
+    "group": "Groupe",
+    "texts": "Textes",
+    "englishEdited": "Anglais modifié",
+    "all": "Tous",
+    "notHere": "Non modifiable ici",
+    "notHereHelp": "Les pages légales (Politique de confidentialité, Conditions, Mentions légales, Contact, Rétractation) sont des textes juridiques : elles sont modifiées dans le code et relues, pas ici. Elles n’existent qu’en anglais."
+  },
+  "ns": {
+    "title": "Textes : {ns}",
+    "pageTitle": "Site web : {name}",
+    "help": "Chaque texte de ce groupe avec le texte anglais et le texte en {lang}. Ouvrez un texte pour le modifier.",
+    "language": "Langue",
+    "show": "Afficher",
+    "search": "Recherche",
+    "searchPlaceholder": "Clé ou texte",
+    "showButton": "Afficher",
+    "count": { "one": "{count} texte.", "many": "{count} textes.", "other": "{count} textes." },
+    "key": "Clé",
+    "english": "Anglais",
+    "state": "État",
+    "englishShown": "(anglais affiché)",
+    "noMatch": "Aucun texte ne correspond."
+  },
+  "key": {
+    "historyError": "L’historique n’a pas pu être chargé (base de données). Rechargez la page pour réessayer.",
+    "noChanges": "Aucun changement pour l’instant.",
+    "history": "Historique ({count}{newest})",
+    "newest30": ", les 30 plus récents",
+    "when": "Quand",
+    "by": "Par",
+    "changedTo": "Nouveau texte",
+    "reset": "Rétablir par défaut",
+    "restore": "Restaurer cette version",
+    "fromEdit": "Votre modification",
+    "fromCatalog": "Texte par défaut",
+    "fromEnglish": "Pas de texte dans cette langue : le site affiche l’anglais",
+    "savedBy": "enregistré le {date} par {who}",
+    "previewNotSaved": "Aperçu (non enregistré) :",
+    "textIn": "Texte ({lang})",
+    "preview": "Aperçu",
+    "save": "Enregistrer",
+    "resetConfirm": "Rétablir le texte {lang} par défaut ?",
+    "help": "Un texte du site dans chaque langue. L’enregistrement le met en ligne tout de suite ; « Rétablir par défaut » remet le texte d’origine.",
+    "original": "Anglais (original)",
+    "englishEdited": "Le site affiche votre modification en anglais à la place (ci-dessous). Les traductions faites avant sont marquées « À mettre à jour »."
+  },
+  "images": {
+    "title": "Images du site",
+    "help": "Les images utilisées par le site. Un envoi est converti (les métadonnées comme l’appareil photo ou la position sont supprimées) et ajusté à la taille de l’emplacement : une image d’une autre forme est recadrée sur les bords. En ligne tout de suite ; les navigateurs peuvent montrer l’ancienne image jusqu’à 5 minutes.",
+    "replaced": "Remplacée",
+    "default": "Par défaut",
+    "where": "{where}. Chemin `{path}`, {size}, {format}.",
+    "currentAlt": "Image actuelle : {label}",
+    "uploaded": "Envoyée le {date} par {who}, {size}",
+    "defaultFile": "Le fichier par défaut",
+    "replace": "Remplacer (PNG, JPEG ou WebP, jusqu’à {mb} Mo)",
+    "upload": "Envoyer",
+    "resetConfirm": "Remettre l’image par défaut « {label} » ?"
+  },
+  "slot": {
+    "screen-overview-dark": { "label": "Capture du tableau de bord : vue d’ensemble (sombre)", "where": "Page d’accueil, section « Le tableau de bord »" },
+    "screen-overview-light": { "label": "Capture du tableau de bord : vue d’ensemble (clair)", "where": "Servie à son chemin ; aucune page ne l’affiche aujourd’hui" },
+    "screen-cases-dark": { "label": "Capture du tableau de bord : dossiers (sombre)", "where": "Docs : « Utiliser le tableau de bord »" },
+    "screen-cases-light": { "label": "Capture du tableau de bord : dossiers (clair)", "where": "Servie à son chemin ; aucune page ne l’affiche aujourd’hui" },
+    "og": { "label": "Image de partage", "where": "Aperçus de liens (Discord, réseaux sociaux) de chaque page" },
+    "logo": { "label": "Logo et icône d’onglet", "where": "Barre du haut du site, favicon, barre latérale du tableau de bord" }
+  }
+}

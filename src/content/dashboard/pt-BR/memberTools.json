@@ -1,0 +1,205 @@
+{
+  "notice": {
+    "readOnly": "Somente leitura: a edição pelo painel está desligada (DASHBOARD_EDIT_ENABLED não é true).",
+    "viewOnly": "Só visualização: você precisa de Administrador no servidor principal para mudar as regras de cargos."
+  },
+  "trigger": {
+    "days_in_server": "Dias no servidor",
+    "level_reached": "Nível",
+    "has_role": "Tem um cargo"
+  },
+  "form": {
+    "name": "Nome",
+    "namePlaceholder": "ex.: Frequentes depois de 30 dias",
+    "when": "Quando",
+    "threshold": "Dias ou nível",
+    "thresholdHint": "Dias no servidor (0 = ao entrar, até {maxDays}) ou o nível (1–{maxLevel}). Não é usado para \"Tem um cargo\".",
+    "triggerRole": "Cargo que ativa",
+    "triggerRoleNone": "Só para \"Tem um cargo\"",
+    "give": "Dar este cargo",
+    "choose": "Escolher…",
+    "giveHint": "Só cargos abaixo do Mewvo (e abaixo do seu cargo mais alto), não gerenciados, sem permissões de equipe.",
+    "removeWhenFalse": "Tirar o cargo de novo quando a condição deixar de valer",
+    "removeHelp": "Tirar também vale para membros que receberam o cargo à mão; um membro que ainda se encaixa em outra regra ligada para o mesmo cargo fica com ele.",
+    "enabled": "Ligar a regra ao salvar",
+    "nothingYet": "Nada muda ainda: a próxima página mostra quantos membros, e quais, a regra mudaria.",
+    "dryRun": "Teste"
+  },
+  "rules": {
+    "title": "Regras de cargos",
+    "intro": "Cargos que o Mewvo dá sozinho: verificados a cada 10 minutos (no máximo {limit} mudanças de cargo por rodada, uma por vez) e na hora quando um membro entra, sobe de nível ou recebe um cargo.",
+    "levelingOff": "Os níveis estão desligados: os níveis não mudam, então as regras de nível usam só os níveis já salvos.",
+    "heading": "Regras ({count} de {max})",
+    "rule": "Regra",
+    "state": "Estado",
+    "none": "Ainda não há regras de cargos.",
+    "keepRoles": "Desligar ou excluir uma regra mantém os cargos que ela já deu.",
+    "editHeading": "Editar \"{name}\"",
+    "newRule": "Nova regra",
+    "full": "Este servidor tem {max} regras, o máximo. Exclua uma primeiro.",
+    "cancelEdit": "Cancelar edição",
+    "onPaused": "Ligada, pausada",
+    "on": "Ligada",
+    "off": "Desligada",
+    "lastRun": "Última rodada {date}: +{added} −{removed}",
+    "lastFailed": ", {count} com falha",
+    "notRun": "Ainda não rodou",
+    "turnOff": "Desligar",
+    "turnOn": "Ligar…",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "deleteConfirm": "Excluir a regra \"{name}\"? Os cargos que ela já deu ficam."
+  },
+  "andMore": "… e mais {count}.",
+  "preview": {
+    "back": "← Regras de cargos",
+    "title": "Teste: {name}",
+    "nobody": "Ninguém.",
+    "wouldChange": {
+      "zero": "Mudaria {count} membros agora: daria o cargo para {add} e tiraria de {remove}. Nada foi mudado ainda.",
+      "one": "Mudaria {count} membro agora: daria o cargo para {add} e tiraria de {remove}. Nada foi mudado ainda.",
+      "many": "Mudaria {count} membros agora: daria o cargo para {add} e tiraria de {remove}. Nada foi mudado ainda.",
+      "other": "Mudaria {count} membros agora: daria o cargo para {add} e tiraria de {remove}. Nada foi mudado ainda."
+    },
+    "savedOff": {
+      "zero": "Salva desligada: nada muda até você ligá-la. Se estivesse ligada agora, mudaria {count} membros.",
+      "one": "Salva desligada: nada muda até você ligá-la. Se estivesse ligada agora, mudaria {count} membro.",
+      "many": "Salva desligada: nada muda até você ligá-la. Se estivesse ligada agora, mudaria {count} membros.",
+      "other": "Salva desligada: nada muda até você ligá-la. Se estivesse ligada agora, mudaria {count} membros."
+    },
+    "partial": "Contado com {cached} de {total} membros (a lista de membros ainda está carregando); a rodada de verdade inclui todos.",
+    "gets": "Recebem o cargo ({count})",
+    "loses": "Perdem o cargo ({count})",
+    "nextRun": "As mudanças são feitas na próxima rodada (em até 10 minutos), no máximo {limit} por rodada.",
+    "savedOffShort": "A regra é salva desligada.",
+    "saveChanges": "Salvar mudanças",
+    "saveRule": "Salvar regra"
+  },
+  "chart": {
+    "label": {
+      "zero": "Entradas e saídas por dia, últimos {count} dias: {joins} entradas, {leaves} saídas",
+      "one": "Entradas e saídas por dia, último {count} dia: {joins} entradas, {leaves} saídas",
+      "many": "Entradas e saídas por dia, últimos {count} dias: {joins} entradas, {leaves} saídas",
+      "other": "Entradas e saídas por dia, últimos {count} dias: {joins} entradas, {leaves} saídas"
+    },
+    "day": "{day}: {joins} entraram, {leaves} saíram",
+    "joined": "Entraram",
+    "left": "Saíram"
+  },
+  "insights": {
+    "title": "Estatísticas de membros",
+    "intro": "Quem chega e quem sai, quem ficou sem cargo, quem continua recebendo casos.",
+    "partial": "Com base em {cached} de {total} membros: a lista de membros ainda está carregando. Recarregue em um minuto.",
+    "notLoaded": "Não foi possível carregar.",
+    "joinsTitle": {
+      "zero": "Entradas e saídas (últimos {count} dias)",
+      "one": "Entradas e saídas (último {count} dia)",
+      "many": "Entradas e saídas (últimos {count} dias)",
+      "other": "Entradas e saídas (últimos {count} dias)"
+    },
+    "joinsTitleShort": "Entradas e saídas",
+    "joinsSummary": "{joined} entraram · {left} saíram · saldo {net}. Dias em UTC.",
+    "countingSince": "Contando desde {date}; os dias anteriores mostram 0.",
+    "nothingYet": "Nada contado ainda: entradas e saídas são registradas a partir de agora.",
+    "kept": {
+      "zero": "Guardado por {count} dias.",
+      "one": "Guardado por {count} dia.",
+      "many": "Guardado por {count} dias.",
+      "other": "Guardado por {count} dias."
+    },
+    "showTable": "Mostrar como tabela",
+    "day": "Dia",
+    "noRolesTitle": "Membros novos sem cargo depois de 24 horas",
+    "noRolesHelp": "Entraram nos últimos 30 dias, há mais de 24 horas, e ainda estão sem cargo (bots fora). Muitas vezes: nunca se verificaram.",
+    "joinedAt": "entrou em {date}",
+    "none": "Nenhum.",
+    "noGuild": "O bot não está vendo o servidor principal agora.",
+    "offendersTitle": {
+      "zero": "Reincidentes (últimos {count} dias)",
+      "one": "Reincidentes (último {count} dia)",
+      "many": "Reincidentes (últimos {count} dias)",
+      "other": "Reincidentes (últimos {count} dias)"
+    },
+    "offendersHelp": "Membros com dois casos ou mais (casos removidos, importados e de teste ficam de fora).",
+    "member": "Membro",
+    "cases": "Casos",
+    "last": "Último",
+    "warns": {
+      "zero": "{count} advertências",
+      "one": "{count} advertência",
+      "many": "{count} advertências",
+      "other": "{count} advertências"
+    },
+    "mutes": {
+      "zero": "{count} silenciamentos",
+      "one": "{count} silenciamento",
+      "many": "{count} silenciamentos",
+      "other": "{count} silenciamentos"
+    },
+    "kicks": {
+      "zero": "{count} expulsões",
+      "one": "{count} expulsão",
+      "many": "{count} expulsões",
+      "other": "{count} expulsões"
+    },
+    "bans": {
+      "zero": "{count} banimentos",
+      "one": "{count} banimento",
+      "many": "{count} banimentos",
+      "other": "{count} banimentos"
+    },
+    "noOffenders": {
+      "zero": "Ninguém tem dois casos ou mais nos últimos {count} dias.",
+      "one": "Ninguém tem dois casos ou mais no último {count} dia.",
+      "many": "Ninguém tem dois casos ou mais nos últimos {count} dias.",
+      "other": "Ninguém tem dois casos ou mais nos últimos {count} dias."
+    },
+    "inactiveTitle": {
+      "zero": "Membros inativos (sem XP há {count}+ dias)",
+      "one": "Membros inativos (sem XP há {count}+ dia)",
+      "many": "Membros inativos (sem XP há {count}+ dias)",
+      "other": "Membros inativos (sem XP há {count}+ dias)"
+    },
+    "inactiveOff": "Não disponível: o único horário de atividade que o Mewvo guarda é a última vez que os níveis deram XP a um membro, e os níveis estão desligados. Ligue os níveis para começar a medir; nada é chutado aqui.",
+    "inactiveHelp": {
+      "zero": "Atividade = a última vez que os níveis deram XP ao membro (mensagens que dão XP). Membros no servidor há menos de {count} dias e bots ficam de fora.",
+      "one": "Atividade = a última vez que os níveis deram XP ao membro (mensagens que dão XP). Membros no servidor há menos de {count} dia e bots ficam de fora.",
+      "many": "Atividade = a última vez que os níveis deram XP ao membro (mensagens que dão XP). Membros no servidor há menos de {count} dias e bots ficam de fora.",
+      "other": "Atividade = a última vez que os níveis deram XP ao membro (mensagens que dão XP). Membros no servidor há menos de {count} dias e bots ficam de fora."
+    },
+    "noRecord": {
+      "zero": "{count} membros não têm nenhum registro de nível (nunca ganharam XP, ou foi antes de os níveis estarem ligados) e não aparecem na lista.",
+      "one": "{count} membro não tem nenhum registro de nível (nunca ganhou XP, ou foi antes de os níveis estarem ligados) e não aparece na lista.",
+      "many": "{count} membros não têm nenhum registro de nível (nunca ganharam XP, ou foi antes de os níveis estarem ligados) e não aparecem na lista.",
+      "other": "{count} membros não têm nenhum registro de nível (nunca ganharam XP, ou foi antes de os níveis estarem ligados) e não aparecem na lista."
+    },
+    "lastXp": "último XP em {date}",
+    "noInactive": {
+      "zero": "Ninguém com registro de nível ficou quieto por {count} dias.",
+      "one": "Ninguém com registro de nível ficou quieto por {count} dia.",
+      "many": "Ninguém com registro de nível ficou quieto por {count} dias.",
+      "other": "Ninguém com registro de nível ficou quieto por {count} dias."
+    }
+  },
+  "route": {
+    "needName": "Dê um nome à regra.",
+    "needTrigger": "Escolha quando a regra vale.",
+    "needRole": "Escolha o cargo que será dado.",
+    "needTriggerRole": "Escolha o cargo que ativa.",
+    "needLevel": "Informe o nível (um número inteiro).",
+    "needDays": "Informe o número de dias (um número inteiro).",
+    "notARule": "Não é uma regra.",
+    "loadError": "Não foi possível carregar as regras de cargos (o banco de dados não responde). Nada foi mudado; recarregue a página para tentar de novo.",
+    "gone": "Essa regra não existe mais.",
+    "goneNotSaved": "Essa regra não existe mais; nada foi salvo.",
+    "full": "Este servidor já tem {max} regras, o máximo.",
+    "dryRunExpired": "Este teste expirou ou já foi usado. Nada foi salvo; faça o teste de novo.",
+    "savedOn": "Regra \"{name}\" salva; a próxima rodada (em até 10 minutos) a aplica.",
+    "savedOff": "Regra \"{name}\" salva, desligada.",
+    "createdOn": "Regra \"{name}\" criada; a próxima rodada (em até 10 minutos) a aplica.",
+    "createdOff": "Regra \"{name}\" criada, desligada.",
+    "turnedOff": "Regra \"{name}\" desligada. Os cargos que ela já deu ficam.",
+    "deleted": "Regra \"{name}\" excluída. Os cargos que ela já deu ficam.",
+    "partFailed": "Não foi possível carregar (o banco de dados não responde). Recarregue a página para tentar de novo."
+  }
+}

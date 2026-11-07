@@ -1,0 +1,310 @@
+{
+  "test": "(test)",
+  "pager": {
+    "newer": "← Plus récents",
+    "older": "Plus anciens →"
+  },
+  "list": {
+    "title": "Dossiers",
+    "help": "Toutes les sanctions, les plus récentes d’abord. Filtre par membre, modérateur, type, statut, tag ou date.",
+    "count": {
+      "one": "{count} dossier",
+      "other": "{count} dossiers",
+      "many": "{count} dossiers"
+    },
+    "exportPlan": "L’export des dossiers (CSV) est inclus à partir de Mewvo Normal, dans l’offre du propriétaire du serveur. {plans}",
+    "plans": "Offres",
+    "download": "Télécharger le CSV",
+    "exportDays": {
+      "one": "Le dernier jour (Mewvo Normal) : {count}.",
+      "other": "Les {count} derniers jours (Mewvo Normal).",
+      "many": "Les {count} derniers jours (Mewvo Normal)."
+    },
+    "exportAll": "Tout l’historique.",
+    "noMatch": "Aucun dossier ne correspond à ces filtres.",
+    "clearFilters": "Effacer les filtres",
+    "empty": "Aucun dossier pour l’instant. Ils apparaissent ici après le premier avertissement, la première mise en sourdine, expulsion ou le premier bannissement."
+  },
+  "filter": {
+    "member": "ID du membre",
+    "moderator": "ID du modérateur",
+    "type": "Type",
+    "status": "Statut",
+    "any": "tous",
+    "text": "Texte",
+    "tag": "Tag",
+    "tagPlaceholder": "ex. scam",
+    "from": "Du",
+    "to": "Au",
+    "search": "Rechercher",
+    "clear": "Effacer"
+  },
+  "type": {
+    "ban": "bannissement",
+    "kick": "expulsion",
+    "mute": "mise en sourdine",
+    "warn": "avertissement"
+  },
+  "searchStatus": {
+    "active": "actif",
+    "ended": "terminé",
+    "revoked": "levé",
+    "voided": "retiré"
+  },
+  "saved": {
+    "label": "Enregistrées :",
+    "delete": "(supprimer)",
+    "deleteLabel": "Supprimer la recherche enregistrée {name}",
+    "saveAs": "Enregistrer cette recherche sous",
+    "namePlaceholder": "ex. scam ce mois-ci",
+    "save": "Enregistrer"
+  },
+  "bulk": {
+    "with": "Avec les dossiers cochés",
+    "tagAdd": "Ajouter un tag",
+    "tagRemove": "Retirer un tag",
+    "void": "Les retirer (une erreur, ils ne comptent plus)",
+    "reason": "Raison (pour le retrait ; les membres la voient)",
+    "apply": "Appliquer",
+    "help": "Tags : jusqu’à 25 dossiers à la fois. Retrait : jusqu’à 10, et chaque membre reçoit le MP habituel. Le retrait passe d’abord par une page de confirmation."
+  },
+  "table": {
+    "select": "Sélectionner",
+    "selectCase": "Sélectionner le dossier {code}",
+    "case": "Dossier",
+    "type": "Type",
+    "member": "Membre",
+    "moderator": "Modérateur",
+    "reason": "Raison",
+    "date": "Date",
+    "status": "Statut"
+  },
+  "status": {
+    "voided": "retiré (une erreur)",
+    "liftedByAppeal": "levé après appel",
+    "reversed": "annulé par un modérateur",
+    "lifted": "levé avant la fin",
+    "appealPending": "appel en attente",
+    "activeAppealDenied": "actif, appel refusé",
+    "expired": "expiré",
+    "active": "actif",
+    "ended": "terminé"
+  },
+  "appealStatus": {
+    "pending": "en attente",
+    "accepted": "accepté",
+    "denied": "refusé"
+  },
+  "action": {
+    "ban": "Bannir",
+    "kick": "Expulser",
+    "mute": "Mettre en sourdine",
+    "warn": "Avertir",
+    "unban": "Débannir",
+    "unmute": "Retirer la sourdine",
+    "removewarn": "Retirer un avertissement"
+  },
+  "actionVerb": {
+    "ban": "bannir",
+    "kick": "expulser",
+    "mute": "mettre en sourdine",
+    "warn": "avertir",
+    "unban": "débannir",
+    "unmute": "retirer la sourdine",
+    "removewarn": "retirer un avertissement",
+    "timeout": "exclure temporairement"
+  },
+  "stage": {
+    "none": "0 sur 3 (pas encore de bannissement d’avertissement)",
+    "permanent": "{n} sur 3 (bannissement définitif)",
+    "days": {
+      "one": "{n} sur 3 (bannissement de {count} jour)",
+      "other": "{n} sur 3 (bannissement de {count} jours)",
+      "many": "{n} sur 3 (bannissement de {count} jours)"
+    },
+    "label": "Palier d’avertissement {stage}"
+  },
+  "duration": {
+    "permanent": "Définitif",
+    "permanentLower": "définitif",
+    "underMinute": "moins d’une minute",
+    "month": {
+      "one": "{count} mois",
+      "other": "{count} mois",
+      "many": "{count} mois"
+    },
+    "day": {
+      "one": "{count} jour",
+      "other": "{count} jours",
+      "many": "{count} jours"
+    },
+    "hour": {
+      "one": "{count} heure",
+      "other": "{count} heures",
+      "many": "{count} heures"
+    },
+    "minute": {
+      "one": "{count} minute",
+      "other": "{count} minutes",
+      "many": "{count} minutes"
+    }
+  },
+  "age": {
+    "minutes": "{n} min",
+    "hours": "{n} h",
+    "days": "{n} j"
+  },
+  "warns": {
+    "of": "{n} sur {max}",
+    "nextBans": "{n} (le prochain avertissement bannit)"
+  },
+  "next": {
+    "would": "Ce serait l’avertissement {n} sur {max}.",
+    "oneAfter": "Le suivant entraînerait un bannissement automatique ({ban}).",
+    "moreAfter": {
+      "one": "Encore {count} après entraînerait un bannissement automatique ({ban}).",
+      "other": "Encore {count} après entraîneraient un bannissement automatique ({ban}).",
+      "many": "Encore {count} après entraîneraient un bannissement automatique ({ban})."
+    },
+    "limit": "Cela atteindrait la limite d’avertissements : un bannissement automatique ({ban}, palier d’avertissement {stage} sur 3)."
+  },
+  "settings": {
+    "title": "Paramètres",
+    "setting": "Paramètre",
+    "value": "Valeur",
+    "source": {
+      "title": "Source",
+      "database": "enregistré",
+      "env": "depuis env (valeur initiale)",
+      "default": "valeur par défaut intégrée"
+    }
+  },
+  "evidence": {
+    "imageAlt": "Image de preuve {id}",
+    "imageGone": "Image indisponible (le message enregistré a disparu)."
+  },
+  "detail": {
+    "back": "← Dossiers",
+    "case": "Dossier",
+    "title": "Dossier {code}",
+    "name": "Nom",
+    "allTheirCases": "tous ses dossiers",
+    "automatic": " (automatique)",
+    "created": "Créé",
+    "duration": "Durée",
+    "ends": "Fin",
+    "appealDeadline": "Date limite d’appel",
+    "canAppeal": "Appel possible ?",
+    "yes": "Oui",
+    "no": "Non",
+    "yesLower": "oui",
+    "noLower": "non",
+    "dmDelivered": "MP remis",
+    "stageAfter": "Palier d’avertissement après",
+    "tags": "Tags",
+    "none": "aucun",
+    "liftedEarly": "Levé avant la fin",
+    "removed": "Retiré",
+    "history": "Historique ({count})",
+    "when": "Quand",
+    "by": "Par",
+    "field": "Champ",
+    "old": "Avant",
+    "new": "Après",
+    "neverEdited": "Jamais modifié.",
+    "notes": "Notes de l’équipe ({count})",
+    "noNotes": "Aucune note. Seule l’équipe voit les notes.",
+    "evidence": "Preuves ({count})",
+    "noEvidence": "Aucune preuve jointe.",
+    "appeals": "Appels ({count})",
+    "filed": "Déposé",
+    "decided": "Décidé",
+    "note": "Note",
+    "noAppeals": "Aucun appel."
+  },
+  "appeals": {
+    "pageTitle": "Appels",
+    "title": "Appels en attente ({count})",
+    "help": "Appels en attente de décision, les plus anciens d’abord. Orange après un jour, rouge après trois.",
+    "waiting": "En attente depuis",
+    "secondReviewer": "Deuxième avis requis",
+    "secondReviewerTitle": "Tu as donné cette sanction, donc une autre personne de l’équipe doit décider de cet appel.",
+    "review": "Examiner et décider",
+    "open": "Ouvrir",
+    "decideHere": "Décide ici ou dans Discord (Accepter / Refuser sur le message d’appel) : l’effet est le même.",
+    "adminsDecide": "Les administrateurs décident des appels ici (modification activée) ou dans Discord.",
+    "empty": "Aucun appel en attente. Les nouveaux appels apparaissent ici et dans les salons d’appel sur Discord."
+  },
+  "change": {
+    "title": "Modifier ce dossier",
+    "removedNoEdit": "Les dossiers retirés ne peuvent plus être modifiés.",
+    "edit": "Modifier",
+    "newReason": "Nouvelle raison",
+    "newDuration": "Nouvelle durée",
+    "unchanged": "inchangée",
+    "durationHint": "Durée totale depuis la sanction, ex. 7d, 1mo.",
+    "durationHintBan": "Durée totale depuis la sanction, ex. 7d, 1mo, permanent.",
+    "save": "Enregistrer les modifications",
+    "remove": "Retirer le dossier",
+    "removeHelp": "Pour un dossier donné par erreur : il ne compte plus. Ce qui est encore en vigueur est levé (débannissement, fin de sourdine, avertissement retiré, palier d’avertissement abaissé) et le membre reçoit la raison en MP. Le dossier reste au dossier, marqué Retiré.",
+    "removeReason": "Raison (montrée au membre)",
+    "removeNext": "Rien ne se passe encore : la page suivante montre ce qui sera levé, et tu confirmes là-bas.",
+    "removeSubmit": "Retirer le dossier…",
+    "link": "Lien (ex. un lien de message Discord : son texte est enregistré)",
+    "noteOptional": "Note (facultatif)",
+    "addEvidence": "Ajouter une preuve",
+    "image": "Image (PNG, JPEG, GIF ou WebP, jusqu’à 8 Mo)",
+    "upload": "Envoyer l’image",
+    "rehosted": "Les images sont réhébergées dans le salon des preuves, comme avec /case evidence add.",
+    "removeEvidence": "Retirer #{id}",
+    "removeEvidenceConfirm": "Retirer la preuve #{id} ?",
+    "notesTags": "Notes et tags",
+    "staffOnly": "Seule l’équipe les voit. Jamais le membre.",
+    "newNote": "Nouvelle note",
+    "tagsHint": "Séparés par des virgules. Laisse vide pour tout retirer.",
+    "saveTags": "Enregistrer les tags"
+  },
+  "appeal": {
+    "back": "← Appels",
+    "heading": "Appel ·",
+    "title": "Appel {code}",
+    "testCase": "(dossier de test)",
+    "testNotice": "Dossier de test créé avec /test : rien n’a été exécuté, l’accepter ne change rien.",
+    "givenBy": "Donné par",
+    "automatic": " (automatique, échelle d’avertissements)",
+    "review": "Examen indépendant",
+    "reviewNeeded": "Donné par {name}, il faut donc un deuxième avis",
+    "ladder": "Échelle d’avertissements",
+    "ladderValue": "{stage}, {count} avertissement(s) comptabilisé(s)",
+    "appealHead": "Appel ({status}) · déposé le {date} · en attente depuis {age}",
+    "answers": "Réponses",
+    "noAppeal": "Aucun appel sur ce dossier.",
+    "imageGone": "Image indisponible.",
+    "earlier": "Appels précédents sur ce dossier ({count})",
+    "byName": " par {name}",
+    "none": "Aucun.",
+    "others": "Autres dossiers ({count})",
+    "decide": "Décider",
+    "ownerOverride": "Tu as donné cette sanction. En tant que propriétaire du bot, tu peux quand même décider ; c’est enregistré comme une dérogation du propriétaire.",
+    "note": "Note (facultatif, visible dans le salon d’appel et le journal)",
+    "accept": "Accepter…",
+    "deny": "Refuser…"
+  },
+  "appealConfirm": {
+    "effect": {
+      "test": "Dossier de test : seule la fiche est clôturée.",
+      "ban": "Le membre est débanni (s’il l’est encore), reçoit un MP avec une invitation pour revenir, et le dossier est levé.",
+      "mute": "La sourdine du membre est retirée (si elle est encore active), il reçoit un MP, et le dossier est levé.",
+      "warn": "L’avertissement est retiré (le compteur de l’échelle baisse ; un bannissement automatique qu’il a causé est levé) et le membre reçoit un MP.",
+      "lifted": "Le dossier est levé et le membre reçoit un MP.",
+      "deny": "La sanction reste. Le membre reçoit un MP indiquant que l’appel est refusé."
+    },
+    "headingAccept": "Confirmer : accepter l’appel sur {code}",
+    "headingDeny": "Confirmer : refuser l’appel sur {code}",
+    "stage3": " Ce bannissement d’avertissement de palier 3 ne pourra alors plus faire l’objet d’un appel.",
+    "channel": "Le salon d’appel reçoit la décision et est supprimé 10 secondes plus tard (sa transcription va dans le journal de modération). Cette confirmation fonctionne une fois et expire dans 5 minutes.",
+    "accept": "Accepter l’appel",
+    "deny": "Refuser l’appel",
+    "title": "Confirmer l’appel {code}"
+  }
+}

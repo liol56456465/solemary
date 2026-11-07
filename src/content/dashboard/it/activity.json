@@ -1,0 +1,44 @@
+{
+  "chart": {
+    "aria": "{label} al giorno per {days} giorni, {total} in totale. La tabella qui sotto ha ogni giorno."
+  },
+  "page": {
+    "unreadable": "Non è stato possibile caricare i numeri (database). Ricarica la pagina per riprovare.",
+    "intro": "Gli ultimi {days} giorni in questo server (UTC). I messaggi vengono contati da oggi in poi: solo un numero al giorno, non chi li ha scritti né cosa.",
+    "inDays": "{sum} in {days} giorni",
+    "messages": "Messaggi",
+    "joinsLeaves": "Ingressi e uscite",
+    "joinedLeft": "{joins} entrati, {leaves} usciti",
+    "joins": "Ingressi",
+    "leaves": "Uscite",
+    "leavesLabel": "Uscite:",
+    "cases": "Casi",
+    "table": "Ogni giorno in tabella"
+  },
+  "col": {
+    "day": "Giorno",
+    "moderator": "Moderatore",
+    "total": "Totale",
+    "bans": "Ban",
+    "kicks": "Espulsioni",
+    "mutes": "Silenziamenti",
+    "warns": "Avvertimenti",
+    "removed": "Rimossi",
+    "rule": "Regola",
+    "actions": "Azioni",
+    "undone": "Annullate",
+    "undoneShare": "Quota annullata"
+  },
+  "analytics": {
+    "title": "Staff e automod",
+    "locked": "I casi per moderatore e quanto spesso ogni regola automod viene annullata sono inclusi in Mewvo Pro e Max, nel piano del proprietario del server.",
+    "plans": "Piani",
+    "unreadable": "Non è stato possibile caricare questi numeri (database). Ricarica la pagina per riprovare.",
+    "perModerator": "Casi per moderatore",
+    "lastDays": "ultimi {days} giorni",
+    "noCases": "Nessun caso da parte di persone in questo periodo.",
+    "rules": "Regole automod",
+    "tooStrict": "Una regola annullata spesso forse è troppo severa: valuta «Solo segnalare (non eliminare)» per lei.",
+    "noAutomod": "L’automod non ha fatto nulla in questo periodo."
+  }
+}

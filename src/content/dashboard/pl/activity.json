@@ -1,0 +1,44 @@
+{
+  "chart": {
+    "aria": "{label} dziennie przez {days} dni, łącznie {total}. Tabela poniżej ma każdy dzień."
+  },
+  "page": {
+    "unreadable": "Nie udało się wczytać liczb (baza danych). Odśwież stronę, żeby spróbować ponownie.",
+    "intro": "Ostatnie {days} dni na tym serwerze (UTC). Wiadomości są liczone od dziś: tylko liczba na dzień, nie kto je napisał ani co.",
+    "inDays": "{sum} w {days} dni",
+    "messages": "Wiadomości",
+    "joinsLeaves": "Dołączenia i wyjścia",
+    "joinedLeft": "dołączyło {joins}, wyszło {leaves}",
+    "joins": "Dołączenia",
+    "leaves": "Wyjścia",
+    "leavesLabel": "Wyjścia:",
+    "cases": "Sprawy",
+    "table": "Każdy dzień w tabeli"
+  },
+  "col": {
+    "day": "Dzień",
+    "moderator": "Moderator",
+    "total": "Razem",
+    "bans": "Bany",
+    "kicks": "Wyrzucenia",
+    "mutes": "Wyciszenia",
+    "warns": "Ostrzeżenia",
+    "removed": "Usunięte",
+    "rule": "Reguła",
+    "actions": "Akcje",
+    "undone": "Cofnięte",
+    "undoneShare": "Odsetek cofniętych"
+  },
+  "analytics": {
+    "title": "Ekipa i automoderacja",
+    "locked": "Sprawy na moderatora i to, jak często każda reguła automoderacji jest cofana, są w Mewvo Pro i Max, w planie właściciela serwera.",
+    "plans": "Plany",
+    "unreadable": "Nie udało się wczytać tych liczb (baza danych). Odśwież stronę, żeby spróbować ponownie.",
+    "perModerator": "Sprawy na moderatora",
+    "lastDays": "ostatnie {days} dni",
+    "noCases": "Brak spraw od ludzi w tym czasie.",
+    "rules": "Reguły automoderacji",
+    "tooStrict": "Reguła, która jest często cofana, może być zbyt surowa: rozważ dla niej „Tylko zgłaszaj (nie usuwaj)”.",
+    "noAutomod": "Automoderacja nic nie zrobiła w tym czasie."
+  }
+}

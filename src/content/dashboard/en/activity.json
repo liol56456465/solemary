@@ -1,0 +1,44 @@
+{
+  "chart": {
+    "aria": "{label} per day for {days} days, {total} in total. The table below has every day."
+  },
+  "page": {
+    "unreadable": "The numbers could not be loaded (database). Reload the page to try again.",
+    "intro": "The last {days} days in this server (UTC). Messages are counted from today on: only a number per day, not who wrote them or what.",
+    "inDays": "{sum} in {days} days",
+    "messages": "Messages",
+    "joinsLeaves": "Joins and leaves",
+    "joinedLeft": "{joins} joined, {leaves} left",
+    "joins": "Joins",
+    "leaves": "Leaves",
+    "leavesLabel": "Leaves:",
+    "cases": "Cases",
+    "table": "Every day as a table"
+  },
+  "col": {
+    "day": "Day",
+    "moderator": "Moderator",
+    "total": "Total",
+    "bans": "Bans",
+    "kicks": "Kicks",
+    "mutes": "Mutes",
+    "warns": "Warns",
+    "removed": "Removed",
+    "rule": "Rule",
+    "actions": "Actions",
+    "undone": "Undone",
+    "undoneShare": "Undone share"
+  },
+  "analytics": {
+    "title": "Staff and automod",
+    "locked": "Cases per moderator and how often each automod rule is undone come with Mewvo Pro and Max, on the server owner's plan.",
+    "plans": "Plans",
+    "unreadable": "These numbers could not be loaded (database). Reload the page to try again.",
+    "perModerator": "Cases per moderator",
+    "lastDays": "last {days} days",
+    "noCases": "No cases by people in this time.",
+    "rules": "Automod rules",
+    "tooStrict": "A rule that is undone often may be too strict: consider Report only (don't delete) for it.",
+    "noAutomod": "Automod took no action in this time."
+  }
+}

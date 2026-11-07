@@ -1,0 +1,174 @@
+{
+  "notice": {
+    "readOnly": "Sola lettura: la modifica dalla dashboard è disattivata (DASHBOARD_EDIT_ENABLED non è true).",
+    "viewOnly": "Solo visualizzazione: per cambiare le regole dei ruoli ti serve Amministratore nel server principale."
+  },
+  "trigger": {
+    "days_in_server": "Giorni nel server",
+    "level_reached": "Livello",
+    "has_role": "Ha un ruolo"
+  },
+  "form": {
+    "name": "Nome",
+    "namePlaceholder": "es. Habitué dopo 30 giorni",
+    "when": "Quando",
+    "threshold": "Giorni o livello",
+    "thresholdHint": "Giorni nel server (0 = all'ingresso, fino a {maxDays}) o il livello (1–{maxLevel}). Non usato per \"Ha un ruolo\".",
+    "triggerRole": "Ruolo di attivazione",
+    "triggerRoleNone": "Solo per \"Ha un ruolo\"",
+    "give": "Dai questo ruolo",
+    "choose": "Scegli…",
+    "giveHint": "Solo ruoli sotto Mewvo (e sotto il tuo ruolo più alto), non gestiti, senza permessi da staff.",
+    "removeWhenFalse": "Togli di nuovo il ruolo quando la condizione non vale più",
+    "removeHelp": "La rimozione vale anche per i membri che hanno avuto il ruolo a mano; un membro che corrisponde ancora a un'altra regola attiva per lo stesso ruolo lo tiene.",
+    "enabled": "Attiva la regola al salvataggio",
+    "nothingYet": "Per ora non cambia niente: la pagina successiva mostra quanti membri, e chi, la regola cambierebbe.",
+    "dryRun": "Prova"
+  },
+  "rules": {
+    "title": "Regole dei ruoli",
+    "intro": "Ruoli che Mewvo dà da solo: controllati ogni 10 minuti (al massimo {limit} cambi di ruolo per giro, uno alla volta) e subito quando un membro entra, sale di livello o riceve un ruolo.",
+    "levelingOff": "I livelli sono disattivati: i livelli non cambiano, quindi le regole sui livelli usano solo quelli già salvati.",
+    "heading": "Regole ({count} di {max})",
+    "rule": "Regola",
+    "state": "Stato",
+    "none": "Ancora nessuna regola dei ruoli.",
+    "keepRoles": "Disattivare o eliminare una regola lascia i ruoli che ha già dato.",
+    "editHeading": "Modifica \"{name}\"",
+    "newRule": "Nuova regola",
+    "full": "Questo server ha {max} regole, il massimo. Eliminane prima una.",
+    "cancelEdit": "Annulla modifica",
+    "onPaused": "Attiva, in pausa",
+    "on": "Attiva",
+    "off": "Disattivata",
+    "lastRun": "Ultimo giro {date}: +{added} −{removed}",
+    "lastFailed": ", {count} non riusciti",
+    "notRun": "Non ancora eseguita",
+    "turnOff": "Disattiva",
+    "turnOn": "Attiva…",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "deleteConfirm": "Eliminare la regola \"{name}\"? I ruoli che ha già dato restano."
+  },
+  "andMore": "… e altri {count}.",
+  "preview": {
+    "back": "← Regole dei ruoli",
+    "title": "Prova: {name}",
+    "nobody": "Nessuno.",
+    "wouldChange": {
+      "one": "Ora cambierebbe {count} membro: darebbe il ruolo a {add}, lo toglierebbe a {remove}. Ancora non è cambiato niente.",
+      "many": "Ora cambierebbe {count} membri: darebbe il ruolo a {add}, lo toglierebbe a {remove}. Ancora non è cambiato niente.",
+      "other": "Ora cambierebbe {count} membri: darebbe il ruolo a {add}, lo toglierebbe a {remove}. Ancora non è cambiato niente."
+    },
+    "savedOff": {
+      "one": "Salvata disattivata: non cambia niente finché non la attivi. Se fosse attiva ora, cambierebbe {count} membro.",
+      "many": "Salvata disattivata: non cambia niente finché non la attivi. Se fosse attiva ora, cambierebbe {count} membri.",
+      "other": "Salvata disattivata: non cambia niente finché non la attivi. Se fosse attiva ora, cambierebbe {count} membri."
+    },
+    "partial": "Contato su {cached} di {total} membri (l'elenco dei membri si sta ancora caricando); il giro vero considera tutti.",
+    "gets": "Ricevono il ruolo ({count})",
+    "loses": "Perdono il ruolo ({count})",
+    "nextRun": "I cambi li fa il prossimo giro (entro 10 minuti), al massimo {limit} per giro.",
+    "savedOffShort": "La regola viene salvata disattivata.",
+    "saveChanges": "Salva modifiche",
+    "saveRule": "Salva regola"
+  },
+  "chart": {
+    "label": {
+      "one": "Ingressi e uscite al giorno, ultimo {count} giorno: {joins} ingressi, {leaves} uscite",
+      "many": "Ingressi e uscite al giorno, ultimi {count} giorni: {joins} ingressi, {leaves} uscite",
+      "other": "Ingressi e uscite al giorno, ultimi {count} giorni: {joins} ingressi, {leaves} uscite"
+    },
+    "day": "{day}: {joins} entrati, {leaves} usciti",
+    "joined": "Entrati",
+    "left": "Usciti"
+  },
+  "insights": {
+    "title": "Statistiche dei membri",
+    "intro": "Chi arriva e chi va, chi è bloccato senza ruolo, chi continua ad avere casi.",
+    "partial": "Basato su {cached} di {total} membri: l'elenco dei membri si sta ancora caricando. Ricarica tra un minuto.",
+    "notLoaded": "Non è stato possibile caricare.",
+    "joinsTitle": {
+      "one": "Ingressi e uscite (ultimo {count} giorno)",
+      "many": "Ingressi e uscite (ultimi {count} giorni)",
+      "other": "Ingressi e uscite (ultimi {count} giorni)"
+    },
+    "joinsTitleShort": "Ingressi e uscite",
+    "joinsSummary": "{joined} entrati · {left} usciti · saldo {net}. Giorni in UTC.",
+    "countingSince": "Conteggio dal {date}; i giorni precedenti mostrano 0.",
+    "nothingYet": "Ancora niente contato: ingressi e uscite vengono registrati da adesso.",
+    "kept": {
+      "one": "Conservati {count} giorno.",
+      "many": "Conservati {count} giorni.",
+      "other": "Conservati {count} giorni."
+    },
+    "showTable": "Mostra come tabella",
+    "day": "Giorno",
+    "noRolesTitle": "Nuovi membri senza ruolo dopo 24 ore",
+    "noRolesHelp": "Entrati negli ultimi 30 giorni, più di 24 ore fa, e ancora senza ruolo (bot esclusi). Spesso: mai verificati.",
+    "joinedAt": "entrato il {date}",
+    "none": "Nessuno.",
+    "noGuild": "Il bot non vede il server principale in questo momento.",
+    "offendersTitle": {
+      "one": "Recidivi (ultimo {count} giorno)",
+      "many": "Recidivi (ultimi {count} giorni)",
+      "other": "Recidivi (ultimi {count} giorni)"
+    },
+    "offendersHelp": "Membri con due o più casi (casi rimossi, importati e di prova esclusi).",
+    "member": "Membro",
+    "cases": "Casi",
+    "last": "Ultimo",
+    "warns": { "one": "{count} avvertimento", "many": "{count} avvertimenti", "other": "{count} avvertimenti" },
+    "mutes": { "one": "{count} silenziamento", "many": "{count} silenziamenti", "other": "{count} silenziamenti" },
+    "kicks": { "one": "{count} espulsione", "many": "{count} espulsioni", "other": "{count} espulsioni" },
+    "bans": { "one": "{count} ban", "many": "{count} ban", "other": "{count} ban" },
+    "noOffenders": {
+      "one": "Nessuno ha due o più casi nell'ultimo {count} giorno.",
+      "many": "Nessuno ha due o più casi negli ultimi {count} giorni.",
+      "other": "Nessuno ha due o più casi negli ultimi {count} giorni."
+    },
+    "inactiveTitle": {
+      "one": "Membri inattivi (niente XP da {count}+ giorno)",
+      "many": "Membri inattivi (niente XP da {count}+ giorni)",
+      "other": "Membri inattivi (niente XP da {count}+ giorni)"
+    },
+    "inactiveOff": "Non disponibile: l'unico momento di attività che Mewvo salva è l'ultima volta che i livelli hanno dato XP a un membro, e i livelli sono disattivati. Attiva i livelli per iniziare a misurare; qui non si tira a indovinare.",
+    "inactiveHelp": {
+      "one": "Attività = l'ultima volta che i livelli hanno dato XP al membro (messaggi che danno XP). I membri nel server da meno di {count} giorno e i bot sono esclusi.",
+      "many": "Attività = l'ultima volta che i livelli hanno dato XP al membro (messaggi che danno XP). I membri nel server da meno di {count} giorni e i bot sono esclusi.",
+      "other": "Attività = l'ultima volta che i livelli hanno dato XP al membro (messaggi che danno XP). I membri nel server da meno di {count} giorni e i bot sono esclusi."
+    },
+    "noRecord": {
+      "one": "{count} membro non ha nessun dato sui livelli (mai guadagnato XP, o prima che i livelli fossero attivi) e non è in elenco.",
+      "many": "{count} membri non hanno nessun dato sui livelli (mai guadagnato XP, o prima che i livelli fossero attivi) e non sono in elenco.",
+      "other": "{count} membri non hanno nessun dato sui livelli (mai guadagnato XP, o prima che i livelli fossero attivi) e non sono in elenco."
+    },
+    "lastXp": "ultimi XP il {date}",
+    "noInactive": {
+      "one": "Nessuno con dati sui livelli è rimasto in silenzio per {count} giorno.",
+      "many": "Nessuno con dati sui livelli è rimasto in silenzio per {count} giorni.",
+      "other": "Nessuno con dati sui livelli è rimasto in silenzio per {count} giorni."
+    }
+  },
+  "route": {
+    "needName": "Dai un nome alla regola.",
+    "needTrigger": "Scegli quando vale la regola.",
+    "needRole": "Scegli il ruolo da dare.",
+    "needTriggerRole": "Scegli il ruolo di attivazione.",
+    "needLevel": "Indica il livello (un numero intero).",
+    "needDays": "Indica il numero di giorni (un numero intero).",
+    "notARule": "Non è una regola.",
+    "loadError": "Non è stato possibile caricare le regole dei ruoli (il database non risponde). Non è cambiato nulla; ricarica la pagina per riprovare.",
+    "gone": "Questa regola non esiste più.",
+    "goneNotSaved": "Questa regola non esiste più; non è stato salvato nulla.",
+    "full": "Questo server ha già {max} regole, il massimo.",
+    "dryRunExpired": "Questa prova è scaduta o è già stata usata. Non è stato salvato nulla; ripeti la prova.",
+    "savedOn": "Regola \"{name}\" salvata; il prossimo giro (entro 10 minuti) la applica.",
+    "savedOff": "Regola \"{name}\" salvata, disattivata.",
+    "createdOn": "Regola \"{name}\" creata; il prossimo giro (entro 10 minuti) la applica.",
+    "createdOff": "Regola \"{name}\" creata, disattivata.",
+    "turnedOff": "Regola \"{name}\" disattivata. I ruoli che ha già dato restano.",
+    "deleted": "Regola \"{name}\" eliminata. I ruoli che ha già dato restano.",
+    "partFailed": "Non è stato possibile caricare (il database non risponde). Ricarica la pagina per riprovare."
+  }
+}

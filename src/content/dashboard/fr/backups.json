@@ -1,0 +1,44 @@
+{
+  "none": "(aucune)",
+  "page": {
+    "intro": "Tous les paramètres du tableau de bord du serveur principal et du serveur d’assistance dans un seul fichier. Utilise-le avant de gros changements, ou pour changer d’hébergeur. Il ne contient jamais de secrets.",
+    "download": "Télécharger",
+    "downloadButton": "Télécharger les paramètres (.json)",
+    "load": "Charger une sauvegarde",
+    "loadHelp": "Rien ne change pour l’instant : tu vois d’abord chaque paramètre que le fichier modifierait, puis tu choisis de l’appliquer.",
+    "loadNeedsAdmin": "Charger une sauvegarde demande Administrateur et l’édition activée.",
+    "file": "Fichier de sauvegarde (.json)",
+    "check": "Vérifier ce fichier"
+  },
+  "preview": {
+    "title": "Vérifier la sauvegarde",
+    "wouldChange": {
+      "one": "{count} paramètre changerait",
+      "many": "{count} paramètres changeraient",
+      "other": "{count} paramètres changeraient"
+    },
+    "server": "Serveur",
+    "setting": "Paramètre",
+    "now": "Actuel",
+    "fromFile": "Du fichier",
+    "confirm": {
+      "one": "Appliquer {count} changement de la sauvegarde ?",
+      "many": "Appliquer {count} changements de la sauvegarde ?",
+      "other": "Appliquer {count} changements de la sauvegarde ?"
+    },
+    "apply": "Appliquer ces changements",
+    "cancel": "Annuler",
+    "once": "Cela fonctionne une fois et expire dans 10 minutes. Chaque changement va dans le journal d’audit.",
+    "same": "Le fichier correspond aux paramètres actuels. Rien ne changerait.",
+    "skipped": "Ignorés ({n})"
+  },
+  "route": {
+    "chooseFile": "Choisis un fichier de sauvegarde.",
+    "expired": "Cette vérification a expiré ou a déjà servi. Charge le fichier à nouveau.",
+    "applied": {
+      "one": "Sauvegarde appliquée : {count} paramètre modifié. Il est dans le journal d’audit.",
+      "many": "Sauvegarde appliquée : {count} paramètres modifiés. Ils sont dans le journal d’audit.",
+      "other": "Sauvegarde appliquée : {count} paramètres modifiés. Ils sont dans le journal d’audit."
+    }
+  }
+}

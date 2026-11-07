@@ -1,0 +1,44 @@
+{
+  "none": "(nessuno)",
+  "page": {
+    "intro": "Tutte le impostazioni della dashboard del server principale e del server di supporto in un unico file. Usalo prima di grandi modifiche o per passare a un nuovo hosting. Non contiene mai segreti.",
+    "download": "Scarica",
+    "downloadButton": "Scarica le impostazioni (.json)",
+    "load": "Carica un backup",
+    "loadHelp": "Per ora non cambia nulla: prima vedi ogni impostazione che il file cambierebbe, poi scegli se applicarlo.",
+    "loadNeedsAdmin": "Caricare un backup richiede Amministratore e la modifica attivata.",
+    "file": "File di backup (.json)",
+    "check": "Controlla questo file"
+  },
+  "preview": {
+    "title": "Controlla il backup",
+    "wouldChange": {
+      "one": "{count} impostazione cambierebbe",
+      "many": "{count} impostazioni cambierebbero",
+      "other": "{count} impostazioni cambierebbero"
+    },
+    "server": "Server",
+    "setting": "Impostazione",
+    "now": "Ora",
+    "fromFile": "Dal file",
+    "confirm": {
+      "one": "Applicare {count} modifica dal backup?",
+      "many": "Applicare {count} modifiche dal backup?",
+      "other": "Applicare {count} modifiche dal backup?"
+    },
+    "apply": "Applica queste modifiche",
+    "cancel": "Annulla",
+    "once": "Funziona una volta e scade tra 10 minuti. Ogni modifica finisce nel registro di controllo.",
+    "same": "Il file corrisponde alle impostazioni attuali. Non cambierebbe nulla.",
+    "skipped": "Saltati ({n})"
+  },
+  "route": {
+    "chooseFile": "Scegli un file di backup.",
+    "expired": "Questo controllo è scaduto o è già stato usato. Carica di nuovo il file.",
+    "applied": {
+      "one": "Backup applicato: {count} impostazione cambiata. È nel registro di controllo.",
+      "many": "Backup applicato: {count} impostazioni cambiate. Sono nel registro di controllo.",
+      "other": "Backup applicato: {count} impostazioni cambiate. Sono nel registro di controllo."
+    }
+  }
+}

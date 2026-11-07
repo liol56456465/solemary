@@ -1,0 +1,302 @@
+{
+  "test": "(test)",
+  "pager": {
+    "newer": "← Newer",
+    "older": "Older →"
+  },
+  "list": {
+    "title": "Cases",
+    "help": "Every enforcement action, newest first. Filter by member, moderator, type, status, tag or date.",
+    "count": {
+      "one": "{count} case",
+      "other": "{count} cases"
+    },
+    "exportPlan": "Case export (CSV) comes with Mewvo Normal and up, on the server owner's plan. {plans}",
+    "plans": "Plans",
+    "download": "Download CSV",
+    "exportDays": {
+      "one": "The last {count} days (Mewvo Normal).",
+      "other": "The last {count} days (Mewvo Normal)."
+    },
+    "exportAll": "The full history.",
+    "noMatch": "No cases match these filters.",
+    "clearFilters": "Clear filters",
+    "empty": "No cases yet. They show up here after the first warn, mute, kick or ban."
+  },
+  "filter": {
+    "member": "Member ID",
+    "moderator": "Moderator ID",
+    "type": "Type",
+    "status": "Status",
+    "any": "any",
+    "text": "Text",
+    "tag": "Tag",
+    "tagPlaceholder": "e.g. scam",
+    "from": "From",
+    "to": "To",
+    "search": "Search",
+    "clear": "Clear"
+  },
+  "type": {
+    "ban": "ban",
+    "kick": "kick",
+    "mute": "mute",
+    "warn": "warn"
+  },
+  "searchStatus": {
+    "active": "active",
+    "ended": "ended",
+    "revoked": "revoked",
+    "voided": "voided"
+  },
+  "saved": {
+    "label": "Saved:",
+    "delete": "(delete)",
+    "deleteLabel": "Delete saved search {name}",
+    "saveAs": "Save this search as",
+    "namePlaceholder": "e.g. scam this month",
+    "save": "Save"
+  },
+  "bulk": {
+    "with": "With the ticked cases",
+    "tagAdd": "Add a tag",
+    "tagRemove": "Remove a tag",
+    "void": "Remove them (a mistake, they stop counting)",
+    "reason": "Reason (for removing; the members see it)",
+    "apply": "Apply",
+    "help": "Tags: up to 25 cases at once. Removing: up to 10, and each member gets the usual DM. Removing shows a confirm page first."
+  },
+  "table": {
+    "select": "Select",
+    "selectCase": "Select case {code}",
+    "case": "Case",
+    "type": "Type",
+    "member": "Member",
+    "moderator": "Moderator",
+    "reason": "Reason",
+    "date": "Date",
+    "status": "Status"
+  },
+  "status": {
+    "voided": "removed (a mistake)",
+    "liftedByAppeal": "lifted by appeal",
+    "reversed": "reversed by a moderator",
+    "lifted": "lifted early",
+    "appealPending": "appeal pending",
+    "activeAppealDenied": "active, appeal denied",
+    "expired": "expired",
+    "active": "active",
+    "ended": "ended"
+  },
+  "appealStatus": {
+    "pending": "pending",
+    "accepted": "accepted",
+    "denied": "denied"
+  },
+  "action": {
+    "ban": "Ban",
+    "kick": "Kick",
+    "mute": "Mute",
+    "warn": "Warn",
+    "unban": "Unban",
+    "unmute": "Unmute",
+    "removewarn": "Remove warn"
+  },
+  "actionVerb": {
+    "ban": "ban",
+    "kick": "kick",
+    "mute": "mute",
+    "warn": "warn",
+    "unban": "unban",
+    "unmute": "unmute",
+    "removewarn": "remove warn",
+    "timeout": "time out"
+  },
+  "stage": {
+    "none": "0 of 3 (no warning ban yet)",
+    "permanent": "{n} of 3 (permanent ban)",
+    "days": {
+      "one": "{n} of 3 ({count}-day ban)",
+      "other": "{n} of 3 ({count}-day ban)"
+    },
+    "label": "Warning stage {stage}"
+  },
+  "duration": {
+    "permanent": "Permanent",
+    "permanentLower": "permanent",
+    "underMinute": "less than a minute",
+    "month": {
+      "one": "{count} month",
+      "other": "{count} months"
+    },
+    "day": {
+      "one": "{count} day",
+      "other": "{count} days"
+    },
+    "hour": {
+      "one": "{count} hour",
+      "other": "{count} hours"
+    },
+    "minute": {
+      "one": "{count} minute",
+      "other": "{count} minutes"
+    }
+  },
+  "age": {
+    "minutes": "{n} min",
+    "hours": "{n} h",
+    "days": "{n} d"
+  },
+  "warns": {
+    "of": "{n} of {max}",
+    "nextBans": "{n} (next warn bans)"
+  },
+  "next": {
+    "would": "It would be warning {n} of {max}.",
+    "oneAfter": "The one after it would mean an automatic ban ({ban}).",
+    "moreAfter": {
+      "one": "{count} more after it would mean an automatic ban ({ban}).",
+      "other": "{count} more after it would mean an automatic ban ({ban})."
+    },
+    "limit": "It would reach the warning limit: an automatic ban ({ban}, warning stage {stage} of 3)."
+  },
+  "settings": {
+    "title": "Settings",
+    "setting": "Setting",
+    "value": "Value",
+    "source": {
+      "title": "Source",
+      "database": "saved",
+      "env": "from env (seed)",
+      "default": "built-in default"
+    }
+  },
+  "evidence": {
+    "imageAlt": "Evidence image {id}",
+    "imageGone": "Image not available (the stored message is gone)."
+  },
+  "detail": {
+    "back": "← Cases",
+    "case": "Case",
+    "title": "Case {code}",
+    "name": "Name",
+    "allTheirCases": "all their cases",
+    "automatic": " (automatic)",
+    "created": "Created",
+    "duration": "Duration",
+    "ends": "Ends",
+    "appealDeadline": "Appeal deadline",
+    "canAppeal": "Can they appeal?",
+    "yes": "Yes",
+    "no": "No",
+    "yesLower": "yes",
+    "noLower": "no",
+    "dmDelivered": "DM delivered",
+    "stageAfter": "Warning stage after",
+    "tags": "Tags",
+    "none": "none",
+    "liftedEarly": "Lifted early",
+    "removed": "Removed",
+    "history": "History ({count})",
+    "when": "When",
+    "by": "By",
+    "field": "Field",
+    "old": "Old",
+    "new": "New",
+    "neverEdited": "Never edited.",
+    "notes": "Staff notes ({count})",
+    "noNotes": "No notes. Only staff can see notes.",
+    "evidence": "Evidence ({count})",
+    "noEvidence": "No evidence attached.",
+    "appeals": "Appeals ({count})",
+    "filed": "Filed",
+    "decided": "Decided",
+    "note": "Note",
+    "noAppeals": "No appeals."
+  },
+  "appeals": {
+    "pageTitle": "Appeals",
+    "title": "Pending appeals ({count})",
+    "help": "Appeals waiting for a decision, oldest first. Amber after a day, red after three.",
+    "waiting": "Waiting",
+    "secondReviewer": "Needs second reviewer",
+    "secondReviewerTitle": "You issued this punishment, so another staff member has to decide this appeal.",
+    "review": "Review and decide",
+    "open": "Open",
+    "decideHere": "Decide here or in Discord (Accept / Deny on the appeal message): the effects are the same.",
+    "adminsDecide": "Administrators decide appeals here (with editing on) or in Discord.",
+    "empty": "No pending appeals. New appeals show up here and in the appeal channels in Discord."
+  },
+  "change": {
+    "title": "Change this case",
+    "removedNoEdit": "Removed cases can no longer be edited.",
+    "edit": "Edit",
+    "newReason": "New reason",
+    "newDuration": "New duration",
+    "unchanged": "unchanged",
+    "durationHint": "Total from when it was given, e.g. 7d, 1mo.",
+    "durationHintBan": "Total from when it was given, e.g. 7d, 1mo, permanent.",
+    "save": "Save changes",
+    "remove": "Remove case",
+    "removeHelp": "For a case given by mistake: it stops counting. This lifts what is still in effect (unban, unmute, warning removed, warning stage stepped back) and DMs the member the reason. The case stays on record, marked Removed.",
+    "removeReason": "Reason (shown to the member)",
+    "removeNext": "Nothing happens yet: the next page shows what will be lifted, and you confirm there.",
+    "removeSubmit": "Remove case…",
+    "link": "Link (e.g. a Discord message link: its text is saved)",
+    "noteOptional": "Note (optional)",
+    "addEvidence": "Add evidence",
+    "image": "Image (PNG, JPEG, GIF or WebP, up to 8 MB)",
+    "upload": "Upload image",
+    "rehosted": "Images are re-hosted in the evidence channel, as with /case evidence add.",
+    "removeEvidence": "Remove #{id}",
+    "removeEvidenceConfirm": "Remove evidence #{id}?",
+    "notesTags": "Notes and tags",
+    "staffOnly": "Only staff see these. The member never does.",
+    "newNote": "New note",
+    "tagsHint": "Comma-separated. Leave empty to remove all.",
+    "saveTags": "Save tags"
+  },
+  "appeal": {
+    "back": "← Appeals",
+    "heading": "Appeal ·",
+    "title": "Appeal {code}",
+    "testCase": "(test case)",
+    "testNotice": "Test case created with /test: nothing was executed, accepting it changes nothing.",
+    "givenBy": "Given by",
+    "automatic": " (automatic, warn ladder)",
+    "review": "Independent review",
+    "reviewNeeded": "Issued by {name}, so it needs a second reviewer",
+    "ladder": "Warn ladder",
+    "ladderValue": "{stage}, {count} counted warn(s)",
+    "appealHead": "Appeal ({status}) · filed {date} · waiting {age}",
+    "answers": "Answers",
+    "noAppeal": "No appeal on this case.",
+    "imageGone": "Image not available.",
+    "earlier": "Earlier appeals on this case ({count})",
+    "byName": " by {name}",
+    "none": "None.",
+    "others": "Other cases ({count})",
+    "decide": "Decide",
+    "ownerOverride": "You issued this punishment. As a bot owner you may decide anyway; it is logged as an owner override.",
+    "note": "Note (optional, shown in the appeal channel and the log)",
+    "accept": "Accept…",
+    "deny": "Deny…"
+  },
+  "appealConfirm": {
+    "effect": {
+      "test": "Test case: only the record is closed.",
+      "ban": "The member is unbanned (if still banned), DMed with an invite back, and the case is lifted.",
+      "mute": "The member is unmuted (if still muted), DMed, and the case is lifted.",
+      "warn": "The warning is removed (the ladder count drops; an automatic ban it caused is lifted) and the member is DMed.",
+      "lifted": "The case is lifted and the member is DMed.",
+      "deny": "The punishment stays. The member is DMed that the appeal was denied."
+    },
+    "headingAccept": "Confirm: accept the appeal on {code}",
+    "headingDeny": "Confirm: deny the appeal on {code}",
+    "stage3": " This stage-3 warning ban can then no longer be appealed.",
+    "channel": "The appeal channel gets the decision and is deleted 10 seconds later (its transcript goes to the mod log). This confirmation works once and expires in 5 minutes.",
+    "accept": "Accept appeal",
+    "deny": "Deny appeal",
+    "title": "Confirm appeal {code}"
+  }
+}

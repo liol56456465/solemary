@@ -1,0 +1,101 @@
+{
+  "title": "Staff",
+  "help": "Moderation per moderator, when the team is active, weekly activity, staff discipline and safety limit blocks (too many bans or kicks in 10 minutes).",
+  "settings": "Enforcement settings",
+  "period": {
+    "7d": "last 7 days",
+    "30d": "last 30 days",
+    "90d": "last 90 days",
+    "all": "all time"
+  },
+  "stats": {
+    "period": "Period",
+    "title": "Moderation stats · {period}",
+    "moderator": "Moderator",
+    "total": "Total",
+    "bans": "Bans",
+    "kicks": "Kicks",
+    "mutes": "Mutes",
+    "warns": "Warns",
+    "accepted": "Appeals accepted",
+    "denied": "Appeals denied",
+    "removed": "Removed",
+    "note": "Automatic (bot) and test cases are left out; removed cases are not in the totals.",
+    "empty": "No moderation actions in this period."
+  },
+  "coverage": {
+    "period": "Coverage period",
+    "days": {
+      "one": "{count} days",
+      "other": "{count} days"
+    },
+    "title": {
+      "one": "Coverage · last {count} days ({zone})",
+      "other": "Coverage · last {count} days ({zone})"
+    },
+    "incidents": "Incidents (cases created, automatic included): {count}",
+    "staff": "Staff activity (cases by human moderators + appeals decided): {count}",
+    "note": "Stronger shade = busier, in quarter steps up to the busiest hour. Columns are hours 0–23 in {zone} (the server's birthday time zone, set under Birthdays; UTC when none is set).",
+    "gaps": "Most under-covered slots",
+    "incidentCount": {
+      "one": "{count} incident",
+      "other": "{count} incidents"
+    },
+    "actionCount": {
+      "one": "{count} staff action",
+      "other": "{count} staff actions"
+    },
+    "none": "No incidents in this period."
+  },
+  "blocks": {
+    "title": "Safety limit blocks ({count})",
+    "until": "Blocked until",
+    "count": "Bans/kicks",
+    "lift": "Lift block",
+    "ownersOnly": "Only the bot owners can lift a block (like /staff restore).",
+    "none": "Nobody is blocked."
+  },
+  "activity": {
+    "week": "Week",
+    "weeks": {
+      "this": "This week",
+      "last": "Last week"
+    },
+    "error": "Activity could not be loaded (database unavailable).",
+    "member": "Staff member",
+    "messages": "Messages",
+    "actions": "Actions",
+    "appeals": "Appeals",
+    "reviews": "Reviews",
+    "tickets": "Tickets",
+    "owner": "owner",
+    "inactive": "Inactive",
+    "warnings": "Warnings",
+    "note": "Inactive = no moderation work and under 20 messages. Actions are cases they created; reviews are automod and verification cards.",
+    "none": "No staff found.",
+    "title": "Staff activity · week of {start}"
+  },
+  "discipline": {
+    "title": "Staff discipline",
+    "ownersOnly": "Only the bot owners can warn staff members, see their staff warnings or give back removed staff roles (like /staff warn, warnings and restore).",
+    "reason": "Reason: which admin rule they broke (sent to them)",
+    "give": "Give staff warning",
+    "giveConfirm": "Give this staff member a warning? At {limit} active warnings their staff roles are removed.",
+    "showOf": "Show warnings of",
+    "warningsError": "Warnings could not be loaded (database unavailable).",
+    "warningsOf": "Staff warnings: {name}",
+    "given": "Given",
+    "active": "active",
+    "expired": "expired",
+    "removedError": "Removed staff roles could not be loaded (database unavailable).",
+    "removedRoles": "Removed roles",
+    "why": "Why",
+    "restore": "Restore roles",
+    "restoreConfirm": "Give these staff roles back?",
+    "noneSaved": "No removed staff roles are saved.",
+    "restoreOf": "Restore roles of",
+    "help": "Staff warnings expire; at {limit} active warnings the staff roles are removed (the staff guard removes them too). The member is DMed and the mod log gets a line.",
+    "removedTitle": "Removed staff roles",
+    "restoreNote": "Restoring gives back the saved roles the bot can still manage. A safety limit block (too many bans or kicks in 10 minutes) is lifted separately (Safety limit blocks)."
+  }
+}

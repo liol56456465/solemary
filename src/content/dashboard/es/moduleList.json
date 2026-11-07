@@ -1,0 +1,54 @@
+{
+  "page": {
+    "title": "Módulos",
+    "intro": "Todas las partes de Mewvo en un solo lugar. {on} de {total} módulos con estado activado/desactivado están activados; abre un módulo para cambiar sus ajustes.",
+    "matches": {
+      "one": "{count} módulo coincide",
+      "many": "{count} módulos coinciden",
+      "other": "{count} módulos coinciden"
+    },
+    "showAll": "Mostrar todos",
+    "readOnly": "Solo lectura: la edición desde el panel está desactivada (DASHBOARD_EDIT_ENABLED no es true).",
+    "noMatch": "Ningún módulo coincide. Prueba otra palabra o mira todos los módulos.",
+    "noneOn": "No hay módulos activados.",
+    "noneOff": "No hay módulos desactivados."
+  },
+  "filter": {
+    "label": "Filtrar módulos",
+    "all": "Todos",
+    "on": "Activados",
+    "off": "Desactivados"
+  },
+  "col": {
+    "module": "Módulo",
+    "what": "Qué hace",
+    "state": "Estado"
+  },
+  "state": {
+    "on": "Activado",
+    "off": "Desactivado",
+    "needsSetup": "falta configurar ({n})",
+    "setUp": "Configurado"
+  },
+  "summary": {
+    "tickets": "Los miembros piden ayuda al staff en un canal privado.",
+    "welcome": "Saluda a los nuevos, despide a quien se va, da un rol inicial.",
+    "leveling": "Los miembros suben de nivel chateando y reciben roles por ello.",
+    "reaction-roles": "Menús donde los miembros eligen sus propios roles.",
+    "messages": "Publica anuncios, encuestas y cuentas atrás como Mewvo.",
+    "giveaways": "Sortea premios entre miembros al azar.",
+    "birthdays": "Felicita a los miembros por su cumpleaños.",
+    "applications": "Los miembros solicitan un rol respondiendo preguntas.",
+    "community": "Sugerencias, starboard, notas fijas, respuestas guardadas, YouTube.",
+    "join-to-create": "Canales de voz que aparecen cuando hacen falta y desaparecen al quedar vacíos.",
+    "automod": "Detiene el spam, las palabrotas y los raids por sí solo.",
+    "enforcement": "Cómo funcionan las advertencias, silencios y baneos, y cómo apelan los miembros.",
+    "logging": "Un registro de lo que pasa en el servidor, para el staff.",
+    "verification": "Los nuevos miembros confirman que son reales antes de poder chatear.",
+    "counters": "Contadores de miembros en directo y un juego de contar.",
+    "support": "Donde los miembros baneados aún pueden apelar.",
+    "rules": "Las reglas de tu servidor, en una página web y en los mensajes de sanción.",
+    "appearance": "Dale aquí a Mewvo su propio nombre e imagen (Pro y Max).",
+    "commands": "Activa o desactiva comandos sueltos o grupos de comandos."
+  }
+}

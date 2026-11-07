@@ -1,0 +1,174 @@
+{
+  "notice": {
+    "readOnly": "Solo lectura: la edición desde el panel está desactivada (DASHBOARD_EDIT_ENABLED no es true).",
+    "viewOnly": "Solo ver: necesitas Administrador en el servidor principal para cambiar las reglas de roles."
+  },
+  "trigger": {
+    "days_in_server": "Días en el servidor",
+    "level_reached": "Nivel",
+    "has_role": "Tiene un rol"
+  },
+  "form": {
+    "name": "Nombre",
+    "namePlaceholder": "p. ej. Habituales tras 30 días",
+    "when": "Cuándo",
+    "threshold": "Días o nivel",
+    "thresholdHint": "Días en el servidor (0 = al entrar, hasta {maxDays}) o el nivel (1–{maxLevel}). No se usa para \"Tiene un rol\".",
+    "triggerRole": "Rol que activa",
+    "triggerRoleNone": "Solo para \"Tiene un rol\"",
+    "give": "Dar este rol",
+    "choose": "Elegir…",
+    "giveHint": "Solo roles por debajo de Mewvo (y de tu rol más alto), no gestionados, sin permisos de staff.",
+    "removeWhenFalse": "Quitar el rol otra vez cuando la condición deje de cumplirse",
+    "removeHelp": "Quitarlo también afecta a quienes recibieron el rol a mano; un miembro que siga cumpliendo otra regla activa para el mismo rol lo conserva.",
+    "enabled": "Activar la regla al guardar",
+    "nothingYet": "Todavía no cambia nada: la página siguiente muestra cuántos miembros, y quiénes, cambiaría la regla.",
+    "dryRun": "Prueba"
+  },
+  "rules": {
+    "title": "Reglas de roles",
+    "intro": "Roles que Mewvo da por sí solo: se revisan cada 10 minutos (como mucho {limit} cambios de rol por pasada, uno a uno) y al momento cuando un miembro entra, sube de nivel o recibe un rol.",
+    "levelingOff": "Los niveles están desactivados: los niveles no cambian, así que las reglas de nivel solo usan los niveles ya guardados.",
+    "heading": "Reglas ({count} de {max})",
+    "rule": "Regla",
+    "state": "Estado",
+    "none": "Todavía no hay reglas de roles.",
+    "keepRoles": "Desactivar o borrar una regla conserva los roles que ya dio.",
+    "editHeading": "Editar \"{name}\"",
+    "newRule": "Nueva regla",
+    "full": "Este servidor tiene {max} reglas, el máximo. Borra una primero.",
+    "cancelEdit": "Cancelar edición",
+    "onPaused": "Activada, en pausa",
+    "on": "Activada",
+    "off": "Desactivada",
+    "lastRun": "Última pasada {date}: +{added} −{removed}",
+    "lastFailed": ", {count} fallidos",
+    "notRun": "Aún no se ha ejecutado",
+    "turnOff": "Desactivar",
+    "turnOn": "Activar…",
+    "edit": "Editar",
+    "delete": "Borrar",
+    "deleteConfirm": "¿Borrar la regla \"{name}\"? Los roles que ya dio se quedan."
+  },
+  "andMore": "… y {count} más.",
+  "preview": {
+    "back": "← Reglas de roles",
+    "title": "Prueba: {name}",
+    "nobody": "Nadie.",
+    "wouldChange": {
+      "one": "Cambiaría {count} miembro ahora: daría el rol a {add} y se lo quitaría a {remove}. Todavía no se ha cambiado nada.",
+      "many": "Cambiaría {count} miembros ahora: daría el rol a {add} y se lo quitaría a {remove}. Todavía no se ha cambiado nada.",
+      "other": "Cambiaría {count} miembros ahora: daría el rol a {add} y se lo quitaría a {remove}. Todavía no se ha cambiado nada."
+    },
+    "savedOff": {
+      "one": "Guardada desactivada: no cambia nada hasta que la actives. Si estuviera activa ahora, cambiaría {count} miembro.",
+      "many": "Guardada desactivada: no cambia nada hasta que la actives. Si estuviera activa ahora, cambiaría {count} miembros.",
+      "other": "Guardada desactivada: no cambia nada hasta que la actives. Si estuviera activa ahora, cambiaría {count} miembros."
+    },
+    "partial": "Contado con {cached} de {total} miembros (la lista de miembros aún se está cargando); la pasada real incluye a todos.",
+    "gets": "Reciben el rol ({count})",
+    "loses": "Pierden el rol ({count})",
+    "nextRun": "Los cambios los hace la próxima pasada (en 10 minutos como mucho), como máximo {limit} por pasada.",
+    "savedOffShort": "La regla se guarda desactivada.",
+    "saveChanges": "Guardar cambios",
+    "saveRule": "Guardar regla"
+  },
+  "chart": {
+    "label": {
+      "one": "Entradas y salidas por día, último {count} día: {joins} entradas, {leaves} salidas",
+      "many": "Entradas y salidas por día, últimos {count} días: {joins} entradas, {leaves} salidas",
+      "other": "Entradas y salidas por día, últimos {count} días: {joins} entradas, {leaves} salidas"
+    },
+    "day": "{day}: {joins} entraron, {leaves} salieron",
+    "joined": "Entraron",
+    "left": "Salieron"
+  },
+  "insights": {
+    "title": "Estadísticas de miembros",
+    "intro": "Quién llega y quién se va, quién se queda sin rol, quién sigue acumulando casos.",
+    "partial": "Basado en {cached} de {total} miembros: la lista de miembros aún se está cargando. Recarga en un minuto.",
+    "notLoaded": "No se pudo cargar.",
+    "joinsTitle": {
+      "one": "Entradas y salidas (último {count} día)",
+      "many": "Entradas y salidas (últimos {count} días)",
+      "other": "Entradas y salidas (últimos {count} días)"
+    },
+    "joinsTitleShort": "Entradas y salidas",
+    "joinsSummary": "{joined} entraron · {left} salieron · neto {net}. Días en UTC.",
+    "countingSince": "Contando desde el {date}; los días anteriores muestran 0.",
+    "nothingYet": "Todavía no hay nada contado: las entradas y salidas se registran a partir de ahora.",
+    "kept": {
+      "one": "Se guarda {count} día.",
+      "many": "Se guardan {count} días.",
+      "other": "Se guardan {count} días."
+    },
+    "showTable": "Ver como tabla",
+    "day": "Día",
+    "noRolesTitle": "Miembros nuevos sin rol después de 24 horas",
+    "noRolesHelp": "Entraron en los últimos 30 días, hace más de 24 horas, y siguen sin rol (sin contar bots). A menudo: nunca se verificaron.",
+    "joinedAt": "entró el {date}",
+    "none": "Ninguno.",
+    "noGuild": "El bot no ve el servidor principal ahora mismo.",
+    "offendersTitle": {
+      "one": "Reincidentes (último {count} día)",
+      "many": "Reincidentes (últimos {count} días)",
+      "other": "Reincidentes (últimos {count} días)"
+    },
+    "offendersHelp": "Miembros con dos casos o más (sin contar casos retirados, importados y de prueba).",
+    "member": "Miembro",
+    "cases": "Casos",
+    "last": "Último",
+    "warns": { "one": "{count} advertencia", "many": "{count} advertencias", "other": "{count} advertencias" },
+    "mutes": { "one": "{count} silenciamiento", "many": "{count} silenciamientos", "other": "{count} silenciamientos" },
+    "kicks": { "one": "{count} expulsión", "many": "{count} expulsiones", "other": "{count} expulsiones" },
+    "bans": { "one": "{count} baneo", "many": "{count} baneos", "other": "{count} baneos" },
+    "noOffenders": {
+      "one": "Nadie tiene dos casos o más en el último {count} día.",
+      "many": "Nadie tiene dos casos o más en los últimos {count} días.",
+      "other": "Nadie tiene dos casos o más en los últimos {count} días."
+    },
+    "inactiveTitle": {
+      "one": "Miembros inactivos (sin XP desde hace {count}+ día)",
+      "many": "Miembros inactivos (sin XP desde hace {count}+ días)",
+      "other": "Miembros inactivos (sin XP desde hace {count}+ días)"
+    },
+    "inactiveOff": "No disponible: la única hora de actividad que guarda Mewvo es la última vez que los niveles dieron XP a un miembro, y los niveles están desactivados. Activa los niveles para empezar a medir; aquí no se adivina nada.",
+    "inactiveHelp": {
+      "one": "Actividad = la última vez que los niveles dieron XP al miembro (mensajes que dan XP). Se dejan fuera los miembros que llevan menos de {count} día en el servidor y los bots.",
+      "many": "Actividad = la última vez que los niveles dieron XP al miembro (mensajes que dan XP). Se dejan fuera los miembros que llevan menos de {count} días en el servidor y los bots.",
+      "other": "Actividad = la última vez que los niveles dieron XP al miembro (mensajes que dan XP). Se dejan fuera los miembros que llevan menos de {count} días en el servidor y los bots."
+    },
+    "noRecord": {
+      "one": "{count} miembro no tiene ningún registro de niveles (nunca ganó XP, o fue antes de activar los niveles) y no aparece.",
+      "many": "{count} miembros no tienen ningún registro de niveles (nunca ganaron XP, o fue antes de activar los niveles) y no aparecen.",
+      "other": "{count} miembros no tienen ningún registro de niveles (nunca ganaron XP, o fue antes de activar los niveles) y no aparecen."
+    },
+    "lastXp": "último XP el {date}",
+    "noInactive": {
+      "one": "Nadie con registro de niveles ha estado callado durante {count} día.",
+      "many": "Nadie con registro de niveles ha estado callado durante {count} días.",
+      "other": "Nadie con registro de niveles ha estado callado durante {count} días."
+    }
+  },
+  "route": {
+    "needName": "Ponle un nombre a la regla.",
+    "needTrigger": "Elige cuándo se aplica la regla.",
+    "needRole": "Elige el rol que se dará.",
+    "needTriggerRole": "Elige el rol que activa.",
+    "needLevel": "Indica el nivel (un número entero).",
+    "needDays": "Indica el número de días (un número entero).",
+    "notARule": "No es una regla.",
+    "loadError": "No se pudieron cargar las reglas de roles (la base de datos no responde). No se cambió nada; recarga la página para volver a intentarlo.",
+    "gone": "Esa regla ya no existe.",
+    "goneNotSaved": "Esa regla ya no existe; no se guardó nada.",
+    "full": "Este servidor ya tiene {max} reglas, el máximo.",
+    "dryRunExpired": "Esta prueba caducó o ya se usó. No se guardó nada; haz la prueba otra vez.",
+    "savedOn": "Regla \"{name}\" guardada; la próxima pasada (en 10 minutos como mucho) la aplica.",
+    "savedOff": "Regla \"{name}\" guardada, desactivada.",
+    "createdOn": "Regla \"{name}\" creada; la próxima pasada (en 10 minutos como mucho) la aplica.",
+    "createdOff": "Regla \"{name}\" creada, desactivada.",
+    "turnedOff": "Regla \"{name}\" desactivada. Los roles que ya dio se quedan.",
+    "deleted": "Regla \"{name}\" borrada. Los roles que ya dio se quedan.",
+    "partFailed": "No se pudo cargar (la base de datos no responde). Recarga la página para volver a intentarlo."
+  }
+}

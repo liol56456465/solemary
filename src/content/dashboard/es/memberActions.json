@@ -1,0 +1,60 @@
+{
+  "joined": {
+    "any": "Cualquier momento",
+    "24h": "Últimas 24 horas",
+    "7d": "Últimos 7 días",
+    "30d": "Últimos 30 días",
+    "older": "Hace más de 30 días"
+  },
+  "state": {
+    "any": "Todos",
+    "sanction": "Silenciados ahora",
+    "warned": "Con advertencias que cuentan",
+    "noroles": "Sin roles",
+    "humans": "Solo personas",
+    "bots": "Solo bots"
+  },
+  "sort": {
+    "joined_desc": "Más recientes primero",
+    "joined_asc": "Más antiguos primero",
+    "name": "Nombre A–Z"
+  },
+  "timeout": {
+    "60s": "60 segundos",
+    "5m": "5 minutos",
+    "10m": "10 minutos",
+    "1h": "1 hora",
+    "1d": "1 día",
+    "1w": "1 semana",
+    "28d": "28 días"
+  },
+  "bulk": {
+    "role-add": "Dar un rol",
+    "role-remove": "Quitar un rol",
+    "timeout": "Aislar temporalmente",
+    "kick": "Expulsar",
+    "ban": "Banear"
+  },
+  "problem": {
+    "notInServer": "Ese usuario no está en el servidor.",
+    "serverOwner": "El dueño del servidor no se puede cambiar desde aquí.",
+    "itself": "Mewvo no puede cambiarse a sí mismo.",
+    "yourself": "No puedes cambiar tus propios roles ni tu aislamiento desde aquí.",
+    "thisMember": "Este miembro",
+    "aboveBot": "{name} tiene un rol igual o superior al rol más alto de Mewvo, así que Discord no deja que el bot lo cambie.",
+    "aboveYou": "{name} tiene un rol igual o superior a tu rol más alto.",
+    "roleGone": "Ese rol ya no existe.",
+    "everyone": "El rol @everyone no se puede dar ni quitar.",
+    "managed": "@{role} lo gestiona una integración o un bot; Discord no permite cambiarlo a mano.",
+    "roleAboveBot": "@{role} no está por debajo del rol más alto de Mewvo, así que Discord no deja que el bot lo dé o lo quite.",
+    "roleAboveYou": "@{role} no está por debajo de tu rol más alto.",
+    "staffRole": "@{role} tiene permisos de staff ({permissions}); solo el dueño del servidor o los dueños del bot pueden darlo o quitarlo aquí."
+  },
+  "skip": {
+    "hasRole": "ya tiene @{role}",
+    "lacksRole": "no tiene @{role}",
+    "noLength": "no se eligió la duración del aislamiento",
+    "admin": "tiene Administrador (Discord no permite aislarlo)",
+    "guard": "límite de seguridad: no se permiten más baneos/expulsiones en esta ventana de 10 minutos"
+  }
+}

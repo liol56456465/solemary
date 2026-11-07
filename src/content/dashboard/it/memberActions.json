@@ -1,0 +1,60 @@
+{
+  "joined": {
+    "any": "Qualsiasi momento",
+    "24h": "Ultime 24 ore",
+    "7d": "Ultimi 7 giorni",
+    "30d": "Ultimi 30 giorni",
+    "older": "Più di 30 giorni fa"
+  },
+  "state": {
+    "any": "Tutti",
+    "sanction": "Silenziati ora",
+    "warned": "Con avvertimenti conteggiati",
+    "noroles": "Senza ruoli",
+    "humans": "Solo persone",
+    "bots": "Solo bot"
+  },
+  "sort": {
+    "joined_desc": "Prima i più recenti",
+    "joined_asc": "Prima i più vecchi",
+    "name": "Nome A–Z"
+  },
+  "timeout": {
+    "60s": "60 secondi",
+    "5m": "5 minuti",
+    "10m": "10 minuti",
+    "1h": "1 ora",
+    "1d": "1 giorno",
+    "1w": "1 settimana",
+    "28d": "28 giorni"
+  },
+  "bulk": {
+    "role-add": "Dai un ruolo",
+    "role-remove": "Togli un ruolo",
+    "timeout": "Metti in timeout",
+    "kick": "Espelli",
+    "ban": "Banna"
+  },
+  "problem": {
+    "notInServer": "Questo utente non è nel server.",
+    "serverOwner": "Il proprietario del server non può essere modificato da qui.",
+    "itself": "Mewvo non può modificare se stesso.",
+    "yourself": "Non puoi modificare i tuoi ruoli o il tuo timeout da qui.",
+    "thisMember": "Questo membro",
+    "aboveBot": "{name} ha un ruolo pari o superiore al ruolo più alto di Mewvo, quindi Discord non lascia che il bot lo modifichi.",
+    "aboveYou": "{name} ha un ruolo pari o superiore al tuo ruolo più alto.",
+    "roleGone": "Questo ruolo non esiste più.",
+    "everyone": "Il ruolo @everyone non può essere dato né tolto.",
+    "managed": "@{role} è gestito da un'integrazione o da un bot; Discord non permette di cambiarlo a mano.",
+    "roleAboveBot": "@{role} non è sotto il ruolo più alto di Mewvo, quindi Discord non lascia che il bot lo dia o lo tolga.",
+    "roleAboveYou": "@{role} non è sotto il tuo ruolo più alto.",
+    "staffRole": "@{role} ha permessi da staff ({permissions}); solo il proprietario del server o i proprietari del bot possono darlo o toglierlo qui."
+  },
+  "skip": {
+    "hasRole": "ha già @{role}",
+    "lacksRole": "non ha @{role}",
+    "noLength": "nessuna durata di timeout scelta",
+    "admin": "ha Amministratore (Discord non permette il timeout)",
+    "guard": "limite di sicurezza: in questa finestra di 10 minuti non sono più permessi ban/espulsioni"
+  }
+}

@@ -1,0 +1,174 @@
+{
+  "notice": {
+    "readOnly": "Lecture seule : la modification depuis le tableau de bord est désactivée (DASHBOARD_EDIT_ENABLED n’est pas à true).",
+    "viewOnly": "Consultation seule : il te faut Administrateur sur le serveur principal pour modifier les règles de rôles."
+  },
+  "trigger": {
+    "days_in_server": "Jours sur le serveur",
+    "level_reached": "Niveau",
+    "has_role": "A un rôle"
+  },
+  "form": {
+    "name": "Nom",
+    "namePlaceholder": "ex. Habitués après 30 jours",
+    "when": "Quand",
+    "threshold": "Jours ou niveau",
+    "thresholdHint": "Jours sur le serveur (0 = dès l’arrivée, jusqu’à {maxDays}) ou le niveau (1–{maxLevel}). Pas utilisé pour « A un rôle ».",
+    "triggerRole": "Rôle déclencheur",
+    "triggerRoleNone": "Seulement pour « A un rôle »",
+    "give": "Donner ce rôle",
+    "choose": "Choisir…",
+    "giveHint": "Seulement des rôles sous Mewvo (et sous ton propre rôle le plus haut), non gérés, sans permissions de staff.",
+    "removeWhenFalse": "Retirer le rôle quand la condition n’est plus remplie",
+    "removeHelp": "Le retrait s’applique aussi aux membres qui ont reçu le rôle à la main ; un membre qui correspond encore à une autre règle active pour le même rôle le garde.",
+    "enabled": "Activer la règle à l’enregistrement",
+    "nothingYet": "Rien ne change encore : la page suivante montre combien de membres, et lesquels, la règle modifierait.",
+    "dryRun": "Essai à blanc"
+  },
+  "rules": {
+    "title": "Règles de rôles",
+    "intro": "Les rôles que Mewvo donne tout seul : vérifiés toutes les 10 minutes (au plus {limit} changements de rôles par passage, un à la fois), et tout de suite quand un membre arrive, monte de niveau ou reçoit un rôle.",
+    "levelingOff": "Les niveaux sont désactivés : ils ne changent pas, donc les règles de niveau utilisent seulement les niveaux déjà enregistrés.",
+    "heading": "Règles ({count} sur {max})",
+    "rule": "Règle",
+    "state": "État",
+    "none": "Pas encore de règles de rôles.",
+    "keepRoles": "Désactiver ou supprimer une règle garde les rôles qu’elle a déjà donnés.",
+    "editHeading": "Modifier « {name} »",
+    "newRule": "Nouvelle règle",
+    "full": "Ce serveur a {max} règles, le maximum. Supprimes-en une d’abord.",
+    "cancelEdit": "Annuler la modification",
+    "onPaused": "Activée, en pause",
+    "on": "Activée",
+    "off": "Désactivée",
+    "lastRun": "Dernier passage {date} : +{added} −{removed}",
+    "lastFailed": ", {count} en échec",
+    "notRun": "Pas encore lancée",
+    "turnOff": "Désactiver",
+    "turnOn": "Activer…",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "deleteConfirm": "Supprimer la règle « {name} » ? Les rôles qu’elle a déjà donnés restent."
+  },
+  "andMore": "… et {count} de plus.",
+  "preview": {
+    "back": "← Règles de rôles",
+    "title": "Essai à blanc : {name}",
+    "nobody": "Personne.",
+    "wouldChange": {
+      "one": "Modifierait {count} membre maintenant : donner le rôle à {add}, le retirer à {remove}. Rien n’a encore été changé.",
+      "many": "Modifierait {count} membres maintenant : donner le rôle à {add}, le retirer à {remove}. Rien n’a encore été changé.",
+      "other": "Modifierait {count} membres maintenant : donner le rôle à {add}, le retirer à {remove}. Rien n’a encore été changé."
+    },
+    "savedOff": {
+      "one": "Enregistrée désactivée : rien ne change tant que tu ne l’actives pas. Si elle était active maintenant, elle modifierait {count} membre.",
+      "many": "Enregistrée désactivée : rien ne change tant que tu ne l’actives pas. Si elle était active maintenant, elle modifierait {count} membres.",
+      "other": "Enregistrée désactivée : rien ne change tant que tu ne l’actives pas. Si elle était active maintenant, elle modifierait {count} membres."
+    },
+    "partial": "Compté sur {cached} des {total} membres (la liste des membres est encore en chargement) ; le vrai passage prend tout le monde.",
+    "gets": "Reçoivent le rôle ({count})",
+    "loses": "Perdent le rôle ({count})",
+    "nextRun": "Les changements sont faits au prochain passage (dans les 10 minutes), au plus {limit} par passage.",
+    "savedOffShort": "La règle est enregistrée désactivée.",
+    "saveChanges": "Enregistrer les modifications",
+    "saveRule": "Enregistrer la règle"
+  },
+  "chart": {
+    "label": {
+      "one": "Arrivées et départs par jour, dernier {count} jour : {joins} arrivées, {leaves} départs",
+      "many": "Arrivées et départs par jour, {count} derniers jours : {joins} arrivées, {leaves} départs",
+      "other": "Arrivées et départs par jour, {count} derniers jours : {joins} arrivées, {leaves} départs"
+    },
+    "day": "{day} : {joins} arrivés, {leaves} partis",
+    "joined": "Arrivés",
+    "left": "Partis"
+  },
+  "insights": {
+    "title": "Aperçu des membres",
+    "intro": "Qui arrive et qui part, qui reste bloqué sans rôle, qui accumule les dossiers.",
+    "partial": "Basé sur {cached} des {total} membres : la liste des membres est encore en chargement. Recharge dans une minute.",
+    "notLoaded": "Impossible de charger.",
+    "joinsTitle": {
+      "one": "Arrivées et départs (dernier {count} jour)",
+      "many": "Arrivées et départs ({count} derniers jours)",
+      "other": "Arrivées et départs ({count} derniers jours)"
+    },
+    "joinsTitleShort": "Arrivées et départs",
+    "joinsSummary": "{joined} arrivés · {left} partis · solde {net}. Jours en UTC.",
+    "countingSince": "Comptage depuis le {date} ; les jours précédents affichent 0.",
+    "nothingYet": "Rien de compté pour l’instant : les arrivées et départs sont enregistrés à partir de maintenant.",
+    "kept": {
+      "one": "Conservé {count} jour.",
+      "many": "Conservé {count} jours.",
+      "other": "Conservé {count} jours."
+    },
+    "showTable": "Afficher en tableau",
+    "day": "Jour",
+    "noRolesTitle": "Nouveaux membres sans rôle après 24 heures",
+    "noRolesHelp": "Arrivés dans les 30 derniers jours, il y a plus de 24 heures, et toujours sans rôle (bots exclus). Souvent : jamais vérifiés.",
+    "joinedAt": "arrivé le {date}",
+    "none": "Aucun.",
+    "noGuild": "Le bot ne voit pas le serveur principal pour le moment.",
+    "offendersTitle": {
+      "one": "Récidivistes (dernier {count} jour)",
+      "many": "Récidivistes ({count} derniers jours)",
+      "other": "Récidivistes ({count} derniers jours)"
+    },
+    "offendersHelp": "Membres avec deux dossiers ou plus (dossiers retirés, importés et de test exclus).",
+    "member": "Membre",
+    "cases": "Dossiers",
+    "last": "Dernier",
+    "warns": { "one": "{count} avertissement", "many": "{count} avertissements", "other": "{count} avertissements" },
+    "mutes": { "one": "{count} mise en sourdine", "many": "{count} mises en sourdine", "other": "{count} mises en sourdine" },
+    "kicks": { "one": "{count} expulsion", "many": "{count} expulsions", "other": "{count} expulsions" },
+    "bans": { "one": "{count} bannissement", "many": "{count} bannissements", "other": "{count} bannissements" },
+    "noOffenders": {
+      "one": "Personne n’a deux dossiers ou plus sur le dernier {count} jour.",
+      "many": "Personne n’a deux dossiers ou plus sur les {count} derniers jours.",
+      "other": "Personne n’a deux dossiers ou plus sur les {count} derniers jours."
+    },
+    "inactiveTitle": {
+      "one": "Membres inactifs (pas d’XP depuis {count}+ jour)",
+      "many": "Membres inactifs (pas d’XP depuis {count}+ jours)",
+      "other": "Membres inactifs (pas d’XP depuis {count}+ jours)"
+    },
+    "inactiveOff": "Pas disponible : la seule heure d’activité que Mewvo enregistre est la dernière fois que les niveaux ont donné de l’XP à un membre, et les niveaux sont désactivés. Active les niveaux pour commencer à mesurer ; rien n’est deviné ici.",
+    "inactiveHelp": {
+      "one": "Activité = la dernière fois que les niveaux ont donné de l’XP au membre (messages qui rapportent de l’XP). Les membres présents depuis moins de {count} jour et les bots sont exclus.",
+      "many": "Activité = la dernière fois que les niveaux ont donné de l’XP au membre (messages qui rapportent de l’XP). Les membres présents depuis moins de {count} jours et les bots sont exclus.",
+      "other": "Activité = la dernière fois que les niveaux ont donné de l’XP au membre (messages qui rapportent de l’XP). Les membres présents depuis moins de {count} jours et les bots sont exclus."
+    },
+    "noRecord": {
+      "one": "{count} membre n’a aucun historique de niveau (jamais gagné d’XP, ou avant l’activation des niveaux) et n’est pas listé.",
+      "many": "{count} membres n’ont aucun historique de niveau (jamais gagné d’XP, ou avant l’activation des niveaux) et ne sont pas listés.",
+      "other": "{count} membres n’ont aucun historique de niveau (jamais gagné d’XP, ou avant l’activation des niveaux) et ne sont pas listés."
+    },
+    "lastXp": "dernière XP le {date}",
+    "noInactive": {
+      "one": "Personne avec un historique de niveau n’est resté silencieux pendant {count} jour.",
+      "many": "Personne avec un historique de niveau n’est resté silencieux pendant {count} jours.",
+      "other": "Personne avec un historique de niveau n’est resté silencieux pendant {count} jours."
+    }
+  },
+  "route": {
+    "needName": "Donne un nom à la règle.",
+    "needTrigger": "Choisis quand la règle s’applique.",
+    "needRole": "Choisis le rôle à donner.",
+    "needTriggerRole": "Choisis le rôle déclencheur.",
+    "needLevel": "Indique le niveau (un nombre entier).",
+    "needDays": "Indique le nombre de jours (un nombre entier).",
+    "notARule": "Ce n’est pas une règle.",
+    "loadError": "Les règles de rôles n’ont pas pu être chargées (la base de données ne répond pas). Rien n’a été modifié ; recharge la page pour réessayer.",
+    "gone": "Cette règle n’existe plus.",
+    "goneNotSaved": "Cette règle n’existe plus ; rien n’a été enregistré.",
+    "full": "Ce serveur a déjà {max} règles, le maximum.",
+    "dryRunExpired": "Cet essai à blanc a expiré ou a déjà servi. Rien n’a été enregistré ; relance l’essai.",
+    "savedOn": "Règle « {name} » enregistrée ; le prochain passage (dans les 10 minutes) l’applique.",
+    "savedOff": "Règle « {name} » enregistrée, désactivée.",
+    "createdOn": "Règle « {name} » créée ; le prochain passage (dans les 10 minutes) l’applique.",
+    "createdOff": "Règle « {name} » créée, désactivée.",
+    "turnedOff": "Règle « {name} » désactivée. Les rôles qu’elle a déjà donnés restent.",
+    "deleted": "Règle « {name} » supprimée. Les rôles qu’elle a déjà donnés restent.",
+    "partFailed": "Impossible de charger (la base de données ne répond pas). Recharge la page pour réessayer."
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "page": {
+    "title": "Corriger les permissions",
+    "heading": "Corriger les permissions de Mewvo dans #{channel}",
+    "back": "Retour (annuler)",
+    "missing": "Manquantes",
+    "willGive": "Mewvo se donnera",
+    "cannotGive": "Mewvo ne peut pas se donner",
+    "ownRole": "(son propre rôle ne les a pas)",
+    "notChanged": "Non modifiées ici",
+    "onlyYou": "(toi seul peux les donner)",
+    "why": "Pourquoi Mewvo ne peut pas corriger",
+    "nothing": "Mewvo a déjà ce qu’il lui faut ici. Rien à corriger.",
+    "editingOff": "L’édition depuis le tableau de bord est désactivée, rien ne peut donc être modifié ici.",
+    "adminOnly": "Seuls les membres qui ont la permission Administrateur sur le serveur principal peuvent faire cela.",
+    "explain": "Cela ajoute une permission uniquement pour Mewvo dans #{channel}. Les permissions des autres ne changent pas. Cette confirmation fonctionne une fois et expire dans 5 minutes.",
+    "submit": "Donner ces permissions à Mewvo",
+    "inDiscord": "Ce qu’il faut faire dans Discord",
+    "reload": "Recharge ensuite cette page pour vérifier à nouveau."
+  },
+  "route": {
+    "noServer": "Serveur indisponible",
+    "noServerText": "Mewvo ne voit pas le serveur principal pour le moment. Réessaie dans une minute.",
+    "noServerNothing": "Mewvo ne voit pas le serveur principal pour le moment. Rien n’a été modifié.",
+    "noChannel": "Salon introuvable",
+    "noChannelText": "Ce salon n’est pas (ou plus) sur le serveur. Reviens en arrière et choisis-en un autre.",
+    "noChannelNothing": "Ce salon n’est pas (ou plus) sur le serveur. Rien n’a été modifié.",
+    "adminOnly": "Seuls les membres qui ont la permission Administrateur sur le serveur principal peuvent modifier les permissions de Mewvo. Rien n’a été modifié.",
+    "expired": "Cette confirmation a expiré ou a déjà servi. Rien n’a été modifié. Vérifie la liste ci-dessous et confirme à nouveau.",
+    "stillMissing": " Il manque encore : {perms}. Seul le propriétaire du serveur peut les donner (voir les étapes sur la page Corriger les permissions).",
+    "done": "Mewvo a maintenant {perms} dans #{channel}."
+  }
+}

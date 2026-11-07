@@ -1,0 +1,108 @@
+{
+  "common": {
+    "readOnly": "Nur lesen: Bearbeiten im Dashboard ist ausgeschaltet (DASHBOARD_EDIT_ENABLED ist nicht true).",
+    "clear": "Zurücksetzen"
+  },
+  "state": {
+    "translated": "Übersetzt",
+    "needs-update": "Braucht Update",
+    "missing": "Fehlt (Englisch angezeigt)",
+    "edited": "Bearbeitet",
+    "default": "Standard"
+  },
+  "filter": {
+    "all": "Alle",
+    "needs-update": "Braucht Update",
+    "missing": "Fehlt",
+    "edited": "Bearbeitet"
+  },
+  "tabs": {
+    "label": "Website-Editor",
+    "text": "Text",
+    "images": "Bilder"
+  },
+  "markup": {
+    "formatting": "Formatierung:",
+    "bold": "fett",
+    "italic": "kursiv",
+    "code": "Code",
+    "text": "Text",
+    "rest1": "für einen Link, eine Leerzeile für einen neuen Absatz, Zeilen, die beginnen mit",
+    "rest2": "für eine Liste. HTML geht nicht (Tags erscheinen als getippter Text). Wörter in geschweiften Klammern wie",
+    "rest3": "füllt die Website aus: Behalte dieselben wie im englischen Text."
+  },
+  "home": {
+    "title": "Website",
+    "help": "Ändere die Texte der Website in jeder Sprache und ersetze ihre Bilder, ohne Code. Änderungen sind sofort nach dem Speichern live. Jede Textgruppe ist ein Teil der Website; öffne eine, um ihre Texte zu sehen und zu bearbeiten.",
+    "toUpdate": "{count} zu aktualisieren",
+    "missing": "{count} fehlen",
+    "byGroup": "Texte nach Gruppe",
+    "byGroupHelp": "Pro Sprache: übersetzte Texte / alle Texte. **Zu aktualisieren**: Der englische Text hat sich nach der Übersetzung geändert. **Fehlt**: Die Website zeigt dort Englisch. Bei Englisch steht, wie viele Texte du bearbeitet hast.",
+    "group": "Gruppe",
+    "texts": "Texte",
+    "englishEdited": "Englisch bearbeitet",
+    "all": "Alle",
+    "notHere": "Nicht hier bearbeitet",
+    "notHereHelp": "Die Rechtsseiten (Datenschutzerklärung, Nutzungsbedingungen, Impressum, Kontakt, Widerruf) sind Rechtstexte: Sie werden im Code bearbeitet und geprüft, nicht hier. Es gibt sie nur auf Englisch."
+  },
+  "ns": {
+    "title": "Texte: {ns}",
+    "pageTitle": "Website: {name}",
+    "help": "Jeder Text dieser Gruppe mit dem englischen und dem Text auf {lang}. Öffne einen Text, um ihn zu bearbeiten.",
+    "language": "Sprache",
+    "show": "Zeigen",
+    "search": "Suche",
+    "searchPlaceholder": "Schlüssel oder Text",
+    "showButton": "Anzeigen",
+    "count": { "one": "{count} Text.", "other": "{count} Texte." },
+    "key": "Schlüssel",
+    "english": "Englisch",
+    "state": "Stand",
+    "englishShown": "(Englisch angezeigt)",
+    "noMatch": "Keine Texte passen."
+  },
+  "key": {
+    "historyError": "Der Verlauf konnte nicht geladen werden (Datenbank). Lade die Seite neu und versuche es noch mal.",
+    "noChanges": "Noch keine Änderungen.",
+    "history": "Verlauf ({count}{newest})",
+    "newest30": ", die neuesten 30",
+    "when": "Wann",
+    "by": "Von",
+    "changedTo": "Geändert zu",
+    "reset": "Auf Standard zurücksetzen",
+    "restore": "Diese Version wiederherstellen",
+    "fromEdit": "Deine Bearbeitung",
+    "fromCatalog": "Standardtext",
+    "fromEnglish": "Kein Text in dieser Sprache: Die Website zeigt Englisch",
+    "savedBy": "gespeichert {date} von {who}",
+    "previewNotSaved": "Vorschau (nicht gespeichert):",
+    "textIn": "Text ({lang})",
+    "preview": "Vorschau",
+    "save": "Speichern",
+    "resetConfirm": "Den Text auf {lang} auf den Standard zurücksetzen?",
+    "help": "Ein Text der Website in jeder Sprache. Speichern macht ihn sofort live; „Auf Standard zurücksetzen“ holt den ursprünglichen Text zurück.",
+    "original": "Englisch (Original)",
+    "englishEdited": "Die Website zeigt stattdessen deine englische Bearbeitung (unten). Übersetzungen von davor sind als „Braucht Update“ markiert."
+  },
+  "images": {
+    "title": "Website-Bilder",
+    "help": "Die Bilder, die die Website nutzt. Ein Upload wird umgewandelt (Metadaten wie Kamera- oder Standortdaten werden entfernt) und an die Größe des Platzes angepasst: Ein Bild in anderer Form wird an den Rändern zugeschnitten. Sofort live; Browser zeigen das alte Bild eventuell noch bis zu 5 Minuten.",
+    "replaced": "Ersetzt",
+    "default": "Standard",
+    "where": "{where}. Pfad `{path}`, {size}, {format}.",
+    "currentAlt": "Aktuelles Bild: {label}",
+    "uploaded": "Hochgeladen {date} von {who}, {size}",
+    "defaultFile": "Die Standarddatei",
+    "replace": "Ersetzen (PNG, JPEG oder WebP, bis {mb} MB)",
+    "upload": "Hochladen",
+    "resetConfirm": "Standard für „{label}“ zurückholen?"
+  },
+  "slot": {
+    "screen-overview-dark": { "label": "Dashboard-Screenshot: Übersicht (dunkel)", "where": "Startseite, Abschnitt „Das Dashboard“" },
+    "screen-overview-light": { "label": "Dashboard-Screenshot: Übersicht (hell)", "where": "Unter seinem Pfad erreichbar; keine Seite zeigt es derzeit" },
+    "screen-cases-dark": { "label": "Dashboard-Screenshot: Fälle (dunkel)", "where": "Doku: „Das Dashboard nutzen“" },
+    "screen-cases-light": { "label": "Dashboard-Screenshot: Fälle (hell)", "where": "Unter seinem Pfad erreichbar; keine Seite zeigt es derzeit" },
+    "og": { "label": "Vorschaubild", "where": "Link-Vorschauen (Discord, soziale Medien) aller Seiten" },
+    "logo": { "label": "Logo und Tab-Symbol", "where": "Kopfzeile der Website, Favicon, Dashboard-Seitenleiste" }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "page": {
+    "title": "Berechtigungen reparieren",
+    "heading": "Mewvos Berechtigungen in #{channel} reparieren",
+    "back": "Zurück (abbrechen)",
+    "missing": "Fehlt",
+    "willGive": "Mewvo gibt sich selbst",
+    "cannotGive": "Mewvo kann sich nicht selbst geben",
+    "ownRole": "(seine eigene Rolle hat sie nicht)",
+    "notChanged": "Hier nicht geändert",
+    "onlyYou": "(nur du kannst sie geben)",
+    "why": "Warum Mewvo es nicht reparieren kann",
+    "nothing": "Mewvo hat hier schon alles, was es braucht. Nichts zu reparieren.",
+    "editingOff": "Bearbeiten im Dashboard ist ausgeschaltet, deshalb kann hier nichts geändert werden.",
+    "adminOnly": "Nur Mitglieder mit der Berechtigung Administrator auf dem Hauptserver können das tun.",
+    "explain": "Das fügt eine Berechtigung nur für Mewvo in #{channel} hinzu. Die Berechtigungen aller anderen bleiben gleich. Diese Bestätigung funktioniert einmal und läuft nach 5 Minuten ab.",
+    "submit": "Mewvo diese Berechtigungen geben",
+    "inDiscord": "Was du in Discord tun musst",
+    "reload": "Lade diese Seite danach neu, um erneut zu prüfen."
+  },
+  "route": {
+    "noServer": "Server nicht verfügbar",
+    "noServerText": "Mewvo kann den Hauptserver gerade nicht sehen. Versuch es in einer Minute noch einmal.",
+    "noServerNothing": "Mewvo kann den Hauptserver gerade nicht sehen. Nichts wurde geändert.",
+    "noChannel": "Kanal nicht gefunden",
+    "noChannelText": "Dieser Kanal ist (nicht mehr) auf dem Server. Geh zurück und wähle einen anderen.",
+    "noChannelNothing": "Dieser Kanal ist (nicht mehr) auf dem Server. Nichts wurde geändert.",
+    "adminOnly": "Nur Mitglieder mit der Berechtigung Administrator auf dem Hauptserver können Mewvos Berechtigungen ändern. Nichts wurde geändert.",
+    "expired": "Diese Bestätigung ist abgelaufen oder wurde schon benutzt. Nichts wurde geändert. Prüf die Liste unten und bestätige noch einmal.",
+    "stillMissing": " Fehlt noch: {perms}. Nur der Server-Inhaber kann diese geben (siehe die Schritte auf der Seite „Berechtigungen reparieren“).",
+    "done": "Mewvo hat jetzt {perms} in #{channel}."
+  }
+}

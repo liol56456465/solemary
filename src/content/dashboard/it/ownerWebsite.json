@@ -1,0 +1,108 @@
+{
+  "common": {
+    "readOnly": "Sola lettura: la modifica dalla dashboard è disattivata (DASHBOARD_EDIT_ENABLED non è true).",
+    "clear": "Azzera"
+  },
+  "state": {
+    "translated": "Tradotto",
+    "needs-update": "Da aggiornare",
+    "missing": "Mancante (mostrato in inglese)",
+    "edited": "Modificato",
+    "default": "Predefinito"
+  },
+  "filter": {
+    "all": "Tutti",
+    "needs-update": "Da aggiornare",
+    "missing": "Mancanti",
+    "edited": "Modificati"
+  },
+  "tabs": {
+    "label": "Editor del sito",
+    "text": "Testi",
+    "images": "Immagini"
+  },
+  "markup": {
+    "formatting": "Formattazione:",
+    "bold": "grassetto",
+    "italic": "corsivo",
+    "code": "codice",
+    "text": "testo",
+    "rest1": "per un link, una riga vuota per un nuovo paragrafo, righe che iniziano con",
+    "rest2": "per un elenco. L’HTML non è supportato (i tag appaiono come testo scritto). Le parole tra graffe come",
+    "rest3": "le compila il sito: tieni le stesse del testo inglese."
+  },
+  "home": {
+    "title": "Sito web",
+    "help": "Cambia i testi del sito in ogni lingua e sostituisci le sue immagini, senza codice. Le modifiche sono online appena salvi. Ogni gruppo di testi è una parte del sito; aprine uno per vedere e modificare i suoi testi.",
+    "toUpdate": "{count} da aggiornare",
+    "missing": "{count} mancanti",
+    "byGroup": "Testi per gruppo",
+    "byGroupHelp": "Per lingua: testi tradotti / tutti i testi. **Da aggiornare**: il testo inglese è cambiato dopo la traduzione. **Mancante**: lì il sito mostra l’inglese. Per l’inglese, quanti testi hai modificato.",
+    "group": "Gruppo",
+    "texts": "Testi",
+    "englishEdited": "Inglese modificato",
+    "all": "Tutti",
+    "notHere": "Non modificabile qui",
+    "notHereHelp": "Le pagine legali (Informativa sulla privacy, Termini, Note legali, Contatti, Recesso) sono testi legali: si modificano nel codice e si rivedono, non qui. Esistono solo in inglese."
+  },
+  "ns": {
+    "title": "Testi: {ns}",
+    "pageTitle": "Sito web: {name}",
+    "help": "Ogni testo di questo gruppo con il testo inglese e quello in {lang}. Apri un testo per modificarlo.",
+    "language": "Lingua",
+    "show": "Mostra",
+    "search": "Cerca",
+    "searchPlaceholder": "Chiave o testo",
+    "showButton": "Mostra",
+    "count": { "one": "{count} testo.", "many": "{count} testi.", "other": "{count} testi." },
+    "key": "Chiave",
+    "english": "Inglese",
+    "state": "Stato",
+    "englishShown": "(mostrato in inglese)",
+    "noMatch": "Nessun testo corrisponde."
+  },
+  "key": {
+    "historyError": "Impossibile caricare la cronologia (database). Ricarica la pagina per riprovare.",
+    "noChanges": "Ancora nessuna modifica.",
+    "history": "Cronologia ({count}{newest})",
+    "newest30": ", le 30 più recenti",
+    "when": "Quando",
+    "by": "Da",
+    "changedTo": "Nuovo testo",
+    "reset": "Ripristina predefinito",
+    "restore": "Ripristina questa versione",
+    "fromEdit": "La tua modifica",
+    "fromCatalog": "Testo predefinito",
+    "fromEnglish": "Nessun testo in questa lingua: il sito mostra l’inglese",
+    "savedBy": "salvato il {date} da {who}",
+    "previewNotSaved": "Anteprima (non salvata):",
+    "textIn": "Testo ({lang})",
+    "preview": "Anteprima",
+    "save": "Salva",
+    "resetConfirm": "Ripristinare il testo predefinito in {lang}?",
+    "help": "Un testo del sito in ogni lingua. Salvando va subito online; «Ripristina predefinito» riporta il testo originale.",
+    "original": "Inglese (originale)",
+    "englishEdited": "Il sito mostra invece la tua modifica in inglese (sotto). Le traduzioni fatte prima sono segnate «Da aggiornare»."
+  },
+  "images": {
+    "title": "Immagini del sito",
+    "help": "Le immagini usate dal sito. Un caricamento viene convertito (i metadati come fotocamera o posizione vengono rimossi) e adattato alla misura dello spazio: un’immagine di altra forma viene ritagliata ai bordi. Subito online; i browser possono mostrare l’immagine vecchia fino a 5 minuti.",
+    "replaced": "Sostituita",
+    "default": "Predefinita",
+    "where": "{where}. Percorso `{path}`, {size}, {format}.",
+    "currentAlt": "Immagine attuale: {label}",
+    "uploaded": "Caricata il {date} da {who}, {size}",
+    "defaultFile": "Il file predefinito",
+    "replace": "Sostituisci (PNG, JPEG o WebP, fino a {mb} MB)",
+    "upload": "Carica",
+    "resetConfirm": "Rimettere l’immagine predefinita «{label}»?"
+  },
+  "slot": {
+    "screen-overview-dark": { "label": "Screenshot della dashboard: panoramica (scura)", "where": "Pagina iniziale, sezione «La dashboard»" },
+    "screen-overview-light": { "label": "Screenshot della dashboard: panoramica (chiara)", "where": "Servita al suo percorso; oggi nessuna pagina la mostra" },
+    "screen-cases-dark": { "label": "Screenshot della dashboard: casi (scura)", "where": "Documentazione: «Usare la dashboard»" },
+    "screen-cases-light": { "label": "Screenshot della dashboard: casi (chiara)", "where": "Servita al suo percorso; oggi nessuna pagina la mostra" },
+    "og": { "label": "Immagine di condivisione", "where": "Anteprime dei link (Discord, social) di ogni pagina" },
+    "logo": { "label": "Logo e icona della scheda", "where": "Barra in alto del sito, favicon, barra laterale della dashboard" }
+  }
+}

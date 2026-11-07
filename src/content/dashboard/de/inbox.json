@@ -1,0 +1,93 @@
+{
+  "kinds": {
+    "appeal": { "label": "Einsprüche", "single": "Einspruch" },
+    "ticket": { "label": "Tickets", "single": "Ticket" },
+    "modmail": { "label": "Modmail", "single": "Modmail" },
+    "report": { "label": "Team-Meldungen", "single": "Team-Meldung" },
+    "review": { "label": "Automod-Prüfungen", "single": "Automod-Prüfung" }
+  },
+  "action": {
+    "appeal": "Einspruch prüfen",
+    "ticket": "Unterhaltung öffnen",
+    "modmail": "Unterhaltung öffnen",
+    "report": "In Discord öffnen",
+    "review": "Prüfkarte öffnen"
+  },
+  "list": {
+    "title": "Posteingang",
+    "heading": "Posteingang ({count})",
+    "intro": "Alles, was auf das Team wartet, das Älteste zuerst: Einsprüche, Tickets, Modmail, Team-Meldungen und Automod-Prüfkarten. Gelb nach einem Tag, rot nach drei.",
+    "filterLabel": "Nach Art filtern",
+    "all": "Alle",
+    "failed": "Konnte gerade nicht geladen werden: {kinds}. Diese Zahlen sind nicht vollständig; lade die Seite neu, um es noch einmal zu versuchen.",
+    "kind": "Art",
+    "what": "Was",
+    "who": "Wer",
+    "waiting": "Wartet seit",
+    "opensDiscord": "(öffnet Discord)",
+    "empty": "Nichts wartet auf das Team.",
+    "emptyKind": {
+      "appeal": "Keine offenen Einsprüche.",
+      "ticket": "Keine offenen Tickets.",
+      "modmail": "Kein offenes Modmail.",
+      "report": "Keine offenen Team-Meldungen.",
+      "review": "Keine offenen Automod-Prüfungen."
+    }
+  },
+  "conversation": {
+    "titleModmail": "Modmail #{channel}",
+    "titleTicket": "Ticket #{channel}",
+    "headModmail": "Modmail · #{channel}",
+    "headTicket": "Ticket · #{channel}",
+    "back": "← Posteingang",
+    "with": "Mit {member} {id} · ",
+    "openDiscord": "In Discord öffnen",
+    "bot": "Bot",
+    "last": {
+      "one": "Letzte Nachrichten ({count})",
+      "other": "Letzte Nachrichten ({count})"
+    },
+    "noMessages": "Noch keine Nachrichten.",
+    "reply": "Antworten",
+    "helpModmail": "Wird als Bot gesendet, wie wenn du im Discord-Kanal schreibst: Das Mitglied bekommt eine DM „Dein Servername (Team): …“, und eine Kopie wird im Kanal gepostet. Beginne mit {prefix} für eine interne Notiz (nur im Kanal gepostet, nie an das Mitglied gesendet).",
+    "helpTicket": "Wird als Bot im Ticket-Kanal gepostet (das Mitglied liest es dort).",
+    "editingOff": "Bearbeiten im Dashboard ist aus (DASHBOARD_EDIT_ENABLED): Antworte in Discord.",
+    "needsAdmin": "Antworten braucht Administrator auf dem Hauptserver (Bot-Inhaber ohne diese Berechtigung können nur lesen).",
+    "message": "Nachricht",
+    "replyHint": "Bis zu {max} Zeichen; niemand wird erwähnt.",
+    "send": "Antwort senden",
+    "close": "Schließen",
+    "closeHelpModmail": "Wie der Schließen-Button: Das Mitglied wird per DM informiert, das Protokoll geht in den Protokollkanal und der Kanal wird gelöscht.",
+    "closeHelpTicket": "Wie der Schließen-Button: Das Ticket wird geschlossen (in die Kategorie für geschlossene Tickets verschoben, falls eine eingestellt ist), das Mitglied bekommt eine DM, falls das an ist, und das Protokoll wird abgelegt.",
+    "reason": "Grund (optional)",
+    "closeButton": "Schließen…"
+  },
+  "confirm": {
+    "title": "Schließen bestätigen",
+    "back": "← Zurück (abbrechen)",
+    "headModmail": "Bestätigen: Modmail-Unterhaltung #{channel} schließen",
+    "headTicket": "Bestätigen: Ticket #{channel} schließen",
+    "member": "Mitglied",
+    "reason": "Grund",
+    "effect": "Folge",
+    "effectModmail": "Das Mitglied bekommt eine DM, dass die Unterhaltung geschlossen wurde, das Protokoll wird abgelegt und der Kanal gelöscht.",
+    "effectTicket": "Das Ticket wird für das Mitglied geschlossen (es kann dort nicht mehr schreiben), das Protokoll wird abgelegt.",
+    "once": "Diese Bestätigung funktioniert einmal und läuft nach 5 Minuten ab.",
+    "submit": "Jetzt schließen"
+  },
+  "route": {
+    "gone": "Diese Unterhaltung oder dieses Ticket ist nicht mehr offen (oder hat nie existiert). Vielleicht wurde es in Discord geschlossen.",
+    "goneNothingSent": "Diese Unterhaltung oder dieses Ticket ist nicht mehr offen. Es wurde nichts gesendet.",
+    "goneShort": "Diese Unterhaltung oder dieses Ticket ist nicht mehr offen.",
+    "readError": "Die Nachrichten konnten nicht aus Discord geladen werden. Lade die Seite neu, um es noch einmal zu versuchen.",
+    "tooLong": "Die Antwort ist länger als {max} Zeichen.",
+    "empty": "Schreib zuerst eine Antwort.",
+    "notePosted": "Interne Notiz im Kanal gepostet (nicht an das Mitglied gesendet).",
+    "ticketReplied": "Antwort im Ticket gepostet.",
+    "dmSent": "Antwort per DM an das Mitglied gesendet und in den Kanal kopiert.",
+    "dmFailed": "Die Antwort wurde im Kanal gepostet, aber die DM konnte nicht zugestellt werden (das Mitglied hat den Server verlassen oder seine DMs geschlossen).",
+    "confirmExpired": "Diese Bestätigung ist abgelaufen oder wurde schon benutzt. Es wurde nichts geschlossen; drücke noch einmal auf Schließen.",
+    "closedModmail": "Modmail-Unterhaltung #{channel} geschlossen.",
+    "closedTicket": "Ticket #{channel} geschlossen."
+  }
+}

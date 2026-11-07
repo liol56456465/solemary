@@ -1,0 +1,47 @@
+{
+  "none": "(brak)",
+  "page": {
+    "intro": "Wszystkie ustawienia panelu serwera głównego i serwera wsparcia w jednym pliku. Użyj go przed dużymi zmianami albo przy przenosinach na nowy hosting. Nigdy nie ma w nim sekretów.",
+    "download": "Pobierz",
+    "downloadButton": "Pobierz ustawienia (.json)",
+    "load": "Wczytaj kopię",
+    "loadHelp": "Na razie nic się nie zmienia: najpierw widzisz każde ustawienie, które plik by zmienił, a potem decydujesz, czy je zastosować.",
+    "loadNeedsAdmin": "Wczytanie kopii wymaga Administratora i włączonej edycji.",
+    "file": "Plik kopii (.json)",
+    "check": "Sprawdź ten plik"
+  },
+  "preview": {
+    "title": "Sprawdź kopię",
+    "wouldChange": {
+      "one": "{count} ustawienie by się zmieniło",
+      "few": "{count} ustawienia by się zmieniły",
+      "many": "{count} ustawień by się zmieniło",
+      "other": "{count} ustawienia by się zmieniło"
+    },
+    "server": "Serwer",
+    "setting": "Ustawienie",
+    "now": "Teraz",
+    "fromFile": "Z pliku",
+    "confirm": {
+      "one": "Zastosować {count} zmianę z kopii?",
+      "few": "Zastosować {count} zmiany z kopii?",
+      "many": "Zastosować {count} zmian z kopii?",
+      "other": "Zastosować {count} zmiany z kopii?"
+    },
+    "apply": "Zastosuj te zmiany",
+    "cancel": "Anuluj",
+    "once": "To działa raz i wygasa po 10 minutach. Każda zmiana trafia do dziennika zdarzeń.",
+    "same": "Plik zgadza się z obecnymi ustawieniami. Nic by się nie zmieniło.",
+    "skipped": "Pominięte ({n})"
+  },
+  "route": {
+    "chooseFile": "Wybierz plik kopii.",
+    "expired": "To sprawdzenie wygasło albo zostało już użyte. Wczytaj plik ponownie.",
+    "applied": {
+      "one": "Kopia zastosowana: zmieniono {count} ustawienie. Jest w dzienniku zdarzeń.",
+      "few": "Kopia zastosowana: zmieniono {count} ustawienia. Są w dzienniku zdarzeń.",
+      "many": "Kopia zastosowana: zmieniono {count} ustawień. Są w dzienniku zdarzeń.",
+      "other": "Kopia zastosowana: zmieniono {count} ustawienia. Są w dzienniku zdarzeń."
+    }
+  }
+}

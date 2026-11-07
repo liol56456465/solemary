@@ -1,0 +1,105 @@
+{
+  "title": "Staff",
+  "help": "Moderación por moderador, cuándo está activo el equipo, actividad semanal, disciplina del staff y bloqueos del límite de seguridad (demasiados baneos o expulsiones en 10 minutos).",
+  "settings": "Ajustes de sanciones",
+  "period": {
+    "7d": "últimos 7 días",
+    "30d": "últimos 30 días",
+    "90d": "últimos 90 días",
+    "all": "desde siempre"
+  },
+  "stats": {
+    "period": "Periodo",
+    "title": "Estadísticas de moderación · {period}",
+    "moderator": "Moderador",
+    "total": "Total",
+    "bans": "Baneos",
+    "kicks": "Expulsiones",
+    "mutes": "Silenciamientos",
+    "warns": "Advertencias",
+    "accepted": "Apelaciones aceptadas",
+    "denied": "Apelaciones rechazadas",
+    "removed": "Quitados",
+    "note": "Se excluyen los casos automáticos (bot) y de prueba; los casos quitados no entran en los totales.",
+    "empty": "No hay acciones de moderación en este periodo."
+  },
+  "coverage": {
+    "period": "Periodo de cobertura",
+    "days": {
+      "one": "{count} día",
+      "other": "{count} días",
+      "many": "{count} días"
+    },
+    "title": {
+      "one": "Cobertura · último {count} día ({zone})",
+      "other": "Cobertura · últimos {count} días ({zone})",
+      "many": "Cobertura · últimos {count} días ({zone})"
+    },
+    "incidents": "Incidentes (casos creados, incluidos los automáticos): {count}",
+    "staff": "Actividad del staff (casos de moderadores humanos + apelaciones decididas): {count}",
+    "note": "Más oscuro = más movimiento, en cuartos hasta la hora más ocupada. Las columnas son las horas 0–23 en {zone} (la zona horaria de cumpleaños del servidor, configurada en Cumpleaños; UTC si no hay ninguna).",
+    "gaps": "Franjas peor cubiertas",
+    "incidentCount": {
+      "one": "{count} incidente",
+      "other": "{count} incidentes",
+      "many": "{count} incidentes"
+    },
+    "actionCount": {
+      "one": "{count} acción del staff",
+      "other": "{count} acciones del staff",
+      "many": "{count} acciones del staff"
+    },
+    "none": "No hay incidentes en este periodo."
+  },
+  "blocks": {
+    "title": "Bloqueos del límite de seguridad ({count})",
+    "until": "Bloqueado hasta",
+    "count": "Baneos/expulsiones",
+    "lift": "Quitar bloqueo",
+    "ownersOnly": "Solo los dueños del bot pueden quitar un bloqueo (como /staff restore).",
+    "none": "Nadie está bloqueado."
+  },
+  "activity": {
+    "week": "Semana",
+    "weeks": {
+      "this": "Esta semana",
+      "last": "La semana pasada"
+    },
+    "error": "No se pudo cargar la actividad (base de datos no disponible).",
+    "member": "Miembro del staff",
+    "messages": "Mensajes",
+    "actions": "Acciones",
+    "appeals": "Apelaciones",
+    "reviews": "Revisiones",
+    "tickets": "Tickets",
+    "owner": "dueño",
+    "inactive": "Inactivo",
+    "warnings": "Advertencias",
+    "note": "Inactivo = sin trabajo de moderación y menos de 20 mensajes. Las acciones son los casos que creó; las revisiones son tarjetas de automod y de verificación.",
+    "none": "No se encontró staff.",
+    "title": "Actividad del staff · semana del {start}"
+  },
+  "discipline": {
+    "title": "Disciplina del staff",
+    "ownersOnly": "Solo los dueños del bot pueden advertir a miembros del staff, ver sus advertencias de staff o devolver roles de staff quitados (como /staff warn, warnings y restore).",
+    "reason": "Motivo: qué regla de admin incumplió (se le envía)",
+    "give": "Dar advertencia de staff",
+    "giveConfirm": "¿Dar una advertencia a este miembro del staff? Con {limit} advertencias activas se le quitan los roles de staff.",
+    "showOf": "Mostrar advertencias de",
+    "warningsError": "No se pudieron cargar las advertencias (base de datos no disponible).",
+    "warningsOf": "Advertencias de staff: {name}",
+    "given": "Puesta",
+    "active": "activa",
+    "expired": "expirada",
+    "removedError": "No se pudieron cargar los roles de staff quitados (base de datos no disponible).",
+    "removedRoles": "Roles quitados",
+    "why": "Por qué",
+    "restore": "Devolver roles",
+    "restoreConfirm": "¿Devolver estos roles de staff?",
+    "noneSaved": "No hay roles de staff quitados guardados.",
+    "restoreOf": "Devolver roles a",
+    "help": "Las advertencias de staff caducan; con {limit} advertencias activas se quitan los roles de staff (la protección del staff también los quita). El miembro recibe un MD y el registro de moderación una línea.",
+    "removedTitle": "Roles de staff quitados",
+    "restoreNote": "Devolver restituye los roles guardados que el bot aún puede gestionar. Un bloqueo del límite de seguridad (demasiados baneos o expulsiones en 10 minutos) se quita aparte (Bloqueos del límite de seguridad)."
+  }
+}

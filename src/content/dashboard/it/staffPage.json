@@ -1,0 +1,105 @@
+{
+  "title": "Staff",
+  "help": "Moderazione per moderatore, quando il team è attivo, attività settimanale, disciplina dello staff e blocchi del limite di sicurezza (troppi ban o espulsioni in 10 minuti).",
+  "settings": "Impostazioni delle sanzioni",
+  "period": {
+    "7d": "ultimi 7 giorni",
+    "30d": "ultimi 30 giorni",
+    "90d": "ultimi 90 giorni",
+    "all": "da sempre"
+  },
+  "stats": {
+    "period": "Periodo",
+    "title": "Statistiche di moderazione · {period}",
+    "moderator": "Moderatore",
+    "total": "Totale",
+    "bans": "Ban",
+    "kicks": "Espulsioni",
+    "mutes": "Silenziamenti",
+    "warns": "Avvertimenti",
+    "accepted": "Ricorsi accolti",
+    "denied": "Ricorsi respinti",
+    "removed": "Rimossi",
+    "note": "I casi automatici (bot) e di test sono esclusi; i casi rimossi non sono nei totali.",
+    "empty": "Nessuna azione di moderazione in questo periodo."
+  },
+  "coverage": {
+    "period": "Periodo di copertura",
+    "days": {
+      "one": "{count} giorno",
+      "other": "{count} giorni",
+      "many": "{count} giorni"
+    },
+    "title": {
+      "one": "Copertura · ultimo {count} giorno ({zone})",
+      "other": "Copertura · ultimi {count} giorni ({zone})",
+      "many": "Copertura · ultimi {count} giorni ({zone})"
+    },
+    "incidents": "Incidenti (casi creati, automatici inclusi): {count}",
+    "staff": "Attività dello staff (casi di moderatori umani + ricorsi decisi): {count}",
+    "note": "Più scuro = più movimento, a quarti fino all’ora più piena. Le colonne sono le ore 0–23 in {zone} (il fuso dei compleanni del server, impostato in Compleanni; UTC se non è impostato).",
+    "gaps": "Fasce orarie meno coperte",
+    "incidentCount": {
+      "one": "{count} incidente",
+      "other": "{count} incidenti",
+      "many": "{count} incidenti"
+    },
+    "actionCount": {
+      "one": "{count} azione dello staff",
+      "other": "{count} azioni dello staff",
+      "many": "{count} azioni dello staff"
+    },
+    "none": "Nessun incidente in questo periodo."
+  },
+  "blocks": {
+    "title": "Blocchi del limite di sicurezza ({count})",
+    "until": "Bloccato fino al",
+    "count": "Ban/espulsioni",
+    "lift": "Togli il blocco",
+    "ownersOnly": "Solo i proprietari del bot possono togliere un blocco (come /staff restore).",
+    "none": "Nessuno è bloccato."
+  },
+  "activity": {
+    "week": "Settimana",
+    "weeks": {
+      "this": "Questa settimana",
+      "last": "Settimana scorsa"
+    },
+    "error": "Non è stato possibile caricare l’attività (database non disponibile).",
+    "member": "Membro dello staff",
+    "messages": "Messaggi",
+    "actions": "Azioni",
+    "appeals": "Ricorsi",
+    "reviews": "Revisioni",
+    "tickets": "Ticket",
+    "owner": "proprietario",
+    "inactive": "Inattivo",
+    "warnings": "Avvertimenti",
+    "note": "Inattivo = nessun lavoro di moderazione e meno di 20 messaggi. Le azioni sono i casi creati; le revisioni sono le schede di automod e verifica.",
+    "none": "Nessun membro dello staff trovato.",
+    "title": "Attività dello staff · settimana del {start}"
+  },
+  "discipline": {
+    "title": "Disciplina dello staff",
+    "ownersOnly": "Solo i proprietari del bot possono avvertire i membri dello staff, vederne gli avvertimenti o ridare i ruoli dello staff tolti (come /staff warn, warnings e restore).",
+    "reason": "Motivo: quale regola per admin è stata violata (inviato alla persona)",
+    "give": "Dai avvertimento allo staff",
+    "giveConfirm": "Dare un avvertimento a questo membro dello staff? Con {limit} avvertimenti attivi i suoi ruoli dello staff vengono tolti.",
+    "showOf": "Mostra avvertimenti di",
+    "warningsError": "Non è stato possibile caricare gli avvertimenti (database non disponibile).",
+    "warningsOf": "Avvertimenti dello staff: {name}",
+    "given": "Dato",
+    "active": "attivo",
+    "expired": "scaduto",
+    "removedError": "Non è stato possibile caricare i ruoli dello staff tolti (database non disponibile).",
+    "removedRoles": "Ruoli tolti",
+    "why": "Perché",
+    "restore": "Ridai i ruoli",
+    "restoreConfirm": "Ridare questi ruoli dello staff?",
+    "noneSaved": "Nessun ruolo dello staff tolto è salvato.",
+    "restoreOf": "Ridai i ruoli a",
+    "help": "Gli avvertimenti dello staff scadono; con {limit} avvertimenti attivi i ruoli dello staff vengono tolti (li toglie anche la protezione dello staff). Il membro riceve un DM e il registro di moderazione una riga.",
+    "removedTitle": "Ruoli dello staff tolti",
+    "restoreNote": "Ridare restituisce i ruoli salvati che il bot può ancora gestire. Un blocco del limite di sicurezza (troppi ban o espulsioni in 10 minuti) si toglie a parte (Blocchi del limite di sicurezza)."
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "list": {
+    "intro": "Jede Raid-Sperre der letzten {days} Tage, Minute für Minute: wer beigetreten ist und was Mewvo und das Team getan haben. Zeiten in UTC. Nachrichteninhalte werden nicht gespeichert.",
+    "unreadable": "Die Vorfälle konnten nicht geladen werden (Datenbank). Lade die Seite neu, um es noch einmal zu versuchen.",
+    "empty": "Keine Raids in den letzten {days} Tagen. Wenn viele Accounts gleichzeitig beitreten, startet Mewvo von selbst eine Sperre, und ihr Verlauf erscheint hier.",
+    "notKept": "(+{n} nicht gespeichert)",
+    "open": "Verlauf öffnen"
+  },
+  "col": {
+    "started": "Beginn",
+    "ended": "Ende",
+    "duration": "Dauer",
+    "trigger": "Auslöser",
+    "events": "Erfasste Ereignisse",
+    "open": "Öffnen"
+  },
+  "status": {
+    "running": "Läuft noch",
+    "notRecorded": "Nicht erfasst",
+    "unread": "Nicht lesbar"
+  },
+  "span": {
+    "underMinute": "unter einer Minute",
+    "days": "{n} T.",
+    "hours": "{n} Std.",
+    "minutes": "{n} Min."
+  },
+  "trigger": {
+    "join_raid": "Beitritts-Raid (viele Accounts sind gleichzeitig beigetreten)"
+  },
+  "kind": {
+    "lockdown_start": "Sperre gestartet",
+    "lockdown_end": "Sperre beendet",
+    "verification": "Verifizierungsstufe",
+    "panic": "Einladungen und DMs",
+    "gate_kick": "Kick durch Beitrittsschranke",
+    "gate_flag": "Markiert durch Beitrittsschranke",
+    "automod": "Automod (kein Fall)",
+    "mass_block": "Sicherheitslimit (Banns/Kicks)",
+    "join": "Beigetreten",
+    "leave": "Verlassen",
+    "case": "Fall",
+    "dashboard": "Dashboard-Änderung"
+  },
+  "actions": {
+    "ban": "Banns",
+    "kick": "Kicks",
+    "mute": "Stummschaltungen",
+    "warn": "Verwarnungen",
+    "gate_kick": "Kicks durch Beitrittsschranke",
+    "gate_flag": "Markierungen durch Beitrittsschranke",
+    "automod": "Automod ohne Fall",
+    "mass_block": "Sperren durch Sicherheitslimit"
+  },
+  "chart": {
+    "ariaMinute": "{label} pro Minute: {total} insgesamt über {bars} Balken. Die Liste Minute für Minute unten enthält jedes Ereignis.",
+    "ariaMinutes": "{label} pro {minutes} Minuten: {total} insgesamt über {bars} Balken. Die Liste Minute für Minute unten enthält jedes Ereignis."
+  },
+  "item": {
+    "case": "Fall {code}",
+    "by": "von"
+  },
+  "count": {
+    "joins": {
+      "one": "{count} Beitritt",
+      "other": "{count} Beitritte"
+    },
+    "leaves": {
+      "one": "{count} Austritt",
+      "other": "{count} Austritte"
+    },
+    "actions": {
+      "one": "{count} Aktion",
+      "other": "{count} Aktionen"
+    },
+    "steps": {
+      "one": "{count} Sperrschritt",
+      "other": "{count} Sperrschritte"
+    },
+    "quiet": {
+      "one": "{count} ruhige Minute",
+      "other": "{count} ruhige Minuten"
+    },
+    "events": {
+      "one": "{count} Ereignis",
+      "other": "{count} Ereignisse"
+    }
+  },
+  "detail": {
+    "all": "Alle Vorfälle",
+    "unreadable": "Dieser Vorfall konnte nicht geladen werden (Datenbank). Lade die Seite neu, um es noch einmal zu versuchen.",
+    "nothing": "Für diesen Vorfall wurde nichts erfasst.",
+    "dropped": "Nur die ersten {max} Ereignisse von Sperre, Beitrittsschranke und Automod wurden gespeichert; {n} weitere sind passiert.",
+    "truncated": "Dieser Vorfall ist sehr groß: Nur die ersten Zeilen von Beitritten und Austritten, Fällen oder Dashboard-Änderungen werden gezeigt.",
+    "stateUnread": "Ob diese Sperre noch läuft, konnte nicht gelesen werden (Datenbank). Lade die Seite neu, um es noch einmal zu versuchen.",
+    "endUnknown": "Das Ende dieser Sperre wurde nicht erfasst (zum Beispiel, weil der Bot mit einer älteren Version neu gestartet ist). Der Verlauf endet mit dem letzten Ereignis.",
+    "title": "Raid am {date}",
+    "trigger": "{trigger}. Zeiten in UTC.",
+    "soFar": "{span} bisher",
+    "joined": "Beigetreten",
+    "left": "Verlassen",
+    "raidJoiners": "Raid-Accounts",
+    "endedBy": "Beendet von",
+    "done": "Was getan wurde",
+    "verification": "Verifizierungsstufe:",
+    "panic": "Einladungen und DMs:",
+    "released": "Unbeteiligte freigegeben:",
+    "releasedAt": "{date} von",
+    "chartTitle": "Beitritte und Aktionen",
+    "perMinute": "pro Minute",
+    "perMinutes": "pro {minutes} Minuten",
+    "joinsLabel": "Beitritte:",
+    "joins": "Beitritte",
+    "actionsLabel": "Aktionen (Fälle, Beitrittsschranke, Automod, Sperren durch Sicherheitslimit):",
+    "actions": "Aktionen",
+    "minutes": "Minute für Minute"
+  }
+}

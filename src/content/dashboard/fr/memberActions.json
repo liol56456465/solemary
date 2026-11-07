@@ -1,0 +1,60 @@
+{
+  "joined": {
+    "any": "N’importe quand",
+    "24h": "Dernières 24 heures",
+    "7d": "7 derniers jours",
+    "30d": "30 derniers jours",
+    "older": "Il y a plus de 30 jours"
+  },
+  "state": {
+    "any": "Tout le monde",
+    "sanction": "En sourdine maintenant",
+    "warned": "A des avertissements comptés",
+    "noroles": "Sans rôle",
+    "humans": "Humains seulement",
+    "bots": "Bots seulement"
+  },
+  "sort": {
+    "joined_desc": "Plus récents d’abord",
+    "joined_asc": "Plus anciens d’abord",
+    "name": "Nom A–Z"
+  },
+  "timeout": {
+    "60s": "60 secondes",
+    "5m": "5 minutes",
+    "10m": "10 minutes",
+    "1h": "1 heure",
+    "1d": "1 jour",
+    "1w": "1 semaine",
+    "28d": "28 jours"
+  },
+  "bulk": {
+    "role-add": "Donner un rôle",
+    "role-remove": "Retirer un rôle",
+    "timeout": "Exclure temporairement",
+    "kick": "Expulser",
+    "ban": "Bannir"
+  },
+  "problem": {
+    "notInServer": "Cet utilisateur n’est pas sur le serveur.",
+    "serverOwner": "Le propriétaire du serveur ne peut pas être modifié d’ici.",
+    "itself": "Mewvo ne peut pas se modifier lui-même.",
+    "yourself": "Tu ne peux pas modifier tes propres rôles ou ton exclusion temporaire d’ici.",
+    "thisMember": "Ce membre",
+    "aboveBot": "{name} a un rôle au niveau ou au-dessus du rôle le plus haut de Mewvo, donc Discord ne laisse pas le bot le modifier.",
+    "aboveYou": "{name} a un rôle au niveau ou au-dessus de ton rôle le plus haut.",
+    "roleGone": "Ce rôle n’existe plus.",
+    "everyone": "Le rôle @everyone ne peut pas être donné ni retiré.",
+    "managed": "@{role} est géré par une intégration ou un bot ; Discord ne permet pas de le modifier à la main.",
+    "roleAboveBot": "@{role} n’est pas sous le rôle le plus haut de Mewvo, donc Discord ne laisse pas le bot le donner ni le retirer.",
+    "roleAboveYou": "@{role} n’est pas sous ton rôle le plus haut.",
+    "staffRole": "@{role} a des permissions de staff ({permissions}) ; seuls le propriétaire du serveur ou les propriétaires du bot peuvent le donner ou le retirer ici."
+  },
+  "skip": {
+    "hasRole": "a déjà @{role}",
+    "lacksRole": "n’a pas @{role}",
+    "noLength": "aucune durée d’exclusion choisie",
+    "admin": "a Administrateur (Discord n’autorise pas d’exclusion temporaire)",
+    "guard": "limite de sécurité : plus de bannissements/expulsions autorisés dans cette fenêtre de 10 minutes"
+  }
+}

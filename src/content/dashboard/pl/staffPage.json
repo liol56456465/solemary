@@ -1,0 +1,109 @@
+{
+  "title": "Ekipa",
+  "help": "Moderacja według moderatorów, kiedy ekipa jest aktywna, aktywność tygodniowa, dyscyplina ekipy i blokady limitu bezpieczeństwa (za dużo banów lub wyrzuceń w 10 minut).",
+  "settings": "Ustawienia kar",
+  "period": {
+    "7d": "ostatnie 7 dni",
+    "30d": "ostatnie 30 dni",
+    "90d": "ostatnie 90 dni",
+    "all": "cały czas"
+  },
+  "stats": {
+    "period": "Okres",
+    "title": "Statystyki moderacji · {period}",
+    "moderator": "Moderator",
+    "total": "Razem",
+    "bans": "Bany",
+    "kicks": "Wyrzucenia",
+    "mutes": "Wyciszenia",
+    "warns": "Ostrzeżenia",
+    "accepted": "Odwołania przyjęte",
+    "denied": "Odwołania odrzucone",
+    "removed": "Usunięte",
+    "note": "Sprawy automatyczne (bot) i testowe są pominięte; usunięte sprawy nie wchodzą do sum.",
+    "empty": "Brak akcji moderacji w tym okresie."
+  },
+  "coverage": {
+    "period": "Okres pokrycia",
+    "days": {
+      "one": "{count} dzień",
+      "other": "{count} dni",
+      "few": "{count} dni",
+      "many": "{count} dni"
+    },
+    "title": {
+      "one": "Pokrycie · ostatni {count} dzień ({zone})",
+      "other": "Pokrycie · ostatnie {count} dni ({zone})",
+      "few": "Pokrycie · ostatnie {count} dni ({zone})",
+      "many": "Pokrycie · ostatnie {count} dni ({zone})"
+    },
+    "incidents": "Incydenty (utworzone sprawy, z automatycznymi): {count}",
+    "staff": "Aktywność ekipy (sprawy od moderatorów-ludzi + rozstrzygnięte odwołania): {count}",
+    "note": "Ciemniej = więcej się dzieje, w krokach co ćwierć do najbardziej zajętej godziny. Kolumny to godziny 0–23 w {zone} (strefa czasowa urodzin serwera, ustawiana w Urodzinach; UTC, gdy nie ustawiono).",
+    "gaps": "Najsłabiej pokryte godziny",
+    "incidentCount": {
+      "one": "{count} incydent",
+      "other": "{count} incydenty",
+      "few": "{count} incydenty",
+      "many": "{count} incydentów"
+    },
+    "actionCount": {
+      "one": "{count} akcja ekipy",
+      "other": "{count} akcje ekipy",
+      "few": "{count} akcje ekipy",
+      "many": "{count} akcji ekipy"
+    },
+    "none": "Brak incydentów w tym okresie."
+  },
+  "blocks": {
+    "title": "Blokady limitu bezpieczeństwa ({count})",
+    "until": "Zablokowany do",
+    "count": "Bany/wyrzucenia",
+    "lift": "Zdejmij blokadę",
+    "ownersOnly": "Tylko właściciele bota mogą zdjąć blokadę (jak /staff restore).",
+    "none": "Nikt nie jest zablokowany."
+  },
+  "activity": {
+    "week": "Tydzień",
+    "weeks": {
+      "this": "Ten tydzień",
+      "last": "Poprzedni tydzień"
+    },
+    "error": "Nie udało się wczytać aktywności (baza danych niedostępna).",
+    "member": "Członek ekipy",
+    "messages": "Wiadomości",
+    "actions": "Akcje",
+    "appeals": "Odwołania",
+    "reviews": "Weryfikacje",
+    "tickets": "Tickety",
+    "owner": "właściciel",
+    "inactive": "Nieaktywny",
+    "warnings": "Ostrzeżenia",
+    "note": "Nieaktywny = brak pracy moderacyjnej i mniej niż 20 wiadomości. Akcje to utworzone przez nich sprawy; weryfikacje to karty automoderacji i weryfikacji.",
+    "none": "Nie znaleziono ekipy.",
+    "title": "Aktywność ekipy · tydzień od {start}"
+  },
+  "discipline": {
+    "title": "Dyscyplina ekipy",
+    "ownersOnly": "Tylko właściciele bota mogą ostrzegać członków ekipy, widzieć ich ostrzeżenia ekipy i oddawać zdjęte role ekipy (jak /staff warn, warnings i restore).",
+    "reason": "Powód: którą zasadę dla adminów złamał (zostanie mu wysłany)",
+    "give": "Daj ostrzeżenie ekipy",
+    "giveConfirm": "Dać temu członkowi ekipy ostrzeżenie? Przy {limit} aktywnych ostrzeżeniach role ekipy są zdejmowane.",
+    "showOf": "Pokaż ostrzeżenia",
+    "warningsError": "Nie udało się wczytać ostrzeżeń (baza danych niedostępna).",
+    "warningsOf": "Ostrzeżenia ekipy: {name}",
+    "given": "Dane",
+    "active": "aktywne",
+    "expired": "wygasłe",
+    "removedError": "Nie udało się wczytać zdjętych ról ekipy (baza danych niedostępna).",
+    "removedRoles": "Zdjęte role",
+    "why": "Dlaczego",
+    "restore": "Oddaj role",
+    "restoreConfirm": "Oddać te role ekipy?",
+    "noneSaved": "Nie zapisano żadnych zdjętych ról ekipy.",
+    "restoreOf": "Oddaj role",
+    "help": "Ostrzeżenia ekipy wygasają; przy {limit} aktywnych ostrzeżeniach role ekipy są zdejmowane (zdejmuje je też ochrona ekipy). Członek dostaje wiadomość prywatną, a dziennik moderacji wpis.",
+    "removedTitle": "Zdjęte role ekipy",
+    "restoreNote": "Oddanie przywraca zapisane role, którymi bot nadal może zarządzać. Blokadę limitu bezpieczeństwa (za dużo banów lub wyrzuceń w 10 minut) zdejmuje się osobno (Blokady limitu bezpieczeństwa)."
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "chart": {
+    "aria": "{label} pro Tag für {days} Tage, {total} insgesamt. Die Tabelle unten enthält jeden Tag."
+  },
+  "page": {
+    "unreadable": "Die Zahlen konnten nicht geladen werden (Datenbank). Lade die Seite neu, um es noch einmal zu versuchen.",
+    "intro": "Die letzten {days} Tage auf diesem Server (UTC). Nachrichten werden ab heute gezählt: nur eine Zahl pro Tag, nicht wer sie geschrieben hat oder was.",
+    "inDays": "{sum} in {days} Tagen",
+    "messages": "Nachrichten",
+    "joinsLeaves": "Beitritte und Austritte",
+    "joinedLeft": "{joins} beigetreten, {leaves} gegangen",
+    "joins": "Beitritte",
+    "leaves": "Austritte",
+    "leavesLabel": "Austritte:",
+    "cases": "Fälle",
+    "table": "Jeden Tag als Tabelle"
+  },
+  "col": {
+    "day": "Tag",
+    "moderator": "Moderator",
+    "total": "Gesamt",
+    "bans": "Banns",
+    "kicks": "Kicks",
+    "mutes": "Stummschaltungen",
+    "warns": "Verwarnungen",
+    "removed": "Entfernt",
+    "rule": "Regel",
+    "actions": "Aktionen",
+    "undone": "Rückgängig",
+    "undoneShare": "Anteil rückgängig"
+  },
+  "analytics": {
+    "title": "Team und Automod",
+    "locked": "Fälle pro Moderator und wie oft jede Automod-Regel rückgängig gemacht wird, gibt es mit Mewvo Pro und Max, im Tarif des Server-Inhabers.",
+    "plans": "Tarife",
+    "unreadable": "Diese Zahlen konnten nicht geladen werden (Datenbank). Lade die Seite neu, um es noch einmal zu versuchen.",
+    "perModerator": "Fälle pro Moderator",
+    "lastDays": "letzte {days} Tage",
+    "noCases": "In dieser Zeit keine Fälle von Personen.",
+    "rules": "Automod-Regeln",
+    "tooStrict": "Eine Regel, die oft rückgängig gemacht wird, ist vielleicht zu streng: Überleg dir „Nur melden (nicht löschen)“ für sie.",
+    "noAutomod": "Automod hat in dieser Zeit nichts getan."
+  }
+}

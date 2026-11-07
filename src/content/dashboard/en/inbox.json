@@ -1,0 +1,93 @@
+{
+  "kinds": {
+    "appeal": { "label": "Appeals", "single": "Appeal" },
+    "ticket": { "label": "Tickets", "single": "Ticket" },
+    "modmail": { "label": "Modmail", "single": "Modmail" },
+    "report": { "label": "Staff reports", "single": "Staff report" },
+    "review": { "label": "Automod reviews", "single": "Automod review" }
+  },
+  "action": {
+    "appeal": "Review appeal",
+    "ticket": "Open conversation",
+    "modmail": "Open conversation",
+    "report": "Open in Discord",
+    "review": "Open review card"
+  },
+  "list": {
+    "title": "Inbox",
+    "heading": "Inbox ({count})",
+    "intro": "Everything waiting for staff, oldest first: appeals, tickets, modmail, staff reports and automod review cards. Amber after a day, red after three.",
+    "filterLabel": "Filter by kind",
+    "all": "All",
+    "failed": "Could not be loaded right now: {kinds}. Those counts are not complete; reload to try again.",
+    "kind": "Kind",
+    "what": "What",
+    "who": "Who",
+    "waiting": "Waiting",
+    "opensDiscord": "(opens Discord)",
+    "empty": "Nothing is waiting for staff.",
+    "emptyKind": {
+      "appeal": "No open appeals.",
+      "ticket": "No open tickets.",
+      "modmail": "No open modmail.",
+      "report": "No open staff reports.",
+      "review": "No open automod reviews."
+    }
+  },
+  "conversation": {
+    "titleModmail": "Modmail #{channel}",
+    "titleTicket": "Ticket #{channel}",
+    "headModmail": "Modmail · #{channel}",
+    "headTicket": "Ticket · #{channel}",
+    "back": "← Inbox",
+    "with": "With {member} {id} · ",
+    "openDiscord": "Open in Discord",
+    "bot": "bot",
+    "last": {
+      "one": "Last {count} messages",
+      "other": "Last {count} messages"
+    },
+    "noMessages": "No messages yet.",
+    "reply": "Reply",
+    "helpModmail": "Sent as the bot, like typing in the Discord channel: the member gets a DM \"Your server name (staff): …\" and a copy is posted in the channel. Start with {prefix} for an internal note (posted in the channel only, never sent to the member).",
+    "helpTicket": "Posted as the bot in the ticket channel (the member reads it there).",
+    "editingOff": "Editing from the dashboard is off (DASHBOARD_EDIT_ENABLED): reply in Discord.",
+    "needsAdmin": "Replying needs Administrator in the main server (bot owners without it can read only).",
+    "message": "Message",
+    "replyHint": "Up to {max} characters; nobody is pinged.",
+    "send": "Send reply",
+    "close": "Close",
+    "closeHelpModmail": "Like the Close button: the member is told by DM, the transcript goes to the transcript channel and the channel is deleted.",
+    "closeHelpTicket": "Like the Close button: the ticket is closed (moved to the closed category if one is set), the member is DMed if that is on, and the transcript is filed.",
+    "reason": "Reason (optional)",
+    "closeButton": "Close…"
+  },
+  "confirm": {
+    "title": "Confirm close",
+    "back": "← Back (cancel)",
+    "headModmail": "Confirm: close the modmail conversation #{channel}",
+    "headTicket": "Confirm: close the ticket #{channel}",
+    "member": "Member",
+    "reason": "Reason",
+    "effect": "Effect",
+    "effectModmail": "The member is DMed that the conversation was closed, the transcript is filed and the channel is deleted.",
+    "effectTicket": "The ticket is closed for the member (they can no longer write in it), the transcript is filed.",
+    "once": "This confirmation works once and expires in 5 minutes.",
+    "submit": "Close now"
+  },
+  "route": {
+    "gone": "This conversation or ticket is not open any more (or never existed). It may have been closed in Discord.",
+    "goneNothingSent": "This conversation or ticket is not open any more. Nothing was sent.",
+    "goneShort": "This conversation or ticket is not open any more.",
+    "readError": "The messages could not be loaded from Discord. Reload to try again.",
+    "tooLong": "The reply is longer than {max} characters.",
+    "empty": "Write a reply first.",
+    "notePosted": "Internal note posted in the channel (not sent to the member).",
+    "ticketReplied": "Reply posted in the ticket.",
+    "dmSent": "Reply sent to the member by DM and copied to the channel.",
+    "dmFailed": "The reply was posted in the channel, but the DM could not be delivered (they left the server or closed their DMs).",
+    "confirmExpired": "This confirmation expired or was already used. Nothing was closed; press Close again.",
+    "closedModmail": "Modmail conversation #{channel} closed.",
+    "closedTicket": "Ticket #{channel} closed."
+  }
+}

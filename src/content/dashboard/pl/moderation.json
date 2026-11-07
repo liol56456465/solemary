@@ -1,0 +1,247 @@
+{
+  "action": {
+    "ban": "Ban",
+    "kick": "Wyrzucenie",
+    "mute": "Wyciszenie",
+    "warn": "Ostrzeżenie",
+    "unban": "Odbanowanie",
+    "unmute": "Zdjęcie wyciszenia",
+    "removewarn": "Usunięcie ostrzeżenia"
+  },
+  "length": {
+    "60s": "60 sekund",
+    "5m": "5 minut",
+    "10m": "10 minut",
+    "1h": "1 godzina",
+    "1d": "1 dzień",
+    "3d": "3 dni",
+    "7d": "7 dni",
+    "1w": "1 tydzień",
+    "28d": "28 dni",
+    "30d": "30 dni"
+  },
+  "flow": {
+    "chooseReason": "Wybierz powód.",
+    "unknownAppealChoice": "Czy można się odwołać: nieznany wybór."
+  },
+  "void": {
+    "dm": "Członek dostanie DM z twoim powodem.",
+    "test": "Sprawa testowa: tylko wpis zostaje oznaczony jako pomyłka. {dm}",
+    "alreadyEnded": "Kara już się skończyła, więc nic nie jest zdejmowane; sprawa zostaje tylko oznaczona jako pomyłka. {dm}",
+    "alreadyLifted": "Kara została już zdjęta, więc nic nie jest zdejmowane; sprawa zostaje tylko oznaczona jako pomyłka. {dm}",
+    "lift": {
+      "ban": "Członek zostaje odbanowany (i dostaje zaproszenie z powrotem).",
+      "mute": "Z członka zostaje zdjęte wyciszenie.",
+      "warn": "Ostrzeżenie przestaje się liczyć do etapów ostrzeżeń; ban, który spowodowało, zostaje zdjęty.",
+      "kick": "Przy wyrzuceniu nie ma czego zdejmować; sprawa zostaje oznaczona jako pomyłka.",
+      "fallback": "To, co nadal obowiązuje, zostaje zdjęte."
+    },
+    "effect": "{lift} {dm}"
+  },
+  "result": {
+    "done": "{action}: gotowe dla {name}.",
+    "case": "Sprawa {code} ({name}).",
+    "dmFailed": "Nie udało się dostarczyć DM (DM zamknięte albo brak wspólnego serwera); akcja i tak została wykonana.",
+    "dmDelivered": "DM dostarczony.",
+    "warning": "Uwaga:"
+  },
+  "access": {
+    "needModRole": "Do tego potrzebujesz roli moderatora albo uprawnienia Administrator na głównym serwerze (mogło zostać odebrane od czasu logowania).",
+    "needAdmin": "Do tego potrzebujesz uprawnienia Administrator na głównym serwerze.",
+    "actionNeedsAdmin": "{action} wymaga uprawnienia Administrator na głównym serwerze.",
+    "thisAction": "Ta akcja",
+    "ownerOnly": "To mogą tylko właściciele bota (jak /staff restore).",
+    "enforcementAdmin": "Kary wymagają uprawnienia Administrator na głównym serwerze (właściciele bota bez niego mogą tylko przeglądać)."
+  },
+  "expired": {
+    "action": "To potwierdzenie wygasło albo zostało już użyte. Nic nie zrobiono; otwórz podgląd akcji jeszcze raz.",
+    "bulk": "To potwierdzenie wygasło albo zostało już użyte. Nic nie zrobiono; otwórz podgląd akcji zbiorczej jeszcze raz.",
+    "void": "To potwierdzenie wygasło albo zostało już użyte. Nic nie zrobiono; usuń sprawę jeszcze raz.",
+    "cases": "To potwierdzenie wygasło albo zostało już użyte. Nic nie zrobiono; wybierz sprawy jeszcze raz.",
+    "appeal": "To potwierdzenie wygasło albo zostało już użyte. Nic nie zrobiono; zdecyduj jeszcze raz."
+  },
+  "members": {
+    "bansFailed": "Nie udało się wczytać listy banów (Discord albo baza danych nie odpowiedziały). Odśwież stronę, aby spróbować ponownie.",
+    "noUserWithId": "Nie ma użytkownika Discorda o ID {id}.",
+    "noUser": "Nie ma użytkownika Discorda o tym ID.",
+    "notUserId": "To nie jest ID użytkownika.",
+    "unknownAction": "Nieznana akcja.",
+    "notAvailable": "{action} nie jest teraz dostępne dla {name} (odśwież stronę).",
+    "warnWouldBan": "To ostrzeżenie automatycznie zbanowałoby {name} (etapy ostrzeżeń), więc potrzebny jest administrator.",
+    "chooseCountedWarn": "Wybierz jedno z liczonych ostrzeżeń członka.",
+    "actionFailed": "Coś poszło nie tak; możliwe, że nic się nie zmieniło. Sprawdź sprawy członka, zanim spróbujesz ponownie.",
+    "alreadyHasRole": "{name} ma już @{role}.",
+    "lacksRole": "{name} nie ma @{role}.",
+    "chooseHowLong": "Wybierz, na jak długo.",
+    "roleFor": "@{role} na {length}",
+    "gaveRole": "Nadano {label} dla {name}.",
+    "tookRole": "Odebrano @{role} od {name}.",
+    "sameNickname": "To już jest ich pseudonim.",
+    "nicknameSet": "Pseudonim ustawiony na „{nick}”.",
+    "nicknameRemoved": "Pseudonim usunięty.",
+    "chooseTimeout": "Wybierz długość przerwy.",
+    "timeoutAdmin": "Discord nie pozwala dać przerwy członkowi z uprawnieniem Administrator.",
+    "notTimedOut": "{name} nie ma przerwy.",
+    "timeoutRemoved": "Przerwa dla {name} zdjęta.",
+    "timedOut": "{name} ma przerwę na {length}.",
+    "notVerified": "{name} nie ma roli zweryfikowanego.",
+    "unverified": "Weryfikacja zdjęta z {name}."
+  },
+  "bulk": {
+    "action": {
+      "roleAdd": "Nadaj rolę",
+      "roleRemove": "Odbierz rolę",
+      "timeout": "Przerwa",
+      "kick": "Wyrzucenie",
+      "ban": "Ban"
+    },
+    "labelRole": "{label} @{role}",
+    "labelFor": "{label} na {length}",
+    "labelTimeout": "{label} ({length})",
+    "notDone": "Nie wykonano",
+    "tooManyMatch": "Do tych filtrów pasuje członków: {total}; jedna akcja zbiorcza może zmienić najwyżej {max}. Zawęź filtry.",
+    "tickMember": "Zaznacz co najmniej jednego członka albo wybierz „wszyscy pasujący do tych filtrów”.",
+    "tooMany": "Jedna akcja zbiorcza może zmienić najwyżej {max} członków.",
+    "chooseAction": "Wybierz, co zrobić.",
+    "chooseRole": "Wybierz rolę.",
+    "blocked": "Blokuje cię limit bezpieczeństwa (za dużo banów lub wyrzuceń w 10 minut); nic nie zrobiono.",
+    "unknownJob": "Ta akcja zbiorcza jest nieznana (może mieć ponad godzinę albo bot został zrestartowany)."
+  },
+  "notes": {
+    "empty": "Notatka jest pusta.",
+    "added": "Notatka dodana.",
+    "notNote": "To nie jest notatka.",
+    "gone": "Tej notatki już nie ma.",
+    "removed": "Notatka usunięta."
+  },
+  "case": {
+    "noCase": "Nie ma sprawy o tym kodzie.",
+    "giveChange": "Podaj nowy powód albo nowy czas trwania.",
+    "field": {
+      "reason": "powód",
+      "duration": "czas trwania"
+    },
+    "fieldsAnd": "{a} i {b}",
+    "edited": "Sprawa {code} zmieniona: {fields}.",
+    "editedEnded": "Sprawa {code} zmieniona: {fields}. Nowy koniec już minął: kara zostanie zdjęta w ciągu minuty.",
+    "reasonEmpty": "Powód nie może być pusty.",
+    "alreadyRemoved": "Sprawa {code} jest już usunięta.",
+    "voidTitle": "Usuń {code}",
+    "voidHeading": "Potwierdź: usuń sprawę {code}",
+    "rowCase": "Sprawa",
+    "rowMember": "Członek",
+    "rowReason": "Powód (zobaczy go członek)",
+    "rowEffect": "Skutek",
+    "removeSubmit": "Usuń sprawę",
+    "removed": "Sprawa {code} usunięta (już się nie liczy).",
+    "dmDelivered": "DM do członka: dostarczony.",
+    "dmNotDelivered": "DM do członka: niedostarczony.",
+    "noteAdded": "Notatka dodana. Widzi ją tylko ekipa.",
+    "tagsSaved": "Tagi zapisane: {tags}.",
+    "tagsRemoved": "Tagi usunięte."
+  },
+  "evidence": {
+    "oneLink": "Podaj jeden link http(s), np. link do wiadomości na Discordzie.",
+    "added": "Dowód #{id} dodany.",
+    "addedLinkOnly": "Dowód #{id} dodany. Nie udało się odczytać wiadomości (inny serwer, brak dostępu albo usunięta), więc zapisano tylko link.",
+    "chooseImage": "Wybierz obraz do przesłania.",
+    "notImage": "Ten plik nie jest obrazem PNG, JPEG, GIF ani WebP.",
+    "imageAdded": "Dowód-obraz #{id} dodany (przesłany ponownie na kanał dowodów).",
+    "notNumber": "To nie jest numer dowodu.",
+    "none": "Sprawa {code} nie ma dowodu #{id}.",
+    "removed": "Dowód #{id} usunięty.",
+    "removedImage": "Dowód #{id} usunięty. Jego kopia na kanale dowodów zostaje."
+  },
+  "cases": {
+    "nothingChanged": "Nic nie zmieniono",
+    "backToCases": "Wróć do spraw",
+    "tickCase": "Zaznacz co najmniej jedną sprawę.",
+    "chooseAction": "Wybierz, co zrobić z zaznaczonymi sprawami.",
+    "noneExist": "Żadna z zaznaczonych spraw już nie istnieje na tym serwerze.",
+    "removeMax": "Usuwaj najwyżej {max} spraw naraz.",
+    "giveReason": "Podaj powód usunięcia (członkowie go zobaczą).",
+    "allRemoved": "Wszystkie zaznaczone sprawy są już usunięte.",
+    "removeTitle": "Usuń sprawy",
+    "removeHeading": {
+      "one": "Potwierdź: usuń {count} sprawę",
+      "few": "Potwierdź: usuń {count} sprawy",
+      "many": "Potwierdź: usuń {count} spraw",
+      "other": "Potwierdź: usuń {count} sprawy"
+    },
+    "rowReason": "Powód (zobaczą go członkowie)",
+    "willRemove": "Zostaną usunięte ({count})",
+    "skippedRemoved": "Pominięte, już usunięte: {codes}.",
+    "removeSubmit": {
+      "one": "Usuń {count} sprawę",
+      "few": "Usuń {count} sprawy",
+      "many": "Usuń {count} spraw",
+      "other": "Usuń {count} sprawy"
+    },
+    "tagMax": "Taguj najwyżej {max} spraw naraz.",
+    "giveTag": "Podaj tag, np. scam.",
+    "tagLimit": "{code} (ma już 10 tagów)",
+    "tagged": {
+      "one": "Dodano tag #{tag}: {count} sprawa.",
+      "few": "Dodano tag #{tag}: {count} sprawy.",
+      "many": "Dodano tag #{tag}: {count} spraw.",
+      "other": "Dodano tag #{tag}: {count} sprawy."
+    },
+    "untagged": {
+      "one": "Usunięto tag #{tag}: {count} sprawa.",
+      "few": "Usunięto tag #{tag}: {count} sprawy.",
+      "many": "Usunięto tag #{tag}: {count} spraw.",
+      "other": "Usunięto tag #{tag}: {count} sprawy."
+    },
+    "skipped": "Pominięte: {list}.",
+    "goneItem": "{code} (już nie istnieje)",
+    "removedItem": "{code} (już usunięta)",
+    "failedItem": "{code} ({error})",
+    "notRemoved": "nie usunięto",
+    "removedList": "Usunięto: {list}.",
+    "none": "żadnej"
+  },
+  "appeal": {
+    "answers": "Odpowiedzi",
+    "unreadable": "(nie udało się odczytać)",
+    "chooseDecision": "Wybierz Przyjmij albo Odrzuć.",
+    "noPending": "Nie ma oczekującego odwołania dla {code}.",
+    "accepted": "Odwołanie dla {code} przyjęte.",
+    "denied": "Odwołanie dla {code} odrzucone.",
+    "ownerOverride": "To ty nałożyłeś tę karę: decyzja podjęta jako właściciel bota, zapisana jako obejście przez właściciela."
+  },
+  "keepApart": {
+    "pickBoth": "Wybierz obu członków (wpisz nazwę i wybierz albo użyj „Znajdź członka”) albo wklej ich ID użytkowników Discorda.",
+    "days": "Liczba dni musi być od 1 do {max}.",
+    "reasonRequired": "Powód jest wymagany.",
+    "notUser": "Jedno z tych ID nie jest użytkownikiem Discorda.",
+    "noBots": "Rozdzielenie dotyczy członków, nie botów.",
+    "started": "Rozdzielenie #{id} rozpoczęte między {a} a {b}.",
+    "bothDmed": "Obaj członkowie dostali DM.",
+    "dmFailed": "Do jednego z nich nie udało się dostarczyć DM.",
+    "notOrder": "To nie jest numer rozdzielenia.",
+    "noOrder": "Nie ma aktywnego rozdzielenia #{id}.",
+    "ended": "Rozdzielenie #{id} zakończone."
+  },
+  "watchlist": {
+    "notEntry": "To nie jest numer wpisu na liście obserwacji.",
+    "noEntry": "Nie ma aktywnego wpisu #{id} na liście obserwacji.",
+    "ended": "Wpis #{id} na liście obserwacji zakończony."
+  },
+  "staff": {
+    "coverage": "Pokrycie",
+    "coverageFailed": "Nie udało się wczytać pokrycia (baza danych niedostępna).",
+    "activity": "Aktywność ekipy",
+    "activityOwners": "Tygodniową aktywność ekipy widzą tylko właściciele bota (jak /staff activity).",
+    "notBlocked": "Ten moderator nie jest zablokowany.",
+    "blockLifted": "Blokada limitu bezpieczeństwa zdjęta dla {name}.",
+    "pickStaff": "Członek ekipy: wybierz członka (wpisz nazwę i wybierz albo użyj „Znajdź członka”) albo wklej jego ID użytkownika Discorda.",
+    "reasonRule": "Powód jest wymagany (którą zasadę dla adminów złamano).",
+    "cannotWarn": "Nie możesz ostrzec właściciela ani bota.",
+    "notInServer": "Tego użytkownika nie ma na serwerze.",
+    "warned": "Ostrzeżenie ekipy dla {name}: aktywne {active} z {limit}.",
+    "demoted": "Limit osiągnięty: role ekipy zostały odebrane (przywrócisz je w sekcji „Odebrane role ekipy”).",
+    "noSavedRoles": "Dla tego użytkownika nie zapisano odebranych ról ekipy (albo nie ma go na serwerze).",
+    "rolesBack": "Role ekipy oddane {name}: {roles}.",
+    "noneBack": "Żadnej z zapisanych ról nie udało się oddać {name} (usunięte albo powyżej mojej roli)."
+  }
+}

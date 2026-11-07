@@ -1,0 +1,44 @@
+{
+  "none": "(ninguno)",
+  "page": {
+    "intro": "Todos los ajustes del panel del servidor principal y del de soporte en un solo archivo. Úsalo antes de cambios grandes o para mudarte a otro hosting. Nunca contiene secretos.",
+    "download": "Descargar",
+    "downloadButton": "Descargar ajustes (.json)",
+    "load": "Cargar una copia",
+    "loadHelp": "Todavía no cambia nada: primero ves cada ajuste que el archivo cambiaría y luego decides si aplicarlo.",
+    "loadNeedsAdmin": "Cargar una copia requiere Administrador y la edición activada.",
+    "file": "Archivo de copia (.json)",
+    "check": "Revisar este archivo"
+  },
+  "preview": {
+    "title": "Revisar la copia",
+    "wouldChange": {
+      "one": "Cambiaría {count} ajuste",
+      "many": "Cambiarían {count} ajustes",
+      "other": "Cambiarían {count} ajustes"
+    },
+    "server": "Servidor",
+    "setting": "Ajuste",
+    "now": "Ahora",
+    "fromFile": "Del archivo",
+    "confirm": {
+      "one": "¿Aplicar {count} cambio de la copia?",
+      "many": "¿Aplicar {count} cambios de la copia?",
+      "other": "¿Aplicar {count} cambios de la copia?"
+    },
+    "apply": "Aplicar estos cambios",
+    "cancel": "Cancelar",
+    "once": "Funciona una vez y caduca en 10 minutos. Cada cambio va al registro de auditoría.",
+    "same": "El archivo coincide con los ajustes actuales. No cambiaría nada.",
+    "skipped": "Omitidos ({n})"
+  },
+  "route": {
+    "chooseFile": "Elige un archivo de copia.",
+    "expired": "Esa revisión caducó o ya se usó. Vuelve a cargar el archivo.",
+    "applied": {
+      "one": "Copia aplicada: {count} ajuste cambiado. Está en el registro de auditoría.",
+      "many": "Copia aplicada: {count} ajustes cambiados. Están en el registro de auditoría.",
+      "other": "Copia aplicada: {count} ajustes cambiados. Están en el registro de auditoría."
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "joined": {
+    "any": "Kiedykolwiek",
+    "24h": "Ostatnie 24 godziny",
+    "7d": "Ostatnie 7 dni",
+    "30d": "Ostatnie 30 dni",
+    "older": "Ponad 30 dni temu"
+  },
+  "state": {
+    "any": "Wszyscy",
+    "sanction": "Teraz wyciszeni",
+    "warned": "Mają liczone ostrzeżenia",
+    "noroles": "Bez ról",
+    "humans": "Tylko ludzie",
+    "bots": "Tylko boty"
+  },
+  "sort": {
+    "joined_desc": "Najnowsi najpierw",
+    "joined_asc": "Najstarsi najpierw",
+    "name": "Nazwa A–Z"
+  },
+  "timeout": {
+    "60s": "60 sekund",
+    "5m": "5 minut",
+    "10m": "10 minut",
+    "1h": "1 godzina",
+    "1d": "1 dzień",
+    "1w": "1 tydzień",
+    "28d": "28 dni"
+  },
+  "bulk": {
+    "role-add": "Nadaj rolę",
+    "role-remove": "Odbierz rolę",
+    "timeout": "Daj przerwę (timeout)",
+    "kick": "Wyrzuć",
+    "ban": "Zbanuj"
+  },
+  "problem": {
+    "notInServer": "Tego użytkownika nie ma na serwerze.",
+    "serverOwner": "Właściciela serwera nie można tu zmienić.",
+    "itself": "Mewvo nie może zmienić samego siebie.",
+    "yourself": "Nie możesz tu zmienić własnych ról ani przerwy (timeout).",
+    "thisMember": "Ten członek",
+    "aboveBot": "{name}: ma rolę na poziomie najwyższej roli Mewvo lub wyżej, więc Discord nie pozwala botowi go zmienić.",
+    "aboveYou": "{name}: ma rolę na poziomie twojej najwyższej roli lub wyżej.",
+    "roleGone": "Ta rola już nie istnieje.",
+    "everyone": "Roli @everyone nie można nadać ani odebrać.",
+    "managed": "@{role} jest zarządzana przez integrację lub bota; Discord nie pozwala zmieniać jej ręcznie.",
+    "roleAboveBot": "@{role} nie jest poniżej najwyższej roli Mewvo, więc Discord nie pozwala botowi jej nadać ani odebrać.",
+    "roleAboveYou": "@{role} nie jest poniżej twojej najwyższej roli.",
+    "staffRole": "@{role} ma uprawnienia ekipy ({permissions}); tylko właściciel serwera lub właściciele bota mogą ją tu nadać lub odebrać."
+  },
+  "skip": {
+    "hasRole": "ma już @{role}",
+    "lacksRole": "nie ma @{role}",
+    "noLength": "nie wybrano długości przerwy",
+    "admin": "ma uprawnienie Administrator (Discord nie pozwala na przerwę)",
+    "guard": "limit bezpieczeństwa: w tym 10-minutowym oknie nie można już banować ani wyrzucać"
+  }
+}

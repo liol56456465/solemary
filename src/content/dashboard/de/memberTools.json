@@ -1,0 +1,163 @@
+{
+  "notice": {
+    "readOnly": "Nur lesen: Bearbeiten im Dashboard ist ausgeschaltet (DASHBOARD_EDIT_ENABLED ist nicht true).",
+    "viewOnly": "Nur ansehen: Um Rollenregeln zu ändern, brauchst du Administrator auf dem Hauptserver."
+  },
+  "trigger": {
+    "days_in_server": "Tage auf dem Server",
+    "level_reached": "Level",
+    "has_role": "Hat eine Rolle"
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "z. B. Stammgäste nach 30 Tagen",
+    "when": "Wann",
+    "threshold": "Tage oder Level",
+    "thresholdHint": "Tage auf dem Server (0 = beim Beitritt, bis {maxDays}) oder das Level (1–{maxLevel}). Nicht genutzt für „Hat eine Rolle“.",
+    "triggerRole": "Auslöser-Rolle",
+    "triggerRoleNone": "Nur für „Hat eine Rolle“",
+    "give": "Diese Rolle geben",
+    "choose": "Auswählen…",
+    "giveHint": "Nur Rollen unter Mewvo (und unter deiner eigenen höchsten Rolle), nicht verwaltet, ohne Team-Berechtigungen.",
+    "removeWhenFalse": "Die Rolle wieder wegnehmen, wenn die Bedingung nicht mehr zutrifft",
+    "removeHelp": "Das Wegnehmen gilt auch für Mitglieder, die die Rolle von Hand bekommen haben; wer noch zu einer anderen aktiven Regel für dieselbe Rolle passt, behält sie.",
+    "enabled": "Regel beim Speichern einschalten",
+    "nothingYet": "Noch ändert sich nichts: Die nächste Seite zeigt, wie viele Mitglieder und wen die Regel ändern würde.",
+    "dryRun": "Probelauf"
+  },
+  "rules": {
+    "title": "Rollenregeln",
+    "intro": "Rollen, die Mewvo selbst vergibt: geprüft alle 10 Minuten (höchstens {limit} Rollenänderungen pro Lauf, eine nach der anderen) und sofort, wenn ein Mitglied beitritt, ein Level aufsteigt oder eine Rolle bekommt.",
+    "levelingOff": "Level ist aus: Level ändern sich nicht, also nutzen Level-Regeln nur die schon gespeicherten Level.",
+    "heading": "Regeln ({count} von {max})",
+    "rule": "Regel",
+    "state": "Status",
+    "none": "Noch keine Rollenregeln.",
+    "keepRoles": "Wenn du eine Regel ausschaltest oder löschst, bleiben die Rollen, die sie schon vergeben hat.",
+    "editHeading": "„{name}“ bearbeiten",
+    "newRule": "Neue Regel",
+    "full": "Dieser Server hat {max} Regeln, mehr sind nicht erlaubt. Lösche zuerst eine.",
+    "cancelEdit": "Bearbeiten abbrechen",
+    "onPaused": "An, pausiert",
+    "on": "An",
+    "off": "Aus",
+    "lastRun": "Letzter Lauf {date}: +{added} −{removed}",
+    "lastFailed": ", {count} fehlgeschlagen",
+    "notRun": "Noch nicht gelaufen",
+    "turnOff": "Ausschalten",
+    "turnOn": "Einschalten…",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "deleteConfirm": "Die Regel „{name}“ löschen? Rollen, die sie schon vergeben hat, bleiben."
+  },
+  "andMore": "… und {count} weitere.",
+  "preview": {
+    "back": "← Rollenregeln",
+    "title": "Probelauf: {name}",
+    "nobody": "Niemand.",
+    "wouldChange": {
+      "one": "Würde jetzt {count} Mitglied ändern: die Rolle {add} geben, {remove} wegnehmen. Noch wurde nichts geändert.",
+      "other": "Würde jetzt {count} Mitglieder ändern: die Rolle {add} geben, {remove} wegnehmen. Noch wurde nichts geändert."
+    },
+    "savedOff": {
+      "one": "Ausgeschaltet gespeichert: Nichts ändert sich, bis du sie einschaltest. Wäre sie jetzt an, würde sie {count} Mitglied ändern.",
+      "other": "Ausgeschaltet gespeichert: Nichts ändert sich, bis du sie einschaltest. Wäre sie jetzt an, würde sie {count} Mitglieder ändern."
+    },
+    "partial": "Gezählt aus {cached} von {total} Mitgliedern (die Mitgliederliste lädt noch); der echte Lauf nutzt alle.",
+    "gets": "Bekommt die Rolle ({count})",
+    "loses": "Verliert die Rolle ({count})",
+    "nextRun": "Die Änderungen macht der nächste Lauf (innerhalb von 10 Minuten), höchstens {limit} pro Lauf.",
+    "savedOffShort": "Die Regel wird ausgeschaltet gespeichert.",
+    "saveChanges": "Änderungen speichern",
+    "saveRule": "Regel speichern"
+  },
+  "chart": {
+    "label": {
+      "one": "Beitritte und Austritte pro Tag, letzter {count} Tag: {joins} Beitritte, {leaves} Austritte",
+      "other": "Beitritte und Austritte pro Tag, letzte {count} Tage: {joins} Beitritte, {leaves} Austritte"
+    },
+    "day": "{day}: {joins} beigetreten, {leaves} gegangen",
+    "joined": "Beigetreten",
+    "left": "Gegangen"
+  },
+  "insights": {
+    "title": "Mitglieder-Einblicke",
+    "intro": "Wer kommt und geht, wer ohne Rolle festhängt, wer immer wieder Fälle bekommt.",
+    "partial": "Basierend auf {cached} von {total} Mitgliedern: Die Mitgliederliste lädt noch. Lade die Seite in einer Minute neu.",
+    "notLoaded": "Konnte nicht geladen werden.",
+    "joinsTitle": {
+      "one": "Beitritte und Austritte (letzter {count} Tag)",
+      "other": "Beitritte und Austritte (letzte {count} Tage)"
+    },
+    "joinsTitleShort": "Beitritte und Austritte",
+    "joinsSummary": "{joined} beigetreten · {left} gegangen · netto {net}. Tage in UTC.",
+    "countingSince": "Gezählt seit {date}; frühere Tage zeigen 0.",
+    "nothingYet": "Noch nichts gezählt: Beitritte und Austritte werden ab jetzt erfasst.",
+    "kept": {
+      "one": "Aufbewahrt {count} Tag.",
+      "other": "Aufbewahrt {count} Tage."
+    },
+    "showTable": "Als Tabelle zeigen",
+    "day": "Tag",
+    "noRolesTitle": "Neue Mitglieder ohne Rolle nach 24 Stunden",
+    "noRolesHelp": "In den letzten 30 Tagen beigetreten, vor mehr als 24 Stunden, und noch immer ohne Rolle (ohne Bots). Oft: nie verifiziert.",
+    "joinedAt": "beigetreten {date}",
+    "none": "Keine.",
+    "noGuild": "Der Bot sieht den Hauptserver gerade nicht.",
+    "offendersTitle": {
+      "one": "Wiederholungstäter (letzter {count} Tag)",
+      "other": "Wiederholungstäter (letzte {count} Tage)"
+    },
+    "offendersHelp": "Mitglieder mit zwei oder mehr Fällen (entfernte, importierte und Testfälle nicht mitgezählt).",
+    "member": "Mitglied",
+    "cases": "Fälle",
+    "last": "Zuletzt",
+    "warns": { "one": "{count} Verwarnung", "other": "{count} Verwarnungen" },
+    "mutes": { "one": "{count} Stummschaltung", "other": "{count} Stummschaltungen" },
+    "kicks": { "one": "{count} Kick", "other": "{count} Kicks" },
+    "bans": { "one": "{count} Bann", "other": "{count} Banns" },
+    "noOffenders": {
+      "one": "Niemand hat zwei oder mehr Fälle am letzten {count} Tag.",
+      "other": "Niemand hat zwei oder mehr Fälle in den letzten {count} Tagen."
+    },
+    "inactiveTitle": {
+      "one": "Inaktive Mitglieder (seit {count}+ Tag keine XP)",
+      "other": "Inaktive Mitglieder (seit {count}+ Tagen keine XP)"
+    },
+    "inactiveOff": "Nicht verfügbar: Die einzige Aktivitätszeit, die Mewvo speichert, ist das letzte Mal, dass das Level-System einem Mitglied XP gegeben hat, und Level ist aus. Schalte Level ein, um mit dem Messen zu beginnen; hier wird nichts geschätzt.",
+    "inactiveHelp": {
+      "one": "Aktivität = das letzte Mal, dass das Level-System dem Mitglied XP gegeben hat (Nachrichten, die XP bringen). Mitglieder, die seit weniger als {count} Tag auf dem Server sind, und Bots sind nicht dabei.",
+      "other": "Aktivität = das letzte Mal, dass das Level-System dem Mitglied XP gegeben hat (Nachrichten, die XP bringen). Mitglieder, die seit weniger als {count} Tagen auf dem Server sind, und Bots sind nicht dabei."
+    },
+    "noRecord": {
+      "one": "{count} Mitglied hat überhaupt keinen Level-Eintrag (nie XP verdient oder vor dem Einschalten von Level) und ist nicht aufgeführt.",
+      "other": "{count} Mitglieder haben überhaupt keinen Level-Eintrag (nie XP verdient oder vor dem Einschalten von Level) und sind nicht aufgeführt."
+    },
+    "lastXp": "letzte XP {date}",
+    "noInactive": {
+      "one": "Niemand mit Level-Eintrag war {count} Tag lang still.",
+      "other": "Niemand mit Level-Eintrag war {count} Tage lang still."
+    }
+  },
+  "route": {
+    "needName": "Gib der Regel einen Namen.",
+    "needTrigger": "Wähle, wann die Regel gilt.",
+    "needRole": "Wähle die Rolle, die vergeben wird.",
+    "needTriggerRole": "Wähle die Auslöser-Rolle.",
+    "needLevel": "Gib das Level an (eine ganze Zahl).",
+    "needDays": "Gib die Anzahl der Tage an (eine ganze Zahl).",
+    "notARule": "Keine Regel.",
+    "loadError": "Die Rollenregeln konnten nicht geladen werden (die Datenbank antwortet nicht). Es wurde nichts geändert; lade die Seite neu, um es noch einmal zu versuchen.",
+    "gone": "Diese Regel gibt es nicht mehr.",
+    "goneNotSaved": "Diese Regel gibt es nicht mehr; es wurde nichts gespeichert.",
+    "full": "Dieser Server hat schon {max} Regeln, mehr sind nicht erlaubt.",
+    "dryRunExpired": "Dieser Probelauf ist abgelaufen oder wurde schon benutzt. Es wurde nichts gespeichert; starte den Probelauf noch einmal.",
+    "savedOn": "Regel „{name}“ gespeichert; der nächste Lauf (innerhalb von 10 Minuten) wendet sie an.",
+    "savedOff": "Regel „{name}“ gespeichert, ausgeschaltet.",
+    "createdOn": "Regel „{name}“ erstellt; der nächste Lauf (innerhalb von 10 Minuten) wendet sie an.",
+    "createdOff": "Regel „{name}“ erstellt, ausgeschaltet.",
+    "turnedOff": "Regel „{name}“ ausgeschaltet. Rollen, die sie schon vergeben hat, bleiben.",
+    "deleted": "Regel „{name}“ gelöscht. Rollen, die sie schon vergeben hat, bleiben.",
+    "partFailed": "Konnte nicht geladen werden (die Datenbank antwortet nicht). Lade die Seite neu, um es noch einmal zu versuchen."
+  }
+}

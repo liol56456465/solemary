@@ -1,0 +1,108 @@
+{
+  "common": {
+    "readOnly": "Tylko do odczytu: edytowanie w panelu jest wyłączone (DASHBOARD_EDIT_ENABLED nie jest true).",
+    "clear": "Wyczyść"
+  },
+  "state": {
+    "translated": "Przetłumaczone",
+    "needs-update": "Do aktualizacji",
+    "missing": "Brak (pokazany angielski)",
+    "edited": "Edytowane",
+    "default": "Domyślne"
+  },
+  "filter": {
+    "all": "Wszystkie",
+    "needs-update": "Do aktualizacji",
+    "missing": "Brakujące",
+    "edited": "Edytowane"
+  },
+  "tabs": {
+    "label": "Edytor strony",
+    "text": "Teksty",
+    "images": "Obrazy"
+  },
+  "markup": {
+    "formatting": "Formatowanie:",
+    "bold": "pogrubienie",
+    "italic": "kursywa",
+    "code": "kod",
+    "text": "tekst",
+    "rest1": "dla linku, pusta linia dla nowego akapitu, linie zaczynające się od",
+    "rest2": "dla listy. HTML nie działa (znaczniki są pokazywane jako zwykły tekst). Słowa w nawiasach klamrowych, np.",
+    "rest3": "uzupełnia strona: zostaw te same co w tekście angielskim."
+  },
+  "home": {
+    "title": "Strona",
+    "help": "Zmieniaj teksty strony w każdym języku i podmieniaj jej obrazy, bez kodu. Zmiany działają od razu po zapisaniu. Każda grupa tekstów to jedna część strony; otwórz ją, żeby zobaczyć i edytować jej teksty.",
+    "toUpdate": "do aktualizacji: {count}",
+    "missing": "brakuje: {count}",
+    "byGroup": "Teksty według grup",
+    "byGroupHelp": "Dla każdego języka: przetłumaczone teksty / wszystkie teksty. **Do aktualizacji**: tekst angielski zmienił się po tłumaczeniu. **Brak**: strona pokazuje tam angielski. Przy angielskim widać, ile tekstów edytowałeś.",
+    "group": "Grupa",
+    "texts": "Teksty",
+    "englishEdited": "Edytowane po angielsku",
+    "all": "Wszystkie",
+    "notHere": "Nie edytuje się tutaj",
+    "notHereHelp": "Strony prawne (Polityka prywatności, Regulamin, Nota prawna, Kontakt, Odstąpienie) to teksty prawne: edytuje się je w kodzie i sprawdza, nie tutaj. Są tylko po angielsku."
+  },
+  "ns": {
+    "title": "Teksty: {ns}",
+    "pageTitle": "Strona: {name}",
+    "help": "Każdy tekst z tej grupy z tekstem angielskim i tekstem w języku: {lang}. Otwórz tekst, żeby go edytować.",
+    "language": "Język",
+    "show": "Pokaż",
+    "search": "Szukaj",
+    "searchPlaceholder": "Klucz lub tekst",
+    "showButton": "Pokaż",
+    "count": { "one": "{count} tekst.", "few": "{count} teksty.", "many": "{count} tekstów.", "other": "{count} tekstu." },
+    "key": "Klucz",
+    "english": "Angielski",
+    "state": "Stan",
+    "englishShown": "(pokazany angielski)",
+    "noMatch": "Żaden tekst nie pasuje."
+  },
+  "key": {
+    "historyError": "Nie udało się wczytać historii (baza danych). Odśwież stronę i spróbuj ponownie.",
+    "noChanges": "Brak zmian.",
+    "history": "Historia ({count}{newest})",
+    "newest30": ", 30 najnowszych",
+    "when": "Kiedy",
+    "by": "Kto",
+    "changedTo": "Zmieniono na",
+    "reset": "Przywróć domyślne",
+    "restore": "Przywróć tę wersję",
+    "fromEdit": "Twoja edycja",
+    "fromCatalog": "Tekst domyślny",
+    "fromEnglish": "Brak tekstu w tym języku: strona pokazuje angielski",
+    "savedBy": "zapisano {date}, przez {who}",
+    "previewNotSaved": "Podgląd (niezapisany):",
+    "textIn": "Tekst ({lang})",
+    "preview": "Podgląd",
+    "save": "Zapisz",
+    "resetConfirm": "Przywrócić domyślny tekst w języku: {lang}?",
+    "help": "Jeden tekst strony w każdym języku. Zapisanie od razu go publikuje; „Przywróć domyślne” przywraca oryginalny tekst.",
+    "original": "Angielski (oryginał)",
+    "englishEdited": "Strona pokazuje zamiast tego twoją angielską edycję (poniżej). Tłumaczenia sprzed niej są oznaczone „Do aktualizacji”."
+  },
+  "images": {
+    "title": "Obrazy strony",
+    "help": "Obrazy, których używa strona. Przesłany plik jest konwertowany (metadane, np. aparatu czy lokalizacji, są usuwane) i dopasowany do rozmiaru miejsca: obraz o innym kształcie jest przycinany na brzegach. Działa od razu; przeglądarki mogą pokazywać stary obraz do 5 minut.",
+    "replaced": "Podmieniony",
+    "default": "Domyślny",
+    "where": "{where}. Ścieżka `{path}`, {size}, {format}.",
+    "currentAlt": "Obecny obraz: {label}",
+    "uploaded": "Przesłano {date}, przez {who}, {size}",
+    "defaultFile": "Plik domyślny",
+    "replace": "Podmień (PNG, JPEG lub WebP, do {mb} MB)",
+    "upload": "Prześlij",
+    "resetConfirm": "Przywrócić domyślny obraz „{label}”?"
+  },
+  "slot": {
+    "screen-overview-dark": { "label": "Zrzut panelu: przegląd (ciemny)", "where": "Strona główna, sekcja „Panel”" },
+    "screen-overview-light": { "label": "Zrzut panelu: przegląd (jasny)", "where": "Dostępny pod swoją ścieżką; żadna strona go teraz nie pokazuje" },
+    "screen-cases-dark": { "label": "Zrzut panelu: sprawy (ciemny)", "where": "Dokumentacja: „Korzystanie z panelu”" },
+    "screen-cases-light": { "label": "Zrzut panelu: sprawy (jasny)", "where": "Dostępny pod swoją ścieżką; żadna strona go teraz nie pokazuje" },
+    "og": { "label": "Obraz udostępniania", "where": "Podglądy linków (Discord, media społecznościowe) każdej strony" },
+    "logo": { "label": "Logo i ikona karty", "where": "Górny pasek strony, favicon, pasek boczny panelu" }
+  }
+}

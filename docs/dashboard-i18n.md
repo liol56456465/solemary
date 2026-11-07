@@ -12,8 +12,17 @@ pl, es, pt-BR. It uses the website's i18n core (`src/services/site/i18n.js`) wit
 - The words the static script shows (`frame.script.*`: Copy, Cancel, Saving…, relative times),
   handed to it as JSON in `<body data-ui-text>` (non-English pages only; no inline script).
 
-Module pages (Welcome, Automod, Cases, Owner pages …) still show their own English text inside the
-translated frame. That is expected until their wave is done.
+- The non-module pages (wave 2): Cases, case detail, Appeals, Staff, Audit log (`cases`, `staffPage`, `audit`),
+  Members / Banned / member page / Keep apart (`members`), the enforcement route messages (`moderation`), Inbox
+  (`inbox`), role rules + insights (`memberTools`, `memberActions`), Words explained + Setup (`help`), Raid timeline
+  (`incidents`), Settings backup (`backups`), Activity (`activity`), All modules (`moduleList`), Fix permissions
+  (`permissionFix`), other route messages (`general`), owner pages (`owner`) and the website editor pages (`ownerWebsite`).
+  Still English: `ownerRoutes.js` / `websiteRoutes.js` flash texts, and text that comes from services
+  (reasons config, flowSummary, inboxData titles, roleRuleService, incident timeline details, settingsBackup problems).
+
+Module pages (Welcome, Automod …) still show their own English text inside the translated frame until their
+wave is done. A nested key named `one/few/many/other/zero` counts as a plural form in the parity test: don't
+use those as plain key names.
 
 ## Where things live
 

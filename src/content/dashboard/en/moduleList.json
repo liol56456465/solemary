@@ -1,0 +1,53 @@
+{
+  "page": {
+    "title": "Modules",
+    "intro": "Every part of Mewvo in one place. {on} of {total} modules with an on/off state are on; open a module to change its settings.",
+    "matches": {
+      "one": "{count} module matches",
+      "other": "{count} modules match"
+    },
+    "showAll": "Show all",
+    "readOnly": "Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true).",
+    "noMatch": "No module matches. Try another word, or browse all modules.",
+    "noneOn": "No modules are on.",
+    "noneOff": "No modules are off."
+  },
+  "filter": {
+    "label": "Filter modules",
+    "all": "All",
+    "on": "On",
+    "off": "Off"
+  },
+  "col": {
+    "module": "Module",
+    "what": "What it does",
+    "state": "State"
+  },
+  "state": {
+    "on": "On",
+    "off": "Off",
+    "needsSetup": "needs setup ({n})",
+    "setUp": "Set up"
+  },
+  "summary": {
+    "tickets": "Members ask staff for help in a private channel.",
+    "welcome": "Greet new members, say goodbye, give a starting role.",
+    "leveling": "Members earn levels for chatting and get roles for them.",
+    "reaction-roles": "Menus where members pick their own roles.",
+    "messages": "Post announcements, polls and countdowns as Mewvo.",
+    "giveaways": "Give away prizes to random members.",
+    "birthdays": "Wish members a happy birthday.",
+    "applications": "Members apply for a role by answering questions.",
+    "community": "Suggestions, starboard, sticky notes, saved replies, YouTube.",
+    "join-to-create": "Voice channels that appear when needed and go away when empty.",
+    "automod": "Stops spam, bad words and raids by itself.",
+    "enforcement": "How warns, mutes and bans work, and how members appeal.",
+    "logging": "A record of what happens in the server, for staff.",
+    "verification": "New members confirm they are real before they can chat.",
+    "counters": "Live member counts and a counting game.",
+    "support": "Where banned members can still appeal.",
+    "rules": "Your server rules, shown on a web page and in punishment messages.",
+    "appearance": "Give Mewvo its own name and picture here (Pro and Max).",
+    "commands": "Turn single commands or groups of commands on or off."
+  }
+}
