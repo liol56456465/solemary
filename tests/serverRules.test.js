@@ -182,9 +182,10 @@ test('/rules: numbered rules with #rule-N anchors, escaped text, last-updated da
         assert.ok(!res.body.includes('<img src=x'));
         assert.ok(res.body.includes('Last updated <time datetime="2026-10-20">20 October 2026</time>.'));
         assert.ok(res.body.includes('<a href="/docs/appeals">How appeals work</a>'));
-        assert.ok(!/<script/i.test(res.body.replace('&lt;script&gt;', '')), 'no scripts');
+        assert.equal((res.body.match(/<script/gi) || []).length, 1, 'only the static site script');
+        assert.ok(res.body.includes('<script src="/site.js?v='), 'the static site script');
         assert.ok(!/\sstyle=|<style/i.test(res.body), 'no inline styles');
-        assert.ok(res.headers.get('content-security-policy').includes("script-src 'none'"));
+        assert.ok(res.headers.get('content-security-policy').includes("script-src 'self';"));
         assert.ok(res.body.includes('<li><a href="/rules" aria-current="page">Rules</a></li>'), 'footer link, current');
     } finally { await site.close(); }
 });

@@ -3,6 +3,7 @@
 // link + not in the sitemap, on → masked numbers, DB error → 503, a failed cat or rules read
 // hides only that block, share image, no inline style or script).
 import { test } from 'node:test';
+import { JS_PATH } from '../src/services/site/shell.js';
 import assert from 'node:assert/strict';
 import express from 'express';
 import {
@@ -281,7 +282,7 @@ test('on: tiles, how it moderates, rules, cat, footer link, sitemap, cat share i
         assert.match(body, /<meta property="og:image" content="https:\/\/mewvo\.example\/img\/cat\/young-happy\.png">/);
         assert.match(body, /<meta name="twitter:card" content="summary">/);
         assert.match(body, /<link rel="canonical" href="https:\/\/mewvo\.example\/trust">/);
-        assert.ok(!/style=|<script/i.test(body));
+        assert.ok(!/style=|<script/i.test(body.replace(`<script src="${JS_PATH}" defer></script>`, '')));
         assert.ok(!/—/.test(body.slice(body.indexOf('<main'), body.indexOf('</main>'))), 'no em dash in the page');
         const main = body.slice(body.indexOf('<main'), body.indexOf('</main>'));
         assert.ok(!/\d{17,20}/.test(main), 'no snowflake');

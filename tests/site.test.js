@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import express from 'express';
 import { PermissionFlagsBits } from 'discord.js';
 import {
-    CSS_PATH, INSTALL_PERMISSIONS, LEADERBOARD_PAGE_SIZE, NOINDEX, SECURITY_HEADERS, STYLESHEET, botStatus,
+    CSS_PATH, INSTALL_PERMISSIONS, JS_PATH, LEADERBOARD_PAGE_SIZE, NOINDEX, SCRIPT, SECURITY_HEADERS, STYLESHEET, botStatus,
     createCatReader, createLeaderboardReader, createSite, everyoneCommandGroups, installPermissionBits, installUrl, inviteOrNull,
     leaderboardPage, leaderboardPageNumber, publicSiteEnabled, uptimeWords,
 } from '../src/services/site/site.js';
@@ -54,7 +54,7 @@ test('PUBLIC_SITE_ENABLED is off unless true', () => {
     assert.equal(publicSiteEnabled({ PUBLIC_SITE_ENABLED: 'true' }), true);
 });
 
-test('every front page renders with the shell, the hashed stylesheet and no inline style or script', async () => {
+test('every front page renders with the shell, the hashed stylesheet and script, no inline style or script', async () => {
     const site = await serve();
     try {
         for (const [path, heading] of [
@@ -74,7 +74,8 @@ test('every front page renders with the shell, the hashed stylesheet and no inli
             for (const landmark of ['<header', '<nav class="topnav" aria-label="Main">', '<main id="main"', '<footer', 'class="skip" href="#main"']) {
                 assert.ok(res.body.includes(landmark), `${path}: ${landmark}`);
             }
-            assert.ok(!/<script/i.test(res.body), `${path}: no scripts`);
+            assert.deepEqual(res.body.match(/<script[^>]*>[\s\S]*?<\/script>/gi), [`<script src="${JS_PATH}" defer></script>`], `${path}: only the static script`);
+            assert.ok(!/\son[a-z]+=/i.test(res.body), `${path}: no inline handlers`);
             assert.ok(!/\sstyle=/i.test(res.body) && !/<style/i.test(res.body), `${path}: no inline styles`);
             assert.ok(res.body.includes(`href="${SUPPORT}"`), `${path}: support link`);
             assert.ok(res.body.includes('<a class="button" href="/dashboard">Dashboard</a>'), `${path}: filled Dashboard button in the top bar`);
@@ -105,16 +106,42 @@ test('the stylesheet is the site\'s own: its tokens, light and dark, no dashboar
     } finally { await site.close(); }
 });
 
-test('CSP and security headers: no unsafe-inline, no scripts, no framing', async () => {
+test('the script is the site\'s own static file: versioned, JavaScript, cached, small, no network or storage', async () => {
     const site = await serve();
     try {
-        for (const path of ['/', '/features', '/pricing', '/faq', '/docs', '/docs/appeals', '/commands', '/about', '/leaderboard', '/status', '/privacy', '/terms', '/robots.txt', '/img/og.png', CSS_PATH, '/nope']) {
+        assert.match(JS_PATH, /^\/site\.js\?v=[0-9a-f]{10}$/);
+        const res = await site.get(JS_PATH);
+        assert.equal(res.status, 200);
+        assert.match(res.headers.get('content-type'), /^text\/javascript/);
+        assert.equal(res.headers.get('cache-control'), 'public, max-age=3600');
+        assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
+        assert.equal(res.headers.get('content-security-policy'), SECURITY_HEADERS['Content-Security-Policy']);
+        assert.equal(res.body, SCRIPT);
+        assert.equal(SCRIPT, readFileSync(new URL('../src/services/site/static/site.js', import.meta.url), 'utf8'));
+        assert.ok(Buffer.byteLength(SCRIPT) < 2048, 'under 2 KB');
+        assert.ok(!/fetch\(|XMLHttpRequest|WebSocket|sendBeacon|EventSource|localStorage|sessionStorage|indexedDB|document\.cookie|import\(|eval\(|new Function|innerHTML/.test(SCRIPT), 'no network, storage, eval or HTML injection');
+        for (const selector of ['details.lang-menu', 'details.account-menu', '.topnav a[aria-current="page"]', '.table-wrap']) assert.ok(SCRIPT.includes(selector), selector);
+        assert.ok(STYLESHEET.includes('.table-wrap.can-scroll'), 'the scroll hint class has a style');
+        const prefixed = await site.get('/de/site.js');
+        assert.equal(prefixed.status, 404, 'only pages exist under a language prefix');
+    } finally { await site.close(); }
+});
+
+test('the site CSP is pinned: only script-src changed from none to self', () => {
+    assert.equal(SECURITY_HEADERS['Content-Security-Policy'],
+        "default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'");
+});
+
+test('CSP and security headers: no unsafe-inline, scripts only from self, no framing', async () => {
+    const site = await serve();
+    try {
+        for (const path of ['/', '/features', '/pricing', '/faq', '/docs', '/docs/appeals', '/commands', '/about', '/leaderboard', '/status', '/privacy', '/terms', '/robots.txt', '/img/og.png', CSS_PATH, JS_PATH, '/nope']) {
             const res = await site.get(path);
             const csp = res.headers.get('content-security-policy');
             assert.equal(csp, SECURITY_HEADERS['Content-Security-Policy'], path);
             assert.ok(!csp.includes('unsafe-inline') && !csp.includes('unsafe-eval'), path);
             assert.match(csp, /default-src 'none'/);
-            assert.match(csp, /script-src 'none'/);
+            assert.match(csp, /script-src 'self';/);
             assert.match(csp, /style-src 'self'/);
             assert.match(csp, /frame-ancestors 'none'/);
             assert.equal(res.headers.get('x-frame-options'), 'DENY');
@@ -320,7 +347,7 @@ test('leaderboard: rank, escaped display name, level and total XP; nav marks it 
         assert.ok(res.body.includes('<td class="num">12</td><td class="num">98,765</td>'), 'level and total XP');
         assert.ok(res.body.includes('<li><a href="/leaderboard" aria-current="page">Leaderboard</a></li>'));
         assert.ok(!res.body.includes('class="pager"'), 'one page: no pager');
-        assert.ok(!/<script|\sstyle=|<style/i.test(res.body));
+        assert.ok(!/<script|\sstyle=|<style/i.test(res.body.replace(`<script src="${JS_PATH}" defer></script>`, '')));
     } finally { await site.close(); }
 });
 
@@ -494,7 +521,7 @@ test('status: Online / Starting / Degraded, 200 always, refreshes, shows no coun
             // The only digits on the page body are the uptime ("2 days, 3 hours").
             const text = main.replace(/<[^>]+>/g, '').replace(/Up for [^.]*\./, '');
             assert.ok(!/\d/.test(text), `${label}: no numbers besides the uptime`);
-            assert.ok(!/<script|\sstyle=|<style/i.test(res.body));
+            assert.ok(!/<script|\sstyle=|<style/i.test(res.body.replace(`<script src="${JS_PATH}" defer></script>`, '')));
         } finally { await site.close(); }
     }
     const online = await serve({ status: () => ({ state: 'online', uptimeMs: (2 * 24 + 3) * 3_600_000 }) });
@@ -682,7 +709,9 @@ test('every image has alt text and a size; the image files are small and served 
         assert.equal(og.headers.get('content-security-policy'), SECURITY_HEADERS['Content-Security-Policy']);
         assert.equal((await site.get('/img/screen-overview-light.webp')).headers.get('content-type'), 'image/webp');
         assert.equal((await site.get('/img/nope.png')).status, 404);
-        assert.equal((await site.get('/img/../site.js')).status, 404);
+        assert.equal((await site.get('/img/../shell.js')).status, 404);
+        const climbed = await site.get('/img/../site.js');
+        assert.equal(climbed.body, SCRIPT, 'only the static script, never the router source');
     } finally { await site.close(); }
     const { readdirSync, statSync } = await import('node:fs');
     const dir = new URL('../src/services/site/static/img/', import.meta.url);
@@ -908,7 +937,7 @@ test('leaderboard: the server cat above the table (picture, name, stage, mood, p
         assert.ok(res.body.includes('<progress class="cat-bar" max="100" value="18"'));
         assert.ok(res.body.includes('4,321 messages counted. 10,679 more to Cat.'));
         assert.ok(res.body.indexOf('cat-card') < res.body.indexOf('<table class="board"'), 'above the table');
-        assert.ok(!/<script|\sstyle=|<style/i.test(res.body));
+        assert.ok(!/<script|\sstyle=|<style/i.test(res.body.replace(`<script src="${JS_PATH}" defer></script>`, '')));
         assert.ok(STYLESHEET.includes('.cat-card'));
     } finally { await site.close(); }
 });

@@ -179,7 +179,7 @@ test('first visit: Accept-Language or the cookie only shows a note in that langu
         assert.ok(cookie.body.includes('href="/pl/pricing?setlang=1" hreflang="pl"'));
         assert.ok(!(await site.get('/de/features', { 'accept-language': 'fr' })).body.includes('lang-suggest'), 'prefixed pages: no note');
         const evil = await site.get('/features', { 'accept-language': '"><script>alert(1)</script>', cookie: `${LANG_COOKIE}="><b>` });
-        assert.ok(!evil.body.includes('<script') && !evil.body.includes('lang-suggest'));
+        assert.ok(!evil.body.includes('<script>') && !evil.body.includes('lang-suggest'));
     } finally {
         setContentOverrides(null);
         await site.close();
