@@ -1,4 +1,5 @@
-// feedService.js — YouTube upload feeds (/community feed add | remove | list).
+// feedService.js — YouTube upload feeds and Twitch "went live" feeds
+// (/community feed add | remove | list).
 //
 // Every 15 minutes (cron in app.js) each YouTube channel's public RSS feed
 // (https://www.youtube.com/feeds/videos.xml?channel_id=…) is fetched once, no
@@ -11,16 +12,28 @@
 // are never posted. If the last-seen video disappears from the RSS window
 // (deleted or 15+ uploads since), nothing is posted for that poll and the
 // newest video becomes the new marker: missing a video beats reposting.
+//
+// Twitch (kind 'twitch', source_id = lowercase login): every 2 minutes (own cron
+// in app.js) one Get Streams request per 100 followed logins. A live stream whose
+// id differs from last_item_id is posted once; the stream id is saved BEFORE the
+// post, so the same broadcast is never posted twice, also across restarts (if the
+// save fails, nothing is posted and the next poll tries again). Going offline
+// changes nothing. When a feed is added while the streamer is live, that stream is
+// recorded and not posted. Without TWITCH_CLIENT_ID/SECRET Twitch is off
+// (twitchService.js): adding is refused and polling skips Twitch feeds.
 
 import { logger } from '../../utils/logger.js';
 import { CT, query, isCommunityDbAvailable, isUniqueViolation, userError } from './db.js';
 import { limitMessage, planLimit } from '../billing/premiumEffects.js';
+import { getTwitchClient, parseTwitchLogin } from './twitchService.js';
 
 // Free's limit; a server owner's plan raises it (planLimit, plans.js).
 export const FEED_MAX_PER_GUILD = 20;
 export const FEED_TEMPLATE_MAX = 500;
 export const FEED_MAX_POSTS_PER_POLL = 3;
 export const DEFAULT_FEED_TEMPLATE = '**{author}** posted a new video: **{title}**\n{url}';
+export const DEFAULT_TWITCH_TEMPLATE = '**{author}** is live on Twitch: **{title}**\n{url}';
+export const FEED_PLATFORMS = ['youtube', 'twitch'];
 const FETCH_TIMEOUT_MS = 10_000;
 const MAX_FEED_BYTES = 1_000_000;
 const YOUTUBE_CHANNEL_ID = /^UC[\w-]{22}$/;
@@ -93,11 +106,16 @@ export function selectNewEntries(entries, lastId, max = FEED_MAX_POSTS_PER_POLL)
     return { toPost: entries.slice(0, index).slice(0, max).reverse(), marker: newest };
 }
 
-/** Fills a template's {title} {url} {author} placeholders; pure. */
-export function renderFeedMessage(template, entry) {
-    const values = { title: entry.title, url: entry.url, author: entry.author, channel: entry.author };
-    return String(template || DEFAULT_FEED_TEMPLATE)
-        .replace(/\{(title|url|author|channel)\}/g, (match, key) => values[key])
+/** The default message of a feed kind; pure. */
+export function defaultTemplate(kind) {
+    return kind === 'twitch' ? DEFAULT_TWITCH_TEMPLATE : DEFAULT_FEED_TEMPLATE;
+}
+
+/** Fills a template's {title} {url} {author} {game} placeholders; pure. */
+export function renderFeedMessage(template, entry, kind = 'youtube') {
+    const values = { title: entry.title, url: entry.url, author: entry.author, channel: entry.author, game: entry.game || '' };
+    return String(template || defaultTemplate(kind))
+        .replace(/\{(title|url|author|channel|game)\}/g, (match, key) => values[key] ?? '')
         .slice(0, 2000);
 }
 
@@ -137,6 +155,13 @@ function toFeed(row) {
     };
 }
 
+async function ensureLoaded() {
+    if (loaded) return true;
+    if (!isCommunityDbAvailable()) return false;
+    await loadFeeds();
+    return true;
+}
+
 export async function loadFeeds() {
     if (!isCommunityDbAvailable()) return null;
     const { rows } = await query(`SELECT * FROM ${CT.feeds} ORDER BY id`);
@@ -149,12 +174,44 @@ export function listFeeds(guildId) {
     return feeds.filter((feed) => feed.guildId === guildId);
 }
 
-/** Adds a feed after checking the YouTube channel exists; records its newest video. */
-export async function addFeed({ guildId, sourceInput, channelId, template = null, createdBy }, fetchImpl = fetch) {
-    const sourceId = parseYoutubeChannelId(sourceInput);
+function checkNewFeed(guildId, template) {
     const text = template == null ? null : String(template).trim() || null;
     if (text && text.length > FEED_TEMPLATE_MAX) throw userError(`The message is limited to ${FEED_TEMPLATE_MAX} characters.`);
-    if (listFeeds(guildId).length >= planLimit(guildId, 'feeds')) throw userError(limitMessage(guildId, 'feeds', 'YouTube feeds'));
+    // YouTube and Twitch feeds share one per-server limit.
+    if (listFeeds(guildId).length >= planLimit(guildId, 'feeds')) throw userError(limitMessage(guildId, 'feeds', 'feeds (YouTube and Twitch together)'));
+    return text;
+}
+
+async function insertFeed({ guildId, kind, sourceId, channelId, text, lastItemId, createdBy }) {
+    let row;
+    try {
+        ({ rows: [row] } = await query(
+            `INSERT INTO ${CT.feeds} (guild_id, kind, source_id, channel_id, message_template, last_item_id, created_by)
+             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+            [guildId, kind, sourceId, channelId, text, lastItemId, createdBy]
+        ));
+    } catch (error) {
+        if (isUniqueViolation(error)) {
+            throw userError(kind === 'twitch'
+                ? 'That Twitch channel is already posted to that Discord channel.'
+                : 'That YouTube channel is already posted to that Discord channel.');
+        }
+        throw error;
+    }
+    const feed = toFeed(row);
+    feeds.push(feed);
+    return feed;
+}
+
+/**
+ * Adds a feed after checking the source exists. YouTube: records its newest video.
+ * Twitch: records the stream that is live right now, if any. Returns { feed, latest }.
+ */
+export async function addFeed({ guildId, platform = 'youtube', sourceInput, channelId, template = null, createdBy }, fetchImpl = fetch, { twitch = getTwitchClient() } = {}) {
+    if (platform === 'twitch') return addTwitchFeed({ guildId, sourceInput, channelId, template, createdBy }, twitch);
+    if (platform !== 'youtube') throw userError('Choose YouTube or Twitch.');
+    const sourceId = parseYoutubeChannelId(sourceInput);
+    const text = checkNewFeed(guildId, template);
     let entries;
     try {
         entries = await fetchYoutubeFeed(sourceId, fetchImpl);
@@ -162,20 +219,31 @@ export async function addFeed({ guildId, sourceInput, channelId, template = null
         if (error.status === 404) throw userError('YouTube has no channel with that id.');
         throw userError(`Could not reach YouTube to check that channel (${error.message}). Try again later.`);
     }
-    let row;
-    try {
-        ({ rows: [row] } = await query(
-            `INSERT INTO ${CT.feeds} (guild_id, kind, source_id, channel_id, message_template, last_item_id, created_by)
-             VALUES ($1, 'youtube', $2, $3, $4, $5, $6) RETURNING *`,
-            [guildId, sourceId, channelId, text, entries[0]?.id ?? null, createdBy]
-        ));
-    } catch (error) {
-        if (isUniqueViolation(error)) throw userError('That YouTube channel is already posted to that Discord channel.');
-        throw error;
-    }
-    const feed = toFeed(row);
-    feeds.push(feed);
+    const feed = await insertFeed({ guildId, kind: 'youtube', sourceId, channelId, text, lastItemId: entries[0]?.id ?? null, createdBy });
     return { feed, latest: entries[0] || null };
+}
+
+async function addTwitchFeed({ guildId, sourceInput, channelId, template, createdBy }, twitch) {
+    if (!twitch?.configured) throw userError('Twitch alerts are not set up on this bot yet.');
+    const login = parseTwitchLogin(sourceInput);
+    const text = checkNewFeed(guildId, template);
+    let user;
+    let live;
+    try {
+        user = await twitch.getUser(login);
+        live = user ? (await twitch.getLiveStreams([user.login])).get(user.login) || null : null;
+    } catch (error) {
+        throw userError(`Could not reach Twitch to check that channel (${error.message}). Try again later.`);
+    }
+    if (!user) throw userError('Twitch has no channel with that name.');
+    const feed = await insertFeed({ guildId, kind: 'twitch', sourceId: user.login, channelId, text, lastItemId: live?.id ?? null, createdBy });
+    return {
+        feed,
+        user,
+        live,
+        // For the preview: the live stream, or a sample built from the channel name.
+        latest: live || { id: null, title: 'Example stream title', url: `https://www.twitch.tv/${user.login}`, author: user.displayName, game: 'Just Chatting' },
+    };
 }
 
 /** Removes a feed of the guild; true when there was one. */
@@ -194,7 +262,7 @@ async function postEntries(client, feed, entries) {
     let posted = 0;
     for (const entry of entries) {
         const ok = await channel.send({
-            content: renderFeedMessage(feed.template, entry),
+            content: renderFeedMessage(feed.template, entry, feed.kind),
             allowedMentions: { parse: [], roles: templateRoleIds(feed.template) },
         }).then(() => true).catch((error) => {
             logger.warn(`Feed #${feed.id}: could not post in ${feed.channelId}: ${error.message}`);
@@ -205,14 +273,12 @@ async function postEntries(client, feed, entries) {
     return posted;
 }
 
-/** One poll of every feed (cron, every 15 minutes). Returns { sources, posted }. */
+/** One poll of every YouTube feed (cron, every 15 minutes). Returns { sources, posted }. */
 export async function pollFeeds(client, fetchImpl = fetch) {
-    if (!loaded) {
-        if (!isCommunityDbAvailable()) return { sources: 0, posted: 0 };
-        await loadFeeds();
-    }
+    if (!(await ensureLoaded())) return { sources: 0, posted: 0 };
     const bySource = new Map();
     for (const feed of feeds) {
+        if (feed.kind !== 'youtube') continue;
         if (!bySource.has(feed.sourceId)) bySource.set(feed.sourceId, []);
         bySource.get(feed.sourceId).push(feed);
     }
@@ -237,6 +303,57 @@ export async function pollFeeds(client, fetchImpl = fetch) {
         }
     }
     return { sources: bySource.size, posted };
+}
+
+/**
+ * Which Twitch feeds to post: those whose login is live with a stream id other than
+ * the saved one. Offline logins and already-posted streams give nothing; pure.
+ */
+export function selectTwitchAlerts(twitchFeeds, liveByLogin) {
+    const alerts = [];
+    for (const feed of twitchFeeds) {
+        const entry = liveByLogin.get(String(feed.sourceId).toLowerCase());
+        if (entry?.id && entry.id !== feed.lastItemId) alerts.push({ feed, entry });
+    }
+    return alerts;
+}
+
+/**
+ * One poll of every Twitch feed (cron, every 2 minutes). Returns { sources, posted, skipped }.
+ * Twitch off (no credentials) or no Twitch feeds: no request at all. A failed Twitch
+ * request posts nothing (it never counts as "offline").
+ */
+export async function pollTwitchFeeds(client, { twitch = getTwitchClient(), saveMarker = saveFeedMarker } = {}) {
+    if (!twitch?.configured) return { sources: 0, posted: 0, skipped: 'not configured' };
+    if (!(await ensureLoaded())) return { sources: 0, posted: 0, skipped: 'database' };
+    const twitchFeeds = feeds.filter((feed) => feed.kind === 'twitch');
+    const logins = [...new Set(twitchFeeds.map((feed) => feed.sourceId))];
+    if (!logins.length) return { sources: 0, posted: 0 };
+    let live;
+    try {
+        live = await twitch.getLiveStreams(logins);
+    } catch (error) {
+        logger.warn(`Twitch streams could not be fetched: ${error.message}`);
+        return { sources: logins.length, posted: 0, skipped: 'twitch' };
+    }
+    let posted = 0;
+    for (const { feed, entry } of selectTwitchAlerts(twitchFeeds, live)) {
+        try {
+            await saveMarker(feed.id, entry.id);
+        } catch (error) {
+            logger.warn(`Feed #${feed.id}: stream marker not saved, not posting yet: ${error.message}`);
+            continue;
+        }
+        feed.lastItemId = entry.id;
+        posted += await postEntries(client, feed, [entry]);
+    }
+    return { sources: logins.length, posted };
+}
+
+async function saveFeedMarker(id, marker) {
+    const { rowCount } = await query(`UPDATE ${CT.feeds} SET last_item_id = $2 WHERE id = $1`, [id, marker]);
+    // Removed (/community feed remove) while this poll waited on Twitch: don't post.
+    if (!rowCount) throw new Error('the feed was removed');
 }
 
 /** For tests: replace the in-memory feeds. */

@@ -192,7 +192,7 @@ test('/premium status: Free with the pricing link, or the plan with its end and 
     const paid = fakeInteraction('status');
     await premiumCommand.execute(paid, null, null, { env: ON, store: { accountOf: async () => ({ subscription: sub(MEMBER, 'max', 3) }) } });
     assert.match(description(paid), /\*\*Mewvo Max\*\* until <t:\d+:F>/);
-    assert.match(description(paid), /1000 tags, 100 sticky messages, 150 YouTube feeds, 500 scheduled messages/);
+    assert.match(description(paid), /1000 tags, 100 sticky messages, 150 YouTube or Twitch feeds, 500 scheduled messages/);
     assert.match(statusText(null, ''), /^You are on \*\*Free\*\*\.\n/);
 });
 

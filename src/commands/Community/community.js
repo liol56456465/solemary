@@ -83,17 +83,32 @@ async function handleStarboard(interaction, sub) {
     }
 }
 
+const PLATFORM_LABELS = { youtube: 'YouTube', twitch: 'Twitch' };
+const platformName = (kind) => PLATFORM_LABELS[kind] || kind;
+
 /** /community feed add | remove | list */
 async function handleFeed(interaction, sub) {
     if (sub === 'add') {
         const channel = interaction.options.getChannel('channel', true);
-        const { feed, latest } = await addFeed({
+        const platform = interaction.options.getString('platform') || 'youtube';
+        const { feed, latest, live } = await addFeed({
             guildId: interaction.guildId,
-            sourceInput: interaction.options.getString('youtube_channel_id', true),
+            platform,
+            sourceInput: interaction.options.getString('source', true),
             channelId: channel.id,
             template: interaction.options.getString('message'),
             createdBy: interaction.user.id,
         });
+        if (platform === 'twitch') {
+            const preview = renderFeedMessage(feed.template, latest, 'twitch');
+            return InteractionHelper.safeEditReply(interaction, {
+                embeds: [successEmbed(`Feed #${feed.id} added`, [
+                    `I will post in ${channel} when **${latest.author}** goes live on Twitch (checked every 2 minutes).`,
+                    live ? 'They are live right now: this stream is not announced, the next one will be.' : '',
+                    `\n**Preview** (${live ? 'with the current stream' : 'with an example stream'}, not posted):\n${truncate(preview, 1500)}`,
+                ].filter(Boolean).join('\n'))],
+            });
+        }
         const preview = latest ? renderFeedMessage(feed.template, latest) : null;
         return InteractionHelper.safeEditReply(interaction, {
             embeds: [successEmbed(`Feed #${feed.id} added`, [
@@ -109,7 +124,7 @@ async function handleFeed(interaction, sub) {
     }
     if (sub === 'list') {
         const lines = listFeeds(interaction.guildId).map((feed) =>
-            `**#${feed.id}** YouTube \`${feed.sourceId}\` → <#${feed.channelId}>${feed.template ? ` · "${truncate(feed.template.replace(/\s+/g, ' '), 60)}"` : ''}`);
+            `**#${feed.id}** ${platformName(feed.kind)} \`${feed.sourceId}\` → <#${feed.channelId}>${feed.template ? ` · "${truncate(feed.template.replace(/\s+/g, ' '), 60)}"` : ''}`);
         return InteractionHelper.safeEditReply(interaction, {
             embeds: [createEmbed({
                 title: `Feeds (${lines.length})`,
@@ -146,14 +161,16 @@ export default {
                 .addIntegerOption((option) => option.setName('threshold').setDescription('Reactions needed (default 3)')
                     .setMinValue(1).setMaxValue(STARBOARD_MAX_THRESHOLD)))
             .addSubcommand((sub) => sub.setName('off').setDescription('Turn the starboard off')))
-        .addSubcommandGroup((group) => group.setName('feed').setDescription('Post new YouTube videos in a channel')
-            .addSubcommand((sub) => sub.setName('add').setDescription('Follow a YouTube channel')
-                .addStringOption((option) => option.setName('youtube_channel_id').setDescription('Channel id (UC…) or youtube.com/channel/UC… link')
+        .addSubcommandGroup((group) => group.setName('feed').setDescription('Post new YouTube videos or Twitch go-lives in a channel')
+            .addSubcommand((sub) => sub.setName('add').setDescription('Follow a YouTube or Twitch channel')
+                .addStringOption((option) => option.setName('source').setDescription('YouTube: channel id (UC…) or /channel/ link. Twitch: login or twitch.tv link')
                     .setRequired(true).setMaxLength(200))
                 .addChannelOption((option) => option.setName('channel').setDescription('Where to post').setRequired(true).addChannelTypes(...TEXT_CHANNELS))
-                .addStringOption((option) => option.setName('message').setDescription('Message with {title} {url} {author}; may mention a role')
+                .addStringOption((option) => option.setName('platform').setDescription('YouTube (default) or Twitch')
+                    .addChoices({ name: 'YouTube', value: 'youtube' }, { name: 'Twitch', value: 'twitch' }))
+                .addStringOption((option) => option.setName('message').setDescription('Message with {title} {url} {author} ({game} on Twitch); may mention a role')
                     .setMaxLength(FEED_TEMPLATE_MAX)))
-            .addSubcommand((sub) => sub.setName('remove').setDescription('Stop following a YouTube channel')
+            .addSubcommand((sub) => sub.setName('remove').setDescription('Stop following a YouTube or Twitch channel')
                 .addIntegerOption((option) => option.setName('id').setDescription('Feed number (#) from /community feed list').setRequired(true).setMinValue(1)))
             .addSubcommand((sub) => sub.setName('list').setDescription('List feeds')))
         .setDMPermission(false),
