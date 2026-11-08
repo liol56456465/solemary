@@ -204,13 +204,13 @@ export const SETTINGS = Object.freeze([
     {
         // /transparency on the website (services/site/pages/transparency.js): monthly counts
         // only, never names or IDs. Off until an administrator turns it on in the dashboard.
-        key: 'transparencyReportEnabled', module: 'appeals', kind: 'boolean', guild: 'main',
+        key: 'transparencyReportEnabled', module: 'appeals', kind: 'boolean', guild: 'main', homeOnly: true,
         label: 'Publish a monthly transparency report on the website', env: null, fallback: false, schema: z.boolean(),
     },
     {
         // /trust on the website (services/site/pages/trust.js): a 90-day summary (appeal times and
         // results, members in good standing, heads-up fix rate). Off until an administrator turns it on.
-        key: 'trustCardEnabled', module: 'appeals', kind: 'boolean', guild: 'main',
+        key: 'trustCardEnabled', module: 'appeals', kind: 'boolean', guild: 'main', homeOnly: true,
         label: 'Publish a trust card on the website', env: null, fallback: false, schema: z.boolean(),
     },
     {
@@ -264,7 +264,7 @@ export const SETTINGS = Object.freeze([
     },
     // ── Support server ──
     {
-        key: 'supportServerInvite', module: 'support', kind: 'url', guild: 'main',
+        key: 'supportServerInvite', module: 'support', kind: 'url', guild: 'main', homeOnly: true,
         label: 'Support server invite', env: 'SUPPORT_SERVER_INVITE',
         fallback: 'https://discord.gg/7Ckv9Bt577', schema: invite,
     },
@@ -294,7 +294,7 @@ export const SETTINGS = Object.freeze([
     // ── Premium (Owner → Premium keys; services/billing/premiumEffects.js) ──
     {
         // One role per paid plan in the main server, given while the plan is active.
-        key: 'premiumRoleIds', module: 'premium', kind: 'json', guild: 'main', label: 'Supporter roles per plan',
+        key: 'premiumRoleIds', module: 'premium', kind: 'json', guild: 'main', homeOnly: true, label: 'Supporter roles per plan',
         fallback: Object.freeze({ normal: null, pro: null, max: null }),
         schema: z.object({ normal: optionalId, pro: optionalId, max: optionalId }).strict(),
         describe: (value) => `${Object.values(value || {}).filter(Boolean).length} of 3 set`,
@@ -382,6 +382,15 @@ export function settingKeys() {
 
 export function entriesForModule(module) {
     return SETTINGS.filter((entry) => entry.module === module);
+}
+
+/**
+ * True for a key that only Mewvo's own servers (main / support) use (`homeOnly: true`): the
+ * support invite, premium roles and the website's transparency report / trust card. Other
+ * servers cannot save one (validatePatch role 'other'); their dashboard reads neutralValue().
+ */
+export function isHomeOnlyKey(key) {
+    return Boolean(getSettingEntry(key)?.homeOnly);
 }
 
 export function entriesForGuild(guild) {
@@ -479,8 +488,9 @@ export function validateSetting(key, value) {
 }
 
 /**
- * Validates a patch { key: value } for one server ('main' | 'support'). Returns the
- * parsed patch; throws an Error with `userMessage` listing every problem.
+ * Validates a patch { key: value } for one server role: 'main' | 'support' (Mewvo's own
+ * servers) or 'other' (any other server: only `guild: 'main'` keys without `homeOnly`).
+ * Returns the parsed patch; throws an Error with `userMessage` listing every problem.
  */
 export function validatePatch(patch, guild = 'main') {
     if (!patch || typeof patch !== 'object' || Array.isArray(patch)) {
@@ -494,8 +504,12 @@ export function validatePatch(patch, guild = 'main') {
             problems.push(`unknown setting "${key}"`);
             continue;
         }
-        if (entry.guild !== guild) {
+        if (guild === 'other' ? entry.guild !== 'main' : entry.guild !== guild) {
             problems.push(`${entry.label} belongs to the ${entry.guild} server`);
+            continue;
+        }
+        if (guild === 'other' && entry.homeOnly) {
+            problems.push(`${entry.label} is only available in Mewvo's own servers`);
             continue;
         }
         const result = validateSetting(key, value);

@@ -32,6 +32,8 @@ import {
     entriesForGuild, getSettingEntry, neutralValue, seedValue, settingKeys, validatePatch, validateSetting,
 } from './settingsRegistry.js';
 
+const SNOWFLAKE = /^\d{17,20}$/;
+
 const cache = new Map(); // guildId → { data: {key: value}, seeded: boolean, updatedAt }
 let loaded = false;
 let allRowsLoaded = false; // only loadAllSettings sets this (the seed reads just the home rows)
@@ -251,6 +253,29 @@ export async function refreshGuildSettings(guildId, env = process.env) {
 }
 
 /**
+ * The guild whose row holds `key` when the dashboard of `guildId` reads or saves it (missing
+ * `guildId` = the main server). Mewvo's home servers keep the registry mapping (a support key
+ * lives on the support server, everything else on the main server). Any other server: its own
+ * id, or null for keys it does not have (support-server keys and `homeOnly` keys).
+ */
+export function settingGuildId(guildId, key, env = process.env) {
+    const entry = getSettingEntry(key);
+    if (!entry) throw new Error(`Unknown setting "${key}"`);
+    if (!isOtherGuild(guildId, env)) return guildIdFor(entry.guild, env);
+    return entry.guild === 'support' || entry.homeOnly ? null : guildId.trim();
+}
+
+/**
+ * True when `guildId` is a server other than Mewvo's own (missing = the main server, so false).
+ * Without a configured MAIN_GUILD_ID there are no home servers to tell apart (the dashboard is
+ * off then) and everything keeps the old single-server mapping: false.
+ */
+export function isOtherGuild(guildId, env = process.env) {
+    const id = typeof guildId === 'string' ? guildId.trim() : '';
+    return Boolean(id && guildIdFor('main', env) && !isHomeGuild(id, env));
+}
+
+/**
  * Defines getter/setter properties on a config object for the given setting keys.
  * Reading goes through getConfiguredSetting; assigning (tests only) pins a value
  * until the next assignment of undefined.
@@ -353,15 +378,21 @@ export async function seedFromEnvOnce(env = process.env) {
 /**
  * Changes settings of one guild. patch = { key: value } (validated by the registry,
  * every key must belong to this guild's role); actor = { userId, username, module? }.
+ * Mewvo's home servers use role 'main' / 'support' (old value = stored, else env/default);
+ * any other server uses role 'other' (only `guild: 'main'` keys without `homeOnly`; old
+ * value = stored, else neutralValue) and only ever touches its own row.
  * Returns { changes: [{ key, module, old, new }], settings: { key: value } }.
  * Throws (with userMessage) on invalid input, an unknown guild or a database error;
  * nothing is changed then.
  */
 export async function updateSettings(guildId, patch, actor = {}, env = process.env) {
-    const role = guildRole(guildId, env);
-    if (!role) {
-        throw Object.assign(new Error(`Guild ${guildId} is not the main or support server`), { userMessage: 'Settings can only be changed for the main or support server.' });
+    const id = typeof guildId === 'string' ? guildId.trim() : '';
+    if (!SNOWFLAKE.test(id) && !isHomeGuild(id, env)) {
+        throw Object.assign(new Error(`Invalid guild id ${JSON.stringify(guildId)}`), { userMessage: 'Settings can only be changed for a server.' });
     }
+    guildId = id;
+    const role = guildRole(guildId, env) || 'other';
+    const fallbackOf = role === 'other' ? (entry) => neutralValue(entry) : (entry) => seedValue(entry, env);
     const clean = validatePatch(patch, role);
     const keys = Object.keys(clean);
     const db = await dbHelpers();
@@ -373,7 +404,7 @@ export async function updateSettings(guildId, patch, actor = {}, env = process.e
         const stored = current.data && typeof current.data === 'object' ? current.data : {};
         const changes = [];
         for (const key of keys) {
-            const old = Object.hasOwn(stored, key) ? stored[key] : seedValue(getSettingEntry(key), env);
+            const old = Object.hasOwn(stored, key) ? stored[key] : fallbackOf(getSettingEntry(key));
             if (!sameValue(old, clean[key])) changes.push({ key, module: getSettingEntry(key).module, old, new: clean[key] });
         }
         const { rows: [row] } = await client.query(
@@ -395,7 +426,7 @@ export async function updateSettings(guildId, patch, actor = {}, env = process.e
         logger.info(`Settings changed in ${guildId} by ${actor.userId || 'unknown'}: ${result.changes.map((c) => c.key).join(', ')}`);
     }
     const settings = {};
-    for (const key of keys) settings[key] = getSetting(guildId, key, env);
+    for (const key of keys) settings[key] = resolveSetting(guildId, key, env);
     return { changes: result.changes, settings };
 }
 

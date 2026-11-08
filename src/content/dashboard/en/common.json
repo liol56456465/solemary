@@ -1,3 +1,4 @@
 {
-  "serverNotConfigured": "{label}: the server for this setting is not configured."
+  "serverNotConfigured": "{label}: the server for this setting is not configured.",
+  "homeOnlySetting": "{label}: this setting is only available in Mewvo's own servers."
 }

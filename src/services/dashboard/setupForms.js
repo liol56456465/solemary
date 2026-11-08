@@ -8,7 +8,7 @@
 // once (tickets, welcome, verification) keep the link to their page.
 
 import { PERMS, channelPicker, postForm, rolePicker } from './forms.js';
-import { registryGuildId } from './modules/common.js';
+import { registryGuildId, registryValue } from './modules/common.js';
 
 const REGISTRY_KEYS = ['modLogChannelId', 'appealsCategoryId', 'reviewChannelId', 'alertsChannelId', 'mutedRoleId', 'bannedRoleId'];
 
@@ -17,9 +17,9 @@ const roleIdOf = (value) => (value && typeof value === 'object' ? value.id || nu
 /** The current values the pickers preselect: registry values, the guild config and the log channels. Read per request. */
 export async function setupStepData(ctx) {
     const registry = {};
-    for (const key of REGISTRY_KEYS) registry[key] = ctx.services.getSetting(registryGuildId(key, ctx.env), key, ctx.env) ?? null;
+    for (const key of REGISTRY_KEYS) registry[key] = registryValue(ctx, key) ?? null;
     const config = await ctx.services.getGuildConfig(ctx.client, ctx.guildId);
-    const supportId = registryGuildId('bannedRoleId', ctx.env);
+    const supportId = registryGuildId(ctx, 'bannedRoleId'); // null outside Mewvo's own servers
     return {
         registry,
         config: config || {},
