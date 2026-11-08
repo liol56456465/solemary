@@ -3,9 +3,16 @@ import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { logger } from '../../utils/logger.js';
+import { handleTaskError } from '../../utils/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+/** The server of an event's first argument (a message, member, channel, guild…), when it has one. */
+export function guildIdOf(target) {
+    const id = target?.guildId ?? target?.guild?.id ?? null;
+    return typeof id === 'string' ? id : null;
+}
 
 export default async function loadEvents(client) {
     const eventsPath = join(__dirname, '../../events');
@@ -27,7 +34,9 @@ export default async function loadEvents(client) {
                 try {
                     await event.execute(...args, client);
                 } catch (error) {
-                    logger.error(`Error executing event ${event.name}:`, error);
+                    // Logged and recorded for Owner → Recent errors (source "event:<name>"; the
+                    // row keeps the error message only, masked and cut, never message content).
+                    handleTaskError(`event:${event.name}`, error, { guildId: guildIdOf(args[0]) });
                 }
             };
 

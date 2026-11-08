@@ -179,6 +179,31 @@ const enforceLogSchema = format((info) => {
   return info;
 });
 
+/**
+ * Whether logs go to files under logs/ (LOG_TO_FILE). "true"/"false" win; unset: on, except
+ * under NODE_ENV=test and inside `node --test` (tests must not write to logs/).
+ */
+export function resolveLogToFile({ nodeEnv, logToFile, underTestRunner = false } = {}) {
+  const raw = typeof logToFile === 'string' ? logToFile.toLowerCase().trim() : '';
+  if (raw === 'true' || raw === '1') return true;
+  if (raw === 'false' || raw === '0') return false;
+  return !(nodeEnv === 'test' || underTestRunner);
+}
+
+const logToFile = resolveLogToFile({
+  nodeEnv: process.env.NODE_ENV,
+  logToFile: process.env.LOG_TO_FILE,
+  underTestRunner: Boolean(process.env.NODE_TEST_CONTEXT),
+});
+
+const rotating = (name, options = {}) => new transports.DailyRotateFile({
+  filename: path.join(__dirname, `../../logs/${name}-%DATE%.log`),
+  maxSize: '20m',
+  maxFiles: '14d',
+  zippedArchive: true,
+  ...options,
+});
+
 const logger = createLogger({
   level: resolvedLogLevel,
   format: combine(
@@ -189,60 +214,29 @@ const logger = createLogger({
     format.json()
   ),
   defaultMeta: { service: 'mewvo' },
-  transports: [
-    new transports.DailyRotateFile({
-      filename: path.join(__dirname, '../../logs/error-%DATE%.log'),
-      level: 'error',
-      maxSize: '20m',
-      maxFiles: '14d',
-      zippedArchive: true,
-    }),
-    new transports.DailyRotateFile({
-      filename: path.join(__dirname, '../../logs/combined-%DATE%.log'),
-      maxSize: '20m',
-      maxFiles: '7d',
-      zippedArchive: true,
-    }),
-  ],
-  exceptionHandlers: [
-    new transports.DailyRotateFile({
-      filename: path.join(__dirname, '../../logs/exceptions-%DATE%.log'),
-      maxSize: '20m',
-      maxFiles: '14d',
-      zippedArchive: true,
-    }),
-  ],
-  rejectionHandlers: [
-    new transports.DailyRotateFile({
-      filename: path.join(__dirname, '../../logs/rejections-%DATE%.log'),
-      maxSize: '20m',
-      maxFiles: '14d',
-      zippedArchive: true,
-    }),
-  ],
+  transports: logToFile
+    ? [rotating('error', { level: 'error' }), rotating('combined', { maxFiles: '7d' })]
+    : [],
+  // app.js handles uncaught exceptions and rejections itself (graceful shutdown, exit code 1);
+  // these only add file copies, and winston must not exit the process before that shutdown runs.
+  exitOnError: false,
+  ...(logToFile ? {
+    exceptionHandlers: [rotating('exceptions')],
+    rejectionHandlers: [rotating('rejections')],
+  } : {}),
 });
 
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new transports.Console({
-    format: combine(
-      colorize(),
-      timestamp({ format: 'HH:mm:ss' }),
-      errors({ stack: true }),
-      logFormat
-    ),
-    level: resolvedLogLevel,
-  }));
-} else {
-  logger.add(new transports.Console({
-    format: combine(
-      colorize(),
-      timestamp({ format: 'HH:mm:ss' }),
-      errors({ stack: true }),
-      logFormat
-    ),
-    level: resolvedLogLevel,
-  }));
-}
+// Colours only on a terminal: piped output (Replit deployment logs, CI) gets plain text.
+const consoleFormats = [
+  ...(process.stdout.isTTY ? [colorize()] : []),
+  timestamp({ format: 'HH:mm:ss' }),
+  errors({ stack: true }),
+  logFormat,
+];
+logger.add(new transports.Console({
+  format: combine(...consoleFormats),
+  level: resolvedLogLevel,
+}));
 
 // The last warnings and errors in memory (masked) for the owner Health page.
 logger.add(new RecentLogTransport());

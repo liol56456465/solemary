@@ -124,9 +124,13 @@ async function run() {
     ], target.env);
   }
 
+  // All or nothing: one transaction, stopped at the first error, so a failed restore leaves the
+  // target as it was instead of half-replaced.
   runCommand('pg_restore', [
     '--clean',
     '--if-exists',
+    '--single-transaction',
+    '--exit-on-error',
     '--no-owner',
     '--no-privileges',
     '--dbname',

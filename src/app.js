@@ -402,6 +402,7 @@ class Mewvo extends Client {
     // A tick is skipped while the previous run of the same job is still going, so a
     // slow run (e.g. ending many giveaways) can never overlap and act twice.
     const running = new Set();
+    this.cronRunning = running; // shutdown waits for this to empty
     const exclusive = (name, fn) => runSafeTask(name, async () => {
       if (running.has(name)) {
         logger.warn(`Cron job ${name} is still running; skipping this tick`);
@@ -561,52 +562,36 @@ class Mewvo extends Client {
     }
   }
 
-  async shutdown(reason = 'UNKNOWN') {
+  /** Once only: a second signal, or an error while stopping, gets the run already going. */
+  shutdown(reason = 'UNKNOWN') {
+    this.shutdownPromise ??= this.runShutdown(reason);
+    return this.shutdownPromise;
+  }
+
+  // Order and timeouts: utils/gracefulShutdown.js. Loaded here, so a broken import there can
+  // never stop the bot from starting.
+  async runShutdown(reason) {
     shutdownLog(`Bot is shutting down (${reason})...`);
-    logger.info(`\n${'='.repeat(60)}`);
-    logger.info(`🛑 Graceful Shutdown Initiated (${reason})`);
-    logger.info(`${'='.repeat(60)}`);
-
     try {
-      
-      logger.info('Stopping cron jobs...');
-      cron.getTasks().forEach(task => task.stop());
-      logger.info('✅ Cron jobs stopped');
-
-      if (this.webServer) {
-        logger.info('Closing web server...');
-        await new Promise((resolve) => this.webServer.close(resolve));
-        logger.info('✅ Web server closed');
-      }
-
-      // Close database connection
-      // Close database connection
-      if (this.db && this.db.db) {
-        logger.info('Closing database connection...');
-        try {
-          if (this.db.db.pool) {
-            await this.db.db.pool.end();
-            logger.info('✅ Database connection closed');
-          }
-        } catch (error) {
-          logger.warn('Error closing database pool:', error.message);
-        }
-      }
-
-      logger.info('Destroying Discord client...');
-      if (this.isReady()) {
-        try {
-          this.destroy();
-          logger.info('✅ Discord client destroyed');
-        } catch (error) {
-
-          logger.warn('Discord client destroy warning (non-critical):', error.message);
-        }
-      }
-
-      logger.info('✅ Graceful shutdown complete');
-  shutdownLog('Bot stopped successfully.');
-      process.exit(0);
+      const [{ createGracefulShutdown }, { pgDb }] = await Promise.all([
+        import('./utils/gracefulShutdown.js'),
+        import('./utils/postgresDatabase.js'),
+      ]);
+      const server = this.webServer;
+      const run = createGracefulShutdown({
+        log: logger,
+        stopCrons: () => cron.getTasks().forEach((task) => task.stop()),
+        running: () => this.cronRunning,
+        destroyClient: () => this.destroy(),
+        flushers: [['activity counts', flushActivity], ['staff message counts', flushStaffMessages]],
+        closeHttp: () => (server ? new Promise((resolve) => server.close(() => resolve())) : null),
+        closeDb: () => pgDb.disconnect(),
+        exit: (code) => {
+          shutdownLog(`Bot stopped (exit code ${code}).`);
+          process.exit(code);
+        },
+      });
+      await run(reason);
     } catch (error) {
       logger.error('Error during graceful shutdown:', error);
       process.exit(1);

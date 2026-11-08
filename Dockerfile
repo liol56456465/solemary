@@ -11,4 +11,5 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+# node directly (not npm): SIGTERM reaches the bot, so graceful shutdown runs.
+CMD ["node", "src/app.js"]

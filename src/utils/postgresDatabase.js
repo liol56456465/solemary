@@ -643,14 +643,17 @@ class PostgreSQLDatabase {
     }
 
     async list(prefix) {
+        // LIKE treats % and _ as wildcards: escape them (and the escape character) so a prefix
+        // such as "guild:1:temp_x" matches only itself.
+        const likePrefix = (value) => `${String(value).replace(/[\\%_]/g, '\\$&')}%`;
         const keys = new Set();
         const plan = getStructuredListPlan(prefix, pgConfig.tables);
         const tempPrefixes = plan.tempPrefixes ?? [prefix];
 
         for (const tempPrefix of tempPrefixes) {
             const tempResult = await this._query(
-                `SELECT key FROM ${pgConfig.tables.temp_data} WHERE key LIKE $1 AND (expires_at IS NULL OR expires_at > NOW())`,
-                [`${tempPrefix}%`],
+                `SELECT key FROM ${pgConfig.tables.temp_data} WHERE key LIKE $1 ESCAPE '\\' AND (expires_at IS NULL OR expires_at > NOW())`,
+                [likePrefix(tempPrefix)],
             );
             for (const row of tempResult.rows) {
                 keys.add(canonicalizeKey(row.key));
@@ -658,8 +661,8 @@ class PostgreSQLDatabase {
         }
 
         const cacheResult = await this._query(
-            `SELECT key FROM ${pgConfig.tables.cache_data} WHERE key LIKE $1 AND (expires_at IS NULL OR expires_at > NOW())`,
-            [`${prefix}%`],
+            `SELECT key FROM ${pgConfig.tables.cache_data} WHERE key LIKE $1 ESCAPE '\\' AND (expires_at IS NULL OR expires_at > NOW())`,
+            [likePrefix(prefix)],
         );
         for (const row of cacheResult.rows) {
             keys.add(row.key);
@@ -733,7 +736,11 @@ class PostgreSQLDatabase {
                 select: { sql: `SELECT value, (expires_at IS NOT NULL AND expires_at <= NOW()) AS expired FROM ${t.temp_data} WHERE key = $1 FOR UPDATE`, params: [key] },
                 read: (row) => (row && !row.expired ? row.value : null),
                 write: (value) => ({
-                    sql: `UPDATE ${t.temp_data} SET value = $2, expires_at = CASE WHEN expires_at <= NOW() THEN NULL ELSE expires_at END WHERE key = $1`,
+                    // An upsert: if the expired-row cleanup (retentionService) removed the row
+                    // between ensure and select, the write still lands instead of updating nothing.
+                    sql: `INSERT INTO ${t.temp_data} (key, value) VALUES ($1, $2)
+                          ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value,
+                          expires_at = CASE WHEN ${t.temp_data}.expires_at <= NOW() THEN NULL ELSE ${t.temp_data}.expires_at END`,
                     params: [key, JSON.stringify(value ?? null)],
                 }),
                 legacyKeys: this._legacyKeys(key, originalKey),

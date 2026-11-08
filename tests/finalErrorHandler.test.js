@@ -33,3 +33,31 @@ test('final error handler: no stack trace in the browser outside production; 4xx
         if (saved === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = saved;
     }
 });
+
+test('final error handler: a 500 is recorded for Recent errors (source http); a 4xx is not', async () => {
+    const { setErrorEventSink } = await import('../src/utils/errorEvents.js');
+    const rows = [];
+    setErrorEventSink((row) => { rows.push(row); });
+    try {
+        const app = express();
+        app.get('/boom', () => { throw new Error('pool exhausted for "member text"'); });
+        app.get('/u/:id', (req, res) => res.send(req.params.id));
+        app.use(finalErrorHandler);
+        await request(app, '/boom');
+        await request(app, '/u/%E0%A4%A');
+        await new Promise((resolve) => setImmediate(resolve));
+        assert.equal(rows.length, 1);
+        assert.equal(rows[0].source, 'http');
+        assert.ok(!rows[0].message.includes('member text'), 'quoted values are masked');
+    } finally {
+        setErrorEventSink(null);
+    }
+});
+
+test('event loader: guildIdOf finds the server of an event argument, else null', async () => {
+    const { guildIdOf } = await import('../src/handlers/loaders/events.js');
+    assert.equal(guildIdOf({ guildId: '123456789012345678' }), '123456789012345678');
+    assert.equal(guildIdOf({ guild: { id: '223456789012345678' } }), '223456789012345678');
+    assert.equal(guildIdOf({ content: 'hi' }), null);
+    assert.equal(guildIdOf(undefined), null);
+});

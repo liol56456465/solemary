@@ -2,9 +2,11 @@
 // error's stack trace in the browser whenever NODE_ENV is not "production" (the Replit
 // workspace runs "development" and its dev URL is reachable from the internet). Client
 // errors (for example a malformed %-escape in the path) get a short 4xx; everything else a
-// plain 500. The details go to the log only.
+// plain 500. The details go to the log only; a 500 is also recorded for Owner → Recent errors
+// (source "http", via handleTaskError: the error message masked and cut, no path, no body).
 
 import { logger } from './logger.js';
+import { handleTaskError } from './errorHandler.js';
 
 export function finalErrorHandler(error, req, res, next) {
     if (res.headersSent) return next(error);
@@ -13,7 +15,7 @@ export function finalErrorHandler(error, req, res, next) {
     if (clientError) {
         logger.debug(`HTTP ${status} on ${req.method} ${req.path}: ${error?.message}`);
     } else {
-        logger.error(`Unhandled error on ${req.method} ${req.path}: ${error?.message}`);
+        handleTaskError('http', error instanceof Error ? error : new Error(String(error)), { method: req.method, route: req.route?.path ?? null });
     }
     res.status(clientError ? status : 500).type('text/plain').set('Cache-Control', 'no-store')
         .send(clientError ? 'Bad request.' : 'Something went wrong.');

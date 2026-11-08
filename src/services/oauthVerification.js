@@ -39,7 +39,10 @@ const DEFAULT_SUCCESS_REDIRECT = 'https://discord.gg/WyceK9YENP';
 const STATE_TTL_MS = 10 * 60 * 1000;
 const HTTP_TIMEOUT_MS = 10000;
 
+// Single use: a used state's nonce is kept in memory (fast path, same process) and in the
+// key-value store with a TTL until the state would have expired anyway (survives a restart).
 const usedStates = new Map();
+const USED_STATE_KEY_PREFIX = 'oauth:state_used:';
 
 function settings() {
     const publicUrl = (process.env.PUBLIC_URL || '').trim().replace(/\/+$/, '');
@@ -72,8 +75,12 @@ function createState(guildId, userId) {
     return `${payload}.${sign(payload, settings().clientSecret)}`;
 }
 
-/** Returns { guildId, userId } for a valid, unexpired, unused state, else null. */
-function readState(state) {
+/**
+ * Returns { guildId, userId } for a valid, unexpired, unused state, else null, and marks it
+ * used. Throws when the store cannot be read or written (the link is then burned in memory:
+ * the member presses Verify again).
+ */
+export async function readState(state, { getStored = getFromDb, setStored = setInDb } = {}) {
     const [payload, signature] = String(state || '').split('.');
     if (!payload || !signature) return null;
     const expected = Buffer.from(sign(payload, settings().clientSecret));
@@ -92,7 +99,12 @@ function readState(state) {
     for (const [nonce, expiresAt] of usedStates) {
         if (expiresAt <= now) usedStates.delete(nonce);
     }
+    // Marked in memory before any await, so two requests in this process can never both pass.
     usedStates.set(data.n, data.e);
+
+    const key = `${USED_STATE_KEY_PREFIX}${data.n}`;
+    if (await getStored(key, null)) return null;
+    await setStored(key, true, Math.ceil((data.e - now) / 1000) + 60);
     return { guildId: data.g, userId: data.u };
 }
 
@@ -234,7 +246,13 @@ export function registerOAuthRoutes(app, client) {
         if (req.query.error) {
             return send(400, 'Verification cancelled', 'You did not authorize the bot. Go back to Discord and press Verify again if you want to verify.');
         }
-        const state = readState(req.query.state);
+        let state;
+        try {
+            state = await readState(req.query.state);
+        } catch (error) {
+            logger.warn(`OAuth verification: could not check the link (database): ${error.message}`);
+            return send(503, 'Try again', 'Verification is not available right now. Go back to Discord and press Verify again in a minute.');
+        }
         if (!state || typeof req.query.code !== 'string') {
             return send(400, 'Link expired', 'This verification link is invalid, expired or already used. Go back to Discord and press Verify again.');
         }

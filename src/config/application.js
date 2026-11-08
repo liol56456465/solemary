@@ -30,24 +30,12 @@ const appConfig = {
     ...pgConfig,
   },
 
+  // For reference only: utils/logger.js reads LOG_LEVEL and LOG_TO_FILE itself
+  // (resolveLogLevel, resolveLogToFile). No error-reporting service (Sentry etc.) is wired in.
   logging: {
     level: process.env.LOG_LEVEL || "info",
     file: {
-      enabled: process.env.LOG_TO_FILE === "true",
       path: path.join(__dirname, "../../logs"),
-      maxSize: "20m",
-      maxFiles: "14d",
-      zippedArchive: true,
-    },
-    console: {
-      enabled: true,
-      colorize: true,
-      timestamp: true,
-    },
-    sentry: {
-      enabled: process.env.SENTRY_DSN ? true : false,
-      dsn: process.env.SENTRY_DSN,
-      environment: process.env.NODE_ENV || "development",
     },
   },
 
