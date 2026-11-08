@@ -58,6 +58,12 @@ export const GUILD_SQL = {
     levelRewards: `SELECT guild_id AS id FROM ${t.leveling_configs}
                    WHERE jsonb_typeof(config->'roleRewards') = 'object' AND config->'roleRewards' <> '{}'::jsonb
                      AND COALESCE(config->>'enabled', 'true') <> 'false'`,
+    // Servers where the staff guard runs (automod on + staff guard on; staffGuardService.staffGuardOn),
+    // for the daily structure snapshots. Settings live in temp_data as automod:settings:<id>.
+    staffGuard: `SELECT split_part(key, ':', 3) AS id FROM ${t.temp_data}
+                 WHERE key LIKE 'automod:settings:%'
+                   AND value->>'enabled' = 'true' AND value->>'staffGuard' = 'true'
+                   AND (expires_at IS NULL OR expires_at > NOW())`,
     // Servers with counted messages since $1 (a YYYY-MM-DD day; server cat).
     activeSince: `SELECT DISTINCT guild_id AS id FROM ${t.guild_daily_stats} WHERE day >= $1::date`,
 };

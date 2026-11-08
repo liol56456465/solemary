@@ -16,6 +16,10 @@
 // pause is lifted when the lockdown ends. Without Manage Server the pause is skipped
 // and the alert says so.
 //
+// Manual lockdown ("Lock down (panic)" on a nuke alert, startManualLockdown): the same lockdown
+// started by an Administrator, with the invite/DM pause even when panic mode is off (the button
+// asks for it). /automod lockdown-end lifts it as usual. No raid timeline (no join raid).
+//
 // Raid timeline (incidentTimeline.js): once the protective steps ran, the lockdown opens
 // an incident (its id is kept in the lockdown state as timelineId) and records what it
 // did; noteIncidentEvent lets other code (join gate, automod, mass-action guard) add to
@@ -69,7 +73,7 @@ async function alertOwner(guild, text) {
     await owner?.send({ content: text, allowedMentions: { parse: [] } }).catch(() => {});
 }
 
-async function startLockdown(guild, joinerIds) {
+async function startLockdown(guild, joinerIds, { forcePanic = false, reason = 'Automod: join raid detected' } = {}) {
     const previous = guild.verificationLevel;
     // Save the lockdown before any slow call, so joins arriving meanwhile add to
     // it instead of starting a second one that forgets the original level.
@@ -84,7 +88,7 @@ async function startLockdown(guild, joinerIds) {
 
     let raised = false;
     if (previous < GuildVerificationLevel.High) {
-        raised = await guild.setVerificationLevel(GuildVerificationLevel.High, 'Automod: join raid detected')
+        raised = await guild.setVerificationLevel(GuildVerificationLevel.High, reason.slice(0, 512))
             .then(() => true)
             .catch((error) => {
                 logger.warn(`Lockdown could not raise the verification level: ${error.message}`);
@@ -95,7 +99,7 @@ async function startLockdown(guild, joinerIds) {
     const verifiedAt = new Date();
 
     const settings = await getAutomodSettings(guild.id).catch(() => null);
-    const panic = settings?.panic?.enabled === false ? null : await pauseInvitesAndDms(guild, settings?.panic?.hours);
+    const panic = settings?.panic?.enabled === false && !forcePanic ? null : await pauseInvitesAndDms(guild, settings?.panic?.hours);
     const pausedAt = new Date();
 
     if (raised || panic) {
@@ -151,17 +155,35 @@ export async function noteIncidentEvent(guildId, event) {
     }
 }
 
-async function announceLockdown(guild, { joinerCount, raised, panic }) {
-    const summary = `${joinerCount} accounts joined within ${automodConfig.raidWindowMs / 1000} seconds.`;
+async function announceLockdown(guild, { joinerCount, raised, panic, startedBy = null }) {
+    const summary = startedBy
+        ? `Started by ${startedBy.username} (${startedBy.id}) from a nuke alert.`
+        : `${joinerCount} accounts joined within ${automodConfig.raidWindowMs / 1000} seconds.`;
     await postModLog(guild.client, 'raid', [
         { name: 'What happened', value: summary },
         { name: 'Verification level', value: raised ? 'Raised to High' : 'Not changed (already High, or missing Manage Server)' },
         { name: 'Invites and DMs', value: describePanic(panic) },
         { name: 'Raid joiners', value: 'Kicked automatically if they break any rule while the lockdown lasts.' },
         { name: 'End it', value: '`/automod lockdown-end`' },
-    ], { guildId: guild.id, title: 'Join raid: lockdown started' });
+    ], { guildId: guild.id, title: startedBy ? 'Lockdown started' : 'Join raid: lockdown started' });
     const extras = [raised ? 'the verification level is now High' : null, panic?.applied ? 'invites and DMs are paused' : null].filter(Boolean);
-    await alertOwner(guild, `**Join raid in ${guild.name}.** ${summary} The server is in lockdown${extras.length ? ` and ${extras.join(' and ')}` : ''}. End it with \`/automod lockdown-end\` when it is over.`);
+    await alertOwner(guild, `**${startedBy ? 'Lockdown' : 'Join raid'} in ${guild.name}.** ${summary} The server is in lockdown${extras.length ? ` and ${extras.join(' and ')}` : ''}. End it with \`/automod lockdown-end\` when it is over.`);
+}
+
+/**
+ * Starts a lockdown now (an Administrator's "Lock down (panic)"): verification High and invites
+ * and DMs paused for the panic hours, whatever /automod panic says. Resolves the lockdown
+ * ({ raised, panic, ... }) or null when one is already running. Throws on a database error.
+ */
+export async function startManualLockdown(guild, admin) {
+    const lockdown = await Mutex.runExclusive(`raid:${guild.id}`, async () => {
+        if ((await loadLockdown(guild.id))?.active) return null;
+        return startLockdown(guild, [], { forcePanic: true, reason: `Lockdown by ${admin.username} (nuke alert)` });
+    });
+    if (lockdown) {
+        announceLockdown(guild, { ...lockdown, startedBy: admin }).catch((error) => logger.warn(`Lockdown notice failed: ${error.message}`));
+    }
+    return lockdown;
 }
 
 /** Test hook: sizes of the in-memory state. */

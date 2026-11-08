@@ -33,6 +33,8 @@ before(async () => {
     await db.set(keys.getLevelingKey(USES), { enabled: true, roleRewards: { 5: snowflake(7) } });
     await db.set(keys.getLevelingKey(IDLE), { enabled: true, roleRewards: {} });
     await db.set(keys.getReactionRoleKey(USES, snowflake(8)), { messageId: snowflake(8), channelId: snowflake(9), roles: [] });
+    await db.set(`automod:settings:${USES}`, { enabled: true, staffGuard: true });
+    await db.set(`automod:settings:${IDLE}`, { enabled: true, staffGuard: false });
     await pgDb.pool.query('INSERT INTO guild_daily_stats (guild_id, day, messages) VALUES ($1, CURRENT_DATE, 3)', [USES]);
 });
 
@@ -40,6 +42,7 @@ after(async () => {
     if (skip) return;
     await pgDb.pool.query('DELETE FROM guild_daily_stats WHERE guild_id = ANY($1)', [[USES, IDLE]]);
     await pgDb.pool.query('DELETE FROM temp_data WHERE key LIKE $1 OR key LIKE $2', [`guild:${USES}:%`, `guild:${IDLE}:%`]);
+    await pgDb.pool.query('DELETE FROM temp_data WHERE key = ANY($1)', [[`automod:settings:${USES}`, `automod:settings:${IDLE}`]]);
     await pgDb.pool.query('DELETE FROM guilds WHERE id = ANY($1)', [[USES, IDLE]]);
     await pgDb.disconnect();
 });
@@ -48,7 +51,7 @@ const ids = async (sql, params = []) => new Set((await pgDb.pool.query(sql, para
 
 test('each feature query finds the server that uses it and not the idle one', { skip }, async () => {
     const day = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
-    for (const [name, params] of [['counters'], ['birthdays'], ['ticketCategory'], ['ticketPanel'], ['verificationPanel'], ['reactionRoles'], ['levelRewards'], ['activeSince', [day]]]) {
+    for (const [name, params] of [['counters'], ['birthdays'], ['ticketCategory'], ['ticketPanel'], ['verificationPanel'], ['reactionRoles'], ['levelRewards'], ['activeSince', [day]], ['staffGuard']]) {
         const found = await ids(scan.GUILD_SQL[name], params || []);
         assert.ok(found.has(USES), `${name}: the server that uses it`);
         assert.ok(!found.has(IDLE), `${name}: not the idle server`);

@@ -14,6 +14,11 @@
 // demoted; dangerous permissions granted to @everyone, or Administrator granted to
 // any role, are reverted and the member who did it is demoted. The owner is alerted.
 //
+// Nuke alerts (any server with the guard on): the server's structure is snapshotted at once
+// when its newest snapshot is over an hour old (captured before the guard acts), and the alert
+// gets "Show what changed", "Revert…" and "Lock down (panic)" buttons (backupRevert.js). The
+// member the guard acted on is remembered (recentOffenders) and refused by those buttons.
+//
 // Staff warnings: /staff warn (owner only) records a warning that expires after
 // staffWarnExpiryMs; at staffWarnLimit active warnings the staff roles are removed
 // the same way.
@@ -27,9 +32,8 @@ import { db, getFromDb, setInDb, deleteFromDb } from '../../utils/database.js';
 import { query, T } from '../enforcement/db.js';
 import { postModLog } from '../enforcement/enforcementService.js';
 import { dateStamp } from '../enforcement/format.js';
-import { postAlert, showDiffRow } from './alertPost.js';
-import { isMewvoServer } from '../../utils/ownerPower.js';
-import { enforcementConfig } from '../../config/enforcement.js';
+import { nukeAlertRow, postAlert } from './alertPost.js';
+import { snapshotIfStale } from '../structureBackupService.js';
 
 const STAFF_ROLE_PERMISSIONS = [
     PermissionFlagsBits.Administrator,
@@ -67,9 +71,26 @@ const NUKE_ACTIONS = new Set([AuditLogEvent.BotAdd, AuditLogEvent.WebhookCreate,
 export const GUARD_ACTIVITY_MAX = 5000;
 const activity = new BoundedMap(GUARD_ACTIVITY_MAX); // guildId:executorId:kind → [at]
 
+// Members the guard acted on in a nuke (guildId:userId → at): the nuke buttons refuse them even
+// when their customId does not name them (another alert, or one from before a restart names them).
+export const OFFENDER_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const recentOffenders = new BoundedMap(GUARD_ACTIVITY_MAX);
+
+/** Remembers `userId` as the offender of a nuke in `guildId`. */
+export function noteOffender(guildId, userId, at = Date.now()) {
+    if (guildId && userId) recentOffenders.set(`${guildId}:${userId}`, at);
+}
+
+/** True when the guard acted on `userId` in `guildId` within OFFENDER_TTL_MS. */
+export function isRecentOffender(guildId, userId, now = Date.now()) {
+    const at = recentOffenders.get(`${guildId}:${userId}`);
+    return Boolean(at && now - at < OFFENDER_TTL_MS);
+}
+
 /** Test hook. */
 export function resetStaffGuardState() {
     activity.clear();
+    recentOffenders.clear();
 }
 
 /** Test hook: how many executor windows are tracked. */
@@ -160,16 +181,19 @@ export async function listRemovedStaffRoles(guildId) {
 }
 
 /**
- * "Show what changed" + the /backup revert hint: structure snapshots and /backup exist only for
- * Mewvo's own servers, so other servers' alerts get neither (multi-server B1).
+ * The first step of a nuke alert: remember the offender and snapshot the server if its newest
+ * snapshot is stale (the structure is captured right now, stored in the background: it never
+ * delays the guard). Returns the detection time for the alert's buttons.
  */
-function diffComponents(guild) {
-    return isMewvoServer(guild.id) ? [showDiffRow(Date.now(), guild.id)] : [];
+function onNukeDetected(guild, offenderId) {
+    const at = Date.now();
+    noteOffender(guild.id, offenderId, at);
+    snapshotIfStale(guild).catch(() => {});
+    return at;
 }
 
-/** `nuke`: in Mewvo's servers the alert gets a "Show diff" button (snapshot vs now, for /backup revert). */
-async function demote(guild, member, why, { nuke = false } = {}) {
-    const withDiff = nuke && isMewvoServer(guild.id);
+/** `nuke`: the alert gets the nuke buttons (nukeAlertRow); `at` from onNukeDetected. */
+async function demote(guild, member, why, { nuke = false, at = Date.now() } = {}) {
     const { removed, kept } = await stripStaffRoles(member, `Staff guard: ${why}`);
     const summary = [
         `**Staff member:** ${member.user.username} (\`${member.id}\`)`,
@@ -177,23 +201,23 @@ async function demote(guild, member, why, { nuke = false } = {}) {
         `**Removed roles:** ${removed.map((role) => role.name).join(', ') || 'none'}`,
         kept.length ? `**Could not remove (above my role):** ${kept.map((role) => role.name).join(', ')}` : null,
         'Restore with `/staff restore`.',
+        nuke ? 'Undo the damage: **Show what changed**, then **Revert…** on the alert.' : null,
     ].filter(Boolean).join('\n');
     const fields = [
         { name: 'Staff member', value: `<@${member.id}> ${member.user.username} (\`${member.id}\`)` },
         { name: 'Why', value: why },
         { name: 'Removed roles', value: removed.map((role) => role.name).join(', ') || 'none' },
         ...(kept.length ? [{ name: 'Could not remove (above my role)', value: kept.map((role) => role.name).join(', ') }] : []),
-        // /backup revert works on the main server only; the support server's diff is fixed by hand.
-        { name: 'Restore', value: withDiff ? (guild.id === enforcementConfig.mainGuildId ? '`/staff restore` · damage: **Show what changed**, then `/backup revert`' : '`/staff restore` · damage: **Show what changed**') : '`/staff restore`' },
+        { name: 'Restore', value: nuke ? '`/staff restore` · damage: **Show what changed**, then **Revert…** · **Lock down (panic)** pauses invites and DMs' : '`/staff restore`' },
     ];
-    if (nuke) await postAlert(guild.client, 'staff', { guildId: guild.id, title: 'Staff roles removed', fields, components: diffComponents(guild) });
+    if (nuke) await postAlert(guild.client, 'staff', { guildId: guild.id, title: 'Staff roles removed', fields, components: [nukeAlertRow(at, guild.id, member.id)] });
     else await postModLog(guild.client, 'staff', fields, { guildId: guild.id, title: 'Staff roles removed' });
     await alertOwner(guild, `**Staff guard in ${guild.name}**\n${summary}`);
     logger.warn(`Staff guard removed roles from ${member.id}: ${why}`);
 }
 
-async function alertNuke(guild, title, fields) {
-    await postAlert(guild.client, 'staff', { guildId: guild.id, title, fields, components: diffComponents(guild) });
+async function alertNuke(guild, title, fields, { offenderId, at }) {
+    await postAlert(guild.client, 'staff', { guildId: guild.id, title, fields, components: [nukeAlertRow(at, guild.id, offenderId)] });
     await alertOwner(guild, `**${title} in ${guild.name}**\n${fields.map((f) => `**${f.name}:** ${f.value}`).join('\n')}`);
 }
 
@@ -205,9 +229,9 @@ function grantedBits(entry) {
     return after & ~before;
 }
 
-async function demoteExecutor(guild, executorId, why) {
+async function demoteExecutor(guild, executorId, why, at) {
     const member = await guild.members.fetch(executorId).catch(() => null);
-    if (member) await demote(guild, member, why, { nuke: true }).catch((error) => logger.error(`Staff guard could not demote ${executorId}: ${error.message}`));
+    if (member) await demote(guild, member, why, { nuke: true, at }).catch((error) => logger.error(`Staff guard could not demote ${executorId}: ${error.message}`));
 }
 
 /** Anti-nuke checks for one audit log entry. Returns true when it handled the entry. */
@@ -217,12 +241,13 @@ async function handleNukeEntry(entry, guild) {
 
     if (entry.action === AuditLogEvent.BotAdd) {
         const botId = entry.targetId;
+        const at = onNukeDetected(guild, executorId);
         const kicked = await guild.members.kick(botId, 'Anti-nuke: bot added without the owner').then(() => true).catch(() => false);
         await alertNuke(guild, 'Unapproved bot removed', [
             { name: 'Bot', value: `<@${botId}> (\`${botId}\`)` },
             { name: 'Added by', value: executor },
             { name: 'Result', value: kicked ? 'Kicked. The owner can add it again if it is wanted.' : 'Could not kick it (it may be above my role). Remove it by hand.' },
-        ]);
+        ], { offenderId: executorId, at });
         return true;
     }
 
@@ -235,14 +260,15 @@ async function handleNukeEntry(entry, guild) {
         if (times.length < WEBHOOK_LIMIT) return true;
         activity.delete(key);
 
+        const at = onNukeDetected(guild, executorId);
         const webhooks = await guild.fetchWebhooks().catch(() => null);
         const theirs = webhooks ? [...webhooks.values()].filter((hook) => hook.owner?.id === executorId) : [];
         for (const hook of theirs) await hook.delete('Anti-nuke: webhook spam').catch(() => {});
         await alertNuke(guild, 'Webhook spam stopped', [
             { name: 'Created by', value: executor },
             { name: 'Webhooks deleted', value: String(theirs.length) },
-        ]);
-        await demoteExecutor(guild, executorId, `${times.length} webhooks created within ${automodConfig.guardWindowMs / 60000} minutes`);
+        ], { offenderId: executorId, at });
+        await demoteExecutor(guild, executorId, `${times.length} webhooks created within ${automodConfig.guardWindowMs / 60000} minutes`, at);
         return true;
     }
 
@@ -256,6 +282,7 @@ async function handleNukeEntry(entry, guild) {
         const flagged = isEveryone ? dangerous : dangerous.filter((flag) => flag === PermissionFlagsBits.Administrator);
         if (!flagged.length) return false;
 
+        const at = onNukeDetected(guild, executorId);
         const reverted = flagged.reduce((bits, flag) => bits & ~flag, role.permissions.bitfield);
         const ok = await role.setPermissions(reverted, 'Anti-nuke: dangerous permission granted without the owner').then(() => true).catch(() => false);
         const names = flagged.map((flag) => Object.entries(PermissionFlagsBits).find(([, bit]) => bit === flag)?.[0]).join(', ');
@@ -264,8 +291,8 @@ async function handleNukeEntry(entry, guild) {
             { name: 'Granted', value: names },
             { name: 'By', value: executor },
             { name: 'Result', value: ok ? 'Reverted.' : 'Could not revert (the role may be above mine). Fix it by hand.' },
-        ]);
-        await demoteExecutor(guild, executorId, `gave ${names} to ${isEveryone ? '@everyone' : role.name}`);
+        ], { offenderId: executorId, at });
+        await demoteExecutor(guild, executorId, `gave ${names} to ${isEveryone ? '@everyone' : role.name}`, at);
         return true;
     }
     return false;
@@ -293,13 +320,14 @@ export async function handleAuditLogEntry(entry, guild) {
     if (times.length < limit) return;
     activity.delete(key);
 
+    const at = kind === 'delete' ? onNukeDetected(guild, executorId) : Date.now();
     const member = await guild.members.fetch(executorId).catch(() => null);
     if (!member) return;
     const minutes = automodConfig.guardWindowMs / 60000;
     const why = kind === 'banKick'
         ? `${times.length} bans/kicks within ${minutes} minutes`
         : `${times.length} channel/role deletions within ${minutes} minutes`;
-    await demote(guild, member, why, { nuke: kind === 'delete' }).catch((error) => logger.error(`Staff guard could not demote ${executorId}: ${error.message}`));
+    await demote(guild, member, why, { nuke: kind === 'delete', at }).catch((error) => logger.error(`Staff guard could not demote ${executorId}: ${error.message}`));
 }
 
 export async function listStaffWarnings(guildId, userId) {
