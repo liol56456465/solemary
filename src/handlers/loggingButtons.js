@@ -117,23 +117,26 @@ export default {
 };
 
 async function handleRefresh(interaction) {
+  // Acknowledge first: the view reads the config and may fetch the log channels.
+  await interaction.deferUpdate();
   if (isCategoriesView(interaction)) {
     const { embed, components } = await buildLoggingCategoriesView(interaction, interaction.client);
-    return interaction.update({ embeds: [embed], components, content: null });
+    return interaction.editReply({ embeds: [embed], components, content: null });
   }
 
   if (isFilterView(interaction)) {
     const { embed, components } = await buildLoggingFilterView(interaction, interaction.client);
-    return interaction.update({ embeds: [embed], components, content: null });
+    return interaction.editReply({ embeds: [embed], components, content: null });
   }
 
   const { embed, components } = await buildLoggingDashboardView(interaction, interaction.client);
-  await interaction.update({ embeds: [embed], components, content: null });
+  await interaction.editReply({ embeds: [embed], components, content: null });
 }
 
 async function handleBackToMain(interaction) {
+  await interaction.deferUpdate();
   const { embed, components } = await buildLoggingDashboardView(interaction, interaction.client);
-  await interaction.update({ embeds: [embed], components, content: null });
+  await interaction.editReply({ embeds: [embed], components, content: null });
 }
 
 async function handleToggle(interaction) {
@@ -141,6 +144,9 @@ async function handleToggle(interaction) {
   if (!eventType) {
     return interaction.reply({ content: textForInteraction(interaction).t('logging.panel.unknownEvent'), ephemeral: true });
   }
+
+  // Acknowledge before the status read, the write and the view rebuild.
+  await interaction.deferUpdate();
 
   const status = await getLoggingStatus(interaction.client, interaction.guildId);
   const onCategoriesView = isCategoriesView(interaction);
@@ -159,11 +165,11 @@ async function handleToggle(interaction) {
 
   if (onCategoriesView || (eventType !== 'audit_enabled' && eventType.includes('.*'))) {
     const { embed, components } = await buildLoggingCategoriesView(interaction, interaction.client);
-    return interaction.update({ embeds: [embed], components, content: null });
+    return interaction.editReply({ embeds: [embed], components, content: null });
   }
 
   const { embed, components } = await buildLoggingDashboardView(interaction, interaction.client);
-  await interaction.update({ embeds: [embed], components, content: null });
+  await interaction.editReply({ embeds: [embed], components, content: null });
 }
 
 async function handleAddFilterModal(interaction) {
@@ -455,11 +461,14 @@ export async function handleLoggingMenuSelect(interaction) {
     return showChannelModal(interaction, destination);
   }
 
+  // Everything below edits the panel after database work: acknowledge first.
+  await interaction.deferUpdate();
+
   if (value.startsWith('clear:')) {
     const destination = value.replace('clear:', '');
     await setLogChannel(interaction.client, interaction.guildId, destination, null);
     const { embed, components } = await buildLoggingDashboardView(interaction, interaction.client);
-    return interaction.update({
+    return interaction.editReply({
       embeds: [embed],
       components,
       content: null,
@@ -468,13 +477,13 @@ export async function handleLoggingMenuSelect(interaction) {
 
   if (value === 'view:categories') {
     const { embed, components } = await buildLoggingCategoriesView(interaction, interaction.client);
-    return interaction.update({ embeds: [embed], components, content: null });
+    return interaction.editReply({ embeds: [embed], components, content: null });
   }
 
   if (value === 'view:filters') {
     const { embed, components } = await buildLoggingFilterView(interaction, interaction.client);
-    return interaction.update({ embeds: [embed], components, content: null });
+    return interaction.editReply({ embeds: [embed], components, content: null });
   }
 
-  return interaction.reply({ content: textForInteraction(interaction).t('logging.panel.unknownOption'), ephemeral: true });
+  return interaction.followUp({ content: textForInteraction(interaction).t('logging.panel.unknownOption'), flags: MessageFlags.Ephemeral });
 }

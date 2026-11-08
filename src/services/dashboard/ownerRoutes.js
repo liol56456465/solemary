@@ -69,6 +69,7 @@ import { normalizeCaseCode } from '../enforcement/format.js';
 import { eraseConfirmPage, erasePage } from './ownerErasePages.js';
 import { getFromDb } from '../../utils/database/wrapper.js';
 import { getRoleAssignmentProblem } from '../../utils/roleSafety.js';
+import { getEventLoopLag } from '../../utils/eventLoopMonitor.js';
 import {
     ABOUT_MAX, ANNOUNCE_MAX, SERVER_SORTS, USERNAME_MAX, activityPage, announceConfirmPage, announcePage, announceResultPage,
     KEY_FILTERS, blacklistPage, commandsPage, premiumPage, registerConfirmPage, healthPage, leaveConfirmPage, ownerHomePage, profilePage, serverPage, serversPage, userLookupPage,
@@ -860,6 +861,7 @@ export function createOwnerHandlers(core) {
             gatewayUptimeMs: Number.isFinite(client.uptime) ? client.uptime : null,
             ping: client.ws?.ping,
             memory: process.memoryUsage(),
+            eventLoop: getEventLoopLag(),
             node: process.version,
             version: readBotVersion(),
             servers: client.guilds?.cache?.size ?? 0,

@@ -52,6 +52,8 @@ export default {
 
     category: "Community",
 
+    // /apply submit answers with the application form: exempt from the 3-second safety net.
+    opensModal: (interaction) => interaction.options?.getSubcommand?.(false) === 'submit',
     execute: withErrorHandling(async (interaction) => {
         const tr = textForInteraction(interaction);
         if (!interaction.inGuild()) {

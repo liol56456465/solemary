@@ -26,6 +26,7 @@ import { hasRuleOverride, isRelaxableRule, ruleMode } from '../../services/autom
 import { snapshotOnGuardEnabled } from '../../services/structureBackupService.js';
 import { botText, textForInteraction } from '../../utils/botText.js';
 import { DISCORD_LOCALES_BY_LANG, descriptionLocalizations } from '../../utils/commandLocalizations.js';
+import { BoundedMap } from '../../utils/boundedMap.js';
 
 // Language (utils/botText.js): every /automod answer is ephemeral, in the admin's Discord language.
 // Rule names, mode words and join gate checks are translated here; English is the code's own text.
@@ -270,6 +271,19 @@ async function handleNative(interaction, sub, tr) {
 }
 
 
+// Autocomplete runs on every keystroke and must answer within 3 s: the server's AutoMod rules
+// (a REST fetch) are reused for AUTOCOMPLETE_RULES_TTL_MS instead of being fetched each time.
+const AUTOCOMPLETE_RULES_TTL_MS = 30 * 1000;
+const autocompleteRuleCache = new BoundedMap(500);
+
+async function autocompleteRules(guild) {
+    const hit = autocompleteRuleCache.get(guild.id);
+    if (hit && Date.now() - hit.at < AUTOCOMPLETE_RULES_TTL_MS) return hit.rules;
+    const rules = await guild.autoModerationRules.fetch().catch(() => null);
+    if (rules) autocompleteRuleCache.set(guild.id, { at: Date.now(), rules });
+    return rules;
+}
+
 export default {
     data: new SlashCommandBuilder()
         .setName('automod')
@@ -383,7 +397,7 @@ export default {
             const { lang } = textForInteraction(interaction);
             return interaction.respond(customRuleChoices(storedCustomRules(interaction.guildId), focused, { lang })).catch(() => {});
         }
-        const rules = await interaction.guild.autoModerationRules.fetch().catch(() => null);
+        const rules = await autocompleteRules(interaction.guild);
         const choices = [...(rules?.values() || [])]
             .filter((rule) => !focused || rule.name.toLowerCase().includes(focused) || rule.id.includes(focused))
             .slice(0, 25)

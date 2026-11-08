@@ -23,6 +23,8 @@ import { botText, resolveBotLanguage } from '../utils/botText.js';
 import { BLACKLIST_MESSAGE, blacklistHit } from '../services/owner/blacklistCache.js';
 import { noteOwnerOverride } from '../services/ownerOverride.js';
 import { skipIfArrivedTooLate, noticeIfHandlerMissedDeadline } from '../utils/lateInteractionNotice.js';
+import { armAckSafetyNet, opensModal, interactionsAreWarm, waitForStartupCaches } from '../utils/ackSafetyNet.js';
+import { runAutocompleteWithDeadline } from '../utils/autocompleteDeadline.js';
 
 const COMMAND_ERROR_SUBTYPES = {
   ticket: 'ticket_failed',
@@ -69,6 +71,48 @@ export async function refuseBlacklistedComponent(interaction) {
   return true;
 }
 
+// While the bot is starting (or the database is known down) an interaction is acknowledged at
+// once, then the handler waits up to this long for the startup caches.
+const STARTUP_CACHE_WAIT_MS = 10 * 1000;
+
+/**
+ * Arms the 3-second safety net (utils/ackSafetyNet.js) for a registered handler. Modal paths
+ * (`opensModal` on the handler or command) are exempt from the 2-second auto-defer (a modal must
+ * be the first response); they only get the last-moment "please try again" fallback.
+ * When the bot is not warm yet, acknowledges at once and waits for the startup caches.
+ */
+async function armSafetyNet(interaction, client, handler, args = []) {
+  const net = armAckSafetyNet(interaction, {
+    exempt: opensModal(handler, interaction, args),
+    ephemeral: handler?.ackEphemeral !== false,
+  });
+  if (!net.exempt && !interactionsAreWarm(client)) {
+    await net.fireNow('startup');
+    await waitForStartupCaches(STARTUP_CACHE_WAIT_MS);
+  }
+  return net;
+}
+
+/** The autocomplete answer: the command's own handler, or the application-name lists below. */
+async function answerAutocomplete(interaction, client, command) {
+  if (command?.autocomplete) {
+    await command.autocomplete(interaction, client);
+    return;
+  }
+  const focusedOption = interaction.options.getFocused(true);
+  const isApply = interaction.commandName === 'apply';
+  if ((isApply || interaction.commandName === 'app-admin') && focusedOption.name === 'application') {
+    const { getApplicationRoles } = await import('../utils/database.js');
+    const roles = await getApplicationRoles(client, interaction.guildId);
+    const typed = interaction.options.getString('application', false)?.toLowerCase() || '';
+    const filtered = roles.filter((role) => (!isApply || role.enabled !== false) && role.name.toLowerCase().startsWith(typed));
+    await interaction.respond(filtered.slice(0, 25).map((role) => ({
+      name: `${role.name}${role.enabled === false ? ' (disabled)' : ''}`,
+      value: role.name,
+    })));
+  }
+}
+
 function withTraceContext(context = {}, traceContext = {}) {
   return {
     traceId: traceContext.traceId,
@@ -90,6 +134,8 @@ export default {
       // Set once a registered handler runs, so the late check below skips
       // collector-managed and inline-awaited interactions.
       let dispatched = false;
+      // The 3-second safety net, armed once the handler is known; disarmed when it finishes.
+      let net = null;
       try {
         InteractionHelper.patchInteractionResponses(interaction);
         ResponseCoordinator.attach(interaction);
@@ -125,6 +171,10 @@ export default {
                 withTraceContext({ commandName: interaction.commandName }, interactionTraceContext)
               );
             }
+
+            // Armed before the gate: its config reads (guild config, command toggles,
+            // cooldown store) count towards the 3 seconds too.
+            net = await armSafetyNet(interaction, client, command);
 
             const access = checkCommandAccess({
               command,
@@ -241,6 +291,7 @@ export default {
                 botText(resolveBotLanguage({ interaction, guildId: interaction.guildId, userId: interaction.user.id, purpose: 'reply' })).t('errors.dispatch.unknownCommand'),
                 withTraceContext({ commandName: interaction.commandName }, interactionTraceContext));
             }
+            net = await armSafetyNet(interaction, client, command);
             const access = checkCommandAccess({
               command,
               accessKey: interaction.commandName,
@@ -281,72 +332,9 @@ export default {
             return;
           }
 
-          if (autocompleteCommand?.autocomplete) {
-            try {
-              await autocompleteCommand.autocomplete(interaction, client);
-            } catch (error) {
-              logger.error('Error handling command autocomplete:', {
-                error: error.message,
-                guildId: interaction.guildId,
-                commandName: interaction.commandName,
-              });
-              await interaction.respond([]).catch(() => {});
-            }
-            return;
-          }
-
-          const focusedOption = interaction.options.getFocused(true);
-          
-          if (interaction.commandName === 'apply' && focusedOption.name === 'application') {
-            try {
-              const { getApplicationRoles } = await import('../utils/database.js');
-              const roles = await getApplicationRoles(client, interaction.guildId);
-              const roleName = interaction.options.getString('application', false);
-
-              const filtered = roles.filter(role =>
-                role.enabled !== false && 
-                role.name.toLowerCase().startsWith(roleName?.toLowerCase() || '')
-              );
-              
-              await interaction.respond(
-                filtered.slice(0, 25).map(role => ({
-                  name: `${role.name}${role.enabled === false ? ' (disabled)' : ''}`,
-                  value: role.name
-                }))
-              );
-            } catch (error) {
-              logger.error('Error handling autocomplete:', {
-                error: error.message,
-                guildId: interaction.guildId,
-                commandName: interaction.commandName
-              });
-              await interaction.respond([]);
-            }
-          } else if (interaction.commandName === 'app-admin' && focusedOption.name === 'application') {
-            try {
-              const { getApplicationRoles } = await import('../utils/database.js');
-              const roles = await getApplicationRoles(client, interaction.guildId);
-              const appName = interaction.options.getString('application', false);
-
-              const filtered = roles.filter(role =>
-                role.name.toLowerCase().startsWith(appName?.toLowerCase() || '')
-              );
-              
-              await interaction.respond(
-                filtered.slice(0, 25).map(role => ({
-                  name: `${role.name}${role.enabled === false ? ' (disabled)' : ''}`,
-                  value: role.name
-                }))
-              );
-            } catch (error) {
-              logger.error('Error handling app-admin autocomplete:', {
-                error: error.message,
-                guildId: interaction.guildId,
-                commandName: interaction.commandName
-              });
-              await interaction.respond([]);
-            }
-          }
+          // Autocomplete can't be deferred: answered within the deadline, with the last
+          // choices (or an empty list) when the handler is too slow.
+          await runAutocompleteWithDeadline(interaction, (i) => answerAutocomplete(i, client, autocompleteCommand));
         } else if (interaction.isButton()) {
           if (interaction.customId.startsWith('shared_todo_')) {
             const parts = interaction.customId.split('_');
@@ -356,6 +344,7 @@ export default {
 
             if (button) {
               try {
+                net = await armSafetyNet(interaction, client, button, [listId]);
                 if (await skipIfArrivedTooLate(interaction)) return;
                 dispatched = true;
                 await button.execute(interaction, client, [listId]);
@@ -395,6 +384,7 @@ export default {
           }
 
           try {
+            net = await armSafetyNet(interaction, client, button, args);
             if (await skipIfArrivedTooLate(interaction)) return;
             dispatched = true;
             await button.execute(interaction, client, args);
@@ -424,6 +414,7 @@ export default {
           }
 
           try {
+            net = await armSafetyNet(interaction, client, selectMenu, args);
             if (await skipIfArrivedTooLate(interaction)) return;
             dispatched = true;
             await selectMenu.execute(interaction, client, args);
@@ -439,6 +430,7 @@ export default {
         } else if (interaction.isModalSubmit()) {
           if (interaction.customId.startsWith('app_modal_')) {
             try {
+              net = await armSafetyNet(interaction, client, null);
               if (await skipIfArrivedTooLate(interaction)) return;
               dispatched = true;
               await handleApplicationModal(interaction);
@@ -484,6 +476,7 @@ export default {
           }
 
           try {
+            net = await armSafetyNet(interaction, client, modal, args);
             if (await skipIfArrivedTooLate(interaction)) return;
             dispatched = true;
             await modal.execute(interaction, client, args);
@@ -522,6 +515,7 @@ export default {
           });
         }
       } finally {
+        net?.disarm();
         if (dispatched) {
           await noticeIfHandlerMissedDeadline(interaction).catch(() => {});
         }

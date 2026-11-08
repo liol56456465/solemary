@@ -38,9 +38,11 @@ export function getCategoryStatus(enabledEvents, category, auditEnabled) {
   return categoryEvents.every((eventType) => events[eventType] !== false);
 }
 
+// The guild's channels are all cached (Guilds intent): a cache miss is a deleted channel, so it
+// is not fetched (that was a REST 404 on every panel click, before the click was acknowledged).
 async function formatChannelMention(guild, id, tr) {
   if (!id) return tr.t('logging.dashboard.notSet');
-  const channel = guild.channels.cache.get(id) ?? await guild.channels.fetch(id).catch(() => null);
+  const channel = guild.channels.cache.get(id) ?? null;
   return channel ? channel.toString() : tr.t('logging.dashboard.missing', { id });
 }
 
@@ -53,8 +55,10 @@ function countEnabledCategories(enabledEvents, auditEnabled) {
 
 export async function buildLoggingDashboardView(interaction, client) {
   const tr = textForInteraction(interaction);
-  const guildConfig = await getGuildConfig(client, interaction.guildId);
-  const loggingStatus = await getLoggingStatus(client, interaction.guildId);
+  const [guildConfig, loggingStatus] = await Promise.all([
+    getGuildConfig(client, interaction.guildId),
+    getLoggingStatus(client, interaction.guildId),
+  ]);
 
   const auditEnabled = Boolean(loggingStatus.enabled);
   const channels = loggingStatus.channels || {};

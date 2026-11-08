@@ -121,6 +121,25 @@ function ticketAccessMessage(context, actionLabel, allowTicketCreator, { lang = 
     : tr.t('ticket.buttons.accessStaff', { staffRole, action });
 }
 
+// The permission check reads the ticket record. Before a form it must leave time for the form
+// itself; after a defer the interaction has 15 minutes.
+const TICKET_PERMISSION_TIMEOUT_BEFORE_MODAL_MS = 1500;
+const TICKET_PERMISSION_TIMEOUT_AFTER_DEFER_MS = 8000;
+// Before the ticket form: the open-ticket count gets this long, then it is checked again on submit.
+const TICKET_COUNT_BUDGET_BEFORE_MODAL_MS = 1200;
+
+/** The promise's value, or null when it takes longer than ms (its error propagates). */
+async function withinBudget(promise, ms) {
+  let timer;
+  promise.catch(() => {}); // a late failure after the budget is not an unhandled rejection
+  const timeout = new Promise((resolve) => { timer = setTimeout(() => resolve(null), ms); });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function assertTicketPermission(interaction, client, actionLabel, options = {}, timeoutMs = 2500) {
   const { allowTicketCreator = false } = options;
   const tr = textForInteraction(interaction);
@@ -189,6 +208,7 @@ async function ensureTicketPermission(interaction, client, actionLabel, options 
 
 const createTicketHandler = {
   name: 'create_ticket',
+  opensModal: true,
   async execute(interaction, client) {
     try {
       if (!(await ensureGuildContext(interaction))) return;
@@ -201,13 +221,18 @@ const createTicketHandler = {
         return;
       }
 
-      const config = await getGuildConfig(client, interaction.guildId);
-      const maxTicketsPerUser = config.maxTicketsPerUser || 3;
-      
-      const { getUserTicketCount } = await import('../services/ticket.js');
-      const currentTicketCount = await getUserTicketCount(interaction.guildId, interaction.user.id);
-      
-      if (currentTicketCount >= maxTicketsPerUser) {
+      // The early "limit reached" answer is a courtesy: the form must open within 3 s, so the
+      // config + count reads get TICKET_COUNT_BUDGET_BEFORE_MODAL_MS. When they are slower the
+      // form opens anyway; createTicket() checks the limit again on submit.
+      const early = await withinBudget((async () => {
+        const config = await getGuildConfig(client, interaction.guildId);
+        const { getUserTicketCount } = await import('../services/ticket.js');
+        return { max: config.maxTicketsPerUser || 3, count: await getUserTicketCount(interaction.guildId, interaction.user.id) };
+      })(), TICKET_COUNT_BUDGET_BEFORE_MODAL_MS);
+      const maxTicketsPerUser = early?.max;
+      const currentTicketCount = early?.count;
+
+      if (early && currentTicketCount >= maxTicketsPerUser) {
         return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('ticket.buttons.limitReached', { count: currentTicketCount, max: maxTicketsPerUser }) });
       }
 
@@ -283,11 +308,13 @@ const createTicketModalHandler = {
 
 const closeTicketHandler = {
   name: 'ticket_close',
+  opensModal: true,
   async execute(interaction, client) {
     try {
       if (!(await ensureGuildContext(interaction))) return;
 
-      await assertTicketPermission(interaction, client, 'close this ticket', { allowTicketCreator: true }, 2000);
+      // Runs before the form (a modal must be the first response), so it gets a short budget.
+      await assertTicketPermission(interaction, client, 'close this ticket', { allowTicketCreator: true }, TICKET_PERMISSION_TIMEOUT_BEFORE_MODAL_MS);
       const tr = textForInteraction(interaction);
 
       const modal = new ModalBuilder()
@@ -320,10 +347,11 @@ const closeTicketModalHandler = {
     try {
       if (!(await ensureGuildContext(interaction))) return;
 
-      await assertTicketPermission(interaction, client, 'close this ticket', { allowTicketCreator: true }, 2000);
-
+      // Acknowledge first: the permission check reads the database (ticket record).
       const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
       if (!deferSuccess) return;
+
+      await assertTicketPermission(interaction, client, 'close this ticket', { allowTicketCreator: true }, TICKET_PERMISSION_TIMEOUT_AFTER_DEFER_MS);
 
       const tr = textForInteraction(interaction);
       const providedReason = interaction.fields.getTextInputValue('reason')?.trim();
@@ -345,10 +373,11 @@ const claimTicketHandler = {
     try {
       if (!(await ensureGuildContext(interaction))) return;
 
-      await assertTicketPermission(interaction, client, 'claim tickets', {}, 2000);
-
+      // Acknowledge first: the permission check reads the database (ticket record).
       const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
       if (!deferSuccess) return;
+
+      await assertTicketPermission(interaction, client, 'claim tickets', {}, TICKET_PERMISSION_TIMEOUT_AFTER_DEFER_MS);
       
       const tr = textForInteraction(interaction);
       await claimTicket(interaction.channel, interaction.user, { lang: tr.lang });
@@ -366,10 +395,11 @@ const priorityTicketHandler = {
     try {
       if (!(await ensureGuildContext(interaction))) return;
 
-      await assertTicketPermission(interaction, client, 'change ticket priority', {}, 2000);
-
+      // Acknowledge first: the permission check reads the database (ticket record).
       const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
       if (!deferSuccess) return;
+
+      await assertTicketPermission(interaction, client, 'change ticket priority', {}, TICKET_PERMISSION_TIMEOUT_AFTER_DEFER_MS);
       
       const tr = textForInteraction(interaction);
       const priority = args?.[0];
@@ -395,10 +425,11 @@ const pinTicketHandler = {
     try {
       if (!(await ensureGuildContext(interaction))) return;
 
-      await assertTicketPermission(interaction, client, 'pin tickets', {}, 2000);
-
+      // Acknowledge first: the permission check reads the database (ticket record).
       const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
       if (!deferSuccess) return;
+
+      await assertTicketPermission(interaction, client, 'pin tickets', {}, TICKET_PERMISSION_TIMEOUT_AFTER_DEFER_MS);
 
       const tr = textForInteraction(interaction);
       const channel = interaction.channel;
@@ -488,10 +519,11 @@ const unclaimTicketHandler = {
     try {
       if (!(await ensureGuildContext(interaction))) return;
 
-      await assertTicketPermission(interaction, client, 'unclaim tickets', {}, 2000);
-
+      // Acknowledge first: the permission check reads the database (ticket record).
       const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
       if (!deferSuccess) return;
+
+      await assertTicketPermission(interaction, client, 'unclaim tickets', {}, TICKET_PERMISSION_TIMEOUT_AFTER_DEFER_MS);
       
       const tr = textForInteraction(interaction);
       const { unclaimTicket } = await import('../services/ticket.js');
@@ -510,10 +542,11 @@ const reopenTicketHandler = {
     try {
       if (!(await ensureGuildContext(interaction))) return;
 
-      await assertTicketPermission(interaction, client, 'reopen tickets', {}, 2000);
-
+      // Acknowledge first: the permission check reads the database (ticket record).
       const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
       if (!deferSuccess) return;
+
+      await assertTicketPermission(interaction, client, 'reopen tickets', {}, TICKET_PERMISSION_TIMEOUT_AFTER_DEFER_MS);
       
       const tr = textForInteraction(interaction);
       const { reopenTicket } = await import('../services/ticket.js');
@@ -536,10 +569,11 @@ const deleteTicketHandler = {
     try {
       if (!(await ensureGuildContext(interaction))) return;
 
-      await assertTicketPermission(interaction, client, 'delete tickets', {}, 2000);
-
+      // Acknowledge first: the permission check reads the database (ticket record).
       const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
       if (!deferSuccess) return;
+
+      await assertTicketPermission(interaction, client, 'delete tickets', {}, TICKET_PERMISSION_TIMEOUT_AFTER_DEFER_MS);
       
       const tr = textForInteraction(interaction);
       const { deleteTicket } = await import('../services/ticket.js');

@@ -44,6 +44,9 @@ export default {
     async execute(interaction, guildConfig, client) {
         const tr = textForInteraction(interaction);
         const sub = interaction.options.getSubcommand();
+        // Every answer is ephemeral (the canned text itself is a channel message): acknowledge
+        // before the config read, the database and the DM to the member.
+        await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
         const config = guildConfig ?? await getGuildConfig(client, interaction.guildId);
         if ((sub === 'send' || sub === 'list') && !isModmailStaff(interaction.member, config)) {
             return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('ticket.canned.staffOnly') });

@@ -348,7 +348,7 @@ ${list.map((l) => html`<tr><td class="nowrap">${timeTag(l.at)}</td><td><span cla
 </tbody></table></div>` : html`<p class="empty">${tr.t('owner.health.noLogs')}</p>`}</section>`;
 }
 
-/** health: { uptimeSeconds, gatewayUptimeMs, ping, memory, node, version, servers, database, maintenance }. */
+/** health: { uptimeSeconds, gatewayUptimeMs, ping, memory, eventLoop, node, version, servers, database, maintenance }. */
 export function healthPage({ session, access = null, moduleStates = {}, health, flash = null, error = null, editEnabled = true }) {
     const db = health.database;
     const tr = dashboardText(session?.lang);
@@ -358,6 +358,7 @@ ${notices({ flash, error, editEnabled })}
 <dt>${tr.t('owner.health.uptime')}</dt><dd>${duration(health.uptimeSeconds)}${health.gatewayUptimeMs != null ? html` <span class="muted">${tr.t('owner.health.gatewayConnected', { time: duration(health.gatewayUptimeMs / 1000) })}</span>` : ''}</dd>
 <dt>${tr.t('owner.health.gatewayPing')}</dt><dd>${Number.isFinite(health.ping) && health.ping >= 0 ? `${Math.round(health.ping)} ms` : '-'}</dd>
 <dt>${tr.t('owner.health.memory')}</dt><dd>${tr.t('owner.health.memoryValue', { rss: mb(health.memory?.rss), used: mb(health.memory?.heapUsed), total: mb(health.memory?.heapTotal) })}</dd>
+<dt>${tr.t('owner.health.eventLoop')}</dt><dd>${health.eventLoop ? html`${tr.t('owner.health.eventLoopValue', { p99: health.eventLoop.p99Ms, max: health.eventLoop.maxMs })}${health.eventLoop.p99Ms > 500 ? html` <span class="state-word is-warn"><span class="dot dot-warn" aria-hidden="true"></span>${tr.t('owner.health.eventLoopSlow')}</span>` : ''}` : tr.t('owner.health.eventLoopPending')}</dd>
 <dt>Node</dt><dd>${health.node}</dd>
 <dt>${tr.t('owner.health.version')}</dt><dd>${health.version || '-'}</dd>
 <dt>${tr.t('owner.servers.title')}</dt><dd>${health.servers}</dd>

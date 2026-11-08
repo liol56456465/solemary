@@ -78,6 +78,8 @@ export default {
 
     category: "Community",
 
+    // /app-admin setup answers with a form: exempt from the 3-second safety net.
+    opensModal: (interaction) => interaction.options?.getSubcommand?.(false) === 'setup',
     execute: withErrorHandling(async (interaction) => {
         if (!interaction.inGuild()) {
             return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: textForInteraction(interaction).t('community.apply.serverOnly') });

@@ -13,13 +13,16 @@ export default {
         if (!interaction.guildId || !Number.isInteger(suggestionId) || clicked === 0) {
             return interaction.reply({ content: tr.t('community.suggest.vote.invalid'), flags: MessageFlags.Ephemeral });
         }
+        // Acknowledge before the vote transaction; update() below then edits the post and the
+        // "gone" note is an ephemeral follow-up.
+        await interaction.deferUpdate();
         const result = await castVote({ suggestionId, guildId: interaction.guildId, userId: interaction.user.id, clicked, lang: tr.lang });
         if (!result) {
-            return interaction.reply({ content: tr.t('community.suggest.vote.gone'), flags: MessageFlags.Ephemeral });
+            return interaction.followUp({ content: tr.t('community.suggest.vote.gone'), flags: MessageFlags.Ephemeral });
         }
         const author = await client.users.fetch(result.row.user_id).catch(() => null);
         const postLang = textForInteraction(interaction, { purpose: 'public' }).lang;
-        await interaction.update(buildSuggestionMessage(result.row, author, { lang: postLang }));
+        await interaction.editReply(buildSuggestionMessage(result.row, author, { lang: postLang }));
         const note = result.vote === 1 ? tr.t('community.suggest.vote.up') : result.vote === -1 ? tr.t('community.suggest.vote.down') : tr.t('community.suggest.vote.removed');
         await interaction.followUp({ content: tr.t('community.suggest.vote.hint', { note }), flags: MessageFlags.Ephemeral }).catch(() => {});
     },

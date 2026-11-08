@@ -65,16 +65,19 @@ export const closeModmailHandler = {
     async execute(interaction, client) {
         // Refusals are ephemeral (the clicker's language); "Closing…" is posted in the channel (the server's).
         const tr = textForInteraction(interaction);
+        // Acknowledge before the link lookup and the config read; the answers are follow-ups
+        // (ephemeral refusals, the public "Closing…").
+        await interaction.deferUpdate();
         if (!interaction.guildId || !(await modmailUserId(interaction.channel))) {
-            await interaction.reply({ content: tr.t('staff.modmail.notOpen'), flags: MessageFlags.Ephemeral });
+            await interaction.followUp({ content: tr.t('staff.modmail.notOpen'), flags: MessageFlags.Ephemeral });
             return;
         }
         const config = await getGuildConfig(client, interaction.guild.id);
         if (!isModmailStaff(interaction.member, config)) {
-            await interaction.reply({ content: tr.t('staff.modmail.staffOnly'), flags: MessageFlags.Ephemeral });
+            await interaction.followUp({ content: tr.t('staff.modmail.staffOnly'), flags: MessageFlags.Ephemeral });
             return;
         }
-        await interaction.reply({ content: textForInteraction(interaction, { purpose: 'public' }).t('staff.modmail.closing') });
+        await interaction.followUp({ content: textForInteraction(interaction, { purpose: 'public' }).t('staff.modmail.closing'), allowedMentions: { parse: [] } });
         await closeModmail(interaction.channel, interaction.user);
     },
 };

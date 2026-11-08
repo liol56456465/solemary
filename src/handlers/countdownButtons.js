@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import { successEmbed } from '../utils/embeds.js';
 import { logger } from '../utils/logger.js';
 
@@ -144,6 +144,9 @@ async function countdownButtonHandler(interaction, client, args) {
             noteOwnerOverride({ client, guildId: interaction.guildId, userId: interaction.user.id, username: interaction.user.username, action: `countdown ${action}`, via: 'button' });
         }
 
+        // Every answer is ephemeral: acknowledge before editing the public countdown message
+        // (a REST call); the reply() calls below then edit this deferred reply.
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const trMessage = messageText(countdownData);
         switch (action) {
             case "pause":
@@ -206,7 +209,8 @@ async function countdownButtonHandler(interaction, client, args) {
     } catch (error) {
         logger.error('Countdown button handler error:', error);
         try {
-            if (!interaction.replied && !interaction.deferred) {
+            // Also after the deferReply above (sendErrorResponse edits the deferred reply).
+            if (!interaction.replied) {
                 await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('tools.countdown.failed'), context: { lang: tr.lang } });
             }
         } catch (err) {
