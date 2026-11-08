@@ -402,7 +402,7 @@ export async function setReactionRoleChannel(client, guildId, messageId, channel
     }
 }
 
-export async function reconcileReactionRoleMessages(client, guildId = null) {
+export async function reconcileReactionRoleMessages(client, guildId = null, { quiet = false } = {}) {
     const summary = {
         scannedGuilds: 0,
         scannedMessages: 0,
@@ -470,7 +470,7 @@ export async function reconcileReactionRoleMessages(client, guildId = null) {
             }
         }
 
-        logger.info(
+        if (!quiet) logger.info(
             `Reaction role reconciliation complete: scanned ${summary.scannedMessages} message(s) across ${summary.scannedGuilds} guild(s), removed ${summary.removedMessages}, errors ${summary.errors}`
         );
 

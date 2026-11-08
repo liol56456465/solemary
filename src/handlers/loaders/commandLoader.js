@@ -1,4 +1,5 @@
 import fs from 'fs/promises';
+import { createHash } from 'node:crypto';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { ApplicationIntegrationType, Collection, InteractionContextType, Routes } from 'discord.js';
@@ -322,14 +323,54 @@ function homeGuildIds() {
     return [...new Set([enforcementConfig.mainGuildId, enforcementConfig.supportGuildId].filter(Boolean).map(String))];
 }
 
+/** PUTs `commands` as the guild list of each home server; true when every PUT succeeded. */
 async function putHomeGuildLists(rest, clientId, commands, label) {
+    let allOk = true;
     for (const guildId of homeGuildIds()) {
         try {
             await putCommands(rest, Routes.applicationGuildCommands(clientId, guildId), commands, `${label} ${guildId}`);
         } catch (error) {
+            allOk = false;
             // 50001 Missing Access: the bot is not in that guild (or lacks applications.commands).
             logger.error(`Could not set the guild command list of ${guildId}: ${error.message}`);
         }
+    }
+    return allOk;
+}
+
+// ── Skip the PUTs when nothing changed (multi-server B5) ──────────────────
+// Every boot used to PUT the global list and the home / owner-tools guild lists. Discord allows
+// 200 command creates a day, and a restart loop would burn them. The hash of everything the PUTs
+// send is kept in the key-value store after a fully successful registration; the next boot
+// skips registration when the hash is the same and the home guild copies are already emptied.
+// A failed hash read always registers. Dashboard → Command sync (registerAllCommands) always
+// registers. If someone changes the commands outside the bot, Command sync puts them back.
+export const COMMAND_HASH_KEY_PREFIX = 'command_registration:';
+
+/** sha256 of the registration bodies and their targets; pure. */
+export function commandRegistrationHash({ clientId, globalCommands, ownerCommands, ownerGuildId, homeGuilds }) {
+    return createHash('sha256')
+        .update(JSON.stringify({ clientId, globalCommands, ownerCommands, ownerGuildId: ownerGuildId || null, homeGuilds }))
+        .digest('hex');
+}
+
+/** The key-value store as a hash store: get(clientId) → { hash, settled } | null, set(clientId, record). */
+export const kvCommandHashStore = {
+    async get(clientId) {
+        const { getFromDb } = await import('../../utils/database/wrapper.js');
+        return getFromDb(`${COMMAND_HASH_KEY_PREFIX}${clientId}`, null);
+    },
+    async set(clientId, record) {
+        const { setInDb } = await import('../../utils/database/wrapper.js');
+        await setInDb(`${COMMAND_HASH_KEY_PREFIX}${clientId}`, record);
+    },
+};
+
+async function saveCommandHash(hashStore, clientId, record) {
+    try {
+        await hashStore.set(clientId, { ...record, at: new Date().toISOString() });
+    } catch (error) {
+        logger.warn(`Command hash not saved (${error.message}); the next start registers the commands again`);
     }
 }
 
@@ -351,7 +392,7 @@ const defaultSchedule = (fn, ms) => {
  * Returns { scope: 'global' | 'test', count } (count = global list length).
  * `now` and `schedule` are for tests.
  */
-export async function registerCommandSets(rest, clientId, sets, totalSubcommands = 0, { now = Date.now(), schedule = defaultSchedule } = {}) {
+export async function registerCommandSets(rest, clientId, sets, totalSubcommands = 0, { now = Date.now(), schedule = defaultSchedule, hashStore = null } = {}) {
     if (!clientId) {
         throw new Error('CLIENT_ID is required for slash command registration');
     }
@@ -384,6 +425,23 @@ export async function registerCommandSets(rest, clientId, sets, totalSubcommands
         return { scope: 'test', count: globalCommands.length };
     }
 
+    // Unchanged since the last fully successful registration (and the home copies are gone): skip.
+    let hash = null;
+    if (hashStore) {
+        hash = commandRegistrationHash({ clientId: String(clientId), globalCommands, ownerCommands, ownerGuildId, homeGuilds: homeGuildIds() });
+        let stored = null;
+        try {
+            stored = await hashStore.get(clientId);
+        } catch (error) {
+            logger.warn(`Could not read the stored command hash (${error.message}); registering the commands`);
+        }
+        if (stored && stored.hash === hash && stored.settled === true) {
+            logger.info(`Commands unchanged since the last registration (${globalCommands.length} global); no PUT`);
+            return { scope: 'global', count: globalCommands.length, skipped: true };
+        }
+    }
+    let complete = true; // every PUT of this registration succeeded
+
     // What Discord has globally before this PUT decides whether the home guild copies can go.
     let existing = null;
     try {
@@ -395,14 +453,20 @@ export async function registerCommandSets(rest, clientId, sets, totalSubcommands
 
     await putCommands(rest, Routes.applicationCommands(clientId), globalCommands, 'global');
 
-    if (remainingMs === 0) {
-        await putHomeGuildLists(rest, clientId, [], 'home-guild (emptied, global list settled)');
+    let settled = remainingMs === 0;
+    if (settled) {
+        settled = await putHomeGuildLists(rest, clientId, [], 'home-guild (emptied, global list settled)');
+        complete = settled;
     } else {
-        await putHomeGuildLists(rest, clientId, globalCommands, 'home-guild (copy until the global list settles)');
+        complete = await putHomeGuildLists(rest, clientId, globalCommands, 'home-guild (copy until the global list settles)');
         const minutes = Math.ceil(remainingMs / 60000);
         logger.info(`Global commands can take up to an hour to show in every client; the home servers keep a guild copy for ${minutes} more minute(s), then it is emptied`);
         schedule(() => {
             putHomeGuildLists(rest, clientId, [], 'home-guild (emptied, global list settled)')
+                .then(async (ok) => {
+                    // Settled now: the next start may skip registration.
+                    if (ok && hashStore && complete) await saveCommandHash(hashStore, clientId, { hash, settled: true });
+                })
                 .catch((error) => logger.error(`Could not empty the home guild command lists: ${error.message}`));
         }, remainingMs);
     }
@@ -411,9 +475,12 @@ export async function registerCommandSets(rest, clientId, sets, totalSubcommands
         try {
             await putCommands(rest, Routes.applicationGuildCommands(clientId, ownerGuildId), ownerCommands, 'owner-tools-guild');
         } catch (error) {
+            complete = false;
             logger.error(`Could not register owner-tools commands in ${ownerGuildId}: ${error.message}`);
         }
     }
+    // Only a fully successful registration is remembered; otherwise the next start tries again.
+    if (hashStore && complete) await saveCommandHash(hashStore, clientId, { hash, settled });
     return { scope: 'global', count: globalCommands.length };
 }
 
@@ -422,7 +489,8 @@ export async function registerCommands(client, options = {}) {
 
     try {
         const { sets, totalSubcommands } = collectCommandPayloads(client);
-        await registerCommandSets(client.rest, clientId, sets, totalSubcommands);
+        // Startup: skipped when the commands are unchanged (hash in the key-value store).
+        await registerCommandSets(client.rest, clientId, sets, totalSubcommands, { hashStore: options.hashStore ?? kvCommandHashStore });
     } catch (error) {
         logger.error('Error registering commands:', error);
         throw error;

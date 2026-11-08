@@ -5,6 +5,7 @@ import { getGuildBirthdays, setBirthday as dbSetBirthday, deleteBirthday as dbDe
 import { logger } from '../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../utils/errorHandler.js';
 import { DEFAULT_TIMEZONE, canonicalTimeZone, localDateParts, localDateKey } from '../utils/timezone.js';
+import { GUILD_SQL, guildIdsFromSql } from './scheduling/guildScan.js';
 
 function isLeapYear(year) {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
@@ -317,14 +318,24 @@ export async function getTodaysBirthdays(client, guildId) {
  * on the right day, at the first run after local midnight. The tracking key records
  * the local date already handled, so running this more often never announces twice.
  */
-export async function checkBirthdays(client) {
+export async function checkBirthdays(client, { query } = {}) {
   const now = new Date();
 
   if (process.env.NODE_ENV !== 'production') {
     logger.debug(`🎂 Running birthday check at ${now.toISOString()}.`);
   }
 
+  // Only servers with a birthday channel (one query) instead of every server's config. Without
+  // SQL (in-memory storage) or when the query fails, every server is checked as before.
+  let withChannel = null;
+  try {
+    withChannel = await guildIdsFromSql(client, GUILD_SQL.birthdays, [], { query });
+  } catch (error) {
+    logger.warn(`Birthday check: the server list could not be read (${error.message}); checking every server`);
+  }
+
   for (const [guildId, guild] of client.guilds.cache) {
+    if (withChannel && !withChannel.has(String(guildId))) continue;
     try {
       const config = await getGuildConfig(client, guildId);
       const { birthdayChannelId, birthdayRoleId } = config;

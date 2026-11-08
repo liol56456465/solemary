@@ -2,9 +2,7 @@ import { Events } from "discord.js";
 import { logger, startupLog } from "../utils/logger.js";
 import config from "../config/application.js";
 import { testMode, verifyTestResources } from "../config/testMode.js";
-import { reconcileReactionRoleMessages } from "../services/reactionRoleService.js";
-import { reconcileTicketPanels, reconcileVerificationPanels, reconcileReactionRolePanelHealth } from "../services/panelHealthService.js";
-import { reconcileLevelRoles } from "../services/leveling/levelRoleSyncService.js";
+import { scheduleStartupJobs, STARTUP_JOB_DELAY_MS } from "../services/scheduling/startupJobs.js";
 import { reconcileBannedRoles } from "../services/enforcement/bannedRoleService.js";
 import { describeAutomodReadiness } from "../services/automod/automodService.js";
 import { loadNoContactOrders } from "../services/enforcement/noContactService.js";
@@ -52,25 +50,10 @@ export default {
       startupLog(watchCount == null ? "Watchlist: not loaded (database unavailable)" : `Watchlist: ${watchCount} active`);
       startupLog(`Community: ${await loadCommunityCaches(client)}`);
 
-      const reconciliationSummary = await reconcileReactionRoleMessages(client);
-      startupLog(
-        `Reaction role reconciliation: scanned ${reconciliationSummary.scannedMessages}, removed ${reconciliationSummary.removedMessages}, errors ${reconciliationSummary.errors}`
-      );
-
-      const ticketPanelSummary = await reconcileTicketPanels(client);
-      startupLog(
-        `Ticket panel health: scanned ${ticketPanelSummary.scannedGuilds} guilds, healthy ${ticketPanelSummary.healthyPanels}, deleted ${ticketPanelSummary.deletedPanels}, missing channel ${ticketPanelSummary.missingChannels}, recovered ${ticketPanelSummary.recoveredIds}, errors ${ticketPanelSummary.errors}`
-      );
-
-      const verificationPanelSummary = await reconcileVerificationPanels(client);
-      startupLog(
-        `Verification panel health: scanned ${verificationPanelSummary.scannedGuilds} guilds, healthy ${verificationPanelSummary.healthyPanels}, deleted ${verificationPanelSummary.deletedPanels}, missing channel ${verificationPanelSummary.missingChannels}, recovered ${verificationPanelSummary.recoveredIds}, errors ${verificationPanelSummary.errors}`
-      );
-
-      const reactionRolePanelSummary = await reconcileReactionRolePanelHealth(client);
-      startupLog(
-        `Reaction role panel health: scanned ${reactionRolePanelSummary.scannedPanels} panels, healthy ${reactionRolePanelSummary.healthyPanels}, deleted ${reactionRolePanelSummary.deletedPanels}, missing channel ${reactionRolePanelSummary.missingChannels}, recovered ${reactionRolePanelSummary.recoveredIds}, errors ${reactionRolePanelSummary.errors}`
-      );
+      // Reaction role cleanup, panel health and the level reward role sync: one paced background
+      // job about 60 s from now, only for servers with panels or rules (scheduling/startupJobs.js).
+      scheduleStartupJobs(client);
+      startupLog(`Startup jobs (reaction roles, panel health, level roles) start in ${STARTUP_JOB_DELAY_MS / 1000} s in the background`);
 
       const bannedRoleSummary = await reconcileBannedRoles(client).catch((error) => ({ skipped: error.message }));
       if (bannedRoleSummary.skipped) {
@@ -81,11 +64,6 @@ export default {
           `Banned role sync: scanned ${bannedRoleSummary.scanned} support members, added ${bannedRoleSummary.added}, removed ${bannedRoleSummary.removed}, errors ${bannedRoleSummary.errors}${bannedRoleSummary.partial ? " (cached members only)" : ""}`
         );
       }
-
-      const levelRoleSummary = await reconcileLevelRoles(client);
-      startupLog(
-        `Level role sync: scanned ${levelRoleSummary.scannedGuilds} guilds (${levelRoleSummary.skippedGuilds} skipped, member list not loaded), pruned ${levelRoleSummary.prunedRewardEntries} stale rewards, re-awarded ${levelRoleSummary.rolesReAwarded} roles, removed ${levelRoleSummary.rolesRemoved} lower rewards, skipped ${levelRoleSummary.rolesSkipped}, errors ${levelRoleSummary.errors}`
-      );
     } catch (error) {
       logger.error("Error in ready event:", error);
     }

@@ -25,7 +25,8 @@ import {
 import { enforcementConfig } from '../config/enforcement.js';
 import { getCommandPrefix } from '../config/bot.js';
 import { getGuildConfig } from './config/guildConfig.js';
-import { updateGuildConfigAtomic } from '../utils/database/guildConfigStorage.js';
+import { onGuildConfigSaved, updateGuildConfigAtomic } from '../utils/database/guildConfigStorage.js';
+import { GUILD_SQL, guildIdsFromSql } from './scheduling/guildScan.js';
 import { generateTranscript } from './ticket.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
 import { logger } from '../utils/logger.js';
@@ -201,6 +202,78 @@ async function modmailRefusal(client, guild, userId) {
     return null;
 }
 
+// ── Which servers may take modmail (multi-server B5) ──────────────────────
+// A DM used to read every server's config. A server takes modmail with a modmail category
+// (settings registry, cached in memory) or a /ticket category (guild config). The servers with a
+// ticket category are kept here as a set: loaded with one query, refreshed every 5 minutes and
+// updated on every config write (onGuildConfigSaved). The set only narrows which configs are
+// read: every candidate's config is still read fresh and checked (isModmailSetUp, blocked), and
+// openModmail checks the chosen server again before opening, so a stale set can never send
+// modmail to a server that turned it off. Without SQL or before the first load: every server.
+const MODMAIL_SET_REFRESH_MS = 5 * 60 * 1000;
+let ticketCategorySet = null; // Set<guildId> | null (not loaded)
+let ticketCategoryLoadedAt = 0;
+let ticketCategoryRefresh = null; // the running refresh, shared by concurrent DMs
+let changesDuringRefresh = null; // Map<guildId, boolean> written while a refresh query ran
+
+onGuildConfigSaved((guildId, config) => {
+    const has = Boolean(config?.ticketCategoryId);
+    changesDuringRefresh?.set(guildId, has);
+    if (!ticketCategorySet) return;
+    if (has) ticketCategorySet.add(guildId);
+    else ticketCategorySet.delete(guildId);
+});
+
+async function ticketCategoryServers(client, { query, now = Date.now() } = {}) {
+    if (ticketCategorySet && now - ticketCategoryLoadedAt < MODMAIL_SET_REFRESH_MS) return ticketCategorySet;
+    if (!query && !client?.db?.rows?.()) return null;
+    ticketCategoryRefresh ??= (async () => {
+        const changes = new Map();
+        changesDuringRefresh = changes;
+        try {
+            const ids = await guildIdsFromSql(client, GUILD_SQL.ticketCategory, [], { query });
+            for (const [id, has] of changes) {
+                if (has) ids.add(id);
+                else ids.delete(id);
+            }
+            ticketCategorySet = ids;
+            ticketCategoryLoadedAt = Date.now();
+        } finally {
+            changesDuringRefresh = null;
+            ticketCategoryRefresh = null;
+        }
+    })();
+    try {
+        await ticketCategoryRefresh;
+    } catch (error) {
+        logger.warn(`Modmail: the list of servers with a ticket category could not be refreshed (${error.message}); ${ticketCategorySet ? 'using the last one' : 'checking every server'}`);
+    }
+    return ticketCategorySet;
+}
+
+/** For tests: forget the loaded set. */
+export function _resetModmailServerSetForTests() {
+    ticketCategorySet = null;
+    ticketCategoryLoadedAt = 0;
+    ticketCategoryRefresh = null;
+    changesDuringRefresh = null;
+}
+
+/**
+ * Can this server take modmail, judged without its config? True for the main server, a server
+ * in the ticket-category set, one whose modmail category exists, and whenever unsure (no set
+ * loaded, settings unreadable): the config check that follows decides.
+ */
+function mayTakeModmail(guild, ticketServers) {
+    if (!ticketServers || isMainGuild(guild.id) || ticketServers.has(String(guild.id))) return true;
+    try {
+        const id = resolveSetting(guild.id, 'modmailCategoryId');
+        return Boolean(id) && guild.channels.cache.get(id)?.type === ChannelType.GuildCategory;
+    } catch {
+        return true;
+    }
+}
+
 /**
  * The servers this member can send modmail to: the bot is in it, the member is in it, modmail
  * is set up there and the member is not blocked there. Main server first, then by name.
@@ -211,11 +284,13 @@ async function modmailRefusal(client, guild, userId) {
  * member is only fetched from Discord for servers that take modmail. Servers where the member is
  * already cached are taken first; the rest are fetched one by one.
  */
-export async function modmailServersFor(client, userId, { getConfig = getGuildConfig } = {}) {
+export async function modmailServersFor(client, userId, { getConfig = getGuildConfig, query } = {}) {
+    const ticketServers = await ticketCategoryServers(client, { query });
     const candidates = [];
     for (const guild of client.guilds.cache.values()) {
         if (blacklistHit({ guildId: guild.id })) continue;
         if (isHomeGuild(guild.id) && !isMainGuild(guild.id)) continue; // the Support server has no modmail
+        if (!mayTakeModmail(guild, ticketServers)) continue; // no category at all: no config read
         try {
             const config = await getConfig(client, guild.id);
             if (!isModmailSetUp(guild, config)) continue;

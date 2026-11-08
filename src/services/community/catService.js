@@ -19,7 +19,8 @@ import { pgConfig } from '../../config/database/postgres.js';
 import { query as defaultQuery } from '../enforcement/db.js';
 import { resolveSetting } from '../settings/guildSettings.js';
 import { isSettingsUnavailable, noteSettingsUnavailable } from '../settings/guildScoped.js';
-import { pendingMessages } from '../stats/activityService.js';
+import { pendingMessages, takeActiveGuilds } from '../stats/activityService.js';
+import { GUILD_SQL, guildIdsFromSql } from '../scheduling/guildScan.js';
 import { logger } from '../../utils/logger.js';
 import {
     CAT_DEFAULT_NAME, CAT_STAGES, catImageFile, catMood, catProgressLine, growthAction, moodSentence, sanitizeCatName,
@@ -201,13 +202,51 @@ export async function checkGuildCatGrowth(guild, { client, getLevelingConfig, ge
     return 'announced';
 }
 
-/** The cron job: every server the bot is in. One server's failure does not stop the others. */
+// Which servers the cron looks at. The cat only grows when messages are counted, so a run checks
+// the servers with messages since the last run (activityService.takeActiveGuilds), the ones whose
+// last check failed (retried), and once after a restart every server with messages in the last
+// 2 days (counts from before the restart). Idle servers cost nothing.
+const catRetry = new Set();
+let catStartupScanDone = false;
+
+async function catCandidates(client, deps, now) {
+    if (deps.activeGuilds) return new Set([...(await deps.activeGuilds())].map(String));
+    const ids = new Set([...catRetry, ...(deps.takeActive || takeActiveGuilds)()]);
+    catRetry.clear();
+    if (!catStartupScanDone) {
+        try {
+            const recent = await guildIdsFromSql(client, GUILD_SQL.activeSince, [dayOf(now - 2 * DAY_MS)], { query: deps.query });
+            for (const id of recent || []) ids.add(id);
+            catStartupScanDone = true;
+        } catch (error) {
+            logger.warn(`Server cat: recent servers could not be read (${error.message}); trying again next run`);
+        }
+    }
+    return ids;
+}
+
+/** For tests: forget the retry list and run the after-restart scan again. */
+export function _resetCatScanForTests() {
+    catRetry.clear();
+    catStartupScanDone = false;
+}
+
+/**
+ * The cron job (every 5 minutes): the servers that may have grown (catCandidates). One server's
+ * failure does not stop the others; a failed server is checked again next run.
+ * `deps.activeGuilds()` (tests) replaces the candidate list.
+ */
 export async function checkCatGrowth(client, deps = {}) {
     const getLevelingConfig = deps.getLevelingConfig || (await import('../leveling/leveling.js')).getLevelingConfig;
-    for (const guild of client.guilds?.cache?.values?.() || []) {
+    const now = deps.now ?? Date.now();
+    for (const guildId of await catCandidates(client, deps, now)) {
+        const guild = client.guilds?.cache?.get?.(guildId);
+        if (!guild) continue;
         try {
-            await checkGuildCatGrowth(guild, { client, getLevelingConfig, ...deps });
+            const result = await checkGuildCatGrowth(guild, { client, getLevelingConfig, ...deps });
+            if (result === 'failed') catRetry.add(guildId);
         } catch (error) {
+            catRetry.add(guildId);
             // Settings not readable (database down): skipped, logged at most once per server per 10 min.
             if (isSettingsUnavailable(error)) noteSettingsUnavailable(guild.id, 'server cat');
             else logger.warn(`Server cat: growth check for ${guild.id} failed: ${error.message}`);

@@ -15,6 +15,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const ACTIVITY_DAYS = 30;
 const KEEP_DAYS = 400;
 const pending = new Map(); // `${guildId}|${YYYY-MM-DD}` → count
+// Servers with a counted message since the server cat's last growth check (at most one entry per
+// server; emptied by takeActiveGuilds). Lets the cat cron skip servers nobody wrote in.
+const activeGuilds = new Set();
 
 const dayOf = (date) => new Date(date).toISOString().slice(0, 10);
 
@@ -23,6 +26,14 @@ export function noteMessage(message, now = Date.now()) {
     if (!message?.guildId || message.author?.bot) return;
     const key = `${message.guildId}|${dayOf(now)}`;
     pending.set(key, (pending.get(key) || 0) + 1);
+    activeGuilds.add(String(message.guildId));
+}
+
+/** The servers with counted messages since the last call (and empties the list). */
+export function takeActiveGuilds() {
+    const ids = [...activeGuilds];
+    activeGuilds.clear();
+    return ids;
 }
 
 /** Writes the buffered counts; every minute. A failed write is put back for the next run. */

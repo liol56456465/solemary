@@ -49,11 +49,33 @@ export async function updateGuildConfigAtomic(client, guildId, change, context =
     if (!client?.db || typeof client.db.update !== 'function') {
         throw databaseUnavailable(guildId, context);
     }
-    return client.db.update(getGuildConfigKey(guildId), async (raw) => {
+    const saved = await client.db.update(getGuildConfigKey(guildId), async (raw) => {
         const current = normalizeGuildConfig(unwrapReplitData(raw) || {}, GUILD_CONFIG_DEFAULTS);
         const next = normalizeGuildConfig(await change(current), GUILD_CONFIG_DEFAULTS);
         return validateGuildConfigOrThrow(next, { guildId, ...context });
     }, {});
+    notifyConfigSaved(guildId, saved);
+    return saved;
+}
+
+// Called after every successful config write with (guildId, savedConfig), so in-memory lists
+// derived from configs (modmail servers) stay current. A listener's error never fails the write.
+const savedListeners = new Set();
+
+/** Registers fn(guildId, config) for every saved guild config; returns an unsubscribe function. */
+export function onGuildConfigSaved(fn) {
+    savedListeners.add(fn);
+    return () => savedListeners.delete(fn);
+}
+
+function notifyConfigSaved(guildId, config) {
+    for (const fn of savedListeners) {
+        try {
+            fn(String(guildId), config);
+        } catch {
+            // a derived list may be stale; it is refreshed on its own timer
+        }
+    }
 }
 
 /**
@@ -71,5 +93,6 @@ export async function writeGuildConfig(client, guildId, config, context = {}) {
 
     const validated = validateGuildConfigOrThrow(config, { guildId, ...context });
     await client.db.set(getGuildConfigKey(guildId), validated);
+    notifyConfigSaved(guildId, validated);
     return validated;
 }
