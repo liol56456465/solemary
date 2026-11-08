@@ -10,7 +10,7 @@
 import {
     LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle,
 } from 'discord.js';
-import { isBotOwner } from '../../../config/bot.js';
+import { hasOwnerPower } from '../../../utils/ownerPower.js';
 import { getAdminRequiredMessage, hasAdministrator } from '../../../utils/commandGate.js';
 import { mutateJoinToCreateConfig } from '../../../utils/database.js';
 import { logger } from '../../../utils/logger.js';
@@ -105,7 +105,7 @@ export function parseSettingValue(kind, raw) {
 
 /** May this user still change Join to Create? Administrator (or the server owner), or OWNER_IDS. */
 export function canConfigure(interaction) {
-    return isBotOwner(interaction.user?.id)
+    return hasOwnerPower(interaction.user?.id, interaction.guildId)
         || hasAdministrator({ guild: interaction.guild, userId: interaction.user?.id, permissions: interaction.memberPermissions });
 }
 

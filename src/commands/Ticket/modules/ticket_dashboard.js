@@ -32,7 +32,7 @@ import {
 } from '../../../utils/panelStatus.js';
 import { startDashboardSession } from '../../../utils/dashboardSession.js';
 import { randomBytes } from 'node:crypto';
-import { isBotOwner } from '../../../config/bot.js';
+import { hasOwnerPower } from '../../../utils/ownerPower.js';
 import { getAdminRequiredMessage, hasAdministrator } from '../../../utils/commandGate.js';
 
 function buildButtonRow(guildConfig, guildId, disabled = false, panelStatus = null) {
@@ -859,7 +859,7 @@ const NO_MENTIONS = { parse: [] };
 
 /** Administrator in this server (the owner counts) or OWNER_IDS, checked on the click itself. */
 export function canDeleteTicketSystem(interaction) {
-    return isBotOwner(interaction.user.id)
+    return hasOwnerPower(interaction.user.id, interaction.guildId)
         || hasAdministrator({ guild: interaction.guild, userId: interaction.user.id, permissions: interaction.memberPermissions });
 }
 

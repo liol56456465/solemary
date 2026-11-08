@@ -60,11 +60,12 @@ export default {
             if (guild.id === enforcementConfig.supportGuildId) {
                 await syncBannedRoleQuietly(member.client, member.id);
             }
-            // Rejoining the main server (e.g. after a temporary ban) restores the warning role.
+            // Rejoining (e.g. after a temporary ban) restores the warning role, in any server
+            // (its own warnRoleIds; none set up there → nothing to do).
+            await syncWarnRolesQuietly(guild, member.id);
             if (guild.id === enforcementConfig.mainGuildId) {
                 // Joins per day for the dashboard's Members → Insights.
                 await recordMemberEvent(guild.id, member.id, 'join').catch((error) => logger.warn(`Join of ${member.id} not recorded: ${error.message}`));
-                await syncWarnRolesQuietly(guild, member.id);
                 // Temporary roles that have not ended yet come back on rejoin.
                 await reapplyTempRolesOnJoin(member).catch((error) => logger.warn(`Temporary roles not given back to ${member.id}: ${error.message}`));
                 // An active plan gives its supporter role back.

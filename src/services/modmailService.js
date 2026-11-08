@@ -1,22 +1,26 @@
 // modmailService.js — members DM the bot to talk to staff privately.
 //
-// A DM from a main-server member (outside an open conversation) gets a
-// "Send to staff?" prompt. Confirming opens a private channel in the ticket
-// category that only staff can see. From then on:
+// A DM to the bot (outside an open conversation) goes to a server that shares the member and
+// has modmail set up (multi-server B1): with one such server the member gets a "Send to
+// staff?" prompt, with several a "Which server?" select menu (up to 25), with none a clear
+// refusal. Mewvo's main server is always set up (as before); any other server once it has a
+// modmail category or a /ticket category. The Support server has no modmail. Confirming opens
+// a private channel in that server's modmail category (else its ticket category) that only
+// staff can see. One open conversation per member at a time, across servers. From then on:
 // - the member's DMs are copied into the channel,
 // - staff messages in the channel are DM'd to the member, except messages that
 //   start with `//` (internal notes) or the command prefix.
 // Staff close the conversation with the Close button or /modmail close; the
 // transcript goes to the ticket transcript channel and the channel is deleted.
 //
-// The channel topic `modmail:<userId>` is the only state, so open conversations
-// survive restarts. Blocked members are stored in the guild config.
+// modmail_links (guild, channel, member) is the only state, so open conversations survive
+// restarts. Blocked members are stored in each server's guild config.
 // Relayed text goes out as message content, not embeds: embeds.js strips emoji
 // from embed descriptions.
 
 import {
     ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ChannelType,
-    EmbedBuilder, PermissionFlagsBits,
+    EmbedBuilder, PermissionFlagsBits, StringSelectMenuBuilder,
 } from 'discord.js';
 import { enforcementConfig } from '../config/enforcement.js';
 import { getCommandPrefix } from '../config/bot.js';
@@ -25,9 +29,10 @@ import { updateGuildConfigAtomic } from '../utils/database/guildConfigStorage.js
 import { generateTranscript } from './ticket.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
 import { logger } from '../utils/logger.js';
-import { linkModmailChannel, linkedChannelId, linkedUserId, unlinkModmailChannel } from './modmailLinks.js';
+import { linkModmailChannel, linkedChannelId, linkedChannelsForUser, linkedUserId, unlinkModmailChannel } from './modmailLinks.js';
 import { withOpenChannelSlot } from './openChannelCap.js';
-import { resolveSetting } from './settings/guildSettings.js';
+import { isHomeGuild, resolveSetting } from './settings/guildSettings.js';
+import { blacklistHit } from './owner/blacklistCache.js';
 import { privacyUrl } from '../utils/privacyNotice.js';
 
 const NOTE_PREFIX = '//';
@@ -44,9 +49,40 @@ function privacySuffix() {
 }
 
 export const MODMAIL_BUTTONS = { open: 'modmail_open', cancel: 'modmail_cancel', close: 'modmail_close' };
+/** The "Which server?" select menu under the DM prompt: `modmail_pick:<messageId>`, value = guild id. */
+export const MODMAIL_PICK = 'modmail_pick';
+/** Discord's limit on select menu options. */
+export const MAX_SERVER_CHOICES = 25;
 
 export function getMainGuild(client) {
     return client.guilds.cache.get(enforcementConfig.mainGuildId) ?? null;
+}
+
+const isMainGuild = (guildId) => Boolean(guildId) && guildId === enforcementConfig.mainGuildId;
+
+/** "the Mewvo staff" for the main server (wording as before), "the staff of <name>" elsewhere. */
+export function staffLabel(guild) {
+    return !guild || isMainGuild(guild.id) ? 'the Mewvo staff' : `the staff of ${guild.name}`;
+}
+
+/** Where a conversation opens: the server's modmail category, else its /ticket category, else null. */
+export function findModmailCategory(guild, config) {
+    const categoryOf = (id) => (id ? guild.channels.cache.get(id) : null);
+    return [categoryOf(resolveSetting(guild.id, 'modmailCategoryId')), categoryOf(config?.ticketCategoryId)]
+        .find((c) => c?.type === ChannelType.GuildCategory) || null;
+}
+
+/**
+ * Does this server take modmail? The main server always (as before: without a category the
+ * channel opens at the top). The Support server never (Mewvo's help server, no modmail). Any
+ * other server once it has a modmail or /ticket category. Throws SettingsUnavailableError
+ * when the server's settings could not be read (callers skip that server).
+ */
+export function isModmailSetUp(guild, config) {
+    if (!guild) return false;
+    if (isMainGuild(guild.id)) return true;
+    if (isHomeGuild(guild.id)) return false;
+    return Boolean(findModmailCategory(guild, config));
 }
 
 /**
@@ -136,9 +172,9 @@ async function relay(target, header, message) {
     }
 }
 
-function promptRow(messageId) {
+function promptRow(messageId, guildId) {
     return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`${MODMAIL_BUTTONS.open}:${messageId}`).setLabel('Send to staff').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(`${MODMAIL_BUTTONS.open}:${messageId}:${guildId}`).setLabel('Send to staff').setStyle(ButtonStyle.Primary),
         new ButtonBuilder().setCustomId(MODMAIL_BUTTONS.cancel).setLabel('Cancel').setStyle(ButtonStyle.Secondary),
     );
 }
@@ -149,33 +185,120 @@ function closeRow() {
     );
 }
 
-/** Why this user can't use modmail right now, or null when they can. */
+const NOT_A_MEMBER_MAIN = 'Modmail is for members of the Mewvo server. If you were banned, use the appeal panel in the support server.';
+export const NO_MODMAIL_SERVER = 'None of the servers you share with this bot takes modmail (or you are not a member there any more). '
+    + 'Ask that server\'s staff another way. If you were banned from the Mewvo server, use the appeal panel in the support server.';
+export const MODMAIL_BLOCKED = 'You can\'t use modmail.';
+
+/** Why this user can't use modmail in `guild` right now, or null when they can. */
 async function modmailRefusal(client, guild, userId) {
     if (!guild) return 'Modmail is not available right now.';
-    if (await isModmailBlocked(client, guild.id, userId)) return 'You can\'t use modmail.';
+    if (await isModmailBlocked(client, guild.id, userId)) return MODMAIL_BLOCKED;
     const member = await guild.members.fetch(userId).catch(() => null);
     if (!member) {
-        return 'Modmail is for members of the Mewvo server. If you were banned, use the appeal panel in the support server.';
+        return isMainGuild(guild.id) ? NOT_A_MEMBER_MAIN : `You are not a member of ${guild.name}, so its staff can't be reached through modmail.`;
     }
     return null;
 }
 
-/** Entry point for every DM the bot receives. */
-export async function handleModmailDm(message, client) {
+/**
+ * The servers this member can send modmail to: the bot is in it, the member is in it, modmail
+ * is set up there and the member is not blocked there. Main server first, then by name.
+ * Returns { servers: [guild], blockedSomewhere }. A server whose settings or config could not be
+ * read is skipped (logged), never guessed. `getConfig` is for tests.
+ */
+export async function modmailServersFor(client, userId, { getConfig = getGuildConfig } = {}) {
+    const servers = [];
+    let blockedSomewhere = false;
+    for (const guild of client.guilds.cache.values()) {
+        if (blacklistHit({ guildId: guild.id })) continue;
+        if (isHomeGuild(guild.id) && !isMainGuild(guild.id)) continue; // the Support server has no modmail
+        const member = guild.members.cache.get(userId) || await guild.members.fetch(userId).catch(() => null);
+        if (!member) continue;
+        try {
+            const config = await getConfig(client, guild.id);
+            if (!isModmailSetUp(guild, config)) continue;
+            if (Array.isArray(config?.modmailBlocked) && config.modmailBlocked.includes(userId)) {
+                blockedSomewhere = true;
+                continue;
+            }
+            servers.push(guild);
+        } catch (error) {
+            logger.warn(`Modmail: server ${guild.id} skipped for ${userId} (${error.message})`);
+        }
+    }
+    servers.sort((a, b) => (isMainGuild(b.id) - isMainGuild(a.id)) || String(a.name).localeCompare(String(b.name)));
+    return { servers, blockedSomewhere };
+}
+
+/**
+ * The member's open conversation, in any server: { guild, channel } or null. A link to a channel
+ * that is gone is removed. Only one conversation is open at a time; if older data holds several,
+ * the main server's comes first, then the first found.
+ */
+export async function findOpenModmail(client, userId) {
+    const links = await linkedChannelsForUser(userId);
+    links.sort((a, b) => isMainGuild(b.guildId) - isMainGuild(a.guildId));
+    for (const link of links) {
+        const guild = client.guilds.cache.get(link.guildId);
+        const channel = guild?.channels.cache.get(link.channelId);
+        if (channel) return { guild, channel };
+        if (guild) {
+            await unlinkModmailChannel(link.channelId).catch((error) => logger.warn(`Stale modmail link ${link.channelId} not removed: ${error.message}`));
+        }
+    }
+    return null;
+}
+
+/**
+ * The DM reply for the member's servers (pure, exported for tests):
+ *   none → the refusal text; one → "Send to staff?" with the server in the button;
+ *   several → "Which server?" with a select menu (first 25) and Cancel.
+ */
+export function modmailPromptPayload(servers, messageId, { blockedSomewhere = false } = {}) {
+    if (!servers.length) {
+        return { content: blockedSomewhere ? MODMAIL_BLOCKED : NO_MODMAIL_SERVER, components: [], allowedMentions: NO_MENTIONS };
+    }
+    if (servers.length === 1) {
+        const [guild] = servers;
+        return {
+            content: `Do you want to send this message to ${staffLabel(guild)}? They will reply here in DMs.${privacySuffix()}`,
+            components: [promptRow(messageId, guild.id)],
+            allowedMentions: NO_MENTIONS,
+        };
+    }
+    const shown = servers.slice(0, MAX_SERVER_CHOICES);
+    const select = new StringSelectMenuBuilder()
+        .setCustomId(`${MODMAIL_PICK}:${messageId}`)
+        .setPlaceholder('Choose a server')
+        .addOptions(shown.map((guild) => ({ label: String(guild.name || guild.id).slice(0, 100), value: guild.id })));
+    const more = servers.length > shown.length ? `\n-# Only the first ${MAX_SERVER_CHOICES} servers are listed.` : '';
+    return {
+        content: `Which server's staff should get this message? They will reply here in DMs.${more}${privacySuffix()}`,
+        components: [
+            new ActionRowBuilder().addComponents(select),
+            new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId(MODMAIL_BUTTONS.cancel).setLabel('Cancel').setStyle(ButtonStyle.Secondary)),
+        ],
+        allowedMentions: NO_MENTIONS,
+    };
+}
+
+/** Entry point for every DM the bot receives. `getConfig` is for tests. */
+export async function handleModmailDm(message, client, { getConfig = getGuildConfig } = {}) {
     const userId = message.author.id;
     if (!(await checkRateLimit(`modmail:dm:${userId}`, 8, 10_000))) return;
 
-    const guild = getMainGuild(client);
-    const refusal = await modmailRefusal(client, guild, userId);
-    if (refusal) {
-        if (await checkRateLimit(`modmail:refusal:${userId}`, 1, 60_000)) {
-            await message.reply({ content: refusal, allowedMentions: NO_MENTIONS }).catch(() => {});
+    const open = await findOpenModmail(client, userId);
+    if (open) {
+        const refusal = await modmailRefusal(client, open.guild, userId);
+        if (refusal) {
+            if (await checkRateLimit(`modmail:refusal:${userId}`, 1, 60_000)) {
+                await message.reply({ content: refusal, allowedMentions: NO_MENTIONS }).catch(() => {});
+            }
+            return;
         }
-        return;
-    }
-
-    const channel = await findModmailChannel(guild, userId);
-    if (channel) {
+        const { channel } = open;
         try {
             await relay(channel, `**${message.author.username}:**`, message);
             await message.react('✅').catch(() => {});
@@ -186,31 +309,40 @@ export async function handleModmailDm(message, client) {
         return;
     }
 
+    // Limited before the server lookup, which checks membership in every server the bot is in.
     if (!(await checkRateLimit(`modmail:prompt:${userId}`, 3, 60_000))) return;
-    await message.reply({
-        content: `Do you want to send this message to the Mewvo staff? They will reply here in DMs.${privacySuffix()}`,
-        components: [promptRow(message.id)],
-        allowedMentions: NO_MENTIONS,
-    }).catch((error) => logger.warn(`Modmail prompt failed for ${userId}: ${error.message}`));
+    const { servers, blockedSomewhere } = await modmailServersFor(client, userId, { getConfig });
+    if (!servers.length) {
+        if (await checkRateLimit(`modmail:refusal:${userId}`, 1, 60_000)) {
+            await message.reply(modmailPromptPayload(servers, message.id, { blockedSomewhere })).catch(() => {});
+        }
+        return;
+    }
+    await message.reply(modmailPromptPayload(servers, message.id))
+        .catch((error) => logger.warn(`Modmail prompt failed for ${userId}: ${error.message}`));
 }
 
 /**
- * Opens a conversation for the DM `messageId` (the member pressed "Send to staff").
- * Returns a short status line for the prompt.
+ * Opens a conversation in server `guildId` for the DM `messageId` (the member pressed "Send to
+ * staff" or picked the server). Prompts sent before multi-server carry no server: the main one.
+ * Every check is re-run here (member, not blocked, set up). Returns a short status line.
  */
-export async function openModmail(client, user, dmChannel, messageId) {
-    const guild = getMainGuild(client);
+export async function openModmail(client, user, dmChannel, messageId, guildId = enforcementConfig.mainGuildId, { getConfig = getGuildConfig } = {}) {
+    const guild = (guildId && client.guilds.cache.get(guildId)) || null;
+    if (guild && blacklistHit({ guildId: guild.id })) return 'Modmail is not available right now.';
     const refusal = await modmailRefusal(client, guild, user.id);
     if (refusal) return refusal;
-    if (await findModmailChannel(guild, user.id)) return 'You already have an open conversation. Just send your messages here.';
+    if (await findOpenModmail(client, user.id)) return 'You already have an open conversation. Just send your messages here.';
     if (opening.has(user.id)) return 'Your conversation is being opened.';
+    const setupConfig = await getConfig(client, guild.id);
+    if (!isModmailSetUp(guild, setupConfig)) return `${guild.name} does not take modmail right now.`;
 
     const original = await dmChannel.messages.fetch(messageId).catch(() => null);
     if (!original || original.author.id !== user.id) return 'That message is gone. Send it again.';
 
     opening.add(user.id);
     try {
-        const config = await getGuildConfig(client, guild.id);
+        const config = setupConfig;
         const member = await guild.members.fetch(user.id);
         const staffRoleId = config.ticketStaffRoleId || null;
         const staffAccess = [
@@ -218,9 +350,7 @@ export async function openModmail(client, user, dmChannel, messageId) {
             PermissionFlagsBits.AttachFiles, PermissionFlagsBits.ReadMessageHistory,
         ];
         // Its own category (dashboard), else the /ticket category as before.
-        const categoryOf = (id) => (id ? guild.channels.cache.get(id) : null);
-        const category = [categoryOf(resolveSetting(guild.id, 'modmailCategoryId')), categoryOf(config.ticketCategoryId)]
-            .find((c) => c?.type === ChannelType.GuildCategory) || null;
+        const category = findModmailCategory(guild, config);
         const safeName = user.username.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 80) || user.id;
 
         // Modmail counts toward the open-channel cap (with staff reports); appeals never do.
@@ -270,7 +400,8 @@ export async function openModmail(client, user, dmChannel, messageId) {
         await relay(channel, `**${user.username}:**`, original);
         await original.react('✅').catch(() => {});
         logger.info(`Modmail opened for ${user.id} in ${channel.id}`);
-        return `Sent to staff. They will reply here; anything else you send here goes to them too.${privacySuffix()}`;
+        const to = isMainGuild(guild.id) ? 'staff' : `the staff of ${guild.name}`;
+        return `Sent to ${to}. They will reply here; anything else you send here goes to them too.${privacySuffix()}`;
     } finally {
         opening.delete(user.id);
     }
@@ -319,7 +450,7 @@ export async function closeModmail(channel, closer, reason = '') {
 
     const user = await client.users.fetch(userId).catch(() => null);
     await user?.send({
-        content: `Your conversation with the Mewvo staff was closed.${note}\nSend a new message here any time to start another one.`,
+        content: `Your conversation with ${staffLabel(channel.guild)} was closed.${note}\nSend a new message here any time to start another one.`,
         allowedMentions: NO_MENTIONS,
     }).catch(() => {});
 

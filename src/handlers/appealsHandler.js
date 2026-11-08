@@ -84,40 +84,48 @@ function reportModal() {
         );
 }
 
-/** 'main' | 'support' | null for any other place. */
-function panelServer(interaction) {
+/**
+ * 'main' | 'support' | 'other' (any other server, multi-server B1: its own panel posted with
+ * /setappeal) | null outside a server.
+ */
+export function panelServer(interaction) {
     if (!interaction.inGuild()) return null;
     if (interaction.guildId === enforcementConfig.mainGuildId) return 'main';
     if (interaction.guildId === enforcementConfig.supportGuildId) return 'support';
-    return null;
+    return 'other';
 }
 
 const WRONG_PLACE = 'Appeals are handled in the Mewvo servers.';
 
+/** Staff reports: the support server's panel (for Mewvo) or another server's own panel; never the main one. */
+const takesReports = (server) => server === 'support' || server === 'other';
+
 export async function handleAppealButton(interaction, client, args) {
     const server = panelServer(interaction);
     const [step] = args;
-    if (!server || (step === 'report' && server !== 'support')) {
+    if (!server || (step === 'report' && !takesReports(server))) {
         return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: WRONG_PLACE });
     }
     if (step === 'open') return InteractionHelper.safeShowModal(interaction, appealModal());
     if (step === 'report') return InteractionHelper.safeShowModal(interaction, reportModal());
     if (step === 'status') return showMyAppeals(interaction);
-    if (step === 'standing') return showMyStanding(interaction);
+    if (step === 'standing') return showMyStanding(interaction, server);
 }
 
 /**
- * The clicking member's own standing in the main server: counted warnings, ladder
- * level and what the next warning would do, active punishments, appeals. Private,
- * and only ever about interaction.user.
+ * The clicking member's own standing: in the main server for Mewvo's panels, in the server
+ * itself for another server's panel. Counted warnings, ladder level and what the next warning
+ * would do, active punishments, appeals. Private, and only ever about interaction.user.
  */
-async function showMyStanding(interaction) {
+async function showMyStanding(interaction, server = 'main') {
     const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
     if (!deferred) return;
-    const standing = await getMemberStanding(enforcementConfig.mainGuildId, interaction.user.id);
+    const other = server === 'other';
+    const guildId = other ? interaction.guildId : enforcementConfig.mainGuildId;
+    const standing = await getMemberStanding(guildId, interaction.user.id);
     return InteractionHelper.safeEditReply(interaction, {
         embeds: [createEmbed({
-            title: `My record in ${enforcementConfig.serverName}`,
+            title: `My record in ${other ? (interaction.guild?.name || 'this server') : enforcementConfig.serverName}`,
             description: 'Only you can see this.',
             fields: standingFields(standing),
             color: standing.activeBan || standing.activeMute ? 'warning' : 'primary',
@@ -192,9 +200,10 @@ export async function handleAppealModal(interaction, client, args) {
         });
     }
 
-    if (step === 'report' && server === 'support') {
+    if (step === 'report' && takesReports(server)) {
         await submitStaffReport({
             client,
+            guildId: interaction.guildId,
             user: interaction.user,
             staffMember: interaction.fields.getTextInputValue('staff').trim(),
             details: interaction.fields.getTextInputValue('details').trim(),

@@ -8,7 +8,7 @@ import { createEmbed } from '../../utils/embeds.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { logger } from '../../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../../utils/errorHandler.js';
-import { isBotOwner } from '../../config/bot.js';
+import { hasOwnerPower } from '../../utils/ownerPower.js';
 import { hasAdministrator } from '../../utils/commandGate.js';
 import { getLevelingConfig, getUserLevelData, getXpForLevel, memberCacheComplete } from '../../services/leveling/leveling.js';
 import { getGuildBirthdays, getMonthName } from '../../utils/database.js';
@@ -111,7 +111,7 @@ export default {
     async execute(interaction, config, client) {
         const target = interaction.options.getUser('user') || interaction.user;
         if (target.id !== interaction.user.id
-            && !isBotOwner(interaction.user.id)
+            && !hasOwnerPower(interaction.user.id, interaction.guildId)
             && !hasAdministrator({ guild: interaction.guild, userId: interaction.user.id, permissions: interaction.memberPermissions })) {
             throw new TitanBotError(`Non-admin ${interaction.user.id} tried to view the profile of ${target.id}`, ErrorTypes.PERMISSION,
                 'Only admins can see someone else\'s profile. Use `/profile` without a user to see yours.');

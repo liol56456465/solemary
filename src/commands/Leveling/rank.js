@@ -6,7 +6,7 @@ import { TOTAL_MULTIPLIER_CAP, xpBoostBreakdown } from '../../services/leveling/
 
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { hasAdministrator } from '../../utils/commandGate.js';
-import { isBotOwner } from '../../config/bot.js';
+import { hasOwnerPower } from '../../utils/ownerPower.js';
 import { CARD_FILE_NAME, cardAvatarUrl, tryLevelCard } from '../../services/leveling/levelCard.js';
 
 /**
@@ -83,7 +83,7 @@ export default {
     const targetUser = interaction.options.getUser('user') || interaction.user;
     // Everyone may check their own rank; other members' ranks are admin-only (commandAccess.js).
     if (targetUser.id !== interaction.user.id
-      && !isBotOwner(interaction.user.id)
+      && !hasOwnerPower(interaction.user.id, interaction.guildId)
       && !hasAdministrator({ guild: interaction.guild, userId: interaction.user.id, permissions: interaction.memberPermissions })) {
       throw new TitanBotError(
         `Non-admin ${interaction.user.id} tried to view rank of ${targetUser.id}`,

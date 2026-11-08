@@ -61,6 +61,16 @@ export async function linkedChannelId(guildId, userId) {
     return byUser.get(`${guildId}:${userId}`) ?? null;
 }
 
+/** Every open modmail link of a member, across servers: [{ guildId, channelId }]. */
+export async function linkedChannelsForUser(userId) {
+    await loadModmailLinks();
+    const out = [];
+    for (const [channelId, link] of byChannel) {
+        if (link.userId === userId) out.push({ guildId: link.guildId, channelId });
+    }
+    return out;
+}
+
 export async function linkModmailChannel(guildId, channelId, userId) {
     await loadModmailLinks();
     await query(`INSERT INTO ${T.modmailLinks} (channel_id, guild_id, user_id) VALUES ($1, $2, $3)`, [channelId, guildId, userId]);

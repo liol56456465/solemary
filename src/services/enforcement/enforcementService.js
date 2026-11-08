@@ -811,9 +811,8 @@ export async function getTargetState(guild, userId) {
     return { member, banned, ladder, activeBan, activeMute, muted: Boolean(activeMute) || hasMutedRole };
 }
 
-/** Re-applies the muted role when a muted member rejoins. */
+/** Re-applies the muted role when a muted member rejoins (any server: its own mute cases and role). */
 export async function reapplyMuteOnJoin(member) {
-    if (member.guild.id !== enforcementConfig.mainGuildId) return;
     const mute = await getActiveCase(member.guild.id, member.id, 'mute');
     if (!mute) return;
     const role = await findMutedRole(member.guild);

@@ -15,7 +15,6 @@
 // Server permission (checked in the startup readiness line).
 
 import { AutoModerationActionType, AutoModerationRuleTriggerType } from 'discord.js';
-import { enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
 import { query, T, isEnforcementDbAvailable } from '../enforcement/db.js';
 import { executeSystemAction } from '../enforcement/enforcementService.js';
@@ -106,10 +105,13 @@ function pruneLastActed(now) {
     for (const [key, at] of lastActed) if (now - at > 24 * 60 * 60 * 1000) lastActed.delete(key);
 }
 
-/** autoModerationActionExecution in the main server. */
+/**
+ * autoModerationActionExecution in any server (multi-server B1): that server's automod settings,
+ * native policies, review channel and warn ladder (executeSystemAction acts in `guild`).
+ */
 export async function handleNativeExecution(execution) {
     const { guild } = execution;
-    if (!guild || guild.id !== enforcementConfig.mainGuildId || !isBridgedAction(execution.action)) return;
+    if (!guild || !isBridgedAction(execution.action)) return;
     if (!isEnforcementDbAvailable()) return;
     const settings = await getAutomodSettings(guild.id);
     if (!settings.enabled) return;

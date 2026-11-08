@@ -3,9 +3,8 @@ import { clearMassActionBlock, getMassActionBlock } from '../../services/enforce
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
-import { enforcementConfig } from '../../config/enforcement.js';
 import { automodConfig } from '../../config/automod.js';
-import { isBotOwner } from '../../config/bot.js';
+import { hasOwnerPower } from '../../utils/ownerPower.js';
 import { dateStamp, truncate } from '../../services/enforcement/format.js';
 import {
     giveStaffWarning,
@@ -23,8 +22,9 @@ function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
 }
 
-function isOwner(interaction) {
-    return interaction.guild?.ownerId === interaction.user.id || isBotOwner(interaction.user.id);
+/** The server's owner, or OWNER_IDS in Mewvo's own servers only. */
+export function isOwner(interaction) {
+    return interaction.guild?.ownerId === interaction.user.id || hasOwnerPower(interaction.user.id, interaction.guildId);
 }
 
 export default {
@@ -52,8 +52,9 @@ export default {
             .addUserOption((option) => option.setName('user').setDescription('Staff member').setRequired(true))),
 
     async execute(interaction) {
-        if (interaction.guildId !== enforcementConfig.mainGuildId) {
-            throw new TitanBotError('Wrong guild for /staff', ErrorTypes.PERMISSION, 'This command only works in the main server.', { expected: true });
+        // Any server (multi-server B1): every subcommand reads and writes this server's rows only.
+        if (!interaction.guildId) {
+            throw new TitanBotError('/staff outside a server', ErrorTypes.PERMISSION, 'This command only works in a server.', { expected: true });
         }
         const sub = interaction.options.getSubcommand();
         // /staff stats and coverage are open to administrators; everything else is the owner's.

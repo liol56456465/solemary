@@ -1,7 +1,6 @@
 import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
-import { enforcementConfig } from '../../config/enforcement.js';
 import { buildPanel } from '../../handlers/enforcementPanel.js';
 import { assertBotPermissions, isAdministrator } from '../../services/enforcement/enforcementService.js';
 import { resolveTargetUser } from '../../handlers/backgroundView.js';
@@ -22,9 +21,10 @@ export default {
             .setMaxLength(20)),
 
     async execute(interaction, config, client) {
-        if (interaction.guildId !== enforcementConfig.mainGuildId) {
-            throw new TitanBotError('Wrong guild for /enforcements', ErrorTypes.PERMISSION,
-                'This command only works in the main server.', { expected: true });
+        // Any server (multi-server B1): every action runs in, and is stored for, this server.
+        if (!interaction.guildId) {
+            throw new TitanBotError('/enforcements outside a server', ErrorTypes.PERMISSION,
+                'This command only works in a server.', { expected: true });
         }
         if (!isAdministrator(interaction.member)) {
             throw new TitanBotError('Not an administrator', ErrorTypes.PERMISSION,

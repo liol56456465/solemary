@@ -12,7 +12,7 @@
 // Pure apart from the settings cache read: no database, no Discord calls. A non-home server
 // whose settings could not be read throws (SettingsUnavailableError) instead of assuming off.
 
-import { isBotOwner } from '../../config/bot.js';
+import { hasOwnerPower } from '../../utils/ownerPower.js';
 import { resolveSetting } from '../settings/guildSettings.js';
 
 export const SECOND_REVIEWER_MESSAGE = 'You issued this punishment, so another staff member has to decide this appeal.';
@@ -44,7 +44,8 @@ export function needsSecondReviewer(record, { botUserId = null, enabled = isInde
  *   { allowed: true, ownerOverride: true }     the issuer is a bot owner: allowed, must be logged
  *   { allowed: false, message }                the issuer may not decide
  */
-export function checkAppealReviewer(record, deciderId, { botUserId = null, enabled = isIndependentReviewOn(record?.guild_id), isOwner = isBotOwner } = {}) {
+// The owner override only applies to cases of Mewvo's own servers (utils/ownerPower.js).
+export function checkAppealReviewer(record, deciderId, { botUserId = null, enabled = isIndependentReviewOn(record?.guild_id), isOwner = (id) => hasOwnerPower(id, record?.guild_id) } = {}) {
     if (!needsSecondReviewer(record, { botUserId, enabled })) return { allowed: true };
     if (String(record.moderator_id) !== String(deciderId)) return { allowed: true };
     if (isOwner(deciderId)) return { allowed: true, ownerOverride: true };

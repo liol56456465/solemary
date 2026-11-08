@@ -635,12 +635,12 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
 
 const MAX_REPORTS_PER_DAY = 3;
 
-/** Each report opens a channel, so cap them: one open at a time, three a day. */
+/** Each report opens a channel, so cap them per server: one open at a time, three a day. */
 async function assertCanReport(guild, userId) {
     const { rows } = await query(
         `SELECT channel_id, created_at > NOW() - INTERVAL '1 day' AS today FROM ${T.appeals}
-         WHERE kind = 'report' AND user_id = $1`,
-        [userId]
+         WHERE kind = 'report' AND user_id = $1 AND guild_id = $2`,
+        [userId, guild.id]
     );
     if (rows.filter((row) => row.today).length >= MAX_REPORTS_PER_DAY) {
         throw userError('You have sent the maximum number of staff reports for today. Please try again tomorrow.');
@@ -649,12 +649,35 @@ async function assertCanReport(guild, userId) {
     if (open) throw userError('You already have an open staff report. The administrators will contact you about it.');
 }
 
-export async function submitStaffReport({ client, user, staffMember, details, proof }) {
-    const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
-    if (!guild) throw configError('Main guild unavailable for staff reports');
-    // One submission per member at a time: two forms sent at once must not both pass the
-    // "one open report" check (the new row only counts as open once its channel exists).
-    return Mutex.runExclusive(`report:${user.id}`, () => openStaffReport({ client, guild, user, staffMember, details, proof }));
+/** Shown when a server without any category for reports gets one. */
+export const REPORTS_NOT_SET_UP = 'Staff reports are not set up in this server yet: it has no reports, ticket or appeals category. '
+    + 'Ask an administrator to set one up (for example with /ticket), then try again. Nothing was sent.';
+
+/**
+ * The server a staff report is filed in: Mewvo's two servers file into the main server (as
+ * before: the report button sits in the support server); any other server into itself.
+ */
+export function reportGuildId(guildId) {
+    return !guildId || isHomeGuild(guildId) ? enforcementConfig.mainGuildId : guildId;
+}
+
+/**
+ * Files a staff report from the panel in `guildId` (the server the member pressed the button
+ * in; default: the main server). Its channel opens in that server's reports category (else its
+ * ticket, else its appeals category); a server without one gets REPORTS_NOT_SET_UP.
+ */
+export async function submitStaffReport({ client, user, staffMember, details, proof, guildId = null }) {
+    const targetId = reportGuildId(guildId);
+    const home = isHomeGuild(targetId);
+    const guild = client.guilds.cache.get(targetId);
+    if (!guild) {
+        if (home) throw configError('Main guild unavailable for staff reports');
+        throw userError('That server is not available right now. Nothing was sent.');
+    }
+    if (!home && !(await getReportsCategory(guild))) throw userError(REPORTS_NOT_SET_UP);
+    // One submission per member and server at a time: two forms sent at once must not both pass
+    // the "one open report" check (the new row only counts as open once its channel exists).
+    return Mutex.runExclusive(`report:${guild.id}:${user.id}`, () => openStaffReport({ client, guild, user, staffMember, details, proof }));
 }
 
 async function openStaffReport({ client, guild, user, staffMember, details, proof }) {

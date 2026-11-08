@@ -3,7 +3,7 @@ import { successEmbed } from '../utils/embeds.js';
 import { logger } from '../utils/logger.js';
 
 import { replyUserError, ErrorTypes } from '../utils/errorHandler.js';
-import { isBotOwner } from '../config/bot.js';
+import { hasOwnerPower } from '../utils/ownerPower.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
 import { noteOwnerOverride } from '../services/ownerOverride.js';
 function createControlButtons(countdownId, isPaused = false) {
@@ -124,7 +124,7 @@ async function countdownButtonHandler(interaction, client, args) {
         }
 
         // Pausing or cancelling a public countdown affects everyone: Administrator only (access model).
-        if (!isBotOwner(interaction.user.id) && !isAdministrator(interaction.member)) {
+        if (!hasOwnerPower(interaction.user.id, interaction.guildId) && !isAdministrator(interaction.member)) {
             return await interaction.reply({
                 content: 'You need the Administrator role to control countdowns.',
                 flags: ["Ephemeral"],

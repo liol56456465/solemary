@@ -10,7 +10,6 @@ import { addNote, listNotes, removeNote } from '../services/enforcement/staffNot
 import { createEmbed } from '../utils/embeds.js';
 import { createError, ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
-import { enforcementConfig } from '../config/enforcement.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
 import { caseStatusLabel, getAppealHistory, getLatestAppealStatuses, listCasesForUser } from '../services/enforcement/caseService.js';
 import { countCaseEdits } from '../services/enforcement/caseEditService.js';
@@ -184,7 +183,8 @@ function noteModal(step, targetId) {
 }
 
 function staffOnly(interaction) {
-    return isAdministrator(interaction.member) && interaction.guildId === enforcementConfig.mainGuildId;
+    // Any server: the view only ever reads and writes interaction.guildId's records and notes.
+    return isAdministrator(interaction.member) && Boolean(interaction.guildId);
 }
 
 export async function handleBackgroundButton(interaction, client, args) {
