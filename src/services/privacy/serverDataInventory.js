@@ -97,6 +97,8 @@ export const TABLES = Object.freeze([
     { key: 'oauth_verified_guilds', kind: 'oauthLinks', where: () => 'guild_id = $1' },
     // ── Member insights ──
     { key: 'member_events', kind: 'insights', where: () => 'guild_id = $1' },
+    // v13: the bot's DMs about this server, kept for the language-change re-edit (30 days).
+    { key: 'bot_dm_log', kind: 'insights', where: () => 'guild_id = $1' },
     { key: 'guild_daily_stats', kind: 'insights', where: () => 'guild_id = $1' },
     // ── Dashboard audit log of this server ──
     { key: 'dashboard_audit', kind: 'audit', where: () => 'guild_id = $1' },
