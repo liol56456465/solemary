@@ -1,0 +1,63 @@
+{
+    "slash": {
+        "description": "Supprimer les données que Mewvo garde pour ce serveur (propriétaire uniquement)",
+        "delete": {
+            "description": "Voir ce que Mewvo garde pour ce serveur et demander sa suppression (propriétaire)"
+        }
+    },
+    "refuse": {
+        "home": "Les serveurs de Mewvo ne peuvent pas être supprimés ainsi.",
+        "notOwner": "Seul le propriétaire de ce serveur peut demander la suppression de ses données.",
+        "unknown": "Discord n'a pas confirmé pour l'instant qui possède ce serveur, donc rien n'a été modifié. Réessaie dans un instant.",
+        "database": "La base de données ne répond pas, donc rien n'a été modifié. Réessaie dans un instant.",
+        "notYours": "Seul le propriétaire du serveur qui a ouvert ceci peut utiliser ces boutons."
+    },
+    "preview": {
+        "title": "Supprimer les données de ce serveur ?",
+        "intro": "Voici ce que Mewvo garde pour le serveur (nombre d'entrées) :",
+        "line": "- {label} : {count}",
+        "empty": "Mewvo ne garde rien pour ce serveur en ce moment.",
+        "record": "« Mon dossier » des membres sur le site montre les cas de tous les serveurs : les cas de ce serveur en disparaissent aussi.",
+        "active": "Les bannissements et mises en sourdine encore actifs ne sont pas levés sur Discord, et ceux à durée limitée ne se terminent plus seuls. Lève-les d'abord si besoin.",
+        "untouched": "Non supprimés : les comptes Mewvo et connexions des membres, leurs données dans d'autres serveurs et les cas des autres serveurs.",
+        "grace": "La suppression a lieu {days} jours après ta confirmation. D'ici là, tu peux l'annuler ici ou sur le tableau de bord."
+    },
+    "kind": {
+        "cases": "Cas de modération (notes, preuves, historique des modifications, échelle d'avertissements)",
+        "appeals": "Appels et signalements sur l'équipe",
+        "moderation": "Liste de surveillance, interdictions de contact, rôles temporaires, dossiers de l'équipe, liens modmail",
+        "settings": "Paramètres",
+        "logs": "Configuration des journaux",
+        "levels": "Niveaux, anniversaires, AFK et fiches des membres",
+        "tickets": "Tickets",
+        "automod": "Règles d'automodération, raids et chronologies",
+        "snapshots": "Instantanés de la structure du serveur",
+        "community": "Tags, suggestions, starboard, concours, messages programmés, règles de rôles, flux",
+        "verification": "Historique de vérification",
+        "oauthLinks": "Liens de restauration des membres (qui s'est vérifié ici avec Discord)",
+        "insights": "Statistiques d'arrivées, de départs et d'activité",
+        "audit": "Journal des modifications du tableau de bord",
+        "kv": "Autres paramètres et données enregistrés",
+        "misc": "Rapports d'erreur et rappels créés ici (ils continuent par MP)"
+    },
+    "button": {
+        "confirm": "Supprimer les données",
+        "confirmLeave": "Supprimer les données et retirer Mewvo",
+        "dismiss": "Annuler",
+        "cancelDeletion": "Annuler la suppression"
+    },
+    "scheduled": {
+        "title": "Suppression programmée",
+        "body": "Les données de ce serveur seront supprimées le <t:{unix}:F> (<t:{unix}:R>).",
+        "leave": "Mewvo quittera ensuite le serveur.",
+        "hint": "Tu as changé d'avis ? Appuie sur « Annuler la suppression » ou relance /serverdata delete.",
+        "already": "Une suppression est déjà programmée pour ce serveur.",
+        "running": "La suppression est en cours et ne peut plus être annulée."
+    },
+    "cancelled": "La suppression a été annulée. Rien n'a été supprimé.",
+    "notScheduled": "Aucune suppression n'est plus programmée pour ce serveur.",
+    "dismissed": "Rien n'a été modifié.",
+    "dm": {
+        "done": "Mewvo a supprimé les données qu'il gardait pour le serveur {server}, comme tu l'as demandé. Les comptes des membres et leurs données dans d'autres serveurs n'ont pas été touchés."
+    }
+}

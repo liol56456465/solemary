@@ -130,6 +130,7 @@ import { collectInbox, defaultInboxData } from './inboxData.js';
 import { createMemberToolsHandlers, defaultMemberTools } from './memberToolsRoutes.js';
 import { createIncidentHandlers, defaultIncidents } from './incidentRoutes.js';
 import { createConfirmStore } from './confirmTokens.js';
+import { createServerDataHandlers } from './serverDataRoutes.js';
 import { confirmPage } from './enforcementPages.js';
 import { createPermissionFixHandlers } from './permissionFixRoutes.js';
 import { createOwnerHandlers, defaultOwnerDeps } from './ownerRoutes.js';
@@ -156,7 +157,7 @@ const GUILDS_URL = 'https://discord.com/api/v10/users/@me/guilds';
 /** The OAuth2 scopes of the dashboard login: who you are, and which servers you are in (for the picker). */
 export const OAUTH_SCOPES = 'identify guilds';
 /** First path segments below /dashboard that are global routes, never a server or an old link. */
-export const GLOBAL_SEGMENTS = Object.freeze(['static', 'theme', 'lang', 'nav', 'oauth', 'logout', 'owner']);
+export const GLOBAL_SEGMENTS = Object.freeze(['static', 'theme', 'lang', 'nav', 'oauth', 'logout', 'owner', 'removed']);
 const HTTP_TIMEOUT_MS = 10000;
 const CASES_PAGE_SIZE = 25;
 const MAX_PAGE = 10000;
@@ -366,7 +367,7 @@ export function createDashboard({
     memberTools = defaultMemberTools, incidents = defaultIncidents, website = defaultWebsiteDeps,
     // One ban list cache per dashboard, shared by the Banned page and the member search.
     banCache = createBanCache(), memberSearch = createMemberSearch({ banCache }), ownerErrors = defaultErrorPageDeps,
-    guildLists = createGuildListCache(), picker = null, settingsReady = ensureGuildSettings,
+    guildLists = createGuildListCache(), picker = null, settingsReady = ensureGuildSettings, serverData: serverDataDeps = undefined,
 }) {
     const secret = settings.sessionSecret;
     const guildId = boundGuildId || settings.mainGuildId;
@@ -721,7 +722,7 @@ export function createDashboard({
         return sendHtml(res, 200, overviewPage({
             ...shellOf(req), overview: result, recentChanges, editEnabled: settings.editEnabled,
             handover, canEditHandover: Boolean(settings.editEnabled && allows(req.dashboard.access, 'staff.handover')),
-            flash: req.dashboard.flash,
+            flash: req.dashboard.flash, serverData: await serverDataHandlers.overviewInfo(req),
         }));
     }
 
@@ -1315,8 +1316,14 @@ export function createDashboard({
         return send(200, { results: results.map(({ id, name, username, bot, banned }) => ({ id, name, username, bot, banned })), error });
     }
 
+    // "Delete this server's data" (server owner only; serverDataRoutes.js).
+    const serverDataHandlers = createServerDataHandlers({
+        client, guildId, isHomeServer, settings, sessions, guildLists, startLogin, sendHtml, shellOf, fail, failT, textOfReq,
+        checkPost, postLimiter, serverNotFound, themeOf, path, ...(serverDataDeps ? { deps: serverDataDeps } : {}),
+    });
+
     return {
-        memberSearch: memberSearchHtml, memberSearchJson: memberSearchJsonHandler,
+        memberSearch: memberSearchHtml, memberSearchJson: memberSearchJsonHandler, serverData: serverDataHandlers,
         guildId, isHomeServer, access, guildLists, startLogin, readSession, serverNotFound, requireSession, limiters: shared,
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, requireUser, checkPost,
         overview, handover, searchSave, searchDelete, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme, setNav, setLanguage, help, setup,
@@ -1541,6 +1548,13 @@ function addGlobalRoutes(router, d) {
     router.get('/nav', d.limitByIp, d.setNav);
     router.get('/', d.limitByIp, safe(d.index));
     router.get('/oauth/callback', d.limitByIp, safe(d.callback));
+    // A server Mewvo left: its owner asks for its data to be deleted (serverDataRoutes.js).
+    const sd = d.serverData;
+    const sdForm = express.urlencoded({ extended: false, limit: '2kb' });
+    router.get('/removed/:id/data', safe(d.requireSession), safe(sd.removedPage));
+    router.get('/removed/:id/data/verify', d.limitByIp, safe(d.requireSession), safe(sd.removedVerify));
+    router.post('/removed/:id/data/request', sdForm, safe(d.requireSession), safe(sd.removedRequest));
+    router.post('/removed/:id/data/cancel', sdForm, safe(d.requireSession), safe(sd.removedCancel));
     // Logout needs a session, not access to any server.
     router.post('/logout', express.urlencoded({ extended: false, limit: '2kb' }), safe(d.requireSession), safe(d.logout));
     const form = express.urlencoded({ extended: false, limit: '16kb' });
@@ -1654,6 +1668,9 @@ function addGuildRoutes(router, d) {
     router.post('/inbox/:kind/:id/close', form, user, safe(ib.close));
     // Settings forms: the body parser is mounted here only (32 kB, no nested objects).
     // urlencoded skips multipart bodies, so an upload is read only after the login check.
+    // "Delete this server's data" (server owner only): before the settings catch-alls.
+    router.post('/server-data/request', form, user, safe(d.serverData.request));
+    router.post('/server-data/cancel', form, user, safe(d.serverData.cancel));
     router.post('/:module/:action', express.urlencoded({ extended: false, limit: '32kb' }), user, safe(d.moduleUploadBody), safe(d.moduleAction));
     router.get('/overview', user, safe(d.overview));
     router.get('/inbox', user, safe(ib.list));
@@ -1683,6 +1700,7 @@ function addGuildRoutes(router, d) {
     router.get('/help', user, safe(d.help));
     router.get('/setup', user, safe(d.setup));
     router.get('/fix-permissions', user, safe(d.permissionFix.page));
+    router.get('/server-data', user, safe(d.serverData.page));
     router.get('/:module', user, safe(d.modulePage));
     router.use(user, safe(d.notFound));
 }

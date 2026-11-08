@@ -1,0 +1,76 @@
+{
+    "card": {
+        "title": "Daten dieses Servers löschen",
+        "intro": "Nur du als Serverbesitzer siehst das. Mewvo behält die Daten dieses Servers auch, nachdem der Bot entfernt wurde, bis du die Löschung beantragst.",
+        "open": "Ansehen, was gelöscht würde",
+        "scheduled": "Löschung geplant für {date}.",
+        "running": "Die Löschung läuft gerade.",
+        "cancel": "Löschung abbrechen"
+    },
+    "page": {
+        "title": "Daten dieses Servers löschen",
+        "intro": "Unten steht alles, was Mewvo für {name} speichert, mit der Anzahl der Einträge je Art. Nur der Serverbesitzer kann die Löschung beantragen.",
+        "introRemoved": "Mewvo ist nicht mehr auf {name}. Seine Daten bleiben, bis du als Besitzer die Löschung beantragst.",
+        "details": "Pro Tabelle",
+        "total": "Insgesamt: {count} Einträge.",
+        "removeBot": "Und Mewvo von diesem Server entfernen",
+        "confirm": "In {days} Tagen löschen",
+        "back": "Zurück zur Übersicht",
+        "backPicker": "Zurück zu deinen Servern"
+    },
+    "kind": {
+        "cases": "Moderationsfälle (Notizen, Beweise, Änderungsverlauf, Verwarnungsstufen)",
+        "appeals": "Einsprüche und Meldungen über das Team",
+        "moderation": "Beobachtungsliste, Kontaktverbote, befristete Rollen, Team-Einträge, Modmail-Verknüpfungen",
+        "settings": "Einstellungen",
+        "logs": "Log-Einrichtung",
+        "levels": "Level, Geburtstage, AFK und Mitgliedereinträge",
+        "tickets": "Tickets",
+        "automod": "Automod-Regeln, Raid-Vorfälle und Zeitleisten",
+        "snapshots": "Schnappschüsse der Serverstruktur",
+        "community": "Tags, Vorschläge, Starboard, Gewinnspiele, geplante Nachrichten, Rollenregeln, Feeds",
+        "verification": "Verifizierungsverlauf",
+        "oauthLinks": "Verknüpfungen für die Mitglieder-Wiederherstellung (wer sich hier mit Discord verifiziert hat)",
+        "insights": "Statistiken zu Beitritten, Austritten und Aktivität",
+        "audit": "Änderungsprotokoll des Dashboards",
+        "kv": "Weitere gespeicherte Einstellungen und Einträge",
+        "misc": "Fehlerberichte und hier gesetzte Erinnerungen (sie kommen weiter per DM)"
+    },
+    "note": {
+        "record": "„Meine Akte“ der Mitglieder auf der Website zeigt Fälle aus allen Servern: Die Fälle dieses Servers verschwinden auch dort.",
+        "active": "Noch aktive Banns und Stummschaltungen werden in Discord nicht aufgehoben, und befristete enden nicht mehr von selbst. Heb sie vorher auf, wenn nötig.",
+        "untouched": "Nicht gelöscht: die eigenen Mewvo-Konten und Logins der Mitglieder, ihre Daten in anderen Servern und die Fälle anderer Server.",
+        "grace": "Die Löschung läuft {days} Tage nach deiner Bestätigung. Bis dahin kannst du sie hier oder im Dashboard abbrechen.",
+        "empty": "Mewvo speichert gerade nichts für diesen Server."
+    },
+    "status": {
+        "scheduled": "Die Daten dieses Servers werden am {date} gelöscht. Bis dahin kannst du das abbrechen.",
+        "leave": "Danach verlässt Mewvo den Server.",
+        "running": "Die Löschung läuft gerade und kann nicht mehr abgebrochen werden.",
+        "done": "Mewvo hat die Daten dieses Servers am {date} gelöscht.",
+        "retry": "Der letzte Versuch wurde nicht fertig; er wird innerhalb eines Tages wiederholt."
+    },
+    "flash": {
+        "scheduled": "Löschung geplant für {date}. Bis dahin kannst du sie abbrechen.",
+        "already": "Eine Löschung ist schon für {date} geplant.",
+        "cancelled": "Die Löschung wurde abgebrochen. Es wurde nichts gelöscht.",
+        "notScheduled": "Es war keine Löschung geplant.",
+        "running": "Die Löschung läuft schon und kann nicht mehr abgebrochen werden."
+    },
+    "errors": {
+        "title": "Nicht möglich",
+        "notOwner": "Das kann nur der Besitzer dieses Servers.",
+        "home": "Mewvos eigene Server können so nicht gelöscht werden.",
+        "unknown": "Discord hat gerade nicht bestätigt, wem dieser Server gehört, deshalb wurde nichts geändert. Versuch es gleich noch einmal."
+    },
+    "verify": {
+        "title": "Bestätige, dass dir dieser Server gehört",
+        "text": "Mewvo prüft bei Discord, dass dir {name} noch gehört. Du gehst kurz zu Discord und kommst direkt zurück.",
+        "button": "Bei Discord prüfen"
+    },
+    "picker": {
+        "link": "Gespeicherte Daten löschen",
+        "label": "Die Daten löschen, die Mewvo für {name} gespeichert hat"
+    },
+    "ownerAction": "Löschung der Serverdaten: {server}"
+}

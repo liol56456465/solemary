@@ -1,0 +1,76 @@
+{
+    "card": {
+        "title": "Usuń dane tego serwera",
+        "intro": "Widzisz to tylko ty, właściciel serwera. Mewvo przechowuje dane serwera także po usunięciu bota, dopóki nie poprosisz o ich usunięcie.",
+        "open": "Zobacz, co zostałoby usunięte",
+        "scheduled": "Usunięcie zaplanowane na {date}.",
+        "running": "Usuwanie właśnie trwa.",
+        "cancel": "Anuluj usunięcie"
+    },
+    "page": {
+        "title": "Usuń dane tego serwera",
+        "intro": "Poniżej jest wszystko, co Mewvo przechowuje dla {name}, z liczbą wpisów każdego rodzaju. Tylko właściciel serwera może poprosić o usunięcie.",
+        "introRemoved": "Mewvo nie ma już na {name}. Jego dane są przechowywane, dopóki ty, właściciel, nie poprosisz o ich usunięcie.",
+        "details": "Według tabel",
+        "total": "Łącznie wpisów: {count}.",
+        "removeBot": "I usuń Mewvo z tego serwera",
+        "confirm": "Usuń za {days} dni",
+        "back": "Wróć do przeglądu",
+        "backPicker": "Wróć do swoich serwerów"
+    },
+    "kind": {
+        "cases": "Sprawy moderacyjne (notatki, dowody, historia zmian, drabinka ostrzeżeń)",
+        "appeals": "Odwołania i zgłoszenia na ekipę",
+        "moderation": "Lista obserwowanych, zakazy kontaktu, role czasowe, wpisy o ekipie, powiązania modmail",
+        "settings": "Ustawienia",
+        "logs": "Konfiguracja logów",
+        "levels": "Poziomy, urodziny, AFK i wpisy członków",
+        "tickets": "Tickety",
+        "automod": "Reguły automoderacji, rajdy i osie czasu",
+        "snapshots": "Migawki struktury serwera",
+        "community": "Tagi, sugestie, starboard, konkursy, zaplanowane wiadomości, reguły ról, kanały RSS",
+        "verification": "Historia weryfikacji",
+        "oauthLinks": "Powiązania do przywracania członków (kto zweryfikował się tu przez Discord)",
+        "insights": "Statystyki dołączeń, odejść i aktywności",
+        "audit": "Dziennik zmian panelu",
+        "kv": "Inne zapisane ustawienia i wpisy",
+        "misc": "Raporty błędów i przypomnienia ustawione tutaj (dalej przychodzą w DM)"
+    },
+    "note": {
+        "record": "„Moja kartoteka” członków na stronie pokazuje sprawy ze wszystkich serwerów: sprawy tego serwera znikną też stamtąd.",
+        "active": "Wciąż aktywne bany i wyciszenia nie zostaną zdjęte na Discordzie, a czasowe nie skończą się już same. W razie potrzeby najpierw je zdejmij.",
+        "untouched": "Nie zostaną usunięte: własne konta Mewvo i logowania członków, ich dane na innych serwerach ani sprawy innych serwerów.",
+        "grace": "Usunięcie nastąpi {days} dni po potwierdzeniu. Do tego czasu możesz je anulować tutaj albo w panelu.",
+        "empty": "Mewvo nie przechowuje teraz nic dla tego serwera."
+    },
+    "status": {
+        "scheduled": "Dane tego serwera zostaną usunięte {date}. Do tego czasu możesz to anulować.",
+        "leave": "Potem Mewvo opuści serwer.",
+        "running": "Usuwanie właśnie trwa i nie można go już anulować.",
+        "done": "Mewvo usunął dane tego serwera {date}.",
+        "retry": "Ostatnia próba się nie zakończyła; kolejna będzie w ciągu doby."
+    },
+    "flash": {
+        "scheduled": "Usunięcie zaplanowane na {date}. Do tego czasu możesz je anulować.",
+        "already": "Usunięcie jest już zaplanowane na {date}.",
+        "cancelled": "Usunięcie anulowano. Nic nie zostało usunięte.",
+        "notScheduled": "Nie było zaplanowanego usunięcia.",
+        "running": "Usuwanie już trwa i nie można go anulować."
+    },
+    "errors": {
+        "title": "Niemożliwe",
+        "notOwner": "Może to zrobić tylko właściciel tego serwera.",
+        "home": "Własnych serwerów Mewvo nie można w ten sposób usunąć.",
+        "unknown": "Discord nie potwierdził teraz, kto jest właścicielem serwera, więc nic nie zmieniono. Spróbuj ponownie za chwilę."
+    },
+    "verify": {
+        "title": "Potwierdź, że ten serwer należy do ciebie",
+        "text": "Mewvo sprawdzi w Discordzie, że {name} nadal należy do ciebie. Przejdziesz do Discorda i od razu wrócisz.",
+        "button": "Sprawdź przez Discorda"
+    },
+    "picker": {
+        "link": "Usuń zapisane dane",
+        "label": "Usuń dane, które Mewvo zapisał dla {name}"
+    },
+    "ownerAction": "Usunięcie danych serwera: {server}"
+}

@@ -39,7 +39,7 @@ const DASHBOARD_PAGE = {
     purge: 'channels', backup: 'overview', reactroles: 'reaction-roles', ticket: 'tickets', canned: 'tickets', modmail: 'tickets',
     tools: 'giveaways', shorten: 'commands', countdown: 'messages', poll: 'messages', embedbuilder: 'messages',
     verification: 'verification', welcome: 'welcome', goodbye: 'welcome', greet: 'welcome', autorole: 'welcome',
-    wipedata: 'overview', rules: 'rules',
+    wipedata: 'overview', rules: 'rules', serverdata: 'server-data',
 };
 
 export function adminCommandsRetired(env = process.env) {

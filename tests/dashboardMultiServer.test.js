@@ -217,7 +217,7 @@ const caseRecord = (code, guildId, extra = {}) => ({
  * owners: OWNER_IDS. Members of B are added per test: bMembers = { userId: { perms, position } }.
  * cases: code → record (getCaseByCode answers it whatever server asks: the route must check).
  */
-async function serve({ owners = [OWNER], bMembers = {}, mainMembers = {}, cases = null, blocked = { users: new Set(), guilds: new Set() }, guildsAnswer = null } = {}) {
+async function serve({ owners = [OWNER], bMembers = {}, mainMembers = {}, cases = null, blocked = { users: new Set(), guilds: new Set() }, guildsAnswer = null, serverData = undefined } = {}) {
     const world = fakeWorld();
     for (const [userId, spec] of Object.entries(bMembers)) world.addMember(world.guild(B), userId, spec);
     for (const [userId, spec] of Object.entries(mainMembers)) world.addMember(world.guild(MAIN), userId, spec);
@@ -305,7 +305,7 @@ async function serve({ owners = [OWNER], bMembers = {}, mainMembers = {}, cases 
         blacklist: ({ userId, guildId } = {}) => (userId && blocked.users.has(userId) ? { kind: 'user' } : guildId && blocked.guilds.has(guildId) ? { kind: 'guild' } : null),
         settingsReady: async (guildId) => { log.push({ fn: 'settingsReady', args: [guildId] }); },
         owner: { isBotOwner: isOwner },
-        services, data, enforcement, memberTools, inbox, incidents,
+        services, data, enforcement, memberTools, inbox, incidents, serverData,
         auditStore: spyDeps('audit', createAuditStore({ query: auditQuery, table: 'audit' }), log),
     });
     app.use('/dashboard', dashboard.router);
@@ -772,8 +772,9 @@ test('CSRF and Origin on every per-server POST: missing, wrong or another sessio
     try {
         const { cookie, csrf } = await h.loginAs(ADMIN);
         const other = await h.loginAs(ADMIN);
-        // /logout is global (below); /backup is home-only (404 in A).
-        const posts = concreteRoutes().filter((r) => r.method === 'POST' && r.key !== OWNER_AREA && r.path !== '/logout' && !r.path.startsWith('/backup'));
+        // /logout is global (below); /backup is home-only (404 in A); /removed/<id>/data/… is global
+        // (a server Mewvo left; its CSRF check: tests/serverDataDeletion.test.js).
+        const posts = concreteRoutes().filter((r) => r.method === 'POST' && r.key !== OWNER_AREA && r.path !== '/logout' && !r.path.startsWith('/backup') && !r.path.startsWith('/removed/'));
         const bad = [
             ['no token', { form: { ...fullForm(csrf), csrf: undefined } }],
             ['wrong token', { form: { ...fullForm(csrf), csrf: 'w'.repeat(43) } }],
@@ -998,6 +999,58 @@ test('global logout: CSRF and Origin checked; the session survives a forged logo
         assert.ok(await h.sessions.get(session.id));
         assert.equal((await h.request('/dashboard/logout', { method: 'POST', cookie, form: { csrf } })).status, 303);
         assert.equal(await h.sessions.get(session.id), null);
+    } finally {
+        await h.close();
+    }
+});
+
+test('Delete this server\'s data through the real router: the in-server page for the owner only; a server Mewvo left via the global route (session + fresh OAuth owner flag), CSRF and Origin on its POSTs', async () => {
+    const GONE = '130000000000000013';
+    const calls = [];
+    const serverData = {
+        preview: async () => ({ kinds: { cases: 2 }, tables: [{ table: 'mod_cases', key: 'mod_cases', kind: 'cases', count: 2 }], total: 2 }),
+        getRequest: async () => null,
+        request: async (a) => { calls.push(['request', a]); return { record: { status: 'scheduled', dueAt: new Date(Date.now() + 7 * 86400000).toISOString() }, created: true }; },
+        cancel: async (a) => { calls.push(['cancel', a]); return { cancelled: true }; },
+    };
+    const h = await serve({ serverData });
+    try {
+        assert.equal((await h.request(`/dashboard/removed/${GONE}/data`)).status, 302, 'no session: to the login');
+        const admin = await h.loginAs(ADMIN);
+        assert.equal((await h.request(`/dashboard/removed/${GONE}/data`, { cookie: admin.cookie })).status, 404, 'no owner flag in the list');
+        assert.equal((await h.request(`/dashboard/${A}/server-data`, { cookie: admin.cookie })).status, 404, 'an Administrator who is not the owner');
+        assert.equal((await h.request(`/dashboard/${A}/server-data/request`, { method: 'POST', cookie: admin.cookie, form: { csrf: admin.csrf } })).status, 404);
+        const inA = await h.request(`/dashboard/removed/${A}/data`, { cookie: admin.cookie });
+        assert.deepEqual([inA.status, inA.location], [302, `/dashboard/${A}/server-data`], 'the bot is still there: the in-server page');
+
+        // Discord gives the server owner every permission (the fake does not by itself).
+        h.addMember(h.guild(A), GUILD_OWNER, { perms: ['Administrator'], position: 60 });
+        const owner = await h.loginAs(GUILD_OWNER);
+        const page = await h.request(`/dashboard/${A}/server-data`, { cookie: owner.cookie });
+        assert.equal(page.status, 200);
+        assert.match(page.body, /name="removeBot"/);
+        const overview = await h.request(`/dashboard/${A}/overview`, { cookie: owner.cookie });
+        assert.match(overview.body, new RegExp(`href="/dashboard/${A}/server-data"`), 'the danger zone card for the owner');
+        assert.doesNotMatch((await h.request(`/dashboard/${A}/overview`, { cookie: admin.cookie })).body, /server-data/, 'not for an admin');
+        const scheduled = await h.request(`/dashboard/${A}/server-data/request`, { method: 'POST', cookie: owner.cookie, form: { csrf: owner.csrf, removeBot: '1' } });
+        assert.deepEqual([scheduled.status, scheduled.location], [303, `/dashboard/${A}/server-data`]);
+        assert.deepEqual([calls[0][1].guildId, calls[0][1].userId, calls[0][1].removeBot], [A, GUILD_OWNER, true]);
+
+        h.dashboard.guildLists.set(ADMIN, [{ id: GONE, name: 'Gone', canManage: true, owner: true, listedAt: Date.now() }]);
+        const removed = await h.request(`/dashboard/removed/${GONE}/data`, { cookie: admin.cookie });
+        assert.equal(removed.status, 200);
+        assert.match(removed.body, /Gone/);
+        const action = `/dashboard/removed/${GONE}/data/request`;
+        assert.equal((await h.request(action, { method: 'POST', cookie: admin.cookie, form: { csrf: 'w'.repeat(43) } })).status, 403);
+        assert.equal((await h.request(action, { method: 'POST', cookie: admin.cookie, form: { csrf: admin.csrf }, origin: 'https://evil.example' })).status, 403);
+        assert.equal((await h.request(action, { method: 'POST', cookie: admin.cookie, form: { csrf: admin.csrf }, origin: null })).status, 403);
+        assert.equal(calls.length, 1, 'nothing requested by the refused POSTs');
+        const ok = await h.request(action, { method: 'POST', cookie: admin.cookie, form: { csrf: admin.csrf } });
+        assert.deepEqual([ok.status, ok.location], [303, `/dashboard/removed/${GONE}/data`]);
+        assert.deepEqual([calls[1][1].guildId, calls[1][1].userId, calls[1][1].source], [GONE, ADMIN, 'dashboard-removed']);
+        const cancel = await h.request(`/dashboard/removed/${GONE}/data/cancel`, { method: 'POST', cookie: admin.cookie, form: { csrf: admin.csrf } });
+        assert.equal(cancel.status, 303);
+        assert.equal(calls[2][0], 'cancel');
     } finally {
         await h.close();
     }

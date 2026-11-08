@@ -28,6 +28,7 @@ import { remindStaleAppeals } from './services/enforcement/appealStatusService.j
 import { flushActivity, pruneActivity } from './services/stats/activityService.js';
 import { purgeIncidentTimelines } from './services/automod/incidentTimeline.js';
 import { runRetention, scheduleRetention } from './services/privacy/retentionService.js';
+import { runDueDeletions as runDueServerDataDeletions } from './services/privacy/serverDataDeletion.js';
 import { checkCatGrowth } from './services/community/catService.js';
 import { query as enforcementQuery } from './services/enforcement/db.js';
 import { importModmailTopicsOnce } from './services/modmailLinks.js';
@@ -380,6 +381,9 @@ class Mewvo extends Client {
       run: () => runRetention(this),
       whenReady: (fn) => (this.isReady() ? fn() : this.once(Events.ClientReady, () => fn())),
     });
+    // Server data deletions a server owner asked for, once their 7-day grace period is over
+    // (privacy/serverDataDeletion.js): daily at 04:20 UTC.
+    cron.schedule('20 4 * * *', exclusive('server_data_deletions', () => runDueServerDataDeletions(this)), { timezone: 'UTC' });
     // The server cat: posts once in the level-up channel when it grows a stage (never per message).
     cron.schedule('*/5 * * * *', exclusive('server_cat_growth', () => checkCatGrowth(this)));
     cron.schedule('* * * * *', exclusive('auto_slowmode_lift', () => liftCalmSlowmodes(this)));

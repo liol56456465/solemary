@@ -1,0 +1,76 @@
+{
+    "card": {
+        "title": "Apagar os dados deste servidor",
+        "intro": "Só você, o dono do servidor, vê isto. O Mewvo guarda os dados deste servidor depois que o bot é removido, até você pedir para apagar.",
+        "open": "Ver o que seria apagado",
+        "scheduled": "Exclusão agendada para {date}.",
+        "running": "A exclusão está em andamento.",
+        "cancel": "Cancelar exclusão"
+    },
+    "page": {
+        "title": "Apagar os dados deste servidor",
+        "intro": "Abaixo está tudo o que o Mewvo guarda de {name}, com o número de registros de cada tipo. Só o dono do servidor pode pedir a exclusão.",
+        "introRemoved": "O Mewvo não está mais em {name}. Os dados dele ficam guardados até você, o dono, pedir para apagar.",
+        "details": "Por tabela",
+        "total": "No total: {count} registros.",
+        "removeBot": "E remover o Mewvo deste servidor",
+        "confirm": "Apagar em {days} dias",
+        "back": "Voltar à visão geral",
+        "backPicker": "Voltar aos seus servidores"
+    },
+    "kind": {
+        "cases": "Casos de moderação (notas, provas, histórico de edições, escada de advertências)",
+        "appeals": "Recursos e denúncias sobre a equipe",
+        "moderation": "Lista de observação, ordens de não contato, cargos temporários, registros da equipe, vínculos de modmail",
+        "settings": "Configurações",
+        "logs": "Configuração dos registros",
+        "levels": "Níveis, aniversários, AFK e fichas de membros",
+        "tickets": "Tickets",
+        "automod": "Regras de automod, raids e linhas do tempo",
+        "snapshots": "Instantâneos da estrutura do servidor",
+        "community": "Tags, sugestões, starboard, sorteios, mensagens agendadas, regras de cargos, feeds",
+        "verification": "Histórico de verificação",
+        "oauthLinks": "Vínculos de restauração de membros (quem se verificou aqui com o Discord)",
+        "insights": "Estatísticas de entradas, saídas e atividade",
+        "audit": "Registro de alterações do painel",
+        "kv": "Outras configurações e registros salvos",
+        "misc": "Relatórios de erro e lembretes criados aqui (continuam por DM)"
+    },
+    "note": {
+        "record": "O \"Meu histórico\" dos membros no site mostra casos de todos os servidores: os casos deste servidor somem de lá também.",
+        "active": "Banimentos e silenciamentos ainda ativos não são retirados no Discord, e os temporários não terminam mais sozinhos. Retire-os antes, se precisar.",
+        "untouched": "Não é apagado: as contas Mewvo e os logins dos membros, os dados deles em outros servidores e os casos de outros servidores.",
+        "grace": "A exclusão acontece {days} dias depois da sua confirmação. Até lá, você pode cancelar aqui ou no painel.",
+        "empty": "No momento o Mewvo não guarda nada deste servidor."
+    },
+    "status": {
+        "scheduled": "Os dados deste servidor serão apagados em {date}. Até lá, você pode cancelar.",
+        "leave": "Depois, o Mewvo sairá do servidor.",
+        "running": "A exclusão está em andamento e não pode mais ser cancelada.",
+        "done": "O Mewvo apagou os dados deste servidor em {date}.",
+        "retry": "A última tentativa não terminou; ela será repetida em até um dia."
+    },
+    "flash": {
+        "scheduled": "Exclusão agendada para {date}. Você pode cancelar até lá.",
+        "already": "Já existe uma exclusão agendada para {date}.",
+        "cancelled": "A exclusão foi cancelada. Nada foi apagado.",
+        "notScheduled": "Não havia exclusão agendada.",
+        "running": "A exclusão já está em andamento e não pode mais ser cancelada."
+    },
+    "errors": {
+        "title": "Não é possível",
+        "notOwner": "Só o dono deste servidor pode fazer isso.",
+        "home": "Os servidores do próprio Mewvo não podem ser apagados assim.",
+        "unknown": "O Discord não confirmou agora quem é o dono do servidor, então nada foi alterado. Tente de novo em instantes."
+    },
+    "verify": {
+        "title": "Confirme que o servidor é seu",
+        "text": "O Mewvo confere com o Discord que {name} ainda é seu. Você passa pelo Discord e volta na hora.",
+        "button": "Conferir com o Discord"
+    },
+    "picker": {
+        "link": "Apagar dados guardados",
+        "label": "Apagar os dados que o Mewvo guardou de {name}"
+    },
+    "ownerAction": "Exclusão dos dados do servidor: {server}"
+}

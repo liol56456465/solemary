@@ -1,0 +1,76 @@
+{
+    "card": {
+        "title": "Supprimer les données de ce serveur",
+        "intro": "Seul toi, le propriétaire du serveur, vois ceci. Mewvo garde les données de ce serveur après le retrait du bot, jusqu'à ce que tu demandes leur suppression.",
+        "open": "Voir ce qui serait supprimé",
+        "scheduled": "Suppression programmée le {date}.",
+        "running": "La suppression est en cours.",
+        "cancel": "Annuler la suppression"
+    },
+    "page": {
+        "title": "Supprimer les données de ce serveur",
+        "intro": "Tout ce que Mewvo garde pour {name} est listé ci-dessous, avec le nombre d'entrées de chaque type. Seul le propriétaire du serveur peut demander leur suppression.",
+        "introRemoved": "Mewvo n'est plus sur {name}. Ses données sont gardées jusqu'à ce que toi, le propriétaire, demandes leur suppression.",
+        "details": "Par table",
+        "total": "Au total : {count} entrées.",
+        "removeBot": "Et retirer Mewvo de ce serveur",
+        "confirm": "Supprimer dans {days} jours",
+        "back": "Retour à la vue d'ensemble",
+        "backPicker": "Retour à tes serveurs"
+    },
+    "kind": {
+        "cases": "Cas de modération (notes, preuves, historique des modifications, échelle d'avertissements)",
+        "appeals": "Appels et signalements sur l'équipe",
+        "moderation": "Liste de surveillance, interdictions de contact, rôles temporaires, dossiers de l'équipe, liens modmail",
+        "settings": "Paramètres",
+        "logs": "Configuration des journaux",
+        "levels": "Niveaux, anniversaires, AFK et fiches des membres",
+        "tickets": "Tickets",
+        "automod": "Règles d'automodération, raids et chronologies",
+        "snapshots": "Instantanés de la structure du serveur",
+        "community": "Tags, suggestions, starboard, concours, messages programmés, règles de rôles, flux",
+        "verification": "Historique de vérification",
+        "oauthLinks": "Liens de restauration des membres (qui s'est vérifié ici avec Discord)",
+        "insights": "Statistiques d'arrivées, de départs et d'activité",
+        "audit": "Journal des modifications du tableau de bord",
+        "kv": "Autres paramètres et données enregistrés",
+        "misc": "Rapports d'erreur et rappels créés ici (ils continuent par MP)"
+    },
+    "note": {
+        "record": "« Mon dossier » des membres sur le site montre les cas de tous les serveurs : les cas de ce serveur en disparaissent aussi.",
+        "active": "Les bannissements et mises en sourdine encore actifs ne sont pas levés sur Discord, et ceux à durée limitée ne se terminent plus seuls. Lève-les d'abord si besoin.",
+        "untouched": "Non supprimés : les comptes Mewvo et connexions des membres, leurs données dans d'autres serveurs et les cas des autres serveurs.",
+        "grace": "La suppression a lieu {days} jours après ta confirmation. D'ici là, tu peux l'annuler ici ou sur le tableau de bord.",
+        "empty": "Mewvo ne garde rien pour ce serveur en ce moment."
+    },
+    "status": {
+        "scheduled": "Les données de ce serveur seront supprimées le {date}. D'ici là, tu peux annuler.",
+        "leave": "Mewvo quittera ensuite le serveur.",
+        "running": "La suppression est en cours et ne peut plus être annulée.",
+        "done": "Mewvo a supprimé les données de ce serveur le {date}.",
+        "retry": "La dernière tentative n'a pas abouti ; elle sera relancée dans la journée."
+    },
+    "flash": {
+        "scheduled": "Suppression programmée le {date}. Tu peux l'annuler d'ici là.",
+        "already": "Une suppression est déjà programmée le {date}.",
+        "cancelled": "La suppression a été annulée. Rien n'a été supprimé.",
+        "notScheduled": "Aucune suppression n'était programmée.",
+        "running": "La suppression est déjà en cours et ne peut plus être annulée."
+    },
+    "errors": {
+        "title": "Impossible",
+        "notOwner": "Seul le propriétaire de ce serveur peut faire cela.",
+        "home": "Les serveurs de Mewvo ne peuvent pas être supprimés ainsi.",
+        "unknown": "Discord n'a pas confirmé pour l'instant qui possède ce serveur, donc rien n'a été modifié. Réessaie dans un instant."
+    },
+    "verify": {
+        "title": "Confirme que ce serveur t'appartient",
+        "text": "Mewvo vérifie auprès de Discord que {name} t'appartient toujours. Tu passes par Discord et tu reviens aussitôt.",
+        "button": "Vérifier avec Discord"
+    },
+    "picker": {
+        "link": "Supprimer les données gardées",
+        "label": "Supprimer les données que Mewvo garde pour {name}"
+    },
+    "ownerAction": "Suppression des données du serveur : {server}"
+}

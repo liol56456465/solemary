@@ -1,0 +1,63 @@
+{
+    "slash": {
+        "description": "Delete the data Mewvo stores for this server (server owner only)",
+        "delete": {
+            "description": "See what Mewvo stores for this server and ask for it to be deleted (owner only)"
+        }
+    },
+    "refuse": {
+        "home": "Mewvo's own servers cannot be deleted this way.",
+        "notOwner": "Only the owner of this server can ask for its data to be deleted.",
+        "unknown": "Discord did not confirm who owns this server right now, so nothing was changed. Try again in a moment.",
+        "database": "The database is not responding, so nothing was changed. Try again in a moment.",
+        "notYours": "Only the server owner who opened this can use these buttons."
+    },
+    "preview": {
+        "title": "Delete this server's data?",
+        "intro": "Mewvo stores this for the server (number of records):",
+        "line": "- {label}: {count}",
+        "empty": "Mewvo stores nothing for this server right now.",
+        "record": "Members' \"My record\" on the website lists cases from every server: this server's cases disappear from there too.",
+        "active": "Bans and mutes that are still active are not lifted in Discord, and temporary ones no longer end on their own. Lift them first if needed.",
+        "untouched": "Not deleted: members' own Mewvo accounts and logins, their data in other servers, and other servers' cases.",
+        "grace": "The deletion runs {days} days after you confirm. Until then you can cancel it here or on the dashboard."
+    },
+    "kind": {
+        "cases": "Moderation cases (notes, evidence, edit history, warn ladder)",
+        "appeals": "Appeals and staff reports",
+        "moderation": "Watchlist, no-contact orders, temporary roles, staff records, modmail links",
+        "settings": "Settings",
+        "logs": "Logging setup",
+        "levels": "Levels, birthdays, AFK and member records",
+        "tickets": "Tickets",
+        "automod": "Automod rules, raid incidents and timelines",
+        "snapshots": "Server structure snapshots",
+        "community": "Tags, suggestions, starboard, giveaways, scheduled messages, role rules, feeds",
+        "verification": "Verification history",
+        "oauthLinks": "Member backup links (who verified here with Discord)",
+        "insights": "Join, leave and activity statistics",
+        "audit": "Dashboard audit log",
+        "kv": "Other stored settings and records",
+        "misc": "Error reports, and reminders set here (they keep going by DM)"
+    },
+    "button": {
+        "confirm": "Delete data",
+        "confirmLeave": "Delete data and remove Mewvo",
+        "dismiss": "Cancel",
+        "cancelDeletion": "Cancel deletion"
+    },
+    "scheduled": {
+        "title": "Deletion scheduled",
+        "body": "This server's data will be deleted on <t:{unix}:F> (<t:{unix}:R>).",
+        "leave": "Mewvo will then leave the server.",
+        "hint": "Changed your mind? Press Cancel deletion, or run /serverdata delete again.",
+        "already": "A deletion is already scheduled for this server.",
+        "running": "The deletion is running now and can no longer be cancelled."
+    },
+    "cancelled": "The deletion was cancelled. Nothing was deleted.",
+    "notScheduled": "There is no scheduled deletion for this server any more.",
+    "dismissed": "Nothing was changed.",
+    "dm": {
+        "done": "Mewvo deleted the data it stored for the server {server}, as you asked. Members' own accounts and their data in other servers were not touched."
+    }
+}

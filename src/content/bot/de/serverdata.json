@@ -1,0 +1,63 @@
+{
+    "slash": {
+        "description": "Lösche die Daten, die Mewvo für diesen Server speichert (nur Serverbesitzer)",
+        "delete": {
+            "description": "Sieh, was Mewvo für diesen Server speichert, und beantrage die Löschung (nur Besitzer)"
+        }
+    },
+    "refuse": {
+        "home": "Mewvos eigene Server können so nicht gelöscht werden.",
+        "notOwner": "Nur der Besitzer dieses Servers kann die Löschung seiner Daten beantragen.",
+        "unknown": "Discord hat gerade nicht bestätigt, wem dieser Server gehört, deshalb wurde nichts geändert. Versuch es gleich noch einmal.",
+        "database": "Die Datenbank antwortet nicht, deshalb wurde nichts geändert. Versuch es gleich noch einmal.",
+        "notYours": "Nur der Serverbesitzer, der dies geöffnet hat, kann diese Buttons nutzen."
+    },
+    "preview": {
+        "title": "Daten dieses Servers löschen?",
+        "intro": "Das speichert Mewvo für den Server (Anzahl der Einträge):",
+        "line": "- {label}: {count}",
+        "empty": "Mewvo speichert gerade nichts für diesen Server.",
+        "record": "„Meine Akte“ der Mitglieder auf der Website zeigt Fälle aus allen Servern: Die Fälle dieses Servers verschwinden auch dort.",
+        "active": "Noch aktive Banns und Stummschaltungen werden in Discord nicht aufgehoben, und befristete enden nicht mehr von selbst. Heb sie vorher auf, wenn nötig.",
+        "untouched": "Nicht gelöscht: die eigenen Mewvo-Konten und Logins der Mitglieder, ihre Daten in anderen Servern und die Fälle anderer Server.",
+        "grace": "Die Löschung läuft {days} Tage nach deiner Bestätigung. Bis dahin kannst du sie hier oder im Dashboard abbrechen."
+    },
+    "kind": {
+        "cases": "Moderationsfälle (Notizen, Beweise, Änderungsverlauf, Verwarnungsstufen)",
+        "appeals": "Einsprüche und Meldungen über das Team",
+        "moderation": "Beobachtungsliste, Kontaktverbote, befristete Rollen, Team-Einträge, Modmail-Verknüpfungen",
+        "settings": "Einstellungen",
+        "logs": "Log-Einrichtung",
+        "levels": "Level, Geburtstage, AFK und Mitgliedereinträge",
+        "tickets": "Tickets",
+        "automod": "Automod-Regeln, Raid-Vorfälle und Zeitleisten",
+        "snapshots": "Schnappschüsse der Serverstruktur",
+        "community": "Tags, Vorschläge, Starboard, Gewinnspiele, geplante Nachrichten, Rollenregeln, Feeds",
+        "verification": "Verifizierungsverlauf",
+        "oauthLinks": "Verknüpfungen für die Mitglieder-Wiederherstellung (wer sich hier mit Discord verifiziert hat)",
+        "insights": "Statistiken zu Beitritten, Austritten und Aktivität",
+        "audit": "Änderungsprotokoll des Dashboards",
+        "kv": "Weitere gespeicherte Einstellungen und Einträge",
+        "misc": "Fehlerberichte und hier gesetzte Erinnerungen (sie kommen weiter per DM)"
+    },
+    "button": {
+        "confirm": "Daten löschen",
+        "confirmLeave": "Daten löschen und Mewvo entfernen",
+        "dismiss": "Abbrechen",
+        "cancelDeletion": "Löschung abbrechen"
+    },
+    "scheduled": {
+        "title": "Löschung geplant",
+        "body": "Die Daten dieses Servers werden am <t:{unix}:F> (<t:{unix}:R>) gelöscht.",
+        "leave": "Danach verlässt Mewvo den Server.",
+        "hint": "Doch nicht? Drück „Löschung abbrechen“ oder führe /serverdata delete erneut aus.",
+        "already": "Für diesen Server ist schon eine Löschung geplant.",
+        "running": "Die Löschung läuft gerade und kann nicht mehr abgebrochen werden."
+    },
+    "cancelled": "Die Löschung wurde abgebrochen. Es wurde nichts gelöscht.",
+    "notScheduled": "Für diesen Server ist keine Löschung mehr geplant.",
+    "dismissed": "Es wurde nichts geändert.",
+    "dm": {
+        "done": "Mewvo hat die Daten gelöscht, die es für den Server {server} gespeichert hatte, wie du es wolltest. Die eigenen Konten der Mitglieder und ihre Daten in anderen Servern sind unberührt."
+    }
+}

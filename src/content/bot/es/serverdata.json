@@ -1,0 +1,63 @@
+{
+    "slash": {
+        "description": "Borrar los datos que Mewvo guarda de este servidor (solo el propietario)",
+        "delete": {
+            "description": "Ver qué guarda Mewvo de este servidor y pedir que se borre (solo propietario)"
+        }
+    },
+    "refuse": {
+        "home": "Los servidores propios de Mewvo no se pueden borrar así.",
+        "notOwner": "Solo el propietario de este servidor puede pedir que se borren sus datos.",
+        "unknown": "Discord no ha confirmado ahora quién es el propietario del servidor, así que no se ha cambiado nada. Inténtalo de nuevo en un momento.",
+        "database": "La base de datos no responde, así que no se ha cambiado nada. Inténtalo de nuevo en un momento.",
+        "notYours": "Solo el propietario del servidor que abrió esto puede usar estos botones."
+    },
+    "preview": {
+        "title": "¿Borrar los datos de este servidor?",
+        "intro": "Esto es lo que Mewvo guarda del servidor (número de registros):",
+        "line": "- {label}: {count}",
+        "empty": "Ahora mismo Mewvo no guarda nada de este servidor.",
+        "record": "\"Mi historial\" de los miembros en la web muestra casos de todos los servidores: los casos de este servidor también desaparecen de ahí.",
+        "active": "Los baneos y silencios que siguen activos no se retiran en Discord, y los temporales ya no terminarán solos. Retíralos antes si hace falta.",
+        "untouched": "No se borra: las cuentas de Mewvo y los inicios de sesión de los miembros, sus datos en otros servidores ni los casos de otros servidores.",
+        "grace": "El borrado se hace {days} días después de que lo confirmes. Hasta entonces puedes cancelarlo aquí o en el panel."
+    },
+    "kind": {
+        "cases": "Casos de moderación (notas, pruebas, historial de cambios, escalera de advertencias)",
+        "appeals": "Apelaciones y denuncias sobre el staff",
+        "moderation": "Lista de vigilancia, órdenes de no contacto, roles temporales, registros del staff, enlaces de modmail",
+        "settings": "Ajustes",
+        "logs": "Configuración de registros",
+        "levels": "Niveles, cumpleaños, AFK y fichas de miembros",
+        "tickets": "Tickets",
+        "automod": "Reglas de automod, raids y cronologías",
+        "snapshots": "Instantáneas de la estructura del servidor",
+        "community": "Etiquetas, sugerencias, starboard, sorteos, mensajes programados, reglas de roles, feeds",
+        "verification": "Historial de verificación",
+        "oauthLinks": "Enlaces de restauración de miembros (quién se verificó aquí con Discord)",
+        "insights": "Estadísticas de entradas, salidas y actividad",
+        "audit": "Registro de cambios del panel",
+        "kv": "Otros ajustes y registros guardados",
+        "misc": "Informes de errores y recordatorios creados aquí (siguen llegando por MD)"
+    },
+    "button": {
+        "confirm": "Borrar datos",
+        "confirmLeave": "Borrar datos y quitar Mewvo",
+        "dismiss": "Cancelar",
+        "cancelDeletion": "Cancelar borrado"
+    },
+    "scheduled": {
+        "title": "Borrado programado",
+        "body": "Los datos de este servidor se borrarán el <t:{unix}:F> (<t:{unix}:R>).",
+        "leave": "Después, Mewvo saldrá del servidor.",
+        "hint": "¿Has cambiado de idea? Pulsa \"Cancelar borrado\" o vuelve a usar /serverdata delete.",
+        "already": "Ya hay un borrado programado para este servidor.",
+        "running": "El borrado está en curso y ya no se puede cancelar."
+    },
+    "cancelled": "Se canceló el borrado. No se ha borrado nada.",
+    "notScheduled": "Ya no hay ningún borrado programado para este servidor.",
+    "dismissed": "No se ha cambiado nada.",
+    "dm": {
+        "done": "Mewvo ha borrado los datos que guardaba del servidor {server}, como pediste. Las cuentas de los miembros y sus datos en otros servidores no se han tocado."
+    }
+}
