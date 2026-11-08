@@ -105,7 +105,7 @@ export function mapArgumentsToOptions(args, commandData) {
   let optionDefs = [];
 
   logger.debug(
-    `Parsing prefix command: commandName=${cmdData.name}, args=${JSON.stringify(args)}, hasSubcommands=${hasSubcommands}, hasSubcommandGroup=${!!subcommandGroup}, optionsCount=${cmdData.options.length}`,
+    `Parsing prefix command: commandName=${cmdData.name}, argCount=${args.length}, hasSubcommands=${hasSubcommands}, hasSubcommandGroup=${!!subcommandGroup}, optionsCount=${cmdData.options.length}`,
   );
 
   if (subcommandGroup) {
@@ -212,4 +212,13 @@ export function mapArgumentsToOptions(args, commandData) {
       optionDefs
     })
   };
+}
+/**
+ * The debug line for an executed prefix command: the resolved command name, the argument
+ * count and ids. Never the arguments or the typed text (member data).
+ */
+export function prefixCommandLogLine({ commandName, argCount = 0, userId = null, guildId = null }) {
+  const who = userId ? ` user=${userId}` : '';
+  const where = guildId ? ` guild=${guildId}` : '';
+  return `Prefix command: ${commandName} (${argCount} arg${argCount === 1 ? '' : 's'})${who}${where}`;
 }

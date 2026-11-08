@@ -8,7 +8,7 @@ import { getLevelingConfig, getUserLevelData } from '../services/leveling/leveli
 import { applyXpMultiplier, computeXpMultiplier } from '../services/leveling/levelBoosts.js';
 import { addXp } from '../services/leveling/xpSystem.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
-import { parsePrefixCommand } from '../utils/prefixParser.js';
+import { parsePrefixCommand, prefixCommandLogLine } from '../utils/prefixParser.js';
 import { supportsPrefixExecution, executePrefixCommand, resolvePrefixAccessKey } from '../utils/messageAdapter.js';
 import { resolveCommandAliasWithArgs, resolveSubcommandAlias } from '../config/commands/commandAliases.js';
 import { getPrefixRestriction } from '../config/commands/prefixRestrictions.js';
@@ -99,13 +99,10 @@ async function handlePrefixCommand(message, client) {
     const { commandName: resolvedCommandName, subcommandArgs } = resolveCommandAliasWithArgs(commandName);
     const args = [...subcommandArgs, ...parsed.args];
 
-    logger.info(`Prefix command detected: ${commandName}, args: ${args.join(', ')}`);
-
-    logger.info(`Resolved command name: ${resolvedCommandName}`);
     const command = client.commands.get(resolvedCommandName);
 
+    // Not a command: nothing is logged (the word after the prefix is member text).
     if (!command) {
-      logger.warn(`Command not found: ${resolvedCommandName}`);
       return; 
     }
 
@@ -200,7 +197,8 @@ async function handlePrefixCommand(message, client) {
       return;
     }
 
-    logger.info(`Executing prefix command: ${prefix}${commandName} (resolved to ${resolvedCommandName}) by ${message.author.tag}`);
+    // Never log the arguments (member text): the command, the argument count and ids only.
+    logger.debug(prefixCommandLogLine({ commandName: resolvedCommandName, argCount: args.length, userId: message.author.id, guildId: message.guild.id }));
     
     await executePrefixCommand(command, message, args, client, prefix, guildConfig);
   } catch (error) {
@@ -301,13 +299,8 @@ async function handleLeveling(message, client) {
     });
     const finalXP = applyXpMultiplier(xpToGive, multiplier);
 
-    const result = await addXp(client, message.guild, message.member, finalXP);
-
-    if (result?.leveledUp) {
-      logger.info(
-        `${message.author.tag} leveled up to level ${result.level} in ${message.guild.name}`
-      );
-    }
+    // Level-ups are logged once, by addXp (debug).
+    await addXp(client, message.guild, message.member, finalXP);
   } catch (error) {
     logger.error('Error handling leveling for message:', error);
   }

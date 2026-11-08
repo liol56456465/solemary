@@ -1,6 +1,7 @@
 // configService.js
 
 import { logger } from '../../utils/logger.js';
+import { BoundedMap } from '../../utils/boundedMap.js';
 import { getGuildConfig, setGuildConfig } from './guildConfig.js';
 import { PermissionFlagsBits } from 'discord.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
@@ -8,7 +9,8 @@ import { wrapServiceClassMethods } from '../../utils/serviceErrorBoundary.js';
 import { z } from 'zod';
 import { LogIgnoreSchema, LoggingConfigSchema } from '../../utils/schemas.js';
 
-const configChangeHistory = new Map();
+// guildId → last CONFIG_HISTORY_LIMIT changes, in memory. Bounded (B5) to 500 servers.
+const configChangeHistory = new BoundedMap(500);
 const CONFIG_HISTORY_LIMIT = 100;
 
 const CONFIG_VALIDATION_RULES = {

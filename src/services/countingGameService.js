@@ -1,4 +1,5 @@
 import { logger } from '../utils/logger.js';
+import { createConfigCache } from '../utils/configCache.js';
 
 const COUNTING_GAME_KEY_PREFIX = 'countingGame:';
 
@@ -198,10 +199,20 @@ function getStorageKey(guildId) {
   return `${COUNTING_GAME_KEY_PREFIX}${guildId}`;
 }
 
+// Read cache (B5): the counting config is read on every message in every channel. Same
+// rules as the guild config cache (utils/configCache.js): writes below clear the entry,
+// errors are never cached.
+const countingCache = createConfigCache({ maxSize: 2000, ttlMs: 60_000 });
+
+/** Tests: { hits, misses, size }. */
+export function countingCacheInfo(client) {
+  return { ...countingCache.stats(), size: countingCache.size(client?.db) };
+}
+
 export async function getCountingGameConfig(client, guildId) {
   try {
-    const rawState = await client.db.get(getStorageKey(guildId));
-    return normalizeCountingGame(rawState);
+    return await countingCache.read(client.db, guildId,
+      async () => normalizeCountingGame(await client.db.get(getStorageKey(guildId))));
   } catch (error) {
     logger.error('Failed to load counting game config:', { guildId, error });
     throw error;
@@ -210,14 +221,14 @@ export async function getCountingGameConfig(client, guildId) {
 
 export async function saveCountingGameConfig(client, guildId, state) {
   const normalized = normalizeCountingGame(state);
-  await client.db.set(getStorageKey(guildId), normalized);
+  await countingCache.write(client.db, guildId, () => client.db.set(getStorageKey(guildId), normalized));
   return normalized;
 }
 
 /** Locked read-modify-write of the counting state: change(config) returns the new state. */
 export async function updateCountingGameConfig(client, guildId, change) {
-  return client.db.update(getStorageKey(guildId),
-    async (raw) => normalizeCountingGame(await change(normalizeCountingGame(raw))), null);
+  return countingCache.write(client.db, guildId, () => client.db.update(getStorageKey(guildId),
+    async (raw) => normalizeCountingGame(await change(normalizeCountingGame(raw))), null));
 }
 
 export async function disableCountingGame(client, guildId) {

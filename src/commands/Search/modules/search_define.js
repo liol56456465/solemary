@@ -3,6 +3,55 @@ import { createEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { handleInteractionError, replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { BoundedMap } from '../../../utils/boundedMap.js';
+
+// B5: dictionaryapi.dev is a free service. Answers are kept in an LRU of 500 words (a day; a
+// word with no entry for an hour), and each user may cause one API call per DEFINE_COOLDOWN_MS
+// (answers from the cache are not limited).
+export const DEFINE_CACHE_SIZE = 500;
+export const DEFINE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+export const DEFINE_NOT_FOUND_TTL_MS = 60 * 60 * 1000;
+export const DEFINE_COOLDOWN_MS = 5000;
+const definitionCache = new BoundedMap(DEFINE_CACHE_SIZE); // word → { entry | null, expiresAt }
+const lastApiCallByUser = new BoundedMap(5000); // userId → ms
+
+const httpGet = (url) => axios.get(url, { timeout: 5000 });
+
+/**
+ * The dictionary entry for a word: { entry } (entry null when the word has none) or
+ * { cooldownMs } when this user must wait before the next API call. Other errors throw.
+ */
+export async function lookupDefinition(word, userId, { get = httpGet, now = Date.now() } = {}) {
+    const key = String(word).trim().toLowerCase();
+    const cached = definitionCache.get(key);
+    if (cached && cached.expiresAt > now) {
+        definitionCache.set(key, cached); // LRU: a used word stays
+        return { entry: cached.entry, cached: true };
+    }
+    if (cached) definitionCache.delete(key);
+
+    const last = lastApiCallByUser.get(String(userId));
+    if (last !== undefined && now - last < DEFINE_COOLDOWN_MS) {
+        return { cooldownMs: DEFINE_COOLDOWN_MS - (now - last) };
+    }
+    lastApiCallByUser.set(String(userId), now);
+
+    let entry = null;
+    try {
+        const response = await get(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(key)}`);
+        entry = Array.isArray(response?.data) && response.data.length ? response.data[0] : null;
+    } catch (error) {
+        if (error?.response?.status !== 404) throw error; // outages are not cached
+    }
+    definitionCache.set(key, { entry, expiresAt: now + (entry ? DEFINE_CACHE_TTL_MS : DEFINE_NOT_FOUND_TTL_MS) });
+    return { entry, cached: false };
+}
+
+/** Tests only. */
+export function resetDefineCache() {
+    definitionCache.clear();
+    lastApiCallByUser.clear();
+}
 
 export default {
     async execute(interaction) {
@@ -15,31 +64,25 @@ export default {
             const word = interaction.options.getString('word');
 
             if (word.length < 2) {
-                logger.warn('Define command - word too short', {
-                    userId: interaction.user.id,
-                    word: word,
-                    guildId: interaction.guildId
-                });
                 return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Please enter a word with at least 2 characters.' });
             }
 
-            const response = await axios.get(
-                `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`,
-                { timeout: 5000 }
-            );
-
-            if (!response.data || response.data.length === 0) {
+            const result = await lookupDefinition(word, interaction.user.id);
+            if (result.cooldownMs) {
+                return await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: `Wait ${Math.ceil(result.cooldownMs / 1000)} s before looking up another word.` });
+            }
+            if (!result.entry) {
                 return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: `No definitions found for "${word}".` });
             }
 
-            const data = response.data[0];
+            const data = result.entry;
             const embed = createEmbed({
                 title: data.word,
                 description: data.phonetic ? `*${data.phonetic}*` : '',
                 color: 'success'
             });
 
-            data.meanings.slice(0, 5).forEach(meaning => {
+            (data.meanings || []).slice(0, 5).forEach(meaning => {
                 const definitions = meaning.definitions
                     .slice(0, 3)
                     .map((def, idx) => {
@@ -67,31 +110,20 @@ export default {
 
             await InteractionHelper.safeEditReply(interaction, { embeds: [embed], allowedMentions: { parse: [] } });
 
-            logger.info('Dictionary definition retrieved', {
-                userId: interaction.user.id,
-                word: word,
-                guildId: interaction.guildId,
-                commandName: 'define'
-            });
+            logger.debug('Dictionary definition sent', { guildId: interaction.guildId, cached: result.cached, commandName: 'define' });
 
         } catch (error) {
             logger.error('Dictionary lookup error', {
                 error: error.message,
                 stack: error.stack,
-                userId: interaction.user.id,
-                word: interaction.options.getString('word'),
                 guildId: interaction.guildId,
                 commandName: 'define'
             });
 
-            if (error.response?.status === 404) {
-                await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: `No definitions found for "${interaction.options.getString('word')}".` });
-            } else {
-                await handleInteractionError(interaction, error, {
-                    commandName: 'define',
-                    source: 'dictionary_api'
-                });
-            }
+            await handleInteractionError(interaction, error, {
+                commandName: 'define',
+                source: 'dictionary_api'
+            });
         }
     },
 };

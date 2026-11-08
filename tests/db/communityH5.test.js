@@ -268,6 +268,13 @@ test('starboard: threshold, self-stars, count updates, edits, deletes', { skip }
     await starboard.handleStarSourceEdit(source);
     assert.match(posted.get(post.starMessageId).payload.embeds[0].data.description, /edited/);
 
+    // B5: a post that is not in memory is looked up by id on demand.
+    starboard.setStarboardPostsForTests([]);
+    source.content = 'cute cat (edited again)';
+    await starboard.handleStarSourceEdit(source);
+    assert.match(posted.get(post.starMessageId).payload.embeds[0].data.description, /edited again/);
+    assert.equal(starboard.getStarboardPost(source.id).count, 3);
+
     // Reload from the database keeps the post.
     starboard.setStarboardPostsForTests([]);
     await starboard.loadStarboardPosts();

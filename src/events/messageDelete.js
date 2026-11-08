@@ -20,7 +20,10 @@ export default {
       await noteMessageDeleted(message.client, message.guild.id, message.id);
 
       try {
-        const reactionRoleData = await getReactionRoleMessage(message.client, message.guild.id, message.id);
+        // Reaction role panels are Mewvo's own messages: a cached message from anyone else
+        // can't be one, so it costs no database read (B5). Partials are checked.
+        const maybePanel = message.partial || !message.author || message.author.id === message.client.user?.id;
+        const reactionRoleData = maybePanel ? await getReactionRoleMessage(message.client, message.guild.id, message.id);
         if (reactionRoleData) {
           await deleteReactionRoleMessage(message.client, message.guild.id, message.id);
           logger.info(`Cleaned up reaction role database entry for manually deleted message ${message.id} in guild ${message.guild.id}`);

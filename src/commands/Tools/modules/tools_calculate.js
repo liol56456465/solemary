@@ -4,14 +4,17 @@ import { logger } from '../../../utils/logger.js';
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { evaluateMathExpression } from '../../../utils/safeMathParser.js';
+import { BoundedMap } from '../../../utils/boundedMap.js';
 
-const calculationContexts = new Map();
+// Bounded (B5): contexts wait for a modal answer (the oldest dropped first: that modal
+// then says "timed out"); history keeps each user's last few results.
+const calculationContexts = new BoundedMap(1000);
 
 function evaluate(expression) {
     return evaluateMathExpression(expression);
 }
 
-const calculationHistory = new Map();
+const calculationHistory = new BoundedMap(5000);
 const MAX_HISTORY = 5;
 
 export { calculationContexts };

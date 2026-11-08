@@ -11,7 +11,7 @@ const url = process.env.POSTGRES_URL || '';
 const isLocal = isLocalDatabaseUrl(url);
 const skip = isLocal ? false : 'needs POSTGRES_URL on localhost (npm run test:db)';
 
-let pgDb, db, client, updateGuildConfig, getGuildConfig;
+let pgDb, db, client, updateGuildConfig, getGuildConfig, invalidateGuildConfigCache;
 let setBirthday, getGuildBirthdays, registerTemporaryChannel, getJoinToCreateConfig;
 let recordCorrectCount, updateCountingGameConfig, getCountingGameConfig;
 let saveGiveaway, getGuildGiveaways;
@@ -78,6 +78,7 @@ before(async () => {
     await Promise.all([guildA, guildB].map((id) => refreshGuildSettings(id)));
     client = { db };
     ({ updateGuildConfig, getGuildConfig } = await import('../../src/services/config/guildConfig.js'));
+    ({ invalidateGuildConfigCache } = await import('../../src/utils/database/guildConfigStorage.js'));
     ({ setBirthday, getGuildBirthdays, registerTemporaryChannel, getJoinToCreateConfig } = await import('../../src/utils/database.js'));
     ({ recordCorrectCount, updateCountingGameConfig, getCountingGameConfig } = await import('../../src/services/countingGameService.js'));
     ({ saveGiveaway, getGuildGiveaways } = await import('../../src/utils/giveaways.js'));
@@ -196,11 +197,17 @@ test('counting: two correct posts of the same number advance the count once', { 
 
 // --- health ------------------------------------------------------------------------------
 
+// The guild config cache (B5) would answer these reads from memory; these tests are about the database path.
+const uncachedGuildConfig = (guildId) => {
+    invalidateGuildConfigCache(client, guildId);
+    return getGuildConfig(client, guildId);
+};
+
 test('pool error: isConnected clears, the next query health-checks and recovers', { skip }, async () => {
     pgDb.pool.emit('error', Object.assign(new Error('terminating connection due to administrator command'), { code: '57P01' }));
     assert.equal(pgDb.isConnected, false);
     assert.equal(pgDb.isAvailable(), true, 'a lost idle connection is not an outage');
-    assert.equal((await getGuildConfig(client, guildA)).prefix, '!');
+    assert.equal((await uncachedGuildConfig(guildA)).prefix, '!');
     assert.equal(pgDb.isConnected, true);
 });
 
@@ -208,12 +215,12 @@ test('outage: a failed health check makes everything throw until the database is
     pgDb.markUnhealthy(new Error('simulated'));
     // The database stays unreachable until the fault is cleared.
     failNext(/^SELECT 1$/, undefined, { persistent: true });
-    await assert.rejects(getGuildConfig(client, guildA), (error) => error.type === DATABASE);
+    await assert.rejects(uncachedGuildConfig(guildA), (error) => error.type === DATABASE);
     assert.equal(pgDb.isAvailable(), false);
     await assert.rejects(updateGuildConfig(client, guildA, { prefix: '#' }), (error) => error.type === DATABASE);
     fault = null;
     // Database answers again: the next call recovers by itself.
-    assert.equal((await getGuildConfig(client, guildA)).prefix, '!');
+    assert.equal((await uncachedGuildConfig(guildA)).prefix, '!');
     assert.equal(pgDb.isAvailable(), true);
 });
 

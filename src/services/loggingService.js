@@ -4,6 +4,7 @@ import { ChannelType } from 'discord.js';
 import { getGuildConfig } from './config/guildConfig.js';
 import { updateGuildConfigAtomic } from '../utils/database/guildConfigStorage.js';
 import { logger } from '../utils/logger.js';
+import { BoundedMap } from '../utils/boundedMap.js';
 import {
   appendContentSection,
   buildLogDescription,
@@ -317,6 +318,49 @@ function getLogChannelForEvent(config, eventType, overrideChannelId = null) {
   return resolveLogChannel(config, destination);
 }
 
+// 403 backoff (B5): a log channel Mewvo can't see or post in is skipped for a while instead of
+// being tried (and warned about) on every event. Discord bans an IP for a time after 10,000
+// invalid (401/403/429) requests in 10 minutes. Per channel, in memory, bounded.
+export const LOG_CHANNEL_BACKOFF_MS = 10 * 60 * 1000;
+const MISSING_ACCESS = 50001;
+const MISSING_PERMISSIONS = 50013;
+const logChannelBackoff = new BoundedMap(5000); // channelId → { until, reason }
+
+/** True while posts to this log channel are paused after a refusal. */
+export function isLogChannelBackedOff(channelId, now = Date.now()) {
+  const entry = logChannelBackoff.get(String(channelId));
+  if (!entry) return false;
+  if (entry.until > now) return true;
+  logChannelBackoff.delete(String(channelId));
+  return false;
+}
+
+function backOffLogChannel(guildId, channelId, reason, now = Date.now()) {
+  logChannelBackoff.set(String(channelId), { until: now + LOG_CHANNEL_BACKOFF_MS, reason });
+  logger.warn(`logEvent: ${reason} for log channel ${channelId} in guild ${guildId}; pausing posts there for ${LOG_CHANNEL_BACKOFF_MS / 60000} min`);
+}
+
+const permissionWarnedAt = new BoundedMap(5000); // channelId → last warn (ms)
+function warnThrottled(channelId, message, now = Date.now()) {
+  const last = permissionWarnedAt.get(String(channelId));
+  if (last && now - last < LOG_CHANNEL_BACKOFF_MS) return;
+  permissionWarnedAt.set(String(channelId), now);
+  logger.warn(message);
+}
+
+/** A Discord refusal that counts as an invalid request (401/403, Missing Access/Permissions). */
+export function isForbiddenError(error) {
+  const status = Number(error?.status);
+  const code = Number(error?.code);
+  return status === 401 || status === 403 || code === MISSING_ACCESS || code === MISSING_PERMISSIONS;
+}
+
+/** Tests only. */
+export function resetLogChannelBackoff() {
+  logChannelBackoff.clear();
+  permissionWarnedAt.clear();
+}
+
 export async function logEvent({
   client,
   guildId,
@@ -356,18 +400,23 @@ export async function logEvent({
       return null;
     }
 
+    if (isLogChannelBackedOff(logChannelId)) {
+      return null;
+    }
+
     const channel = guild.channels.cache.get(logChannelId) ||
       await guild.channels.fetch(logChannelId).catch(() => null);
 
     // Text and announcement channels (the dashboard and /logging channel allow both).
     if (!channel || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
-      logger.warn(`logEvent: Invalid log channel ${logChannelId} for guild ${guildId}`);
+      backOffLogChannel(guildId, logChannelId, 'missing or not a text channel');
       return null;
     }
 
     const permissions = channel.permissionsFor(guild.members.me);
-    if (!permissions || !permissions.has(['SendMessages', 'EmbedLinks'])) {
-      logger.warn(`logEvent: Missing permissions in channel ${logChannelId}`);
+    if (!permissions || !permissions.has(['ViewChannel', 'SendMessages', 'EmbedLinks'])) {
+      // Checked locally (no request), so no pause: a fix works on the next event. Warned once per pause period.
+      warnThrottled(logChannelId, `logEvent: Missing permissions in channel ${logChannelId} for guild ${guildId}`);
       return null;
     }
 
@@ -381,8 +430,15 @@ export async function logEvent({
       messageOptions.files = attachments;
     }
 
-    const sent = await channel.send(messageOptions);
-    logger.info(`Event logged: ${eventType} in guild ${guildId}`);
+    let sent;
+    try {
+      sent = await channel.send(messageOptions);
+    } catch (error) {
+      if (!isForbiddenError(error)) throw error;
+      backOffLogChannel(guildId, logChannelId, `Discord refused the post (${error.code || error.status})`);
+      return null;
+    }
+    logger.debug(`Event logged: ${eventType} in guild ${guildId}`);
     return sent;
   } catch (error) {
     logger.error('Error in logEvent:', error);
@@ -531,6 +587,8 @@ export async function setLogChannel(client, guildId, destination, channelId) {
       }
       return { ...config, logging };
     });
+    // A newly chosen channel is tried right away, even if it was paused after a refusal.
+    if (channelId) logChannelBackoff.delete(String(channelId));
     return true;
   } catch (error) {
     logger.error('Error setting log channel:', error);
