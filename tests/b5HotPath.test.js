@@ -277,13 +277,52 @@ test('logEvent: a refused log channel is paused, not retried on every event', as
     const guild = { id: guildId, name: 'G', iconURL: () => null, channels: { cache: new Map([[channelId, channel]]) }, members: { me: {} } };
     const client = { db: countingStore({ [`guild:${guildId}:config`]: { logging: { enabled: true, channels: { audit: channelId } } } }), guilds: { cache: new Map([[guildId, guild]]) } };
     assert.equal(await logEvent({ client, guildId, eventType: 'moderation.ban', data: { title: 'x' } }), null);
-    assert.equal(isLogChannelBackedOff(channelId), true);
+    assert.equal(isLogChannelBackedOff(guildId, channelId), true);
     await logEvent({ client, guildId, eventType: 'moderation.ban', data: { title: 'y' } });
     assert.equal(sends, 1, 'no second request while paused');
-    assert.equal(isLogChannelBackedOff(channelId, Date.now() + 11 * 60 * 1000), false, 'the pause ends');
+    assert.equal(isLogChannelBackedOff(guildId, channelId, Date.now() + 11 * 60 * 1000), false, 'the pause ends');
+    assert.equal(isLogChannelBackedOff(nextGuild(), channelId), false, 'the pause is per server');
     assert.equal(isForbiddenError({ code: 50013 }), true);
     assert.equal(isForbiddenError({ status: 500 }), false);
     resetLogChannelBackoff();
+});
+
+test('logEvent: a server pointing its log at another server\'s channel never pauses that server\'s logs', async () => {
+    resetLogChannelBackoff();
+    const victim = nextGuild();
+    const attacker = nextGuild();
+    const channelId = '92000000000000002';
+    let sends = 0;
+    const channel = {
+        id: channelId, type: 0, guildId: victim,
+        permissionsFor: () => ({ has: () => true }),
+        send: async () => { sends += 1; return { id: 'm' }; },
+    };
+    const victimGuild = { id: victim, name: 'V', iconURL: () => null, channels: { cache: new Map([[channelId, channel]]) }, members: { me: {} } };
+    // The attacker's guild resolves the foreign id (as a REST fetch would) but it belongs to the victim.
+    const attackerGuild = { id: attacker, name: 'A', iconURL: () => null, channels: { cache: new Map([[channelId, channel]]) }, members: { me: {} } };
+    const client = {
+        db: countingStore({
+            [`guild:${victim}:config`]: { logging: { enabled: true, channels: { audit: channelId } } },
+            [`guild:${attacker}:config`]: { logging: { enabled: true, channels: { audit: channelId } } },
+        }),
+        guilds: { cache: new Map([[victim, victimGuild], [attacker, attackerGuild]]) },
+    };
+    assert.equal(await logEvent({ client, guildId: attacker, eventType: 'moderation.ban', data: { title: 'x' } }), null, 'a foreign channel is refused');
+    assert.equal(sends, 0, 'nothing posted into another server');
+    assert.equal(isLogChannelBackedOff(victim, channelId), false);
+    assert.ok(await logEvent({ client, guildId: victim, eventType: 'moderation.ban', data: { title: 'y' } }), 'the owner server still logs');
+    assert.equal(sends, 1);
+    resetLogChannelBackoff();
+});
+
+test('every src/events file parses and loads (a syntax error must fail the suite)', async () => {
+    const { readdirSync } = await import('node:fs');
+    const dir = new URL('../src/events/', import.meta.url);
+    for (const file of readdirSync(dir).filter((f) => f.endsWith('.js'))) {
+        const mod = await import(new URL(file, dir).href);
+        assert.ok(mod, file);
+    }
 });
 
 // ── client cache limits ───────────────────────────────────────────────────────

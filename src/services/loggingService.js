@@ -324,27 +324,32 @@ function getLogChannelForEvent(config, eventType, overrideChannelId = null) {
 export const LOG_CHANNEL_BACKOFF_MS = 10 * 60 * 1000;
 const MISSING_ACCESS = 50001;
 const MISSING_PERMISSIONS = 50013;
-const logChannelBackoff = new BoundedMap(5000); // channelId → { until, reason }
+// Keyed by server AND channel: a server that points its log at another server's channel id must not
+// pause that other server's logs (security review, B5).
+const logChannelBackoff = new BoundedMap(5000); // `${guildId}:${channelId}` → { until, reason }
+const backoffKey = (guildId, channelId) => `${guildId}:${channelId}`;
 
 /** True while posts to this log channel are paused after a refusal. */
-export function isLogChannelBackedOff(channelId, now = Date.now()) {
-  const entry = logChannelBackoff.get(String(channelId));
+export function isLogChannelBackedOff(guildId, channelId, now = Date.now()) {
+  const key = backoffKey(guildId, channelId);
+  const entry = logChannelBackoff.get(key);
   if (!entry) return false;
   if (entry.until > now) return true;
-  logChannelBackoff.delete(String(channelId));
+  logChannelBackoff.delete(key);
   return false;
 }
 
 function backOffLogChannel(guildId, channelId, reason, now = Date.now()) {
-  logChannelBackoff.set(String(channelId), { until: now + LOG_CHANNEL_BACKOFF_MS, reason });
+  logChannelBackoff.set(backoffKey(guildId, channelId), { until: now + LOG_CHANNEL_BACKOFF_MS, reason });
   logger.warn(`logEvent: ${reason} for log channel ${channelId} in guild ${guildId}; pausing posts there for ${LOG_CHANNEL_BACKOFF_MS / 60000} min`);
 }
 
-const permissionWarnedAt = new BoundedMap(5000); // channelId → last warn (ms)
-function warnThrottled(channelId, message, now = Date.now()) {
-  const last = permissionWarnedAt.get(String(channelId));
+const permissionWarnedAt = new BoundedMap(5000); // `${guildId}:${channelId}` → last warn (ms)
+function warnThrottled(guildId, channelId, message, now = Date.now()) {
+  const key = backoffKey(guildId, channelId);
+  const last = permissionWarnedAt.get(key);
   if (last && now - last < LOG_CHANNEL_BACKOFF_MS) return;
-  permissionWarnedAt.set(String(channelId), now);
+  permissionWarnedAt.set(key, now);
   logger.warn(message);
 }
 
@@ -400,15 +405,16 @@ export async function logEvent({
       return null;
     }
 
-    if (isLogChannelBackedOff(logChannelId)) {
+    if (isLogChannelBackedOff(guildId, logChannelId)) {
       return null;
     }
 
     const channel = guild.channels.cache.get(logChannelId) ||
       await guild.channels.fetch(logChannelId).catch(() => null);
 
-    // Text and announcement channels (the dashboard and /logging channel allow both).
-    if (!channel || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
+    // Text and announcement channels (the dashboard and /logging channel allow both), and only
+    // channels of this server (a foreign channel id is a misconfiguration of this server only).
+    if (!channel || (channel.guildId && String(channel.guildId) !== String(guildId)) || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
       backOffLogChannel(guildId, logChannelId, 'missing or not a text channel');
       return null;
     }
@@ -416,7 +422,7 @@ export async function logEvent({
     const permissions = channel.permissionsFor(guild.members.me);
     if (!permissions || !permissions.has(['ViewChannel', 'SendMessages', 'EmbedLinks'])) {
       // Checked locally (no request), so no pause: a fix works on the next event. Warned once per pause period.
-      warnThrottled(logChannelId, `logEvent: Missing permissions in channel ${logChannelId} for guild ${guildId}`);
+      warnThrottled(guildId, logChannelId, `logEvent: Missing permissions in channel ${logChannelId} for guild ${guildId}`);
       return null;
     }
 
