@@ -21,7 +21,7 @@ const {
 } = await import('../src/services/settings/guildSettings.js');
 const { validateSetting } = await import('../src/services/settings/settingsRegistry.js');
 const {
-    appealDeniedDm, appealInvite, banDm, banEndedDm, kickDm, muteDm, warnDm,
+    appealAcceptedDm, appealDeniedDm, appealInvite, banDm, banEndedDm, kickDm, muteDm, warnDm,
 } = await import('../src/services/enforcement/dmTemplates.js');
 const { successRedirectFor } = await import('../src/services/oauthVerification.js');
 const { readServerRules, ruleForReason, ruleLineFor } = await import('../src/services/rules/serverRules.js');
@@ -131,6 +131,36 @@ test('DM invite, other server whose settings were never read (database down at b
     assert.equal(appealInvite(OTHER), null);
     const dm = muteDm(caseOf(OTHER));
     assert.ok(dm.includes('Case code: abc2345') && !dm.includes('discord.gg'), dm);
+});
+
+test('appeal accepted DM: another server names itself and the case; without an invite never Mewvo Support', () => {
+    const named = (extra = {}) => ({ rec: caseOf(OTHER), guildId: OTHER, serverName: 'Cat Café', ...extra });
+    // appealsHome mewvo (default): no invite named at all; ask that server's staff.
+    for (const row of [{}, { appealsHome: 'mewvo', appealsInvite: OWN_INVITE }]) {
+        setSettingsCacheForTests(OTHER, row);
+        const dm = appealAcceptedDm('Admin', null, named());
+        assert.ok(dm.includes('**Appeal accepted in Cat Café**'), dm);
+        assert.ok(dm.includes('Case code: abc2345'), dm);
+        assert.ok(dm.includes('Rejoin: ask a staff member for an invite'), dm);
+        assert.ok(!dm.includes('support server') && !dm.includes(MEWVO_SUPPORT()) && !dm.includes('discord.gg'), dm);
+    }
+    // Its own invite when it set one.
+    setSettingsCacheForTests(OTHER, { appealsHome: 'own', appealsInvite: OWN_INVITE });
+    const own = appealAcceptedDm('Admin', null, named());
+    assert.ok(own.includes(OWN_INVITE) && !own.includes(MEWVO_SUPPORT()), own);
+    // A fresh rejoin invite always wins.
+    const fresh = appealAcceptedDm('Admin', 'https://discord.gg/fresh1', named());
+    assert.ok(fresh.includes('Rejoin: https://discord.gg/fresh1') && !fresh.includes(OWN_INVITE), fresh);
+    // Translated: same rule, placeholders filled.
+    setSettingsCacheForTests(OTHER, {});
+    for (const lang of ['de', 'es', 'fr', 'it', 'pl', 'pt-BR', 'ru']) {
+        const dm = appealAcceptedDm('Admin', null, named({ lang }));
+        assert.ok(dm.includes('Cat Café') && dm.includes('abc2345') && !dm.includes('{') && !dm.includes('discord.gg'), `${lang}: ${dm}`);
+    }
+    // Home servers (and no case named): unchanged.
+    const home = appealAcceptedDm('Admin', null, { rec: caseOf(MAIN), guildId: MAIN });
+    assert.equal(home, appealAcceptedDm('Admin', null));
+    assert.ok(home.startsWith('**Appeal accepted**\n') && home.includes('support server'), home);
 });
 
 // ── OAuth verification redirect (the leak at oauthVerification.js:32 / :244) ─

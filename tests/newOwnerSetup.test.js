@@ -153,6 +153,32 @@ test('post failures: counted per day, bounded, cleared by a working post, newest
     failures.resetPostFailures();
 });
 
+test('post failures: the cap is per server; other servers never push the main server\'s entries out', () => {
+    failures.resetPostFailures();
+    const day = Date.UTC(2026, 10, 7, 10);
+    failures.recordPostFailure({ guildId: MAIN, purpose: 'modlog', channelId: 'c1', reason: 'perms', now: day });
+    // One noisy server and many servers failing after the main server's entry.
+    for (let i = 0; i < failures.MAX_ENTRIES * 3; i += 1) {
+        failures.recordPostFailure({ guildId: 'noisy', purpose: 'modlog', channelId: `n${i}`, reason: 'missing', now: day + 1 + i });
+    }
+    assert.equal(failures.listPostFailures('noisy', day + 999).length, failures.MAX_ENTRIES, 'a server is capped on its own');
+    assert.equal(failures.listPostFailures(MAIN, day + 999).length, 1, 'the main server keeps its entry');
+    for (let i = 0; i < failures.MAX_GUILDS - 3; i += 1) {
+        failures.recordPostFailure({ guildId: `g${i}`, purpose: 'alerts', reason: 'notSet', now: day + 500 });
+    }
+    assert.equal(failures.listPostFailures(MAIN, day + 999).length, 1, 'still there below the server cap');
+    for (let i = 0; i < 10; i += 1) failures.recordPostFailure({ guildId: `h${i}`, purpose: 'alerts', reason: 'notSet', now: day + 600 });
+    const sizes = failures.postFailureSizes();
+    assert.equal(sizes.guilds, failures.MAX_GUILDS, 'bounded number of servers');
+    assert.ok(sizes.entries <= failures.MAX_GUILDS * failures.MAX_ENTRIES);
+    assert.equal(failures.listPostFailures(MAIN, day + 999).length, 1, 'the main server is never the one dropped');
+    assert.deepEqual(failures.listPostFailures('noisy', day + 999), [], 'the least recently failed other server went first');
+    failures.recordPostFailure({ guildId: 'noisy', purpose: 'modlog', channelId: 'n0', reason: 'missing', now: day + 700 });
+    failures.clearPostFailures('noisy', 'modlog');
+    assert.deepEqual(failures.listPostFailures('noisy', day + 999), []);
+    failures.resetPostFailures();
+});
+
 test('a refused send names the missing permissions; other errors are "refused"', () => {
     failures.resetPostFailures();
     const now = Date.UTC(2026, 10, 7, 12);

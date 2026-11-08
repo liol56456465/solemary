@@ -206,26 +206,36 @@ async function modmailRefusal(client, guild, userId) {
  * is set up there and the member is not blocked there. Main server first, then by name.
  * Returns { servers: [guild], blockedSomewhere }. A server whose settings or config could not be
  * read is skipped (logged), never guessed. `getConfig` is for tests.
+ *
+ * Cost: the modmail setup is checked first (settings cache / DB, no Discord API call), so the
+ * member is only fetched from Discord for servers that take modmail. Servers where the member is
+ * already cached are taken first; the rest are fetched one by one.
  */
 export async function modmailServersFor(client, userId, { getConfig = getGuildConfig } = {}) {
-    const servers = [];
-    let blockedSomewhere = false;
+    const candidates = [];
     for (const guild of client.guilds.cache.values()) {
         if (blacklistHit({ guildId: guild.id })) continue;
         if (isHomeGuild(guild.id) && !isMainGuild(guild.id)) continue; // the Support server has no modmail
-        const member = guild.members.cache.get(userId) || await guild.members.fetch(userId).catch(() => null);
-        if (!member) continue;
         try {
             const config = await getConfig(client, guild.id);
             if (!isModmailSetUp(guild, config)) continue;
-            if (Array.isArray(config?.modmailBlocked) && config.modmailBlocked.includes(userId)) {
-                blockedSomewhere = true;
-                continue;
-            }
-            servers.push(guild);
+            const blocked = Array.isArray(config?.modmailBlocked) && config.modmailBlocked.includes(userId);
+            candidates.push({ guild, blocked, cached: guild.members.cache.has(userId) });
         } catch (error) {
             logger.warn(`Modmail: server ${guild.id} skipped for ${userId} (${error.message})`);
         }
+    }
+    candidates.sort((a, b) => Number(b.cached) - Number(a.cached));
+    const servers = [];
+    let blockedSomewhere = false;
+    for (const { guild, blocked, cached } of candidates) {
+        const member = cached || await guild.members.fetch(userId).catch(() => null);
+        if (!member) continue;
+        if (blocked) {
+            blockedSomewhere = true;
+            continue;
+        }
+        servers.push(guild);
     }
     servers.sort((a, b) => (isMainGuild(b.id) - isMainGuild(a.id)) || String(a.name).localeCompare(String(b.name)));
     return { servers, blockedSomewhere };

@@ -31,6 +31,7 @@
         },
         "appealAccepted": {
             "title": "**Odwołanie przyjęte**",
+            "titleIn": "**Odwołanie przyjęte na {server}**",
             "noInvite": "Poproś kogoś z ekipy na serwerze pomocy o zaproszenie z powrotem."
         },
         "appealDenied": "**Odwołanie odrzucone.** Jeśli uważasz, że to pomyłka, odwołaj się ponownie tutaj:\n{invite}",

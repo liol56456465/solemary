@@ -930,7 +930,7 @@ export async function askTicketDeleteConfirm(btnInteraction, { timeoutMs = TICKE
         return { outcome: 'cancel', interaction: click };
     }
     if (!canDelete(click)) {
-        await done('Not allowed', `${getAdminRequiredMessage()}\nNothing was deleted.`);
+        await done('Not allowed', `${getAdminRequiredMessage(click.guildId)}\nNothing was deleted.`);
         return { outcome: 'denied', interaction: click };
     }
     return { outcome: 'confirm', interaction: click };

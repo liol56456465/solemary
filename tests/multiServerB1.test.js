@@ -320,6 +320,27 @@ test('modmail: servers to choose from: shared, set up, not blocked; never the Su
     assert.equal(blockedSomewhere, true);
 });
 
+test('modmail: servers without modmail (and the Support server) are never asked for the member; cached members need no fetch', async () => {
+    for (const id of [OTHER, OTHER_2, OTHER_3]) setSettingsCacheForTests(id, {});
+    const fetches = [];
+    const counted = (guild) => {
+        const fetch = guild.members.fetch;
+        guild.members.fetch = async (...args) => { fetches.push(guild.id); return fetch(...args); };
+        return guild;
+    };
+    const cachedHere = mmGuild(OTHER_2, 'Alpha', { category: true });
+    cachedHere.members.cache.set('500000000000000004', { id: '500000000000000004' });
+    const client = mmClient([
+        counted(mmGuild(SUPPORT, 'Mewvo Support')),
+        counted(mmGuild(OTHER, 'Zeta', { category: true })),
+        counted(cachedHere),
+        counted(mmGuild(OTHER_3, 'No category')),
+    ]);
+    const { servers } = await modmail.modmailServersFor(client, '500000000000000004', { getConfig: configFor() });
+    assert.deepEqual(servers.map((g) => g.id), [OTHER_2, OTHER]);
+    assert.deepEqual(fetches, [OTHER], 'only the set-up server without a cached member was fetched');
+});
+
 test('modmail prompt: none → a clear message; one → straight to that server; several → "Which server?" menu (max 25)', () => {
     const none = modmail.modmailPromptPayload([], '300000000000000001');
     assert.equal(none.content, modmail.NO_MODMAIL_SERVER);
@@ -459,7 +480,7 @@ test('appeal panel: the refusal text no longer says "Mewvo servers" to other ser
     assert.match(wrongPlaceMessage('main', 'report'), /support server/);
 });
 
-test('staff activity: staff messages are counted per server, in every server', async () => {
+test('staff activity: staff messages are counted per server, only in Mewvo\'s servers (the only ones with a report)', async () => {
     const { noteStaffMessage, flushStaffMessages } = await import('../src/services/staffActivityService.js');
     const staffMessage = (guildId) => ({
         guildId, author: { id: MODERATOR },
@@ -471,7 +492,7 @@ test('staff activity: staff messages are counted per server, in every server', a
     await withPool(() => [], async (queries) => {
         await flushStaffMessages();
         const servers = queries.filter((q) => /staff_activity/i.test(q.sql)).map((q) => q.params[0]).sort();
-        assert.deepEqual(servers, [MAIN, OTHER].sort());
+        assert.deepEqual(servers, [MAIN], 'another server gets no weekly report yet: its messages are not stored');
     });
 });
 

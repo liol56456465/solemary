@@ -208,13 +208,39 @@ function warnDmText(rec, warnNumber, { lang, guildId, serverName: name } = {}) {
     ], tr);
 }
 
-function appealAcceptedDmText(adminUsername, inviteUrl, { lang } = {}) {
+/**
+ * The "no rejoin invite" line for another (non-home) server: its own invite when it set one
+ * (appealsHome 'own'), else "ask a staff member". Mewvo's Support can only invite people back into
+ * Mewvo's own servers, so it is never named here. Shared by banEnded and appealAccepted.
+ */
+function otherServerNoInviteLine(tr, gid) {
+    const own = appealInvite(gid);
+    return own && own !== enforcementConfig.supportServerInvite
+        ? tr.t('enforcement.dm.banEnded.noInvite', { invite: own })
+        : tr.t('enforcement.dm.kick.noInvite');
+}
+
+/**
+ * `rec` (optional): the accepted case. Home servers (or no case named): unchanged. Any other
+ * server: names the server and the case code, and without a rejoin invite follows the banEnded
+ * rule (that server's own invite, or "ask a staff member"), never Mewvo's Support.
+ */
+function appealAcceptedDmText(adminUsername, inviteUrl, { lang, rec = null, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
+    const gid = guildOf(rec, guildId);
+    if (!gid || isHomeGuild(gid)) {
+        return withPrivacyLine([
+            tr.t('enforcement.dm.appealAccepted.title'),
+            tr.t('enforcement.dm.by', { name: adminUsername }),
+            inviteUrl || tr.t('enforcement.dm.appealAccepted.noInvite'),
+        ].join('\n'), process.env, { lang: tr.lang });
+    }
     return withPrivacyLine([
-        tr.t('enforcement.dm.appealAccepted.title'),
+        tr.t('enforcement.dm.appealAccepted.titleIn', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
         tr.t('enforcement.dm.by', { name: adminUsername }),
-        inviteUrl || tr.t('enforcement.dm.appealAccepted.noInvite'),
-    ].join('\n'), process.env, { lang: tr.lang });
+        rec?.case_code ? tr.t('enforcement.dm.caseCode', { code: rec.case_code }) : null,
+        inviteUrl ? tr.t('enforcement.dm.rejoin', { invite: inviteUrl }) : otherServerNoInviteLine(tr, gid),
+    ].filter(Boolean).join('\n'), process.env, { lang: tr.lang });
 }
 
 /** `guildId`: the server of the denied appeal's case (none named: Mewvo's Support invite, as before). */
@@ -234,14 +260,15 @@ function banEndedDmText(rec, inviteUrl, { early = false, lang, guildId, serverNa
     // "Ask for an invite in the support server": Mewvo's Support can only invite people back into
     // Mewvo's own servers, so another server names only its own invite here (else: ask staff).
     const gid = guildOf(rec, guildId);
-    const ownServerInvite = gid && !isHomeGuild(gid) && appealInvite(gid) !== enforcementConfig.supportServerInvite;
-    const appealUrl = inviteUrl ? null : (!gid || isHomeGuild(gid) || ownServerInvite ? appealInvite(gid) : null);
+    const home = !gid || isHomeGuild(gid);
+    const homeUrl = home && !inviteUrl ? appealInvite(gid) : null;
     return withPrivacyLine([
         tr.t('enforcement.dm.banEnded.title', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
         early ? tr.t('enforcement.dm.banEnded.early') : tr.t('enforcement.dm.banEnded.expired'),
         rec?.case_code ? tr.t('enforcement.dm.caseCode', { code: rec.case_code }) : null,
         inviteUrl ? tr.t('enforcement.dm.rejoin', { invite: inviteUrl })
-            : appealUrl ? tr.t('enforcement.dm.banEnded.noInvite', { invite: appealUrl }) : tr.t('enforcement.dm.kick.noInvite'),
+            : !home ? otherServerNoInviteLine(tr, gid)
+                : homeUrl ? tr.t('enforcement.dm.banEnded.noInvite', { invite: homeUrl }) : tr.t('enforcement.dm.kick.noInvite'),
     ].filter(Boolean).join('\n'), process.env, { lang: tr.lang });
 }
 

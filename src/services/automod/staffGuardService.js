@@ -28,6 +28,7 @@ import { query, T } from '../enforcement/db.js';
 import { postModLog } from '../enforcement/enforcementService.js';
 import { dateStamp } from '../enforcement/format.js';
 import { postAlert, showDiffRow } from './alertPost.js';
+import { isMewvoServer } from '../../utils/ownerPower.js';
 
 const STAFF_ROLE_PERMISSIONS = [
     PermissionFlagsBits.Administrator,
@@ -147,8 +148,17 @@ export async function listRemovedStaffRoles(guildId) {
     return out.sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')));
 }
 
-/** `nuke`: the alert gets a "Show diff" button (snapshot vs now, for /backup revert). */
+/**
+ * "Show what changed" + the /backup revert hint: structure snapshots and /backup exist only for
+ * Mewvo's own servers, so other servers' alerts get neither (multi-server B1).
+ */
+function diffComponents(guild) {
+    return isMewvoServer(guild.id) ? [showDiffRow()] : [];
+}
+
+/** `nuke`: in Mewvo's servers the alert gets a "Show diff" button (snapshot vs now, for /backup revert). */
 async function demote(guild, member, why, { nuke = false } = {}) {
+    const withDiff = nuke && isMewvoServer(guild.id);
     const { removed, kept } = await stripStaffRoles(member, `Staff guard: ${why}`);
     const summary = [
         `**Staff member:** ${member.user.username} (\`${member.id}\`)`,
@@ -162,16 +172,16 @@ async function demote(guild, member, why, { nuke = false } = {}) {
         { name: 'Why', value: why },
         { name: 'Removed roles', value: removed.map((role) => role.name).join(', ') || 'none' },
         ...(kept.length ? [{ name: 'Could not remove (above my role)', value: kept.map((role) => role.name).join(', ') }] : []),
-        { name: 'Restore', value: nuke ? '`/staff restore` · damage: **Show what changed**, then `/backup revert`' : '`/staff restore`' },
+        { name: 'Restore', value: withDiff ? '`/staff restore` · damage: **Show what changed**, then `/backup revert`' : '`/staff restore`' },
     ];
-    if (nuke) await postAlert(guild.client, 'staff', { guildId: guild.id, title: 'Staff roles removed', fields, components: [showDiffRow()] });
+    if (nuke) await postAlert(guild.client, 'staff', { guildId: guild.id, title: 'Staff roles removed', fields, components: diffComponents(guild) });
     else await postModLog(guild.client, 'staff', fields, { guildId: guild.id, title: 'Staff roles removed' });
     await alertOwner(guild, `**Staff guard in ${guild.name}**\n${summary}`);
     logger.warn(`Staff guard removed roles from ${member.id}: ${why}`);
 }
 
 async function alertNuke(guild, title, fields) {
-    await postAlert(guild.client, 'staff', { guildId: guild.id, title, fields, components: [showDiffRow()] });
+    await postAlert(guild.client, 'staff', { guildId: guild.id, title, fields, components: diffComponents(guild) });
     await alertOwner(guild, `**${title} in ${guild.name}**\n${fields.map((f) => `**${f.name}:** ${f.value}`).join('\n')}`);
 }
 

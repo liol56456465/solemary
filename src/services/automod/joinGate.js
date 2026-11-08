@@ -134,10 +134,16 @@ function gateLine(member, hits, outcome) {
     return `**Join gate** · <@${member.id}> ${member.user.username} (\`${member.id}\`) · ${outcome} · ${hits.map((hit) => hit.reason).join('; ')}`;
 }
 
-export function gateButtons(userId) {
+/**
+ * Kick / Dismiss for a flag line: joingate:<decision>:<userId>:<guildId>. The guild id is the
+ * joiner's server, which can differ from the server the line is posted in (a support joiner's line
+ * is in the main server's review channel); the button acts there (reviewCards.actingGuild).
+ */
+export function gateButtons(userId, guildId) {
+    const suffix = guildId ? `:${guildId}` : '';
     return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`joingate:kick:${userId}`).setLabel('Kick').setStyle(ButtonStyle.Danger),
-        new ButtonBuilder().setCustomId(`joingate:dismiss:${userId}`).setLabel('Dismiss').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`joingate:kick:${userId}${suffix}`).setLabel('Kick').setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId(`joingate:dismiss:${userId}${suffix}`).setLabel('Dismiss').setStyle(ButtonStyle.Secondary),
     );
 }
 
@@ -149,7 +155,7 @@ async function postGateLine(member, hits, outcome, color, withButtons) {
     }
     return channel.send({
         embeds: [createEmbed({ description: gateLine(member, hits, outcome), color })],
-        components: withButtons ? [gateButtons(member.id)] : [],
+        components: withButtons ? [gateButtons(member.id, member.guild.id)] : [],
         allowedMentions: { parse: [] },
     }).catch((error) => {
         logger.warn(`Join gate line failed: ${error.message}`);

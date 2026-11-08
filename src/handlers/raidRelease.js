@@ -1,5 +1,7 @@
 // raidRelease.js — "Release non-offenders" on a raid incident report (raidrelease:<incidentId>).
-// Administrators of the incident's own server only; works once per incident.
+// Administrators of the incident's own server; works once per incident. The home pair is one staff:
+// a support-server raid's report sits in the main server's alerts channel, so a main-server click
+// releases in the support server (reviewCards.actingGuild: Administrator there too).
 // For every raid joiner with no case since the raid began: the automod extra-watch period is ended
 // and an open join-gate flag line is closed as released. The result is posted to the
 // alerts channel and the button is disabled.
@@ -12,6 +14,8 @@ import { logger } from '../utils/logger.js';
 import { isAdministrator, postModLog } from '../services/enforcement/enforcementService.js';
 import { endProbation } from '../services/automod/probationService.js';
 import { clearGateFlag, closeGateLine, getGateFlag } from '../services/automod/joinGate.js';
+import { actingGuild } from '../services/automod/reviewCards.js';
+import { staffGuildId } from '../services/automod/channelRouting.js';
 import {
     casesAgainst, claimRelease, formatReleaseResult, getIncident, releaseRow, saveReleaseResult, splitOffenders,
 } from '../services/automod/raidIncidentService.js';
@@ -19,7 +23,9 @@ import {
 async function closeFlag(guild, userId, by) {
     const flag = await getGateFlag(guild.id, userId);
     if (!flag) return false;
-    const channel = guild.channels.cache.get(flag.channelId) || await guild.channels.fetch(flag.channelId).catch(() => null);
+    // The flag line is in the staff server's review channel (the main server for a support joiner).
+    const lineGuild = guild.client?.guilds?.cache?.get(staffGuildId(guild.id)) || guild;
+    const channel = lineGuild.channels.cache.get(flag.channelId) || await lineGuild.channels.fetch(flag.channelId).catch(() => null);
     const message = channel?.isTextBased?.() ? await channel.messages.fetch(flag.messageId).catch(() => null) : null;
     if (message) await closeGateLine(message, `released by ${by} (raid joiner, no offence)`);
     await clearGateFlag(guild.id, userId);
@@ -36,8 +42,15 @@ export async function handleRaidRelease(interaction, client, args) {
     await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
 
     const incident = await getIncident(id);
-    if (!incident || incident.guild_id !== interaction.guildId) {
+    if (!incident) {
         return InteractionHelper.safeEditReply(interaction, { content: 'That incident is not stored any more.' });
+    }
+    // This server's own incident, or (home pair) the other home server's, with Administrator there.
+    let guild;
+    try {
+        ({ guild } = await actingGuild(interaction, incident.guild_id));
+    } catch (error) {
+        return InteractionHelper.safeEditReply(interaction, { content: error.userMessage || 'That incident belongs to another server.' });
     }
     const claimed = await claimRelease(id, interaction.user.id);
     if (!claimed) {
@@ -45,7 +58,6 @@ export async function handleRaidRelease(interaction, client, args) {
         return InteractionHelper.safeEditReply(interaction, { content: `Already released${incident.released_by ? ` by <@${incident.released_by}>` : ''}.` });
     }
 
-    const guild = interaction.guild;
     const joiners = claimed.joiner_ids || [];
     const cases = await casesAgainst(guild.id, joiners, claimed.started_at);
     const { offenders, clean } = splitOffenders(joiners, cases);

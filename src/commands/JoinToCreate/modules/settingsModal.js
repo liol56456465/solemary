@@ -120,7 +120,7 @@ export async function handleSettingsModalSubmit(interaction, client, { mutate = 
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (!parsed || !interaction.guild) return answer('This form is not valid any more. Run /jointocreate config again.');
     if (parsed.expiresAt < now) return answer('This form expired. Run /jointocreate config again.');
-    if (!canConfigure(interaction)) return answer(getAdminRequiredMessage());
+    if (!canConfigure(interaction)) return answer(getAdminRequiredMessage(interaction.guildId));
     const result = parseSettingValue(parsed.kind, interaction.fields.getTextInputValue('value'));
     if (result.error) return answer(`${result.error} Nothing was changed.`);
     try {

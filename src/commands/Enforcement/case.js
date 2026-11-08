@@ -116,7 +116,7 @@ async function handleEvidence(interaction, client, sub, code) {
         }
 
         const fresh = await resolveImageUrls(client, added);
-        const lines = evidenceLines(added, fresh, { excerptMax: 300 });
+        const lines = evidenceLines(added, fresh, { excerptMax: 300, caseGuildId: record.guild_id });
         if (linkEntry?.sourceMessageUrl && !linkEntry.excerpt) {
             lines.push('-# The message could not be read (other server, no access, or deleted), so only the link is saved.');
         }
@@ -133,7 +133,7 @@ async function handleEvidence(interaction, client, sub, code) {
             embeds: [createEmbed({
                 title: truncate(`Evidence: ${record.case_code} (${record.name})`, 256),
                 description: rows.length
-                    ? fitLines(evidenceLines(rows, fresh, { excerptMax: 300 }), 4096)
+                    ? fitLines(evidenceLines(rows, fresh, { excerptMax: 300, caseGuildId: record.guild_id }), 4096)
                     : 'No evidence yet. Add some with `/case evidence add`.',
                 image: firstImage ? fresh.get(String(firstImage.id)) : null,
                 footer: { text: `${record.type} on ${record.target_username} by ${record.moderator_username}` },

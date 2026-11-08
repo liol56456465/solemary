@@ -10,7 +10,6 @@
 //
 // addEvidence() is the single write path; automod can call it directly later.
 
-import { enforcementConfig } from '../../config/enforcement.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
 import { query, T } from './db.js';
@@ -73,8 +72,9 @@ export function messageExcerpt(message) {
     return truncate(`${author}: ${parts.join(' ') || '(no text)'}`, EXCERPT_MAX);
 }
 
-function jumpLink(channelId, messageId, guildId = enforcementConfig.mainGuildId) {
-    return `https://discord.com/channels/${guildId}/${channelId}/${messageId}`;
+/** A message link, or null when the server is unknown (never guessed as the main server). */
+function jumpLink(channelId, messageId, guildId) {
+    return guildId ? `https://discord.com/channels/${guildId}/${channelId}/${messageId}` : null;
 }
 
 function quote(text, max) {
@@ -85,13 +85,19 @@ function quote(text, max) {
  * Display lines for evidence rows. `freshUrls` maps row id → a current attachment
  * URL for images (see resolveImageUrls); without one the stored message is linked.
  */
-export function evidenceLines(rows, freshUrls = new Map(), { excerptMax = 160, guildIdOf = () => null } = {}) {
+export function evidenceLines(rows, freshUrls = new Map(), { excerptMax = 160, guildIdOf = () => null, caseGuildId = null } = {}) {
     return rows.map((row) => {
+        // The stored copy is in the evidence channel of the case's staff server (staffGuildId);
+        // the channel's own guild wins when it is cached. Neither known: no link (never the main server).
+        const storeGuildOf = (channelId) => {
+            const caseGuild = row.case_guild_id || caseGuildId;
+            return guildIdOf(channelId) || (caseGuild ? staffGuildId(caseGuild) : null);
+        };
         const meta = `${row.added_by_username}, ${dateStamp(row.added_at)}`;
         const note = row.note ? `: ${truncate(row.note, 120)}` : '';
         if (row.kind === 'image') {
             const fresh = freshUrls.get(String(row.id));
-            const stored = row.store_channel_id && row.store_message_id ? jumpLink(row.store_channel_id, row.store_message_id, guildIdOf(row.store_channel_id) || undefined) : null;
+            const stored = row.store_channel_id && row.store_message_id ? jumpLink(row.store_channel_id, row.store_message_id, storeGuildOf(row.store_channel_id)) : null;
             const links = [fresh ? `[image](${fresh})` : null, stored ? `[stored](${stored})` : null].filter(Boolean);
             return `**#${row.id}** Image: ${links.join(' · ') || 'image (stored message missing)'}${note} · ${meta}`;
         }
@@ -146,7 +152,10 @@ export async function addEvidence(caseCode, {
 
 export async function listEvidence(caseCode) {
     const { rows } = await query(
-        `SELECT * FROM ${T.caseEvidence} WHERE case_code = $1 ORDER BY added_at, id`,
+        // case_guild_id: for the stored-image link (evidenceLines), the case's own server.
+        `SELECT e.*, c.guild_id AS case_guild_id FROM ${T.caseEvidence} e
+         JOIN ${T.cases} c ON c.case_code = e.case_code
+         WHERE e.case_code = $1 ORDER BY e.added_at, e.id`,
         [caseCode]
     );
     return rows;

@@ -573,6 +573,48 @@ test('staff guard: another server needs automod on AND the staff guard on; the m
     await assert.rejects(guard.handleAuditLogEntry(entry, third), /must not be read/, 'a watched action does read them');
 });
 
+test('staff guard: "Show what changed" and the /backup revert hint only in Mewvo\'s servers; the diff button refuses elsewhere', async () => {
+    setup();
+    const ALERTS = '400000000000000077';
+    const posted = { [OTHER]: [], [MAIN]: [] };
+    const channelFor = (guildId) => new Map([[ALERTS, { id: ALERTS, isTextBased: () => true, send: async (p) => { posted[guildId].push(p); return { id: 'a1' }; } }]]);
+    const other = fakeGuild(OTHER, { channels: channelFor(OTHER) });
+    const main = fakeGuild(MAIN, { channels: channelFor(MAIN) });
+    fakeClient([other, main]);
+    setSettingsCacheForTests(OTHER, { alertsChannelId: ALERTS });
+    setSettingsCacheForTests(MAIN, { alertsChannelId: ALERTS });
+    await turnOn(OTHER);
+    await setStaffGuard(OTHER, true);
+    const entry = { action: AuditLogEvent.BotAdd, executorId: '200000000000000099', targetId: '300000000000000099' };
+    await captureLogs(async () => {
+        await guard.handleAuditLogEntry(entry, other);
+        await guard.handleAuditLogEntry(entry, main);
+    });
+    const ids = (p) => JSON.stringify(p.components || []);
+    assert.ok(posted[OTHER].length >= 1, 'the other server got its alert');
+    for (const p of posted[OTHER]) {
+        assert.doesNotMatch(ids(p), /nukediff/);
+        assert.doesNotMatch(JSON.stringify(p.embeds), /backup revert/);
+    }
+    assert.ok(posted[MAIN].some((p) => /nukediff/.test(ids(p))), 'the main server keeps the button');
+
+    const { handleNukeDiff } = await import('../../src/handlers/backupRevert.js');
+    const replies = [];
+    let deferred = false;
+    const click = {
+        id: 'i2', guildId: OTHER, guild: other, user: { id: '200000000000000001' },
+        member: { id: '200000000000000001', guild: other, permissions: { has: () => true } },
+        deferred: false, replied: false,
+        reply: async (p) => { replies.push(p); click.replied = true; },
+        deferReply: async () => { deferred = true; },
+        editReply: async (p) => { replies.push(p); },
+        followUp: async (p) => { replies.push(p); },
+    };
+    await handleNukeDiff(click, other.client, [String(Math.floor(Date.now() / 1000))]);
+    assert.equal(deferred, false, 'refused before any lookup');
+    assert.match(JSON.stringify(replies), /only kept for Mewvo/);
+});
+
 test('impersonation names: another server only with automod on; non-English names left alone by default', async () => {
     setup();
     const other = fakeGuild(OTHER);
@@ -760,6 +802,92 @@ test('review cards: an action runs in the case\'s own server, with the moderator
     await assert.rejects(actingGuild(click(MAIN), SUPPORT), /Administrator permission in server/);
     guilds.delete(SUPPORT);
     await assert.rejects(actingGuild(click(MAIN), SUPPORT), /no longer in the server/);
+    resetSettingsCacheForTests();
+});
+
+test('join gate buttons: a support joiner\'s line clicked in the main server kicks in the support server', async () => {
+    setup();
+    const { handleJoinGateButton } = await import('../../src/handlers/joinGateButtons.js');
+    const { gateButtons, getGateFlag } = await import('../../src/services/automod/joinGate.js');
+    const { setInDb } = await import('../../src/utils/database/wrapper.js');
+    for (const id of [MAIN, SUPPORT]) setSettingsCacheForTests(id, {});
+    const JOINER = '200000000000000042';
+    const adminOf = (guild) => ({ id: '300000000000000001', guild, permissions: { has: () => true, any: () => true }, roles: { cache: new Map() } });
+    const main = fakeGuild(MAIN);
+    const support = fakeGuild(SUPPORT);
+    fakeClient([main, support]);
+    const fetched = { [MAIN]: [], [SUPPORT]: [] };
+    const joiner = fakeMember(support, { id: JOINER });
+    main.members.fetch = async (id) => { fetched[MAIN].push(id); return id === JOINER ? null : adminOf(main); };
+    support.members.fetch = async (id) => { fetched[SUPPORT].push(id); return id === JOINER ? joiner : adminOf(support); };
+    await setInDb(`automod:joingate:flag:${SUPPORT}:${JOINER}`, { hits: [{ check: 'avatar', reason: 'no profile picture' }] });
+
+    const customId = gateButtons(JOINER, SUPPORT).components[0].data.custom_id;
+    assert.equal(customId, `joingate:kick:${JOINER}:${SUPPORT}`);
+    const replies = [];
+    const click = (guild) => ({
+        id: 'i1', guild, guildId: guild.id, member: adminOf(guild), user: { id: '300000000000000001', username: 'boss' },
+        client: main.client, deferred: false, replied: false,
+        message: { id: 'line1', embeds: [], edit: async () => {} },
+        deferReply: async function deferReply() { this.deferred = true; },
+        editReply: async (payload) => { replies.push(payload); },
+        followUp: async (payload) => { replies.push(payload); },
+    });
+    await handleJoinGateButton(click(main), main.client, customId.split(':').slice(1));
+    assert.equal(joiner.kicked, true, 'kicked in the support server');
+    assert.deepEqual(fetched[MAIN], [], 'never looked the joiner up in the main server');
+    assert.ok(fetched[SUPPORT].includes(JOINER));
+    assert.equal(await getGateFlag(SUPPORT, JOINER), null, 'the support server\'s flag is cleared');
+    assert.match(JSON.stringify(replies.at(-1)), /Kicked/);
+
+    // An old line (no guild id) still acts in the clicking server.
+    joiner.kicked = false;
+    await handleJoinGateButton(click(main), main.client, ['kick', JOINER]);
+    assert.equal(joiner.kicked, false);
+    assert.deepEqual(fetched[MAIN], [JOINER]);
+    // A non-home server's line can never act in the home pair (or the other way round).
+    const other = fakeGuild(OTHER);
+    fakeClient([main, support, other]);
+    fetched[SUPPORT].length = 0;
+    await handleJoinGateButton(click(other), other.client, ['kick', JOINER, SUPPORT]);
+    assert.equal(joiner.kicked, false);
+    assert.ok(!fetched[SUPPORT].includes(JOINER));
+    resetSettingsCacheForTests();
+});
+
+test('raid release: a support raid\'s report clicked in the main server releases in the support server; other servers refused', async () => {
+    setup();
+    const { handleRaidRelease } = await import('../../src/handlers/raidRelease.js');
+    for (const id of [MAIN, SUPPORT]) setSettingsCacheForTests(id, {});
+    const JOINER = '200000000000000043';
+    const incident = { id: 7, guild_id: SUPPORT, joiner_ids: [JOINER], started_at: new Date(), released_at: null };
+    const queries = fakePg((sql) => {
+        if (/^SELECT \* FROM .*raid/i.test(sql.trim()) || /UPDATE .* SET released_at/i.test(sql)) return [incident];
+        return [];
+    });
+    const adminOf = (guild) => ({ id: '300000000000000001', guild, permissions: { has: () => true, any: () => true }, roles: { cache: new Map() } });
+    const main = fakeGuild(MAIN);
+    const support = fakeGuild(SUPPORT);
+    const other = fakeGuild(OTHER);
+    fakeClient([main, support, other]);
+    support.members.fetch = async () => adminOf(support);
+    const replies = [];
+    const click = (guild) => ({
+        id: 'i3', guild, guildId: guild.id, member: adminOf(guild), user: { id: '300000000000000001', username: 'boss' },
+        client: main.client, deferred: false, replied: false,
+        message: { id: 'report1', edit: async () => {} },
+        deferReply: async function deferReply() { this.deferred = true; },
+        editReply: async (payload) => { replies.push(payload); },
+        followUp: async (payload) => { replies.push(payload); },
+    });
+    await captureLogs(() => handleRaidRelease(click(other), other.client, ['7']));
+    assert.match(JSON.stringify(replies.at(-1)), /another server/);
+    assert.ok(!queries.some((q) => /released_at = NOW/.test(q.sql)), 'nothing claimed from another server');
+
+    await captureLogs(() => handleRaidRelease(click(main), main.client, ['7']));
+    assert.match(JSON.stringify(replies.at(-1)), /Raid joiners released/);
+    const caseQuery = queries.find((q) => /target_user_id = ANY/.test(q.sql));
+    assert.equal(caseQuery?.params[0], SUPPORT, 'cases looked up in the support server');
     resetSettingsCacheForTests();
 });
 
