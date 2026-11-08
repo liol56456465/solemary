@@ -316,6 +316,30 @@ test('logEvent: a server pointing its log at another server\'s channel never pau
     resetLogChannelBackoff();
 });
 
+test('logEvent: a temporary error loading the log channel does not pause logging', async () => {
+    resetLogChannelBackoff();
+    const guildId = nextGuild();
+    const channelId = '92000000000000003';
+    let fail = true;
+    const channel = { id: channelId, type: 0, guildId, permissionsFor: () => ({ has: () => true }), send: async () => ({ id: 'm' }) };
+    const guild = {
+        id: guildId, name: 'G', iconURL: () => null, members: { me: {} },
+        channels: { cache: new Map(), fetch: async () => { if (fail) throw Object.assign(new Error('socket hang up'), { code: 'ECONNRESET' }); return channel; } },
+    };
+    const client = { db: countingStore({ [`guild:${guildId}:config`]: { logging: { enabled: true, channels: { audit: channelId } } } }), guilds: { cache: new Map([[guildId, guild]]) } };
+    assert.equal(await logEvent({ client, guildId, eventType: 'moderation.ban', data: { title: 'x' } }), null);
+    assert.equal(isLogChannelBackedOff(guildId, channelId), false, 'not paused after a network error');
+    fail = false;
+    assert.ok(await logEvent({ client, guildId, eventType: 'moderation.ban', data: { title: 'y' } }), 'the next event is logged');
+    // A confirmed Unknown Channel does pause.
+    guild.channels.fetch = async () => { throw Object.assign(new Error('Unknown Channel'), { code: 10003, status: 404 }); };
+    const other = '92000000000000004';
+    client.db = countingStore({ [`guild:${guildId}:config`]: { logging: { enabled: true, channels: { audit: other } } } });
+    assert.equal(await logEvent({ client, guildId, eventType: 'moderation.ban', data: { title: 'z' } }), null);
+    assert.equal(isLogChannelBackedOff(guildId, other), true);
+    resetLogChannelBackoff();
+});
+
 test('every src/events file parses and loads (a syntax error must fail the suite)', async () => {
     const { readdirSync } = await import('node:fs');
     const dir = new URL('../src/events/', import.meta.url);

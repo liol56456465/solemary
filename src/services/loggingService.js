@@ -324,6 +324,7 @@ function getLogChannelForEvent(config, eventType, overrideChannelId = null) {
 export const LOG_CHANNEL_BACKOFF_MS = 10 * 60 * 1000;
 const MISSING_ACCESS = 50001;
 const MISSING_PERMISSIONS = 50013;
+const UNKNOWN_CHANNEL = 10003;
 // Keyed by server AND channel: a server that points its log at another server's channel id must not
 // pause that other server's logs (security review, B5).
 const logChannelBackoff = new BoundedMap(5000); // `${guildId}:${channelId}` → { until, reason }
@@ -409,8 +410,18 @@ export async function logEvent({
       return null;
     }
 
+    // Only a confirmed refusal pauses posting (Unknown Channel, Missing Access, 401/403, or a channel
+    // of another server). A network error or Discord outage must not silence the logs (security review).
+    let fetchRefused = false;
     const channel = guild.channels.cache.get(logChannelId) ||
-      await guild.channels.fetch(logChannelId).catch(() => null);
+      await guild.channels.fetch(logChannelId).catch((error) => {
+        if (Number(error?.code) === UNKNOWN_CHANNEL || isForbiddenError(error) || error?.code === 'GuildChannelUnowned') fetchRefused = true;
+        return null;
+      });
+    if (!channel && !fetchRefused) {
+      warnThrottled(guildId, logChannelId, `logEvent: could not load log channel ${logChannelId} for guild ${guildId} (temporary error, not paused)`);
+      return null;
+    }
 
     // Text and announcement channels (the dashboard and /logging channel allow both), and only
     // channels of this server (a foreign channel id is a misconfiguration of this server only).
