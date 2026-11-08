@@ -12,6 +12,11 @@
 //                       (pre-v12, home servers) and verification_guild_ips (per server, v12).
 //   oauth_verified_guilds  the servers a member used "Verify with Discord" in, once their stored
 //                       token is gone (revoked, /wipedata), after a 1-day grace
+//   expired_temp_data / expired_cache_data  key-value rows whose expires_at passed more than a day
+//                       ago. Reads already treat them as missing (expires_at > NOW()), so no live
+//                       data goes; batches of BATCH_LIMIT, at most KV_MAX_BATCHES per run.
+//                       ticket_data is NOT pruned: ticket reads ignore expires_at, so an expired
+//                       ticket row is still live data there.
 // Elsewhere, on their own daily crons in app.js: the raid timeline (incident_timelines and
 // their events, 90 days after the end; incidentTimeline.js), member_events (90 days),
 // website accounts that never linked Discord (accountStore.prune, 7 days).
@@ -38,7 +43,12 @@ export const RETENTION_DAYS = Object.freeze({
     verification_audit: 365,
     verification_ips: IP_RETENTION_MS / DAY_MS,
     oauth_verified_guilds: 1,
+    expired_temp_data: 1,
+    expired_cache_data: 1,
 });
+
+/** Expired key-value rows: up to this many batches of BATCH_LIMIT per run. */
+export const KV_MAX_BATCHES = 20;
 
 /** Daily at 03:30 UTC, and once about 5 minutes after the bot is ready. */
 export const RETENTION_CRON = '30 3 * * *';
@@ -109,6 +119,33 @@ export async function pruneOAuthVerifiedGuilds({ query = dbQuery, tables = pgCon
         [cutoff(now, RETENTION_DAYS.oauth_verified_guilds), limit, new Date(now)]));
 }
 
+/**
+ * Rows of a key-value table (temp_data, cache_data; primary key `key`) that expired more than a
+ * day ago, in batches. SKIP LOCKED: a row a write holds right now waits for the next run.
+ */
+export async function pruneExpiredKeyValues(table, { query = dbQuery, limit = BATCH_LIMIT, maxBatches = KV_MAX_BATCHES } = {}) {
+    let total = 0;
+    for (let batch = 0; batch < maxBatches; batch += 1) {
+        const n = count(await query(
+            `DELETE FROM ${table} WHERE key IN (
+                 SELECT key FROM ${table}
+                 WHERE expires_at IS NOT NULL AND expires_at <= NOW() - interval '1 day'
+                 LIMIT $1 FOR UPDATE SKIP LOCKED)`,
+            [limit]));
+        total += n;
+        if (n < limit) break;
+    }
+    return total;
+}
+
+export async function pruneExpiredTempData({ query = dbQuery, tables = pgConfig.tables, limit = BATCH_LIMIT } = {}) {
+    return pruneExpiredKeyValues(tables.temp_data, { query, limit });
+}
+
+export async function pruneExpiredCacheData({ query = dbQuery, tables = pgConfig.tables, limit = BATCH_LIMIT } = {}) {
+    return pruneExpiredKeyValues(tables.cache_data, { query, limit });
+}
+
 export const RETENTION_RULES = Object.freeze([
     ['watchlist', pruneWatchlist],
     ['no_contact', pruneNoContactOrders],
@@ -116,6 +153,8 @@ export const RETENTION_RULES = Object.freeze([
     ['verification_audit', pruneVerificationAudit],
     ['verification_ips', pruneVerificationIps],
     ['oauth_verified_guilds', pruneOAuthVerifiedGuilds],
+    ['expired_temp_data', pruneExpiredTempData],
+    ['expired_cache_data', pruneExpiredCacheData],
 ]);
 
 /**

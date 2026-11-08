@@ -1,0 +1,84 @@
+name: Tests
+
+# Unit tests and the database tests on every push and pull request. Nothing here talks to
+# Discord or to a real database: the DB job uses its own throwaway Postgres service on
+# localhost, and scripts/ci-db-guard.js refuses to run against anything else or with a token.
+
+on:
+  push:
+  pull_request:
+
+# Read-only token: these jobs only check out code and talk to their own Postgres service.
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+  db:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        # Same major version as production (PostgreSQL 18).
+        image: postgres:18
+        env:
+          POSTGRES_USER: mewvo
+          POSTGRES_PASSWORD: mewvo
+          POSTGRES_DB: mewvo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U mewvo -d mewvo_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    # Test values only (the service above is created for this job and thrown away). No
+    # DISCORD_TOKEN, no client secret: the DB tests never log in.
+    env:
+      NODE_ENV: test
+      POSTGRES_URL: postgresql://mewvo:mewvo@localhost:5432/mewvo_test
+      POSTGRES_SSL: "false"
+      AUTO_MIGRATE: "true"
+      SCHEMA_VERSION: "12"
+      SCHEMA_VERSION_LABEL: baseline-v12
+      TEST_ENABLE_CRON: "false"
+      # Made-up server IDs (never the real Mewvo servers; some tests need a main/support server).
+      MAIN_GUILD_ID: "100000000000000001"
+      SUPPORT_GUILD_ID: "100000000000000002"
+      TEST_GUILD_IDS: "100000000000000001,100000000000000002"
+      LOG_LEVEL: info
+      LOG_TO_FILE: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Database tests
+        run: npm run test:db:ci

@@ -17,11 +17,22 @@ Add these through Replit Secrets/environment variables:
 - `DISCORD_TOKEN` (Discord bot token)
 - `CLIENT_ID` (Discord application/client ID)
 
-The current Replit setup also uses:
+The current Replit workspace uses:
 
 - `NODE_ENV=development`
 - `PORT=5000`
 - `WEB_HOST=0.0.0.0`
+
+## Deployment
+
+- The deployment must run with `NODE_ENV=production` (the workspace's `development` must never
+  act as production) and `LOG_LEVEL=info`.
+- Use a **Reserved VM** deployment, not Autoscale: the bot keeps one gateway connection open and
+  runs cron jobs, so it must be exactly one always-on instance. (`.replit` currently says
+  `deploymentTarget = "cloudrun"`; changing the deployment type is a production change and needs
+  the owner's OK.)
+- On stop the bot shuts down gracefully (crons, Discord client, buffered counters, HTTP, database;
+  10 s at most) and exits 0 after SIGTERM.
 
 PostgreSQL is the owner's own database, set as the secret `POSTGRES_URL`. The bot reads only `POSTGRES_URL`; Replit's own `DATABASE_URL` is ignored. Schema changes run with `npm run migrate`, and `SCHEMA_VERSION` must match. Music was removed, so there is no Lavalink.
 

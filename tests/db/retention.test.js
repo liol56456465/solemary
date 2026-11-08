@@ -81,7 +81,7 @@ const ids = async (table, column, values) => (await q(`SELECT ${column} AS id FR
 const str = (list) => list.map(String).sort();
 
 test('retention periods: 1 year for watchlist, no-contact, raid reports, verification audit; 60 days for IP hashes', { skip }, () => {
-    assert.deepEqual({ ...r.RETENTION_DAYS }, { watchlist: 365, no_contact: 365, raid_reports: 365, verification_audit: 365, verification_ips: 60, oauth_verified_guilds: 1 });
+    assert.deepEqual({ ...r.RETENTION_DAYS }, { watchlist: 365, no_contact: 365, raid_reports: 365, verification_audit: 365, verification_ips: 60, oauth_verified_guilds: 1, expired_temp_data: 1, expired_cache_data: 1 });
 });
 
 test('watchlist: ended or run out more than a year ago → deleted; inside the window and open entries stay', { skip }, async () => {
@@ -150,7 +150,7 @@ test('runRetention: a database error in one rule does not stop the others; other
     const failing = (text, params) => (/mod_watchlist/.test(text) ? Promise.reject(new Error('relation is locked')) : query(text, params));
     const result = await r.runRetention(null, { query: failing });
     assert.deepEqual(result.failed, ['watchlist']);
-    assert.deepEqual(Object.keys(result.counts).sort(), ['no_contact', 'oauth_verified_guilds', 'raid_reports', 'verification_audit', 'verification_ips']);
+    assert.deepEqual(Object.keys(result.counts).sort(), ['expired_cache_data', 'expired_temp_data', 'no_contact', 'oauth_verified_guilds', 'raid_reports', 'verification_audit', 'verification_ips']);
     assert.deepEqual(await ids('mod_watchlist', 'id', [watch]), [String(watch)], 'the failed rule deleted nothing');
     assert.deepEqual(await ids('no_contact_orders', 'id', [nc]), []);
     assert.deepEqual(await ids('automod_raid_incidents', 'id', [raid]), []);
@@ -162,4 +162,28 @@ test('runRetention: a database error in one rule does not stop the others; other
     const again = await r.runRetention(null);
     assert.deepEqual(again.failed, []);
     assert.deepEqual(await ids('mod_watchlist', 'id', [watch]), []);
+});
+
+test('expired key-value rows: expired more than a day ago → deleted; recently expired, live and no-expiry rows stay; list() never showed them', { skip }, async () => {
+    const key = (name) => `retention_test_${runId}:${name}`;
+    const put = (table, name, expires) => q(`INSERT INTO ${table} (key, value, expires_at) VALUES ($1, '1'::jsonb, ${expires})`, [key(name)]);
+    try {
+        for (const table of ['temp_data', 'cache_data']) {
+            await put(table, `${table}-old`, "NOW() - interval '2 days'");
+            await put(table, `${table}-recent`, "NOW() - interval '1 hour'");
+            await put(table, `${table}-live`, "NOW() + interval '1 hour'");
+            await put(table, `${table}-forever`, 'NULL');
+        }
+        const listed = await pgDb.list(`retention_test_${runId}:`);
+        assert.ok(!listed.some((k) => k.endsWith('-old') || k.endsWith('-recent')), 'expired rows are already invisible to list()');
+        assert.ok((await r.pruneExpiredTempData()) >= 1);
+        assert.ok((await r.pruneExpiredCacheData()) >= 1);
+        for (const table of ['temp_data', 'cache_data']) {
+            const { rows } = await q(`SELECT key FROM ${table} WHERE key LIKE $1 ORDER BY key`, [`retention_test_${runId}:%`]);
+            assert.deepEqual(rows.map((row) => row.key), [key(`${table}-forever`), key(`${table}-live`), key(`${table}-recent`)], table);
+        }
+    } finally {
+        await q('DELETE FROM temp_data WHERE key LIKE $1', [`retention_test_${runId}:%`]).catch(() => {});
+        await q('DELETE FROM cache_data WHERE key LIKE $1', [`retention_test_${runId}:%`]).catch(() => {});
+    }
 });

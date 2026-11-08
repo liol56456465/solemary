@@ -75,7 +75,6 @@ import {
     getWelcomeConfigKey,
     getEconomyKey,
     getAFKKey,
-    getUserLevelPrefix,
 } from './database/keys.js';
 
 export async function insertVerificationAudit(record) {
@@ -507,63 +506,6 @@ export async function saveUserLevelData(client, guildId, userId, data) {
 
 export function getXpForLevel(level) {
     return 5 * Math.pow(level, 2) + 50 * level + 50;
-}
-
-export async function getLeaderboard(client, guildId, limit = 10) {
-    try {
-        if (!client.db || typeof client.db.list !== "function") {
-            throw databaseUnavailable("Database client is not available for getLeaderboard.");
-        }
-
-        const prefix = getUserLevelPrefix(guildId);
-        let keys = await client.db.list(prefix);
-        
-        if (!Array.isArray(keys)) {
-            if (typeof keys === 'object' && keys !== null) {
-                keys = Object.keys(keys).filter(key => key.startsWith(prefix));
-            } else {
-                return [];
-            }
-        }
-        
-        if (keys.length === 0) {
-            return [];
-        }
-        
-        const userDataPromises = keys.map(async (key) => {
-            try {
-                const userId = key.replace(prefix, '');
-                const data = await client.db.get(key);
-                if (!data) return null;
-                
-                const unwrapped = unwrapReplitData(data);
-                return {
-                    userId,
-                    xp: unwrapped.xp || 0,
-                    level: unwrapped.level || 0,
-                    totalXp: unwrapped.totalXp || 0,
-rank: 0
-                };
-            } catch (error) {
-                logger.error(`Error processing leaderboard key ${key}:`, error);
-                throw error;
-            }
-        });
-        
-        let userData = (await Promise.all(userDataPromises)).filter(Boolean);
-        
-        userData.sort((a, b) => (b.totalXp || 0) - (a.totalXp || 0));
-        
-        userData = userData.map((user, index) => ({
-            ...user,
-            rank: index + 1
-        }));
-        
-        return userData.slice(0, limit);
-    } catch (error) {
-        logger.error(`Error getting leaderboard for guild ${guildId}:`, error);
-        throw error;
-    }
 }
 
 export async function getApplicationRoles(client, guildId) {

@@ -77,7 +77,7 @@ test('runRetention: a failing rule is logged and the others still run; the summa
 });
 
 test('the rules: one bounded DELETE each, cutoff and limit as parameters', async () => {
-    assert.deepEqual(RETENTION_RULES.map(([name]) => name), ['watchlist', 'no_contact', 'raid_reports', 'verification_audit', 'verification_ips', 'oauth_verified_guilds']);
+    assert.deepEqual(RETENTION_RULES.map(([name]) => name), ['watchlist', 'no_contact', 'raid_reports', 'verification_audit', 'verification_ips', 'oauth_verified_guilds', 'expired_temp_data', 'expired_cache_data']);
     const now = Date.parse('2026-11-04T03:30:00Z');
     const expectedDays = { verification_ips: 60, oauth_verified_guilds: 1 };
     for (const [name, rule] of RETENTION_RULES) {
@@ -92,6 +92,12 @@ test('the rules: one bounded DELETE each, cutoff and limit as parameters', async
             assert.match(statement.text, /LIMIT \$\d/, `${name}: bounded`);
             assert.ok(statement.params.includes(i === 0 ? 7 : 4), `${name}: limit passed`);
         });
+        if (name.startsWith('expired_')) {
+            // Key-value rows: a day after expires_at, counted by the database clock.
+            assert.match(seen[0].text, /expires_at <= NOW\(\) - interval '1 day'/, name);
+            assert.match(seen[0].text, /SKIP LOCKED/, name);
+            continue;
+        }
         const cutoff = seen[0].params.find((p) => p instanceof Date);
         const days = Math.round((now - cutoff.getTime()) / 86_400_000);
         assert.equal(days, expectedDays[name] ?? 365, name);
@@ -137,4 +143,18 @@ test('deleteEvidenceMessages: best effort; an already deleted message counts as 
     ]);
     assert.deepEqual(result, { deleted: 2, failed: 2 });
     assert.deepEqual(deleted, ['m1']);
+});
+
+test('expired key-value rows: full batches repeat, a short batch stops, at most KV_MAX_BATCHES', async () => {
+    const { pruneExpiredKeyValues, KV_MAX_BATCHES } = await import('../src/services/privacy/retentionService.js');
+    const answers = [5, 5, 2];
+    const seen = [];
+    const n = await pruneExpiredKeyValues('temp_data', { query: async (text) => { seen.push(text); return { rowCount: answers.shift() }; }, limit: 5 });
+    assert.equal(n, 12);
+    assert.equal(seen.length, 3);
+    assert.ok(seen.every((text) => text.includes('DELETE FROM temp_data')));
+    let calls = 0;
+    const capped = await pruneExpiredKeyValues('cache_data', { query: async () => { calls += 1; return { rowCount: 5 }; }, limit: 5 });
+    assert.equal(calls, KV_MAX_BATCHES);
+    assert.equal(capped, 5 * KV_MAX_BATCHES);
 });

@@ -10,7 +10,8 @@ Root
 - README.md                   -> setup and usage docs
 - SECURITY.md                 -> security policy
 - scripts/                    -> utility/maintenance scripts (backup, restore, migrate)
-- logs/                       -> runtime log output
+- logs/                       -> rotating log files (LOG_TO_FILE; off under NODE_ENV=test)
+- .github/workflows/          -> CI: tests (unit + DB), migration check, restore drill, gitleaks
 - src/                        -> main bot application code
 - tests/                      -> unit tests (run via npm test)
 
@@ -37,10 +38,10 @@ src/
 - config/                     -> centralized configuration modules
 - events/                     -> Discord event listeners
 - handlers/                   -> interaction routing and component handlers
-  - commandLoader.js          -> loads slash commands at startup
-  - events.js                 -> Discord event listener registration
-  - interactions.js           -> button/select/modal router
-  - ticketButtons.js, reactionRoles.js, etc.
+  - loaders/commandLoader.js  -> loads slash commands at startup
+  - loaders/events.js         -> Discord event listener registration (errors -> Recent errors)
+  - loaders/interactions.js   -> button/select/modal router
+  - ticketButtons.js, enforcementPanel.js, verificationButtons.js, etc.
 
 - interactions/               -> button, modal, and select menu handlers
 - services/                   -> business logic + data operations
@@ -50,10 +51,11 @@ src/
   - database/keys.js          -> Redis-style key builders
   - database/tickets.js       -> ticket persistence + guild ticket stats
   - panelStatus.js            -> shared panel message detection
+  - gracefulShutdown.js       -> shutdown order (crons, client, buffer flush, HTTP, database)
   - errorHandler.js, logger.js, embeds.js, etc.
 
 Database
-- PostgreSQL (primary) with in-memory fallback for development
+- PostgreSQL 18 (primary); in-memory fallback only outside production (ALLOW_MEMORY_DB)
 - Graceful degradation when PostgreSQL is unavailable
 
 Notes
