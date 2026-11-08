@@ -1,4 +1,5 @@
 import { Events } from 'discord.js';
+import { hasIntent } from '../config/intents.js';
 import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 import { logger } from '../utils/logger.js';
 import { checkImpersonation } from '../services/automod/memberChecks.js';
@@ -11,6 +12,9 @@ export default {
   once: false,
 
   async execute(oldMember, newMember) {
+    // Discord sends no member events without the Guild Members intent; a cheap guard all the same
+    // (welcome, join gate, member logs, mute re-apply, role and level rules: warned at startup).
+    if (!hasIntent('GuildMembers')) return;
     try {
       if (!newMember.guild) return;
 

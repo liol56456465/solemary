@@ -10,6 +10,7 @@ import { logger } from '../../utils/logger.js';
 import { CT, query, isCommunityDbAvailable, isUniqueViolation, userError } from './db.js';
 import { channelAllowed, compileTrigger, matchFirst, onCooldown } from './tagMatcher.js';
 import { limitMessage, planLimit } from '../billing/premiumEffects.js';
+import { featureAvailable } from '../../config/intents.js';
 
 export const TAG_NAME = /^[a-z0-9_-]{1,32}$/;
 export const TAG_CONTENT_MAX = 2000;
@@ -156,6 +157,8 @@ export function findTriggeredTag(message, now = Date.now(), match = matchFirst) 
 export async function respondToTags(message) {
     try {
         if (!message.guild || message.author?.bot) return false;
+        // Without Message Content there is no text to match (warned at startup).
+        if (!featureAvailable('tagAutoResponses')) return false;
         const tag = findTriggeredTag(message);
         if (!tag) return false;
         bumpUses(tag);

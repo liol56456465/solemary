@@ -10,6 +10,8 @@ import { loadWatchlist } from "../services/enforcement/watchlistService.js";
 import { loadCommunityCaches } from "../services/community/index.js";
 import { loadBlacklistWithRetry } from "../services/owner/blacklistService.js";
 import { applyStoredBotState } from "../services/owner/botStateService.js";
+import { warnDisabledFeatures } from "../config/intents.js";
+import { logSessionStartLimit } from "../utils/sessionStartLimit.js";
 
 export default {
   name: Events.ClientReady,
@@ -36,6 +38,10 @@ export default {
       startupLog(`Ready! Logged in as ${client.user.tag}`);
       startupLog(`Serving ${client.guilds.cache.size} guild(s)`);
       startupLog(`Loaded ${client.commands.size} commands`);
+      // Privileged intents switched off from env (config/intents.js): one warning per disabled feature.
+      warnDisabledFeatures((line) => logger.warn(line));
+      // Gateway session starts left today (1,000 per 24 h); in the background, never blocks or fails the boot.
+      void logSessionStartLimit(client, { log: startupLog, warn: (line) => logger.warn(line) });
       startupLog(`Automod: ${await describeAutomodReadiness(client).catch((error) => `check failed: ${error.message}`)}`);
 
       const noContactCount = await loadNoContactOrders().catch((error) => {

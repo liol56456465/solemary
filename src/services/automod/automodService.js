@@ -28,6 +28,7 @@ import { logger } from '../../utils/logger.js';
 import { query, T, isEnforcementDbAvailable } from '../enforcement/db.js';
 import { executeSystemAction, isAdministrator } from '../enforcement/enforcementService.js';
 import { getAutomodSettings, isChannelExempt } from './automodSettings.js';
+import { featureAvailable } from '../../config/intents.js';
 import { isRaidJoiner, noteIncidentEvent } from './raidService.js';
 import { getProbation } from './probationService.js';
 import { noteMoodSignals } from './moodService.js';
@@ -226,7 +227,9 @@ export function contentHits(message, member, { isForeignInvite = async () => fal
  */
 async function collectHits(message, member, { isForeignInvite, matchCustom, timing }) {
     const hits = [];
-    const text = message.content || '';
+    // Without Message Content only DMs and messages that mention the bot carry text; the text
+    // filters are off then for every message alike (warned at startup), mention + flood checks stay.
+    const text = featureAvailable('automodContent') ? (message.content || '') : '';
 
     const scam = findScam(text);
     if (scam) hits.push({ rule: 'scam', evidence: reasons.scamReason(scam), detail: scam });

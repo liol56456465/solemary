@@ -1,4 +1,5 @@
 import { Events, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
+import { hasIntent } from '../config/intents.js';
 import { getColor, botConfig } from '../config/bot.js';
 import { getGuildConfig } from '../services/config/guildConfig.js';
 import { getWelcomeConfig } from '../utils/database.js';
@@ -34,6 +35,9 @@ export default {
   once: false,
   
   async execute(member) {
+    // Discord sends no member events without the Guild Members intent; a cheap guard all the same
+    // (welcome, join gate, member logs, mute re-apply, role and level rules: warned at startup).
+    if (!hasIntent('GuildMembers')) return;
     try {
         const { guild, user } = member;
 
