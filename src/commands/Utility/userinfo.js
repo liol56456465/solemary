@@ -2,14 +2,18 @@ import { SlashCommandBuilder } from 'discord.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+import { localized, publicText } from '../Core/modules/commandText.js';
+
 export default {
     data: new SlashCommandBuilder()
     .setName("userinfo")
     .setDescription("Get detailed information about a user")
+    .setDescriptionLocalizations(localized('utility.slash.userinfo.description'))
     .addUserOption((option) =>
       option
         .setName("target")
-        .setDescription("The user to inspect (defaults to you)"),
+        .setDescription("The user to inspect (defaults to you)")
+        .setDescriptionLocalizations(localized('utility.slash.userinfo.options.target')),
     ),
 
   async execute(interaction) {
@@ -31,35 +35,37 @@ export default {
     const createdTimestamp = Math.floor(user.createdAt.getTime() / 1000);
     const joinedTimestamp = member?.joinedAt ? Math.floor(member.joinedAt.getTime() / 1000) : null;
 
-    const embed = createEmbed({ title: `User Info: ${user.username}` })
+    // A public answer: the server's language.
+    const tr = publicText(interaction);
+    const embed = createEmbed({ title: tr.t('utility.userinfo.title', { name: user.username }) })
       .setThumbnail(user.displayAvatarURL({ size: 256 }))
       .addFields(
-        { name: "ID", value: user.id, inline: true },
-        { name: "Bot", value: user.bot ? "Yes" : "No", inline: true },
+        { name: tr.t('utility.userinfo.id'), value: user.id, inline: true },
+        { name: tr.t('utility.userinfo.bot'), value: user.bot ? tr.t('utility.userinfo.yes') : tr.t('utility.userinfo.no'), inline: true },
         {
-          name: "Roles",
+          name: tr.t('utility.userinfo.roles'),
           value:
             member && member.roles.cache.size > 1
               ? member.roles.cache
                   .map((r) => r.name)
                   .slice(0, 5)
                   .join(",")
-              : "None",
+              : tr.t('utility.userinfo.none'),
           inline: true,
         },
         {
-          name: "Account Created",
+          name: tr.t('utility.userinfo.created'),
           value: `<t:${createdTimestamp}:R>`,
           inline: false,
         },
         {
-          name: "Joined Server",
-          value: joinedTimestamp ? `<t:${joinedTimestamp}:R>` : "Not in server",
+          name: tr.t('utility.userinfo.joined'),
+          value: joinedTimestamp ? `<t:${joinedTimestamp}:R>` : tr.t('utility.userinfo.notInServer'),
           inline: false,
         },
         {
-          name: "Highest Role",
-          value: member?.roles?.highest?.name || "None",
+          name: tr.t('utility.userinfo.highestRole'),
+          value: member?.roles?.highest?.name || tr.t('utility.userinfo.none'),
           inline: true,
         },
       );

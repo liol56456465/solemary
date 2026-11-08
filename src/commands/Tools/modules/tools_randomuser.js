@@ -4,6 +4,7 @@ import { logger } from '../../../utils/logger.js';
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { getColor } from '../../../config/bot.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { localized, publicText, replyText } from '../../Core/modules/commandText.js';
 import { filterRandomMemberPool, pickFromPool, pickRandomMember } from '../../../services/randomMemberService.js';
 
 export default {
@@ -13,21 +14,27 @@ export default {
         .addRoleOption(option =>
             option.setName('role')
                 .setDescription('Limit selection to users with this role')
+                .setDescriptionLocalizations(localized('tools.slash.tools.sub.randomuser.options.role'))
                 .setRequired(false))
         .addBooleanOption(option =>
             option.setName('bots')
                 .setDescription('Include bots in the selection (default: false)')
+                .setDescriptionLocalizations(localized('tools.slash.tools.sub.randomuser.options.bots'))
                 .setRequired(false))
         .addBooleanOption(option =>
             option.setName('online')
                 .setDescription('Only select from online users (default: false)')
+                .setDescriptionLocalizations(localized('tools.slash.tools.sub.randomuser.options.online'))
                 .setRequired(false))
         .addBooleanOption(option =>
             option.setName('mention')
                 .setDescription('Mention the selected user (default: false)')
+                .setDescriptionLocalizations(localized('tools.slash.tools.sub.randomuser.options.mention'))
                 .setRequired(false)),
 
     async execute(interaction) {
+        // The pick is posted in the channel (not ephemeral): the server's language.
+        const tr = publicText(interaction);
         const deferSuccess = await InteractionHelper.safeDefer(interaction);
         if (!deferSuccess) {
             logger.warn(`RandomUser interaction defer failed`, {
@@ -41,7 +48,8 @@ export default {
         if (!interaction.guild) {
             return replyUserError(interaction, {
                 type: ErrorTypes.VALIDATION,
-                message: 'This command can only be used in a server/guild.',
+                message: tr.t('tools.randomuser.guildOnly'),
+                context: { lang: tr.lang },
             });
         }
 
@@ -59,7 +67,8 @@ export default {
         } catch (error) {
             return replyUserError(interaction, {
                 type: error?.type || ErrorTypes.USER_INPUT,
-                message: error?.userMessage || 'Could not pick a member. Try adjusting your filters.',
+                message: error?.userMessage || tr.t('tools.randomuser.pickFailed'),
+                context: { lang: tr.lang },
             });
         }
 
@@ -72,28 +81,24 @@ export default {
             .slice(0, 10);
 
         const embed = successEmbed(
-            'Random member',
+            tr.t('tools.randomuser.title'),
             shouldMention ? `${selectedMember}` : `**${user.username}**`
         )
         .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
-        .addFields(
-            { name: 'Username', value: user.username, inline: true },
-            { name: 'Bot', value: user.bot ? 'Yes' : 'No', inline: true },
-            { name: `Roles (${roles.length})`, value: roles.length > 0 ? roles.slice(0, 5).join('') + (roles.length > 5 ? `+${roles.length - 5} more` : '') : 'No roles', inline: false }
-        )
+        .addFields(memberFields(tr, user, roles))
         .setColor(getColor('primary'));
-        if (fromCache) embed.setFooter({ text: 'Picked from the members Mewvo has cached; the full member list was not loaded.' });
+        if (fromCache) embed.setFooter({ text: tr.t('tools.randomuser.fromCache') });
 
         const row = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
                     .setCustomId(`randomuser_${interaction.user.id}_again`)
-                    .setLabel('Pick another')
+                    .setLabel(tr.t('tools.randomuser.again'))
                     .setStyle(ButtonStyle.Primary)
             );
 
         const response = await interaction.editReply({
-            content: shouldMention ? `${selectedMember}, you were picked.` : null,
+            content: shouldMention ? tr.t('tools.randomuser.picked', { member: `${selectedMember}` }) : null,
             embeds: [embed],
             components: [row],
             allowedMentions: { users: shouldMention ? [user.id] : [] }
@@ -107,9 +112,11 @@ export default {
                 const newMemberArray = filterRandomMemberPool(interaction.guild.members.cache.values(), { roleId: role?.id || null, includeBots, onlineOnly });
 
                 if (newMemberArray.length === 0) {
+                    const trClicker = replyText(i);
                     await replyUserError(i, {
                         type: ErrorTypes.USER_INPUT,
-                        message: 'No users found matching the criteria.',
+                        message: trClicker.t('tools.randomuser.noMatch'),
+                        context: { lang: trClicker.lang },
                     });
                     return;
                 }
@@ -124,19 +131,15 @@ export default {
                     .slice(0, 10);
 
                 const newEmbed = successEmbed(
-                    'Random member',
+                    tr.t('tools.randomuser.title'),
                     shouldMention ? `${newSelectedMember}` : `**${newUser.username}**`
                 )
                 .setThumbnail(newUser.displayAvatarURL({ dynamic: true, size: 256 }))
-                .addFields(
-                    { name: 'Username', value: newUser.username, inline: true },
-                    { name: 'Bot', value: newUser.bot ? 'Yes' : 'No', inline: true },
-                    { name: `Roles (${newRoles.length})`, value: newRoles.length > 0 ? newRoles.slice(0, 5).join('') + (newRoles.length > 5 ? `+${newRoles.length - 5} more` : '') : 'No roles', inline: false }
-                )
+                .addFields(memberFields(tr, newUser, newRoles))
                 .setColor(newSelectedMember.displayHexColor || '#3498db');
 
                 await i.update({
-                    content: shouldMention ? `${newSelectedMember}, you were picked.` : null,
+                    content: shouldMention ? tr.t('tools.randomuser.picked', { member: `${newSelectedMember}` }) : null,
                     embeds: [newEmbed],
                     components: [row],
                     allowedMentions: { users: shouldMention ? [newUser.id] : [] }
@@ -145,7 +148,7 @@ export default {
             } catch (error) {
                 logger.error('Button interaction error:', error);
                 await i.reply({
-                    content: 'An error occurred while selecting another user.',
+                    content: replyText(i).t('tools.randomuser.againFailed'),
                     flags: ['Ephemeral']
                 });
             }
@@ -160,3 +163,16 @@ export default {
         });
     },
 };
+
+/** The picked member's fields (the public reply's language). */
+export function memberFields(tr, user, roles) {
+    return [
+        { name: tr.t('tools.randomuser.username'), value: user.username, inline: true },
+        { name: tr.t('tools.randomuser.bot'), value: user.bot ? tr.t('tools.randomuser.yes') : tr.t('tools.randomuser.no'), inline: true },
+        {
+            name: tr.t('tools.randomuser.roles', { count: roles.length }),
+            value: roles.length > 0 ? roles.slice(0, 5).join('') + (roles.length > 5 ? tr.t('tools.randomuser.more', { count: roles.length - 5 }) : '') : tr.t('tools.randomuser.noRoles'),
+            inline: false,
+        },
+    ];
+}

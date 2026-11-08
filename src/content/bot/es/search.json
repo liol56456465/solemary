@@ -1,0 +1,38 @@
+{
+    "unknownSubcommand": "Subcomando desconocido",
+    "google": {
+        "title": "Búsqueda de Google",
+        "link": "[Buscar «{query}»]({url})",
+        "footer": "Resultados de búsqueda de Google"
+    },
+    "define": {
+        "tooShort": "Escribe una palabra de al menos 2 caracteres.",
+        "cooldown": "Espera {seconds} s antes de buscar otra palabra.",
+        "notFound": "No se encontraron definiciones para «{word}».",
+        "example": "\n *Ejemplo: {example}*",
+        "definition": "Definición",
+        "source": "Fuente",
+        "footer": "{credit} · vía Free Dictionary API",
+        "creditLine": "Definiciones de {wiktionary} ({license})",
+        "creditFooter": "Definiciones de Wikcionario (CC BY-SA)"
+    },
+    "slash": {
+        "search": {
+            "description": "Busca en la web y en diccionarios",
+            "sub": {
+                "define": {
+                    "description": "Busca el significado de una palabra (diccionario en inglés)",
+                    "options": {
+                        "word": "La palabra que quieres buscar"
+                    }
+                },
+                "google": {
+                    "description": "Busca en Google",
+                    "options": {
+                        "query": "¿Qué quieres buscar?"
+                    }
+                }
+            }
+        }
+    }
+}

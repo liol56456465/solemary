@@ -1,0 +1,507 @@
+{
+    "embed": {
+        "preview": {
+            "empty": "*(Vazio. Adicione algo pelo menu abaixo.)*"
+        },
+        "dash": {
+            "title": "Editor de embed",
+            "footer": "A prévia acima atualiza na hora · Fecha depois de 15 min",
+            "label": {
+                "title": "Título",
+                "description": "Descrição",
+                "colour": "Cor",
+                "author": "Autor",
+                "footer": "Rodapé",
+                "thumbnail": "Miniatura",
+                "image": "Imagem",
+                "timestamp": "Data e hora",
+                "fields": "Campos"
+            },
+            "notSet": "Não definido",
+            "default": "Padrão",
+            "set": "Definido",
+            "on": "Ligado",
+            "off": "Desligado",
+            "characters": {
+                "one": "{count} caractere",
+                "many": "{count} de caracteres",
+                "other": "{count} caracteres"
+            }
+        },
+        "menu": {
+            "placeholder": "O que você quer mudar?",
+            "template": {
+                "label": "Começar de um modelo",
+                "description": "Avisos prontos, como o de como apelar"
+            },
+            "content": {
+                "label": "Editar conteúdo",
+                "description": "Defina o título e a descrição"
+            },
+            "colour": {
+                "label": "Cor",
+                "description": "Escolha uma cor pronta ou digite um código hex"
+            },
+            "author": {
+                "label": "Autor",
+                "description": "A linha com o nome no topo do embed"
+            },
+            "footer": {
+                "label": "Rodapé",
+                "description": "Texto e ícone do rodapé"
+            },
+            "images": {
+                "label": "Imagens",
+                "description": "Miniatura ou imagem grande"
+            },
+            "addField": {
+                "label": "Adicionar campo ({count}/{max})",
+                "description": "Adicione um novo campo"
+            },
+            "editField": {
+                "label": "Editar campo",
+                "description": "Mude o nome, o valor ou o layout de um campo"
+            },
+            "removeField": {
+                "label": "Remover campo",
+                "description": "Apague um campo"
+            },
+            "reorder": {
+                "label": "Reordenar campos",
+                "description": "Mova um campo para cima ou para baixo"
+            },
+            "timestamp": {
+                "off": "Desligar data e hora",
+                "on": "Ligar data e hora",
+                "description": "Mostra a hora no rodapé"
+            },
+            "post": {
+                "label": "Publicar embed",
+                "description": "Envie para um canal"
+            },
+            "json": {
+                "label": "Mostrar JSON",
+                "description": "Veja o JSON bruto"
+            },
+            "reset": {
+                "label": "Recomeçar",
+                "description": "Limpa tudo"
+            }
+        },
+        "content": {
+            "modalTitle": "Editar conteúdo",
+            "titleLabel": "Título (máx. 256 caracteres)",
+            "titlePlaceholder": "Título",
+            "descriptionLabel": "Descrição (máx. 4000 caracteres)",
+            "descriptionPlaceholder": "Texto do embed"
+        },
+        "color": {
+            "placeholder": "Escolha uma cor",
+            "customDescription": "Digite seu próprio #RRGGBB",
+            "title": "Cor",
+            "intro": "Escolha uma cor pronta, ou **Hex próprio** para digitar seu próprio `#RRGGBB`.",
+            "modalTitle": "Cor própria",
+            "hexLabel": "Código de cor hex",
+            "invalid": "`{hex}` não é um código de cor hex válido. Use `#RRGGBB` (ex.: `#5865F2`).",
+            "preset": {
+                "primary": "Principal (azul)",
+                "success": "Sucesso (verde)",
+                "error": "Erro (vermelho)",
+                "warning": "Aviso (amarelo)",
+                "info": "Info (azul claro)",
+                "blurple": "Blurple (Discord)",
+                "fuchsia": "Fúcsia",
+                "gold": "Dourado",
+                "white": "Branco",
+                "dark": "Escuro",
+                "custom": "Hex próprio"
+            }
+        },
+        "template": {
+            "groupPlaceholder": "Escolha um grupo",
+            "title": "Começar de um modelo",
+            "intro": "Escolha um grupo e depois um modelo. Ele substitui o título, o texto e a cor. Edite antes de publicar: as partes entre [colchetes] são para você preencher.",
+            "pickPlaceholder": "Escolha um modelo",
+            "loadedTitle": "Modelo carregado",
+            "loaded": "\"{name}\" está na prévia. Use Editar conteúdo para mudar.",
+            "count": {
+                "one": "{count} modelo",
+                "many": "{count} de modelos",
+                "other": "{count} modelos"
+            }
+        },
+        "author": {
+            "modalTitle": "Autor",
+            "nameLabel": "Nome do autor (vazio para remover)",
+            "namePlaceholder": "Nome",
+            "iconLabel": "URL do ícone do autor (opcional)",
+            "urlLabel": "URL do link do autor (opcional)",
+            "badIcon": "A URL do ícone do autor precisa ser uma URL `https://` válida.",
+            "badUrl": "A URL do link do autor precisa ser uma URL `https://` válida."
+        },
+        "footer": {
+            "modalTitle": "Rodapé",
+            "textLabel": "Texto do rodapé (vazio para remover)",
+            "textPlaceholder": "Texto do rodapé",
+            "iconLabel": "URL do ícone do rodapé (opcional)",
+            "badIcon": "A URL do ícone do rodapé precisa ser uma URL `https://` válida."
+        },
+        "images": {
+            "setThumbnail": {
+                "label": "Definir miniatura",
+                "description": "Imagem pequena no canto superior direito"
+            },
+            "setImage": {
+                "label": "Definir imagem grande",
+                "description": "Imagem larga embaixo"
+            },
+            "clearThumbnail": {
+                "label": "Remover miniatura",
+                "description": "Remove a miniatura atual"
+            },
+            "clearImage": {
+                "label": "Remover imagem grande",
+                "description": "Remove a imagem grande atual"
+            },
+            "title": "Imagens",
+            "intro": "Escolha uma imagem para definir ou remover.",
+            "thumbnailField": "Miniatura",
+            "imageField": "Imagem grande",
+            "view": "Ver",
+            "thumbnailTitle": "Miniatura",
+            "imageTitle": "Imagem grande",
+            "urlLabel": "URL da imagem",
+            "badUrl": "A URL da imagem precisa ser um link `https://` público."
+        },
+        "field": {
+            "max": "Um embed pode ter no máximo {max} campos.",
+            "addTitle": "Adicionar campo",
+            "nameLabel": "Nome do campo (máx. 256 caracteres)",
+            "namePlaceholder": "Nome",
+            "valueLabel": "Valor do campo (máx. 1024 caracteres)",
+            "valuePlaceholder": "Texto do campo",
+            "inlineNo": "Não, largura total",
+            "inlineYes": "Sim, lado a lado",
+            "inlineLabel": "Mostrar lado a lado?",
+            "editPlaceholder": "Escolha um campo para editar",
+            "inline": "Lado a lado",
+            "block": "Largura total",
+            "editTitle": "Editar campo",
+            "editIntro": "Escolha o campo que você quer mudar.",
+            "editModalTitle": "Editar campo {n}",
+            "editNameLabel": "Nome do campo",
+            "editValueLabel": "Valor do campo",
+            "removePlaceholder": "Escolha um campo para remover",
+            "removeTitle": "Remover campo",
+            "removeIntro": "Escolha o campo que você quer apagar.",
+            "reorderPlaceholder": "Escolha um campo para mover",
+            "reorderTitle": "Reordenar campos",
+            "reorderIntro": "Escolha um campo e depois mova para cima ou para baixo.",
+            "up": "Para cima",
+            "down": "Para baixo",
+            "cancel": "Cancelar",
+            "moveTitle": "Mover campo",
+            "moving": "Movendo **{name}**. Está na posição **{position}** de **{total}**."
+        },
+        "post": {
+            "empty": "Adicione primeiro um título, texto ou um campo.",
+            "channelPlaceholder": "Escolha um canal",
+            "title": "Publicar embed",
+            "intro": "Escolha o canal onde publicar.",
+            "noChannel": "Não encontrei esse canal.",
+            "noPermission": "Preciso das permissões **Enviar mensagens** e **Inserir links** em {channel} para publicar lá.",
+            "postedTitle": "Embed publicado",
+            "posted": "Publicado em {channel}."
+        },
+        "json": {
+            "title": "JSON do embed",
+            "tooLong": "O JSON é longo demais para mostrar aqui. Veja o arquivo anexo."
+        },
+        "error": {
+            "generic": "Ocorreu um erro.",
+            "unexpected": "Ocorreu um erro inesperado.",
+            "open": "Não foi possível abrir o editor de embed."
+        }
+    },
+    "slash": {
+        "embedbuilder": {
+            "description": "Monte um embed com prévia ao vivo e publique"
+        },
+        "tools": {
+            "description": "Pequenas ferramentas: calculadora, conversores, senhas e mais",
+            "sub": {
+                "calculate": {
+                    "description": "Calcular uma expressão matemática",
+                    "options": {
+                        "expression": "A expressão a calcular (ex.: 2+2*3, sin(45 deg), 16^0.5)"
+                    }
+                },
+                "baseconvert": {
+                    "description": "Converter números entre bases",
+                    "options": {
+                        "number": "O número a converter",
+                        "from": "Base/formato de origem",
+                        "to": "Base/formato de destino (padrão: todas)"
+                    }
+                },
+                "hexcolor": {
+                    "description": "Cor hex aleatória com prévia",
+                    "options": {
+                        "color": "Uma cor hex específica (ex.: #FF5733 ou FF5733)"
+                    }
+                },
+                "generatepassword": {
+                    "description": "Gerar uma senha aleatória e forte",
+                    "options": {
+                        "length": "Tamanho da senha (padrão: 16, máx.: 50)",
+                        "uppercase": "Incluir letras maiúsculas (A-Z)",
+                        "numbers": "Incluir números (0-9)",
+                        "symbols": "Incluir símbolos (!@#$%^&*)"
+                    }
+                },
+                "time": {
+                    "description": "Hora atual em fusos horários diferentes",
+                    "options": {
+                        "timezone": "O fuso horário a mostrar (ex.: UTC, America/New_York)"
+                    }
+                },
+                "unixtime": {
+                    "description": "Timestamp Unix atual"
+                },
+                "randomuser": {
+                    "description": "Escolher um membro aleatório",
+                    "options": {
+                        "role": "Escolher só entre membros com este cargo",
+                        "bots": "Incluir bots na escolha (padrão: não)",
+                        "online": "Escolher só entre membros online (padrão: não)",
+                        "mention": "Mencionar o membro escolhido (padrão: não)"
+                    }
+                }
+            }
+        },
+        "countdown": {
+            "description": "Iniciar uma contagem regressiva",
+            "options": {
+                "minutes": "Número de minutos da contagem (0-1440)",
+                "seconds": "Número de segundos da contagem (0-59)",
+                "title": "Título da contagem regressiva (opcional)"
+            }
+        },
+        "poll": {
+            "description": "Publicar uma enquete, ou encerrar uma antes",
+            "sub": {
+                "create": {
+                    "description": "Publicar uma enquete do Discord com 2 a 10 opções",
+                    "options": {
+                        "question": "A pergunta da enquete",
+                        "option1": "Primeira opção: até 55 caracteres, 100 se anônima",
+                        "option2": "Segunda opção: até 55 caracteres, 100 se anônima",
+                        "option3": "Terceira opção (opcional): até 55 caracteres, 100 se anônima",
+                        "option4": "Quarta opção (opcional): até 55 caracteres, 100 se anônima",
+                        "option5": "Quinta opção (opcional): até 55 caracteres, 100 se anônima",
+                        "option6": "Sexta opção (opcional): até 55 caracteres, 100 se anônima",
+                        "option7": "Sétima opção (opcional): até 55 caracteres, 100 se anônima",
+                        "option8": "Oitava opção (opcional): até 55 caracteres, 100 se anônima",
+                        "option9": "Nona opção (opcional): até 55 caracteres, 100 se anônima",
+                        "option10": "Décima opção (opcional): até 55 caracteres, 100 se anônima",
+                        "hours": "Por quantas horas a enquete fica aberta: de 1 a 168 (7 dias). Padrão 24.",
+                        "multiple": "Deixar os membros escolherem mais de uma opção (padrão: não)",
+                        "anonymous": "Enquete com reações numeradas, já que as do Discord mostram quem votou. Sem limite."
+                    }
+                },
+                "end": {
+                    "description": "Encerrar agora uma enquete do Discord do Mewvo e mostrar os resultados finais",
+                    "options": {
+                        "message_link": "Link da mensagem da enquete (clique direito na enquete e Copiar link da mensagem)"
+                    }
+                }
+            }
+        },
+        "shorten": {
+            "description": "Encurtar uma URL com is.gd",
+            "options": {
+                "url": "A URL a encurtar",
+                "custom": "Final de URL personalizado (opcional)"
+            }
+        }
+    },
+    "common": {
+        "unknownSubcommand": "Subcomando desconhecido."
+    },
+    "calculate": {
+        "badCharacters": "**Há caracteres que a calculadora não consegue usar.**\n\nPermitido: números, decimais, + - * / ^ %, sin cos tan sqrt abs log exp, pi e, ()\nNão permitido: colchetes, chaves e outros símbolos",
+        "looksLikeCode": "**Isso parece código, não matemática.**\n\n**Bloqueado:** import, require, eval, Function, setTimeout, setInterval, process, fs, document, window, fetch, loops, async/await\n\nAqui só funciona matemática simples.",
+        "noResult": "Sem resultado",
+        "history": "Histórico",
+        "resultTitle": "Resultado",
+        "resultBody": "**Expressão:** `{expression}`\n**Resultado:** `{result}`\n\n-# Use os botões para continuar calculando com este resultado.",
+        "noHistory": "Nenhum cálculo no histórico.",
+        "historyTitle": "**Seus cálculos recentes**\n\n{list}",
+        "modalTitle": {
+            "add": "Digite um número para somar",
+            "subtract": "Digite um número para subtrair",
+            "multiply": "Digite um número para multiplicar",
+            "divide": "Digite um número para dividir"
+        },
+        "operandLabel": "Número para {result} {operator} …",
+        "operandPlaceholder": "Digite um número...",
+        "modalFailed": "Não foi possível abrir a calculadora. Tente de novo.",
+        "buttonFailed": "Ocorreu um erro ao processar seu pedido.",
+        "expiredButton": "Calculadora expirada",
+        "timedOut": "Esta calculadora expirou. Use o comando de novo para continuar.",
+        "evalFailed": "Não foi possível calcular a expressão.",
+        "unsupported": "A expressão contém uma operação ou função não suportada.",
+        "undefinedSymbol": "A expressão contém uma variável ou função desconhecida.",
+        "unbalanced": "Os parênteses da expressão não estão equilibrados.",
+        "badOperator": "A expressão contém um operador ou caractere inválido.",
+        "checkAgain": "Confira a expressão e tente de novo.",
+        "modal": {
+            "noContext": "Não foi possível recuperar este cálculo.",
+            "notYours": "Esta não é a sua calculadora.",
+            "contextTimedOut": "Este cálculo expirou. Comece um novo.",
+            "notNumber": "Isso não é um número.",
+            "updatedBody": "**Expressão:** `{expression}`\n**Resultado:** `{result}`\n\n*Use os botões da mensagem no canal para fazer mais operações.*",
+            "failed": "Ocorreu um erro ao processar seu cálculo."
+        }
+    },
+    "baseconvert": {
+        "base": {
+            "BIN": "Binário",
+            "OCT": "Octal",
+            "DEC": "Decimal",
+            "HEX": "Hexadecimal",
+            "B64": "Base64",
+            "B36": "Base36",
+            "B58": "Base58",
+            "B62": "Base62"
+        },
+        "noNumber": "Informe um número para converter.\n\n**Exemplo:** `/baseconvert number:1010 from:BIN to:DEC`",
+        "example": {
+            "BIN": "\n\n**Válido:** 101, 1010, 11111 | **Inválido:** 5 (o dígito 5 não é permitido)",
+            "OCT": "\n\n**Válido:** 77, 123, 755 | **Inválido:** 8 (só 0-7)",
+            "DEC": "\n\n**Válido:** 42, 123, 999 | **Inválido:** 12.34 (sem decimais)",
+            "HEX": "\n\n**Válido:** FF, A1B2, DEADBEEF | **Inválido:** G (só 0-9, A-F)"
+        },
+        "badInput": "Você digitou: `{input}`\n\nCaracteres válidos: `{alphabet}`{examples}",
+        "tooLarge": "O número é grande demais para processar.\n\nTente com um número menor.",
+        "title": "Conversão de base",
+        "fromTo": "**De {fromName} ({fromBase}):** `{from}`\n**Para {toName} ({toBase}):** `{to}`\n**Decimal:** `{decimal}`",
+        "resultTooLarge": "O resultado seria grande demais ou incompatível.\n\nTente com um número menor ou outra base de destino.",
+        "input": "**Entrada ({fromName}):** `{from}`\n",
+        "decimal": "**Decimal:** `{decimal}`\n\n",
+        "row": "**{name} ({base}):** `{value}`\n",
+        "rowTooLarge": "**{name} ({base}):** *Grande demais para converter*\n"
+    },
+    "hexcolor": {
+        "invalid": "Esse não é um código hex válido.\n\n**Formatos válidos:**\n• `#FF5733` (com cerquilha)\n• `FF5733` (sem cerquilha)\n• `F57` (forma curta de 3 dígitos)\n\n**Inválido:** `#GG5733` (G não é um dígito hex)",
+        "title": "Info da cor",
+        "body": "**Hex:** `{hex}`\n**RGB:** `{rgb}`\n**HSL:** `{hsl}`\n**Nome:** {name}",
+        "custom": "Cor personalizada",
+        "closeTo": "Parecida com: {color}",
+        "random": "Cor gerada aleatoriamente",
+        "failed": "Não foi possível obter a info da cor. Tente de novo.",
+        "color": {
+            "red": "Vermelho",
+            "green": "Verde",
+            "blue": "Azul",
+            "yellow": "Amarelo",
+            "magenta": "Magenta",
+            "cyan": "Ciano",
+            "black": "Preto",
+            "white": "Branco",
+            "gray": "Cinza",
+            "orange": "Laranja",
+            "purple": "Roxo",
+            "brown": "Marrom",
+            "pink": "Rosa",
+            "darkGreen": "Verde-escuro",
+            "navy": "Azul-marinho",
+            "gold": "Dourado",
+            "silver": "Prateado",
+            "tomato": "Tomate",
+            "turquoise": "Turquesa",
+            "lavender": "Lavanda"
+        }
+    },
+    "password": {
+        "badLength": "A senha precisa ter 8-50 caracteres. Você informou: {length}",
+        "strength": {
+            "weak": "Fraca",
+            "good": "Boa",
+            "strong": "Forte",
+            "veryStrong": "Muito forte"
+        },
+        "title": "Sua senha",
+        "body": "**Senha:** ||`{password}`||\n**Tamanho:** {length}\n**Força:** {strength}\n**Contém:** {contains}",
+        "characters": {
+            "one": "{count} caractere",
+            "many": "{count} caracteres",
+            "other": "{count} caracteres"
+        },
+        "lowercase": "Minúsculas",
+        "uppercase": "Maiúsculas",
+        "numbers": "Números",
+        "symbols": "Símbolos"
+    },
+    "randomuser": {
+        "guildOnly": "Este comando só pode ser usado em um servidor.",
+        "pickFailed": "Não foi possível escolher um membro. Tente mudar os filtros.",
+        "title": "Membro aleatório",
+        "username": "Nome de usuário",
+        "bot": "Bot",
+        "yes": "Sim",
+        "no": "Não",
+        "roles": "Cargos ({count})",
+        "more": "+{count} a mais",
+        "noRoles": "Sem cargos",
+        "fromCache": "Escolhido entre os membros que o Mewvo tem em cache; a lista completa de membros não foi carregada.",
+        "again": "Escolher outro",
+        "picked": "{member}, você foi escolhido(a).",
+        "noMatch": "Nenhum membro corresponde a esses critérios.",
+        "againFailed": "Ocorreu um erro ao escolher outro membro."
+    },
+    "time": {
+        "unknownZone": "Fuso horário desconhecido. Tente algo como UTC, America/New_York ou Europe/London.",
+        "title": "Hora atual",
+        "body": "**{zone}:** {time}\n**Timestamp Unix:** `{unix}`\n**String ISO:** `{iso}`",
+        "failed": "Não foi possível obter a hora. Tente de novo."
+    },
+    "unixtime": {
+        "title": "Timestamp Unix",
+        "body": "**Segundos desde a época Unix:** `{seconds}`\n**Milissegundos desde a época Unix:** `{ms}`\n\n**Legível (UTC):** {utc}\n**String ISO:** {iso}",
+        "failed": "Não foi possível obter o timestamp. Tente de novo."
+    },
+    "countdown": {
+        "defaultTitle": "Contagem regressiva",
+        "tooShort": "A duração precisa ser de pelo menos 1 segundo.",
+        "tooLong": "Uma contagem regressiva não pode passar de 24 horas.",
+        "started": "Contagem regressiva iniciada.",
+        "pause": "Pausar",
+        "resume": "Retomar",
+        "cancel": "Cancelar",
+        "remaining": "Tempo restante: **{time}** (termina {ends})",
+        "remainingPaused": "Tempo restante: **{time}**",
+        "finishedTitle": "{title} (terminou)",
+        "finished": "O tempo acabou.",
+        "pausedTitle": "{title} (pausada)",
+        "cancelledTitle": "{title} (cancelada)",
+        "cancelledBody": "A contagem regressiva foi cancelada.",
+        "expired": "Esta contagem regressiva terminou ou foi cancelada.",
+        "adminOnly": "Você precisa do cargo de Administrador para controlar contagens regressivas.",
+        "resumed": "Contagem regressiva retomada.",
+        "paused": "Contagem regressiva pausada.",
+        "cancelled": "Contagem regressiva cancelada.",
+        "failed": "Ocorreu um erro ao controlar a contagem regressiva."
+    },
+    "poll": {
+        "ended": "Enquete encerrada. Agora ela mostra os resultados finais: {url}",
+        "ignored": " Horas e múltipla escolha só valem para enquetes do Discord, então foram ignoradas.",
+        "reactionPosted": "Enquete com reações publicada.{ignored}",
+        "posted": "Enquete publicada. Ela fecha <t:{unix}:F> (<t:{unix}:R>). Para fechar antes, use /poll end com este link: {url}"
+    },
+    "shorten": {
+        "failed": "Não foi possível encurtar esse link. Tente mais tarde.",
+        "title": "URL encurtada",
+        "body": "Aqui está sua URL encurtada: {url}"
+    }
+}

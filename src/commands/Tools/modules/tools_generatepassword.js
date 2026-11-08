@@ -5,6 +5,7 @@ import { createEmbed, successEmbed, infoEmbed, warningEmbed } from '../../../uti
 import { logger } from '../../../utils/logger.js';
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { localized, replyText } from '../../Core/modules/commandText.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('generatepassword')
@@ -12,23 +13,28 @@ export default {
         .addIntegerOption(option =>
             option.setName('length')
                 .setDescription('Password length (default: 16, max: 50)')
+                .setDescriptionLocalizations(localized('tools.slash.tools.sub.generatepassword.options.length'))
                 .setMinValue(8)
                 .setMaxValue(50)
                 .setRequired(false))
         .addBooleanOption(option =>
             option.setName('uppercase')
                 .setDescription('Include uppercase letters (A-Z)')
+                .setDescriptionLocalizations(localized('tools.slash.tools.sub.generatepassword.options.uppercase'))
                 .setRequired(false))
         .addBooleanOption(option =>
             option.setName('numbers')
                 .setDescription('Include numbers (0-9)')
+                .setDescriptionLocalizations(localized('tools.slash.tools.sub.generatepassword.options.numbers'))
                 .setRequired(false))
         .addBooleanOption(option =>
             option.setName('symbols')
                 .setDescription('Include symbols (!@#$%^&*)')
+                .setDescriptionLocalizations(localized('tools.slash.tools.sub.generatepassword.options.symbols'))
                 .setRequired(false)),
 
     async execute(interaction) {
+        const tr = replyText(interaction);
         const deferSuccess = await InteractionHelper.safeDefer(interaction, {
             flags: MessageFlags.Ephemeral
         });
@@ -48,7 +54,7 @@ export default {
         const includeSymbols = interaction.options.getBoolean('symbols') ?? true;
 
         if (length < 8 || length > 50) {
-            await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: `Password must be 8-50 characters. You provided: ${length}` });
+            await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: tr.t('tools.password.badLength', { length }), context: { lang: tr.lang } });
             return;
         }
 
@@ -86,7 +92,7 @@ export default {
             password = password.substring(0, randomIndex) + randomSymbol + password.substring(randomIndex + 1);
         }
 
-        let strength = 'Weak';
+        let strength = tr.t('tools.password.strength.weak');
         let strengthColor = getColor('error');
 
         const hasLower = /[a-z]/.test(password);
@@ -110,25 +116,24 @@ export default {
         if (hasSymbol) score *= 1.3;
 
         if (score > 80) {
-            strength = 'Very strong';
+            strength = tr.t('tools.password.strength.veryStrong');
             strengthColor = getColor('success');
         } else if (score > 60) {
-            strength = 'Strong';
+            strength = tr.t('tools.password.strength.strong');
             strengthColor = getColor('success');
         } else if (score > 40) {
-            strength = 'Good';
+            strength = tr.t('tools.password.strength.good');
             strengthColor = getColor('warning');
         } else if (score > 20) {
-            strength = 'Weak';
+            strength = tr.t('tools.password.strength.weak');
             strengthColor = getColor('warning');
         }
 
+        const contains = `${hasLower ? tr.t('tools.password.lowercase') : ''}${hasUpper ? `, ${tr.t('tools.password.uppercase')}` : ''}`
+            + `${hasNumber ? `, ${tr.t('tools.password.numbers')}` : ''}${hasSymbol ? `, ${tr.t('tools.password.symbols')}` : ''}`;
         const embed = successEmbed(
-            'Your password',
-            `**Password:** ||\`${password}\`||\n` +
-            `**Length:** ${password.length} characters\n` +
-            `**Strength:** ${strength}\n` +
-            `**Contains:** ${hasLower ? 'Lowercase' : ''}${hasUpper ? ', Uppercase' : ''}${hasNumber ? ', Numbers' : ''}${hasSymbol ? ', Symbols' : ''}`
+            tr.t('tools.password.title'),
+            tr.t('tools.password.body', { password, length: tr.tp('tools.password.characters', password.length), strength, contains }),
         ).setColor(strengthColor);
 
         await InteractionHelper.safeEditReply(interaction, {

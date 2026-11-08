@@ -5,6 +5,7 @@ import { getColor } from '../../../config/bot.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
+import { localized, replyText } from '../../Core/modules/commandText.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('hexcolor')
@@ -12,9 +13,11 @@ export default {
         .addStringOption(option =>
             option.setName('color')
                 .setDescription('Specific hex color (e.g., #FF5733 or FF5733)')
+                .setDescriptionLocalizations(localized('tools.slash.tools.sub.hexcolor.options.color'))
                 .setRequired(false)),
 
     async execute(interaction) {
+        const tr = replyText(interaction);
         await InteractionHelper.safeExecute(
             interaction,
             async () => {
@@ -27,7 +30,7 @@ export default {
                 } else {
                     hexColor = hexColor.replace('#', '');
                     if (!/^[0-9A-Fa-f]{3,6}$/.test(hexColor)) {
-                        return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'That isn\'t a valid hex code.\n\n**Valid formats:**\n• `#FF5733` (with hash)\n• `FF5733` (without hash)\n• `F57` (3-digit shorthand)\n\n**Invalid:** `#GG5733` (G is not a hex digit)' });
+                        return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: tr.t('tools.hexcolor.invalid'), context: { lang: tr.lang } });
                     }
 
                     if (hexColor.length === 3) {
@@ -46,25 +49,22 @@ export default {
 
                 const colorPreviewUrl = `https://dummyimage.com/200x100/${hexColor.replace('#', '')}/${textColor.replace('#', '')}?text=${encodeURIComponent(hexColor)}`;
 
-                const colorName = getColorName(hexColor);
+                const colorName = getColorName(hexColor, tr);
 
                 const embed = successEmbed(
-                    'Colour info',
-                    `**Hex:** \`${hexColor}\`\n` +
-                    `**RGB:** \`rgb(${r}, ${g}, ${b})\`\n` +
-                    `**HSL:** \`${rgbToHsl(r, g, b)}\`\n` +
-                    `**Name:** ${colorName || 'Custom Color'}`
+                    tr.t('tools.hexcolor.title'),
+                    tr.t('tools.hexcolor.body', { hex: hexColor, rgb: `rgb(${r}, ${g}, ${b})`, hsl: rgbToHsl(r, g, b), name: colorName || tr.t('tools.hexcolor.custom') }),
                 )
                     .setColor(hexColor)
                     .setImage(colorPreviewUrl);
 
                 if (isRandom) {
-                    embed.setFooter({ text: 'Randomly generated color' });
+                    embed.setFooter({ text: tr.t('tools.hexcolor.random') });
                 }
 
                 await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
             },
-            'Couldn\'t get the colour info. Try again.',
+            tr.t('tools.hexcolor.failed'),
             {
                 autoDefer: true,
                 deferOptions: { flags: MessageFlags.Ephemeral }
@@ -94,47 +94,50 @@ h = s = 0;
     return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
 }
 
-function getColorName(hex) {
-    const colors = {
-        '#FF0000': 'Red',
-        '#00FF00': 'Green',
-        '#0000FF': 'Blue',
-        '#FFFF00': 'Yellow',
-        '#FF00FF': 'Magenta',
-        '#00FFFF': 'Cyan',
-        '#000000': 'Black',
-        '#FFFFFF': 'White',
-        '#808080': 'Gray',
-        '#FFA500': 'Orange',
-        '#800080': 'Purple',
-        '#A52A2A': 'Brown',
-        '#FFC0CB': 'Pink',
-        '#008000': 'Dark Green',
-        '#000080': 'Navy',
-        '#FFD700': 'Gold',
-        '#C0C0C0': 'Silver',
-        '#FF6347': 'Tomato',
-        '#40E0D0': 'Turquoise',
-        '#E6E6FA': 'Lavender'
-    };
-    
-    if (colors[hex.toUpperCase()]) {
-        return colors[hex.toUpperCase()];
+// Known colours: hex → catalog key of the name (tools.hexcolor.color.*).
+const COLOR_NAME_KEYS = {
+    '#FF0000': 'tools.hexcolor.color.red',
+    '#00FF00': 'tools.hexcolor.color.green',
+    '#0000FF': 'tools.hexcolor.color.blue',
+    '#FFFF00': 'tools.hexcolor.color.yellow',
+    '#FF00FF': 'tools.hexcolor.color.magenta',
+    '#00FFFF': 'tools.hexcolor.color.cyan',
+    '#000000': 'tools.hexcolor.color.black',
+    '#FFFFFF': 'tools.hexcolor.color.white',
+    '#808080': 'tools.hexcolor.color.gray',
+    '#FFA500': 'tools.hexcolor.color.orange',
+    '#800080': 'tools.hexcolor.color.purple',
+    '#A52A2A': 'tools.hexcolor.color.brown',
+    '#FFC0CB': 'tools.hexcolor.color.pink',
+    '#008000': 'tools.hexcolor.color.darkGreen',
+    '#000080': 'tools.hexcolor.color.navy',
+    '#FFD700': 'tools.hexcolor.color.gold',
+    '#C0C0C0': 'tools.hexcolor.color.silver',
+    '#FF6347': 'tools.hexcolor.color.tomato',
+    '#40E0D0': 'tools.hexcolor.color.turquoise',
+    '#E6E6FA': 'tools.hexcolor.color.lavender',
+};
+
+/** The colour's name in tr's language ("Close to Red" for a near one), or null when none is near. */
+export function getColorName(hex, tr) {
+    const code = hex.toUpperCase();
+    if (COLOR_NAME_KEYS[code]) {
+        return tr.t(COLOR_NAME_KEYS[code]);
     }
-    
+
     const hexValue = parseInt(hex.replace('#', ''), 16);
-    let closestColor = '';
+    let closestKey = '';
     let minDistance = Infinity;
-    
-    for (const [colorHex, name] of Object.entries(colors)) {
+
+    for (const [colorHex, key] of Object.entries(COLOR_NAME_KEYS)) {
         const colorValue = parseInt(colorHex.replace('#', ''), 16);
         const distance = Math.abs(hexValue - colorValue);
-        
+
         if (distance < minDistance) {
             minDistance = distance;
-            closestColor = name;
+            closestKey = key;
         }
     }
-    
-    return minDistance < 1000000 ? `Close to ${closestColor}` : null;
+
+    return minDistance < 1000000 ? tr.t('tools.hexcolor.closeTo', { color: tr.t(closestKey) }) : null;
 }

@@ -4,6 +4,7 @@ import { logger } from '../../../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../../../utils/errorHandler.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { localized, publicText, replyText } from '../../Core/modules/commandText.js';
 export default {
     data: new SlashCommandBuilder()
     .setName("roll")
@@ -12,6 +13,7 @@ export default {
       option
         .setName("notation")
         .setDescription("The dice notation (e.g., 2d6, 1d20 + 4)")
+        .setDescriptionLocalizations(localized('fun.slash.fun.sub.roll.options.notation'))
         .setRequired(true)
         .setMaxLength(50),
     ),
@@ -25,13 +27,15 @@ export default {
       .toLowerCase()
       .replace(/\s/g, "");
 
+    // Errors are private answers (the user's language); the result is a public reply (the server's).
+    const err = replyText(interaction);
     const match = notation.match(/^(\d*)d(\d+)([\+\-]\d+)?$/);
 
     if (!match) {
       throw new TitanBotError(
         `Invalid dice notation: ${notation}`,
         ErrorTypes.USER_INPUT,
-        'Invalid notation. Use format like `1d20` or `3d6+5`.'
+        err.t('fun.roll.invalid')
       );
     }
 
@@ -43,7 +47,7 @@ export default {
       throw new TitanBotError(
         `Too many dice requested: ${numDice}`,
         ErrorTypes.VALIDATION,
-        'Please keep the number of dice between 1 and 20.'
+        err.t('fun.roll.diceRange')
       );
     }
 
@@ -51,7 +55,7 @@ export default {
       throw new TitanBotError(
         `Invalid number of sides: ${numSides}`,
         ErrorTypes.VALIDATION,
-        'Please keep the number of sides between 1 and 1000.'
+        err.t('fun.roll.sidesRange')
       );
     }
 
@@ -66,13 +70,14 @@ export default {
 
     const finalTotal = totalRoll + modifier;
 
+    const tr = publicText(interaction);
     const resultsDetail =
-      numDice > 1 ? `**Rolls:** ${rolls.join(" + ")}\n` : "";
+      numDice > 1 ? tr.t('fun.roll.rolls', { rolls: rolls.join(" + ") }) : "";
     const modifierText = modifier !== 0 ? `+ (${modifier})` : "";
 
     const embed = successEmbed(
-      `Rolled ${numDice}d${numSides}${modifier !== 0 ? match[3] : ""}`,
-      `${resultsDetail}**Total:** ${totalRoll}${modifierText} = **${finalTotal}**`,
+      tr.t('fun.roll.title', { dice: `${numDice}d${numSides}${modifier !== 0 ? match[3] : ""}` }),
+      `${resultsDetail}${tr.t('fun.roll.total', { total: `${totalRoll}${modifierText}`, final: finalTotal })}`,
     );
 
     await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });

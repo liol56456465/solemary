@@ -2,10 +2,13 @@ import { SlashCommandBuilder, PermissionsBitField, ChannelType } from 'discord.j
 import { createEmbed, errorEmbed, successEmbed } from '../../utils/embeds.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { logger } from '../../utils/logger.js';
+import { localized, publicText } from '../Core/modules/commandText.js';
+
 export default {
     data: new SlashCommandBuilder()
         .setName("firstmsg")
         .setDescription("Get a link to the first message in this channel")
+        .setDescriptionLocalizations(localized('utility.slash.firstmsg.description'))
         .setDMPermission(false),
     category: "Utility",
 
@@ -20,6 +23,8 @@ export default {
             return;
         }
 
+        // A public answer (not ephemeral): the server's language.
+        const tr = publicText(interaction);
         const messages = await interaction.channel.messages.fetch({
             limit: 1,
             after: '1',
@@ -35,7 +40,7 @@ export default {
                 guildId: interaction.guildId
             });
             return await InteractionHelper.safeEditReply(interaction, {
-                embeds: [successEmbed('First Message', "No messages found in this channel!")],
+                embeds: [successEmbed(tr.t('utility.firstmsg.title'), tr.t('utility.firstmsg.none'))],
             });
         }
 
@@ -44,8 +49,8 @@ export default {
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [
                 successEmbed(
-                    "First Message in #" + interaction.channel.name,
-                    `Message Link: ${messageLink}`
+                    tr.t('utility.firstmsg.titleIn', { channel: interaction.channel.name }),
+                    tr.t('utility.firstmsg.link', { link: messageLink })
                 ),
             ],
         });

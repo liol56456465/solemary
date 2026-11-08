@@ -1,0 +1,236 @@
+{
+    "avatar": {
+        "title": "{name}'s Avatar",
+        "download": "[Download Link]({url})"
+    },
+    "firstmsg": {
+        "title": "First Message",
+        "none": "No messages found in this channel!",
+        "titleIn": "First Message in #{channel}",
+        "link": "Message Link: {link}"
+    },
+    "serverinfo": {
+        "title": "Server Info: {name}",
+        "id": "Server ID: {id}",
+        "owner": "Owner",
+        "members": "Members",
+        "channels": "Channels",
+        "roles": "Roles",
+        "boosts": "Boosts",
+        "boostValue": "Level {tier} ({count})",
+        "created": "Creation Date"
+    },
+    "userinfo": {
+        "title": "User Info: {name}",
+        "id": "ID",
+        "bot": "Bot",
+        "yes": "Yes",
+        "no": "No",
+        "roles": "Roles",
+        "none": "None",
+        "created": "Account Created",
+        "joined": "Joined Server",
+        "notInServer": "Not in server",
+        "highestRole": "Highest Role"
+    },
+    "weather": {
+        "title": "Weather in {place}",
+        "sources": "Sources: weather data from [MET Norway](https://api.met.no/) ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), values rounded and converted); location from [© OpenStreetMap contributors](https://www.openstreetmap.org/copyright) (ODbL).",
+        "temperature": "Temperature",
+        "humidity": "Humidity",
+        "wind": "Wind",
+        "windValue": "{speed} km/h",
+        "windFrom": "{speed} km/h from {direction}",
+        "precipitation": "Precipitation (next hour)",
+        "notAvailable": "N/A",
+        "busy": "The weather service is busy or not responding right now. Please try again in a minute.",
+        "notFound": "Could not find that location. Please check the spelling.",
+        "noForecast": "The weather service sent no forecast for this place."
+    },
+    "report": {
+        "unknownSubcommand": "Unknown subcommand.",
+        "rateLimited": "You have filed several reports recently. Please wait a few minutes before filing another.",
+        "noChannel": "The report channel has not been set up. Ask a moderator to use `/logging dashboard` or `/logging channel`.",
+        "ownerPing": "<@{ownerId}> New report",
+        "newReport": "New report",
+        "logTitle": "User Report",
+        "reportedUser": "Reported User",
+        "reportedBy": "Reported By",
+        "channel": "Channel",
+        "reason": "Reason",
+        "notDelivered": "Your report could not be delivered: the report channel is missing, logging is disabled, or I lack permission to post there. Please contact a moderator directly.",
+        "submittedTitle": "Report Submitted",
+        "submitted": "Your report against **{tag}** was sent to the moderators. Thanks for letting us know.",
+        "setchannel": {
+            "noAdmin": "You need the **Administrator** permission to set the report channel.",
+            "saveFailed": "Could not save the channel configuration.",
+            "title": "Report Channel Set",
+            "done": "All new reports will now be sent to {channel}.\nYou can also manage this from `/logging dashboard`."
+        }
+    },
+    "remind": {
+        "title": "Reminders",
+        "none": "You have no reminders. Set one with `/remind me`.",
+        "set": "Okay, I'll remind you {relative} ({time}). It comes as a DM, or here if your DMs are closed.",
+        "setTitle": "Reminder set",
+        "deleted": "Deleted reminder `{id}`.",
+        "deletedTitle": "Reminder deleted",
+        "notFound": "You have no reminder with that number. Check `/remind list`.",
+        "dbDown": "The database is not responding, so nothing was saved. Try again in a few minutes.",
+        "dbDownTitle": "Try again later"
+    },
+    "cooldown": {
+        "title": "Cooldown",
+        "serverOnly": "/cooldown only works in a server.",
+        "pickDuration": "Pick one of the listed durations.",
+        "notFound": "I could not find you in this server. Try again in a moment.",
+        "limited": "You have started {limit} cooldowns in the last 24 hours. You can start another {when}.",
+        "confirmTitle": "Start a cooldown?",
+        "start": "Start cooldown",
+        "cancel": "Cancel",
+        "notYours": "This button is not for you. Run /cooldown yourself if you want a break.",
+        "expired": "This expired, run /cooldown again.",
+        "notStarted": "No cooldown was started.",
+        "cancelledTitle": "Cancelled",
+        "notFoundButton": "I could not find you in this server, so no cooldown was started.",
+        "alreadyStarting": "A cooldown is already being started for you, so this one was not.",
+        "refused": "Discord refused the timeout, so no cooldown was started. Ask staff to check my permissions and role position.",
+        "started": "Your {duration} cooldown has started. It ends on its own {date} ({relative}). Take care.",
+        "startedTitle": "Cooldown started",
+        "duration": {
+            "1h": "1 hour",
+            "6h": "6 hours",
+            "12h": "12 hours",
+            "1d": "1 day",
+            "3d": "3 days",
+            "7d": "7 days"
+        }
+    },
+    "wipedata": {
+        "title": "Delete your data?",
+        "intro": "This permanently deletes your data in this server:",
+        "body": "Your to-do list, reminders and stored login token are the same in every server, so they are deleted everywhere. Without the login token the bot can no longer add you to the support server; Verify with Discord stores a new one. Moderation, appeal, report and verification records are kept.",
+        "final": "**This cannot be undone.**",
+        "confirm": "Confirm",
+        "cancel": "Cancel",
+        "item": {
+            "levels": "Levels and XP",
+            "birthday": "Birthday",
+            "todo": "Personal to-do list",
+            "reminders": "Reminders",
+            "oauth": "Stored Discord login token (from Verify with Discord)"
+        },
+        "partialTitle": "Not everything was deleted",
+        "partialFailed": "The database did not respond for: {items}. ",
+        "partialDeleted": "Deleted: {items}. ",
+        "partialRetry": "Run /wipedata again in a few minutes.",
+        "doneTitle": "Your data was deleted",
+        "done": "Deleted: {items}.\nLevels and birthday in this server; to-do list, reminders and the stored login token everywhere.\n\nModeration, appeal, report and verification records are kept, because they are the server's safety records. See the Privacy Policy for how to ask about those.",
+        "nothingStored": "nothing was stored",
+        "failed": "The database is not responding. Nothing may have been deleted; try again in a few minutes.",
+        "cancelledTitle": "Nothing was deleted",
+        "cancelled": "Your data is unchanged.",
+        "cancelFailed": "Could not cancel data wipe."
+    },
+    "todo": {
+        "invalidSubcommand": "Invalid subcommand.",
+        "listNotFound": "Shared list not found.",
+        "onlyCreator": "Only the list creator can add members.",
+        "alreadyMember": "User is already a member of this list.",
+        "noAccess": "You don't have access to this list.",
+        "taskNotFound": "Task not found.",
+        "alreadyDone": "Task #{id} is already completed.",
+        "createdTitle": "Shared list created",
+        "created": "Created shared list \"{name}\" with ID: `{id}`\nUse `/todo share add list_id:{id} user:@username` to add members.",
+        "memberAddedTitle": "Member added",
+        "memberAdded": "Added {user} to the shared list \"{name}\"",
+        "sharedTitle": "Shared list (ID: `{id}`)",
+        "owner": "**Owner:** {name}",
+        "members": "**Members:** {names}",
+        "tasks": "**Tasks:**",
+        "emptyShared": "*This list is empty. Click \"Add task\" to add one.*",
+        "done": "Done",
+        "open": "Open",
+        "completedBy": "• Completed by {user}",
+        "addTask": "Add task",
+        "completeTask": "Complete task",
+        "removeTask": "Remove task",
+        "taskAddedTitle": "Task added",
+        "taskAddedShared": "Added \"{task}\" to the shared list \"{name}\"",
+        "taskAddedSharedShort": "Added \"{task}\" to the shared list.",
+        "taskAdded": "Added \"{task}\" to your to-do list.",
+        "taskRemovedTitle": "Task removed",
+        "taskRemovedShared": "Removed \"{task}\" from the shared list \"{name}\".",
+        "taskRemovedSharedShort": "Removed \"{task}\" from the shared list.",
+        "taskRemoved": "Removed \"{task}\" from your to-do list.",
+        "yourList": "Your to-do list",
+        "emptyList": "Your to-do list is empty.",
+        "taskDoneTitle": "Task done",
+        "taskDone": "Marked \"{task}\" as done.",
+        "invalidListId": "Invalid shared list ID.",
+        "modalAddTitle": "Add a task",
+        "modalCompleteTitle": "Complete a task",
+        "modalRemoveTitle": "Remove a task",
+        "taskLabel": "Task",
+        "taskNumberLabel": "Task number",
+        "taskNumberPlaceholder": "For example 3",
+        "tooFast": "You're going a bit fast. Wait a moment and try again.",
+        "emptyText": "Task text cannot be empty.",
+        "badTaskId": "Task ID must be a positive number.",
+        "addFailed": "An error occurred while adding the task.",
+        "completeFailed": "An error occurred while completing the task.",
+        "removeFailed": "An error occurred while removing the task."
+    },
+    "slash": {
+        "avatar": {
+            "description": "Display a user's avatar image",
+            "options": { "target": "The user whose avatar you want to see (defaults to you)" }
+        },
+        "cooldown": {
+            "description": "Take a break: put yourself in a timeout for a while",
+            "options": { "duration": "How long", "reason": "Why (optional; only staff see it)" }
+        },
+        "firstmsg": { "description": "Get a link to the first message in this channel" },
+        "remind": {
+            "description": "Reminders for yourself",
+            "sub": {
+                "me": { "description": "Remind me about something later", "options": { "in": "When, like 10m, 2h, 1d or 1d12h", "text": "What to remind you about" } },
+                "list": { "description": "Your reminders that haven't gone off yet" },
+                "delete": { "description": "Delete one of your reminders", "options": { "id": "The number from /remind list" } }
+            }
+        },
+        "report": {
+            "description": "Report a user to server staff, or configure where reports are sent.",
+            "sub": {
+                "file": { "description": "Report a user to the server moderation team.", "options": { "user": "The user you want to report.", "reason": "The reason for the report (be detailed)." } },
+                "setchannel": { "description": "Set the channel where user reports are sent. (Administrator)", "options": { "channel": "The text channel to receive reports." } }
+            }
+        },
+        "serverinfo": { "description": "Get detailed information about the server" },
+        "todo": {
+            "description": "Manage your personal to-do list",
+            "sub": {
+                "add": { "description": "Add a task to your to-do list", "options": { "task": "The task to add" } },
+                "list": { "description": "View your to-do list" },
+                "complete": { "description": "Mark a task as complete", "options": { "number": "The number of the task to complete" } },
+                "remove": { "description": "Remove a task from your to-do list", "options": { "number": "The number of the task to remove" } },
+                "share": { "description": "Manage shared to-do lists" },
+                "shareCreate": { "description": "Create a new shared to-do list", "options": { "name": "Name for the shared list" } },
+                "shareAdd": { "description": "Add a member to a shared list", "options": { "user": "User to add to the list" } },
+                "shareView": { "description": "View a shared to-do list" },
+                "shareAddtask": { "description": "Add a task to a shared to-do list" },
+                "shareRemove": { "description": "Remove a task from a shared to-do list" }
+            },
+            "options": { "listId": "ID of the shared list" }
+        },
+        "userinfo": {
+            "description": "Get detailed information about a user",
+            "options": { "target": "The user to inspect (defaults to you)" }
+        },
+        "weather": {
+            "description": "Get real-time weather information for a location",
+            "options": { "city": "The city name, e.g., 'London' or 'Tokyo'" }
+        },
+        "wipedata": { "description": "Delete your levels, birthday, to-do list, reminders and login token (cannot be undone)" }
+    }
+}

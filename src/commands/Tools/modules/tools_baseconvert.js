@@ -4,6 +4,7 @@ import { logger } from '../../../utils/logger.js';
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { getColor } from '../../../config/bot.js';
+import { localized, publicText } from '../../Core/modules/commandText.js';
 
 const BASE_ALPHABETS = {
     'BIN': { base: 2, prefix: '0b', name: 'Binary', alphabet: '01' },
@@ -14,6 +15,24 @@ const BASE_ALPHABETS = {
     'B36': { base: 36, prefix: '', name: 'Base36', alphabet: '0-9A-Z' },
     'B58': { base: 58, prefix: '', name: 'Base58', alphabet: '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz' },
     'B62': { base: 62, prefix: '', name: 'Base62', alphabet: '0-9A-Za-z' },
+};
+
+// Catalog keys of the base names (the choice names above stay English: names are not localized).
+const BASE_NAME_KEYS = {
+    BIN: 'tools.baseconvert.base.BIN',
+    OCT: 'tools.baseconvert.base.OCT',
+    DEC: 'tools.baseconvert.base.DEC',
+    HEX: 'tools.baseconvert.base.HEX',
+    B64: 'tools.baseconvert.base.B64',
+    B36: 'tools.baseconvert.base.B36',
+    B58: 'tools.baseconvert.base.B58',
+    B62: 'tools.baseconvert.base.B62',
+};
+const EXAMPLE_KEYS = {
+    BIN: 'tools.baseconvert.example.BIN',
+    OCT: 'tools.baseconvert.example.OCT',
+    DEC: 'tools.baseconvert.example.DEC',
+    HEX: 'tools.baseconvert.example.HEX',
 };
 
 const BASE_NAMES = Object.entries(BASE_ALPHABETS).map(([key, { name }]) => ({ name: `${key} (${name})`, value: key }));
@@ -101,19 +120,25 @@ export default {
         .addStringOption(option =>
             option.setName('number')
                 .setDescription('The number to convert')
+                .setDescriptionLocalizations(localized('tools.slash.tools.sub.baseconvert.options.number'))
                 .setRequired(true))
         .addStringOption(option =>
             option.setName('from')
                 .setDescription('Source base/format')
+                .setDescriptionLocalizations(localized('tools.slash.tools.sub.baseconvert.options.from'))
                 .setRequired(true)
                 .addChoices(...BASE_NAMES))
         .addStringOption(option =>
             option.setName('to')
                 .setDescription('Target base/format (default: all)')
+                .setDescriptionLocalizations(localized('tools.slash.tools.sub.baseconvert.options.to'))
                 .setRequired(false)
                 .addChoices(...BASE_NAMES)),
 
     async execute(interaction) {
+        // The answer is posted in the channel (not ephemeral): the server's language.
+        const tr = publicText(interaction);
+        const nameOf = (key) => tr.t(BASE_NAME_KEYS[key]);
         const deferSuccess = await InteractionHelper.safeDefer(interaction);
         if (!deferSuccess) {
             logger.warn(`BaseConvert interaction defer failed`, {
@@ -128,7 +153,8 @@ export default {
         const fromBase = interaction.options.getString('from');
         const toBase = interaction.options.getString('to');
 
-        const { prefix: fromPrefix, name: fromName } = BASE_ALPHABETS[fromBase];
+        const { prefix: fromPrefix } = BASE_ALPHABETS[fromBase];
+        const fromName = nameOf(fromBase);
 
         const cleanNumber = fromPrefix && numberStr.startsWith(fromPrefix)
             ? numberStr.slice(fromPrefix.length)
@@ -137,7 +163,8 @@ export default {
         if (!cleanNumber) {
             return replyUserError(interaction, {
                 type: ErrorTypes.VALIDATION,
-                message: 'You must provide a number to convert.\n\n**Example:** `/baseconvert number:1010 from:BIN to:DEC`',
+                message: tr.t('tools.baseconvert.noNumber'),
+                context: { lang: tr.lang },
             });
         }
 
@@ -145,20 +172,12 @@ export default {
         const regex = new RegExp(`^[${alphabet}]+$`, 'i');
 
         if (!regex.test(cleanNumber)) {
-            let examples = '';
-            if (fromBase === 'BIN') {
-                examples = '\n\n**Valid:** 101, 1010, 11111 | **Invalid:** 5 (digit 5 not allowed)';
-            } else if (fromBase === 'OCT') {
-                examples = '\n\n**Valid:** 77, 123, 755 | **Invalid:** 8 (only 0-7 allowed)';
-            } else if (fromBase === 'DEC') {
-                examples = '\n\n**Valid:** 42, 123, 999 | **Invalid:** 12.34 (no decimals)';
-            } else if (fromBase === 'HEX') {
-                examples = '\n\n**Valid:** FF, A1B2, DEADBEEF | **Invalid:** G (only 0-9, A-F)';
-            }
+            const examples = EXAMPLE_KEYS[fromBase] ? tr.t(EXAMPLE_KEYS[fromBase]) : '';
             logger.warn(`Invalid base conversion input: ${cleanNumber} for base ${fromBase}`);
             return replyUserError(interaction, {
                 type: ErrorTypes.VALIDATION,
-                message: `You provided: \`${cleanNumber}\`\n\nValid characters: \`${alphabet}\`${examples}`,
+                message: tr.t('tools.baseconvert.badInput', { input: cleanNumber, alphabet, examples }),
+                context: { lang: tr.lang },
             });
         }
 
@@ -173,53 +192,57 @@ export default {
             logger.error('Base conversion parse error:', error);
             return replyUserError(interaction, {
                 type: ErrorTypes.VALIDATION,
-                message: 'The number is too large to process.\n\nTry with a smaller number.',
+                message: tr.t('tools.baseconvert.tooLarge'),
+                context: { lang: tr.lang },
             });
         }
 
         if (toBase) {
-            const { prefix: toPrefix, name: toName } = BASE_ALPHABETS[toBase];
+            const { prefix: toPrefix } = BASE_ALPHABETS[toBase];
+            const toName = nameOf(toBase);
             let result;
 
             try {
                 result = formatBigIntToBase(decimalValue, toBase);
 
                 const embed = successEmbed(
-                    'Base conversion',
-                    `**From ${fromName} (${fromBase}):** \`${fromPrefix}${cleanNumber}\`\n` +
-                    `**To ${toName} (${toBase}):** \`${toPrefix}${result}\`\n` +
-                    `**Decimal:** \`${decimalValue.toLocaleString()}\``
+                    tr.t('tools.baseconvert.title'),
+                    tr.t('tools.baseconvert.fromTo', {
+                        fromName, fromBase, from: `${fromPrefix}${cleanNumber}`, toName, toBase, to: `${toPrefix}${result}`, decimal: decimalValue.toLocaleString(),
+                    }),
                 );
                 embed.setColor(getColor('success'));
 
                 await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
 
             } catch (error) {
-                logger.error(`Base conversion error to ${toName}:`, error);
+                logger.error(`Base conversion error to ${BASE_ALPHABETS[toBase].name}:`, error);
                 await replyUserError(interaction, {
                     type: ErrorTypes.VALIDATION,
-                    message: 'The result would be too large or incompatible.\n\nTry with a smaller number or different target base.',
+                    message: tr.t('tools.baseconvert.resultTooLarge'),
+                    context: { lang: tr.lang },
                 });
             }
 
         } else {
-            let description = `**Input (${fromName}):** \`${fromPrefix}${cleanNumber}\`\n`;
-            description += `**Decimal:** \`${decimalValue.toLocaleString()}\`\n\n`;
+            let description = tr.t('tools.baseconvert.input', { fromName, from: `${fromPrefix}${cleanNumber}` });
+            description += tr.t('tools.baseconvert.decimal', { decimal: decimalValue.toLocaleString() });
 
-            for (const [baseKey, { prefix, name }] of Object.entries(BASE_ALPHABETS)) {
+            for (const [baseKey, { prefix }] of Object.entries(BASE_ALPHABETS)) {
+                const name = nameOf(baseKey);
                 if (baseKey === fromBase) continue;
 
                 try {
                     let value = formatBigIntToBase(decimalValue, baseKey);
 
-                    description += `**${name} (${baseKey}):** \`${prefix}${value}\`\n`;
+                    description += tr.t('tools.baseconvert.row', { name, base: baseKey, value: `${prefix}${value}` });
                 } catch (error) {
-                    description += `**${name} (${baseKey}):** *Too large to convert*\n`;
+                    description += tr.t('tools.baseconvert.rowTooLarge', { name, base: baseKey });
                 }
             }
 
             const embed = successEmbed(
-                'Base conversion',
+                tr.t('tools.baseconvert.title'),
                 description
             );
             embed.setColor(getColor('primary'));

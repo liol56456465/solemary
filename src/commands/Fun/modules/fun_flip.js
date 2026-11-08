@@ -4,6 +4,7 @@ import { logger } from '../../../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../../../utils/errorHandler.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { publicText } from '../../Core/modules/commandText.js';
 export default {
     data: new SlashCommandBuilder()
     .setName("flip")
@@ -11,10 +12,12 @@ export default {
   category: 'Fun',
 
   async execute(interaction, config, client) {
-    const result = Math.random() < 0.5 ? "Heads" : "Tails";
+    // A public reply: the server's language.
+    const tr = publicText(interaction);
+    const result = Math.random() < 0.5 ? tr.t('fun.flip.heads') : tr.t('fun.flip.tails');
     const embed = successEmbed(
-      "Coin flip",
-      `It's **${result}**.`,
+      tr.t('fun.flip.title'),
+      tr.t('fun.flip.result', { result }),
     );
 
     await InteractionHelper.safeReply(interaction, { embeds: [embed] });

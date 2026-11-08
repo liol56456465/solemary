@@ -1,0 +1,236 @@
+{
+    "avatar": {
+        "title": "Avatar de {name}",
+        "download": "[Télécharger]({url})"
+    },
+    "firstmsg": {
+        "title": "Premier message",
+        "none": "Aucun message dans ce salon !",
+        "titleIn": "Premier message dans #{channel}",
+        "link": "Lien du message : {link}"
+    },
+    "serverinfo": {
+        "title": "Infos du serveur : {name}",
+        "id": "ID du serveur : {id}",
+        "owner": "Propriétaire",
+        "members": "Membres",
+        "channels": "Salons",
+        "roles": "Rôles",
+        "boosts": "Boosts",
+        "boostValue": "Niveau {tier} ({count})",
+        "created": "Date de création"
+    },
+    "userinfo": {
+        "title": "Infos du membre : {name}",
+        "id": "ID",
+        "bot": "Bot",
+        "yes": "Oui",
+        "no": "Non",
+        "roles": "Rôles",
+        "none": "Aucun",
+        "created": "Compte créé",
+        "joined": "A rejoint le serveur",
+        "notInServer": "Pas sur le serveur",
+        "highestRole": "Rôle le plus haut"
+    },
+    "weather": {
+        "title": "Météo à {place}",
+        "sources": "Sources : données météo de [MET Norway](https://api.met.no/) ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), valeurs arrondies et converties) ; lieu par [© contributeurs OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL).",
+        "temperature": "Température",
+        "humidity": "Humidité",
+        "wind": "Vent",
+        "windValue": "{speed} km/h",
+        "windFrom": "{speed} km/h, venant du {direction}",
+        "precipitation": "Précipitations (prochaine heure)",
+        "notAvailable": "N/D",
+        "busy": "Le service météo est surchargé ou ne répond pas pour le moment. Réessaie dans une minute.",
+        "notFound": "Impossible de trouver ce lieu. Vérifie l'orthographe.",
+        "noForecast": "Le service météo n'a envoyé aucune prévision pour ce lieu."
+    },
+    "report": {
+        "unknownSubcommand": "Sous-commande inconnue.",
+        "rateLimited": "Tu as envoyé plusieurs signalements récemment. Attends quelques minutes avant d'en envoyer un autre.",
+        "noChannel": "Le salon des signalements n'est pas configuré. Demande à un modérateur d'utiliser `/logging dashboard` ou `/logging channel`.",
+        "ownerPing": "<@{ownerId}> Nouveau signalement",
+        "newReport": "Nouveau signalement",
+        "logTitle": "Signalement d'un membre",
+        "reportedUser": "Membre signalé",
+        "reportedBy": "Signalé par",
+        "channel": "Salon",
+        "reason": "Raison",
+        "notDelivered": "Ton signalement n'a pas pu être transmis : le salon des signalements n'existe plus, les logs sont désactivés ou je n'ai pas le droit d'y écrire. Contacte directement un modérateur.",
+        "submittedTitle": "Signalement envoyé",
+        "submitted": "Ton signalement contre **{tag}** a été envoyé aux modérateurs. Merci de nous avoir prévenus.",
+        "setchannel": {
+            "noAdmin": "Il te faut la permission **Administrateur** pour choisir le salon des signalements.",
+            "saveFailed": "Impossible d'enregistrer le réglage du salon.",
+            "title": "Salon des signalements défini",
+            "done": "Tous les nouveaux signalements seront envoyés dans {channel}.\nTu peux aussi gérer ça depuis `/logging dashboard`."
+        }
+    },
+    "remind": {
+        "title": "Rappels",
+        "none": "Tu n'as aucun rappel. Crées-en un avec `/remind me`.",
+        "set": "D'accord, je te le rappellerai {relative} ({time}). Le rappel arrive en MP, ou ici si tes MP sont fermés.",
+        "setTitle": "Rappel créé",
+        "deleted": "Rappel `{id}` supprimé.",
+        "deletedTitle": "Rappel supprimé",
+        "notFound": "Tu n'as aucun rappel avec ce numéro. Regarde `/remind list`.",
+        "dbDown": "La base de données ne répond pas, rien n'a donc été enregistré. Réessaie dans quelques minutes.",
+        "dbDownTitle": "Réessaie plus tard"
+    },
+    "cooldown": {
+        "title": "Pause",
+        "serverOnly": "/cooldown ne fonctionne que dans un serveur.",
+        "pickDuration": "Choisis une des durées proposées.",
+        "notFound": "Je ne te trouve pas sur ce serveur. Réessaie dans un instant.",
+        "limited": "Tu as lancé {limit} pauses ces dernières 24 heures. Tu pourras en lancer une autre {when}.",
+        "confirmTitle": "Lancer une pause ?",
+        "start": "Lancer la pause",
+        "cancel": "Annuler",
+        "notYours": "Ce bouton n'est pas pour toi. Lance /cooldown toi-même si tu veux une pause.",
+        "expired": "C'est expiré, relance /cooldown.",
+        "notStarted": "Aucune pause n'a été lancée.",
+        "cancelledTitle": "Annulé",
+        "notFoundButton": "Je ne te trouve pas sur ce serveur, aucune pause n'a donc été lancée.",
+        "alreadyStarting": "Une pause est déjà en train d'être lancée pour toi, celle-ci ne l'a donc pas été.",
+        "refused": "Discord a refusé l'exclusion temporaire, aucune pause n'a donc été lancée. Demande au staff de vérifier mes permissions et la position de mon rôle.",
+        "started": "Ta pause ({duration}) a commencé. Elle se termine toute seule le {date} ({relative}). Prends soin de toi.",
+        "startedTitle": "Pause lancée",
+        "duration": {
+            "1h": "1 heure",
+            "6h": "6 heures",
+            "12h": "12 heures",
+            "1d": "1 jour",
+            "3d": "3 jours",
+            "7d": "7 jours"
+        }
+    },
+    "wipedata": {
+        "title": "Supprimer tes données ?",
+        "intro": "Cela supprime définitivement tes données sur ce serveur :",
+        "body": "Ta liste de tâches, tes rappels et ton jeton de connexion enregistré sont les mêmes sur tous les serveurs, ils sont donc supprimés partout. Sans le jeton de connexion, le bot ne peut plus t'ajouter au serveur d'assistance ; « Vérifier avec Discord » en enregistre un nouveau. Les dossiers de modération, d'appels, de signalements et de vérification sont conservés.",
+        "final": "**C'est irréversible.**",
+        "confirm": "Confirmer",
+        "cancel": "Annuler",
+        "item": {
+            "levels": "Niveaux et XP",
+            "birthday": "Anniversaire",
+            "todo": "Liste de tâches personnelle",
+            "reminders": "Rappels",
+            "oauth": "Jeton de connexion Discord enregistré (de « Vérifier avec Discord »)"
+        },
+        "partialTitle": "Tout n'a pas été supprimé",
+        "partialFailed": "La base de données n'a pas répondu pour : {items}. ",
+        "partialDeleted": "Supprimé : {items}. ",
+        "partialRetry": "Relance /wipedata dans quelques minutes.",
+        "doneTitle": "Tes données ont été supprimées",
+        "done": "Supprimé : {items}.\nNiveaux et anniversaire sur ce serveur ; liste de tâches, rappels et jeton de connexion enregistré partout.\n\nLes dossiers de modération, d'appels, de signalements et de vérification sont conservés, car ce sont les dossiers de sécurité du serveur. La Politique de confidentialité explique comment poser des questions à leur sujet.",
+        "nothingStored": "rien n'était enregistré",
+        "failed": "La base de données ne répond pas. Il est possible que rien n'ait été supprimé ; réessaie dans quelques minutes.",
+        "cancelledTitle": "Rien n'a été supprimé",
+        "cancelled": "Tes données n'ont pas changé.",
+        "cancelFailed": "Impossible d'annuler la suppression des données."
+    },
+    "todo": {
+        "invalidSubcommand": "Sous-commande invalide.",
+        "listNotFound": "Liste partagée introuvable.",
+        "onlyCreator": "Seul le créateur de la liste peut ajouter des membres.",
+        "alreadyMember": "Cette personne fait déjà partie de la liste.",
+        "noAccess": "Tu n'as pas accès à cette liste.",
+        "taskNotFound": "Tâche introuvable.",
+        "alreadyDone": "La tâche #{id} est déjà terminée.",
+        "createdTitle": "Liste partagée créée",
+        "created": "Liste partagée « {name} » créée avec l'ID : `{id}`\nUtilise `/todo share add list_id:{id} user:@username` pour ajouter des membres.",
+        "memberAddedTitle": "Membre ajouté",
+        "memberAdded": "{user} a été ajouté à la liste partagée « {name} »",
+        "sharedTitle": "Liste partagée (ID : `{id}`)",
+        "owner": "**Propriétaire :** {name}",
+        "members": "**Membres :** {names}",
+        "tasks": "**Tâches :**",
+        "emptyShared": "*Cette liste est vide. Clique sur « Ajouter une tâche » pour en ajouter une.*",
+        "done": "Fait",
+        "open": "À faire",
+        "completedBy": "• Terminée par {user}",
+        "addTask": "Ajouter une tâche",
+        "completeTask": "Terminer une tâche",
+        "removeTask": "Retirer une tâche",
+        "taskAddedTitle": "Tâche ajoutée",
+        "taskAddedShared": "« {task} » ajoutée à la liste partagée « {name} »",
+        "taskAddedSharedShort": "« {task} » ajoutée à la liste partagée.",
+        "taskAdded": "« {task} » ajoutée à ta liste de tâches.",
+        "taskRemovedTitle": "Tâche retirée",
+        "taskRemovedShared": "« {task} » retirée de la liste partagée « {name} ».",
+        "taskRemovedSharedShort": "« {task} » retirée de la liste partagée.",
+        "taskRemoved": "« {task} » retirée de ta liste de tâches.",
+        "yourList": "Ta liste de tâches",
+        "emptyList": "Ta liste de tâches est vide.",
+        "taskDoneTitle": "Tâche terminée",
+        "taskDone": "« {task} » marquée comme terminée.",
+        "invalidListId": "ID de liste partagée invalide.",
+        "modalAddTitle": "Ajouter une tâche",
+        "modalCompleteTitle": "Terminer une tâche",
+        "modalRemoveTitle": "Retirer une tâche",
+        "taskLabel": "Tâche",
+        "taskNumberLabel": "Numéro de la tâche",
+        "taskNumberPlaceholder": "Par exemple 3",
+        "tooFast": "Tu vas un peu vite. Attends un instant et réessaie.",
+        "emptyText": "Le texte de la tâche ne peut pas être vide.",
+        "badTaskId": "Le numéro de la tâche doit être un nombre positif.",
+        "addFailed": "Une erreur est survenue en ajoutant la tâche.",
+        "completeFailed": "Une erreur est survenue en terminant la tâche.",
+        "removeFailed": "Une erreur est survenue en retirant la tâche."
+    },
+    "slash": {
+        "avatar": {
+            "description": "Affiche l'avatar d'un membre",
+            "options": { "target": "Le membre dont tu veux voir l'avatar (toi par défaut)" }
+        },
+        "cooldown": {
+            "description": "Fais une pause : mets-toi en exclusion temporaire un moment",
+            "options": { "duration": "Combien de temps", "reason": "Pourquoi (facultatif ; seul le staff le voit)" }
+        },
+        "firstmsg": { "description": "Obtiens un lien vers le premier message de ce salon" },
+        "remind": {
+            "description": "Des rappels pour toi",
+            "sub": {
+                "me": { "description": "Rappelle-moi quelque chose plus tard", "options": { "in": "Quand, par ex. 10m, 2h, 1d ou 1d12h", "text": "Ce que je dois te rappeler" } },
+                "list": { "description": "Tes rappels qui ne se sont pas encore déclenchés" },
+                "delete": { "description": "Supprime un de tes rappels", "options": { "id": "Le numéro donné par /remind list" } }
+            }
+        },
+        "report": {
+            "description": "Signale un membre au staff, ou choisis où vont les signalements.",
+            "sub": {
+                "file": { "description": "Signale un membre à l'équipe de modération du serveur.", "options": { "user": "Le membre que tu veux signaler.", "reason": "La raison du signalement (sois précis)." } },
+                "setchannel": { "description": "Choisis le salon des signalements. (Administrateur)", "options": { "channel": "Le salon textuel qui reçoit les signalements." } }
+            }
+        },
+        "serverinfo": { "description": "Infos détaillées sur le serveur" },
+        "todo": {
+            "description": "Gère ta liste de tâches personnelle",
+            "sub": {
+                "add": { "description": "Ajoute une tâche à ta liste", "options": { "task": "La tâche à ajouter" } },
+                "list": { "description": "Affiche ta liste de tâches" },
+                "complete": { "description": "Marque une tâche comme terminée", "options": { "number": "Le numéro de la tâche terminée" } },
+                "remove": { "description": "Retire une tâche de ta liste", "options": { "number": "Le numéro de la tâche à retirer" } },
+                "share": { "description": "Gère les listes de tâches partagées" },
+                "shareCreate": { "description": "Crée une nouvelle liste de tâches partagée", "options": { "name": "Nom de la liste partagée" } },
+                "shareAdd": { "description": "Ajoute un membre à une liste partagée", "options": { "user": "Le membre à ajouter à la liste" } },
+                "shareView": { "description": "Affiche une liste de tâches partagée" },
+                "shareAddtask": { "description": "Ajoute une tâche à une liste partagée" },
+                "shareRemove": { "description": "Retire une tâche d'une liste partagée" }
+            },
+            "options": { "listId": "ID de la liste partagée" }
+        },
+        "userinfo": {
+            "description": "Infos détaillées sur un membre",
+            "options": { "target": "Le membre à afficher (toi par défaut)" }
+        },
+        "weather": {
+            "description": "La météo en temps réel pour un lieu",
+            "options": { "city": "Le nom de la ville, par ex. « Paris » ou « Tokyo »" }
+        },
+        "wipedata": { "description": "Supprime tes niveaux, anniversaire, tâches, rappels et jeton de connexion (irréversible)" }
+    }
+}

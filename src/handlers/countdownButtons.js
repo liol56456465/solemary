@@ -6,15 +6,23 @@ import { replyUserError, ErrorTypes } from '../utils/errorHandler.js';
 import { hasOwnerPower } from '../utils/ownerPower.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
 import { noteOwnerOverride } from '../services/ownerOverride.js';
-function createControlButtons(countdownId, isPaused = false) {
+import { botText, textForGuild } from '../utils/botText.js';
+import { replyText } from '../commands/Core/modules/commandText.js';
+
+// The countdown message is a public post: the server's language. Answers to the person who
+// clicked a button only they see: their own language.
+const messageText = (countdownData) => textForGuild(countdownData?.message?.guildId ?? null, { purpose: 'public' });
+
+function createControlButtons(countdownId, isPaused = false, { lang } = {}) {
+    const tr = botText(lang);
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId(`countdown_pause:${countdownId}`)
-            .setLabel(isPaused ? "Resume" : "Pause")
+            .setLabel(isPaused ? tr.t('tools.countdown.resume') : tr.t('tools.countdown.pause'))
             .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
             .setCustomId(`countdown_cancel:${countdownId}`)
-            .setLabel("Cancel")
+            .setLabel(tr.t('tools.countdown.cancel'))
             .setStyle(ButtonStyle.Danger),
     );
 }
@@ -38,10 +46,10 @@ function formatTime(seconds) {
 // client between edits.
 const UPDATE_INTERVAL_MS = 15_000;
 
-function buildRunningEmbed(countdownData, remaining) {
+function buildRunningEmbed(countdownData, remaining, tr = messageText(countdownData)) {
     return successEmbed(
         countdownData.title,
-        `Time remaining: **${formatTime(Math.ceil(remaining / 1000))}** (ends <t:${Math.ceil(countdownData.endTime / 1000)}:R>)`,
+        tr.t('tools.countdown.remaining', { time: formatTime(Math.ceil(remaining / 1000)), ends: `<t:${Math.ceil(countdownData.endTime / 1000)}:R>` }),
     );
 }
 
@@ -61,11 +69,12 @@ function startCountdown(countdownId, countdownData, activeCountdowns) {
 
             const remaining = Math.max(0, countdownData.endTime - Date.now());
             countdownData.remainingTime = remaining;
+            const tr = messageText(countdownData);
 
             if (remaining <= 0) {
                 const finishedEmbed = successEmbed(
-                    `${countdownData.title} (finished)`,
-                    "Time's up.",
+                    tr.t('tools.countdown.finishedTitle', { title: countdownData.title }),
+                    tr.t('tools.countdown.finished'),
                 );
 
                 await countdownData.message.edit({
@@ -79,8 +88,8 @@ function startCountdown(countdownId, countdownData, activeCountdowns) {
 
             try {
                 await countdownData.message.edit({
-                    embeds: [buildRunningEmbed(countdownData, remaining)],
-                    components: [createControlButtons(countdownId, false)],
+                    embeds: [buildRunningEmbed(countdownData, remaining, tr)],
+                    components: [createControlButtons(countdownId, false, { lang: tr.lang })],
                 });
             } catch (error) {
                 logger.error("Error updating countdown message:", error);
@@ -108,6 +117,7 @@ function cleanupCountdown(countdownId, activeCountdowns) {
 }
 
 async function countdownButtonHandler(interaction, client, args) {
+    const tr = replyText(interaction);
     try {
         const { activeCountdowns } = await import('../commands/Tools/countdown.js');
         // customId is `countdown_<action>:<countdownId>`; the router strips the
@@ -118,7 +128,7 @@ async function countdownButtonHandler(interaction, client, args) {
         const countdownData = activeCountdowns.get(countdownId);
         if (!countdownData) {
             return await interaction.reply({
-                content: "This countdown has expired or was cancelled.",
+                content: tr.t('tools.countdown.expired'),
                 flags: ["Ephemeral"],
             });
         }
@@ -126,7 +136,7 @@ async function countdownButtonHandler(interaction, client, args) {
         // Pausing or cancelling a public countdown affects everyone: Administrator only (access model).
         if (!hasOwnerPower(interaction.user.id, interaction.guildId) && !isAdministrator(interaction.member)) {
             return await interaction.reply({
-                content: 'You need the Administrator role to control countdowns.',
+                content: tr.t('tools.countdown.adminOnly'),
                 flags: ["Ephemeral"],
             });
         }
@@ -134,6 +144,7 @@ async function countdownButtonHandler(interaction, client, args) {
             noteOwnerOverride({ client, guildId: interaction.guildId, userId: interaction.user.id, username: interaction.user.username, action: `countdown ${action}`, via: 'button' });
         }
 
+        const trMessage = messageText(countdownData);
         switch (action) {
             case "pause":
                 if (countdownData.isPaused) {
@@ -142,12 +153,12 @@ async function countdownButtonHandler(interaction, client, args) {
                     startCountdown(countdownId, countdownData, activeCountdowns);
 
                     await countdownData.message.edit({
-                        embeds: [buildRunningEmbed(countdownData, countdownData.remainingTime)],
-                        components: [createControlButtons(countdownId, false)],
+                        embeds: [buildRunningEmbed(countdownData, countdownData.remainingTime, trMessage)],
+                        components: [createControlButtons(countdownId, false, { lang: trMessage.lang })],
                     });
 
                     await interaction.reply({
-                        content: "Countdown resumed.",
+                        content: tr.t('tools.countdown.resumed'),
                         flags: ["Ephemeral"],
                     });
                 } else {
@@ -158,14 +169,14 @@ async function countdownButtonHandler(interaction, client, args) {
                     // No end timestamp while paused: it would keep counting down in the client.
                     await countdownData.message.edit({
                         embeds: [successEmbed(
-                            `${countdownData.title} (paused)`,
-                            `Time remaining: **${formatTime(Math.ceil(countdownData.remainingTime / 1000))}**`,
+                            trMessage.t('tools.countdown.pausedTitle', { title: countdownData.title }),
+                            trMessage.t('tools.countdown.remainingPaused', { time: formatTime(Math.ceil(countdownData.remainingTime / 1000)) }),
                         )],
-                        components: [createControlButtons(countdownId, true)],
+                        components: [createControlButtons(countdownId, true, { lang: trMessage.lang })],
                     });
 
                     await interaction.reply({
-                        content: "Countdown paused.",
+                        content: tr.t('tools.countdown.paused'),
                         flags: ["Ephemeral"],
                     });
                 }
@@ -175,8 +186,8 @@ async function countdownButtonHandler(interaction, client, args) {
                 clearTimeout(countdownData.interval);
 
                 const embed = successEmbed(
-                    `${countdownData.title} (cancelled)`,
-                    "The countdown was cancelled.",
+                    trMessage.t('tools.countdown.cancelledTitle', { title: countdownData.title }),
+                    trMessage.t('tools.countdown.cancelledBody'),
                 );
 
                 await countdownData.message.edit({
@@ -187,7 +198,7 @@ async function countdownButtonHandler(interaction, client, args) {
                 cleanupCountdown(countdownId, activeCountdowns);
 
                 await interaction.reply({
-                    content: "Countdown cancelled.",
+                    content: tr.t('tools.countdown.cancelled'),
                     flags: ["Ephemeral"],
                 });
                 break;
@@ -196,7 +207,7 @@ async function countdownButtonHandler(interaction, client, args) {
         logger.error('Countdown button handler error:', error);
         try {
             if (!interaction.replied && !interaction.deferred) {
-                await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred controlling the countdown.' });
+                await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('tools.countdown.failed'), context: { lang: tr.lang } });
             }
         } catch (err) {
             logger.error('Failed to send error message:', err);

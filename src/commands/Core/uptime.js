@@ -3,12 +3,16 @@ import { createEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+import { localized, publicText } from './modules/commandText.js';
 export default {
     data: new SlashCommandBuilder()
     .setName("uptime")
-    .setDescription("Check how long the bot has been online"),
+    .setDescription("Check how long the bot has been online")
+    .setDescriptionLocalizations(localized('core.slash.uptime.description')),
 
   async execute(interaction) {
+    // A public answer (deferred without ephemeral): the server's language.
+    const tr = publicText(interaction);
     try {
       await InteractionHelper.safeDefer(interaction);
       
@@ -20,11 +24,11 @@ export default {
       let minutes = Math.floor(totalSeconds / 60);
       let seconds = Math.floor(totalSeconds % 60);
 
-      const uptimeStr = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+      const uptimeStr = tr.t('core.uptime.value', { days, hours, minutes, seconds });
 
       await InteractionHelper.safeEditReply(interaction, {
         embeds: [createEmbed({ 
-          title: "Uptime", 
+          title: tr.t('core.uptime.title'), 
           description: `\`\`\`${uptimeStr}\`\`\`` 
         })],
       });
@@ -33,7 +37,7 @@ export default {
       
       try {
         return await InteractionHelper.safeEditReply(interaction, {
-          embeds: [createEmbed({ title: 'Something went wrong', description: 'Couldn\'t work out the uptime.', color: 'error' })],
+          embeds: [createEmbed({ title: tr.t('core.uptime.errorTitle'), description: tr.t('core.uptime.error'), color: 'error' })],
           flags: MessageFlags.Ephemeral,
         });
       } catch (replyError) {

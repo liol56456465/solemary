@@ -3,6 +3,7 @@ import { successEmbed, warningEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { localized, publicText } from '../../Core/modules/commandText.js';
 const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const EMBED_DESCRIPTION_LIMIT = 4096;
 
@@ -14,6 +15,7 @@ export default {
       option
         .setName("opponent")
         .setDescription("The user to fight.")
+        .setDescriptionLocalizations(localized('fun.slash.fun.sub.fight.options.opponent'))
         .setRequired(true),
     ),
   category: 'Fun',
@@ -21,21 +23,23 @@ export default {
   async execute(interaction, config, client) {
     await InteractionHelper.safeDefer(interaction);
 
+    // A public reply (the defer is public): the server's language.
+    const tr = publicText(interaction);
     const challenger = interaction.user;
     const opponent = interaction.options.getUser("opponent");
 
     if (challenger.id === opponent.id) {
       const embed = warningEmbed(
-        "Can't fight yourself",
-        `**${challenger.username}**, that would be a draw before it starts. Pick someone else.`
+        tr.t('fun.fight.selfTitle'),
+        tr.t('fun.fight.selfText', { name: challenger.username })
       );
       return await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
     }
 
     if (opponent.bot) {
       const embed = warningEmbed(
-        "Can't fight a bot",
-        "Bots don't fight back. Pick a real person."
+        tr.t('fun.fight.botTitle'),
+        tr.t('fun.fight.botText')
       );
       return await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
     }
@@ -47,25 +51,25 @@ export default {
 
     const log = [];
     log.push(
-      `**${challenger.username}** challenges **${opponent.username}** to a fight. ${rounds} rounds.`,
+      tr.t('fun.fight.start', { challenger: challenger.username, opponent: opponent.username, rounds }),
     );
 
     for (let i = 1; i <= rounds; i++) {
       const attacker = rand(0, 1) === 0 ? challenger : opponent;
       const target = attacker.id === challenger.id ? opponent : challenger;
       const action = [
-        "throws a wild punch",
-        "lands a critical hit",
-        "uses a weak spell",
-        "parries and counterattacks",
+        'fun.fight.action.punch',
+        'fun.fight.action.critical',
+        'fun.fight.action.spell',
+        'fun.fight.action.parry',
       ][rand(0, 3)];
       log.push(
-        `\n**Round ${i}:** ${attacker.username} ${action} on ${target.username} for ${rand(1, damage)} damage.`,
+        `\n${tr.t(action, { round: i, attacker: attacker.username, target: target.username, damage: rand(1, damage) })}`,
       );
     }
 
     const outcomeText = log.join("\n");
-    const winnerText = `**${winner.username}** beats ${loser.username}.`;
+    const winnerText = tr.t('fun.fight.winner', { winner: winner.username, loser: loser.username });
     const fullDescription = `${outcomeText}\n\n${winnerText}`;
 
     const description = fullDescription.length <= EMBED_DESCRIPTION_LIMIT
@@ -73,7 +77,7 @@ export default {
       : `${fullDescription.slice(0, EMBED_DESCRIPTION_LIMIT - 15)}\n\n...`;
 
     const embed = successEmbed(
-      "Fight over",
+      tr.t('fun.fight.title'),
       description
     );
 

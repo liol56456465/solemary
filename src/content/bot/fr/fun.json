@@ -1,0 +1,112 @@
+{
+    "unknownSubcommand": "Sous-commande inconnue.",
+    "flip": {
+        "title": "Pile ou face",
+        "heads": "Face",
+        "tails": "Pile",
+        "result": "C’est **{result}**."
+    },
+    "roll": {
+        "invalid": "Notation invalide. Utilise un format comme `1d20` ou `3d6+5`.",
+        "diceRange": "Choisis entre 1 et 20 dés.",
+        "sidesRange": "Choisis entre 1 et 1000 faces.",
+        "title": "Lancer de {dice}",
+        "rolls": "**Lancers :** {rolls}\n",
+        "total": "**Total :** {total} = **{final}**"
+    },
+    "fight": {
+        "selfTitle": "Impossible de te battre contre toi-même",
+        "selfText": "**{name}**, ce serait un match nul avant même de commencer. Choisis quelqu’un d’autre.",
+        "botTitle": "Impossible de combattre un bot",
+        "botText": "Les bots ne ripostent pas. Choisis une vraie personne.",
+        "start": "**{challenger}** défie **{opponent}** en combat. {rounds} manches.",
+        "action": {
+            "punch": "**Manche {round} :** {attacker} lance un coup de poing sauvage sur {target} et inflige {damage} dégâts.",
+            "critical": "**Manche {round} :** {attacker} porte un coup critique à {target} et inflige {damage} dégâts.",
+            "spell": "**Manche {round} :** {attacker} lance un sort faiblard sur {target} et inflige {damage} dégâts.",
+            "parry": "**Manche {round} :** {attacker} pare et contre-attaque {target} et inflige {damage} dégâts."
+        },
+        "winner": "**{winner}** bat {loser}.",
+        "title": "Combat terminé"
+    },
+    "count": {
+        "textChannel": "Choisis un salon textuel pour le jeu de comptage.",
+        "alreadyActive": "Ce serveur a déjà un salon de comptage actif : <#{channelId}>. Désactive d’abord le jeu de comptage actuel ou utilise ce salon.",
+        "onTitle": "Jeu de comptage activé",
+        "onText": "Le comptage est activé dans {channel} (**{system}**). Commencez à **1**. Personne ne peut poster deux nombres de suite.",
+        "offTitle": "Jeu de comptage désactivé",
+        "alreadyOff": "Le jeu de comptage est déjà désactivé.",
+        "turnedOff": "Le jeu de comptage est désactivé.",
+        "status": {
+            "enabled": "Activé",
+            "yes": "Oui",
+            "no": "Non",
+            "channel": "Salon",
+            "notConfigured": "Non configuré",
+            "system": "Système",
+            "next": "Prochain nombre",
+            "streak": "Série actuelle",
+            "best": "Meilleure série",
+            "last": "Dernier à compter",
+            "none": "Personne",
+            "title": "Jeu de comptage",
+            "description": "Réglages et séries actuels."
+        },
+        "enableFirst": "Active d’abord le jeu de comptage avec `/count setup`.",
+        "resetTitle": "Comptage réinitialisé",
+        "resetText": "Comptage réinitialisé. Recommencez à **{start}** dans <#{channelId}>.",
+        "leaderboardTitle": "Classement du jeu de comptage",
+        "leaderboardEmpty": "Personne n’a encore compté.",
+        "invalidAction": "Choisis une action valide pour le jeu de comptage.",
+        "failed": "Un problème est survenu lors de la gestion du jeu de comptage."
+    },
+    "slash": {
+        "fun": {
+            "description": "Jeux rapides : combats, pile ou face et dés",
+            "sub": {
+                "fight": {
+                    "description": "Lancer un combat textuel simulé en 1 contre 1",
+                    "options": {
+                        "opponent": "La personne à combattre."
+                    }
+                },
+                "flip": {
+                    "description": "Jouer à pile ou face"
+                },
+                "roll": {
+                    "description": "Lancer des dés (ex. 2d20, 1d6 + 5)",
+                    "options": {
+                        "notation": "La notation des dés (ex. 2d6, 1d20 + 4)"
+                    }
+                }
+            }
+        },
+        "count": {
+            "description": "Gérer le jeu de comptage du serveur",
+            "sub": {
+                "setup": {
+                    "description": "Lancer un jeu de comptage dans un salon textuel",
+                    "options": {
+                        "channel": "Le salon où l’on va compter",
+                        "system": "Le système de comptage à utiliser"
+                    }
+                },
+                "disable": {
+                    "description": "Désactiver le jeu de comptage sur ce serveur"
+                },
+                "status": {
+                    "description": "Voir l’état actuel du jeu de comptage"
+                },
+                "reset": {
+                    "description": "Réinitialiser le comptage en cours",
+                    "options": {
+                        "start": "Le nombre de départ après la réinitialisation"
+                    }
+                },
+                "leaderboard": {
+                    "description": "Afficher le classement du jeu de comptage"
+                }
+            }
+        }
+    }
+}

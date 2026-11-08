@@ -1,0 +1,38 @@
+{
+    "unknownSubcommand": "Неизвестная подкоманда",
+    "google": {
+        "title": "Поиск Google",
+        "link": "[Искать «{query}»]({url})",
+        "footer": "Результаты поиска Google"
+    },
+    "define": {
+        "tooShort": "Введите слово хотя бы из 2 символов.",
+        "cooldown": "Подождите {seconds} с, прежде чем искать следующее слово.",
+        "notFound": "Для «{word}» определений не найдено.",
+        "example": "\n *Пример: {example}*",
+        "definition": "Определение",
+        "source": "Источник",
+        "footer": "{credit} · через Free Dictionary API",
+        "creditLine": "Определения из {wiktionary} ({license})",
+        "creditFooter": "Определения из Викисловаря (CC BY-SA)"
+    },
+    "slash": {
+        "search": {
+            "description": "Поиск в интернете и словарях",
+            "sub": {
+                "define": {
+                    "description": "Найти значение слова (английский словарь)",
+                    "options": {
+                        "word": "Слово для поиска"
+                    }
+                },
+                "google": {
+                    "description": "Искать в Google",
+                    "options": {
+                        "query": "Что вы хотите найти?"
+                    }
+                }
+            }
+        }
+    }
+}

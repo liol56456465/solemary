@@ -1,0 +1,358 @@
+{
+    "help": {
+        "menu": {
+            "allLabel": "All commands",
+            "allDescription": "Every command in one list",
+            "categoryDescription": "{category} commands",
+            "title": "{bot} help",
+            "description": "support us by boosting",
+            "gettingStarted": "Getting started",
+            "adminSteps": "1. **/configwizard** sets the mod role and log channel.\n2. **/commands dashboard** turns categories on or off.\n3. Pick a category in the menu below to see its commands.",
+            "memberSteps": "Pick a category in the menu below to see its commands.\nNeed staff? DM the bot: your message goes to the team privately (modmail).",
+            "access": "Access",
+            "accessAdmin": "• Commands marked 🔒 need the **Administrator** permission; the rest are for everyone.",
+            "accessMember": "• This list shows the commands you can use.",
+            "accessSetup": "• **/setup** shows what is set up in this server, with a link to the dashboard.",
+            "accessAppeals": "• **/setappeal** posts the appeal panels; **/appeals** lists, shows and decides appeals.",
+            "goodToKnow": "Good to know",
+            "goodToKnowText": "• Most features have a dashboard command for their settings\n• Settings are saved per server",
+            "supportButton": "Support Server",
+            "placeholder": "Pick a category"
+        },
+        "closed": {
+            "title": "Help menu closed",
+            "description": "Run /help again to open it."
+        },
+        "bug": {
+            "button": "Open the support server",
+            "title": "Report a bug",
+            "description": "Tell us in the support server what happened. It helps if you include:\n- what you did (the command and its options)\n- what you expected and what happened instead\n- a screenshot, if you have one"
+        },
+        "list": {
+            "categoryTitle": "{category} commands",
+            "click": "Click a command to use it.",
+            "empty": "There are no commands in **{category}** yet.",
+            "commands": "Commands",
+            "commandsCont": "Commands (cont.)",
+            "commandsPage": "Commands (Page {page})",
+            "back": "Back",
+            "noDescription": "No description",
+            "allTitle": "All commands",
+            "changePage": "Use the buttons below to change page."
+        }
+    },
+    "commands": {
+        "manageServer": "You need the **Manage Server** permission to manage commands.",
+        "updateFailed": "Failed to update command access.",
+        "noCategory": "No category matched `{target}`. Use `/commands dashboard` to browse categories.",
+        "categoryDisabled": {
+            "title": "Category disabled",
+            "text": "All **{category}** commands are now off.\n`/commands` and `/configwizard` stay on."
+        },
+        "categoryEnabled": {
+            "title": "Category enabled",
+            "text": "**{category}** commands are on again, except ones you turned off one by one."
+        },
+        "commandDisabled": {
+            "title": "Command disabled",
+            "text": "`/{command}` is now disabled in this server."
+        },
+        "commandEnabled": {
+            "title": "Command enabled",
+            "text": "`/{command}` is now enabled in this server."
+        },
+        "dashboard": {
+            "status": {
+                "on": "On",
+                "partial": "Partly on",
+                "off": "Off",
+                "always": "On (always)"
+            },
+            "title": "Command access",
+            "description": "Commands for **{server}**. Subcommands (like `birthday list`) are counted on their own.",
+            "footer": "/commands and /configwizard always stay on",
+            "summary": "Summary",
+            "summaryCommands": "**{on}/{total}** commands on",
+            "summaryCategories": "{full} categories fully on · {partial} partly on · {off} off",
+            "categories": "Categories",
+            "categoriesCont": "Categories (cont.)",
+            "howTo": "How to use",
+            "howToOverview": "• Pick a category below to turn its commands on or off\n• `/commands disable` turns off a category or one command\n• `/commands enable` turns it back on",
+            "categoryOff": "Category off",
+            "everythingOn": "Everything on",
+            "someOff": "{off} of {total} off",
+            "statusField": "Status",
+            "countField": "Count",
+            "countValue": "{on}/{total} on",
+            "commands": "Commands",
+            "commandsCont": "Commands (cont.)",
+            "howToCategory": "• Pick a command in the menu to turn it on or off\n• **Disable all** turns off the whole category\n• **Clear overrides** turns back on the ones you switched off one by one",
+            "categoryDescription": "Command access for **{server}**.",
+            "categoryFooter": "Commands marked \"always\" can't be turned off",
+            "pickCategory": "Pick a category",
+            "refresh": "Refresh",
+            "pickToOff": "On. Pick to turn off.",
+            "pickToOn": "Off. Pick to turn on.",
+            "back": "Back",
+            "turnCategoryOn": "Turn category on",
+            "turnCategoryOff": "Turn category off",
+            "enableAll": "Enable all",
+            "disableAll": "Disable all",
+            "clearOverrides": "Clear overrides",
+            "pickCommand": "Turn a command on or off",
+            "otherServer": "This dashboard belongs to another server.",
+            "unknownAction": "Unknown dashboard action."
+        }
+    },
+    "slash": {
+        "help": {
+            "description": "Show the commands you can use"
+        },
+        "commands": {
+            "description": "Enable or disable bot commands and categories for this server",
+            "sub": {
+                "dashboard": {
+                    "description": "Turn commands on or off with buttons"
+                },
+                "disable": {
+                    "description": "Disable a command or entire category",
+                    "options": {
+                        "scope": "Disable a single command or a whole category",
+                        "target": "Category or command name"
+                    }
+                },
+                "enable": {
+                    "description": "Enable a command or entire category",
+                    "options": {
+                        "scope": "Enable a single command or a whole category",
+                        "target": "Category or command name"
+                    }
+                }
+            }
+        },
+        "ping": {
+            "description": "Check the bot's latency"
+        },
+        "stats": {
+            "description": "View bot statistics"
+        },
+        "uptime": {
+            "description": "Check how long the bot has been online"
+        },
+        "support": {
+            "description": "Get the support server link"
+        },
+        "setup": {
+            "description": "See what is set up in this server, open the dashboard, browse all commands"
+        },
+        "configwizard": {
+            "description": "Open the server settings and setup wizard"
+        },
+        "premium": {
+            "description": "Your Mewvo plan",
+            "sub": {
+                "status": {
+                    "description": "Show your plan and when it ends"
+                },
+                "redeem": {
+                    "description": "Redeem a Mewvo key",
+                    "options": {
+                        "key": "MEWVO-XXXX-XXXX-XXXX"
+                    }
+                },
+                "gift": {
+                    "description": "Give someone a plan (test mode, nothing is charged)",
+                    "options": {
+                        "user": "Who gets it",
+                        "plan": "Which plan",
+                        "period": "How long (default: a month)",
+                        "message": "A short note with the gift"
+                    }
+                }
+            }
+        }
+    },
+    "ping": {
+        "pinging": "Pinging...",
+        "title": "Pong!",
+        "botLatency": "Bot latency",
+        "apiLatency": "API latency",
+        "ms": "{value}ms",
+        "errorTitle": "Something went wrong",
+        "error": "Couldn't measure the latency."
+    },
+    "stats": {
+        "title": "Bot stats",
+        "servers": "Servers",
+        "users": "Users",
+        "memory": "Memory",
+        "errorTitle": "Something went wrong",
+        "error": "Couldn't get the stats."
+    },
+    "uptime": {
+        "title": "Uptime",
+        "value": "{days}d {hours}h {minutes}m {seconds}s",
+        "errorTitle": "Something went wrong",
+        "error": "Couldn't work out the uptime."
+    },
+    "support": {
+        "button": "Join the support server",
+        "privacy": "Privacy Policy",
+        "terms": "Terms",
+        "title": "Need help?",
+        "text": "Join the Mewvo support server to ask questions, appeal, report bugs or suggest features.",
+        "errorTitle": "Something went wrong",
+        "error": "Couldn't show the support info."
+    },
+    "config": {
+        "dmHelp": "1. Right-click this server's name (mobile: tap the server name at the top).\n2. Open **Privacy Settings**.\n3. Turn on **Allow direct messages from server members**.\n4. Click **Start setup** again.",
+        "startedTitle": "Setup started",
+        "started": "Check your DMs, the first question is there. Press **Skip** under a question to keep its current value.",
+        "dmBlocked": "I couldn't send you a DM. Enable DMs from this server, then try again.\n\n{help}",
+        "notSet": "Not set",
+        "notConfigured": "Not configured",
+        "activity": {
+            "playing": "Playing **{name}**",
+            "streaming": "Streaming **{name}**",
+            "listening": "Listening to **{name}**",
+            "watching": "Watching **{name}**",
+            "competing": "Competing in **{name}**"
+        },
+        "colorsPrimary": "Primary `{primary}` · Success `{success}`",
+        "colorsWarning": "Warning `{warning}` · Error `{error}`",
+        "panel": {
+            "title": "Server settings",
+            "description": "Basic settings for **{server}**. Pick one below to change it, or run the setup wizard.",
+            "prefix": "Prefix",
+            "modRole": "Moderator role",
+            "logChannel": "Log channel",
+            "botStatus": "Bot status",
+            "colors": "Embed colours",
+            "colorsNote": "-# Set in the bot config, same for every server.",
+            "access": "Command access",
+            "accessText": "Use `/commands dashboard` to turn commands on or off.",
+            "setup": "Setup",
+            "setupDone": "Done. You can run the wizard again any time.",
+            "setupNotDone": "Not done yet. The wizard asks a few questions in DM.",
+            "footer": "Closes after 10 minutes without use"
+        },
+        "select": {
+            "placeholder": "Pick a setting to change",
+            "prefixHelp": "The prefix for text commands",
+            "modRoleHelp": "Role used for moderation commands",
+            "logChannelHelp": "Where the bot posts its logs"
+        },
+        "startButton": "Start setup",
+        "againButton": "Run setup again",
+        "skipButton": "Skip (keep current)",
+        "stopButton": "Stop setup",
+        "questionTitle": "Setup question {step}/{total}",
+        "timeout": "You did not answer in time. Run the setup wizard again when ready.",
+        "cancelledTitle": "Setup cancelled",
+        "cancelled": "Stopped. Anything you already answered is saved.",
+        "saved": {
+            "prefix": "Server prefix saved as `{value}`.",
+            "logCleared": "Log channel cleared.",
+            "log": "Log channel saved as {channel}.",
+            "modCleared": "Moderator role cleared.",
+            "mod": "Moderator role saved as {role}.",
+            "setting": "Setting saved."
+        },
+        "channelNotFound": "That channel was not found in this server or is not a text channel.",
+        "roleNotFound": "That role was not found in this server.",
+        "runningTitle": "Setup already running",
+        "running": "You already have the setup open in your DMs. Answer there, or press **Stop setup** under the question.",
+        "prompt": {
+            "prefixSkip": "Keeping the current server prefix.",
+            "prefixQuestion": "What command prefix should this server use?\nCurrent: `{prefix}`\nType the new prefix, or press **Skip** to keep it.",
+            "prefixRule": "Prefix must be 1-10 characters with no spaces.",
+            "logSkip": "Keeping the current log channel.",
+            "logQuestion": "Which channel should receive bot logs?\nSend a channel mention or channel ID, or `none` to clear it. Press **Skip** to keep the current one.",
+            "logInvalid": "Provide a valid channel mention or ID from this server.",
+            "modSkip": "Keeping the current moderator role.",
+            "modQuestion": "What role should moderators have?\nSend a role mention or role ID, or `none` to clear it. Press **Skip** to keep the current one.",
+            "modInvalid": "Provide a valid role mention or ID from this server."
+        },
+        "introTitle": "Setup",
+        "intro": "Answer each question here.\n\n• **Skip** keeps the current value\n• **Stop setup** stops the setup",
+        "lostAdmin": "You no longer have the Administrator permission in {server}, so nothing more was saved. Setup stopped.",
+        "skippedTitle": "Skipped",
+        "savedTitle": "Saved",
+        "retry": "{error}\n\nAnswer again, or press **Skip** or **Stop setup** under the new question.",
+        "summary": {
+            "stoppedTitle": "Setup stopped",
+            "doneTitle": "Setup done",
+            "stoppedSaved": {
+                "one": "Setup stopped early. Saved **{count}** setting(s) before stopping.",
+                "other": "Setup stopped early. Saved **{count}** setting(s) before stopping."
+            },
+            "stoppedNothing": "Stopped before anything was saved.",
+            "updated": {
+                "one": "Updated **{count}** setting(s).",
+                "other": "Updated **{count}** setting(s)."
+            },
+            "retried": "Some answers had to be retried.",
+            "nothing": "Nothing was changed.",
+            "issues": "Issues"
+        },
+        "modal": {
+            "channelPlaceholder": "Pick a text channel",
+            "rolePlaceholder": "Pick a role",
+            "prefixLabel": "New prefix (1-10 characters, no spaces)"
+        },
+        "pickLog": "Pick a log channel.",
+        "pickMod": "Pick a moderator role.",
+        "set": {
+            "log": "Log channel set to {channel}.",
+            "mod": "Moderator role set to {role}.",
+            "prefix": "Server prefix set to `{value}`."
+        },
+        "tryAgain": "Try again.",
+        "failed": "That didn't work. Try again.",
+        "openFailed": "Couldn't open the settings. Try again.",
+        "needManageServer": "You need the **Manage Server** permission to use this command."
+    },
+    "premium": {
+        "title": "Mewvo plan",
+        "off": "Plans are not available yet.",
+        "free": "You are on **Free**.",
+        "plans": "Plans: {url}",
+        "haveKey": "Have a key? Use `/premium redeem`.",
+        "limits": "In servers you own: {tags} tags, {stickies} sticky messages, {feeds} YouTube or Twitch feeds, {scheduled} scheduled messages.",
+        "active": "**Mewvo {plan}** until {until} ({relative}).",
+        "giftBot": "Bots can't have a plan.",
+        "giftSelf": "That's you. To get a plan yourself, use the website, or ask someone else to gift it.",
+        "giftLimit": "You can send 3 gifts an hour. Try again later.",
+        "linkRemoved": "(link removed)",
+        "giftDm": {
+            "gave": {
+                "one": "{from} gave you **Mewvo {plan}** for {count} day.",
+                "other": "{from} gave you **Mewvo {plan}** for {count} days."
+            },
+            "note": "Their note: {note}",
+            "key": "Your key: `{code}`",
+            "redeem": "Redeem it with `/premium redeem`. It can be used once, within a year.",
+            "redeemOrUrl": "Redeem it with `/premium redeem` or at {url}. It can be used once, within a year."
+        },
+        "giftSent": {
+            "one": "Sent. {name} got a DM with the key for **Mewvo {plan}** ({count} day). Test mode: nothing was charged.\nThe key, in case they lose it: `{code}`",
+            "other": "Sent. {name} got a DM with the key for **Mewvo {plan}** ({count} days). Test mode: nothing was charged.\nThe key, in case they lose it: `{code}`"
+        },
+        "giftClosed": {
+            "one": "Their DMs are closed, so give them this key yourself: `{code}`\nIt's **Mewvo {plan}** for {count} day, redeemable once with `/premium redeem`. Test mode: nothing was charged.",
+            "other": "Their DMs are closed, so give them this key yourself: `{code}`\nIt's **Mewvo {plan}** for {count} days, redeemable once with `/premium redeem`. Test mode: nothing was charged."
+        },
+        "giftReadyTitle": "Gift ready",
+        "tooManyTries": "Too many tries. Wait a minute and try again.",
+        "converted": "Your remaining {plan} time was converted.",
+        "redeemed": {
+            "one": "Key redeemed: **Mewvo {plan}**, {count} day added.{converted}\nActive until {until}.",
+            "other": "Key redeemed: **Mewvo {plan}**, {count} days added.{converted}\nActive until {until}."
+        },
+        "redeemedTitle": "Key redeemed",
+        "notSentTitle": "Not sent",
+        "notRedeemedTitle": "Not redeemed",
+        "databaseDown": "The database is not responding. Nothing was changed; try again in a few minutes.",
+        "databaseDownTitle": "Try again later"
+    }
+}
