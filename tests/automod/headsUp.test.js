@@ -45,6 +45,7 @@ function fakeKv({ failGet = null } = {}) {
             store.set(key, structuredClone(next));
             return next;
         },
+        kvList: async (prefix) => [...store.keys()].filter((key) => key.startsWith(prefix)),
     };
 }
 
@@ -163,7 +164,7 @@ test('first hit: a DM and a waiting record instead of the action; within 30 days
     assert.equal(pending.rule, 'disrespect');
     assert.equal(pending.dueAt, T0 + 2 * 60 * 1000);
     assert.deepEqual(pending.card, { channelId: 'review', messageId: 'card1' });
-    assert.deepEqual(h.kv.store.get('automod:headsup:index'), { [`${GUILD}:m1`]: { dueAt: T0 + 120000, rule: 'disrespect' } });
+    assert.deepEqual(h.kv.store.get(`automod:headsup:index:${GUILD}`), { [`${GUILD}:m1`]: { dueAt: T0 + 120000, rule: 'disrespect' } });
     assert.ok(h.kv.store.get(`automod:headsup:seen:${GUILD}:u1:disrespect`).until > T0 + 29 * DAY);
     assert.equal(pendingHeadsUpRule(GUILD, 'm1'), 'disrespect');
 
@@ -199,7 +200,7 @@ test('personal info: deleted at once, a DM, no case and nothing waiting', async 
     assert.match(h.calls[1].args[1], /was removed because it looked like personal information\. No warning this time\./);
     assert.ok(!h.names().includes('applyStep'));
     assert.equal(h.kv.store.get(`automod:headsup:pending:${GUILD}:m1`), undefined);
-    assert.equal(h.kv.store.get('automod:headsup:index'), undefined);
+    assert.equal(h.kv.store.get(`automod:headsup:index:${GUILD}`), undefined);
     assert.ok(h.kv.store.get(`automod:headsup:seen:${GUILD}:u1:privacy`));
 });
 
@@ -270,7 +271,7 @@ test('edit: still breaking the rule keeps waiting; edited clean resolves as fixe
     assert.deepEqual(await checkEditedHeadsUp(again, []), []);
     assert.equal(pendingHeadsUpRule(GUILD, 'm9'), null);
     assert.equal(h2.kv.store.get(`automod:headsup:pending:${GUILD}:m9`), undefined);
-    assert.deepEqual(h2.kv.store.get('automod:headsup:index'), {});
+    assert.deepEqual(h2.kv.store.get(`automod:headsup:index:${GUILD}`), {});
     assert.deepEqual(await headsUpStats(GUILD, { days: 30, now: T0 }), { days: 30, sent: 1, fixed: 1, acted: 0 });
     void h;
 });
@@ -322,7 +323,7 @@ test('per-minute check: message gone → fixed; edited clean → fixed; channel 
     await actOn(fakeMessage(), member, disrespect, normalizeSettings({}));
     await runHeadsUpChecks(fakeClient(null, { fetchError: Object.assign(new Error('Missing Access'), { code: 50001 }) }), T0 + 3 * 60 * 1000);
     assert.ok(!h.names().includes('applyStep'));
-    assert.deepEqual(h.kv.store.get('automod:headsup:index'), {});
+    assert.deepEqual(h.kv.store.get(`automod:headsup:index:${GUILD}`), {});
     assert.deepEqual(await headsUpStats(GUILD, { now: T0 }), { days: 90, sent: 1, fixed: 0, acted: 0 });
 });
 

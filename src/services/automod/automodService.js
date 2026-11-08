@@ -1,4 +1,5 @@
-// automodService.js — checks every message in the main server against the rules,
+// automodService.js — checks every message against the rules of its server (every server
+// where automod is turned on; off by default outside the main server, automodSettings.js),
 // acts on the most severe hit, and posts a review card for moderators
 // (reviewCards.js: a compact line for light hits, a full card for serious ones,
 // grouped per member and rule during a burst).
@@ -13,11 +14,16 @@
 // The server's custom rules (customRules.js) are one more check: their hits have rule key
 // "custom-<id>" and carry their own definition (label, group "custom:<id>", one step or
 // none for delete-only), so the same path above handles them. They follow the global mode.
+//
+// Per-message cost: one cached settings read (Map lookup; a database read at most every 30 s
+// per server), and a server with automod off returns before any filter or regex runs. Every
+// in-memory map below is keyed by guild and bounded (BoundedMap), whatever the server count.
 
 import { PermissionFlagsBits } from 'discord.js';
 import { AUTOMOD_RULES, automodConfig } from '../../config/automod.js';
 import { enforcementConfig } from '../../config/enforcement.js';
-import { isSettingsUnavailable, noteSettingsUnavailable } from '../settings/guildScoped.js';
+import { isSettingsUnavailable, noteSettingsUnavailable, usesHomeValues } from '../settings/guildScoped.js';
+import { BoundedMap, BoundedSet } from '../../utils/boundedMap.js';
 import { logger } from '../../utils/logger.js';
 import { query, T, isEnforcementDbAvailable } from '../enforcement/db.js';
 import { executeSystemAction, isAdministrator } from '../enforcement/enforcementService.js';
@@ -52,13 +58,21 @@ import {
     isCapsFlood,
 } from './filters.js';
 
-const history = new Map();        // guildId:userId → [{ at, text, channelId }]
-const cooldowns = new Map();      // guildId:userId:group → until
-const harassment = new Map();     // guildId:authorId:targetId → [at]
-const lastPost = new Map();       // guildId:userId → at (new-member slowmode)
-const inviteGuilds = new Map();   // invite code → guild id | null
-const handledMessages = new Set(); // message ids already acted on (edits re-run the checks)
-const levelCache = new Map();     // guildId:userId → { level, expiresAt } (trusted members)
+// Hard caps on top of the per-minute time pruning (pruneMaps): a burst across many servers
+// within one minute can't grow them without limit. Dropping the oldest entry only shortens a
+// history window or re-reads a cache.
+export const STATE_LIMITS = Object.freeze({
+    history: 20000, cooldowns: 20000, harassment: 20000, lastPost: 20000,
+    inviteGuilds: 5000, handledMessages: 5000, levelCache: 10000,
+});
+const history = new BoundedMap(STATE_LIMITS.history);          // guildId:userId → [{ at, text, channelId }]
+const cooldowns = new BoundedMap(STATE_LIMITS.cooldowns);      // guildId:userId:group → until
+const harassment = new BoundedMap(STATE_LIMITS.harassment);    // guildId:authorId:targetId → [at]
+const lastPost = new BoundedMap(STATE_LIMITS.lastPost);        // guildId:userId → at (new-member slowmode)
+const inviteGuilds = new BoundedMap(STATE_LIMITS.inviteGuilds); // invite code → { guildId | null, at } (public: the same for every server)
+const handledMessages = new BoundedSet(STATE_LIMITS.handledMessages); // message ids already acted on (edits re-run the checks)
+const levelCache = new BoundedMap(STATE_LIMITS.levelCache);    // guildId:userId → { level, expiresAt } (trusted members)
+const INVITE_CACHE_MS = 60 * 60 * 1000;
 
 const STAFF_PERMISSIONS = [
     PermissionFlagsBits.Administrator,
@@ -92,19 +106,29 @@ function pruneMaps(now) {
         if (!list.length || now - list[list.length - 1] > automodConfig.harassmentWindowMs) harassment.delete(key);
     }
     for (const [key, at] of lastPost) if (now - at > automodConfig.newMemberSlowmodeMs) lastPost.delete(key);
-    if (handledMessages.size > 5000) handledMessages.clear();
-    if (inviteGuilds.size > 1000) inviteGuilds.clear();
+    for (const [code, entry] of inviteGuilds) if (now - entry.at > INVITE_CACHE_MS) inviteGuilds.delete(code);
     for (const [key, entry] of levelCache) if (entry.expiresAt <= now) levelCache.delete(key);
 }
 
 let lastPrune = 0;
 
-async function inviteIsForeign(client, code) {
-    if (!inviteGuilds.has(code)) {
+/**
+ * Whether an invite code in a message of `guild` advertises another server. No API call for
+ * the server's own vanity code, invites the bot has cached for it, or allowlisted codes.
+ */
+async function inviteIsForeign(client, code, guild, allowlist = []) {
+    // Codes come lowercased from findInviteCodes (folded text), so compare without case.
+    const lower = String(code).toLowerCase();
+    if (allowlistHas(allowlist, lower)) return false;
+    if (guild && (lower === String(guild.vanityURLCode || '').toLowerCase() || ownCachedInvite(guild, lower))) return false;
+    const now = Date.now();
+    let cached = inviteGuilds.get(code);
+    if (!cached || now - cached.at > INVITE_CACHE_MS) {
         const invite = await client.fetchInvite(code).catch(() => null);
-        inviteGuilds.set(code, invite?.guild?.id || null);
+        cached = { guildId: invite?.guild?.id || null, at: now };
+        inviteGuilds.set(code, cached);
     }
-    return inviteGuildIsForeign(inviteGuilds.get(code));
+    return inviteGuildIsForeign(cached.guildId, { guildId: guild?.id || null, allowlist, code });
 }
 
 // Each code costs one API call; more than this in one message is advertising anyway.
@@ -123,11 +147,36 @@ async function targetsOf(message) {
     return [...ids];
 }
 
-/** Whether an invite's guild id points outside our two servers (null: it advertises nothing). */
-export function inviteGuildIsForeign(guildId) {
+/** Whether the allowlist has this code or server id (codes compared without case). */
+function allowlistHas(allowlist, value) {
+    const lower = String(value).toLowerCase();
+    return (allowlist || []).some((entry) => String(entry).toLowerCase() === lower);
+}
+
+/** An invite the bot has cached for this server (invite tracking), compared without case. */
+function ownCachedInvite(guild, lowerCode) {
+    const cache = guild.invites?.cache;
+    if (!cache?.size) return false;
+    if (cache.has?.(lowerCode)) return true;
+    for (const key of cache.keys()) if (String(key).toLowerCase() === lowerCode) return true;
+    return false;
+}
+
+/**
+ * Whether an invite (resolved to `inviteGuildId`) advertises a server other than the one the
+ * message was posted in. Allowed: the server's own invites (any code that resolves to it, the
+ * vanity URL included), its allowlist (codes or server ids, /automod invites), and, in Mewvo's
+ * own two servers only, each other's invites (as before). No `guildId`: the main server's view.
+ */
+export function inviteGuildIsForeign(inviteGuildId, { guildId = null, allowlist = [], code = null } = {}) {
     // A code that doesn't resolve (expired, mistyped, lookup failed) advertises nothing.
-    if (!guildId) return false;
-    return guildId !== enforcementConfig.mainGuildId && guildId !== enforcementConfig.supportGuildId;
+    if (!inviteGuildId) return false;
+    if (inviteGuildId === guildId) return false;
+    if (allowlistHas(allowlist, inviteGuildId) || (code && allowlistHas(allowlist, code))) return false;
+    if (usesHomeValues(guildId)) {
+        return inviteGuildId !== enforcementConfig.mainGuildId && inviteGuildId !== enforcementConfig.supportGuildId;
+    }
+    return true;
 }
 
 /**
@@ -139,7 +188,7 @@ export function inviteGuildIsForeign(guildId) {
  * Live path: records the message in the per-member history (spam, cross-channel) and
  * counts insults per target (harassment), then builds the hits with collectHits.
  */
-export async function evaluateMessage(message, member, now = Date.now()) {
+export async function evaluateMessage(message, member, now = Date.now(), settings = null) {
     const text = message.content || '';
     const key = `${message.guildId}:${message.author.id}`;
     const recent = remember(history, key, { at: now, text: text.trim().toLowerCase(), channelId: message.channelId }, automodConfig.historyWindowMs, now);
@@ -152,7 +201,7 @@ export async function evaluateMessage(message, member, now = Date.now()) {
         spam: () => detectSpam(recent, now),
     };
     return collectHits(message, member, {
-        isForeignInvite: (code) => inviteIsForeign(message.client, code),
+        isForeignInvite: (code) => inviteIsForeign(message.client, code, message.guild, settings?.inviteAllowlist || []),
         matchCustom: (value) => findCustomRuleHit(value, message.guildId, now),
         timing,
     });
@@ -580,12 +629,23 @@ export function worstHit(hits, guildId = null) {
 }
 
 /**
+ * Whether automod is on in a server (cached settings read). False when the database is down
+ * or the settings can't be read: callers then skip automod work, as moderateMessage would.
+ */
+export async function automodEnabledIn(guildId) {
+    if (!guildId || !isEnforcementDbAvailable()) return false;
+    return getAutomodSettings(guildId).then((settings) => Boolean(settings.enabled)).catch(() => false);
+}
+
+/**
  * Runs automod on a new or edited message. Returns true when the message was
  * removed, so callers skip the rest of their processing (commands, XP).
  */
 export async function moderateMessage(message, { edited = false } = {}) {
     try {
-        if (!message.guild || message.guild.id !== enforcementConfig.mainGuildId) return false;
+        // Any server; one where automod is off (the default outside the main server) stops at
+        // the cached settings read below, before any filter runs, and logs nothing.
+        if (!message.guild) return false;
         if (message.author?.bot || message.webhookId || message.system) return false;
         if (!isEnforcementDbAvailable()) return false;
         if (edited && handledMessages.has(message.id)) return false;
@@ -602,7 +662,7 @@ export async function moderateMessage(message, { edited = false } = {}) {
             lastPrune = now;
         }
 
-        let detected = await evaluateMessage(message, member, now);
+        let detected = await evaluateMessage(message, member, now, settings);
         // An edit of a message that already had its heads-up never gets a second one.
         const hadHeadsUp = edited && Boolean(pendingHeadsUpRule(message.guild.id, message.id));
         if (edited) {
@@ -781,10 +841,14 @@ const AUTOMOD_PERMISSIONS = [
     ['ManageWebhooks', 'Manage Webhooks (anti-nuke webhook cleanup)'],
 ];
 
-/** One startup line: what automod can't do with the bot's current permissions. */
-export async function describeAutomodReadiness(client) {
-    const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
-    if (!guild) return 'skipped: the bot is not in the main server';
+/**
+ * What automod can't do in one server with the bot's current permissions (on/off, mode,
+ * missing permissions). Startup logs it for the main server only: checking every server at
+ * boot would cost one settings read per server.
+ */
+export async function describeAutomodReadiness(client, guildId = enforcementConfig.mainGuildId) {
+    const guild = client.guilds.cache.get(guildId);
+    if (!guild) return 'skipped: the bot is not in that server';
     const me = guild.members.me || await guild.members.fetchMe().catch(() => null);
     if (!me) return 'skipped: could not read my permissions';
 

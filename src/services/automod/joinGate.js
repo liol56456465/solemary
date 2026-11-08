@@ -1,4 +1,5 @@
-// joinGate.js — optional checks on members joining the main server (/automod joingate).
+// joinGate.js — optional checks on members joining a server (/automod joingate). Runs in
+// every server where automod is on (off by default outside the main server).
 //
 // Checks (each off / flag / kick, all off by default):
 //   avatar   no profile picture
@@ -170,22 +171,28 @@ export function gateCheckLabels(hits) {
     return [...new Set(hits.map((hit) => JOIN_GATE_CHECKS[hit.check]?.label).filter(Boolean))].join('; ');
 }
 
+/** The servers whose "Verify with Discord" counts for the join gate of `guildId`. */
+export function verificationScope(guildId) {
+    const homeIds = [enforcementConfig.mainGuildId, enforcementConfig.supportGuildId].filter(Boolean);
+    return homeIds.includes(guildId) ? homeIds : [guildId];
+}
+
 /**
- * Runs the join gate for a new member of the main server. Never throws.
+ * Runs the join gate for a new member of any server where automod is on. Never throws.
  * Returns 'kicked' | 'flagged' | null. onKick / onFlag(userId, hits) run after the kick or flag.
  */
 export async function checkJoinGate(member, { onKick = null, onFlag = null } = {}) {
     try {
         const { guild, user } = member;
-        if (guild.id !== enforcementConfig.mainGuildId || user.bot) return null;
+        if (!guild?.id || user.bot) return null;
         const settings = await getAutomodSettings(guild.id);
         if (!settings.enabled) return null;
         const { action, hits } = evaluateJoinGate(user, settings.joinGate);
         if (action === 'off') return null;
-        // Verified with "Verify with Discord" in one of Mewvo's own servers before: already passed the
-        // verification guard there. A verification in another server does not count here (multi-server B1).
-        const homeIds = [enforcementConfig.mainGuildId, enforcementConfig.supportGuildId].filter(Boolean);
-        if (await hasVerifiedIn(user.id, homeIds).catch(() => false)) return null;
+        // Verified with "Verify with Discord" before: already passed the verification guard. Only a
+        // verification in this server counts (Mewvo's two home servers count as one); one in another
+        // server never lets a member past this server's gate (multi-server B1).
+        if (await hasVerifiedIn(user.id, verificationScope(guild.id)).catch(() => false)) return null;
 
         if (action === 'kick') {
             const kicked = await kickWithNotice(member, hits, `Join gate: ${hits.filter((h) => h.action === 'kick').map((h) => h.reason).join('; ')}`);

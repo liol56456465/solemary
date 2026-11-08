@@ -13,9 +13,16 @@ export default {
       if (oldUser.bot) return;
 
       if (oldUser.username !== newUser.username || oldUser.globalName !== newUser.globalName) {
+        // Main server as before (fetched if not cached); other servers only where the member is
+        // cached (no fetch per server). checkImpersonation returns at once where automod is off.
         const mainGuild = newUser.client.guilds.cache.get(enforcementConfig.mainGuildId);
         const member = mainGuild && await mainGuild.members.fetch(newUser.id).catch(() => null);
         if (member) await checkImpersonation(member);
+        for (const guild of newUser.client.guilds.cache.values()) {
+          if (guild.id === enforcementConfig.mainGuildId) continue;
+          const other = guild.members.cache.get(newUser.id);
+          if (other) await checkImpersonation(other);
+        }
       }
 
       const usernameChanged = oldUser.username !== newUser.username;

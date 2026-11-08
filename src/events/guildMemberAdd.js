@@ -69,21 +69,25 @@ export default {
                 await reapplyTempRolesOnJoin(member).catch((error) => logger.warn(`Temporary roles not given back to ${member.id}: ${error.message}`));
                 // An active plan gives its supporter role back.
                 await syncPremiumRole(member.client, member.id).catch((error) => logger.warn(`Supporter role not given back to ${member.id}: ${error.message}`));
-                await recordJoin(member).catch((error) => logger.warn(`Raid tracking failed for ${member.id}: ${error.message}`));
-                // Join gate (/automod joingate): a kicked member skips the rest of the pipeline.
-                // Both callbacks only record (raid incident report, raid timeline); neither throws.
-                const gate = await checkJoinGate(member, {
-                    onKick: async (userId, hits) => {
-                        await noteGateKick(guild.id, userId).catch((error) => logger.warn(`Could not note join gate kick: ${error.message}`));
-                        await noteIncidentEvent(guild.id, { kind: 'gate_kick', targetId: userId, detail: gateCheckLabels(hits) });
-                    },
-                    // Not awaited: the rest of the join pipeline must not wait for the timeline.
-                    onFlag: (userId, hits) => { noteIncidentEvent(guild.id, { kind: 'gate_flag', targetId: userId, detail: gateCheckLabels(hits) }); },
-                });
-                if (gate === 'kicked') return;
-                await checkImpersonation(member);
-                // Back after a ban that ended recently: automod extra-watch period (/automod extrawatch).
-                await startProbationOnJoin(member).catch((error) => logger.warn(`Probation check failed for ${member.id}: ${error.message}`));
+            }
+            // Automod on joins, in every server (multi-server B1): each check returns at once
+            // where automod is off (the default outside the main server). Same order as before.
+            await recordJoin(member).catch((error) => logger.warn(`Raid tracking failed for ${member.id}: ${error.message}`));
+            // Join gate (/automod joingate): a kicked member skips the rest of the pipeline.
+            // Both callbacks only record (raid incident report, raid timeline); neither throws.
+            const gate = await checkJoinGate(member, {
+                onKick: async (userId, hits) => {
+                    await noteGateKick(guild.id, userId).catch((error) => logger.warn(`Could not note join gate kick: ${error.message}`));
+                    await noteIncidentEvent(guild.id, { kind: 'gate_kick', targetId: userId, detail: gateCheckLabels(hits) });
+                },
+                // Not awaited: the rest of the join pipeline must not wait for the timeline.
+                onFlag: (userId, hits) => { noteIncidentEvent(guild.id, { kind: 'gate_flag', targetId: userId, detail: gateCheckLabels(hits) }); },
+            });
+            if (gate === 'kicked') return;
+            await checkImpersonation(member);
+            // Back after a ban that ended recently: automod extra-watch period (/automod extrawatch).
+            await startProbationOnJoin(member).catch((error) => logger.warn(`Probation check failed for ${member.id}: ${error.message}`));
+            if (guild.id === enforcementConfig.mainGuildId) {
                 // Role rules (dashboard Members): e.g. "days in the server: 0" gives its role now.
                 await applyRoleRulesToMember(member).catch((error) => logger.warn(`Role rules not applied to ${member.id}: ${error.message}`));
             }

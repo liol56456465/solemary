@@ -317,7 +317,7 @@ export function createBacktestRunner({ now = () => Date.now(), resultTtlMs = RES
                 const invite = await guild.client?.fetchInvite?.(code).catch(() => null);
                 invites.set(code, invite?.guild?.id || null);
             }
-            return inviteGuildIsForeign(invites.get(code));
+            return inviteGuildIsForeign(invites.get(code), { guildId: guild.id, allowlist: settings?.inviteAllowlist || [], code });
         };
 
         const streams = channels.map((channel, index) => ({ channel, index, before: null, buffer: [], done: false }));

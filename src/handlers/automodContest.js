@@ -4,8 +4,8 @@
 //   amcontest:submit:<code>  modal submit → marks the review card (services/automod/automodContest.js)
 //
 // Works in DMs (no guild on the interaction): the case is looked up by the code in the
-// customId, must be an automod case in the main server, and must be against the member
-// who pressed the button.
+// customId, must be an automod case (of any server: multi-server B1) and must be against the
+// member who pressed the button. The contest goes to that case's own server's review channel.
 
 import { LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { successEmbed } from '../utils/embeds.js';
@@ -43,7 +43,7 @@ function reply(interaction, content) {
 /**
  * The case behind a customId, checked against the member: { record } or { error }.
  * Any-server lookup: the button is in a DM (no guild); checkContestTarget then requires the
- * member's own automod case of the main server, so nothing of another server is shown.
+ * member's own automod case, so only a case against the member who pressed it is shown.
  */
 export async function resolveContestCase(userId, codeArg, lookup = getCaseByCodeAnyServer) {
     const code = normalizeCaseCode(codeArg);

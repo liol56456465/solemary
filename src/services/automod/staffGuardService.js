@@ -1,4 +1,8 @@
-// staffGuardService.js — protects the main server from its own staff.
+// staffGuardService.js — protects a server from its own staff.
+//
+// Multi-server (B1): the main server as before (always on); any other server only while its
+// automod is on AND its staff guard is turned on (both off by default: kicking bots and
+// removing staff roles must never surprise a server that just added the bot).
 //
 // Abuse guard: an admin who bans or kicks guardBanKickLimit members, or deletes
 // guardDeleteLimit channels/roles, within guardWindowMs loses their staff roles at
@@ -16,8 +20,9 @@
 
 import { AuditLogEvent, PermissionFlagsBits } from 'discord.js';
 import { automodConfig } from '../../config/automod.js';
-import { enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
+import { BoundedMap } from '../../utils/boundedMap.js';
+import { getAutomodSettings, isLegacyAutomodGuild } from './automodSettings.js';
 import { db, getFromDb, setInDb, deleteFromDb } from '../../utils/database.js';
 import { query, T } from '../enforcement/db.js';
 import { postModLog } from '../enforcement/enforcementService.js';
@@ -54,8 +59,31 @@ const DANGEROUS_PERMISSIONS = [
     PermissionFlagsBits.MentionEveryone,
 ];
 const WEBHOOK_LIMIT = 3;
+// Audit log actions handleNukeEntry looks at (others never need the settings read).
+const NUKE_ACTIONS = new Set([AuditLogEvent.BotAdd, AuditLogEvent.WebhookCreate, AuditLogEvent.RoleUpdate, AuditLogEvent.RoleCreate]);
 
-const activity = new Map(); // guildId:executorId:kind → [at]
+export const GUARD_ACTIVITY_MAX = 5000;
+const activity = new BoundedMap(GUARD_ACTIVITY_MAX); // guildId:executorId:kind → [at]
+
+/** Test hook. */
+export function resetStaffGuardState() {
+    activity.clear();
+}
+
+/** Test hook: how many executor windows are tracked. */
+export function staffGuardStateSize() {
+    return activity.size;
+}
+
+/**
+ * Whether the guard runs in this server: always in the main server (as before); elsewhere only
+ * with automod on and the staff guard turned on. Throws on a database error.
+ */
+export async function staffGuardOn(guildId) {
+    if (isLegacyAutomodGuild(guildId)) return true;
+    const settings = await getAutomodSettings(guildId);
+    return Boolean(settings.enabled && settings.staffGuard);
+}
 const backupKey = (guildId, userId) => `staffguard:removed:${guildId}:${userId}`;
 
 function isStaffRole(role) {
@@ -221,11 +249,13 @@ async function handleNukeEntry(entry, guild) {
     return false;
 }
 
-/** Call for every audit log entry in the main server. */
+/** Call for every audit log entry, in any server (staffGuardOn decides). */
 export async function handleAuditLogEntry(entry, guild) {
-    if (guild.id !== enforcementConfig.mainGuildId) return;
+    if (!guild?.id) return;
     const executorId = entry.executorId;
     if (!executorId || executorId === guild.ownerId || executorId === guild.client.user.id) return;
+    if (!WATCHED[entry.action] && !NUKE_ACTIONS.has(entry.action)) return;
+    if (!await staffGuardOn(guild.id)) return;
     if (await handleNukeEntry(entry, guild)) return;
 
     const kind = WATCHED[entry.action];

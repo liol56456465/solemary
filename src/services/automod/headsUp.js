@@ -8,8 +8,13 @@
 //      Personal info is different: the message is deleted at once, the DM says so, and
 //      that is all (no waiting, no case).
 //   2. A waiting record goes into the key-value store (automod:headsup:pending:<guild>:<msg>,
-//      TTL headsUpPendingTtlMs) plus one index key (automod:headsup:index, id → { dueAt, rule })
-//      so the per-minute check (automodService.runHeadsUpChecks) finds due items after a restart.
+//      TTL headsUpPendingTtlMs) plus an index key per server (automod:headsup:index:<guild>,
+//      "<guild>:<msg>" → { dueAt, rule }; the row lock there decides who resolves it). The
+//      per-minute check (automodService.runHeadsUpChecks) lists the waiting records to find the
+//      servers with something waiting, then reads only their indexes, so it also works after a
+//      restart and costs nothing for servers with nothing waiting. The old single index
+//      (automod:headsup:index) is still read until it is empty, so heads-ups waiting during a
+//      deploy are resolved too.
 //   3. A compact line in the review channel: "Heads-up sent, waiting 2 minutes", later
 //      struck through as "Fixed by member" or "Action taken".
 //
@@ -28,24 +33,31 @@ import { isRaidJoiner } from './raidService.js';
 import { closeCard, postReviewCard } from './reviewCards.js';
 import { Mutex } from '../../utils/mutex.js';
 import { headsUpDm, headsUpNotice, privacyHeadsUpDm, privacyHeadsUpNotice } from './policy.js';
+import { BoundedMap } from '../../utils/boundedMap.js';
 
 const DAY = 24 * 60 * 60 * 1000;
-const INDEX_KEY = 'automod:headsup:index';
+const LEGACY_INDEX_KEY = 'automod:headsup:index';
+const PENDING_PREFIX = 'automod:headsup:pending:';
+export const indexKey = (guildId) => `automod:headsup:index:${guildId}`;
 const seenKey = (guildId, userId, rule) => `automod:headsup:seen:${guildId}:${userId}:${rule}`;
-const pendingKey = (guildId, messageId) => `automod:headsup:pending:${guildId}:${messageId}`;
+const pendingKey = (guildId, messageId) => `${PENDING_PREFIX}${guildId}:${messageId}`;
 const statsKey = (guildId) => `automod:headsup:stats:${guildId}`;
 const indexId = (guildId, messageId) => `${guildId}:${messageId}`;
 
 // Waiting messages known to this process: "<guild>:<message>" → rule. Rebuilt from the
-// index on every per-minute check, so after a restart it is complete within a minute
-// (until then the check itself still resolves everything).
-const waiting = new Map();
+// indexes on every per-minute check, so after a restart it is complete within a minute
+// (until then the check itself still resolves everything). Bounded: entries live 2 minutes.
+const WAITING_MAX = 10000;
+const waiting = new BoundedMap(WAITING_MAX);
+// The old single index still had entries at the last check (read until it is empty once).
+let legacyIndexInUse = true;
 
 const defaultDeps = {
     kvGet: (key) => getFromDb(key, null),
     kvSet: (key, value, ttlSeconds) => setInDb(key, value, ttlSeconds),
     kvDelete: (key) => deleteFromDb(key),
     kvUpdate: (key, mutator) => db.update(key, mutator, null),
+    kvList: (prefix) => db.list(prefix),
     sendDm: (user, content) => sendDm(user, content),
     postReviewCard: (p) => postReviewCard(p),
     closeCard: (...args) => closeCard(...args),
@@ -58,6 +70,7 @@ let deps = { ...defaultDeps };
 export function setHeadsUpDepsForTest(overrides = null) {
     deps = overrides ? { ...defaultDeps, ...overrides } : { ...defaultDeps };
     waiting.clear();
+    legacyIndexInUse = true;
 }
 
 const graceMinutes = () => Math.round(automodConfig.headsUpGraceMs / 60000);
@@ -128,7 +141,7 @@ async function giveHeadsUpNow(message, hit, { card, deleteMessage = async () => 
             Math.ceil(automodConfig.headsUpSeenMs / 1000));
         if (pending) {
             await deps.kvSet(pendingKey(guild.id, message.id), pending, Math.ceil(automodConfig.headsUpPendingTtlMs / 1000));
-            await deps.kvUpdate(INDEX_KEY, (current) => ({
+            await deps.kvUpdate(indexKey(guild.id), (current) => ({
                 ...(current && typeof current === 'object' ? current : {}),
                 [indexId(guild.id, message.id)]: { dueAt: pending.dueAt, rule: hit.rule },
             }));
@@ -193,14 +206,17 @@ export async function peekHeadsUp(guildId, messageId) {
 export async function takeHeadsUp(guildId, messageId) {
     const id = indexId(guildId, messageId);
     let claimed = false;
-    await deps.kvUpdate(INDEX_KEY, (current) => {
+    const claim = (current) => {
         const next = current && typeof current === 'object' ? { ...current } : {};
         if (Object.hasOwn(next, id)) {
             claimed = true;
             delete next[id];
         }
         return next;
-    });
+    };
+    await deps.kvUpdate(indexKey(guildId), claim);
+    // Waiting since before the per-server indexes: claimed from the old single index.
+    if (!claimed && legacyIndexInUse) await deps.kvUpdate(LEGACY_INDEX_KEY, claim);
     waiting.delete(id);
     if (!claimed) return null;
     const record = await deps.kvGet(pendingKey(guildId, messageId)).catch((error) => {
@@ -254,14 +270,31 @@ export async function noteMessageDeleted(client, guildId, messageId) {
  * process's list of waiting messages from the index. Throws on a database error.
  */
 export async function dueHeadsUps(now = deps.now()) {
-    const index = await deps.kvGet(INDEX_KEY);
+    // Servers with a waiting record (records expire after headsUpPendingTtlMs).
+    const guildIds = new Set();
+    for (const key of await deps.kvList(PENDING_PREFIX) || []) {
+        const [guildId] = String(key).slice(PENDING_PREFIX.length).split(':');
+        if (guildId) guildIds.add(guildId);
+    }
+    const indexes = [];
+    for (const guildId of guildIds) indexes.push(await deps.kvGet(indexKey(guildId)));
+    if (legacyIndexInUse) {
+        const legacy = await deps.kvGet(LEGACY_INDEX_KEY);
+        const entries = legacy && typeof legacy === 'object' ? Object.keys(legacy).length : 0;
+        if (entries) indexes.push(legacy);
+        else legacyIndexInUse = false;
+    }
     waiting.clear();
     const due = [];
-    for (const [id, entry] of Object.entries(index && typeof index === 'object' ? index : {})) {
-        const [guildId, messageId] = id.split(':');
-        if (!guildId || !messageId) continue;
-        waiting.set(id, entry?.rule || 'unknown');
-        if (Number(entry?.dueAt) <= now) due.push({ guildId, messageId, rule: entry?.rule || null });
+    const seen = new Set();
+    for (const index of indexes) {
+        for (const [id, entry] of Object.entries(index && typeof index === 'object' ? index : {})) {
+            const [guildId, messageId] = id.split(':');
+            if (!guildId || !messageId || seen.has(id)) continue;
+            seen.add(id);
+            waiting.set(id, entry?.rule || 'unknown');
+            if (Number(entry?.dueAt) <= now) due.push({ guildId, messageId, rule: entry?.rule || null });
+        }
     }
     return due;
 }

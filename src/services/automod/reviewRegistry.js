@@ -14,8 +14,8 @@ const MAX_HITS = 20000;
 
 const cards = new Map();   // card message id → entry (see reviewFormat.js), plus { messageId, channelId, url, open, closedStatus }
 const bursts = new Map();  // burst key → card message id
-let hits = [];             // [{ at, rule, channelId, monitor }]
-const events = [];         // [{ at, kind }]
+let hits = [];             // [{ at, rule, channelId, monitor, guildId }]
+const events = [];         // [{ at, kind, guildId }]
 export const startedAt = Date.now();
 
 /**
@@ -112,24 +112,37 @@ function pruneCards(now = Date.now()) {
     }
 }
 
-/** One automod hit (acted on, monitored, or suppressed by the cooldown). */
-export function recordHit({ rule, channelId = null, monitor = false }, now = Date.now()) {
-    hits.push({ at: now, rule, channelId, monitor });
+/** One automod hit (acted on, monitored, or suppressed by the cooldown), in its server. */
+export function recordHit({ rule, channelId = null, monitor = false, guildId = null }, now = Date.now()) {
+    hits.push({ at: now, rule, channelId, monitor, guildId });
     if (hits.length > MAX_HITS || (hits.length % 500 === 0)) hits = hits.filter((hit) => now - hit.at <= DAY_MS).slice(-MAX_HITS);
 }
 
-export function hitsSince(since) {
-    return hits.filter((hit) => hit.at >= since);
+/**
+ * Hits since `since`. `inGuild(guildId)`: only the hits of the servers it accepts (the digest
+ * of one server never counts another's); omitted: all of them.
+ */
+export function hitsSince(since, inGuild = null) {
+    return hits.filter((hit) => hit.at >= since && (!inGuild || inGuild(hit.guildId)));
 }
 
-/** An alert worth counting in the digest ('raid', …). */
-export function recordEvent(kind, now = Date.now()) {
-    events.push({ at: now, kind });
+/** An alert worth counting in the digest ('raid', …), in its server. */
+export function recordEvent(kind, now = Date.now(), guildId = null) {
+    events.push({ at: now, kind, guildId });
     while (events.length && now - events[0].at > 2 * DAY_MS) events.shift();
+    if (events.length > MAX_HITS) events.splice(0, events.length - MAX_HITS);
 }
 
-export function eventsSince(since, kind = null) {
-    return events.filter((event) => event.at >= since && (!kind || event.kind === kind));
+export function eventsSince(since, kind = null, inGuild = null) {
+    return events.filter((event) => event.at >= since && (!kind || event.kind === kind) && (!inGuild || inGuild(event.guildId)));
+}
+
+/** The servers with a hit or an event since `since` (the digest's candidates). */
+export function activeGuildIds(since) {
+    const ids = new Set();
+    for (const hit of hits) if (hit.at >= since && hit.guildId) ids.add(hit.guildId);
+    for (const event of events) if (event.at >= since && event.guildId) ids.add(event.guildId);
+    return [...ids];
 }
 
 /** Test hook. */

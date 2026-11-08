@@ -1,4 +1,7 @@
-// raidService.js — join-raid detection and lockdown for the main server.
+// raidService.js — join-raid detection and lockdown, per server.
+//
+// Multi-server (B1): the main server is watched as before (whatever /automod enable says);
+// any other server only while its automod is on (off by default, automodSettings.js).
 //
 // When raidJoins members join within raidWindowMs, the server goes into lockdown:
 // the verification level is raised to High, admins are alerted (alerts channel + owner DM),
@@ -20,19 +23,22 @@
 
 import { GuildVerificationLevel } from 'discord.js';
 import { automodConfig } from '../../config/automod.js';
-import { enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
+import { BoundedMap } from '../../utils/boundedMap.js';
 import { Mutex } from '../../utils/mutex.js';
 import { postModLog } from '../enforcement/enforcementService.js';
-import { getAutomodSettings, getLockdown, setLockdown } from './automodSettings.js';
+import { getAutomodSettings, getLockdown, isLegacyAutomodGuild, setLockdown } from './automodSettings.js';
 import { describePanic, pauseInvitesAndDms, resumeInvitesAndDms } from './incidentActions.js';
 import { postAlert } from './alertPost.js';
 import { buildIncidentReport, casesAgainst, recordIncident, releaseRow } from './raidIncidentService.js';
 import { recordEvent } from './reviewRegistry.js';
 import { addTimelineEvent, closeTimeline, linkTimelineReport, openTimeline } from './incidentTimeline.js';
 
-const recentJoins = new Map(); // guildId → [{ at, userId }]
-const lockdownCache = new Map(); // guildId → state | null
+// Bounded for any server count: a dropped lockdown entry is re-read from the database (it is
+// saved there first); a dropped join list only restarts that server's raid window.
+export const RAID_STATE_MAX = 5000;
+const recentJoins = new BoundedMap(RAID_STATE_MAX); // guildId → [{ at, userId }]
+const lockdownCache = new BoundedMap(RAID_STATE_MAX); // guildId → state | null
 const MAX_TRACKED_JOINERS = 1000;
 
 async function loadLockdown(guildId) {
@@ -101,7 +107,7 @@ async function startLockdown(guild, joinerIds) {
         });
     }
 
-    recordEvent('raid');
+    recordEvent('raid', Date.now(), guild.id);
     logger.warn(`Join raid in ${guild.id}: ${joinerIds.length} joins within ${automodConfig.raidWindowMs / 1000}s. Lockdown started.`);
     return {
         joinerCount: joinerIds.length, raised, panic,
@@ -158,9 +164,29 @@ async function announceLockdown(guild, { joinerCount, raised, panic }) {
     await alertOwner(guild, `**Join raid in ${guild.name}.** ${summary} The server is in lockdown${extras.length ? ` and ${extras.join(' and ')}` : ''}. End it with \`/automod lockdown-end\` when it is over.`);
 }
 
-/** Call for every member who joins the main server. */
+/** Test hook: sizes of the in-memory state. */
+export function raidStateSizes() {
+    return { recentJoins: recentJoins.size, lockdownCache: lockdownCache.size };
+}
+
+/** Test hook: forget the in-memory state. */
+export function resetRaidState() {
+    recentJoins.clear();
+    lockdownCache.clear();
+}
+
+/**
+ * Whether raid detection runs in this server: always in the main server (as before), elsewhere
+ * only while automod is on there. Throws on a database error (the caller logs and skips).
+ */
+export async function raidWatchOn(guildId) {
+    if (isLegacyAutomodGuild(guildId)) return true;
+    return (await getAutomodSettings(guildId)).enabled;
+}
+
+/** Call for every member who joins a server. */
 export async function recordJoin(member) {
-    if (member.guild.id !== enforcementConfig.mainGuildId) return;
+    if (!member?.guild?.id || !await raidWatchOn(member.guild.id)) return;
     // One join at a time per guild: the lockdown state is read-modify-write.
     const lockdown = await Mutex.runExclusive(`raid:${member.guild.id}`, () => recordJoinLocked(member));
     // The mod log and owner DM can be slow; don't hold up the next join.

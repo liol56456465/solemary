@@ -13,9 +13,13 @@ import { logger } from '../../utils/logger.js';
 import { postModLog } from '../enforcement/enforcementService.js';
 import { AUTO_SLOWMODE_SECONDS, startSlowmode } from './autoSlowmode.js';
 import { computeHeat, messageHeat, shouldCalmChannel } from './policy.js';
+import { BoundedMap } from '../../utils/boundedMap.js';
 
-const signals = new Map();   // channelId → [{ at, userId, weight }]
-const lastCalm = new Map();  // channelId → epoch ms
+// Keyed by channel id (unique across servers, so no server sees another's heat). Called only
+// for servers where automod is on (automodService.moderateMessage); bounded for any server count.
+export const MOOD_CHANNELS_MAX = 5000;
+const signals = new BoundedMap(MOOD_CHANNELS_MAX);   // channelId → [{ at, userId, weight }]
+const lastCalm = new BoundedMap(MOOD_CHANNELS_MAX);  // channelId → epoch ms
 
 export const CALM_NOTE = "Let's keep it friendly. Slowmode is on for a few minutes.";
 export const CALM_NOTE_NO_SLOWMODE = "Let's keep it friendly, everyone.";
@@ -60,6 +64,11 @@ function prune(now) {
         if (!list.length || now - list[list.length - 1].at > automodConfig.moodWindowMs) signals.delete(channelId);
     }
     for (const [channelId, at] of lastCalm) if (now - at > automodConfig.moodCooldownMs) lastCalm.delete(channelId);
+}
+
+/** Test hook: sizes of the in-memory state. */
+export function moodStateSizes() {
+    return { signals: signals.size, lastCalm: lastCalm.size };
 }
 
 /** Test hook. */

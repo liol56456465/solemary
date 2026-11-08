@@ -1,11 +1,10 @@
 // raidRelease.js — "Release non-offenders" on a raid incident report (raidrelease:<incidentId>).
-// Administrators in the main server only; works once per incident.
+// Administrators of the incident's own server only; works once per incident.
 // For every raid joiner with no case since the raid began: the automod extra-watch period is ended
 // and an open join-gate flag line is closed as released. The result is posted to the
 // alerts channel and the button is disabled.
 
 import { MessageFlags } from 'discord.js';
-import { enforcementConfig } from '../config/enforcement.js';
 import { successEmbed } from '../utils/embeds.js';
 import { ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
@@ -30,8 +29,9 @@ async function closeFlag(guild, userId, by) {
 export async function handleRaidRelease(interaction, client, args) {
     const id = args[0];
     if (!/^\d+$/.test(id || '')) return;
-    if (interaction.guildId !== enforcementConfig.mainGuildId || !isAdministrator(interaction.member)) {
-        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Only administrators in the main server can release raid joiners.' });
+    // Any server: the incident must be this server's own (checked below).
+    if (!interaction.guildId || !isAdministrator(interaction.member)) {
+        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Only administrators of this server can release raid joiners.' });
     }
     await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
 
