@@ -51,9 +51,11 @@ export function canManageFromOAuth(entry) {
 
 /**
  * The stored list from Discord's answer: only servers the bot is in (`botHas(id)`) or the user
- * manages; only { id, name, icon, canManage }. Anything malformed is skipped; not an array → [].
+ * manages; only { id, name, icon, canManage }, plus `owner: true` and `listedAt` (ms) on servers the
+ * user owns (proof for "Delete this server's data" after Mewvo was removed, serverDataRoutes.js).
+ * Anything malformed is skipped; not an array → [].
  */
-export function guildListFrom(raw, { botHas = () => false } = {}) {
+export function guildListFrom(raw, { botHas = () => false, now = Date.now() } = {}) {
     if (!Array.isArray(raw)) return [];
     const out = [];
     let addable = 0;
@@ -70,6 +72,7 @@ export function guildListFrom(raw, { botHas = () => false } = {}) {
             name: String(entry?.name ?? '').slice(0, 100) || id,
             icon: typeof entry?.icon === 'string' && ICON_HASH.test(entry.icon) ? entry.icon : null,
             canManage,
+            ...(entry?.owner === true ? { owner: true, listedAt: now } : {}),
         });
     }
     return out;
@@ -144,7 +147,11 @@ export async function collectPicker({
     });
     const addable = entries
         .filter((g) => g.canManage && !botHas(g.id) && !isBlockedGuild(g.id))
-        .map((g) => ({ id: g.id, name: g.name, iconUrl: guildIconUrl(client, g.id, g.icon), href: addBotHref(clientId, g.id) }))
+        .map((g) => ({
+            id: g.id, name: g.name, iconUrl: guildIconUrl(client, g.id, g.icon), href: addBotHref(clientId, g.id),
+            // The owner of a server Mewvo left may ask for its stored data to be deleted.
+            dataHref: g.owner === true ? rootPath(`/removed/${g.id}/data`) : null,
+        }))
         .filter((g) => g.href);
     return { servers, addable, listKnown: Array.isArray(list), limited: ordered.length > checked.length };
 }
@@ -172,7 +179,7 @@ export function pickerPage({ session, picker, lang = null, theme = 'system', fla
         : html`<section class="card"><h2>${t('refreshTitle')}</h2><p>${t('refreshText')}</p><p><a class="button-link" href="${rootPath('?refresh=1')}">${t('refresh')}</a></p></section>`;
     const add = addable.length
         ? html`<section class="card"><h2>${t('addTitle')}</h2><p class="muted">${t('addIntro')}</p><ul class="server-list">${addable.map((g) => html`<li class="server-card">${serverIcon(g.iconUrl)}<span class="server-text"><span class="server-name">${g.name}</span></span>
-<a class="button-link" href="${g.href}" rel="noopener noreferrer" aria-label="${t('addLabel', { name: g.name })}">${t('add')}</a></li>`)}</ul></section>`
+<a class="button-link" href="${g.href}" rel="noopener noreferrer" aria-label="${t('addLabel', { name: g.name })}">${t('add')}</a>${g.dataHref ? html` <a href="${g.dataHref}" aria-label="${tr.t('serverData.picker.label', { name: g.name })}">${tr.t('serverData.picker.link')}</a>` : ''}</li>`)}</ul></section>`
         : '';
     const owner = session?.isOwner ? html`<p><a href="${rootPath('/owner')}">${t('ownerArea')}</a></p>` : '';
     const body = html`<div class="picker">${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}<h1>${t('title')}</h1>

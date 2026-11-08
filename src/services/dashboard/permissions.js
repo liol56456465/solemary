@@ -58,6 +58,8 @@ export const PERMISSIONS = Object.freeze({
     'page:counters': ADMIN,
     'page:support': ADMIN,
     'page:rules': ADMIN,
+    'page:server-data': ADMIN, // + server owner only (serverDataRoutes.js)
+    'serverdata.request': ADMIN, // + server owner only
     'page:modules': ADMIN,
     'page:commands': ADMIN,
     'page:audit': ADMIN,
@@ -100,6 +102,9 @@ export const PERMISSIONS = Object.freeze({
     'permissions.fix': ADMIN, // Fix permissions: the confirm page and the change (Mewvo's own channel overwrite)
     // ── Session ──
     'session.logout': MODERATOR,
+    // A server Mewvo left (global, a session only, no server access to check): the handler lets
+    // only that server's owner through, from their own OAuth server list (serverDataRoutes.js).
+    'serverdata.removed': ADMIN,
 });
 
 /**
@@ -109,6 +114,10 @@ export const PERMISSIONS = Object.freeze({
  */
 export const ROUTES = [
     ['POST', '/logout', 'session.logout'],
+    ['GET', '/removed/:id/data', 'serverdata.removed'],
+    ['GET', '/removed/:id/data/verify', 'serverdata.removed'],
+    ['POST', '/removed/:id/data/request', 'serverdata.removed'],
+    ['POST', '/removed/:id/data/cancel', 'serverdata.removed'],
     ['POST', '/users/rules/preview', 'members.rules'],
     ['POST', '/users/rules/save', 'members.rules'],
     ['POST', '/users/rules/:rid/disable', 'members.rules'],
@@ -151,6 +160,10 @@ export const ROUTES = [
     ['POST', '/inbox/:kind/:id/close', 'inbox.close'],
     ['*', '/owner', OWNER_AREA],
     ['*', '/owner/*', OWNER_AREA],
+    // Delete this server's data: Administrator keys (the owner has every permission); the handler
+    // then lets only the server's owner through (serverDataRoutes.js).
+    ['POST', '/server-data/request', 'serverdata.request'],
+    ['POST', '/server-data/cancel', 'serverdata.request'],
     ['POST', '/:module/:action', 'settings.edit'],
     ['GET', '/overview', 'page:overview'],
     ['GET', '/modules', 'page:modules'],
@@ -180,6 +193,7 @@ export const ROUTES = [
     ['GET', '/help', 'page:help'],
     ['GET', '/setup', 'page:setup'],
     ['GET', '/fix-permissions', 'permissions.fix'],
+    ['GET', '/server-data', 'page:server-data'],
     ['GET', '/:module', (params) => `page:${params.module}`],
 ];
 

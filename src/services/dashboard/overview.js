@@ -24,6 +24,7 @@ import { allows } from './permissions.js';
 import { botPermissionReport, rolesToCheck } from './botPermissions.js';
 import { listPostFailures } from '../automod/postFailures.js';
 import { getAppealPanelPosting } from '../enforcement/appealPanelService.js';
+import { serverDataCard } from './serverDataPages.js';
 
 const PENDING_APPEALS_CAP = 100;
 
@@ -417,7 +418,7 @@ function stat(label, value, sub = '', { href = null } = {}, tr = currentText()) 
 const QUICK_LINKS = ['cases', 'users', 'appeals', 'inbox', 'automod', 'enforcement', 'audit', 'modules'];
 
 /** The Overview page (v6, cards) from collectOverview's result (+ the newest audit rows; null = audit store unavailable). */
-export function overviewPage({ session, access = null, moduleStates = {}, overview: o, recentChanges = [], editEnabled = false, handover = null, canEditHandover = false, flash = null }) {
+export function overviewPage({ session, access = null, moduleStates = {}, overview: o, recentChanges = [], editEnabled = false, handover = null, canEditHandover = false, flash = null, serverData = null }) {
     // Moderator level (permissions.js): no setup, modules, tickets or audit parts (those pages are Administrator-only).
     const tr = dashboardText(session?.lang);
     const t = (key, params) => tr.t(`overview.${key}`, params);
@@ -481,6 +482,7 @@ ${permsMissing ? '' : permsCard}
 ${card(t('cards.week'), weekChart(o.week, tr))}
 ${card(t('cards.latest'), recentFeed(o.recent, tr), { link: { href: path('/cases'), text: t('cards.allCases') }, className: 'ov-wide' })}
 ${limited ? '' : recentChangesSection(recentChanges, tr)}
+${serverDataCard(serverData, { csrf: session?.csrf, tr })}
 </div>`;
     return layout({ title: navLabel({ key: 'overview' }, tr), active: 'overview', session, access, moduleStates, body, lang: tr.lang });
 }

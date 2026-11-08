@@ -1,0 +1,63 @@
+{
+    "slash": {
+        "description": "Apagar os dados que o Mewvo guarda deste servidor (só o dono do servidor)",
+        "delete": {
+            "description": "Ver o que o Mewvo guarda deste servidor e pedir para apagar (só o dono)"
+        }
+    },
+    "refuse": {
+        "home": "Os servidores do próprio Mewvo não podem ser apagados assim.",
+        "notOwner": "Só o dono deste servidor pode pedir que os dados dele sejam apagados.",
+        "unknown": "O Discord não confirmou agora quem é o dono do servidor, então nada foi alterado. Tente de novo em instantes.",
+        "database": "O banco de dados não está respondendo, então nada foi alterado. Tente de novo em instantes.",
+        "notYours": "Só o dono do servidor que abriu isto pode usar estes botões."
+    },
+    "preview": {
+        "title": "Apagar os dados deste servidor?",
+        "intro": "Isto é o que o Mewvo guarda do servidor (número de registros):",
+        "line": "- {label}: {count}",
+        "empty": "No momento o Mewvo não guarda nada deste servidor.",
+        "record": "O \"Meu histórico\" dos membros no site mostra casos de todos os servidores: os casos deste servidor somem de lá também.",
+        "active": "Banimentos e silenciamentos ainda ativos não são retirados no Discord, e os temporários não terminam mais sozinhos. Retire-os antes, se precisar.",
+        "untouched": "Não é apagado: as contas Mewvo e os logins dos membros, os dados deles em outros servidores e os casos de outros servidores.",
+        "grace": "A exclusão acontece {days} dias depois da sua confirmação. Até lá, você pode cancelar aqui ou no painel."
+    },
+    "kind": {
+        "cases": "Casos de moderação (notas, provas, histórico de edições, escada de advertências)",
+        "appeals": "Recursos e denúncias sobre a equipe",
+        "moderation": "Lista de observação, ordens de não contato, cargos temporários, registros da equipe, vínculos de modmail",
+        "settings": "Configurações",
+        "logs": "Configuração dos registros",
+        "levels": "Níveis, aniversários, AFK e fichas de membros",
+        "tickets": "Tickets",
+        "automod": "Regras de automod, raids e linhas do tempo",
+        "snapshots": "Instantâneos da estrutura do servidor",
+        "community": "Tags, sugestões, starboard, sorteios, mensagens agendadas, regras de cargos, feeds",
+        "verification": "Histórico de verificação",
+        "oauthLinks": "Vínculos de restauração de membros (quem se verificou aqui com o Discord)",
+        "insights": "Estatísticas de entradas, saídas e atividade",
+        "audit": "Registro de alterações do painel",
+        "kv": "Outras configurações e registros salvos",
+        "misc": "Relatórios de erro e lembretes criados aqui (continuam por DM)"
+    },
+    "button": {
+        "confirm": "Apagar dados",
+        "confirmLeave": "Apagar dados e remover o Mewvo",
+        "dismiss": "Cancelar",
+        "cancelDeletion": "Cancelar exclusão"
+    },
+    "scheduled": {
+        "title": "Exclusão agendada",
+        "body": "Os dados deste servidor serão apagados em <t:{unix}:F> (<t:{unix}:R>).",
+        "leave": "Depois, o Mewvo sairá do servidor.",
+        "hint": "Mudou de ideia? Clique em \"Cancelar exclusão\" ou use /serverdata delete de novo.",
+        "already": "Já existe uma exclusão agendada para este servidor.",
+        "running": "A exclusão está em andamento e não pode mais ser cancelada."
+    },
+    "cancelled": "A exclusão foi cancelada. Nada foi apagado.",
+    "notScheduled": "Não há mais exclusão agendada para este servidor.",
+    "dismissed": "Nada foi alterado.",
+    "dm": {
+        "done": "O Mewvo apagou os dados que guardava do servidor {server}, como você pediu. As contas dos membros e os dados deles em outros servidores não foram tocados."
+    }
+}

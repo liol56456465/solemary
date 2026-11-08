@@ -1,0 +1,63 @@
+{
+    "slash": {
+        "description": "Elimina i dati che Mewvo conserva per questo server (solo il proprietario)",
+        "delete": {
+            "description": "Vedi cosa conserva Mewvo per questo server e chiedi di eliminarlo (solo proprietario)"
+        }
+    },
+    "refuse": {
+        "home": "I server di Mewvo non si possono eliminare così.",
+        "notOwner": "Solo il proprietario di questo server può chiedere di eliminarne i dati.",
+        "unknown": "Discord non ha confermato ora chi possiede questo server, quindi non è cambiato nulla. Riprova tra poco.",
+        "database": "Il database non risponde, quindi non è cambiato nulla. Riprova tra poco.",
+        "notYours": "Solo il proprietario del server che ha aperto questo può usare questi pulsanti."
+    },
+    "preview": {
+        "title": "Eliminare i dati di questo server?",
+        "intro": "Ecco cosa conserva Mewvo per il server (numero di voci):",
+        "line": "- {label}: {count}",
+        "empty": "Al momento Mewvo non conserva nulla per questo server.",
+        "record": "La \"Mia scheda\" dei membri sul sito mostra i casi di tutti i server: i casi di questo server spariscono anche da lì.",
+        "active": "Ban e silenziamenti ancora attivi non vengono revocati su Discord, e quelli temporanei non finiscono più da soli. Se serve, revocali prima.",
+        "untouched": "Non eliminati: gli account Mewvo e gli accessi dei membri, i loro dati in altri server e i casi degli altri server.",
+        "grace": "L'eliminazione avviene {days} giorni dopo la conferma. Fino ad allora puoi annullarla qui o nella dashboard."
+    },
+    "kind": {
+        "cases": "Casi di moderazione (note, prove, cronologia modifiche, scala degli avvisi)",
+        "appeals": "Ricorsi e segnalazioni sullo staff",
+        "moderation": "Lista di osservazione, divieti di contatto, ruoli temporanei, registri dello staff, collegamenti modmail",
+        "settings": "Impostazioni",
+        "logs": "Configurazione dei log",
+        "levels": "Livelli, compleanni, AFK e schede dei membri",
+        "tickets": "Ticket",
+        "automod": "Regole di automod, raid e cronologie",
+        "snapshots": "Istantanee della struttura del server",
+        "community": "Tag, suggerimenti, starboard, giveaway, messaggi programmati, regole dei ruoli, feed",
+        "verification": "Cronologia delle verifiche",
+        "oauthLinks": "Collegamenti per il ripristino dei membri (chi si è verificato qui con Discord)",
+        "insights": "Statistiche di ingressi, uscite e attività",
+        "audit": "Registro delle modifiche della dashboard",
+        "kv": "Altre impostazioni e voci salvate",
+        "misc": "Segnalazioni di errore e promemoria creati qui (continuano in DM)"
+    },
+    "button": {
+        "confirm": "Elimina dati",
+        "confirmLeave": "Elimina dati e rimuovi Mewvo",
+        "dismiss": "Annulla",
+        "cancelDeletion": "Annulla eliminazione"
+    },
+    "scheduled": {
+        "title": "Eliminazione programmata",
+        "body": "I dati di questo server saranno eliminati il <t:{unix}:F> (<t:{unix}:R>).",
+        "leave": "Poi Mewvo lascerà il server.",
+        "hint": "Ci hai ripensato? Premi \"Annulla eliminazione\" o usa di nuovo /serverdata delete.",
+        "already": "Per questo server è già programmata un'eliminazione.",
+        "running": "L'eliminazione è in corso e non si può più annullare."
+    },
+    "cancelled": "L'eliminazione è stata annullata. Non è stato eliminato nulla.",
+    "notScheduled": "Per questo server non c'è più un'eliminazione programmata.",
+    "dismissed": "Non è cambiato nulla.",
+    "dm": {
+        "done": "Mewvo ha eliminato i dati che conservava per il server {server}, come hai chiesto. Gli account dei membri e i loro dati in altri server non sono stati toccati."
+    }
+}

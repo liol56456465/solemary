@@ -1,0 +1,76 @@
+{
+    "card": {
+        "title": "Elimina i dati di questo server",
+        "intro": "Lo vedi solo tu, il proprietario del server. Mewvo conserva i dati di questo server anche dopo la rimozione del bot, finché non chiedi di eliminarli.",
+        "open": "Vedi cosa verrebbe eliminato",
+        "scheduled": "Eliminazione programmata per il {date}.",
+        "running": "L'eliminazione è in corso.",
+        "cancel": "Annulla eliminazione"
+    },
+    "page": {
+        "title": "Elimina i dati di questo server",
+        "intro": "Qui sotto c'è tutto ciò che Mewvo conserva per {name}, con il numero di voci di ogni tipo. Solo il proprietario del server può chiederne l'eliminazione.",
+        "introRemoved": "Mewvo non è più in {name}. I suoi dati restano finché tu, il proprietario, non chiedi di eliminarli.",
+        "details": "Per tabella",
+        "total": "In totale: {count} voci.",
+        "removeBot": "E rimuovi Mewvo da questo server",
+        "confirm": "Elimina tra {days} giorni",
+        "back": "Torna alla panoramica",
+        "backPicker": "Torna ai tuoi server"
+    },
+    "kind": {
+        "cases": "Casi di moderazione (note, prove, cronologia modifiche, scala degli avvisi)",
+        "appeals": "Ricorsi e segnalazioni sullo staff",
+        "moderation": "Lista di osservazione, divieti di contatto, ruoli temporanei, registri dello staff, collegamenti modmail",
+        "settings": "Impostazioni",
+        "logs": "Configurazione dei log",
+        "levels": "Livelli, compleanni, AFK e schede dei membri",
+        "tickets": "Ticket",
+        "automod": "Regole di automod, raid e cronologie",
+        "snapshots": "Istantanee della struttura del server",
+        "community": "Tag, suggerimenti, starboard, giveaway, messaggi programmati, regole dei ruoli, feed",
+        "verification": "Cronologia delle verifiche",
+        "oauthLinks": "Collegamenti per il ripristino dei membri (chi si è verificato qui con Discord)",
+        "insights": "Statistiche di ingressi, uscite e attività",
+        "audit": "Registro delle modifiche della dashboard",
+        "kv": "Altre impostazioni e voci salvate",
+        "misc": "Segnalazioni di errore e promemoria creati qui (continuano in DM)"
+    },
+    "note": {
+        "record": "La \"Mia scheda\" dei membri sul sito mostra i casi di tutti i server: i casi di questo server spariscono anche da lì.",
+        "active": "Ban e silenziamenti ancora attivi non vengono revocati su Discord, e quelli temporanei non finiscono più da soli. Se serve, revocali prima.",
+        "untouched": "Non eliminati: gli account Mewvo e gli accessi dei membri, i loro dati in altri server e i casi degli altri server.",
+        "grace": "L'eliminazione avviene {days} giorni dopo la conferma. Fino ad allora puoi annullarla qui o nella dashboard.",
+        "empty": "Al momento Mewvo non conserva nulla per questo server."
+    },
+    "status": {
+        "scheduled": "I dati di questo server saranno eliminati il {date}. Fino ad allora puoi annullare.",
+        "leave": "Poi Mewvo lascerà il server.",
+        "running": "L'eliminazione è in corso e non si può più annullare.",
+        "done": "Mewvo ha eliminato i dati di questo server il {date}.",
+        "retry": "L'ultimo tentativo non è terminato; verrà ripetuto entro un giorno."
+    },
+    "flash": {
+        "scheduled": "Eliminazione programmata per il {date}. Puoi annullarla fino ad allora.",
+        "already": "Un'eliminazione è già programmata per il {date}.",
+        "cancelled": "L'eliminazione è stata annullata. Non è stato eliminato nulla.",
+        "notScheduled": "Non c'era nessuna eliminazione programmata.",
+        "running": "L'eliminazione è già in corso e non si può più annullare."
+    },
+    "errors": {
+        "title": "Non possibile",
+        "notOwner": "Solo il proprietario di questo server può farlo.",
+        "home": "I server di Mewvo non si possono eliminare così.",
+        "unknown": "Discord non ha confermato ora chi possiede questo server, quindi non è cambiato nulla. Riprova tra poco."
+    },
+    "verify": {
+        "title": "Conferma che il server è tuo",
+        "text": "Mewvo verifica con Discord che {name} sia ancora tuo. Passi da Discord e torni subito qui.",
+        "button": "Verifica con Discord"
+    },
+    "picker": {
+        "link": "Elimina i dati salvati",
+        "label": "Elimina i dati che Mewvo ha salvato per {name}"
+    },
+    "ownerAction": "Eliminazione dei dati del server: {server}"
+}

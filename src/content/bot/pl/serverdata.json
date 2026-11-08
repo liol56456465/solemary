@@ -1,0 +1,63 @@
+{
+    "slash": {
+        "description": "Usuń dane, które Mewvo przechowuje dla tego serwera (tylko właściciel)",
+        "delete": {
+            "description": "Zobacz, co Mewvo przechowuje dla serwera, i poproś o usunięcie (tylko właściciel)"
+        }
+    },
+    "refuse": {
+        "home": "Własnych serwerów Mewvo nie można w ten sposób usunąć.",
+        "notOwner": "Tylko właściciel tego serwera może poprosić o usunięcie jego danych.",
+        "unknown": "Discord nie potwierdził teraz, kto jest właścicielem serwera, więc nic nie zmieniono. Spróbuj ponownie za chwilę.",
+        "database": "Baza danych nie odpowiada, więc nic nie zmieniono. Spróbuj ponownie za chwilę.",
+        "notYours": "Tych przycisków może używać tylko właściciel serwera, który to otworzył."
+    },
+    "preview": {
+        "title": "Usunąć dane tego serwera?",
+        "intro": "Oto co Mewvo przechowuje dla serwera (liczba wpisów):",
+        "line": "- {label}: {count}",
+        "empty": "Mewvo nie przechowuje teraz nic dla tego serwera.",
+        "record": "„Moja kartoteka” członków na stronie pokazuje sprawy ze wszystkich serwerów: sprawy tego serwera znikną też stamtąd.",
+        "active": "Wciąż aktywne bany i wyciszenia nie zostaną zdjęte na Discordzie, a czasowe nie skończą się już same. W razie potrzeby najpierw je zdejmij.",
+        "untouched": "Nie zostaną usunięte: własne konta Mewvo i logowania członków, ich dane na innych serwerach ani sprawy innych serwerów.",
+        "grace": "Usunięcie nastąpi {days} dni po potwierdzeniu. Do tego czasu możesz je anulować tutaj albo w panelu."
+    },
+    "kind": {
+        "cases": "Sprawy moderacyjne (notatki, dowody, historia zmian, drabinka ostrzeżeń)",
+        "appeals": "Odwołania i zgłoszenia na ekipę",
+        "moderation": "Lista obserwowanych, zakazy kontaktu, role czasowe, wpisy o ekipie, powiązania modmail",
+        "settings": "Ustawienia",
+        "logs": "Konfiguracja logów",
+        "levels": "Poziomy, urodziny, AFK i wpisy członków",
+        "tickets": "Tickety",
+        "automod": "Reguły automoderacji, rajdy i osie czasu",
+        "snapshots": "Migawki struktury serwera",
+        "community": "Tagi, sugestie, starboard, konkursy, zaplanowane wiadomości, reguły ról, kanały RSS",
+        "verification": "Historia weryfikacji",
+        "oauthLinks": "Powiązania do przywracania członków (kto zweryfikował się tu przez Discord)",
+        "insights": "Statystyki dołączeń, odejść i aktywności",
+        "audit": "Dziennik zmian panelu",
+        "kv": "Inne zapisane ustawienia i wpisy",
+        "misc": "Raporty błędów i przypomnienia ustawione tutaj (dalej przychodzą w DM)"
+    },
+    "button": {
+        "confirm": "Usuń dane",
+        "confirmLeave": "Usuń dane i usuń Mewvo",
+        "dismiss": "Anuluj",
+        "cancelDeletion": "Anuluj usunięcie"
+    },
+    "scheduled": {
+        "title": "Usunięcie zaplanowane",
+        "body": "Dane tego serwera zostaną usunięte <t:{unix}:F> (<t:{unix}:R>).",
+        "leave": "Potem Mewvo opuści serwer.",
+        "hint": "Zmiana zdania? Naciśnij „Anuluj usunięcie” albo ponownie użyj /serverdata delete.",
+        "already": "Dla tego serwera usunięcie jest już zaplanowane.",
+        "running": "Usuwanie właśnie trwa i nie można go już anulować."
+    },
+    "cancelled": "Usunięcie anulowano. Nic nie zostało usunięte.",
+    "notScheduled": "Dla tego serwera nie ma już zaplanowanego usunięcia.",
+    "dismissed": "Nic nie zmieniono.",
+    "dm": {
+        "done": "Mewvo usunął dane, które przechowywał dla serwera {server}, tak jak prosiłeś. Własne konta członków i ich dane na innych serwerach nie zostały naruszone."
+    }
+}

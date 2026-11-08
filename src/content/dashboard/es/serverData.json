@@ -1,0 +1,76 @@
+{
+    "card": {
+        "title": "Borrar los datos de este servidor",
+        "intro": "Solo tú, el propietario del servidor, ves esto. Mewvo guarda los datos de este servidor después de quitar el bot, hasta que pidas que se borren.",
+        "open": "Ver qué se borraría",
+        "scheduled": "Borrado programado para el {date}.",
+        "running": "El borrado está en curso.",
+        "cancel": "Cancelar borrado"
+    },
+    "page": {
+        "title": "Borrar los datos de este servidor",
+        "intro": "Abajo está todo lo que Mewvo guarda de {name}, con el número de registros de cada tipo. Solo el propietario del servidor puede pedir que se borre.",
+        "introRemoved": "Mewvo ya no está en {name}. Sus datos se guardan hasta que tú, el propietario, pidas que se borren.",
+        "details": "Por tabla",
+        "total": "En total: {count} registros.",
+        "removeBot": "Y quitar Mewvo de este servidor",
+        "confirm": "Borrar dentro de {days} días",
+        "back": "Volver al resumen",
+        "backPicker": "Volver a tus servidores"
+    },
+    "kind": {
+        "cases": "Casos de moderación (notas, pruebas, historial de cambios, escalera de advertencias)",
+        "appeals": "Apelaciones y denuncias sobre el staff",
+        "moderation": "Lista de vigilancia, órdenes de no contacto, roles temporales, registros del staff, enlaces de modmail",
+        "settings": "Ajustes",
+        "logs": "Configuración de registros",
+        "levels": "Niveles, cumpleaños, AFK y fichas de miembros",
+        "tickets": "Tickets",
+        "automod": "Reglas de automod, raids y cronologías",
+        "snapshots": "Instantáneas de la estructura del servidor",
+        "community": "Etiquetas, sugerencias, starboard, sorteos, mensajes programados, reglas de roles, feeds",
+        "verification": "Historial de verificación",
+        "oauthLinks": "Enlaces de restauración de miembros (quién se verificó aquí con Discord)",
+        "insights": "Estadísticas de entradas, salidas y actividad",
+        "audit": "Registro de cambios del panel",
+        "kv": "Otros ajustes y registros guardados",
+        "misc": "Informes de errores y recordatorios creados aquí (siguen llegando por MD)"
+    },
+    "note": {
+        "record": "\"Mi historial\" de los miembros en la web muestra casos de todos los servidores: los casos de este servidor también desaparecen de ahí.",
+        "active": "Los baneos y silencios que siguen activos no se retiran en Discord, y los temporales ya no terminarán solos. Retíralos antes si hace falta.",
+        "untouched": "No se borra: las cuentas de Mewvo y los inicios de sesión de los miembros, sus datos en otros servidores ni los casos de otros servidores.",
+        "grace": "El borrado se hace {days} días después de que lo confirmes. Hasta entonces puedes cancelarlo aquí o en el panel.",
+        "empty": "Ahora mismo Mewvo no guarda nada de este servidor."
+    },
+    "status": {
+        "scheduled": "Los datos de este servidor se borrarán el {date}. Hasta entonces puedes cancelarlo.",
+        "leave": "Después, Mewvo saldrá del servidor.",
+        "running": "El borrado está en curso y ya no se puede cancelar.",
+        "done": "Mewvo borró los datos de este servidor el {date}.",
+        "retry": "El último intento no terminó; se volverá a intentar en un día."
+    },
+    "flash": {
+        "scheduled": "Borrado programado para el {date}. Puedes cancelarlo hasta entonces.",
+        "already": "Ya hay un borrado programado para el {date}.",
+        "cancelled": "Se canceló el borrado. No se ha borrado nada.",
+        "notScheduled": "No había ningún borrado programado.",
+        "running": "El borrado ya está en curso y no se puede cancelar."
+    },
+    "errors": {
+        "title": "No es posible",
+        "notOwner": "Solo el propietario de este servidor puede hacerlo.",
+        "home": "Los servidores propios de Mewvo no se pueden borrar así.",
+        "unknown": "Discord no ha confirmado ahora quién es el propietario del servidor, así que no se ha cambiado nada. Inténtalo de nuevo en un momento."
+    },
+    "verify": {
+        "title": "Confirma que el servidor es tuyo",
+        "text": "Mewvo comprueba con Discord que {name} sigue siendo tuyo. Pasas por Discord y vuelves enseguida.",
+        "button": "Comprobar con Discord"
+    },
+    "picker": {
+        "link": "Borrar datos guardados",
+        "label": "Borrar los datos que Mewvo guardó de {name}"
+    },
+    "ownerAction": "Borrado de datos del servidor: {server}"
+}

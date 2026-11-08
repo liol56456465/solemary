@@ -261,6 +261,8 @@ export function ownerActionText(key, names = new Map()) {
     if ((m = /^premium\.subscriptions\.(\d+)\.end$/.exec(k))) return tr.t('owner.action.end', { id: m[1] });
     if ((m = /^privacy\.export\.(\d+)$/.exec(k))) return tr.t('owner.action.export', { id: m[1] });
     if ((m = /^privacy\.erase\.([a-z0-9]{5,7})$/.exec(k))) return tr.t('owner.action.erase', { code: m[1] });
+    // A server owner's "Delete this server's data" (services/privacy/serverDataDeletion.js); the value says scheduled / cancelled / deleted.
+    if ((m = /^privacy\.serverdata\.(\d+)$/.exec(k))) return tr.t('serverData.ownerAction', { server: server(m[1]) });
     return k;
 }
 

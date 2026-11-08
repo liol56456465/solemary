@@ -62,6 +62,11 @@ export async function updateCommunitySettings(guildId, patch, updatedBy) {
     return settings;
 }
 
+/** Drops a guild's cached settings (after its data was deleted: defaults from then on). */
+export function forgetCommunitySettings(guildId) {
+    byGuild.delete(guildId);
+}
+
 /** For tests: replace the cached settings of a guild. */
 export function setCommunitySettingsForTests(guildId, settings) {
     if (settings) byGuild.set(guildId, { ...DEFAULT_SETTINGS, ...settings });

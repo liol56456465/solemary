@@ -8,6 +8,7 @@ export const SLASH_ONLY_COMMANDS = new Set([
   'help',
   'embedbuilder',
   'wipedata',
+  'serverdata',
   'apply',
   'enforcements',
   'background',

@@ -1,0 +1,76 @@
+{
+    "card": {
+        "title": "Delete this server's data",
+        "intro": "Only you, the server owner, see this. Mewvo keeps this server's data after the bot is removed, until you ask for it to be deleted.",
+        "open": "See what would be deleted",
+        "scheduled": "Deletion scheduled for {date}.",
+        "running": "The deletion is running now.",
+        "cancel": "Cancel deletion"
+    },
+    "page": {
+        "title": "Delete this server's data",
+        "intro": "Everything Mewvo stores for {name} is listed below, with the number of records of each kind. Only the server owner can ask for it to be deleted.",
+        "introRemoved": "Mewvo is no longer in {name}. Its data is kept until you, the owner, ask for it to be deleted.",
+        "details": "Per table",
+        "total": "In total: {count} records.",
+        "removeBot": "And remove Mewvo from this server",
+        "confirm": "Delete in {days} days",
+        "back": "Back to the overview",
+        "backPicker": "Back to your servers"
+    },
+    "kind": {
+        "cases": "Moderation cases (notes, evidence, edit history, warn ladder)",
+        "appeals": "Appeals and staff reports",
+        "moderation": "Watchlist, no-contact orders, temporary roles, staff records, modmail links",
+        "settings": "Settings",
+        "logs": "Logging setup",
+        "levels": "Levels, birthdays, AFK and member records",
+        "tickets": "Tickets",
+        "automod": "Automod rules, raid incidents and timelines",
+        "snapshots": "Server structure snapshots",
+        "community": "Tags, suggestions, starboard, giveaways, scheduled messages, role rules, feeds",
+        "verification": "Verification history",
+        "oauthLinks": "Member backup links (who verified here with Discord)",
+        "insights": "Join, leave and activity statistics",
+        "audit": "Dashboard audit log",
+        "kv": "Other stored settings and records",
+        "misc": "Error reports, and reminders set here (they keep going by DM)"
+    },
+    "note": {
+        "record": "Members' \"My record\" on the website lists cases from every server: this server's cases disappear from there too.",
+        "active": "Bans and mutes that are still active are not lifted in Discord, and temporary ones no longer end on their own. Lift them first if needed.",
+        "untouched": "Not deleted: members' own Mewvo accounts and logins, their data in other servers, and other servers' cases.",
+        "grace": "The deletion runs {days} days after you confirm. Until then you can cancel it here or on the dashboard.",
+        "empty": "Mewvo stores nothing for this server right now."
+    },
+    "status": {
+        "scheduled": "This server's data will be deleted on {date}. Until then you can cancel it.",
+        "leave": "Mewvo will then leave the server.",
+        "running": "The deletion is running now and can no longer be cancelled.",
+        "done": "Mewvo deleted this server's data on {date}.",
+        "retry": "The last attempt did not finish; it is tried again within a day."
+    },
+    "flash": {
+        "scheduled": "Deletion scheduled for {date}. You can cancel it until then.",
+        "already": "A deletion is already scheduled for {date}.",
+        "cancelled": "The deletion was cancelled. Nothing was deleted.",
+        "notScheduled": "There was no scheduled deletion to cancel.",
+        "running": "The deletion is already running and can no longer be cancelled."
+    },
+    "errors": {
+        "title": "Not possible",
+        "notOwner": "Only the owner of this server can do this.",
+        "home": "Mewvo's own servers cannot be deleted this way.",
+        "unknown": "Discord did not confirm who owns this server right now, so nothing was changed. Try again in a moment."
+    },
+    "verify": {
+        "title": "Confirm that you own this server",
+        "text": "Mewvo checks with Discord that you still own {name}. This takes you to Discord and straight back.",
+        "button": "Check with Discord"
+    },
+    "picker": {
+        "link": "Delete stored data",
+        "label": "Delete the data Mewvo stored for {name}"
+    },
+    "ownerAction": "Server data deletion: {server}"
+}
