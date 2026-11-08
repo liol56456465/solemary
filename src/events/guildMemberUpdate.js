@@ -6,6 +6,7 @@ import { checkImpersonation } from '../services/automod/memberChecks.js';
 import { endTempRoles } from '../services/members/tempRoleService.js';
 import { applyRoleRulesToMember } from '../services/members/roleRuleService.js';
 import { isEnforcementDbAvailable } from '../services/enforcement/db.js';
+import { handleMemberUpdate as mirrorRoles } from '../services/homeServers/roleMirror.js';
 
 export default {
   name: Events.GuildMemberUpdate,
@@ -17,6 +18,10 @@ export default {
     if (!hasIntent('GuildMembers')) return;
     try {
       if (!newMember.guild) return;
+
+      // Home-server role mirror: a source-role change in MAIN updates support/database (never throws;
+      // changes there come back here and are ignored, so it cannot loop).
+      void mirrorRoles(oldMember, newMember);
 
       // A role taken off in Discord ends its timer, so a rejoin does not give it back.
       // A partial old member has no role list to compare with; nothing to do then.

@@ -175,6 +175,50 @@ export const USER_SECTIONS = [
     ['AFK', (t) => `SELECT guild_id, LEFT(reason, 200) AS reason, status_at, ${COUNT} FROM ${t.afk_status} WHERE user_id = $1 ORDER BY status_at DESC LIMIT $2`],
 ];
 
+export const PROFILE_ROWS = 25;
+
+/** A /database user section by name (the profile reuses them). */
+const userSection = (name) => {
+    const found = USER_SECTIONS.find(([label]) => label === name);
+    if (!found) throw new Error(`Unknown user section ${name}`);
+    return found;
+};
+
+/**
+ * /database profile: what the database holds about one user across all servers, for the
+ * owner's profile channel. Same rules as USER_SECTIONS ($1 = user id, $2 = row limit), up to
+ * PROFILE_ROWS rows each. Never IPs (not even "seen"), OAuth data, session rows, password
+ * hashes, 2FA secrets or full premium codes.
+ */
+export const PROFILE_SECTIONS = [
+    userSection('Known username'),
+    ['Cases against them', (t) => `SELECT case_code, guild_id, type, status, name, LEFT(reason, 200) AS reason, moderator_username AS moderator,
+        created_at, expires_at, is_imported, is_test, ${COUNT} FROM ${t.mod_cases} WHERE target_user_id = $1 ORDER BY created_at DESC LIMIT $2`],
+    ['Warns per server', (t) => `SELECT guild_id, COUNT(*) FILTER (WHERE NOT is_imported AND NOT is_test) AS warns,
+        COUNT(*) FILTER (WHERE status IN ('active', 'appeal_pending') AND NOT is_imported AND NOT is_test) AS active_warns,
+        COUNT(*) FILTER (WHERE is_imported) AS imported, MAX(created_at) AS last_warn, ${COUNT}
+        FROM ${t.mod_cases} WHERE target_user_id = $1 AND type = 'warn' GROUP BY guild_id ORDER BY MAX(created_at) DESC LIMIT $2`],
+    userSection('Warn ladder'),
+    userSection('Appeals'),
+    userSection('Staff reports they filed'),
+    userSection('Watchlist'),
+    userSection('Keep-apart orders'),
+    userSection('Levels / XP'),
+    userSection('Tickets opened'),
+    userSection('Modmail channels'),
+    userSection('Modmail blocked in'),
+    userSection('Verification log'),
+    userSection('OAuth verified in'),
+    userSection('Mewvo website account'),
+    userSection('Premium plan'),
+    userSection('Premium orders'),
+    userSection('Bot blacklist'),
+    userSection('Staff warnings'),
+    ['Staff activity (per week)', (t) => `SELECT guild_id, week_start, messages, reviews, tickets, ${COUNT}
+        FROM ${t.staff_activity} WHERE user_id = $1 ORDER BY week_start DESC LIMIT $2`],
+    userSection('Cases they gave (as moderator)'),
+];
+
 /** Tables with a guild_id column, counted by /database server (keys of pgConfig.tables). */
 export const GUILD_TABLES = [
     'mod_cases', 'mod_ladder', 'mod_appeals', 'mod_watchlist', 'no_contact_orders', 'staff_warnings', 'staff_activity',
@@ -220,6 +264,16 @@ export function createDatabaseLookup({ query, tables = pgConfig.tables, migratio
             sections.push(section(name, await run(sql(t), [userId, RECENT_ROWS])));
         }
         return { kind: 'user', title: `User ${userId}`, subject: userId, sections };
+    }
+
+    async function profile(input) {
+        const userId = parseUserId(input);
+        if (!userId) throw new LookupInputError('That is not a user ID or @mention.', 'owner.database.input.notUser');
+        const sections = [];
+        for (const [name, sql] of PROFILE_SECTIONS) {
+            sections.push(section(name, await run(sql(t), [userId, PROFILE_ROWS])));
+        }
+        return { kind: 'profile', title: `Profile of ${userId}`, subject: userId, sections };
     }
 
     async function server(input) {
@@ -329,7 +383,7 @@ export function createDatabaseLookup({ query, tables = pgConfig.tables, migratio
         return { kind: 'search', title: 'Search', subject: text, sections };
     }
 
-    return { user, server, caseByCode, stats, search };
+    return { user, profile, server, caseByCode, stats, search };
 }
 
 // ── Rendering (pure) ─────────────────────────────────────────────────────

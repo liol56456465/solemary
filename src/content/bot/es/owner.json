@@ -53,6 +53,7 @@
             "description": "Solo el dueño: consultas de solo lectura en toda la base de datos",
             "user": "Todo lo guardado sobre un usuario, en todos los servidores",
             "userOption": "ID de usuario o @mención",
+            "profile": "Perfil de un usuario en todos los servidores (se borra solo en el canal de perfiles)",
             "server": "Ajustes, estado de módulos, número de filas y apelaciones abiertas de un servidor",
             "serverOption": "ID del servidor",
             "case": "Un caso con sus cambios, pruebas, notas y apelaciones",

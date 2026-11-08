@@ -26,6 +26,7 @@ import { recordMemberEvent } from '../services/members/memberInsightsService.js'
 import { applyRoleRulesToMember } from '../services/members/roleRuleService.js';
 import { alertWatched } from '../services/enforcement/watchlistService.js';
 import { syncLevelRolesForMember } from '../services/leveling/levelRoleSyncService.js';
+import { handleMemberAdd as mirrorRolesOnJoin } from '../services/homeServers/roleMirror.js';
 
 // Welcome messages keep the mentions they had before the client default dropped roles
 // (2026-11-03): users and roles from the admin-written text, never @everyone/@here.
@@ -74,6 +75,10 @@ export default {
                     : 'joined the server',
             });
         }
+
+        // Joining the support or database server: the roles their main-server roles give
+        // (home-server role mirror; no database needed, never throws).
+        void mirrorRolesOnJoin(member);
 
         // Leaving and rejoining must not shake off an active mute; runs first so
         // nothing later in the join pipeline can skip it.

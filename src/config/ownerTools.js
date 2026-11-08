@@ -6,8 +6,10 @@
 
 import { enforcementConfig } from './enforcement.js';
 import { PRODUCTION_GUILD_IDS } from './testMode.js';
+import { DEFAULT_OWNER_TOOLS_GUILD_ID } from './homeServers.js';
 
-export const DEFAULT_OWNER_TOOLS_GUILD_ID = '1564332751170044186';
+// The id lives with the other home-server ids (config/homeServers.js).
+export { DEFAULT_OWNER_TOOLS_GUILD_ID };
 const SNOWFLAKE = /^\d{17,20}$/;
 
 /**

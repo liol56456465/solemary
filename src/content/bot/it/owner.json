@@ -53,6 +53,7 @@
             "description": "Solo proprietario: consultazioni in sola lettura di tutto il database",
             "user": "Tutto ciò che è salvato su un utente, in ogni server",
             "userOption": "ID utente o @menzione",
+            "profile": "Profilo di un utente in tutti i server (eliminato da solo nel canale dei profili)",
             "server": "Impostazioni, stato dei moduli, conteggio righe e ricorsi aperti di un server",
             "serverOption": "ID del server",
             "case": "Un caso con modifiche, prove, note e ricorsi",
