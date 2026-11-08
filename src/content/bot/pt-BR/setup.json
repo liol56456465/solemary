@@ -3,6 +3,7 @@
     "intro": "O que já está configurado neste servidor. A maioria das configurações fica no painel.",
     "dashboardButton": "Abrir o painel",
     "noDashboard": "O link do painel ainda não está disponível para este bot.",
+    "dashboardSoon": "O painel web para o seu servidor chega em breve.",
     "checklistTitle": "Lista de verificação",
     "on": "ativado",
     "off": "desativado",

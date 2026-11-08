@@ -13,7 +13,7 @@ import { getWelcomeConfig } from '../../utils/database.js';
 import { getAutomodSettings } from '../automod/automodSettings.js';
 import { isHomeGuild, resolvedSource, settingsFor } from '../settings/guildSettings.js';
 import { moduleStatesFrom } from '../dashboard/overview.js';
-import { dashboardUrlFor } from '../site/shell.js';
+import { dashboardComingSoon, dashboardUrlFor } from '../site/shell.js';
 import { LANGUAGES } from '../site/i18n.js';
 import { hasEveryoneAccess, isManageServerCommand } from '../../config/commands/commandAccess.js';
 import { isCommandAvailableInGuild } from '../../utils/commandGate.js';
@@ -149,7 +149,7 @@ export function setupReply({ client, guild, userId, state, tr }) {
     const dashboard = dashboardRow(guild.id, tr);
     const description = [
         tr.t('setup.intro'),
-        ...(dashboard ? [] : [`-# ${tr.t('setup.noDashboard')}`]),
+        ...(dashboard ? [] : [`-# ${tr.t(dashboardComingSoon(guild.id) ? 'setup.dashboardSoon' : 'setup.noDashboard')}`]),
         '',
         `**${tr.t('setup.checklistTitle')}**`,
         checklistText(rows, tr),

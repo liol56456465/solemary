@@ -49,12 +49,24 @@ test('evidenceLines: links with excerpt and images with fresh or stored link', (
         { ...base, id: '2', kind: 'image', store_channel_id: C, store_message_id: M, note: 'screenshot' },
         { ...base, id: '3', kind: 'image', store_channel_id: null, store_message_id: null },
     ];
-    const lines = evidenceLines(rows, new Map([['2', 'https://cdn.example/fresh.png']]));
+    const lines = evidenceLines(rows, new Map([['2', 'https://cdn.example/fresh.png']]), { caseGuildId: G });
     assert.match(lines[0], /^\*\*#1\*\* https:\/\/discord\.com\/channels\/1\/2\/3 "kit: bad words" · mod, <t:/);
     assert.match(lines[1], /\[image\]\(https:\/\/cdn\.example\/fresh\.png\)/);
     assert.match(lines[1], new RegExp(`\\[stored\\]\\(https://discord\\.com/channels/[^/]+/${C}/${M}\\)`));
     assert.match(lines[1], /: screenshot/);
     assert.match(lines[2], /stored message missing/);
+});
+
+test('evidenceLines: the stored image links the case\'s own (staff) server, never a guessed main server', () => {
+    const base = { added_by_username: 'mod', added_at: new Date('2026-01-01T00:00:00Z'), id: '9', kind: 'image', store_channel_id: C, store_message_id: M };
+    const OTHER = '444444444444444444';
+    const own = evidenceLines([{ ...base, case_guild_id: OTHER }])[0];
+    assert.match(own, new RegExp(`\\[stored\\]\\(https://discord\\.com/channels/${OTHER}/${C}/${M}\\)`));
+    assert.match(evidenceLines([base], new Map(), { caseGuildId: OTHER })[0], new RegExp(`/channels/${OTHER}/`));
+    assert.match(evidenceLines([base], new Map(), { caseGuildId: OTHER, guildIdOf: () => G })[0], new RegExp(`/channels/${G}/`), 'the cached channel\'s guild wins');
+    const unknown = evidenceLines([base])[0];
+    assert.doesNotMatch(unknown, /discord\.com\/channels/);
+    assert.match(unknown, /stored message missing/);
 });
 
 test('fitLines: stays under the limit and says how many were left out', () => {

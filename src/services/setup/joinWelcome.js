@@ -11,7 +11,7 @@ import { ActionRowBuilder, AuditLogEvent, ButtonBuilder, ButtonStyle, ChannelTyp
 import { createEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { textForGuild } from '../../utils/botText.js';
-import { dashboardUrlFor } from '../site/shell.js';
+import { dashboardComingSoon, dashboardUrlFor } from '../site/shell.js';
 import { supportInviteUrl } from '../../commands/Core/support.js';
 import { getGuildConfig, updateGuildConfig } from '../config/guildConfig.js';
 import { blacklistHit } from '../owner/blacklistCache.js';
@@ -60,6 +60,8 @@ export function chooseWelcomeChannel(guild) {
 /** The welcome message in `tr`'s language. `dm`: the version for the member who added Mewvo. */
 export function welcomeMessage(guild, tr, { dm = false } = {}) {
     const lines = [dm ? tr.t('setup.welcome.dm', { server: guild.name || guild.id }) : tr.t('setup.welcome.body'), '', tr.t('setup.welcome.help')];
+    // Until the per-server dashboard (B3): a neutral line instead of a link to Mewvo's own dashboard.
+    if (dashboardComingSoon(guild.id)) lines.push(`-# ${tr.t('setup.dashboardSoon')}`);
     const embed = createEmbed({ title: tr.t('setup.welcome.title'), description: lines.join('\n'), color: 'primary' });
     const buttons = [];
     const dashboard = dashboardUrlFor(guild.id);

@@ -3,6 +3,7 @@
     "intro": "What is set up in this server so far. Most settings are on the dashboard.",
     "dashboardButton": "Open the dashboard",
     "noDashboard": "The dashboard link is not available on this bot yet.",
+    "dashboardSoon": "The web dashboard for your server is coming soon.",
     "checklistTitle": "Checklist",
     "on": "on",
     "off": "off",

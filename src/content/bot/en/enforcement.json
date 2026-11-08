@@ -31,6 +31,7 @@
         },
         "appealAccepted": {
             "title": "**Appeal accepted**",
+            "titleIn": "**Appeal accepted in {server}**",
             "noInvite": "Ask a staff member in the support server for an invite back."
         },
         "appealDenied": "**Appeal denied.** If you think this is a mistake, appeal again here:\n{invite}",

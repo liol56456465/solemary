@@ -31,6 +31,7 @@
         },
         "appealAccepted": {
             "title": "**Ricorso accettato**",
+            "titleIn": "**Ricorso accettato su {server}**",
             "noInvite": "Chiedi a un membro dello staff nel server di supporto un invito per rientrare."
         },
         "appealDenied": "**Ricorso respinto.** Se pensi che sia un errore, fai di nuovo ricorso qui:\n{invite}",

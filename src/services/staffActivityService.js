@@ -10,6 +10,7 @@ import { logger } from '../utils/logger.js';
 import { query, T, isEnforcementDbAvailable } from './enforcement/db.js';
 import { postModLog } from './enforcement/enforcementService.js';
 import { isStaff } from './automod/automodService.js';
+import { isMewvoServer } from '../utils/ownerPower.js';
 
 // Staff with fewer messages than this and no moderation work in a week are flagged.
 const INACTIVE_MESSAGE_THRESHOLD = 20;
@@ -32,9 +33,15 @@ async function bump(guildId, userId, field, amount = 1) {
     );
 }
 
-/** Counts a message from a staff member, per server (cheap: buffered; multi-server B1: every server). */
+/**
+ * Counts a message from a staff member, per server (cheap: buffered). Only Mewvo's own servers:
+ * the weekly staff report and the dashboard exist only there for now, so counting other servers'
+ * staff messages would store data nobody reads. When per-server staff reports exist, widen this
+ * to the servers that get one. (/staff activity elsewhere shows 0 messages until then; reviews,
+ * tickets, actions and appeals are still counted per server.)
+ */
 export function noteStaffMessage(message) {
-    if (!message.guildId || !isStaff(message.member)) return;
+    if (!message.guildId || !isMewvoServer(message.guildId) || !isStaff(message.member)) return;
     const key = `${message.guildId}:${message.author.id}`;
     pendingMessages.set(key, (pendingMessages.get(key) || 0) + 1);
 }

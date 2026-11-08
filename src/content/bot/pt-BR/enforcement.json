@@ -31,6 +31,7 @@
         },
         "appealAccepted": {
             "title": "**Apelação aceita**",
+            "titleIn": "**Apelação aceita em {server}**",
             "noInvite": "Peça a alguém da equipe no servidor de suporte um convite para voltar."
         },
         "appealDenied": "**Apelação recusada.** Se você acha que é um engano, apele de novo aqui:\n{invite}",

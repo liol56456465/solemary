@@ -31,6 +31,7 @@
         },
         "appealAccepted": {
             "title": "**Einspruch angenommen**",
+            "titleIn": "**Einspruch in {server} angenommen**",
             "noInvite": "Bitte ein Teammitglied im Support-Server um eine Einladung zurück."
         },
         "appealDenied": "**Einspruch abgelehnt.** Wenn du denkst, dass das ein Fehler ist, leg hier noch einmal Einspruch ein:\n{invite}",

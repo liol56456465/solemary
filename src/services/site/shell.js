@@ -14,6 +14,7 @@ import { logger } from '../../utils/logger.js';
 import {
     DEFAULT_LANG, LANGUAGES, isEnglishOnlyPath, isPagePath, localizePath, textOf, translatedIn, translator,
 } from './i18n.js';
+import { isHomeGuild } from '../settings/guildSettings.js';
 
 export const DASHBOARD_PATH = '/dashboard';
 
@@ -85,13 +86,22 @@ export function siteOrigin(env = process.env) {
 }
 
 /**
- * The dashboard link for one server (/setup, the join welcome), or null without PUBLIC_URL.
- * The one place that builds it: today every server shares `${PUBLIC_URL}/dashboard` (the
- * dashboard serves Mewvo's own server); the per-server dashboard (multi-server B3) changes only
- * this function, to `/dashboard/<guildId>`.
+ * True while `guildId`'s web dashboard does not exist yet: until the per-server dashboard
+ * (multi-server B3) the dashboard serves only Mewvo's own servers, so any other server gets a
+ * neutral "coming soon" line (setup.dashboardSoon) instead of a link. B3 makes this false.
+ */
+export function dashboardComingSoon(guildId, env = process.env) {
+    return Boolean(guildId) && !isHomeGuild(guildId, env);
+}
+
+/**
+ * The dashboard link for one server (/setup, the join welcome), or null without PUBLIC_URL, or
+ * for a server the dashboard does not serve yet (dashboardComingSoon). The one place that builds
+ * it: today `${PUBLIC_URL}/dashboard` for Mewvo's own servers; the per-server dashboard
+ * (multi-server B3) changes only this function, to `/dashboard/<guildId>`.
  */
 export function dashboardUrlFor(guildId, env = process.env) {
-    void guildId; // B3: `${origin}${DASHBOARD_PATH}/${guildId}`
+    if (dashboardComingSoon(guildId, env)) return null; // B3: `${origin}${DASHBOARD_PATH}/${guildId}`
     const origin = siteOrigin(env);
     return origin ? `${origin}${DASHBOARD_PATH}` : null;
 }

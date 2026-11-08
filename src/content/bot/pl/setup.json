@@ -3,6 +3,7 @@
     "intro": "Co jest już skonfigurowane na tym serwerze. Większość ustawień jest w panelu.",
     "dashboardButton": "Otwórz panel",
     "noDashboard": "Link do panelu nie jest jeszcze dostępny dla tego bota.",
+    "dashboardSoon": "Panel WWW dla twojego serwera pojawi się wkrótce.",
     "checklistTitle": "Lista kontrolna",
     "on": "włączone",
     "off": "wyłączone",

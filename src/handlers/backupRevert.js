@@ -11,6 +11,7 @@ import { ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
 import { logger } from '../utils/logger.js';
 import { isAdministrator, postModLog } from '../services/enforcement/enforcementService.js';
+import { isMewvoServer } from '../utils/ownerPower.js';
 import { dateStamp } from '../services/enforcement/format.js';
 import {
     diffAgainstLive, diffHasChanges, formatDiff, formatRevertSummary, getSnapshot, getSnapshotBefore,
@@ -37,6 +38,10 @@ export function diffPayload(snapshot, diff, { withButtons = false } = {}) {
 
 export async function handleNukeDiff(interaction, client, args) {
     const seconds = Number(args[0]);
+    // Snapshots exist only for Mewvo's own servers: a click anywhere else is refused, owners included.
+    if (!isMewvoServer(interaction.guildId)) {
+        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Server backups are only kept for Mewvo\'s own servers.' });
+    }
     const owner = isBackupOwner(client, interaction.user.id);
     if (!owner && (interaction.guildId !== enforcementConfig.mainGuildId || !isAdministrator(interaction.member))) {
         return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Only administrators can see the diff.' });

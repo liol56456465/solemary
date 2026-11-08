@@ -940,7 +940,13 @@ async function decideAppealLocked({ client, admin, caseCode, decision, note, rec
                 via: `appeal \`${record.case_code}\``,
             });
             const invite = mainGuild ? await createRejoinInvite(mainGuild, `Appeal accepted for ${caseCode}`) : null;
-            if (appellant) dmDelivered = await sendDm(appellant, appealAcceptedDm(admin.username, invite, { lang: resolveBotLanguage({ guildId: record.guild_id, userId: record.target_user_id, purpose: 'dm' }) }));
+            // Another server's DM names that server and the case; without an invite it never points to Mewvo Support.
+            if (appellant) {
+                dmDelivered = await sendDm(appellant, appealAcceptedDm(admin.username, invite, {
+                    rec: record, guildId: record.guild_id, serverName: mainGuild?.name,
+                    lang: resolveBotLanguage({ guildId: record.guild_id, userId: record.target_user_id, purpose: 'dm' }),
+                }));
+            }
             // The acceptance DM is also the "ban/mute ended" notice: no second DM.
             if (!record.is_test && (record.type === 'ban' || record.type === 'mute') && isStillInEffect(record)) {
                 await setEndDmDelivered([record.id], dmDelivered).catch((error) =>
