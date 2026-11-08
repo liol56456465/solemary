@@ -123,14 +123,14 @@ test('languageRoles: a guild "main" json key for every server, validated as role
     assert.equal(validateSetting('languageRoles', { lt: R.en }).ok, false, 'only the 8 languages');
 });
 
-test('seed: the owner\'s roles are the main server\'s home default (production only); fr is left unset', () => {
+test('seed: the owner\'s roles are the main server\'s home default (production only)', () => {
     const entry = getSettingEntry('languageRoles');
     const prod = { NODE_ENV: 'production' };
     assert.deepEqual(defaultValue(entry, prod), {
-        en: '1569098172578402344', ru: '1569098415282069544', de: '1569099080125259776', it: '1569099182042648727',
+        en: '1569098172578402344', ru: '1569098287590670356', de: '1569098415282069544', fr: '1569099080125259776', it: '1569099182042648727',
         pl: '1569099300103786708', es: '1569099459923677337', 'pt-BR': '1569099585551601764',
     });
-    assert.equal(seedValue(entry, prod).fr, undefined, 'French had the German id: not set');
+    assert.equal(seedValue(entry, prod).fr, '1569099080125259776', 'French from the corrected list');
     assert.equal(new Set(Object.values(LANGUAGE_ROLE_HOME_DEFAULT)).size, Object.keys(LANGUAGE_ROLE_HOME_DEFAULT).length);
     assert.ok(validateSetting('languageRoles', LANGUAGE_ROLE_HOME_DEFAULT).ok);
     assert.deepEqual(defaultValue(entry, { NODE_ENV: 'test' }), {}, 'never in test mode');
@@ -138,7 +138,7 @@ test('seed: the owner\'s roles are the main server\'s home default (production o
     resetSettingsCacheForTests();
     try {
         const env = { NODE_ENV: 'production', MAIN_GUILD_ID: PROD_MAIN };
-        assert.equal(resolveSetting(PROD_MAIN, 'languageRoles', env).de, '1569099080125259776');
+        assert.equal(resolveSetting(PROD_MAIN, 'languageRoles', env).de, '1569098415282069544');
         setSettingsCacheForTests(GUILD, {});
         assert.deepEqual(resolveSetting(GUILD, 'languageRoles', env), {});
     } finally {

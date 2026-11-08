@@ -8,8 +8,9 @@ A member picks a language through a role; that choice wins for messages meant fo
   each optional, one role per language (two languages on one role are refused). Dashboard → Bot language →
   **Language roles** (Administrator-only: these roles are handed to anyone who asks; each must have no staff
   permissions and sit below Mewvo's role).
-- Home default (main server, production only, no data migration): the owner's roles. **French is not set**: it was
-  given the German role id (`1569099080125259776`). Pick the French role on the dashboard (or send its id) to add it.
+- Home default (main server, production only, no data migration): the owner's roles (corrected list, 2026-11-08):
+  en 1569098172578402344, ru 1569098287590670356, de 1569098415282069544, fr 1569099080125259776,
+  it 1569099182042648727, pl 1569099300103786708, es 1569099459923677337, pt-BR 1569099585551601764.
 - `resolveBotLanguage` (src/utils/botText.js), first step for purposes `reply`, `dm` and `member`: the member's
   language role, when the caller passes a member object. Several language roles: fixed order en, ru, de, fr, it, pl,
   es, pt-BR (Discord does not say when a role was added). No role: the old rule, unchanged.

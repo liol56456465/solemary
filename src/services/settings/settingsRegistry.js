@@ -124,11 +124,12 @@ const languageRoles = z.object(Object.fromEntries(BOT_LANGUAGE_CODES.map((code) 
         const ids = Object.values(map).filter(Boolean);
         return new Set(ids).size === ids.length;
     }, 'each language needs its own role');
-// The owner's roles in the main server (owner, 2026-11-08). fr: not set (it was given the de role's id).
+// The owner's roles in the main server (owner, 2026-11-08, corrected list).
 export const LANGUAGE_ROLE_HOME_DEFAULT = Object.freeze({
     en: '1569098172578402344',
-    ru: '1569098415282069544',
-    de: '1569099080125259776',
+    ru: '1569098287590670356',
+    de: '1569098415282069544',
+    fr: '1569099080125259776',
     it: '1569099182042648727',
     pl: '1569099300103786708',
     es: '1569099459923677337',
