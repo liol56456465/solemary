@@ -21,7 +21,10 @@
     "exportFree": "Niedostępne w planie Free",
     "exportFreeText": "Eksport spraw jest w Mewvo Normal (ostatnie 90 dni) oraz Pro i Max (cała historia), w planie właściciela serwera.",
     "notFound": "Nie znaleziono sprawy",
-    "notFoundText": "Nie ma sprawy z tym kodem."
+    "notFoundText": "Nie ma sprawy z tym kodem.",
+    "exportAudit": "{count} spraw ({window})",
+    "exportWindow": "ostatnie {days} dni",
+    "exportFullHistory": "cała historia"
   },
   "auditModules": {
     "appeals": "Odwołania (rejestr)",

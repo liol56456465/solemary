@@ -39,7 +39,8 @@
     "announce": "Ogłaszaj awanse",
     "announceHelp": "Wyłączone: członkowie nadal awansują, ale żadna wiadomość nie jest publikowana.",
     "message": "Wiadomość o awansie",
-    "messageHelp": "Możesz użyć {user} (oznacza członka) i {level} (jego nowy poziom)."
+    "messageHelp": "Możesz użyć {user} (oznacza członka) i {level} (jego nowy poziom).",
+    "defaultMessage": "{user} ma teraz poziom {level}."
   },
   "card": {
     "title": "Karta awansu",

@@ -52,5 +52,10 @@
     "started": "Jeu de comptage lancé à 1.",
     "reset": "Le compte repart de 1.",
     "off": "Le jeu de comptage est désactivé."
+  },
+  "types": {
+    "members": "Membres + bots",
+    "members_only": "Membres seulement",
+    "bots": "Bots seulement"
   }
 }

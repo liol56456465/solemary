@@ -53,7 +53,8 @@
     "count": "Bans/kicks",
     "lift": "Lift block",
     "ownersOnly": "Only the bot owners can lift a block (like /staff restore).",
-    "none": "Nobody is blocked."
+    "none": "Nobody is blocked.",
+    "failed": "The safety limit blocks could not be loaded (database not responding). Reload the page in a minute."
   },
   "activity": {
     "week": "Week",

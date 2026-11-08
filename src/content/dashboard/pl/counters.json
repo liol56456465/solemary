@@ -52,5 +52,10 @@
     "started": "Gra w liczenie zaczęła się od 1.",
     "reset": "Liczenie zaczyna się znowu od 1.",
     "off": "Gra w liczenie jest wyłączona."
+  },
+  "types": {
+    "members": "Członkowie + boty",
+    "members_only": "Tylko członkowie",
+    "bots": "Tylko boty"
   }
 }

@@ -853,12 +853,23 @@ status: 'pending',
     }
 }
 
+/**
+ * The "is this application past retention" check of a guild (its settings read once). Reads
+ * leave expired ones out; the daily retention job (retentionService.js) deletes them, so a read
+ * never writes (it used to run cleanupExpiredApplications on every call).
+ */
+async function expiryCheck(client, guildId) {
+    const retentionDays = getApplicationRetentionDays(await getApplicationSettings(client, guildId));
+    const now = Date.now();
+    return (app) => isApplicationExpired(app, retentionDays, now);
+}
+
 export async function getApplication(client, guildId, applicationId) {
     const key = getApplicationKey(guildId, applicationId);
     try {
-        await cleanupExpiredApplications(client, guildId);
-        const application = await client.db.get(key, null);
-        return unwrapReplitData(application);
+        const expired = await expiryCheck(client, guildId);
+        const application = unwrapReplitData(await client.db.get(key, null));
+        return application && !expired(application) ? application : null;
     } catch (error) {
         logger.error(`Error getting application ${applicationId} in guild ${guildId}:`, error);
         throw error;
@@ -894,23 +905,26 @@ export async function getUserApplications(client, guildId, userId) {
             throw databaseUnavailable("Database client is not available for getUserApplications.");
         }
 
-        await cleanupExpiredApplications(client, guildId);
-
         const applicationIds = await client.db.get(userKey, []);
         const unwrappedIds = unwrapReplitData(applicationIds);
         
         const idsArray = Array.isArray(unwrappedIds) ? unwrappedIds : [];
         
-        const applicationPromises = idsArray.map(id => 
-            getApplication(client, guildId, id)
-        );
-        
-        const applications = await Promise.all(applicationPromises);
-        return applications.filter(Boolean);
+        const expired = await expiryCheck(client, guildId);
+        const applications = await Promise.all(idsArray.map(async (id) => unwrapReplitData(await client.db.get(getApplicationKey(guildId, id), null))));
+        return applications.filter((app) => app && !expired(app));
     } catch (error) {
         logger.error(`Error getting applications for user ${userId} in guild ${guildId}:`, error);
         throw error;
     }
+}
+
+const APPLICATION_READ_BATCH = 50;
+
+/** The creation time encoded in an application key's id (`${Date.now()}-random`), 0 when unknown. */
+function applicationKeyTime(key, prefix) {
+    const ms = Number.parseInt(String(key).slice(prefix.length), 10);
+    return Number.isFinite(ms) ? ms : 0;
 }
 
 export async function getApplications(client, guildId, filters = {}) {
@@ -926,39 +940,38 @@ export async function getApplications(client, guildId, filters = {}) {
             throw databaseUnavailable("Database client is not available for getApplications.");
         }
 
-        await cleanupExpiredApplications(client, guildId);
-
         const prefix = `guild:${guildId}:applications:`;
         let keys = await client.db.list(prefix);
-        
+
         if (!Array.isArray(keys)) {
             if (typeof keys === 'object' && keys !== null) {
-                const keyArray = Object.keys(keys).filter(key => key.startsWith(prefix));
-                keys = keyArray;
+                keys = Object.keys(keys).filter(key => key.startsWith(prefix));
             } else {
                 return [];
             }
         }
-        
+
         const applicationKeyPattern = new RegExp(`^guild:${guildId}:applications:[^:]+$`);
-        const applicationKeys = keys.filter(key => applicationKeyPattern.test(key));
-        
-        const applicationPromises = applicationKeys.map(key => client.db.get(key));
-        let applications = (await Promise.all(applicationPromises))
-            .map(unwrapReplitData)
-            .filter(Boolean);
-        
-        if (status) {
-            applications = applications.filter(app => app.status === status);
+        // Newest first by the id's time prefix (`${Date.now()}-…`), then read in batches only
+        // until `offset + limit` matches are found: a small page never loads every application.
+        const applicationKeys = keys.filter(key => applicationKeyPattern.test(key))
+            .sort((a, b) => applicationKeyTime(b, prefix) - applicationKeyTime(a, prefix));
+        const expired = await expiryCheck(client, guildId);
+        const wanted = offset + limit;
+        const matches = [];
+        for (let i = 0; i < applicationKeys.length && matches.length < wanted; i += APPLICATION_READ_BATCH) {
+            const batch = await Promise.all(applicationKeys.slice(i, i + APPLICATION_READ_BATCH).map(key => client.db.get(key)));
+            for (const app of batch.map(unwrapReplitData)) {
+                if (!app || expired(app)) continue;
+                if (status && app.status !== status) continue;
+                if (userId && app.userId !== userId) continue;
+                matches.push(app);
+            }
         }
-        
-        if (userId) {
-            applications = applications.filter(app => app.userId === userId);
-        }
-        
-        applications.sort((a, b) => b.createdAt - a.createdAt);
-        
-        return applications.slice(offset, offset + limit);
+
+        matches.sort((a, b) => b.createdAt - a.createdAt);
+
+        return matches.slice(offset, offset + limit);
     } catch (error) {
         logger.error(`Error getting applications for guild ${guildId}:`, error);
         throw error;

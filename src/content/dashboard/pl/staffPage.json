@@ -61,7 +61,8 @@
     "count": "Bany/wyrzucenia",
     "lift": "Zdejmij blokadę",
     "ownersOnly": "Tylko właściciele bota mogą zdjąć blokadę (jak /staff restore).",
-    "none": "Nikt nie jest zablokowany."
+    "none": "Nikt nie jest zablokowany.",
+    "failed": "Nie udało się wczytać blokad limitu bezpieczeństwa (baza danych nie odpowiada). Odśwież stronę za minutę."
   },
   "activity": {
     "week": "Tydzień",

@@ -211,6 +211,12 @@
     "appealPanel": {
       "label": "Panel odwołań opublikowany",
       "hint": "Wiadomość z przyciskiem Odwołanie, żeby ukarani członkowie mogli poprosić ekipę o zdjęcie kary. Jeden panel trafia na twój serwer, drugi na serwer wsparcia."
+    },
+    "appealPanelForm": {
+      "channel": "Kanał na panel odwołań",
+      "post": "Opublikuj panele odwołań",
+      "postAgain": "Opublikuj panele odwołań ponownie",
+      "confirm": "Opublikować teraz panele odwołań? Wcześniejsze panele odwołań w tych kanałach zostaną zastąpione."
     }
   },
   "value": {

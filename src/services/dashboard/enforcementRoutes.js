@@ -50,7 +50,7 @@ import { InputError, multiline, plainText, queryText, text } from './forms.js';
 import { JOINED_FILTERS, SORTS, STATE_FILTERS, listMembers } from './membersData.js';
 import { NICKNAME_MAX, REASON_MAX, TIMEOUTS, assignableRoles, auditReason, roleProblem, targetProblem } from './memberActions.js';
 import { BULK_ACTIONS, BULK_LIMIT, createJobStore, planBulk } from './bulkActions.js';
-import { BAN_FILTERS, listBans } from './bansData.js';
+import { BAN_FILTERS, createBanCache, listBans } from './bansData.js';
 import { TEMP_ROLE_LENGTHS } from '../members/tempRoleService.js';
 import { html, layout, path, queryString } from './html.js';
 import { isSnowflake } from './security.js';
@@ -209,7 +209,7 @@ export function resultMessage(flow, result) {
 export function createEnforcementHandlers(core) {
     const {
         client, guildId, settings, sessions, audits, services, enforcement: e, confirms,
-        sendHtml, fail, shellOf, checkPost, postLimiter,
+        sendHtml, fail, shellOf, checkPost, postLimiter, banCache = createBanCache(),
     } = core;
 
     const guildOf = () => client.guilds?.cache?.get(guildId) || null;
@@ -248,9 +248,10 @@ export function createEnforcementHandlers(core) {
      * the moderator role. `key` defaults to the route's (guardedPost). Sets
      * req.dashboard.fresh = { level, roleId } for the enforcement service's own check.
      */
-    async function freshModerator(req, key = req.dashboard.perm || null) {
+    async function freshModerator(req, key = req.dashboard.perm || null, { force = true } = {}) {
         const guild = guildOf();
-        const member = await guild?.members?.fetch?.({ user: req.dashboard.session.userId, force: true }).catch(() => null);
+        const cached = force ? null : guild?.members?.cache?.get?.(req.dashboard.session.userId) || null;
+        const member = cached || await guild?.members?.fetch?.({ user: req.dashboard.session.userId, force: true }).catch(() => null);
         if (member && isAdministrator(member)) {
             req.dashboard.fresh = { level: 'admin', roleId: null };
             return member;
@@ -345,15 +346,16 @@ export function createEnforcementHandlers(core) {
             error = textOf(req).t('errors.serverUnavailableText');
         } else {
             try {
-                const [banned, cases] = await Promise.all([
-                    guild.bans.fetch({ limit: 1000 }).then((c) => [...c.values()]),
+                // Paged with `after` up to BAN_LIST_CAP, cached per guild (bansData.js createBanCache).
+                const [{ bans: banned, truncated }, cases] = await Promise.all([
+                    banCache.get(guild),
                     e.activeBanCases(guildId),
                 ]);
                 const plain = banned.map((b) => ({
                     reason: b.reason || null,
                     user: { id: b.user.id, username: b.user.username, globalName: b.user.globalName || null, avatarUrl: typeof b.user.displayAvatarURL === 'function' ? b.user.displayAvatarURL({ size: 64 }) : null },
                 }));
-                list = listBans(plain, cases, { ...filters, page });
+                list = { ...listBans(plain, cases, { ...filters, page }), truncated };
             } catch (err) {
                 logger.warn(`Dashboard bans list failed: ${err.message}`);
                 error = textOf(req).t('moderation.members.bansFailed');
@@ -400,7 +402,8 @@ export function createEnforcementHandlers(core) {
             e.getLatestAppealStatuses(userId, guildId),
             e.getCountedWarns(guildId, userId, state.ladder.level),
             e.listNotes(guildId, userId),
-            e.getMassActionBlock(guildId, req.dashboard.session.userId).catch(() => null),
+            // A failed read fails the page ("could not be loaded"), never "not blocked".
+            e.getMassActionBlock(guildId, req.dashboard.session.userId),
             precedentReason && isKnownReasonKey(precedentReason) && precedentReason !== CUSTOM_REASON_KEY
                 ? e.precedentHint(guildId, precedentReason, getReason(precedentReason)?.label || precedentReason).catch(() => null) : null,
         ]);
@@ -417,7 +420,7 @@ export function createEnforcementHandlers(core) {
             const ctx = { guild, target: member, actorId: req.dashboard.session.userId, actorMember, actorIsOwner: isOwner(req), botMember: guild.members.me };
             const until = member.communicationDisabledUntilTimestamp;
             // The verified role, when verification is on and they have it (for "Unverify").
-            const verification = (await e.getGuildConfig(client, guildId).catch(() => null))?.verification;
+            const verification = (await e.getGuildConfig(client, guildId))?.verification;
             const verifiedRole = verification?.enabled && verification.roleId && member.roles?.cache?.has?.(verification.roleId)
                 ? (guild.roles.cache.get(verification.roleId) || null) : null;
             memberEdit = {
@@ -426,7 +429,7 @@ export function createEnforcementHandlers(core) {
                 assignable: assignableRoles(ctx).filter((r) => !member.roles?.cache?.has?.(r.id)),
                 removable: new Set([...(member.roles?.cache?.values?.() || [])].filter((r) => !roleProblem({ ...ctx, role: r })).map((r) => r.id)),
                 timeoutUntil: until > Date.now() ? new Date(until) : null,
-                tempRoles: new Map((await e.listTempRoles(guildId, userId).catch(() => [])).map((row) => [row.role_id, new Date(row.expires_at)])),
+                tempRoles: new Map((await e.listTempRoles(guildId, userId)).map((row) => [row.role_id, new Date(row.expires_at)])),
             };
         }
         return {
@@ -515,6 +518,8 @@ export function createEnforcementHandlers(core) {
         let result;
         try {
             result = await e.executeAction({ guild: guildOf(), moderator, targetUser, flow, staffRole: staffRoleOf(req) });
+            // A ban or unban changes Discord's ban list: the Banned page reads it fresh next time.
+            if (flow.type === 'ban' || flow.type === 'unban') banCache.invalidate(guildId);
         } catch (error) {
             if (isExpectedError(error)) throw error;
             logger.error('Dashboard enforcement action failed', { action: flow.type, targetId: flow.targetId, error });
@@ -701,10 +706,14 @@ export function createEnforcementHandlers(core) {
         if (payload.action === 'timeout') shownLabel = tr.t('moderation.bulk.labelTimeout', { label: shownLabel, length: lengthLabel(tr, payload.timeoutKey, TIMEOUTS[payload.timeoutKey].label) });
         // The moderator must still be an Administrator for every member; once that fails, the
         // rest of the job stops without touching Discord.
+        // One forced Discord fetch per member (the target). The moderator is still checked for every
+        // member, from the member cache the gateway keeps current (GuildMembers intent), not with a
+        // second forced fetch each time; a missing cache entry falls back to a fresh fetch.
         let revoked = null;
+        const currentModerator = () => freshModerator(req, undefined, { force: false });
         const work = async (item) => {
             if (revoked) throw revoked;
-            const moderator = await freshModerator(req).catch((error) => { revoked = error; throw error; });
+            const moderator = await currentModerator().catch((error) => { revoked = error; throw error; });
             // Checked again per member at run time (roles and positions can change meanwhile).
             const member = await guild.members.fetch({ user: item.id, force: true }).catch(() => null);
             const problem = targetProblem({ guild, target: member, actorId: session.userId, actorMember: moderator, actorIsOwner: isOwner(req), botMember: guild.members.me })
@@ -720,7 +729,9 @@ export function createEnforcementHandlers(core) {
             }
             if (payload.action === 'timeout') return member.timeout(TIMEOUTS[payload.timeoutKey].ms, reason);
             const flow = await buildRecordFlow({ guild, moderator, moderatorId: moderator.id, targetUser: member.user, type: payload.action, form: payload.recordForm, completeFlowDetails: e.completeFlowDetails });
-            return e.executeAction({ guild, moderator, targetUser: member.user, flow });
+            const done = await e.executeAction({ guild, moderator, targetUser: member.user, flow });
+            if (flow.type === 'ban') banCache.invalidate(guildId);
+            return done;
         };
         const job = jobs.start({
             session: session.idHash, label: shownLabel, items: payload.run, work,
@@ -1007,7 +1018,7 @@ export function createEnforcementHandlers(core) {
         const [appeals, { rows: otherRows, total }, ladder, evidenceRows] = await Promise.all([
             e.getAppealHistory(code),
             e.listCasesForUser(guildId, record.target_user_id, { limit: 16 }),
-            e.getLadder(guildId, record.target_user_id).catch(() => null),
+            e.getLadder(guildId, record.target_user_id),
             e.listEvidence(code),
         ]);
         const fresh = await e.resolveImageUrls(client, evidenceRows).catch(() => new Map());
@@ -1161,9 +1172,9 @@ export function createEnforcementHandlers(core) {
         const lookupId = owner ? parseUserRef(queryText(req.query, 'warnings', 40)) || '' : '';
         const guild = guildOf();
         const [config, counts, blocks, activity, removed, warnings] = await Promise.all([
-            e.getGuildConfig(client, guildId).catch(() => null),
+            loadOrNull('guild config', () => e.getGuildConfig(client, guildId)),
             loadOrNull('coverage', () => e.loadCoverageCounts(guildId, client.user?.id || '0', COVERAGE_PERIODS[period])),
-            Promise.resolve().then(() => e.listMassActionBlocks(guildId)).catch(() => []),
+            loadOrNull('mass-action blocks', () => e.listMassActionBlocks(guildId)),
             // /staff activity is owner-only, so the weekly list is too.
             owner && guild ? loadOrNull('staff activity', async () => {
                 const { partial } = await completeMemberCache(guild);
@@ -1174,13 +1185,14 @@ export function createEnforcementHandlers(core) {
             isSnowflake(lookupId) ? loadOrNull('staff warnings', () => e.listStaffWarnings(guildId, lookupId)) : undefined,
         ]);
         const userName = (id) => guild?.members?.cache?.get?.(id)?.user?.username || client.users.cache?.get?.(id)?.username || null;
-        const names = new Map(blocks.map((b) => [b.moderatorId, userName(b.moderatorId)]));
+        const names = new Map((blocks || []).map((b) => [b.moderatorId, userName(b.moderatorId)]));
         const removedNames = new Map((removed || []).map((r) => [r.userId, userName(r.userId)]));
         const roleNames = new Map((removed || []).flatMap((r) => r.roleIds).map((id) => [id, guild?.roles?.cache?.get?.(id)?.name || null]).filter(([, n]) => n));
         const keep = { period: statsPeriod, coverage: period === '7d' ? undefined : period };
         const tr = textOf(req);
         return [
-            counts ? coverageSection({ report: buildCoverageReport(counts, config?.birthdayTimezone || 'UTC'), period, periods: COVERAGE_PERIODS, statsPeriod })
+            // The heatmap needs the server's time zone: without the config it is "could not be loaded" too.
+            counts && config ? coverageSection({ report: buildCoverageReport(counts, config?.birthdayTimezone || 'UTC'), period, periods: COVERAGE_PERIODS, statsPeriod })
                 : html`<h2>${tr.t('moderation.staff.coverage')}</h2><p class="muted">${tr.t('moderation.staff.coverageFailed')}</p>`,
             owner ? activitySection({ rows: activity, week, start, keep, warningsLink: owner, partial: Boolean(activity?.partial) })
                 : html`<h2>${tr.t('moderation.staff.activity')}</h2><p class="muted">${tr.t('moderation.staff.activityOwners')}</p>`,
@@ -1191,7 +1203,7 @@ export function createEnforcementHandlers(core) {
                 removed, roleNames, names: removedNames, warnLimit: automodConfig.staffWarnLimit, keep: { ...keep, week: week === 'last' ? 'last' : undefined },
                 guild, picked: { warn: parseUserRef(queryText(req.query, 'warn_user', 25)) || '', restore: parseUserRef(queryText(req.query, 'restore_user', 25)) || '' },
             }),
-            blocksSection({ blocks, names, canLift: owner, csrf: req.dashboard.session.csrf, editEnabled: settings.editEnabled }),
+            blocksSection({ blocks, failed: blocks === null, names, canLift: owner, csrf: req.dashboard.session.csrf, editEnabled: settings.editEnabled }),
         ];
     }
 

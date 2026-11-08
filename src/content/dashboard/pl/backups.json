@@ -42,6 +42,7 @@
       "few": "Kopia zastosowana: zmieniono {count} ustawienia. Są w dzienniku zdarzeń.",
       "many": "Kopia zastosowana: zmieniono {count} ustawień. Są w dzienniku zdarzeń.",
       "other": "Kopia zastosowana: zmieniono {count} ustawienia. Są w dzienniku zdarzeń."
-    }
+    },
+    "applyFailed": "Kopia nie została zastosowana: baza danych nie odpowiedziała, więc nic nie zmieniono. Spróbuj ponownie „Zastosuj”."
   }
 }

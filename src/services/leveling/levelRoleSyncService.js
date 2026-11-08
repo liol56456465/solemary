@@ -14,7 +14,8 @@ async function listLevelUserIds(client, guildId) {
     const userIds = new Set();
 
     for (const prefix of prefixes) {
-        let keys = await client.db.list(prefix).catch(() => []);
+        // A failed list throws (the caller counts the guild as failed), never "nobody has a level".
+        let keys = await client.db.list(prefix);
         if (!Array.isArray(keys)) {
             keys = typeof keys === 'object' && keys !== null ? Object.keys(keys) : [];
         }

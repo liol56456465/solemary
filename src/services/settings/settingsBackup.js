@@ -3,11 +3,11 @@
 //
 // Loading never writes blindly: planBackup() checks the file (format, known keys, right
 // server, each value against the setting's schema) and lists what would change; the page
-// shows that, and only "Apply" writes, through updateSettings (row-locked, audited).
+// shows that, and only "Apply" writes, through updateSettingsBatch (one transaction, row-locked, audited).
 // Sensitive settings are never exported or imported.
 
 import { SETTINGS, getSettingEntry, validateSetting } from './settingsRegistry.js';
-import { getSetting, guildIdFor, updateSettings } from './guildSettings.js';
+import { getSetting, guildIdFor, updateSettingsBatch } from './guildSettings.js';
 
 export const BACKUP_FORMAT = 'mewvo-settings-v1';
 export const BACKUP_MAX_BYTES = 200 * 1024;
@@ -76,14 +76,18 @@ export function planBackup(textInput, { env = process.env, read = getSetting } =
     return { ok: true, changes, problems, patches };
 }
 
-/** Writes a plan's patches (one updateSettings per server). Returns the number of changed settings. */
-export async function applyBackup(plan, actor, { env = process.env, update = updateSettings } = {}) {
-    let changed = 0;
+/**
+ * Writes a plan's patches for both servers in ONE transaction (updateSettingsBatch): all are
+ * saved, or none (a failure leaves every setting as it was). Returns the number of changed settings.
+ */
+export async function applyBackup(plan, actor, { env = process.env, updateBatch = updateSettingsBatch } = {}) {
+    const writes = [];
     for (const guild of GUILDS) {
         const patch = plan.patches[guild];
         if (!patch || !Object.keys(patch).length) continue;
-        const result = await update(guildIdFor(guild, env), patch, { ...actor, module: 'backup' }, env);
-        changed += result.changes.length;
+        writes.push({ guildId: guildIdFor(guild, env), patch });
     }
-    return changed;
+    if (!writes.length) return 0;
+    const result = await updateBatch(writes, { ...actor, module: 'backup' }, env);
+    return result.changes.length;
 }

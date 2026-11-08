@@ -320,33 +320,24 @@ export async function getAllReactionRoleMessages(client, guildId) {
         }
 
         const messages = [];
-        
+        let stored = 0;
+
         for (const key of keys) {
-            try {
-                const data = await client.db.get(key);
-                
-                if (data) {
-                    let actualData;
-                    if (data && data.ok && data.value) {
-                        actualData = data.value;
-                    } else if (data && data.value) {
-                        actualData = data.value;
-                    } else {
-                        actualData = data;
-                    }
-                    
-                    if (actualData && actualData.messageId && actualData.channelId) {
-                        messages.push(actualData);
-                    } else if (actualData) {
-                        logger.warn(`Skipping malformed reaction role data for guild ${guildId}:`, actualData);
-                    }
-                }
-            } catch (dataError) {
-                logger.warn(`Error getting data for reaction role key ${key}:`, dataError);
-                
+            // A failed read throws (the caller shows "database not responding"): a silently
+            // missing panel would look deleted and let a sixth panel past the cap.
+            const data = await client.db.get(key);
+            if (!data) continue;
+            stored += 1;
+            const actualData = data && data.value ? data.value : data;
+            if (actualData && actualData.messageId && actualData.channelId) {
+                messages.push(actualData);
+            } else if (actualData) {
+                logger.warn(`Skipping malformed reaction role data for guild ${guildId}:`, actualData);
             }
         }
 
+        // Every stored panel, malformed ones included, for the MAX_PANELS_PER_GUILD cap.
+        Object.defineProperty(messages, 'storedCount', { value: stored, enumerable: false });
         return messages;
     } catch (error) {
         if (error.name === 'TitanBotError') {
@@ -717,10 +708,11 @@ export async function createReactionRolePanel(client, guild, { channel, title, d
         throw createError(`Bot cannot send messages in ${channel.name}`, ErrorTypes.PERMISSION, `I don't have permission to send messages (with embeds) in <#${channel.id}>.`, { channelId: channel.id, expected: true });
     }
     const existing = await getAllReactionRoleMessages(client, guild.id);
-    if (existing && existing.length >= MAX_PANELS_PER_GUILD) {
+    const panelCount = existing ? (existing.storedCount ?? existing.length) : 0;
+    if (panelCount >= MAX_PANELS_PER_GUILD) {
         throw createError('Panel limit reached', ErrorTypes.VALIDATION,
             `Your guild has reached the maximum of ${MAX_PANELS_PER_GUILD} reaction role panels. Delete an existing panel to create a new one.`,
-            { maxPanels: MAX_PANELS_PER_GUILD, currentPanels: existing.length, expected: true });
+            { maxPanels: MAX_PANELS_PER_GUILD, currentPanels: panelCount, expected: true });
     }
 
     const roles = [];

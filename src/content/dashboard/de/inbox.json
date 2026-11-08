@@ -1,10 +1,25 @@
 {
   "kinds": {
-    "appeal": { "label": "Einsprüche", "single": "Einspruch" },
-    "ticket": { "label": "Tickets", "single": "Ticket" },
-    "modmail": { "label": "Modmail", "single": "Modmail" },
-    "report": { "label": "Team-Meldungen", "single": "Team-Meldung" },
-    "review": { "label": "Automod-Prüfungen", "single": "Automod-Prüfung" }
+    "appeal": {
+      "label": "Einsprüche",
+      "single": "Einspruch"
+    },
+    "ticket": {
+      "label": "Tickets",
+      "single": "Ticket"
+    },
+    "modmail": {
+      "label": "Modmail",
+      "single": "Modmail"
+    },
+    "report": {
+      "label": "Team-Meldungen",
+      "single": "Team-Meldung"
+    },
+    "review": {
+      "label": "Automod-Prüfungen",
+      "single": "Automod-Prüfung"
+    }
   },
   "action": {
     "appeal": "Einspruch prüfen",
@@ -60,7 +75,9 @@
     "closeHelpModmail": "Wie der Schließen-Button: Das Mitglied wird per DM informiert, das Protokoll geht in den Protokollkanal und der Kanal wird gelöscht.",
     "closeHelpTicket": "Wie der Schließen-Button: Das Ticket wird geschlossen (in die Kategorie für geschlossene Tickets verschoben, falls eine eingestellt ist), das Mitglied bekommt eine DM, falls das an ist, und das Protokoll wird abgelegt.",
     "reason": "Grund (optional)",
-    "closeButton": "Schließen…"
+    "closeButton": "Schließen…",
+    "dmFailed": "Das Mitglied konnte keine DM erhalten (es hat den Server verlassen oder seine DMs geschlossen).",
+    "closedFromDashboard": "Im Dashboard geschlossen"
   },
   "confirm": {
     "title": "Schließen bestätigen",

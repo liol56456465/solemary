@@ -52,5 +52,10 @@
     "started": "Gioco del conteggio avviato da 1.",
     "reset": "Il conteggio riparte da 1.",
     "off": "Il gioco del conteggio è disattivato."
+  },
+  "types": {
+    "members": "Membri + bot",
+    "members_only": "Solo membri",
+    "bots": "Solo bot"
   }
 }

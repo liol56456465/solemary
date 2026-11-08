@@ -39,6 +39,7 @@
       "one": "Copia aplicada: {count} ajuste cambiado. Está en el registro de auditoría.",
       "many": "Copia aplicada: {count} ajustes cambiados. Están en el registro de auditoría.",
       "other": "Copia aplicada: {count} ajustes cambiados. Están en el registro de auditoría."
-    }
+    },
+    "applyFailed": "La copia no se aplicó: la base de datos no respondió, así que no se cambió nada. Vuelve a pulsar Aplicar."
   }
 }

@@ -31,7 +31,7 @@ import {
     intField, list, numberInput, plainText, postForm, roleField, rolePicker, selectInput, text, textArea, textInput, toggleForm, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
-import { changedOnly, registryValue, saveRegistry, section, table, topic } from './common.js';
+import { changedOnly, registryValue, saveRegistry, saveRegistryWith, section, table, topic } from './common.js';
 import {
     CUSTOM_RULE_ACTIONS, CUSTOM_RULE_NAME_MAX, CUSTOM_RULE_WORDS_MAX, CUSTOM_RULE_WORD_MAX, cleanCustomRules,
     limitForPlan, overLimitIds, resetCustomRulesCache, runningRules,
@@ -93,22 +93,32 @@ function storedCustomRules(ctx) {
     return Array.isArray(value) ? value : [];
 }
 
-/** Saves a new custom rule list (cleaned first) and applies it at once. */
-async function saveCustomRules(ctx, next, message) {
-    let clean;
-    try {
-        clean = cleanCustomRules(next);
-    } catch (error) {
-        throw new InputError(error.userMessage || textFor(ctx).t('automod.custom.invalid'));
-    }
-    const result = await saveRegistry(ctx, { automodCustomRules: clean }, 'automod');
+/**
+ * Changes the custom rule list under the settings row lock (saveRegistryWith): change(list)
+ * gets the locked stored list and returns the new one (or null: nothing to change); it may throw
+ * an InputError. The result is cleaned, saved and applied at once. `message`: text, or a
+ * function called after the save (for words that need the locked rule, like its name).
+ */
+async function saveCustomRules(ctx, change, message) {
+    const tr = textFor(ctx);
+    const result = await saveRegistryWith(ctx, ['automodCustomRules'], (valueOf) => {
+        const stored = valueOf('automodCustomRules');
+        const next = change(Array.isArray(stored) ? stored : []);
+        if (next === null) return null;
+        try {
+            return { automodCustomRules: cleanCustomRules(next) };
+        } catch (error) {
+            throw new InputError(error.userMessage || tr.t('automod.custom.invalid'));
+        }
+    }, 'automod');
+    if (!result.changes.length) return nothing(tr);
     resetCustomRulesCache();
-    return { ...result, message };
+    return { ...result, message: typeof message === 'function' ? message() : message };
 }
 
-function customRuleById(ctx, form) {
-    const id = text(form, 'id', 20);
-    const rule = storedCustomRules(ctx).find((r) => r.id === id);
+/** The rule with this id in `list`, else "gone" (an InputError). */
+function ruleIn(ctx, list, id) {
+    const rule = list.find((r) => r.id === id);
     if (!rule) throw new InputError(textFor(ctx).t('automod.custom.gone'));
     return rule;
 }
@@ -620,15 +630,8 @@ ${section(tr.t('automod.testRun.title'), testRunSection(ctx, data.backtest, data
         },
         async 'custom-add'(ctx, form) {
             const tr = textFor(ctx);
-            const list = storedCustomRules(ctx);
             const planId = planOfGuild(ctx);
             const limit = limitForPlan(planId);
-            if (list.length >= limit) {
-                const plan = planId === 'free' ? 'Free' : planName(planId);
-                throw new InputError(limit
-                    ? tr.tp('automod.error.customAtLimit', list.length, { plan })
-                    : tr.t('automod.error.customNoPlan'));
-            }
             const rule = {
                 name: text(form, 'name', CUSTOM_RULE_NAME_MAX + 20),
                 action: text(form, 'action', 10),
@@ -636,36 +639,55 @@ ${section(tr.t('automod.testRun.title'), testRunSection(ctx, data.backtest, data
                 words: String(form?.words ?? '').slice(0, 5000),
                 enabled: true,
             };
-            const result = await saveCustomRules(ctx, [...list, rule], tr.t('automod.action.customAdded'));
-            return { ...result, message: tr.t('automod.action.customAddedName', { name: rule.name.replace(/\s+/g, ' ').trim() }) };
+            const name = rule.name.replace(/\s+/g, ' ').trim();
+            return saveCustomRules(ctx, (list) => {
+                // The plan limit counts the locked list, so two adds at once cannot pass it.
+                if (list.length >= limit) {
+                    const plan = planId === 'free' ? 'Free' : planName(planId);
+                    throw new InputError(limit
+                        ? tr.tp('automod.error.customAtLimit', list.length, { plan })
+                        : tr.t('automod.error.customNoPlan'));
+                }
+                return [...list, rule];
+            }, tr.t('automod.action.customAddedName', { name }));
         },
         async 'custom-edit'(ctx, form) {
             const tr = textFor(ctx);
-            const rule = customRuleById(ctx, form);
-            let next;
-            try {
-                ({ list: next } = editRule(storedCustomRules(ctx), rule.id, {
-                    words: String(form?.words ?? '').slice(0, 5000),
-                    action: text(form, 'action', 10),
-                    muteDuration: text(form, 'muteDuration', 20),
-                }));
-            } catch (error) {
-                throw new InputError(error.userMessage || tr.t('automod.custom.invalid'));
-            }
-            return saveCustomRules(ctx, next, tr.t('automod.action.customSaved', { name: rule.name }));
+            const id = text(form, 'id', 20);
+            let name = '';
+            return saveCustomRules(ctx, (list) => {
+                name = ruleIn(ctx, list, id).name;
+                try {
+                    return editRule(list, id, {
+                        words: String(form?.words ?? '').slice(0, 5000),
+                        action: text(form, 'action', 10),
+                        muteDuration: text(form, 'muteDuration', 20),
+                    }).list;
+                } catch (error) {
+                    throw new InputError(error.userMessage || tr.t('automod.custom.invalid'));
+                }
+            }, () => tr.t('automod.action.customSaved', { name }));
         },
         async 'custom-toggle'(ctx, form) {
             const tr = textFor(ctx);
-            const rule = customRuleById(ctx, form);
+            const id = text(form, 'id', 20);
             const enabled = boolField(form, 'enabled', tr.t('automod.custom.ruleLabel'));
-            if ((rule.enabled !== false) === enabled) return nothing(tr);
-            const next = storedCustomRules(ctx).map((r) => (r.id === rule.id ? { ...r, enabled } : r));
-            return saveCustomRules(ctx, next, tr.t(enabled ? 'automod.action.customOn' : 'automod.action.customOff', { name: rule.name }));
+            let name = '';
+            return saveCustomRules(ctx, (list) => {
+                const rule = ruleIn(ctx, list, id);
+                name = rule.name;
+                if ((rule.enabled !== false) === enabled) return null;
+                return list.map((r) => (r.id === id ? { ...r, enabled } : r));
+            }, () => tr.t(enabled ? 'automod.action.customOn' : 'automod.action.customOff', { name }));
         },
         async 'custom-remove'(ctx, form) {
-            const rule = customRuleById(ctx, form);
-            const next = storedCustomRules(ctx).filter((r) => r.id !== rule.id);
-            return saveCustomRules(ctx, next, textFor(ctx).t('automod.action.customRemoved', { name: rule.name }));
+            const tr = textFor(ctx);
+            const id = text(form, 'id', 20);
+            let name = '';
+            return saveCustomRules(ctx, (list) => {
+                name = ruleIn(ctx, list, id).name;
+                return list.filter((r) => r.id !== id);
+            }, () => tr.t('automod.action.customRemoved', { name }));
         },
         async 'channel-add'(ctx, form) {
             const tr = textFor(ctx);

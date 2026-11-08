@@ -21,7 +21,10 @@
     "exportFree": "Pas dans la formule Free",
     "exportFreeText": "L’export des dossiers est inclus dans Mewvo Normal (90 derniers jours) et Pro ou Max (tout l’historique), selon la formule du propriétaire du serveur.",
     "notFound": "Dossier introuvable",
-    "notFoundText": "Il n’y a aucun dossier avec ce code."
+    "notFoundText": "Il n’y a aucun dossier avec ce code.",
+    "exportAudit": "{count} dossiers ({window})",
+    "exportWindow": "{days} derniers jours",
+    "exportFullHistory": "historique complet"
   },
   "auditModules": {
     "appeals": "Appels (registre)",

@@ -1,10 +1,25 @@
 {
   "kinds": {
-    "appeal": { "label": "Appels", "single": "Appel" },
-    "ticket": { "label": "Tickets", "single": "Ticket" },
-    "modmail": { "label": "Modmail", "single": "Modmail" },
-    "report": { "label": "Signalements sur le staff", "single": "Signalement sur le staff" },
-    "review": { "label": "Vérifications Automod", "single": "Vérification Automod" }
+    "appeal": {
+      "label": "Appels",
+      "single": "Appel"
+    },
+    "ticket": {
+      "label": "Tickets",
+      "single": "Ticket"
+    },
+    "modmail": {
+      "label": "Modmail",
+      "single": "Modmail"
+    },
+    "report": {
+      "label": "Signalements sur le staff",
+      "single": "Signalement sur le staff"
+    },
+    "review": {
+      "label": "Vérifications Automod",
+      "single": "Vérification Automod"
+    }
   },
   "action": {
     "appeal": "Examiner l’appel",
@@ -61,7 +76,9 @@
     "closeHelpModmail": "Comme le bouton Fermer : le membre est prévenu par MP, la transcription va dans le salon des transcriptions et le salon est supprimé.",
     "closeHelpTicket": "Comme le bouton Fermer : le ticket est fermé (déplacé dans la catégorie des tickets fermés si elle est définie), le membre reçoit un MP si c’est activé, et la transcription est archivée.",
     "reason": "Raison (facultatif)",
-    "closeButton": "Fermer…"
+    "closeButton": "Fermer…",
+    "dmFailed": "Impossible d’envoyer un MP au membre (il a quitté le serveur ou fermé ses MP).",
+    "closedFromDashboard": "Fermé depuis le tableau de bord"
   },
   "confirm": {
     "title": "Confirmer la fermeture",

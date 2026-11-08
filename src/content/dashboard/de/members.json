@@ -137,7 +137,8 @@
     "empty": "Auf dem Hauptserver ist niemand gebannt.",
     "bannedCount": "{count} gebannt auf dem Hauptserver",
     "help": "Entbannen öffnet die Mitgliedsseite: Du siehst die Wirkung und bestätigst dann. Das Mitglied bekommt eine DM mit einer Einladung zurück.",
-    "searchPlaceholder": "Name oder Nutzer-ID"
+    "searchPlaceholder": "Name oder Nutzer-ID",
+    "truncated": "Es werden die ersten {count} Banns angezeigt: Discords Bannliste ist länger. Öffne ein Mitglied über die Benutzer-ID, um jemanden zu sehen, der nicht aufgeführt ist."
   },
   "standing": {
     "banEnds": "Bann {case}, endet {date}",
@@ -275,5 +276,10 @@
     "until": "Bis",
     "noEnd": "Kein Enddatum",
     "empty": "Niemand steht auf der Beobachtungsliste."
+  },
+  "findMember": {
+    "tooShort": "Gib mindestens 2 Buchstaben des Namens ein.",
+    "discordFailed": "Discord hat auf die Suche nicht geantwortet, daher werden nur Mitglieder angezeigt, die Mewvo schon kennt.",
+    "bansFailed": "Die Bannliste konnte nicht geladen werden, daher werden gebannte Nutzer nicht angezeigt."
   }
 }

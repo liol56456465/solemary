@@ -17,6 +17,7 @@ import { collectOpenReviews } from '../automod/reviewQueue.js';
 import { chunkText, closeModmail, modmailUserId, sendStaffTextToMember } from '../modmailService.js';
 import { closeTicket } from '../ticket.js';
 import { getTicketData } from '../../utils/database.js';
+import { currentText } from './language.js';
 
 export const INBOX_KINDS = {
     appeal: { label: 'Appeals', one: 'Appeal' },
@@ -213,7 +214,7 @@ export async function sendReply({ conversation, staffName, text, inbox = default
     const last = copies[copies.length - 1];
     await last?.react?.(delivered ? '✅' : '❌')?.catch?.(() => {});
     if (!delivered) {
-        await channel.send({ content: 'Could not DM the member (they left the server or closed their DMs).', allowedMentions: NO_MENTIONS }).catch(() => {});
+        await channel.send({ content: currentText().t('inbox.conversation.dmFailed'), allowedMentions: NO_MENTIONS }).catch(() => {});
     }
     return { note: false, delivered };
 }
@@ -221,5 +222,5 @@ export async function sendReply({ conversation, staffName, text, inbox = default
 /** Closes the conversation with the same service as the Close button / command. */
 export async function closeConversation({ conversation, closer, reason, inbox = defaultInboxData }) {
     if (conversation.kind === 'modmail') return inbox.closeModmail(conversation.channel, closer, reason);
-    return inbox.closeTicket(conversation.channel, closer, reason || 'Closed from the dashboard');
+    return inbox.closeTicket(conversation.channel, closer, reason || currentText().t('inbox.conversation.closedFromDashboard'));
 }

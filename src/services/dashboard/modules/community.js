@@ -64,12 +64,34 @@ async function updateSettings(ctx, patch, message) {
     return { changes, message: changes.length ? message : textFor(ctx).t('community.action.nothing') };
 }
 
+/**
+ * The community settings, stickies, tags and feeds live in memory, loaded at startup. If that
+ * load failed, every page view and action first loads them again (community/index.js
+ * ensureCommunityCaches) and refuses with a database error while they are still missing, so
+ * empty defaults are never shown or saved over the real data.
+ */
+const cachesReady = (ctx) => ctx.services.ensureCommunityCaches?.(ctx.client);
+
+function requireCaches(actions) {
+    const out = {};
+    for (const [name, action] of Object.entries(actions)) {
+        if (typeof action === 'function') {
+            out[name] = async (ctx, form, ...rest) => { await cachesReady(ctx); return action(ctx, form, ...rest); };
+        } else {
+            out[name] = { ...action, run: async (ctx, form, ...rest) => { await cachesReady(ctx); return action.run(ctx, form, ...rest); } };
+            if (action.confirm) out[name].confirm = async (ctx, form, ...rest) => { await cachesReady(ctx); return action.confirm(ctx, form, ...rest); };
+        }
+    }
+    return out;
+}
+
 export default {
     key: 'community',
     label: 'Community',
     help: 'Tools that make the server livelier: members can suggest ideas and vote on them, popular messages get a place of honour (the starboard), important notes stay at the bottom of a channel, saved replies answer common questions, and new YouTube videos are announced.',
 
     async load(ctx) {
+        await cachesReady(ctx);
         return {
             settings: ctx.services.getCommunitySettings(ctx.guildId),
             stickies: ctx.services.listStickies(ctx.guildId),
@@ -128,7 +150,7 @@ ${section(tr.t('community.open.title', { count: tr.fmtNumber(openSuggestions.len
 ${section(tr.t('community.starboard.title'), starboard, tr.t('community.starboard.help'), { key: 'starboard' })}${section(tr.t('community.sticky.title'), sticky, tr.t('community.sticky.help'), { key: 'sticky-messages' })}${section(tr.t('community.tag.title'), tagForms, tr.t('community.tag.help'), { key: 'tags' })}${section(tr.t('community.feed.title'), feedForms, tr.t('community.feed.help'), { key: 'youtube-feeds' })}`;
     },
 
-    actions: managerActions(['suggestions', 'starboard', 'starboard-off'], {
+    actions: requireCaches(managerActions(['suggestions', 'starboard', 'starboard-off'], {
         'suggestion-status': {
             admin: true,
             async run(ctx, form) {
@@ -251,6 +273,5 @@ ${section(tr.t('community.starboard.title'), starboard, tr.t('community.starboar
             if (!removed) throw new InputError(tr.t('community.action.noFeed', { id }));
             return { changes: [{ key: `feed.${id}`, old: before ? { source: before.sourceId, channelId: before.channelId } : null, new: null }], message: tr.t('community.action.feedRemoved', { id }) };
         },
-    }),
+    })),
 };
-

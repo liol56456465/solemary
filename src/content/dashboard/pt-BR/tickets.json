@@ -91,5 +91,9 @@
     "notBlocked": "Esse membro não estava bloqueado.",
     "unblocked": "Desbloqueado no modmail."
   },
-  "staffRoleNeedsAdmin": "Para mudar o cargo da equipe você precisa da permissão de Administrador neste servidor (ele abre cada ticket para os membros dele). Nada foi alterado."
+  "staffRoleNeedsAdmin": "Para mudar o cargo da equipe você precisa da permissão de Administrador neste servidor (ele abre cada ticket para os membros dele). Nada foi alterado.",
+  "defaults": {
+    "buttonLabel": "Abrir ticket",
+    "panelMessage": "Precisa de ajuda da equipe? Aperte o botão abaixo para abrir um ticket privado."
+  }
 }

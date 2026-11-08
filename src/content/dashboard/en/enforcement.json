@@ -58,7 +58,8 @@
     "openCap": "Most open reports and modmail",
     "openCapHelp": "How many staff report and modmail channels can be open at the same time. When the limit is reached, new ones are turned away and staff get an alert. Appeals are never turned away.",
     "invite": "Support server invite",
-    "inviteHelp": "A link to your support server. Banned members get it so they can still appeal."
+    "inviteHelp": "A link to your support server. Banned members get it so they can still appeal.",
+    "inviteRequired": "The support server invite cannot be empty: paste a discord.gg invite link. Nothing was changed."
   },
   "roles": {
     "title": "Roles",

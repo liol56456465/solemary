@@ -9,6 +9,7 @@
 
 import { PERMS, channelPicker, postForm, rolePicker } from './forms.js';
 import { registryGuildId, registryValue } from './modules/common.js';
+import { textFor } from './language.js';
 
 const REGISTRY_KEYS = ['modLogChannelId', 'appealsCategoryId', 'reviewChannelId', 'alertsChannelId', 'mutedRoleId', 'bannedRoleId'];
 
@@ -58,8 +59,11 @@ export function setupStepForm(ctx, step, data) {
         case 'bannedRole':
             return data.supportGuild ? form('support', 'banned-role', rolePicker(data.supportGuild, 'bannedRoleId', r.bannedRoleId, { label: step.label })) : null;
         case 'appealPanel':
-            return form('enforcement', 'appeal-panels', channelPicker(g, 'channelId', null, { label: 'Channel for the appeal panel', perms: PERMS.post, optional: false }),
-                { submit: step.done ? 'Post the appeal panels again' : 'Post the appeal panels', canEdit: canAdmin, confirm: 'Post the appeal panels now? Earlier appeal panels in these channels are replaced.' });
+        {
+            const tr = textFor(ctx);
+            return form('enforcement', 'appeal-panels', channelPicker(g, 'channelId', null, { label: tr.t('overview.setup.appealPanelForm.channel'), perms: PERMS.post, optional: false }),
+                { submit: tr.t(step.done ? 'overview.setup.appealPanelForm.postAgain' : 'overview.setup.appealPanelForm.post'), canEdit: canAdmin, confirm: tr.t('overview.setup.appealPanelForm.confirm') });
+        }
         default:
             return null;
     }

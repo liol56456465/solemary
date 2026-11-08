@@ -171,7 +171,8 @@
     "minutesHelp": "От 0 до {max} (24 часа).",
     "seconds": "Секунды",
     "secondsHelp": "От 0 до 59.",
-    "submit": "Запустить отсчёт"
+    "submit": "Запустить отсчёт",
+    "defaultTitle": "Обратный отсчёт"
   },
   "clock": {
     "hours": "{n} ч",

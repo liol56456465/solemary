@@ -210,6 +210,12 @@
     "appealPanel": {
       "label": "Painel de apelações publicado",
       "hint": "Uma mensagem com um botão Apelar, para que membros punidos possam pedir à equipe que retire a punição. Um vai no seu servidor e outro no servidor de suporte."
+    },
+    "appealPanelForm": {
+      "channel": "Canal do painel de recursos",
+      "post": "Publicar os painéis de recurso",
+      "postAgain": "Publicar os painéis de recurso de novo",
+      "confirm": "Publicar os painéis de recurso agora? Os painéis anteriores nesses canais são substituídos."
     }
   },
   "value": {

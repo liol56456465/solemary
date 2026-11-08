@@ -207,6 +207,12 @@
     "appealPanel": {
       "label": "Panel de apelaciones publicado",
       "hint": "Un mensaje con un botón Apelar, para que los miembros sancionados puedan pedir al equipo que quite la sanción. Uno va en tu servidor y otro en el servidor de soporte."
+    },
+    "appealPanelForm": {
+      "channel": "Canal para el panel de apelaciones",
+      "post": "Publicar los paneles de apelación",
+      "postAgain": "Publicar de nuevo los paneles de apelación",
+      "confirm": "¿Publicar ahora los paneles de apelación? Los paneles anteriores de estos canales se reemplazan."
     }
   },
   "value": {

@@ -47,23 +47,33 @@ export function queryText(query, name, max) {
     return typeof value === 'string' ? value.trim().slice(0, max) : '';
 }
 
+/** \r\n and lone \r → \n: a browser sends textarea line breaks as \r\n, which must not count twice. */
+const normalizeBreaks = (value) => value.replace(/\r\n?/g, '\n');
+
+/** Refuses a value over `max` characters (the field is marked on the page); never cuts silently. */
+function refuseTooLong(value, max, name) {
+    if (value.length > max) throw new InputError(ft().t('forms.error.tooLong', { max: ft().fmtNumber(max), length: ft().fmtNumber(value.length) }), 400, name);
+    return value;
+}
+
 export function text(form, name, max = 2000) {
     const value = form?.[name];
     if (typeof value !== 'string') return '';
-    const trimmed = value.trim();
-    // Never cut silently: a longer value is refused (the field is marked on the page).
-    if (trimmed.length > max) throw new InputError(ft().t('forms.error.tooLong', { max: ft().fmtNumber(max), length: ft().fmtNumber(trimmed.length) }), 400, name);
-    return trimmed;
+    const trimmed = normalizeBreaks(value).trim();
+    return refuseTooLong(trimmed, max, name);
 }
 
 /**
  * A repeated field (multi-select, several checkboxes): its string values, trimmed,
- * de-duplicated, at most `max` of them. A single value is a one-item list.
+ * de-duplicated, at most `max` of them. A single value is a one-item list. A value longer than
+ * `maxLength` or more than `max` values is refused with a clear message (never cut silently).
  */
 export function list(form, name, { max = 25, maxLength = 25 } = {}) {
     const value = form?.[name];
     const values = Array.isArray(value) ? value : value === undefined ? [] : [value];
-    return [...new Set(values.filter((v) => typeof v === 'string').map((v) => v.trim().slice(0, maxLength)).filter(Boolean))].slice(0, max);
+    const out = [...new Set(values.filter((v) => typeof v === 'string').map((v) => refuseTooLong(v.trim(), maxLength, name)).filter(Boolean))];
+    if (out.length > max) throw new InputError(ft().t('forms.error.tooMany', { max: ft().fmtNumber(max), count: ft().fmtNumber(out.length) }), 400, name);
+    return out;
 }
 
 /** Several channel ids (multi-select), each checked like channelField. */
@@ -71,10 +81,10 @@ export function channelListField(guild, form, name, { kinds = ['text', 'category
     return list(form, name, { max }).map((id, i) => channelField(guild, { [name]: id }, name, { kinds, optional: false, label: ft().t('forms.error.listItem', { label, number: i + 1 }) }));
 }
 
-/** A posted textarea, keeping inner line breaks (\r\n → \n). */
+/** A posted textarea, keeping inner line breaks (\r\n → \n). Over `max` characters is refused, never cut. */
 export function multiline(form, name, max = 4000) {
     const value = form?.[name];
-    return typeof value === 'string' ? value.replace(/\r\n?/g, '\n').trim().slice(0, max) : '';
+    return typeof value === 'string' ? refuseTooLong(normalizeBreaks(value).trim(), max, name) : '';
 }
 
 /** A checkbox: present with a value → true. */

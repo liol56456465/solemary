@@ -21,7 +21,10 @@
     "exportFree": "Non incluso nel piano Free",
     "exportFreeText": "L’esportazione dei casi è inclusa in Mewvo Normal (ultimi 90 giorni) e Pro o Max (tutto lo storico), nel piano del proprietario del server.",
     "notFound": "Caso non trovato",
-    "notFoundText": "Non c’è nessun caso con quel codice."
+    "notFoundText": "Non c’è nessun caso con quel codice.",
+    "exportAudit": "{count} casi ({window})",
+    "exportWindow": "ultimi {days} giorni",
+    "exportFullHistory": "cronologia completa"
   },
   "auditModules": {
     "appeals": "Ricorsi (registro)",

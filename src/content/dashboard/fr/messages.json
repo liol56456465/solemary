@@ -167,7 +167,8 @@
     "minutesHelp": "De 0 à {max} (24 heures).",
     "seconds": "Secondes",
     "secondsHelp": "De 0 à 59.",
-    "submit": "Lancer"
+    "submit": "Lancer",
+    "defaultTitle": "Compte à rebours"
   },
   "clock": {
     "hours": "{n} h",

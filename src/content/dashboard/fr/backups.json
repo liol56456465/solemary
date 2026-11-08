@@ -39,6 +39,7 @@
       "one": "Sauvegarde appliquée : {count} paramètre modifié. Il est dans le journal d’audit.",
       "many": "Sauvegarde appliquée : {count} paramètres modifiés. Ils sont dans le journal d’audit.",
       "other": "Sauvegarde appliquée : {count} paramètres modifiés. Ils sont dans le journal d’audit."
-    }
+    },
+    "applyFailed": "La sauvegarde n’a pas été appliquée : la base de données n’a pas répondu, rien n’a été modifié. Réessayez Appliquer."
   }
 }

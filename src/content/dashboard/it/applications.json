@@ -43,7 +43,8 @@
     "member": "Membro",
     "noteColumn": "Nota",
     "reviewed": "Esaminata",
-    "nothingReviewed": "Ancora niente di esaminato."
+    "nothingReviewed": "Ancora niente di esaminato.",
+    "capped": "Qui vengono lette solo le {count} candidature più recenti; quelle più vecchie non sono contate qui sotto."
   },
   "roles": {
     "title": "Candidature ({count})",

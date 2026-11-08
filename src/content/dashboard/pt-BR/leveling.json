@@ -39,7 +39,8 @@
     "announce": "Anunciar subidas de nível",
     "announceHelp": "Desligado: os membros continuam subindo de nível, mas nenhuma mensagem é publicada.",
     "message": "Mensagem de subida de nível",
-    "messageHelp": "Você pode usar {user} (menciona o membro) e {level} (o novo nível)."
+    "messageHelp": "Você pode usar {user} (menciona o membro) e {level} (o novo nível).",
+    "defaultMessage": "{user} agora é nível {level}."
   },
   "card": {
     "title": "Cartão de nível",

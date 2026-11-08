@@ -58,7 +58,8 @@
     "openCap": "Höchstens offene Meldungen und Modmails",
     "openCapHelp": "Wie viele Kanäle für Team-Meldungen und Modmail gleichzeitig offen sein können. Ist die Grenze erreicht, werden neue abgewiesen und das Team bekommt einen Alarm. Einsprüche werden nie abgewiesen.",
     "invite": "Einladung zum Support-Server",
-    "inviteHelp": "Ein Link zu deinem Support-Server. Gebannte Mitglieder bekommen ihn, damit sie trotzdem Einspruch einlegen können."
+    "inviteHelp": "Ein Link zu deinem Support-Server. Gebannte Mitglieder bekommen ihn, damit sie trotzdem Einspruch einlegen können.",
+    "inviteRequired": "Die Einladung zum Support-Server darf nicht leer sein: Füge einen discord.gg-Einladungslink ein. Es wurde nichts geändert."
   },
   "roles": {
     "title": "Rollen",

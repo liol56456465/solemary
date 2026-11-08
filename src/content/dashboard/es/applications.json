@@ -43,7 +43,8 @@
     "member": "Miembro",
     "noteColumn": "Nota",
     "reviewed": "Revisada",
-    "nothingReviewed": "Todavía no se ha revisado nada."
+    "nothingReviewed": "Todavía no se ha revisado nada.",
+    "capped": "Aquí solo se leen las {count} solicitudes más recientes; las anteriores no se cuentan abajo."
   },
   "roles": {
     "title": "Solicitudes ({count})",

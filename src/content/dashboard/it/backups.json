@@ -39,6 +39,7 @@
       "one": "Backup applicato: {count} impostazione cambiata. È nel registro di controllo.",
       "many": "Backup applicato: {count} impostazioni cambiate. Sono nel registro di controllo.",
       "other": "Backup applicato: {count} impostazioni cambiate. Sono nel registro di controllo."
-    }
+    },
+    "applyFailed": "Il backup non è stato applicato: il database non ha risposto, quindi non è cambiato nulla. Riprova Applica."
   }
 }

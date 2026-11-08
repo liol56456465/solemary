@@ -42,5 +42,6 @@
   "handoverTooLong": "La nota debe tener menos de 1000 caracteres.",
   "serverNotFound": "Servidor no encontrado",
   "serverNotFoundText": "Servidor no encontrado o no puedes gestionarlo. Elige un servidor de tu lista.",
-  "blockedText": "No puedes usar este bot."
+  "blockedText": "No puedes usar este bot.",
+  "databaseDown": "La base de datos no responde ahora mismo, así que no se cambió nada. Inténtalo de nuevo en un minuto."
 }

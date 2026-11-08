@@ -6,12 +6,30 @@
 // Picking one in the panel fills the action, reason and duration and goes straight to the
 // confirm step; the normal checks (hierarchy, ladder, mass-action guard) still run.
 
+import { createHash, randomBytes } from 'node:crypto';
 import { getReason } from '../../config/enforcement.js';
 import { parseDuration } from './format.js';
 
 export const TEMPLATE_ACTIONS = ['warn', 'mute', 'kick', 'ban'];
 export const MAX_TEMPLATES = 10;
 export const TEMPLATE_NAME_MAX = 40;
+/** A template's stable id (dashboard remove-by-id): 't' + 10 lowercase hex characters. */
+export const TEMPLATE_ID = /^t[0-9a-f]{10}$/;
+
+/** The id of a template saved before ids existed: derived from its (unique) name, so it is the same on every read. */
+export function derivedTemplateId(name) {
+    return `t${createHash('sha256').update(String(name ?? '').toLowerCase()).digest('hex').slice(0, 10)}`;
+}
+
+/** A fresh id for a new template. */
+export function newTemplateId() {
+    return `t${randomBytes(5).toString('hex')}`;
+}
+
+/** The list with every template's id: stored ids kept, missing ones derived (nothing is saved here). */
+export function withTemplateIds(list) {
+    return (Array.isArray(list) ? list : []).map((t) => (t && TEMPLATE_ID.test(t.id || '') ? t : { ...t, id: derivedTemplateId(t?.name) }));
+}
 
 export class TemplateError extends Error {
     constructor(message) { super(message); this.userMessage = message; }
@@ -35,7 +53,8 @@ export function cleanTemplate(input = {}) {
         }
         if (action === 'mute' && !duration) throw new TemplateError('A mute template needs a duration, like 1h.');
     }
-    return { name, action, reasonKey, duration };
+    const id = typeof input.id === 'string' && TEMPLATE_ID.test(input.id) ? input.id : undefined;
+    return { ...(id ? { id } : {}), name, action, reasonKey, duration };
 }
 
 /** The whole list (the setting's schema uses this). */
@@ -44,7 +63,12 @@ export function cleanTemplates(list) {
     if (list.length > MAX_TEMPLATES) throw new TemplateError(`At most ${MAX_TEMPLATES} templates.`);
     const out = list.map(cleanTemplate);
     const names = new Set();
+    const ids = new Set();
     for (const t of out) {
+        if (t.id) {
+            if (ids.has(t.id)) throw new TemplateError('Two templates have the same id.');
+            ids.add(t.id);
+        }
         const key = t.name.toLowerCase();
         if (names.has(key)) throw new TemplateError(`There is already a template called "${t.name}".`);
         names.add(key);

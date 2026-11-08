@@ -42,5 +42,6 @@
   "handoverTooLong": "Die Notiz muss unter 1000 Zeichen bleiben.",
   "serverNotFound": "Server nicht gefunden",
   "serverNotFoundText": "Server nicht gefunden, oder du kannst ihn nicht verwalten. Wähle einen Server aus deiner Liste.",
-  "blockedText": "Du kannst diesen Bot nicht benutzen."
+  "blockedText": "Du kannst diesen Bot nicht benutzen.",
+  "databaseDown": "Die Datenbank antwortet gerade nicht, daher wurde nichts geändert. Versuche es in einer Minute erneut."
 }

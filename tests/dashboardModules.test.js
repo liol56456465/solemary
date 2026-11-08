@@ -22,6 +22,7 @@ import { resolveLogChannel } from '../src/services/loggingService.js';
 import { storeWelcomeImage } from '../src/utils/welcomeImageStore.js';
 import { BacktestError } from '../src/services/automod/backtest.js';
 import { FIELD_LEVEL, NOT_PRIVILEGED } from './helpers/privilegedActions.js';
+import { derivedTemplateId } from '../src/services/enforcement/templateService.js';
 
 const ALLOWED_SCRIPT = `<script src="${JS_PATH}" defer></script>`;
 const SECRET = 'x'.repeat(64);
@@ -174,8 +175,11 @@ function makeServices() {
     const svc = {
         getGuildConfig: async () => clone(s.config),
         getSetting: (guildId, key) => (Object.hasOwn(s.registry, key) ? clone(s.registry[key]) : seedValue(getSettingEntry(key), ENV)),
-        updateSettings: async (guildId, patch, actor) => {
+        updateSettings: async (guildId, patchOrBuild, actor) => {
+            // Like guildSettings.updateSettings: a build function gets the current values (the real one holds the row lock).
+            const patch = typeof patchOrBuild === 'function' ? await patchOrBuild((key) => clone(svc.getSetting(guildId, key))) : patchOrBuild;
             record('updateSettings', [guildId, patch, actor]);
+            if (!patch || !Object.keys(patch).length) return { changes: [], settings: {} };
             const changes = [];
             for (const [key, value] of Object.entries(patch)) {
                 const entry = getSettingEntry(key);
@@ -224,6 +228,23 @@ function makeServices() {
         setLoggingEnabled: async (c, g, enabled) => { record('setLoggingEnabled', [enabled]); s.logging.enabled = enabled; return true; },
         setLogChannel: async (c, g, dest, id) => { record('setLogChannel', [dest, id]); s.logging.channels[dest] = id; return true; },
         toggleEventLogging: async (c, g, types, on) => { record('toggleEventLogging', [types, on]); for (const t of types) s.logging.enabledEvents[t] = on; return true; },
+        setLogChannels: async (c, g, wanted) => {
+            record('setLogChannels', [wanted]);
+            const changes = [];
+            for (const [destination, id] of Object.entries(wanted)) {
+                const old = s.logging.channels[destination] || null;
+                if ((id || null) === old) continue;
+                s.logging.channels[destination] = id || null;
+                changes.push({ destination, old, new: id || null });
+            }
+            return changes;
+        },
+        updateEventLogging: async (c, g, plan) => {
+            const steps = await plan(clone(s.logging.enabledEvents));
+            record('updateEventLogging', [steps]);
+            for (const step of steps) for (const t of step.types) s.logging.enabledEvents[t] = step.enabled;
+            return steps;
+        },
         updateIgnoreList: async (c, g, { action, type, id }) => { record('updateIgnoreList', [action, type, id]); const k = `${type}s`; s.logging.ignore[k] = action === 'add' ? [...s.logging.ignore[k], id] : s.logging.ignore[k].filter((x) => x !== id); return true; },
         getWelcomeSettings: async () => clone(s.welcome),
         // The /greet image store itself, on the fake guild (its channel.send is recorded by withImageStore).
@@ -252,6 +273,14 @@ function makeServices() {
         },
         getLevelingConfig: async () => clone(s.leveling),
         updateLevelingConfig: async (c, g, patch) => { record('updateLevelingConfig', [patch]); return merge('leveling', patch); },
+        updateLevelIgnoreList: async (c, g, field, action, id) => {
+            record('updateLevelIgnoreList', [field, action, id]);
+            const before = clone(s.leveling);
+            const list = s.leveling[field] || [];
+            const changed = action === 'add' ? !list.includes(id) : list.includes(id);
+            if (changed) s.leveling[field] = action === 'add' ? [...list, id] : list.filter((x) => x !== id);
+            return { before, after: clone(s.leveling), changed };
+        },
         setLevelRoleReward: async (c, g, level, roleId) => { record('setLevelRoleReward', [level, roleId]); const before = clone(s.leveling); if (roleId) s.leveling.roleRewards[level] = roleId; else delete s.leveling.roleRewards[level]; return { before, after: clone(s.leveling) }; },
         setLevelBoost: async (c, g, kind, id, multiplier) => {
             record('setLevelBoost', [kind, id, multiplier]);
@@ -750,8 +779,8 @@ const CASES = {
         'trust-card': { form: { enabled: 'true' }, service: 'updateSettings', admin: true, bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
         'template-add': { admin: true, form: { name: 'Spam: short mute', action: 'mute', reasonKey: 'spam', duration: '1h' }, service: 'updateSettings',
             bad: { form: { name: 'No time', action: 'mute', reasonKey: 'spam', duration: '' }, message: /needs a duration/ } },
-        'template-remove': { admin: true, seed: (s) => { s.registry.enforcementTemplates = [{ name: 'Spam', action: 'warn', reasonKey: 'spam', duration: null }]; }, form: { index: '0' }, service: 'updateSettings',
-            bad: { form: { index: '5' }, message: /gone already/ } },
+        'template-remove': { admin: true, seed: (s) => { s.registry.enforcementTemplates = [{ name: 'Spam', action: 'warn', reasonKey: 'spam', duration: null }]; }, form: { id: derivedTemplateId('Spam') }, service: 'updateSettings',
+            bad: { form: { id: 't0000000000' }, message: /gone already/ } },
     },
     appearance: {
         nickname: { form: { nickname: 'Mewvo Helper' }, service: 'setBotNickname', admin: true,
@@ -798,8 +827,8 @@ const CASES = {
     },
     logging: {
         enabled: { admin: true, form: { enabled: 'true' }, service: 'setLoggingEnabled', bad: { form: { enabled: 'x' }, message: /on or off/ } },
-        channels: { admin: true, form: { audit: TEXT, applications: '', reports: '' }, service: 'setLogChannel', bad: { form: { audit: VOICE }, message: /must be a text channel/ } },
-        events: { admin: true, form: {}, service: 'toggleEventLogging' },
+        channels: { admin: true, form: { audit: TEXT, applications: '', reports: '' }, service: 'setLogChannels', bad: { form: { audit: VOICE }, message: /must be a text channel/ } },
+        events: { admin: true, form: {}, service: 'updateEventLogging' },
         'ignore-add': { form: { type: 'role', id: ROLE_OK }, service: 'updateIgnoreList', admin: true, bad: { form: { type: 'user', id: 'abc' }, message: /Discord user ID/ } },
         'ignore-remove': { admin: true, form: { type: 'channel', id: TEXT2 }, service: 'updateIgnoreList', bad: { form: { type: 'planet', id: TEXT2 }, message: /unknown choice/ } },
     },
@@ -839,8 +868,8 @@ const CASES = {
         enabled: { form: { enabled: 'false' }, service: 'updateLevelingConfig', bad: { form: { enabled: 'y' }, message: /on or off/ } },
         settings: { form: { xpMin: '10', xpMax: '20', xpCooldown: '30', levelUpChannel: '', announceLevelUp: '1', levelUpMessage: 'gg {user}' }, service: 'updateLevelingConfig',
             bad: { form: { xpMin: '30', xpMax: '20', xpCooldown: '30' }, message: /cannot be more than Most XP/ } },
-        'ignore-add': { form: { type: 'channel', id: TEXT }, service: 'updateLevelingConfig', bad: { form: { type: 'role', id: MISSING }, message: /not in the server/ } },
-        'ignore-remove': { form: { type: 'channel', id: TEXT2 }, service: 'updateLevelingConfig' },
+        'ignore-add': { form: { type: 'channel', id: TEXT }, service: 'updateLevelIgnoreList', bad: { form: { type: 'role', id: MISSING }, message: /not in the server/ } },
+        'ignore-remove': { form: { type: 'channel', id: TEXT2 }, service: 'updateLevelIgnoreList' },
         'reward-add': { form: { level: '10', roleId: ROLE_OK2 }, service: 'setLevelRoleReward', admin: true, bad: { form: { level: '10', roleId: ROLE_HIGH }, message: /not below my highest role/ } },
         'reward-remove': { form: { level: '5' }, service: 'setLevelRoleReward', admin: true, bad: { form: { level: '0' }, message: /between 1 and 1000/ } },
         'boost-add': { form: { type: 'channel', id: TEXT, multiplier: '1.5' }, service: 'setLevelBoost', bad: { form: { type: 'role', id: ROLE_OK, multiplier: '5.5' }, message: /between 1.1 and 5/ } },
@@ -3338,6 +3367,20 @@ test('settings backup: download, check a file (no write), CSRF/Origin/Administra
     const unknown = await apply('nope');
     assert.equal(unknown.statusCode, 400);
     assert.match(unknown.body, /expired or was already used/);
+
+    // D9: the token is spent only after a successful apply (one transaction in applyBackup).
+    let fail = true;
+    const applied = [];
+    h.svc.applySettingsBackup = async (plan) => { if (fail) throw new Error('db down'); applied.push(plan); return plan.changes.length; };
+    const failed = await apply(token);
+    assert.equal(failed.statusCode, 503);
+    assert.match(failed.body, /not applied/);
+    assert.match(failed.body, new RegExp(`name="token" value="${token}"`), 'the same check can be applied again');
+    fail = false;
+    const done = await apply(token);
+    assert.equal(done.statusCode, 303, 'the other admin\'s attempt and the failure did not spend the token');
+    assert.equal(applied.length, 1);
+    assert.equal((await apply(token)).statusCode, 400, 'spent after the success');
 });
 
 test('bot in this server: not an image refused; below Pro the page says so and every action refuses', async () => {
@@ -3695,7 +3738,78 @@ test('setup step forms: the module save route returns to the step (back=setup&st
     for (const keys of patches()) assert.ok(keys.length === 1 && ['modLogChannelId', 'alertsChannelId', 'mutedRoleId'].includes(keys[0]) || keys.length === 0, `only the sent field: ${keys}`);
     assert.ok(!patches().flat().includes('warnRoleIds') && !patches().flat().includes('evidenceChannelId') && !patches().flat().includes('reviewChannelId'));
     assert.equal((await post(p, 'logging', 'channels', { audit: TEXT })).statusCode, 303);
-    assert.deepEqual(p.calls.filter((c) => c.name === 'setLogChannel').map((c) => c.args[0]), ['audit'], 'the other log channels are not touched');
+    assert.deepEqual(p.calls.filter((c) => c.name === 'setLogChannels').map((c) => Object.keys(c.args[0])), [['audit']], 'the other log channels are not touched');
     assert.equal((await post(p, 'birthdays', 'settings', { channelId: TEXT })).statusCode, 303);
     assert.deepEqual(Object.keys(p.calls.find((c) => c.name === 'updateBirthdaySettings').args[0]), ['channelId']);
+});
+
+// ── Audit fixes D7, D11, D12, D16, D17 (dashboard level) ─────────────────
+
+test('D12: a cleared welcome / goodbye message is saved as cleared, an absent one stays; a cleared support invite is refused', async () => {
+    const h = await setup();
+    const cleared = await post(h, 'welcome', 'welcome', { channelId: TEXT, welcomeMessage: '', dmMessage: '' });
+    assert.equal(cleared.statusCode, 303);
+    assert.equal(h.calls.find((c) => c.name === 'updateWelcomeSettings').args[0].welcomeMessage, '', 'cleared, not "Nothing changed"');
+    assert.equal(h.state.welcome.welcomeMessage, '');
+    await post(h, 'welcome', 'goodbye', { goodbyeChannelId: TEXT, leaveMessage: '' });
+    assert.equal(h.state.welcome.leaveMessage, '');
+    const before = h.calls.filter((c) => c.name === 'updateWelcomeSettings').length;
+    await post(h, 'welcome', 'welcome', { channelId: TEXT });
+    const patch = h.calls.filter((c) => c.name === 'updateWelcomeSettings').slice(before)[0]?.args[0] || {};
+    assert.ok(!('welcomeMessage' in patch) && !('dmMessage' in patch), 'a field absent from the form is left as stored');
+    const invite = await post(h, 'enforcement', 'channels', { supportServerInvite: '' });
+    assert.equal(invite.statusCode, 400);
+    assert.match(invite.body, /support server invite cannot be empty/);
+});
+
+test('D11: module states are not cached as "off" after a failed read', async () => {
+    const h = await setup();
+    let fail = true;
+    let calls = 0;
+    const real = h.svc.getAutomodSettings;
+    h.svc.getAutomodSettings = async (...args) => { calls += 1; if (fail) throw new Error('db down'); return real(...args); };
+    const get = () => run(h, h.d.backup, { method: 'GET', params: {}, query: {}, headers: { cookie: h.cookie } });
+    await get();
+    await get();
+    assert.equal(calls, 2, 'the failed read was not cached: the next request reads again');
+    fail = false;
+    await get();
+    await get();
+    assert.equal(calls, 3, 'a good read is cached');
+});
+
+test('D7: community pages and actions refuse with "database not responding" while the caches are not loaded', async () => {
+    const h = await setup();
+    h.svc.ensureCommunityCaches = async () => { throw Object.assign(new Error('not loaded'), { type: 'database', userMessage: 'The database is not responding right now.' }); };
+    const page = await run(h, h.d.modulePage, { method: 'GET', params: { module: 'community' }, headers: { cookie: h.cookie }, query: {} });
+    assert.equal(page.statusCode, 503);
+    assert.match(page.body, /database is not responding/);
+    assert.ok(!page.body.includes('name="starboardThreshold"'), 'no form of defaults');
+    const before = h.calls.filter((c) => c.name === 'updateCommunitySettings').length;
+    await post(h, 'community', 'suggestions', { channelId: TEXT }).catch(() => null);
+    assert.equal(h.calls.filter((c) => c.name === 'updateCommunitySettings').length, before, 'nothing saved');
+});
+
+test('D16: custom automod rules are changed through one locked build (updateSettings gets a function)', async () => {
+    const h = await setup();
+    const seen = [];
+    const real = h.svc.updateSettings;
+    h.svc.updateSettings = async (guildId, patch, actor) => { seen.push(typeof patch); return real(guildId, patch, actor); };
+    const res = await post(h, 'automod', 'custom-add', { name: 'No spam', action: 'delete', muteDuration: '', words: 'buy now' });
+    assert.equal(res.statusCode, 303);
+    assert.deepEqual(seen, ['function']);
+    const id = h.state.registry.automodCustomRules.find((r) => r.name === 'No spam').id;
+    assert.equal((await post(h, 'automod', 'custom-remove', { id })).statusCode, 303);
+    assert.ok(!h.state.registry.automodCustomRules.some((r) => r.id === id));
+    const gone = await post(h, 'automod', 'custom-remove', { id });
+    assert.equal(gone.statusCode, 400, 'a rule removed meanwhile is "gone", read under the lock');
+});
+
+test('D17: the counter type select in the list has a (screen-reader) label; type names are translated', async () => {
+    const h = await setup();
+    const page = await run(h, h.d.modulePage, { method: 'GET', params: { module: 'counters' }, headers: { cookie: h.cookie }, query: {} });
+    assert.equal(page.statusCode, 200);
+    assert.ok(!page.body.includes('<label><select name="type"'), 'no empty label');
+    assert.match(page.body, /<label><span class="sr">What it counts<\/span><select name="type">/);
+    assert.match(page.body, /Members \+ Bots/);
 });

@@ -141,7 +141,8 @@
     "empty": "Nadie está baneado en el servidor principal.",
     "bannedCount": "{count} baneados en el servidor principal",
     "help": "Desbanear abre la página del miembro: ves el efecto y luego confirmas. El miembro recibe un MD con una invitación para volver.",
-    "searchPlaceholder": "Nombre o ID de usuario"
+    "searchPlaceholder": "Nombre o ID de usuario",
+    "truncated": "Se muestran los primeros {count} baneos: la lista de Discord es más larga. Abre un miembro por su ID de usuario para ver a alguien que no aparece."
   },
   "standing": {
     "banEnds": "baneo {case}, termina {date}",
@@ -280,5 +281,10 @@
     "until": "Hasta",
     "noEnd": "Sin fecha de fin",
     "empty": "No hay nadie en la lista de vigilancia."
+  },
+  "findMember": {
+    "tooShort": "Escribe al menos 2 letras del nombre.",
+    "discordFailed": "Discord no respondió a la búsqueda, así que solo aparecen los miembros que Mewvo ya conoce.",
+    "bansFailed": "No se pudo cargar la lista de baneos, así que los usuarios baneados no aparecen."
   }
 }

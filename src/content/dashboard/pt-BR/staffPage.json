@@ -57,7 +57,8 @@
     "count": "Banimentos/expulsões",
     "lift": "Tirar bloqueio",
     "ownersOnly": "Só os donos do bot podem tirar um bloqueio (como /staff restore).",
-    "none": "Ninguém está bloqueado."
+    "none": "Ninguém está bloqueado.",
+    "failed": "Não foi possível carregar os bloqueios do limite de segurança (o banco de dados não responde). Recarregue a página em um minuto."
   },
   "activity": {
     "week": "Semana",

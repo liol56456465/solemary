@@ -141,7 +141,8 @@
     "empty": "Nessuno è bannato nel server principale.",
     "bannedCount": "{count} bannati nel server principale",
     "help": "Togli il ban apre la pagina del membro: vedi l’effetto, poi confermi. Il membro riceve un DM con un invito per tornare.",
-    "searchPlaceholder": "Nome o ID utente"
+    "searchPlaceholder": "Nome o ID utente",
+    "truncated": "Vengono mostrati i primi {count} ban: l’elenco di Discord è più lungo. Apri un membro tramite ID utente per vedere chi non è elencato."
   },
   "standing": {
     "banEnds": "ban {case}, termina il {date}",
@@ -280,5 +281,10 @@
     "until": "Fino al",
     "noEnd": "Senza fine",
     "empty": "Nessuno è nella lista di osservazione."
+  },
+  "findMember": {
+    "tooShort": "Scrivi almeno 2 lettere del nome.",
+    "discordFailed": "Discord non ha risposto alla ricerca, quindi sono elencati solo i membri che Mewvo conosce già.",
+    "bansFailed": "Non è stato possibile caricare l’elenco dei ban, quindi gli utenti bannati non sono elencati."
   }
 }

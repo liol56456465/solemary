@@ -52,5 +52,10 @@
     "started": "Counting game started at 1.",
     "reset": "The count starts again at 1.",
     "off": "Counting game is off."
+  },
+  "types": {
+    "members": "Members + Bots",
+    "members_only": "Members only",
+    "bots": "Bots only"
   }
 }

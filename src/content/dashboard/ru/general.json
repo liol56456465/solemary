@@ -21,7 +21,10 @@
     "exportFree": "Недоступно на тарифе Free",
     "exportFreeText": "Экспорт дел есть в Mewvo Normal (последние 90 дней) и в Pro или Max (вся история), по тарифу владельца сервера.",
     "notFound": "Дело не найдено",
-    "notFoundText": "Дела с таким кодом нет."
+    "notFoundText": "Дела с таким кодом нет.",
+    "exportAudit": "{count} дел ({window})",
+    "exportWindow": "последние {days} дн.",
+    "exportFullHistory": "вся история"
   },
   "auditModules": {
     "appeals": "Апелляции (реестр)",

@@ -560,25 +560,29 @@ export async function getLoggingStatus(client, guildId) {
   };
 }
 
+/**
+ * enabledEvents with `types` switched to `enabled` (pure). A category wildcard ("message.*")
+ * sets every event of the category and the wildcard itself.
+ */
+export function applyEventToggle(enabledEvents, types, enabled) {
+  const next = { ...(enabledEvents || {}) };
+  for (const type of types) {
+    if (type.endsWith('.*')) {
+      const category = type.replace('.*', '');
+      for (const eventType of Object.values(EVENT_TYPES)) {
+        if (typeof eventType === 'string' && eventType.startsWith(`${category}.`)) next[eventType] = enabled;
+      }
+    }
+    next[type] = enabled;
+  }
+  return next;
+}
+
 export async function toggleEventLogging(client, guildId, eventTypes, enabled) {
   try {
     const types = Array.isArray(eventTypes) ? eventTypes : [eventTypes];
     await updateGuildConfigAtomic(client, guildId, (config) => {
-      const logging = { ...config.logging, enabledEvents: { ...(config.logging?.enabledEvents || {}) } };
-      types.forEach((type) => {
-        if (type.endsWith('.*')) {
-          const category = type.replace('.*', '');
-          const matchingTypes = Object.values(EVENT_TYPES).filter(
-            (eventType) => eventType.startsWith(`${category}.`),
-          );
-          matchingTypes.forEach((eventType) => {
-            logging.enabledEvents[eventType] = enabled;
-          });
-          logging.enabledEvents[type] = enabled;
-        } else {
-          logging.enabledEvents[type] = enabled;
-        }
-      });
+      const logging = { ...config.logging, enabledEvents: applyEventToggle(config.logging?.enabledEvents, types, enabled) };
       return { ...config, logging };
     });
     return true;
@@ -586,6 +590,53 @@ export async function toggleEventLogging(client, guildId, eventTypes, enabled) {
     logger.error('Error toggling event logging:', error);
     return false;
   }
+}
+
+/**
+ * The dashboard's event form in ONE locked write: plan(enabledEvents) gets the locked current
+ * toggles and returns [{ types, enabled }]; they are applied in order and saved together (all
+ * or nothing). Returns the applied steps. Throws on a database error (nothing is saved then).
+ */
+export async function updateEventLogging(client, guildId, plan) {
+  let steps = [];
+  await updateGuildConfigAtomic(client, guildId, async (config) => {
+    const current = { ...(config.logging?.enabledEvents || {}) };
+    steps = (await plan(structuredClone(current))) || [];
+    if (!steps.length) return config;
+    let enabledEvents = current;
+    for (const step of steps) enabledEvents = applyEventToggle(enabledEvents, step.types, step.enabled);
+    return { ...config, logging: { ...config.logging, enabledEvents } };
+  }, { operation: 'updateEventLogging' });
+  return steps;
+}
+
+/**
+ * Several log channels in ONE locked write (the dashboard's channels form): wanted =
+ * { destination: channelId | null }. Returns [{ destination, old, new }] for the ones that
+ * changed, compared with the locked stored value. Throws on a database error (nothing saved).
+ */
+export async function setLogChannels(client, guildId, wanted) {
+  for (const destination of Object.keys(wanted)) {
+    if (!LOG_DESTINATIONS.includes(destination)) throw new Error(`Invalid log destination: ${destination}`);
+  }
+  let changes = [];
+  await updateGuildConfigAtomic(client, guildId, (config) => {
+    const channels = { ...(config.logging?.channels || {}) };
+    changes = [];
+    for (const [destination, channelId] of Object.entries(wanted)) {
+      const old = channels[destination] || null;
+      if ((channelId || null) === old) continue;
+      channels[destination] = channelId || null;
+      changes.push({ destination, old, new: channelId || null });
+    }
+    if (!changes.length) return config;
+    const logging = { ...config.logging, channels };
+    if (changes.some((c) => c.new)) logging.enabled = true;
+    return { ...config, logging };
+  }, { operation: 'setLogChannels' });
+  // A newly chosen channel is tried right away, even if it was paused after a refusal.
+  for (const change of changes) if (change.new) logChannelBackoff.delete(backoffKey(guildId, change.new));
+  return changes;
 }
 
 export async function setLogChannel(client, guildId, destination, channelId) {
@@ -605,7 +656,7 @@ export async function setLogChannel(client, guildId, destination, channelId) {
       return { ...config, logging };
     });
     // A newly chosen channel is tried right away, even if it was paused after a refusal.
-    if (channelId) logChannelBackoff.delete(String(channelId));
+    if (channelId) logChannelBackoff.delete(backoffKey(guildId, channelId));
     return true;
   } catch (error) {
     logger.error('Error setting log channel:', error);

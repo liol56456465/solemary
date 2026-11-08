@@ -45,7 +45,8 @@
     "managed": "{label}: {role} è gestito da un'integrazione o da un bot.",
     "problem": "{label}: {problem}",
     "userId": "{label} deve essere un ID utente Discord (17–20 cifre).",
-    "listItem": "{label} {number}"
+    "listItem": "{label} {number}",
+    "tooMany": "Troppi: se ne possono scegliere al massimo {max} ({count} inviati)."
   },
   "warn": {
     "channelGone": "il canale {id} non esiste più",

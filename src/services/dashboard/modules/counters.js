@@ -15,6 +15,9 @@ import { managerActions } from './serverScope.js';
 
 const TYPES = Object.keys(COUNTER_TYPE_CONFIG);
 
+/** A counter type's name in the page language (counters.types.<type>), the service's English label otherwise. */
+const typeLabel = (tr, type) => (tr.has(`counters.types.${type}`) ? tr.t(`counters.types.${type}`) : getCounterTypeLabel(type));
+
 function counterIdField(form) {
     const id = text(form, 'counterId', 64);
     if (!id) throw new InputError(currentText().t('counters.action.unknown'));
@@ -38,7 +41,7 @@ export default {
         const tr = textFor(ctx);
         const g = ctx.guild;
         const rows = counters.map((c) => [html`<code>${c.id}</code>`, channelName(g, c.channelId),
-            postForm(ctx, 'counters', 'counter-type', selectInput('type', c.type, TYPES.map((t) => [t, getCounterTypeLabel(t)]), { label: '' }), { inline: true, submit: tr.t('counters.list.change'), hidden: { counterId: c.id } }),
+            postForm(ctx, 'counters', 'counter-type', selectInput('type', c.type, TYPES.map((t) => [t, typeLabel(tr, t)]), { label: html`<span class="sr">${tr.t('counters.create.counts')}</span>` }), { inline: true, submit: tr.t('counters.list.change'), hidden: { counterId: c.id } }),
             buttonForm(ctx, 'counters', 'counter-delete', tr.t('counters.list.delete'), { counterId: c.id }, { confirm: tr.t('counters.list.deleteConfirm') })]);
         const systems = getCountingSystemChoices().map((c) => [c.value, c.name]);
         const details = counting.enabled
@@ -52,7 +55,7 @@ ${counting.enabled ? html`${buttonForm(ctx, 'counters', 'counting-reset', tr.t('
         const free = TYPES.filter((t) => !counters.some((c) => c.type === t));
         const create = free.length
             ? postForm(ctx, 'counters', 'counter-create', html`<div class="grid">
-${selectInput('type', free[0], free.map((t) => [t, getCounterTypeLabel(t)]), { label: tr.t('counters.create.counts') })}
+${selectInput('type', free[0], free.map((t) => [t, typeLabel(tr, t)]), { label: tr.t('counters.create.counts') })}
 ${selectInput('channelType', 'voice', [['voice', tr.t('counters.create.voice')], ['text', tr.t('counters.create.text')]], { label: tr.t('counters.create.channelType'), help: tr.t('counters.create.channelTypeHelp') })}
 ${channelPicker(g, 'categoryId', null, { label: tr.t('counters.create.category'), kinds: ['category'], perms: PERMS.category, optional: false, help: tr.t('counters.create.categoryHelp') })}</div>`,
             { submit: tr.t('counters.create.submit'), canEdit: ctx.canEdit && ctx.canAct })

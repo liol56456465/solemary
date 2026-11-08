@@ -1,10 +1,25 @@
 {
   "kinds": {
-    "appeal": { "label": "Odwołania", "single": "Odwołanie" },
-    "ticket": { "label": "Tickety", "single": "Ticket" },
-    "modmail": { "label": "Modmail", "single": "Modmail" },
-    "report": { "label": "Zgłoszenia na ekipę", "single": "Zgłoszenie na ekipę" },
-    "review": { "label": "Przeglądy automoderacji", "single": "Przegląd automoderacji" }
+    "appeal": {
+      "label": "Odwołania",
+      "single": "Odwołanie"
+    },
+    "ticket": {
+      "label": "Tickety",
+      "single": "Ticket"
+    },
+    "modmail": {
+      "label": "Modmail",
+      "single": "Modmail"
+    },
+    "report": {
+      "label": "Zgłoszenia na ekipę",
+      "single": "Zgłoszenie na ekipę"
+    },
+    "review": {
+      "label": "Przeglądy automoderacji",
+      "single": "Przegląd automoderacji"
+    }
   },
   "action": {
     "appeal": "Rozpatrz odwołanie",
@@ -62,7 +77,9 @@
     "closeHelpModmail": "Jak przycisk Zamknij: członek dostaje informację w DM, zapis rozmowy trafia na kanał zapisów, a kanał zostaje usunięty.",
     "closeHelpTicket": "Jak przycisk Zamknij: ticket zostaje zamknięty (przeniesiony do kategorii zamkniętych, jeśli jest ustawiona), członek dostaje DM, jeśli to włączone, a zapis rozmowy zostaje zachowany.",
     "reason": "Powód (opcjonalnie)",
-    "closeButton": "Zamknij…"
+    "closeButton": "Zamknij…",
+    "dmFailed": "Nie udało się wysłać DM do członka (opuścił serwer lub zamknął DM).",
+    "closedFromDashboard": "Zamknięte w panelu"
   },
   "confirm": {
     "title": "Potwierdź zamknięcie",

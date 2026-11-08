@@ -141,7 +141,8 @@
     "empty": "Ninguém está banido no servidor principal.",
     "bannedCount": "{count} banidos no servidor principal",
     "help": "Desbanir abre a página do membro: você vê o efeito e depois confirma. O membro recebe uma DM com um convite para voltar.",
-    "searchPlaceholder": "Nome ou ID de usuário"
+    "searchPlaceholder": "Nome ou ID de usuário",
+    "truncated": "Mostrando os primeiros {count} banimentos: a lista do Discord é maior. Abra um membro pelo ID de usuário para ver alguém que não está na lista."
   },
   "standing": {
     "banEnds": "banimento {case}, termina {date}",
@@ -280,5 +281,10 @@
     "until": "Até",
     "noEnd": "Sem data de fim",
     "empty": "Ninguém está na lista de observação."
+  },
+  "findMember": {
+    "tooShort": "Digite pelo menos 2 letras do nome.",
+    "discordFailed": "O Discord não respondeu à busca, então só aparecem os membros que o Mewvo já conhece.",
+    "bansFailed": "Não foi possível carregar a lista de banimentos, então os usuários banidos não aparecem."
   }
 }

@@ -1,10 +1,25 @@
 {
   "kinds": {
-    "appeal": { "label": "Appeals", "single": "Appeal" },
-    "ticket": { "label": "Tickets", "single": "Ticket" },
-    "modmail": { "label": "Modmail", "single": "Modmail" },
-    "report": { "label": "Staff reports", "single": "Staff report" },
-    "review": { "label": "Automod reviews", "single": "Automod review" }
+    "appeal": {
+      "label": "Appeals",
+      "single": "Appeal"
+    },
+    "ticket": {
+      "label": "Tickets",
+      "single": "Ticket"
+    },
+    "modmail": {
+      "label": "Modmail",
+      "single": "Modmail"
+    },
+    "report": {
+      "label": "Staff reports",
+      "single": "Staff report"
+    },
+    "review": {
+      "label": "Automod reviews",
+      "single": "Automod review"
+    }
   },
   "action": {
     "appeal": "Review appeal",
@@ -60,7 +75,9 @@
     "closeHelpModmail": "Like the Close button: the member is told by DM, the transcript goes to the transcript channel and the channel is deleted.",
     "closeHelpTicket": "Like the Close button: the ticket is closed (moved to the closed category if one is set), the member is DMed if that is on, and the transcript is filed.",
     "reason": "Reason (optional)",
-    "closeButton": "Close…"
+    "closeButton": "Close…",
+    "dmFailed": "Could not DM the member (they left the server or closed their DMs).",
+    "closedFromDashboard": "Closed from the dashboard"
   },
   "confirm": {
     "title": "Confirm close",

@@ -40,7 +40,8 @@
     "member": "Mitglied",
     "noteColumn": "Notiz",
     "reviewed": "Geprüft",
-    "nothingReviewed": "Noch nichts geprüft."
+    "nothingReviewed": "Noch nichts geprüft.",
+    "capped": "Hier werden nur die neuesten {count} Bewerbungen gelesen; ältere werden unten nicht mitgezählt."
   },
   "roles": {
     "title": "Bewerbungen ({count})",

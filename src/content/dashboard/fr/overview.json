@@ -207,6 +207,12 @@
     "appealPanel": {
       "label": "Panneau d'appel publié",
       "hint": "Un message avec un bouton Appel, pour que les membres sanctionnés puissent demander à l'équipe de lever la sanction. Un panneau va sur votre serveur, un autre sur le serveur d'assistance."
+    },
+    "appealPanelForm": {
+      "channel": "Salon du panneau d’appel",
+      "post": "Publier les panneaux d’appel",
+      "postAgain": "Republier les panneaux d’appel",
+      "confirm": "Publier les panneaux d’appel maintenant ? Les anciens panneaux d’appel de ces salons sont remplacés."
     }
   },
   "value": {

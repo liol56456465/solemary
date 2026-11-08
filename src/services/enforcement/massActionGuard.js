@@ -35,10 +35,14 @@ export async function getMassActionBlock(guildId, moderatorId) {
     return block && new Date(block.until).getTime() > Date.now() ? block : null;
 }
 
-/** Every moderator currently blocked in a guild: [{ moderatorId, until, count, attempted, at }]. */
+/**
+ * Every moderator currently blocked in a guild: [{ moderatorId, until, count, attempted, at }].
+ * A database error throws (the staff page says "could not be loaded"), never an empty list.
+ * One read per key: the key-value store has no value-returning list or getMany.
+ */
 export async function listMassActionBlocks(guildId) {
     const prefix = blockKey(guildId, '');
-    const keys = await db.list(prefix).catch(() => []);
+    const keys = await db.list(prefix);
     const out = [];
     for (const key of keys) {
         const moderatorId = String(key).slice(prefix.length);

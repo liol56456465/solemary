@@ -328,6 +328,8 @@ export const SETTINGS = Object.freeze([
         key: 'enforcementTemplates', module: 'enforcement', kind: 'json', guild: 'main', label: 'Enforcement templates',
         fallback: Object.freeze([]),
         schema: z.array(z.object({
+            // Stable id (templateService.js); older lists have none, the dashboard derives one until the next save.
+            id: z.string().regex(/^t[0-9a-f]{10}$/, 'must be a template id').optional(),
             name: z.string().min(1).max(40),
             action: z.enum(['warn', 'mute', 'kick', 'ban']),
             reasonKey: z.string().min(1).max(40),

@@ -91,5 +91,9 @@
     "notBlocked": "Dieses Mitglied war nicht gesperrt.",
     "unblocked": "Für Modmail entsperrt."
   },
-  "staffRoleNeedsAdmin": "Um die Teamrolle zu ändern, brauchst du die Berechtigung Administrator auf diesem Server (sie öffnet jedes Ticket für ihre Mitglieder). Es wurde nichts geändert."
+  "staffRoleNeedsAdmin": "Um die Teamrolle zu ändern, brauchst du die Berechtigung Administrator auf diesem Server (sie öffnet jedes Ticket für ihre Mitglieder). Es wurde nichts geändert.",
+  "defaults": {
+    "buttonLabel": "Ticket öffnen",
+    "panelMessage": "Brauchst du Hilfe vom Team? Drücke unten auf den Knopf, um ein privates Ticket zu öffnen."
+  }
 }

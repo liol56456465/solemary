@@ -57,7 +57,8 @@
     "count": "Ban/espulsioni",
     "lift": "Togli il blocco",
     "ownersOnly": "Solo i proprietari del bot possono togliere un blocco (come /staff restore).",
-    "none": "Nessuno è bloccato."
+    "none": "Nessuno è bloccato.",
+    "failed": "Non è stato possibile caricare i blocchi del limite di sicurezza (il database non risponde). Ricarica la pagina tra un minuto."
   },
   "activity": {
     "week": "Settimana",

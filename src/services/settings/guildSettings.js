@@ -375,59 +375,113 @@ export async function seedFromEnvOnce(env = process.env) {
 
 // ── Writes ────────────────────────────────────────────────────────────────
 
+/** The checked guild id of a write (a snowflake or a configured home server), else a refusal. */
+function writableGuildId(guildId, env) {
+    const id = typeof guildId === 'string' ? guildId.trim() : '';
+    if (!SNOWFLAKE.test(id) && !isHomeGuild(id, env)) {
+        throw Object.assign(new Error(`Invalid guild id ${JSON.stringify(guildId)}`), { userMessage: 'Settings can only be changed for a server.' });
+    }
+    return id;
+}
+
+/**
+ * One guild's write inside an open transaction: locks the row, builds the patch (an object, or
+ * build(valueOf) returning one: valueOf(key) is the locked current value, stored else the
+ * fallback, so a read-modify-write of a list happens under the lock), validates it, saves it and
+ * writes one dashboard_audit row per changed key. Returns { row, changes, keys }; row is null
+ * when a built patch was empty (nothing written).
+ */
+async function writeGuildPatch(client, db, guildId, patchOrBuild, actor, env) {
+    const role = guildRole(guildId, env) || 'other';
+    const fallbackOf = role === 'other' ? (entry) => neutralValue(entry) : (entry) => seedValue(entry, env);
+    await client.query(
+        `INSERT INTO ${db.settingsTable} (guild_id) VALUES ($1) ON CONFLICT (guild_id) DO NOTHING`, [guildId]);
+    const { rows: [current] } = await client.query(
+        `SELECT data FROM ${db.settingsTable} WHERE guild_id = $1 FOR UPDATE`, [guildId]);
+    const stored = current.data && typeof current.data === 'object' ? current.data : {};
+    const valueOf = (key) => {
+        const entry = getSettingEntry(key);
+        if (!entry) throw new Error(`Unknown setting "${key}"`);
+        return clone(Object.hasOwn(stored, key) ? stored[key] : fallbackOf(entry));
+    };
+    const built = typeof patchOrBuild === 'function';
+    const patch = built ? await patchOrBuild(valueOf) : patchOrBuild;
+    if (built && (patch == null || !Object.keys(patch).length)) return { row: null, changes: [], keys: [] };
+    const clean = validatePatch(patch, role);
+    const keys = Object.keys(clean);
+    const changes = [];
+    for (const key of keys) {
+        const old = Object.hasOwn(stored, key) ? stored[key] : fallbackOf(getSettingEntry(key));
+        if (!sameValue(old, clean[key])) changes.push({ key, module: getSettingEntry(key).module, old, new: clean[key] });
+    }
+    const { rows: [row] } = await client.query(
+        `UPDATE ${db.settingsTable} SET data = data || $2::jsonb, updated_by = $3, updated_at = NOW()
+         WHERE guild_id = $1 RETURNING guild_id, data, seeded_from_env, updated_at`,
+        [guildId, JSON.stringify(clean), actor.userId || null]);
+    for (const change of changes) {
+        const entry = getSettingEntry(change.key);
+        await client.query(
+            `INSERT INTO ${db.auditTable} (guild_id, user_id, username, module, key, old, new)
+             VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb)`,
+            [guildId, actor.userId || null, String(actor.username || '').slice(0, 100) || null, actor.module || change.module, change.key,
+                JSON.stringify(entry.sensitive ? '[hidden]' : change.old ?? null), JSON.stringify(entry.sensitive ? '[hidden]' : change.new ?? null)]);
+    }
+    return { row, changes, keys };
+}
+
+/** After a committed write: the cache, one log line, the resolved settings of the written keys. */
+function afterWrite(guildId, result, actor, env) {
+    if (result.row) cacheRow(result.row);
+    if (result.changes.length) {
+        logger.info(`Settings changed in ${guildId} by ${actor.userId || 'unknown'}: ${result.changes.map((c) => c.key).join(', ')}`);
+    }
+    const settings = {};
+    for (const key of result.keys) settings[key] = resolveSetting(guildId, key, env);
+    return { changes: result.changes, settings };
+}
+
 /**
  * Changes settings of one guild. patch = { key: value } (validated by the registry,
  * every key must belong to this guild's role); actor = { userId, username, module? }.
  * Mewvo's home servers use role 'main' / 'support' (old value = stored, else env/default);
  * any other server uses role 'other' (only `guild: 'main'` keys without `homeOnly`; old
  * value = stored, else neutralValue) and only ever touches its own row.
+ * `patch` may also be a function build(valueOf) returning the patch: it runs while the row is
+ * locked and valueOf(key) is the locked current value, so add/remove on a list setting is atomic.
+ * It may throw to refuse (nothing is written) or return null / {} for "nothing to change".
  * Returns { changes: [{ key, module, old, new }], settings: { key: value } }.
  * Throws (with userMessage) on invalid input, an unknown guild or a database error;
  * nothing is changed then.
  */
 export async function updateSettings(guildId, patch, actor = {}, env = process.env) {
-    const id = typeof guildId === 'string' ? guildId.trim() : '';
-    if (!SNOWFLAKE.test(id) && !isHomeGuild(id, env)) {
-        throw Object.assign(new Error(`Invalid guild id ${JSON.stringify(guildId)}`), { userMessage: 'Settings can only be changed for a server.' });
-    }
-    guildId = id;
-    const role = guildRole(guildId, env) || 'other';
-    const fallbackOf = role === 'other' ? (entry) => neutralValue(entry) : (entry) => seedValue(entry, env);
-    const clean = validatePatch(patch, role);
-    const keys = Object.keys(clean);
+    const id = writableGuildId(guildId, env);
+    // A plain patch is checked before the database is touched.
+    if (typeof patch !== 'function') validatePatch(patch, guildRole(id, env) || 'other');
     const db = await dbHelpers();
-    const result = await db.withTransaction(async (client) => {
-        await client.query(
-            `INSERT INTO ${db.settingsTable} (guild_id) VALUES ($1) ON CONFLICT (guild_id) DO NOTHING`, [guildId]);
-        const { rows: [current] } = await client.query(
-            `SELECT data FROM ${db.settingsTable} WHERE guild_id = $1 FOR UPDATE`, [guildId]);
-        const stored = current.data && typeof current.data === 'object' ? current.data : {};
-        const changes = [];
-        for (const key of keys) {
-            const old = Object.hasOwn(stored, key) ? stored[key] : fallbackOf(getSettingEntry(key));
-            if (!sameValue(old, clean[key])) changes.push({ key, module: getSettingEntry(key).module, old, new: clean[key] });
-        }
-        const { rows: [row] } = await client.query(
-            `UPDATE ${db.settingsTable} SET data = data || $2::jsonb, updated_by = $3, updated_at = NOW()
-             WHERE guild_id = $1 RETURNING guild_id, data, seeded_from_env, updated_at`,
-            [guildId, JSON.stringify(clean), actor.userId || null]);
-        for (const change of changes) {
-            const entry = getSettingEntry(change.key);
-            await client.query(
-                `INSERT INTO ${db.auditTable} (guild_id, user_id, username, module, key, old, new)
-                 VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb)`,
-                [guildId, actor.userId || null, String(actor.username || '').slice(0, 100) || null, actor.module || change.module, change.key,
-                    JSON.stringify(entry.sensitive ? '[hidden]' : change.old ?? null), JSON.stringify(entry.sensitive ? '[hidden]' : change.new ?? null)]);
-        }
-        return { row, changes };
+    const result = await db.withTransaction((client) => writeGuildPatch(client, db, id, patch, actor, env));
+    return afterWrite(id, result, actor, env);
+}
+
+/**
+ * Several guilds' patches in ONE transaction (the settings backup): all are saved, or none.
+ * writes = [{ guildId, patch }] (plain patches). Returns { changes: [{ guildId, key, module, old, new }] }.
+ */
+export async function updateSettingsBatch(writes, actor = {}, env = process.env) {
+    const list = (Array.isArray(writes) ? writes : []).map((w) => ({ guildId: writableGuildId(w.guildId, env), patch: w.patch }));
+    for (const w of list) validatePatch(w.patch, guildRole(w.guildId, env) || 'other');
+    if (!list.length) return { changes: [] };
+    const db = await dbHelpers();
+    const results = await db.withTransaction(async (client) => {
+        const out = [];
+        for (const w of list) out.push(await writeGuildPatch(client, db, w.guildId, w.patch, actor, env));
+        return out;
     });
-    cacheRow(result.row);
-    if (result.changes.length) {
-        logger.info(`Settings changed in ${guildId} by ${actor.userId || 'unknown'}: ${result.changes.map((c) => c.key).join(', ')}`);
-    }
-    const settings = {};
-    for (const key of keys) settings[key] = resolveSetting(guildId, key, env);
-    return { changes: result.changes, settings };
+    const changes = [];
+    results.forEach((result, i) => {
+        afterWrite(list[i].guildId, result, actor, env);
+        changes.push(...result.changes.map((c) => ({ guildId: list[i].guildId, ...c })));
+    });
+    return { changes };
 }
 
 /** Recent dashboard_audit rows of a guild, newest first. */

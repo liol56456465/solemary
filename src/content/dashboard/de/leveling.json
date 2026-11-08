@@ -39,7 +39,8 @@
     "announce": "Level-Ups ankündigen",
     "announceHelp": "Aus: Mitglieder steigen trotzdem auf, aber es wird keine Nachricht gepostet.",
     "message": "Level-Up-Nachricht",
-    "messageHelp": "Du kannst {user} (erwähnt das Mitglied) und {level} (das neue Level) verwenden."
+    "messageHelp": "Du kannst {user} (erwähnt das Mitglied) und {level} (das neue Level) verwenden.",
+    "defaultMessage": "{user} ist jetzt Level {level}."
   },
   "card": {
     "title": "Level-Up-Karte",

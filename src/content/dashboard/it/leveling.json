@@ -39,7 +39,8 @@
     "announce": "Annuncia i nuovi livelli",
     "announceHelp": "Disattivato: i membri salgono comunque di livello, ma non viene pubblicato nessun messaggio.",
     "message": "Messaggio di livello",
-    "messageHelp": "Puoi usare {user} (menziona il membro) e {level} (il suo nuovo livello)."
+    "messageHelp": "Puoi usare {user} (menziona il membro) e {level} (il suo nuovo livello).",
+    "defaultMessage": "{user} ora è al livello {level}."
   },
   "card": {
     "title": "Scheda livello",

@@ -100,6 +100,29 @@ export async function saveRegistry(ctx, patch, module) {
 }
 
 /**
+ * A read-modify-write of registry settings under the row lock (updateSettings with a build
+ * function): build(valueOf) gets the locked current values and returns the patch (or null / {}
+ * for nothing; it may throw an InputError to refuse, and nothing is written then). All `keys`
+ * must live on the same server row. Returns an action result like saveRegistry.
+ */
+export async function saveRegistryWith(ctx, keys, build, module) {
+    const other = isOtherGuild(ctxGuildId(ctx), envOf(ctx));
+    const guildIds = new Set();
+    for (const key of keys) {
+        const guildId = registryGuildId(ctx, key);
+        if (!guildId) {
+            const label = getSettingEntry(key).label;
+            throw new InputError(textFor(ctx).t(other ? 'common.homeOnlySetting' : 'common.serverNotConfigured', { label }));
+        }
+        guildIds.add(guildId);
+    }
+    if (guildIds.size !== 1) throw new Error(`saveRegistryWith: ${keys.join(', ')} are not on one server row`);
+    const [guildId] = guildIds;
+    const result = await ctx.services.updateSettings(guildId, build, { userId: ctx.actor.userId, username: ctx.actor.username, module }, ctx.env);
+    return { changes: result.changes.map((c) => ({ key: c.key, old: c.old, new: c.new })), audited: true };
+}
+
+/**
  * The current value of a registry key on this dashboard. Home servers: the registry's server,
  * as before (getSetting, which equals resolveSetting there). Any other server: resolveSetting
  * of its own row (no env or home fallbacks), neutralValue() for a key it does not have.

@@ -45,7 +45,8 @@
     "managed": "{label} : {role} est géré par une intégration ou un bot.",
     "problem": "{label} : {problem}",
     "userId": "{label} doit être un identifiant d’utilisateur Discord (17 à 20 chiffres).",
-    "listItem": "{label} {number}"
+    "listItem": "{label} {number}",
+    "tooMany": "Trop d’éléments : {max} au maximum ({count} envoyés)."
   },
   "warn": {
     "channelGone": "le salon {id} n’existe plus",
