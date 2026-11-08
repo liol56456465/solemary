@@ -41,8 +41,8 @@ export function topic(title, line, cards, { key = slug(title) } = {}) {
     const inner = String(html`${cards}`).replace(/<h2 class="card-title"([^>]*)>([\s\S]*?)<\/h2>/g, '<h3 class="card-title"$1>$2</h3>');
     return html`<section class="topic" id="g-${key}"><header class="topic-head"><h2>${title}</h2>${line ? html`<p>${line}</p>` : ''}</header><div class="card-grid">${raw(inner)}</div></section>`;
 }
-import { guildIdFor } from '../../settings/guildSettings.js';
-import { getSettingEntry } from '../../settings/settingsRegistry.js';
+import { guildIdFor, isOtherGuild, resolveSetting, settingGuildId } from '../../settings/guildSettings.js';
+import { getSettingEntry, neutralValue } from '../../settings/settingsRegistry.js';
 import { InputError, intField } from '../forms.js';
 
 export const MINUTE = 60 * 1000;
@@ -56,20 +56,38 @@ export function table(headers, rows, empty = currentText().t('frame.module.none'
 ${rows.map((cells) => html`<tr>${cells.map((c) => html`<td>${c}</td>`)}</tr>`)}</tbody></table></div>`;
 }
 
-/** The guild id a registry key lives on (main or support). */
-export function registryGuildId(key, env = process.env) {
-    return guildIdFor(getSettingEntry(key).guild, env);
+const envOf = (ctx) => ctx?.env || process.env;
+
+/** The server the dashboard request is for: ctx.guildId, else the main server. */
+function ctxGuildId(ctx) {
+    return (typeof ctx?.guildId === 'string' && ctx.guildId.trim()) || guildIdFor('main', envOf(ctx));
+}
+
+/**
+ * The guild id a registry key is read from / saved to on this dashboard (settingGuildId):
+ * in Mewvo's home servers the registry's main or support server, as before; in any other
+ * server ctx.guildId, or null for support-server and homeOnly keys (it has none of its own).
+ * The old form registryGuildId(key, env) (no ctx) still means "the main server's dashboard".
+ */
+export function registryGuildId(ctx, key) {
+    if (typeof ctx === 'string') return settingGuildId(null, ctx, key || process.env); // old form (key, env)
+    return settingGuildId(ctxGuildId(ctx), key, envOf(ctx));
 }
 
 /**
  * Saves registry settings (guild_settings) through the settings service, which validates
- * them and writes the dashboard_audit rows itself. Returns an action result.
+ * them and writes the dashboard_audit rows itself. Returns an action result. A server other
+ * than Mewvo's own writes only its own row (ctx.guildId); a key it does not have is refused.
  */
 export async function saveRegistry(ctx, patch, module) {
+    const other = isOtherGuild(ctxGuildId(ctx), envOf(ctx));
     const byGuild = new Map();
     for (const [key, value] of Object.entries(patch)) {
-        const guildId = registryGuildId(key, ctx.env);
-        if (!guildId) throw new InputError(textFor(ctx).t('common.serverNotConfigured', { label: getSettingEntry(key).label }));
+        const guildId = registryGuildId(ctx, key);
+        if (!guildId) {
+            const label = getSettingEntry(key).label;
+            throw new InputError(textFor(ctx).t(other ? 'common.homeOnlySetting' : 'common.serverNotConfigured', { label }));
+        }
         if (!byGuild.has(guildId)) byGuild.set(guildId, {});
         byGuild.get(guildId)[key] = value;
     }
@@ -81,9 +99,16 @@ export async function saveRegistry(ctx, patch, module) {
     return { changes, audited: true };
 }
 
-/** The current value of a registry key. */
+/**
+ * The current value of a registry key on this dashboard. Home servers: the registry's server,
+ * as before (getSetting, which equals resolveSetting there). Any other server: resolveSetting
+ * of its own row (no env or home fallbacks), neutralValue() for a key it does not have.
+ */
 export function registryValue(ctx, key) {
-    return ctx.services.getSetting(registryGuildId(key, ctx.env), key, ctx.env);
+    const guildId = registryGuildId(ctx, key);
+    if (!isOtherGuild(ctxGuildId(ctx), envOf(ctx))) return ctx.services.getSetting(guildId, key, ctx.env);
+    if (!guildId) return neutralValue(getSettingEntry(key));
+    return (ctx.services.resolveSetting || resolveSetting)(guildId, key, envOf(ctx));
 }
 
 /** A duration field typed in `unitMs` units (days, minutes, …), returned in ms. */

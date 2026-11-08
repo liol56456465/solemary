@@ -12,8 +12,10 @@ import { findMutedRole } from '../enforcement/muteService.js';
 import { formatDuration } from '../enforcement/format.js';
 import { query, T } from '../enforcement/db.js';
 import { getLockdownState } from '../automod/raidService.js';
-import { SETTINGS } from '../settings/settingsRegistry.js';
-import { getSetting, guildIdFor, settingSource } from '../settings/guildSettings.js';
+import { SETTINGS, neutralValue } from '../settings/settingsRegistry.js';
+import {
+    getSetting, guildIdFor, isOtherGuild, resolveSetting, resolvedSource, settingGuildId, settingSource,
+} from '../settings/guildSettings.js';
 import { html, icon, layout, navItems, navLabel, path, raw, timeTag, typeBadge } from './html.js';
 import { currentText, dashboardText } from './language.js';
 import { moduleEntries, setupByModule } from './modulesPage.js';
@@ -154,11 +156,24 @@ export function gettingStarted({ config, welcome, settings, mutedRole, permissio
     }));
 }
 
-/** The guild settings the checklist looks at (mod log, review, alerts, muted role, appeals category, banned role, warning roles). */
-function setupSettings() {
+/** One registry setting as the dashboard of `guildId` shows it: { guildId (whose row, or null), value, source }. */
+function viewedSetting(guildId, entry, env) {
+    const owner = settingGuildId(guildId, entry.key, env);
+    if (!isOtherGuild(guildId, env)) {
+        return { guildId: owner, value: getSetting(owner, entry.key, env), source: settingSource(owner, entry.key, env) };
+    }
+    if (!owner) return { guildId: null, value: neutralValue(entry), source: 'default' };
+    return { guildId: owner, value: resolveSetting(owner, entry.key, env), source: resolvedSource(owner, entry.key, env) };
+}
+
+/**
+ * The guild settings the checklist looks at (mod log, review, alerts, muted role, appeals category,
+ * banned role, warning roles), as the dashboard of `guildId` sees them (home servers: as before).
+ */
+function setupSettings(guildId, env = process.env) {
     const settings = {};
     for (const key of ['modLogChannelId', 'reviewChannelId', 'alertsChannelId', 'mutedRoleId', 'appealsCategoryId', 'bannedRoleId', 'warnRoleIds']) {
-        settings[key] = getSetting(guildIdFor(SETTINGS.find((e) => e.key === key).guild), key);
+        settings[key] = viewedSetting(guildId, SETTINGS.find((e) => e.key === key), env).value;
     }
     return settings;
 }
@@ -188,7 +203,13 @@ export async function collectChecklist({ client, guildId, data = defaultOverview
         attempt(() => data.getAppealPanelPosting(guildId)),
     ]);
     if (config === undefined) return null;
-    const settings = setupSettings();
+    // Another server's settings not readable (database down): no checklist rather than a wrong one.
+    let settings;
+    try {
+        settings = setupSettings(guildId);
+    } catch {
+        return null;
+    }
     const permissions = permissionsFor(guild, { config, welcome, settings, mutedRole });
     return gettingStarted({ config, welcome, settings, mutedRole, permissions, appealPanel, supportServer: hasSupportServer(guildId) });
 }
@@ -219,7 +240,7 @@ export async function collectOverview({ client, guildId, data = defaultOverviewD
     const online = presences && presences.size > 0
         ? [...presences.values()].filter((p) => p.status && p.status !== 'offline').length
         : null;
-    const settings = setupSettings();
+    const settings = setupSettings(guildId);
     const permissions = permissionsFor(guild, { config, welcome, settings, mutedRole });
     return {
         now,
@@ -498,16 +519,18 @@ function displayValue(client, guildId, entry, value) {
     }
 }
 
-/** Rows for settingsSection(): every registry setting of a module, with its current value and source. */
-export function settingsRowsFor(client, module, env = process.env) {
+/**
+ * Rows for settingsSection(): every registry setting of a module, with its current value and
+ * source, as the dashboard of `guildId` (default: the main server) sees it.
+ */
+export function settingsRowsFor(client, module, guildId = guildIdFor('main'), env = process.env) {
     return SETTINGS.filter((entry) => entry.module === module).map((entry) => {
-        const guildId = guildIdFor(entry.guild, env);
-        const value = getSetting(guildId, entry.key, env);
+        const viewed = viewedSetting(guildId, entry, env);
         return {
             key: entry.key,
             label: entry.label,
-            display: displayValue(client, guildId, entry, value),
-            source: settingSource(guildId, entry.key, env),
+            display: displayValue(client, viewed.guildId, entry, viewed.value),
+            source: viewed.source,
         };
     });
 }

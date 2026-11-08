@@ -19,6 +19,7 @@ const CH = (n) => `5${runId}000000${String(n).padStart(2, '0')}`;
 const ADMIN = `6${runId}00000003`;
 const OTHER = `7${runId}00000004`; // not a home server
 const MAIN2 = `7${runId}00000005`; // a main server whose row already has values before the seed
+const OTHER2 = `7${runId}00000006`; // a non-home server the dashboard saves settings for (B3)
 
 const ENV = {
     NODE_ENV: 'test', MAIN_GUILD_ID: MAIN, SUPPORT_GUILD_ID: SUPPORT,
@@ -35,8 +36,8 @@ before(async () => {
 
 after(async () => {
     if (skip) return;
-    await pgDb.pool.query('DELETE FROM guild_settings WHERE guild_id = ANY($1)', [[MAIN, SUPPORT, OTHER, MAIN2]]);
-    await pgDb.pool.query('DELETE FROM dashboard_audit WHERE guild_id = ANY($1)', [[MAIN, SUPPORT, OTHER, MAIN2]]);
+    await pgDb.pool.query('DELETE FROM guild_settings WHERE guild_id = ANY($1)', [[MAIN, SUPPORT, OTHER, MAIN2, OTHER2]]);
+    await pgDb.pool.query('DELETE FROM dashboard_audit WHERE guild_id = ANY($1)', [[MAIN, SUPPORT, OTHER, MAIN2, OTHER2]]);
     gs.resetSettingsCacheForTests();
     await pgDb.disconnect();
 });
@@ -76,7 +77,7 @@ test('loadAllSettings reads rows into memory; invalid stored values fall back to
 test('updateSettings validates, writes, refreshes the cache and audits old → new', { skip }, async () => {
     await assert.rejects(gs.updateSettings(MAIN, { modLogChannelId: 'nope' }, { userId: ADMIN }, ENV), /must be a Discord ID/);
     await assert.rejects(gs.updateSettings(MAIN, { bannedRoleId: CH(3) }, { userId: ADMIN }, ENV), /support server/);
-    await assert.rejects(gs.updateSettings('123456789012345678', { modLogChannelId: CH(3) }, { userId: ADMIN }, ENV), /main or support/);
+    await assert.rejects(gs.updateSettings('not-a-guild', { modLogChannelId: CH(3) }, { userId: ADMIN }, ENV), /Invalid guild id/);
 
     const result = await gs.updateSettings(MAIN, { modLogChannelId: CH(3), massActionLimit: 7 }, { userId: ADMIN, username: 'admin' }, ENV);
     assert.deepEqual(result.changes.map((c) => c.key), ['modLogChannelId'], 'unchanged values are not audited');
@@ -144,4 +145,43 @@ test('settings core: a non-home server reads only its own row, never env or prod
     assert.equal(seeded[OTHER], undefined, 'the seed never touches other servers');
     const { rows: [row] } = await pgDb.pool.query('SELECT data FROM guild_settings WHERE guild_id = $1', [OTHER]);
     assert.deepEqual(row.data, { massActionLimit: 4 });
+});
+
+test('multi-server B3: updateSettings for a non-home server writes its own row + audit rows, never a home row', { skip }, async () => {
+    const homeRows = async () => (await pgDb.pool.query(
+        'SELECT guild_id, data, updated_at FROM guild_settings WHERE guild_id = ANY($1) ORDER BY guild_id', [[MAIN, SUPPORT]])).rows;
+    const homeAudit = async () => Number((await pgDb.pool.query(
+        'SELECT COUNT(*) AS n FROM dashboard_audit WHERE guild_id = ANY($1)', [[MAIN, SUPPORT]])).rows[0].n);
+    const beforeRows = await homeRows();
+    const beforeAudit = await homeAudit();
+    assert.equal((await pgDb.pool.query('SELECT 1 FROM guild_settings WHERE guild_id = $1', [OTHER2])).rowCount, 0);
+
+    // Home-only and support-server keys are refused; nothing is written then.
+    await assert.rejects(gs.updateSettings(OTHER2, { supportServerInvite: 'https://discord.gg/abc' }, { userId: ADMIN }, ENV), /only available in Mewvo's own servers/);
+    await assert.rejects(gs.updateSettings(OTHER2, { bannedRoleId: CH(40) }, { userId: ADMIN }, ENV), /support server/);
+    assert.equal((await pgDb.pool.query('SELECT 1 FROM guild_settings WHERE guild_id = $1', [OTHER2])).rowCount, 0);
+
+    const result = await gs.updateSettings(OTHER2, { modLogChannelId: CH(41), massActionLimit: 7, appealWindowMs: 20 * 86400000 },
+        { userId: ADMIN, username: 'other-admin' }, ENV);
+    // old = neutralValue: no env MOD_LOG_CHANNEL_ID (CH(1)) and no env MASS_ACTION_LIMIT ('7') lent.
+    const byKey = Object.fromEntries(result.changes.map((c) => [c.key, c]));
+    assert.equal(byKey.modLogChannelId.old, null);
+    assert.equal(byKey.massActionLimit.old, 5, 'the generic default, not the env value');
+    assert.equal(byKey.appealWindowMs.old, 30 * 86400000);
+    assert.equal(result.settings.modLogChannelId, CH(41), 'read back via resolveSetting');
+    assert.equal(gs.resolveSetting(OTHER2, 'modLogChannelId', ENV), CH(41));
+    assert.equal(gs.resolveSetting(OTHER2, 'evidenceChannelId', { ...ENV, EVIDENCE_CHANNEL_ID: CH(42) }), null, 'no env for other servers');
+
+    const { rows: [row] } = await pgDb.pool.query('SELECT data, updated_by, seeded_from_env FROM guild_settings WHERE guild_id = $1', [OTHER2]);
+    assert.deepEqual(row.data, { modLogChannelId: CH(41), massActionLimit: 7, appealWindowMs: 20 * 86400000 });
+    assert.equal(row.updated_by, ADMIN);
+    assert.equal(row.seeded_from_env, false);
+    const audit = await gs.listSettingsAudit(OTHER2, 10);
+    assert.deepEqual(audit.map((r) => r.key).sort(), ['appealWindowMs', 'massActionLimit', 'modLogChannelId']);
+    assert.ok(audit.every((r) => r.guild_id === OTHER2 && r.user_id === ADMIN && r.username === 'other-admin'));
+
+    // A home server's value of the same key is untouched, and it keeps reading its own row.
+    assert.deepEqual(await homeRows(), beforeRows, 'home rows unchanged');
+    assert.equal(await homeAudit(), beforeAudit, 'no audit rows for the home servers');
+    assert.notEqual(gs.resolveSetting(MAIN, 'modLogChannelId', ENV), CH(41));
 });
