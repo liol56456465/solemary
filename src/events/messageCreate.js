@@ -30,6 +30,7 @@ import {
   isValidCountingMessage,
   recordCorrectCount,
 } from '../services/countingGameService.js';
+import { featureAvailable, hasIntent } from '../config/intents.js';
 
 const MESSAGE_XP_RATE_LIMIT_ATTEMPTS = 12;
 const MESSAGE_XP_RATE_LIMIT_WINDOW_MS = 10000;
@@ -74,6 +75,8 @@ export default {
 
 // Staff messages in a modmail channel (any server; the link in modmail_links names it) go to the member by DM.
 async function relayModmailStaffMessage(message, client) {
+  // Without Message Content the staff text arrives empty: nothing to relay (warned at startup).
+  if (!featureAvailable('modmailStaffRelay')) return;
   if (!(await modmailUserId(message.channel))) return;
   try {
     const guildConfig = await getGuildConfig(client, message.guild.id);
@@ -85,6 +88,8 @@ async function relayModmailStaffMessage(message, client) {
 }
 
 async function handlePrefixCommand(message, client) {
+  // Without Message Content a prefix command arrives as an empty message (warned at startup).
+  if (!featureAvailable('prefixCommands')) return false;
   try {
     const guildConfig = await getGuildConfig(client, message.guild.id);
     const prefix = guildConfig?.prefix || getCommandPrefix();
@@ -207,6 +212,8 @@ async function handlePrefixCommand(message, client) {
 }
 
 async function handleCountingGame(message, client) {
+  // Without Message Content every count would look empty and be deleted as wrong: leave the channel alone.
+  if (!featureAvailable('counting')) return false;
   try {
     const config = await getCountingGameConfig(client, message.guild.id);
     if (!config.enabled || !config.channelId || message.channel.id !== config.channelId) {
@@ -268,7 +275,8 @@ async function handleLeveling(message, client) {
       return;
     }
 
-    if (!message.content || message.content.trim().length === 0) {
+    // Empty messages earn no XP; without Message Content every text is empty, so the check is skipped then.
+    if (hasIntent('MessageContent') && (!message.content || message.content.trim().length === 0)) {
       return;
     }
 

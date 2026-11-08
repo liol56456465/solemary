@@ -3,13 +3,14 @@ import './config/loadEnv.js';
 import { testMode, installGuildAllowlist, describeTestMode } from './config/testMode.js';
 // Exits in the Replit workspace so it never runs next to the deployment.
 import './config/instanceGuard.js';
-import { Client, Collection, Events, GatewayIntentBits, Partials } from 'discord.js';
+import { Client, Collection, Events, Partials } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import express from 'express';
 import cron from 'node-cron';
 
 import config from './config/application.js';
 import { makeCache, sweepers } from './config/clientCache.js';
+import { buildIntents } from './config/intents.js';
 import { initializeDatabase } from './utils/database.js';
 import { getGuildConfig } from './services/config/guildConfig.js';
 import { updateAllServerCounters } from './services/serverstatsService.js';
@@ -67,24 +68,8 @@ import { refreshRates } from './services/site/exchangeRates.js';
 class Mewvo extends Client {
   constructor() {
     super({
-      intents: [
-        
-        GatewayIntentBits.Guilds,                        
-        GatewayIntentBits.GuildMembers,                 
-
-        GatewayIntentBits.GuildMessages,                
-        GatewayIntentBits.GuildMessageReactions,        
-        GatewayIntentBits.MessageContent,               
-        GatewayIntentBits.DirectMessages,
-
-        GatewayIntentBits.GuildVoiceStates,             
-
-        GatewayIntentBits.GuildBans,                    
-
-        // Native Discord AutoMod executions (services/automod/nativeBridge.js); the
-        // events only arrive while the bot has Manage Server.
-        GatewayIntentBits.AutoModerationExecution,
-      ],
+      // Privileged intents (Message Content, Guild Members) can be switched off from env: config/intents.js.
+      intents: buildIntents(),
       // DM channels aren't cached; without this partial, DMs (modmail) never arrive.
       // Message + Reaction: reactions, edits and deletes of uncached (older) messages (starboard).
       partials: [Partials.Channel, Partials.Message, Partials.Reaction],

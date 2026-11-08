@@ -18,10 +18,11 @@
 //   partial: the cache may be missing members (no complete list now); callers that show the
 //            result to staff say so ("based on cached members");
 //   reason:  'fetched' | 'cache' | 'fresh' | 'cooldown' | 'too-large' | 'rate-limited' |
-//            'busy' | 'timeout' | 'failed' | 'no-guild'.
+//            'busy' | 'timeout' | 'failed' | 'no-guild' | 'no-intent'.
 
 import { BoundedMap } from './boundedMap.js';
 import { logger } from './logger.js';
+import { hasIntent } from '../config/intents.js';
 
 export const MIN_GAP_MS = 60_000;
 export const MAX_CONCURRENT = 2;
@@ -147,6 +148,8 @@ export async function fetchAllMembers(guild, {
     now = Date.now,
 } = {}) {
     if (!guild?.members) return result(guild, 'no-guild');
+    // Without the Guild Members intent Discord refuses the member list: the cache is all there is.
+    if (!hasIntent('GuildMembers')) return result(guild, 'no-intent');
     if (cacheIsComplete(guild)) return result(guild, 'cache', { partial: false });
 
     const total = Number(guild.memberCount) || 0;
