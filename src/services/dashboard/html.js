@@ -5,10 +5,12 @@
 // are joined. null / undefined / false render as nothing. There is no other way to
 // put text into a page, so user-provided strings are always escaped.
 
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { ICON_SPRITE_MARKUP, hasIcon } from './icons.js';
 import { allows, levelLabel } from './permissions.js';
+import { isHomeOnlyPage } from './homeOnly.js';
 import { html, raw } from './safeHtml.js';
 import { LANGUAGES, currentLanguage, currentText, dashboardText } from './language.js';
 
@@ -69,9 +71,42 @@ function assetVersion(name) {
 export const CSS_PATH = `${BASE}/static/dashboard.css?v=${assetVersion('dashboard.css')}`;
 export const JS_PATH = `${BASE}/static/dashboard.js?v=${assetVersion('dashboard.js')}`;
 
-/** A dashboard URL: path('/cases') → '/dashboard/cases'. */
+// ── The server of the running request (multi-server B3) ──────────────────
+// The guild router runs each request under /dashboard/<guildId>/… inside runInGuild, so every
+// path() a page or handler builds keeps that prefix (links, form actions, 303 Locations).
+// Global pages (picker, login, theme/lang/nav, Owner area) run outside: path() has no prefix.
+const guildContext = new AsyncLocalStorage();
+
+/** Runs `fn` with `guildId` as the request's server (path() then builds /dashboard/<guildId>/…). */
+export function runInGuild(guildId, fn) {
+    return guildContext.run({ guildId: String(guildId) }, fn);
+}
+
+/** The running request's server id, or null on global pages / outside a request. */
+export function currentGuildId() {
+    return guildContext.getStore()?.guildId || null;
+}
+
+/** A dashboard URL of the current server: path('/cases') → '/dashboard/<guildId>/cases' ('/dashboard/cases' outside one). */
 export function path(suffix = '') {
+    const guildId = currentGuildId();
+    return guildId ? `${BASE}/${guildId}${suffix}` : `${BASE}${suffix}`;
+}
+
+/** A global dashboard URL (never under a server): rootPath('/theme') → '/dashboard/theme'; rootPath() → the server picker. */
+export function rootPath(suffix = '') {
     return `${BASE}${suffix}`;
+}
+
+/** A URL of one server's dashboard: guildPath('123…', '/cases') → '/dashboard/123…/cases'. */
+export function guildPath(guildId, suffix = '') {
+    return `${BASE}/${guildId}${suffix}`;
+}
+
+/** A sidebar entry's link: Owner pages are global, everything else belongs to the current server. */
+export function navHref(key) {
+    const text = String(key || '');
+    return text === 'owner' || text.startsWith('owner/') ? rootPath(`/${text}`) : path(`/${text}`);
 }
 const ACTION_ICON = { ban: 'nocontact', kick: 'kick', mute: 'mute', warn: 'warn' };
 
@@ -183,7 +218,11 @@ export function groupLabel(group, tr = currentText()) {
  * empty are dropped. Without one (logged-out pages, tests) everything, as before.
  */
 export function navGroups(session = null, access = null) {
-    const groups = session?.isOwner ? [...NAV, OWNER_NAV] : NAV;
+    // Home-only pages (homeOnly.js) are hidden in other servers (the router 404s them there).
+    const nav = session?.isHomeServer === false
+        ? NAV.map((group) => ({ ...group, items: group.items.filter((item) => !isHomeOnlyPage(item.key)) }))
+        : NAV;
+    const groups = session?.isOwner ? [...nav, OWNER_NAV] : nav;
     if (!access?.allowed) return groups;
     return groups
         .map((group) => (group === OWNER_NAV ? group : { ...group, items: group.items.filter((item) => allows(access, `page:${item.key}`)) }))
@@ -217,7 +256,7 @@ function navSwitch(session, access, active, back, tr) {
     const all = navModeFrom(session?.navMode) === 'all';
     const hidden = hiddenCount(session, access, active);
     if (!all && !hidden) return '';
-    return html`<a class="nav-switch" href="${path(`/nav${queryString({ mode: all ? 'main' : 'all', next: back })}`)}">${all ? tr.t('frame.nav.showMain') : tr.tp('frame.nav.showAll', hidden)}</a>`;
+    return html`<a class="nav-switch" href="${rootPath(`/nav${queryString({ mode: all ? 'main' : 'all', next: back })}`)}">${all ? tr.t('frame.nav.showMain') : tr.tp('frame.nav.showAll', hidden)}</a>`;
 }
 
 /** Every sidebar entry, flattened. */
@@ -239,7 +278,7 @@ const SECTION_ICON = { Moderate: 'enforcement', Community: 'users', 'Server setu
 export function sections(groups = NAV) {
     return groups.map((item) => ({
         key: item.group.toLowerCase().replace(/\s+/g, '-'), label: item.group, icon: SECTION_ICON[item.group] || 'overview',
-        href: path(`/${item.items[0].key}`), items: item.items,
+        href: navHref(item.items[0].key), items: item.items,
     }));
 }
 
@@ -261,7 +300,7 @@ ${visibleNavGroups(session, access, active).map((group) => html`<div class="side
         const on = item.key === active;
         const badge = item.key === 'inbox' && session.inboxCount > 0
             ? html`<span class="nav-badge">${session.inboxCount > 99 ? '99+' : tr.fmtNumber(session.inboxCount)}<span class="sr"> ${tr.t('frame.nav.waiting')}</span></span>` : '';
-        return html`<li><a href="${path(`/${item.key}`)}"${on ? raw(' aria-current="page"') : ''}><span class="side-text">${navLabel(item, tr)}</span>${badge}${state === null ? ''
+        return html`<li><a href="${navHref(item.key)}"${on ? raw(' aria-current="page"') : ''}><span class="side-text">${navLabel(item, tr)}</span>${badge}${state === null ? ''
             : html`<span class="dot ${state ? 'dot-on' : 'dot-off'}"><span class="sr">${state ? tr.t('frame.state.on') : tr.t('frame.state.off')}</span></span>`}</a></li>`;
     })}</ul></div>`)}
 ${navSwitch(session, access, active, back, tr)}
@@ -283,9 +322,9 @@ function tabBar(active, theme, back, session, access, tr) {
     const main = sections(groups).slice(0, 3);
     return html`<nav class="tabbar" aria-label="${tr.t('frame.tabbar.label')}"><a href="${path('/overview')}"${active === 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon('overview')}<span>${tr.t('frame.tabbar.home')}</span></a>${main.map((sec) => html`<a href="${sec.href}"${current?.key === sec.key && active !== 'overview' ? raw(' class="on" aria-current="true"') : ''}>${icon(sec.icon)}<span>${sec.label === 'Server setup' ? tr.t('frame.tabbar.setup') : groupLabel(sec.label, tr)}</span></a>`)}
 <details class="more menu-wrap"><summary${current && !main.some((sec) => sec.key === current.key) ? raw(' class="on"') : ''}>${icon('menu')}<span>${tr.t('frame.tabbar.more')}</span></summary><div class="more-sheet">
-${sections(visibleNavGroups(session, access, active)).map((sec) => html`<p class="more-group">${groupLabel(sec.label, tr)}</p>${sec.items.map((item) => html`<a href="${path(`/${item.key}`)}"${item.key === active ? raw(' aria-current="page"') : ''}>${navLabel(item, tr)}</a>`)}`)}
+${sections(visibleNavGroups(session, access, active)).map((sec) => html`<p class="more-group">${groupLabel(sec.label, tr)}</p>${sec.items.map((item) => html`<a href="${navHref(item.key)}"${item.key === active ? raw(' aria-current="page"') : ''}>${navLabel(item, tr)}</a>`)}`)}
 ${navSwitch(session, access, active, back, tr)}
-${themePicker(theme, back, 'sheet', tr)}<div class="more-foot"><a href="/">${icon('home')}${tr.t('frame.tabbar.website')}</a><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}${tr.t('frame.user.logout')}</button></form></div></div></details></nav>`;
+${themePicker(theme, back, 'sheet', tr)}<div class="more-foot"><a href="/">${icon('home')}${tr.t('frame.tabbar.website')}</a><form method="post" action="${rootPath('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}${tr.t('frame.user.logout')}</button></form></div></div></details></nav>`;
 }
 
 // Themes (same tokens and layout, ten palettes): "system" follows the device (Paper or Graphite).
@@ -310,13 +349,13 @@ function themePicker(theme, back, id, tr) {
     const inUse = tr.lang === 'en' ? '' : html` data-in-use="${tr.t('frame.theme.inUse')}"`;
     return html`<div class="theme-picker"><p class="theme-picker-title" id="theme-${id}">${tr.t('frame.theme.title')}</p><div class="theme-list" role="radiogroup" aria-labelledby="theme-${id}">${THEMES.map((key) => {
         const on = key === theme;
-        return html`<a class="theme-opt" href="${path(`/theme${queryString({ mode: key, next: back })}`)}" role="radio" aria-checked="${on ? 'true' : 'false'}" tabindex="${on ? '0' : '-1'}" data-theme-pick="${key}"${inUse}>${tr.t(`frame.theme.${key}`)}</a>`;
+        return html`<a class="theme-opt" href="${rootPath(`/theme${queryString({ mode: key, next: back })}`)}" role="radio" aria-checked="${on ? 'true' : 'false'}" tabindex="${on ? '0' : '-1'}" data-theme-pick="${key}"${inUse}>${tr.t(`frame.theme.${key}`)}</a>`;
     })}</div></div>`;
 }
 
 /**
- * The server switcher in the top bar. The dashboard manages one server for now (the login
- * asks Discord for `identify` only, so it cannot list other servers); the menu says so.
+ * The server switcher in the top bar: the server being managed and a link to the server
+ * picker (GET /dashboard: every server the viewer may manage, re-checked live).
  */
 function serverSwitch(server, tr) {
     if (!server) return '';
@@ -325,16 +364,17 @@ function serverSwitch(server, tr) {
         : '');
     return html`<details class="server-switch menu-wrap"><summary aria-label="${tr.t('frame.server.label', { name: server.name })}">${avatar(24)}<span class="server-name">${server.name}</span>${icon('chevron', 'icon icon-down')}</summary>
 <div class="menu"><p class="menu-item is-current">${avatar(24)}<span class="server-text"><span class="server-name">${server.name}</span><span class="server-sub">${tr.t('frame.server.sub')}</span></span></p>
+<a class="menu-item menu-link" href="${rootPath()}">${icon('server')}${tr.t('frame.server.switch')}</a>
 <p class="menu-note">${tr.t('frame.server.note')}</p></div></details>`;
 }
 
-const LEVEL_KEY = { Moderator: 'moderator', 'View and settings (bot owner)': 'ownerView', Administrator: 'administrator' };
+const LEVEL_KEY = { Moderator: 'frame.user.level.moderator', 'View and settings (bot owner)': 'frame.user.level.ownerView', Administrator: 'frame.user.level.administrator', 'Manage Server': 'general.access.levelManager' };
 
 function userMenu(session, access, theme = 'system', back = path('/overview'), tr = currentText()) {
     const level = levelLabel(access);
     return html`<details class="user-menu menu-wrap"><summary aria-label="${tr.t('frame.user.label', { name: session.username })}"><span class="user-name">${session.username}</span></summary>
-<div class="menu"><p class="menu-meta"><strong>${session.username}</strong><br><span class="muted">${LEVEL_KEY[level] ? tr.t(`frame.user.level.${LEVEL_KEY[level]}`) : level}</span></p>
-${themePicker(theme, back, 'menu', tr)}<a class="menu-item menu-link" href="/">${icon('home')}${tr.t('frame.nav.website')}</a><form method="post" action="${path('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}${tr.t('frame.user.logout')}</button></form></div></details>`;
+<div class="menu"><p class="menu-meta"><strong>${session.username}</strong><br><span class="muted">${LEVEL_KEY[level] ? tr.t(LEVEL_KEY[level]) : level}</span></p>
+${themePicker(theme, back, 'menu', tr)}<a class="menu-item menu-link" href="/">${icon('home')}${tr.t('frame.nav.website')}</a><form method="post" action="${rootPath('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}${tr.t('frame.user.logout')}</button></form></div></details>`;
 }
 
 /**
@@ -345,7 +385,7 @@ ${themePicker(theme, back, 'menu', tr)}<a class="menu-item menu-link" href="/">$
 function languagePicker(back, tr) {
     const current = LANGUAGES.find((l) => l.code === tr.lang) || LANGUAGES[0];
     return html`<details class="lang-switch menu-wrap"><summary class="icon-button lang-button" aria-label="${tr.t('frame.language.label', { name: current.name })}"><span class="lang-code" aria-hidden="true">${current.code.slice(0, 2).toUpperCase()}</span></summary>
-<div class="menu"><p class="menu-meta">${tr.t('frame.language.title')}</p>${LANGUAGES.map((l) => html`<a class="menu-item menu-link" href="${path(`/lang${queryString({ code: l.code, next: back })}`)}" lang="${l.code}" hreflang="${l.code}"${l.code === current.code ? raw(' aria-current="true"') : ''}>${l.name}</a>`)}</div></details>`;
+<div class="menu"><p class="menu-meta">${tr.t('frame.language.title')}</p>${LANGUAGES.map((l) => html`<a class="menu-item menu-link" href="${rootPath(`/lang${queryString({ code: l.code, next: back })}`)}" lang="${l.code}" hreflang="${l.code}"${l.code === current.code ? raw(' aria-current="true"') : ''}>${l.name}</a>`)}</div></details>`;
 }
 
 /**
@@ -409,5 +449,7 @@ export function unsavedAttr(tr = currentText()) {
 /** A plain message page (errors, 403, …). `title` and `message` come translated (or English). */
 export function messagePage(title, message, session = null, extra = {}) {
     const tr = dashboardText(extra.lang || session?.lang || currentLanguage());
-    return layout({ title, session, ...extra, lang: tr.lang, body: html`<div class="message card"><h1>${title}</h1><p>${message}</p><p class="message-actions">${session ? html`<a class="button-link" href="${path('/overview')}">${tr.t('frame.message.backOverview')}</a>` : html`<a class="button-link" href="/">${tr.t('frame.message.backHome')}</a>`}</p></div>` });
+    return layout({ title, session, ...extra, lang: tr.lang, body: html`<div class="message card"><h1>${title}</h1><p>${message}</p><p class="message-actions">${session && currentGuildId() ? html`<a class="button-link" href="${path('/overview')}">${tr.t('frame.message.backOverview')}</a>`
+        : session ? html`<a class="button-link" href="${rootPath()}">${tr.t('frame.message.backServers')}</a>`
+            : html`<a class="button-link" href="/">${tr.t('frame.message.backHome')}</a>`}</p></div>` });
 }

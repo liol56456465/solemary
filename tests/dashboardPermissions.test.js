@@ -302,7 +302,7 @@ test('moderator: every Administrator-only page gets 403 with a clear message (si
         const res = await get(h, h.d.modulePage, p, { module: p.slice(1) });
         assert.equal(res.statusCode, 403, p);
         assert.equal(res.passed, false, `${p}: no handler ran`);
-        assert.match(res.body, /This needs Administrator in the main server\. As a moderator you can use/);
+        assert.match(res.body, /This needs Administrator in this server\. As a moderator you can use/);
     }
     assert.ok(await h.sessions.get(h.session.id), 'a forbidden page does not log the moderator out');
 });
@@ -398,21 +398,22 @@ test('moderator: timeout works; hierarchy (equal or higher role) still refuses; 
     assert.match(blocked.body, /mass-action guard/);
 });
 
-test('moderator: role removed since login → POSTs refused on the fresh fetch; then the whole dashboard once the cache expires', async () => {
+test('moderator: role removed since login → POSTs refused on the fresh check; then the server 404s once the cache expires (session kept)', async () => {
     const h = await setup();
     assert.equal((await get(h, null, '/overview')).passed, true);
     h.state.modHasRole = false; // removed in Discord; the access decision is still cached (60 s)
+    // B3: every POST checks access fresh (the cached GET answer is not used): this server's 404.
     const timeout = await post(h, h.d.enforcement.timeout, `/users/${TARGET}/timeout`, { params: { id: TARGET }, form: { duration: '1h' } });
-    assert.equal(timeout.statusCode, 403);
-    assert.match(timeout.body, /moderator role or Administrator/);
+    assert.equal(timeout.statusCode, 404);
+    assert.match(timeout.body, /Server not found/);
     const preview = await post(h, h.d.enforcement.actionPreview, `/users/${TARGET}/action/preview`, { params: { id: TARGET }, form: { type: 'warn', reason: 'spam' } });
-    assert.equal(preview.statusCode, 403);
+    assert.equal(preview.statusCode, 404);
     assert.equal(h.guild.memberCalls.length, 0);
     h.access.forget(MOD);
     const after = await get(h, null, '/overview');
-    assert.equal(after.statusCode, 403);
-    assert.match(after.body, /no longer an administrator or moderator/);
-    assert.equal(await h.sessions.get(h.session.id), null, 'session ended');
+    assert.equal(after.statusCode, 404);
+    assert.match(after.body, /Server not found or you can&#39;t manage it/);
+    assert.ok(await h.sessions.get(h.session.id), 'session kept: only this server is closed');
 });
 
 test('Owner area unaffected: 404 for a moderator, still open to OWNER_IDS', async () => {

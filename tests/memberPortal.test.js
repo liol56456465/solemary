@@ -298,14 +298,15 @@ test('a member session is never accepted at /dashboard', async () => {
     try {
         const { value, cookie } = await login(app);
         const id = value.slice(0, value.lastIndexOf('.'));
-        // Positive control: a real dashboard session is recognised (then refused by access: 403, not a login redirect).
+        // Positive control: a real dashboard session is recognised (then refused: the bot is not in
+        // the server here → the uniform 404, not a login redirect).
         const dash = await app.dashSessions.create({ userId: MEMBER, username: 'm' });
-        const control = await app.request('/dashboard/overview', { cookie: `${SESSION_COOKIE}=${encodeURIComponent(signValue(dash.id, SECRET))}` });
-        assert.equal(control.status, 403);
+        const control = await app.request(`/dashboard/${GUILD}/overview`, { cookie: `${SESSION_COOKIE}=${encodeURIComponent(signValue(dash.id, SECRET))}` });
+        assert.equal(control.status, 404);
         for (const c of [cookie, `${SESSION_COOKIE}=${encodeURIComponent(value)}`, `${SESSION_COOKIE}=${encodeURIComponent(signValue(id, SECRET))}`]) {
-            const res = await app.request('/dashboard/overview', { cookie: c });
+            const res = await app.request(`/dashboard/${GUILD}/overview`, { cookie: c });
             assert.equal(res.status, 302, c);
-            assert.equal(res.headers.get('location'), '/dashboard');
+            assert.equal(res.headers.get('location'), `/dashboard?r=${encodeURIComponent(`/dashboard/${GUILD}/overview`)}`, 'to the login, coming back here');
         }
     } finally {
         await app.close();

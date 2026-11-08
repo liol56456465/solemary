@@ -552,7 +552,7 @@
     // The only network read of this script: GET of the same-origin JSON endpoint named in the
     // attribute (session cookie, Administrator checked per request, rate limited). Without this,
     // the field still takes an ID or @mention and links to the server-rendered search page.
-    const MEMBER_SEARCH_PATH = /^\/dashboard\/members\/search\.json(\?bans=1)?$/;
+    const MEMBER_SEARCH_PATH = /^\/dashboard(\/\d{17,20})?\/members\/search\.json(\?bans=1)?$/;
     let memberListCount = 0;
 
     function setupMemberSearch(input) {

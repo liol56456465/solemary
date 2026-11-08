@@ -446,8 +446,9 @@ test('an administrator who lost Administrator since login is refused when the me
     // Access is cached for 60 s, but the member is fetched fresh before executing.
     admins.delete(ADMIN);
     const res = await post(h, h.d.enforcement.actionExecute, { params: { id: TARGET }, form: { token, fh } });
-    assert.equal(res.statusCode, 403);
-    assert.match(res.body, /Administrator/);
+    // B3: every POST checks access fresh in requireUser; no access in this server → its uniform 404.
+    assert.equal(res.statusCode, 404);
+    assert.match(res.body, /Server not found/);
     assert.equal(serviceCalls(h, ['executeAction']).length, 0);
 });
 
@@ -1142,8 +1143,8 @@ test('member page: an admin who lost Administrator since login cannot change rol
     admins.delete(ADMIN); // the access check on the request is cached; the member fetch is not
     for (const [handler, form] of [[h.d.enforcement.roleAdd, { roleId: '600000000000000002' }], [h.d.enforcement.nickname, { nickname: 'x' }], [h.d.enforcement.timeout, { duration: '1h' }]]) {
         const res = await post(h, handler, { params: { id: TARGET }, form });
-        assert.equal(res.statusCode, 403);
-        assert.match(res.body, /Administrator/);
+        assert.equal(res.statusCode, 404, 'fresh access check on the POST (B3)');
+        assert.match(res.body, /Server not found/);
     }
     assert.equal(h.guild.memberCalls.length, 0, 'nothing reached Discord');
 });
@@ -1288,7 +1289,7 @@ test('member page: Unverify is hidden when verification is off; refused for unve
     assert.equal((await get(lost, lost.d.enforcement.userPage, { params: { id: TARGET } })).statusCode, 200);
     admins.delete(ADMIN);
     const res = await post(lost, lost.d.enforcement.unverify, { params: { id: TARGET }, form: {} });
-    assert.equal(res.statusCode, 403);
+    assert.equal(res.statusCode, 404, 'fresh access check on the POST (B3)');
     assert.deepEqual(unverifyOverrides.calls, [], 'removeVerification never ran');
 });
 

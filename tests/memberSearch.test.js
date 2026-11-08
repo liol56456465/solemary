@@ -189,7 +189,7 @@ test('search page: logged out → login; not an Administrator → refused; no qu
     assert.equal(out.statusCode, 302);
     const stranger = await setup({ userId: STRANGER });
     const refused = await get(stranger, stranger.d.memberSearch, { q: 'bob' });
-    assert.equal(refused.statusCode, 403);
+    assert.equal(refused.statusCode, 404, 'no access in this server: its uniform 404');
     assert.equal(stranger.world.searches.length, 0, 'no Discord call');
     const empty = await get(h, h.d.memberSearch, { for: 'user_a', back: '/dashboard/nocontact' });
     assert.equal(empty.statusCode, 200);
@@ -237,5 +237,5 @@ test('JSON: results as JSON (application/json, no-store headers come from the ro
     assert.deepEqual(JSON.parse((await get(h, h.d.memberSearchJson, {}, {}, '/members/search.json')).body), { results: [] });
     assert.equal(searchJson({ a: '</script>&' }), '{"a":"\\u003c/script\\u003e\\u0026"}');
     const stranger = await setup({ userId: STRANGER });
-    assert.equal((await get(stranger, stranger.d.memberSearchJson, { q: 'bob' }, {}, '/members/search.json')).statusCode, 403);
+    assert.equal((await get(stranger, stranger.d.memberSearchJson, { q: 'bob' }, {}, '/members/search.json')).statusCode, 404);
 });

@@ -18,6 +18,17 @@ export function isSnowflake(value) {
     return typeof value === 'string' && SNOWFLAKE.test(value);
 }
 
+/**
+ * The first path segment below /dashboard when it names a server: a snowflake ('/123…/cases' →
+ * '123…'), else null. Anything digit-like that is not a valid id (16 or 21 digits, '123abc') is
+ * `invalid` (one uniform 404); a lowercase word is an old link or a global route.
+ */
+export function guildSegment(segment) {
+    const text = typeof segment === 'string' ? segment : '';
+    if (isSnowflake(text)) return { guildId: text, invalid: false };
+    return { guildId: null, invalid: !/^[a-z][a-z0-9-]*$/.test(text) };
+}
+
 export function hmac(value, secret) {
     return crypto.createHmac('sha256', secret).update(String(value)).digest('base64url');
 }
@@ -44,34 +55,48 @@ export function verifySignedValue(signed, secret) {
 
 // ── OAuth state: signed, expiring, single use, bound to the browser by a nonce cookie ──
 
-/** { state, nonce }: put `nonce` in the state cookie, `state` in the authorize URL. */
-export function createState(secret, now = Date.now()) {
+/** The longest return path a login state carries (longer ones are dropped: back to the picker). */
+export const MAX_RETURN_PATH = 300;
+
+/**
+ * { state, nonce }: put `nonce` in the state cookie, `state` in the authorize URL. `returnTo`
+ * (optional) is the dashboard page to open after the login: signed inside the state, so it
+ * cannot be changed on the way; the callback still checks it again (safeBackPath).
+ */
+export function createState(secret, now = Date.now(), { returnTo = null } = {}) {
     const nonce = crypto.randomBytes(16).toString('base64url');
-    const payload = Buffer.from(JSON.stringify({ n: nonce, e: now + STATE_TTL_MS })).toString('base64url');
+    const data = { n: nonce, e: now + STATE_TTL_MS };
+    if (typeof returnTo === 'string' && returnTo && returnTo.length <= MAX_RETURN_PATH) data.r = returnTo;
+    const payload = Buffer.from(JSON.stringify(data)).toString('base64url');
     return { state: signValue(payload, secret), nonce };
 }
 
 export function createStateStore() {
     const used = new Map(); // nonce → expiry
+    /**
+     * { returnTo } for a correctly signed, unexpired, unused state whose nonce matches the
+     * browser's cookie (returnTo is null when the state has none); marks it used. Else null.
+     */
+    function take(state, cookieNonce, secret, now = Date.now()) {
+        const payload = verifySignedValue(state, secret);
+        if (!payload) return null;
+        let data;
+        try {
+            data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+        } catch {
+            return null;
+        }
+        for (const [nonce, expiresAt] of used) if (expiresAt <= now) used.delete(nonce);
+        if (!data?.n || !(data.e > now) || used.has(data.n)) return null;
+        if (!cookieNonce || !safeEqual(data.n, cookieNonce)) return null;
+        used.set(data.n, data.e);
+        return { returnTo: typeof data.r === 'string' ? data.r : null };
+    }
     return {
-        /**
-         * True for a correctly signed, unexpired, unused state whose nonce matches the
-         * browser's cookie. Marks it used.
-         */
+        take,
+        /** take() as a yes/no. */
         consume(state, cookieNonce, secret, now = Date.now()) {
-            const payload = verifySignedValue(state, secret);
-            if (!payload) return false;
-            let data;
-            try {
-                data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
-            } catch {
-                return false;
-            }
-            for (const [nonce, expiresAt] of used) if (expiresAt <= now) used.delete(nonce);
-            if (!data?.n || !(data.e > now) || used.has(data.n)) return false;
-            if (!cookieNonce || !safeEqual(data.n, cookieNonce)) return false;
-            used.set(data.n, data.e);
-            return true;
+            return take(state, cookieNonce, secret, now) !== null;
         },
         size: () => used.size,
     };

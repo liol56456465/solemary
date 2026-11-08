@@ -107,8 +107,9 @@
   },
   "server": {
     "label": "Server: {name}",
-    "sub": "Server principale · gestito ora",
-    "note": "Per ora si può gestire solo questo server."
+    "sub": "In gestione ora",
+    "note": "Ogni server che puoi gestire è nel tuo elenco dei server.",
+    "switch": "Cambia server"
   },
   "user": {
     "label": "Account: {name}",
@@ -121,7 +122,8 @@
   },
   "message": {
     "backOverview": "Torna alla Panoramica",
-    "backHome": "Torna alla pagina iniziale"
+    "backHome": "Torna alla pagina iniziale",
+    "backServers": "Torna ai tuoi server"
   },
   "module": {
     "readOnly": "Sola lettura: la modifica dalla dashboard è disattivata (DASHBOARD_EDIT_ENABLED non è true). Usa i comandi del bot, oppure chiedi al proprietario di attivarla.",

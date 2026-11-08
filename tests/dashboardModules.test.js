@@ -1048,7 +1048,7 @@ test('every POST action: users without access are refused; admin-only actions re
         for (const [action, c] of Object.entries(CASES[module.key])) {
             const stranger = await setup({ userId: STRANGER });
             const res = await post(stranger, module.key, action, c.form);
-            assert.equal(res.statusCode, 403, `${module.key}/${action} stranger`);
+            assert.equal(res.statusCode, 404, `${module.key}/${action} stranger: no access here → the server's uniform 404`);
             assert.equal(stranger.calls.length, 0);
             const owner = await setup({ userId: OWNER });
             c.seed?.(owner.state, owner.guild);
@@ -3289,7 +3289,7 @@ test('rules: refused without CSRF, with editing off, and for users without acces
     assert.equal((await post(off, 'rules', 'rule-add', { title: 'X' })).statusCode, 403);
     assert.ok(!(await get(off, 'rules')).body.includes('>Add rule</button>'), 'read-only page has no submit');
     const stranger = await setup({ userId: STRANGER });
-    assert.equal((await post(stranger, 'rules', 'rule-add', { title: 'X' })).statusCode, 403);
+    assert.equal((await post(stranger, 'rules', 'rule-add', { title: 'X' })).statusCode, 404);
     for (const x of [h, off, stranger]) assert.equal(x.state.registry.serverRules, undefined);
 });
 
