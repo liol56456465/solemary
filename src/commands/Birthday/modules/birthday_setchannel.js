@@ -3,14 +3,15 @@ import { updateBirthdaySettings } from '../../../services/birthdayService.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { logger } from '../../../utils/logger.js';
 import { canonicalTimeZone, localDateKey } from '../../../utils/timezone.js';
+import { hasAdminAccess } from '../../../utils/commandGate.js';
 
 export default {
     async execute(interaction, config, client) {
-        if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
+        if (!hasAdminAccess(interaction)) {
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
                 .setTitle('Not allowed')
-                .setDescription('You need **Manage Server** permissions to configure the birthday channel.');
+                .setDescription('You need the **Administrator** permission to configure the birthday channel.');
             return InteractionHelper.safeReply(interaction, {
                 embeds: [embed],
                 flags: MessageFlags.Ephemeral,

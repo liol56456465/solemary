@@ -10,7 +10,8 @@ export default {
 
   async execute(oldUser, newUser) {
     try {
-      if (oldUser.bot) return;
+      // A partial old user (Partials.User) has no old name to compare with.
+      if (oldUser.partial || oldUser.bot) return;
 
       if (oldUser.username !== newUser.username || oldUser.globalName !== newUser.globalName) {
         // Main server as before (fetched if not cached); other servers only where the member is

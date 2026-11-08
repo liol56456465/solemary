@@ -137,7 +137,6 @@ async function handleFeed(interaction, sub) {
 
 export default {
     // Admin-only (not in commandAccess.js): community feature setup.
-    scope: 'main',
     slashOnly: true,
     category: 'Community',
     data: new SlashCommandBuilder()

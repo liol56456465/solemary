@@ -12,10 +12,13 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { PLANS } from '../../config/site/plans.js';
 import { PremiumError, planName, premiumSettings, premiumStore } from '../../services/billing/premiumService.js';
 import { afterPremiumChange } from '../../services/billing/premiumEffects.js';
+import { BoundedMap } from '../../utils/boundedMap.js';
 
 const REDEEM_LIMIT = 5;
 const REDEEM_WINDOW_MS = 60_000;
-const tries = new Map(); // user id → [timestamps]
+// Bounded (utils/boundedMap.js): a public bot sees many users; losing the oldest entry only
+// restarts that user's window.
+const tries = new BoundedMap(10_000); // user id → [timestamps]
 
 /** True while a user may try another redeem (5 a minute). Exported for tests. */
 export function allowRedeem(userId, now = Date.now(), store = tries) {
@@ -31,7 +34,10 @@ export function allowRedeem(userId, now = Date.now(), store = tries) {
 
 const GIFT_LIMIT = 3;
 const GIFT_WINDOW_MS = 60 * 60_000;
-const gifts = new Map(); // user id → [timestamps]
+const gifts = new BoundedMap(10_000); // user id → [timestamps]
+
+/** For tests: the two rate-limit stores. */
+export const _rateLimitStores = { tries, gifts };
 
 /** True while a user may send another gift (3 an hour: each one DMs someone). Exported for tests. */
 export function allowGift(userId, now = Date.now(), store = gifts) {

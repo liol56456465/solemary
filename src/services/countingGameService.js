@@ -244,6 +244,19 @@ export async function resetCountingGame(client, guildId, startNumber = 1) {
   }));
 }
 
+function applyCorrectCount(config, userId) {
+  const leaderboard = { ...config.leaderboard };
+  leaderboard[userId] = (leaderboard[userId] || 0) + 1;
+  return {
+    ...config,
+    leaderboard,
+    lastUserId: userId,
+    currentStreak: (config.currentStreak || 0) + 1,
+    bestStreak: Math.max(config.bestStreak || 0, (config.currentStreak || 0) + 1),
+    nextNumber: (config.nextNumber || 1) + 1,
+  };
+}
+
 /**
  * Counts one correct number. expectedNumber is the number the message was checked
  * against; if someone else counted it first, nothing changes.
@@ -251,17 +264,30 @@ export async function resetCountingGame(client, guildId, startNumber = 1) {
 export async function recordCorrectCount(client, guildId, userId, expectedNumber = null) {
   return updateCountingGameConfig(client, guildId, (config) => {
     if (expectedNumber !== null && (config.nextNumber || 1) !== expectedNumber) return config;
-    const leaderboard = { ...config.leaderboard };
-    leaderboard[userId] = (leaderboard[userId] || 0) + 1;
-    return {
-      ...config,
-      leaderboard,
-      lastUserId: userId,
-      currentStreak: (config.currentStreak || 0) + 1,
-      bestStreak: Math.max(config.bestStreak || 0, (config.currentStreak || 0) + 1),
-      nextNumber: (config.nextNumber || 1) + 1,
-    };
+    return applyCorrectCount(config, userId);
   });
+}
+
+/**
+ * Judges one message in the counting channel against the locked, current state (not a cached
+ * copy that a message a moment earlier may have changed) and saves the result in the same step.
+ * Returns 'counted', 'broken' (wrong number or the same person twice; the count restarts at 1),
+ * or 'ignored' (the game is off or this is not its channel any more). The caller deletes the
+ * message and posts the notice only for 'broken'.
+ */
+export async function processCountingMessage(client, guildId, { channelId, userId, content }) {
+  let outcome = 'ignored';
+  await updateCountingGameConfig(client, guildId, (config) => {
+    outcome = 'ignored';
+    if (!config.enabled || !config.channelId || config.channelId !== channelId) return config;
+    if (!isValidCountingMessage(String(content ?? ''), config) || userId === config.lastUserId) {
+      outcome = 'broken';
+      return { ...config, nextNumber: 1, lastUserId: null, currentStreak: 0 };
+    }
+    outcome = 'counted';
+    return applyCorrectCount(config, userId);
+  });
+  return outcome;
 }
 
 export function getCountingSystemChoices() {

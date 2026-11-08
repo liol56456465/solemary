@@ -65,7 +65,7 @@ export default {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('setchannel')
-                .setDescription('Set or disable the channel for birthday announcements. (Manage Server required)')
+                .setDescription('Set or disable the channel for birthday announcements. (Administrator)')
                 .addChannelOption(option =>
                     option
                         .setName('channel')

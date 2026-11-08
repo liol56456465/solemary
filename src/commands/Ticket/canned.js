@@ -10,7 +10,6 @@ import {
 
 // send/list: staff (checked here; open at the gate). add/remove: admin-only (commandAccess.js).
 export default {
-    scope: 'main',
     data: new SlashCommandBuilder()
         .setName('canned')
         .setDescription('Saved answers for staff in tickets, appeals and modmail')

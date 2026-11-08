@@ -1034,7 +1034,3 @@ export async function getTemporaryChannelInfo(client, guildId, channelId) {
         throw error;
     }
 }
-
-function generateCaseId() {
-    return `${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 4)}`;
-}

@@ -141,7 +141,7 @@ test('/case watch: add (member, reason, optional days), list, end', async () => 
     const add = watch.options[0].options;
     assert.deepEqual(add.map((option) => [option.name, Boolean(option.required)]), [['member', true], ['reason', true], ['days', false]]);
     assert.equal(add[2].max_value, WATCH_MAX_DAYS);
-    assert.equal(command.scope, 'main');
+    assert.equal(command.scope, undefined, 'a global command (scope only means something as owner)');
 });
 
 test('alert throttle is per kind: a join alert never swallows the ban case that follows', async () => {

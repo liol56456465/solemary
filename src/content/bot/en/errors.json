@@ -67,5 +67,15 @@
         "admin": "You need the Administrator role to use this command.",
         "adminOther": "You need the Administrator role to use this command. Ask an admin of this server if you need access.",
         "manageServer": "You need the Manage Server or Administrator permission to use this command."
+    },
+    "dispatch": {
+        "unknownCommand": "Sorry, that command does not exist.",
+        "cooldown": "This command is on cooldown. Please wait {time} before trying again.",
+        "disabledHere": "This command has been disabled for this server."
+    },
+    "panel": {
+        "otherModerator": "This panel belongs to another moderator. Run /enforcements yourself.",
+        "serverOnly": "This panel only works in a server.",
+        "noAdmin": "You no longer have the Administrator permission, so this panel is closed."
     }
 }

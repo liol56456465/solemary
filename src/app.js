@@ -72,7 +72,9 @@ class Mewvo extends Client {
       intents: buildIntents(),
       // DM channels aren't cached; without this partial, DMs (modmail) never arrive.
       // Message + Reaction: reactions, edits and deletes of uncached (older) messages (starboard).
-      partials: [Partials.Channel, Partials.Message, Partials.Reaction],
+      // GuildMember + User: guildMemberRemove also fires for members that were not cached
+      // (cache limits, config/clientCache.js); the handler copes with a partial member.
+      partials: [Partials.Channel, Partials.Message, Partials.Reaction, Partials.GuildMember, Partials.User],
       // No message may ping @everyone/@here or a role unless it opts in: user text
       // (prizes, reports, names) ends up in bot messages. Messages that ping a role on
       // purpose list it in their own allowedMentions (tickets, modmail, reminders, feeds).

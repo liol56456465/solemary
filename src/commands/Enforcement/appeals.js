@@ -26,7 +26,6 @@ async function showPending(interaction) {
 
 export default {
     // Every server (B2 global commands); each server sees and decides only its own appeals.
-    scope: 'main',
     data: new SlashCommandBuilder()
         .setName('appeals')
         .setDescription('List pending appeals, see a case in full, or accept/deny an appeal')

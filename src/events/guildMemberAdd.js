@@ -6,7 +6,7 @@ import { getWelcomeConfig } from '../utils/database.js';
 import { formatWelcomeMessage } from '../utils/welcome.js';
 import { resolveWelcomeImageUrl } from '../utils/welcomeImageStore.js';
 import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
-import { getServerCounters, updateCounter } from '../services/serverstatsService.js';
+import { refreshCountersOnMemberChange } from '../services/serverstatsService.js';
 import { setBirthday as dbSetBirthday } from '../utils/database.js';
 import { logger } from '../utils/logger.js';
 import { reapplyMuteOnJoin } from '../services/enforcement/enforcementService.js';
@@ -67,12 +67,12 @@ export default {
             // Rejoining (e.g. after a temporary ban) restores the warning role, in any server
             // (its own warnRoleIds; none set up there → nothing to do).
             await syncWarnRolesQuietly(guild, member.id);
+            // Joins per day for the dashboard's Members → Insights, per server.
+            await recordMemberEvent(guild.id, member.id, 'join').catch((error) => logger.warn(`Join of ${member.id} not recorded: ${error.message}`));
+            // Temporary roles of this server that have not ended yet come back on rejoin.
+            await reapplyTempRolesOnJoin(member).catch((error) => logger.warn(`Temporary roles not given back to ${member.id}: ${error.message}`));
             if (guild.id === enforcementConfig.mainGuildId) {
-                // Joins per day for the dashboard's Members → Insights.
-                await recordMemberEvent(guild.id, member.id, 'join').catch((error) => logger.warn(`Join of ${member.id} not recorded: ${error.message}`));
-                // Temporary roles that have not ended yet come back on rejoin.
-                await reapplyTempRolesOnJoin(member).catch((error) => logger.warn(`Temporary roles not given back to ${member.id}: ${error.message}`));
-                // An active plan gives its supporter role back.
+                // An active plan gives its supporter role back (the supporter role lives in the main server).
                 await syncPremiumRole(member.client, member.id).catch((error) => logger.warn(`Supporter role not given back to ${member.id}: ${error.message}`));
             }
             // Automod on joins, in every server (multi-server B1): each check returns at once
@@ -92,10 +92,8 @@ export default {
             await checkImpersonation(member);
             // Back after a ban that ended recently: automod extra-watch period (/automod extrawatch).
             await startProbationOnJoin(member).catch((error) => logger.warn(`Probation check failed for ${member.id}: ${error.message}`));
-            if (guild.id === enforcementConfig.mainGuildId) {
-                // Role rules (dashboard Members): e.g. "days in the server: 0" gives its role now.
-                await applyRoleRulesToMember(member).catch((error) => logger.warn(`Role rules not applied to ${member.id}: ${error.message}`));
-            }
+            // Role rules of this server (dashboard Members): e.g. "days in the server: 0" gives its role now.
+            await applyRoleRulesToMember(member).catch((error) => logger.warn(`Role rules not applied to ${member.id}: ${error.message}`));
         }
 
         // Rejoin: level data is kept when a member leaves (guildMemberRemove), so give back the
@@ -224,16 +222,9 @@ export default {
             logger.debug('Error logging member join:', error);
         }
 
-        try {
-            const counters = await getServerCounters(member.client, guild.id);
-            for (const counter of counters) {
-                if (counter && counter.type && counter.channelId && counter.enabled !== false) {
-                    await updateCounter(member.client, guild, counter);
-                }
-            }
-        } catch (error) {
-            logger.debug('Error updating counters on member join:', error);
-        }
+        // Counter channels: at most one rename per server per 5 minutes, in the background
+        // (the 15-minute cron catches up).
+        refreshCountersOnMemberChange(member.client, guild);
 
         try {
             const backupKey = `guild:${guild.id}:birthdays:left`;

@@ -5,7 +5,7 @@ import {
     unregisterTemporaryChannel,
     getTemporaryChannelInfo
 } from '../utils/database.js';
-import { formatChannelName } from '../services/joinToCreateService.js';
+import { buildJoinToCreateOverwrites, formatChannelName } from '../services/joinToCreateService.js';
 import { sanitizeInput } from '../utils/validation.js';
 import { logger } from '../utils/logger.js';
 
@@ -21,6 +21,8 @@ const MAX_TRACKED_COOLDOWNS = 10000;
 export default {
     name: 'voiceStateUpdate',
     async execute(oldState, newState, client) {
+        // Mute, deafen, stream or video toggles: the channel did not change, nothing for Join to Create.
+        if (oldState.channelId === newState.channelId) return;
         if (!newState.member || newState.member.user.bot) return;
 
         const guildId = newState.guild.id;
@@ -207,16 +209,14 @@ type: ChannelType.GuildVoice,
                     parent: triggerChannel.parentId,
 userLimit: userLimit === 0 ? undefined : userLimit,
                     bitrate: bitrate,
-                    permissionOverwrites: [
-                        {
-                            id: member.id,
-                            allow: ['Connect', 'Speak', 'PrioritySpeaker', 'MoveMembers']
-                        },
-                        {
-                            id: guild.id,
-                            allow: ['Connect', 'Speak']
-                        }
-                    ]
+                    // The category's (else the trigger's) overwrites, the owner's on top; no @everyone
+                    // allows, so a room in a private category stays private.
+                    permissionOverwrites: buildJoinToCreateOverwrites(triggerChannel.parent ?? triggerChannel, {
+                        guildId: guild.id,
+                        ownerId: member.id,
+                        botId: me.id,
+                        botPermissions: (triggerChannel.parent ?? triggerChannel).permissionsFor?.(me)?.bitfield ?? null,
+                    }),
                 });
 
                 await registerTemporaryChannel(client, guild.id, tempChannel.id, member.id, triggerChannel.id);

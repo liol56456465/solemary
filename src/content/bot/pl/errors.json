@@ -67,5 +67,15 @@
         "admin": "Do tej komendy potrzebujesz roli Administrator.",
         "adminOther": "Do tej komendy potrzebujesz roli Administrator. Jeśli potrzebujesz dostępu, zapytaj admina tego serwera.",
         "manageServer": "Potrzebujesz uprawnienia Zarządzanie serwerem lub Administrator, aby użyć tej komendy."
+    },
+    "dispatch": {
+        "unknownCommand": "Niestety taka komenda nie istnieje.",
+        "cooldown": "Ta komenda jest chwilowo zablokowana. Poczekaj {time} i spróbuj ponownie.",
+        "disabledHere": "Ta komenda jest wyłączona na tym serwerze."
+    },
+    "panel": {
+        "otherModerator": "Ten panel należy do innego moderatora. Uruchom /enforcements samodzielnie.",
+        "serverOnly": "Ten panel działa tylko na serwerze.",
+        "noAdmin": "Nie masz już uprawnienia Administrator, więc ten panel jest zamknięty."
     }
 }

@@ -14,6 +14,7 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { logger } from '../../../utils/logger.js';
 
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
+import { hasAdminAccess } from '../../../utils/commandGate.js';
 
 // The sub-view is recognised by its embed title (old titles still accepted for
 // panels opened before the rename).
@@ -204,8 +205,8 @@ export default {
   prefixOnly: false,
   async execute(interaction, config, client) {
     try {
-      if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-        return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need **Manage Server** permissions to view the logging dashboard.' });
+      if (!hasAdminAccess(interaction)) {
+        return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the **Administrator** permission to view the logging dashboard.' });
       }
 
       await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });

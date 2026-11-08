@@ -5,8 +5,7 @@ import { buildPanel } from '../../handlers/enforcementPanel.js';
 import { assertBotPermissions, assertCanTarget, isAdministrator } from '../../services/enforcement/enforcementService.js';
 
 export default {
-    // Registered as a guild command in MAIN_GUILD_ID only: right-click a member → Apps → Moderate.
-    scope: 'main',
+    // Right-click a member → Apps → Moderate.
     data: new ContextMenuCommandBuilder()
         .setName('Moderate')
         .setType(ApplicationCommandType.User),

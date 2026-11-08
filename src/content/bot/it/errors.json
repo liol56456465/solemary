@@ -67,5 +67,15 @@
         "admin": "Ti serve il ruolo Amministratore per usare questo comando.",
         "adminOther": "Ti serve il ruolo Amministratore per usare questo comando. Chiedi a un admin di questo server se ti serve l’accesso.",
         "manageServer": "Ti serve il permesso Gestisci server o Amministratore per usare questo comando."
+    },
+    "dispatch": {
+        "unknownCommand": "Spiacente, questo comando non esiste.",
+        "cooldown": "Questo comando è in pausa. Aspetta {time} prima di riprovare.",
+        "disabledHere": "Questo comando è disattivato in questo server."
+    },
+    "panel": {
+        "otherModerator": "Questo pannello appartiene a un altro moderatore. Esegui tu /enforcements.",
+        "serverOnly": "Questo pannello funziona solo in un server.",
+        "noAdmin": "Non hai più il permesso di Amministratore, quindi questo pannello è chiuso."
     }
 }

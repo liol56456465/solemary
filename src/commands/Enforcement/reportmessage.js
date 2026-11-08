@@ -15,7 +15,6 @@ export function resetReportCooldowns() {
 
 export default {
     // Every server (multi-server B4): the card goes to that server's review channel. Open to every member.
-    scope: 'main',
     data: new ContextMenuCommandBuilder()
         .setName('Report message')
         .setType(ApplicationCommandType.Message),

@@ -67,5 +67,15 @@
         "admin": "Für diesen Befehl brauchst du die Administrator-Rolle.",
         "adminOther": "Für diesen Befehl brauchst du die Administrator-Rolle. Frag einen Admin dieses Servers, wenn du Zugriff brauchst.",
         "manageServer": "Du brauchst die Berechtigung „Server verwalten“ oder Administrator, um diesen Befehl zu nutzen."
+    },
+    "dispatch": {
+        "unknownCommand": "Diesen Befehl gibt es leider nicht.",
+        "cooldown": "Dieser Befehl ist gerade gesperrt. Bitte warte {time} und versuche es dann noch einmal.",
+        "disabledHere": "Dieser Befehl wurde auf diesem Server deaktiviert."
+    },
+    "panel": {
+        "otherModerator": "Dieses Panel gehört einem anderen Moderator. Führe /enforcements selbst aus.",
+        "serverOnly": "Dieses Panel funktioniert nur auf einem Server.",
+        "noAdmin": "Du hast die Administrator-Berechtigung nicht mehr, deshalb ist dieses Panel geschlossen."
     }
 }

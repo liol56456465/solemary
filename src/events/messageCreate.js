@@ -26,9 +26,7 @@ import { noteStickyActivity } from '../services/community/stickyService.js';
 import { respondToTags } from '../services/community/tagService.js';
 import {
   getCountingGameConfig,
-  resetCountingGame,
-  isValidCountingMessage,
-  recordCorrectCount,
+  processCountingMessage,
 } from '../services/countingGameService.js';
 import { featureAvailable, hasIntent } from '../config/intents.js';
 
@@ -220,23 +218,27 @@ async function handleCountingGame(message, client) {
       return false;
     }
 
-    const content = message.content.trim();
-    const validCount = isValidCountingMessage(content, config);
-    const invalidAttempt = !validCount || message.author.id === config.lastUserId;
+    // The cached config above only filters; the decision is made on the locked state
+    // (countingGameService.processCountingMessage), so two quick messages can't both count.
+    const outcome = await processCountingMessage(client, message.guild.id, {
+      channelId: message.channel.id,
+      userId: message.author.id,
+      content: message.content.trim(),
+    });
+    if (outcome === 'ignored') return false;
 
-    if (invalidAttempt) {
+    if (outcome === 'broken') {
       await message.delete().catch(() => {});
-      await resetCountingGame(client, message.guild.id, 1);
-
-      const failureMessage = await message.channel.send(`<@${message.author.id}> broke the count. Start again from **1**.`);
-      setTimeout(() => {
-        failureMessage.delete().catch(() => {});
-      }, 10000);
-
-      return true;
+      const failureMessage = await message.channel.send({
+        content: `<@${message.author.id}> broke the count. Start again from **1**.`,
+        allowedMentions: { users: [message.author.id] },
+      }).catch(() => null);
+      if (failureMessage) {
+        setTimeout(() => {
+          failureMessage.delete().catch(() => {});
+        }, 10000);
+      }
     }
-
-    await recordCorrectCount(client, message.guild.id, message.author.id, config.nextNumber || 1);
     return true;
   } catch (error) {
     logger.error('Error handling counting game:', error);

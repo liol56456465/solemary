@@ -7,6 +7,7 @@ import { logger } from '../../../utils/logger.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
+import { hasAdminAccess } from '../../../utils/commandGate.js';
 export async function handleCreate(interaction, client) {
     const guild = interaction.guild;
     const type = interaction.options.getString("type");
@@ -20,8 +21,8 @@ export async function handleCreate(interaction, client) {
         return;
     }
 
-    if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels)) {
-        await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need **Manage Channels** permission to create counters.' }).catch(logger.error);
+    if (!hasAdminAccess(interaction)) {
+        await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the **Administrator** permission to create counters.' }).catch(logger.error);
         return;
     }
 

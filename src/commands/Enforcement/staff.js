@@ -57,8 +57,6 @@ export function restoreRefusal({ interaction, targetId, roles }) {
 }
 
 export default {
-    // Registered as a guild command in MAIN_GUILD_ID only.
-    scope: 'main',
     data: new SlashCommandBuilder()
         .setName('staff')
         .setDescription('Staff warnings, activity, stats, coverage and restoring roles (owner only; some subcommands: admins)')

@@ -13,13 +13,13 @@ import { isAdministrator } from '../services/enforcement/enforcementService.js';
 import { noteOwnerOverride } from '../services/ownerOverride.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
 import { 
-    selectWinners,
     isUserRateLimited,
     recordUserInteraction,
     createGiveawayEmbed,
-    createGiveawayButtons
+    createGiveawayButtons,
+    endGiveawayNow,
+    rerollGiveaway,
 } from '../services/giveawayService.js';
-import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 
 export const giveawayJoinHandler = {
     customId: 'giveaway_join',
@@ -128,91 +128,17 @@ export const giveawayEndHandler = {
                 return;
             }
 
-            const guildGiveaways = await getGuildGiveaways(client, interaction.guildId);
-            const giveaway = guildGiveaways.find(g => g.messageId === interaction.message.id);
-
-            if (!giveaway) {
-                throw new TitanBotError(
-                    'Giveaway not found in database',
-                    ErrorTypes.VALIDATION,
-                    'This giveaway is no longer active.',
-                    { messageId: interaction.message.id, guildId: interaction.guildId }
-                );
-            }
-
-            if (giveaway.ended || giveaway.isEnded || isGiveawayEnded(giveaway)) {
-                throw new TitanBotError(
-                    'Giveaway already ended',
-                    ErrorTypes.VALIDATION,
-                    'This giveaway has already ended.',
-                    { messageId: interaction.message.id }
-                );
-            }
-
-            const participants = giveaway.participants || [];
-            const winners = selectWinners(participants, giveaway.winnerCount);
-
-            giveaway.ended = true;
-            giveaway.isEnded = true;
-            giveaway.winnerIds = winners;
-            giveaway.endedAt = new Date().toISOString();
-            giveaway.endedBy = interaction.user.id;
-
-            await saveGiveaway(client, interaction.guildId, giveaway);
-
+            // Same path as /giveaway end: under the giveaway's lock, with the winner announcement.
+            const { winners } = await endGiveawayNow(client, interaction.guildId, interaction.message.id, interaction.user.id);
             logger.info(`Giveaway ended via button by ${interaction.user.tag}: ${interaction.message.id}`);
 
-            const updatedEmbed = createGiveawayEmbed(giveaway, 'ended', winners);
-            const updatedRow = createGiveawayButtons(true);
-
-            await interaction.message.edit({
-                content: '**Giveaway ended**',
-                embeds: [updatedEmbed],
-                components: [updatedRow]
-            });
-
-            try {
-                await logEvent({
-                    client,
-                    guildId: interaction.guildId,
-                    eventType: EVENT_TYPES.GIVEAWAY_WINNER,
-                    data: {
-                        description: `Giveaway ended with ${winners.length} winner(s)`,
-                        channelId: interaction.channelId,
-                        userId: interaction.user.id,
-                        fields: [
-                            {
-                                name: 'Prize',
-                                value: giveaway.prize || 'Unknown',
-                                inline: true
-                            },
-                            {
-                                name: 'Winners',
-                                value: winners.length > 0 
-                                    ? winners.map(id => `<@${id}>`).join(', ')
-                                    : 'Nobody entered',
-                                inline: false
-                            },
-                            {
-                                name: 'Entries',
-                                value: participants.length.toString(),
-                                inline: true
-                            }
-                        ]
-                    }
-                });
-            } catch (logError) {
-                logger.debug('Error logging giveaway end event:', logError);
-            }
-
-            await interaction.reply({
+            await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     successEmbed(
                         'Giveaway ended',
                         winners.length > 0 ? `Picked ${winners.length} winner${winners.length === 1 ? '' : 's'}.` : 'Nobody entered, so there is no winner.'
                     )
                 ],
-                flags: MessageFlags.Ephemeral
             });
 
         } catch (error) {
@@ -252,97 +178,12 @@ export const giveawayRerollHandler = {
                 return;
             }
 
-            const guildGiveaways = await getGuildGiveaways(client, interaction.guildId);
-            const giveaway = guildGiveaways.find(g => g.messageId === interaction.message.id);
-
-            if (!giveaway) {
-                throw new TitanBotError(
-                    'Giveaway not found in database',
-                    ErrorTypes.VALIDATION,
-                    'This giveaway is no longer active.',
-                    { messageId: interaction.message.id, guildId: interaction.guildId }
-                );
-            }
-
-            if (!giveaway.ended && !giveaway.isEnded) {
-                throw new TitanBotError(
-                    'Giveaway still active',
-                    ErrorTypes.VALIDATION,
-                    'This giveaway has not ended yet. Please end it first.',
-                    { messageId: interaction.message.id }
-                );
-            }
-
-            const participants = giveaway.participants || [];
-            
-            if (participants.length === 0) {
-                throw new TitanBotError(
-                    'No participants to reroll',
-                    ErrorTypes.VALIDATION,
-                    'There are no entries to reroll from.',
-                    { messageId: interaction.message.id }
-                );
-            }
-
-            const newWinners = selectWinners(participants, giveaway.winnerCount);
-
-            giveaway.winnerIds = newWinners;
-            giveaway.rerolledAt = new Date().toISOString();
-            giveaway.rerolledBy = interaction.user.id;
-
-            await saveGiveaway(client, interaction.guildId, giveaway);
-
+            // Same path as /giveaway reroll: under the giveaway's lock, with the winner announcement.
+            await rerollGiveaway(client, interaction.guildId, interaction.message.id, interaction.user.id);
             logger.info(`Giveaway rerolled via button by ${interaction.user.tag}: ${interaction.message.id}`);
 
-            const updatedEmbed = createGiveawayEmbed(giveaway, 'reroll', newWinners);
-            const updatedRow = createGiveawayButtons(true);
-
-            await interaction.message.edit({
-                content: '**Giveaway rerolled**',
-                embeds: [updatedEmbed],
-                components: [updatedRow]
-            });
-
-            try {
-                await logEvent({
-                    client,
-                    guildId: interaction.guildId,
-                    eventType: EVENT_TYPES.GIVEAWAY_REROLL,
-                    data: {
-                        description: `Giveaway rerolled`,
-                        channelId: interaction.channelId,
-                        userId: interaction.user.id,
-                        fields: [
-                            {
-                                name: 'Prize',
-                                value: giveaway.prize || 'Unknown',
-                                inline: true
-                            },
-                            {
-                                name: 'New winners',
-                                value: newWinners.map(id => `<@${id}>`).join(', '),
-                                inline: false
-                            },
-                            {
-                                name: 'Entries',
-                                value: participants.length.toString(),
-                                inline: true
-                            }
-                        ]
-                    }
-                });
-            } catch (logError) {
-                logger.debug('Error logging giveaway reroll event:', logError);
-            }
-
-            await interaction.reply({
-                embeds: [
-                    successEmbed(
-                        'Giveaway rerolled',
-                        'New winners picked.'
-                    )
-                ],
-                flags: MessageFlags.Ephemeral
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [successEmbed('Giveaway rerolled', 'New winners picked.')],
             });
 
         } catch (error) {

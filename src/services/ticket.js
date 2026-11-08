@@ -68,6 +68,54 @@ function buildTicketControlRow({ claimedBy = null } = {}) {
   );
 }
 
+const TICKET_MEMBER_ALLOW = [
+  PermissionFlagsBits.ViewChannel,
+  PermissionFlagsBits.SendMessages,
+  PermissionFlagsBits.AttachFiles,
+  PermissionFlagsBits.ReadMessageHistory,
+];
+
+// The bot needs its own overwrite: @everyone is denied ViewChannel, and a bot without
+// Administrator would otherwise be locked out of the channel it just made.
+const TICKET_BOT_ALLOW = [
+  PermissionFlagsBits.ViewChannel,
+  PermissionFlagsBits.SendMessages,
+  PermissionFlagsBits.EmbedLinks,
+  PermissionFlagsBits.AttachFiles,
+  PermissionFlagsBits.ReadMessageHistory,
+  PermissionFlagsBits.ManageChannels,
+];
+
+/** Overwrites for a new ticket channel: @everyone denied; the opener, the bot and the staff role allowed. */
+export function buildTicketPermissionOverwrites({ guildId, memberId, botId = null, staffRoleId = null }) {
+  return [
+    { id: guildId, deny: [PermissionFlagsBits.ViewChannel] },
+    { id: memberId, allow: [...TICKET_MEMBER_ALLOW] },
+    ...(botId ? [{ id: botId, allow: [...TICKET_BOT_ALLOW] }] : []),
+    ...(staffRoleId ? [{ id: staffRoleId, allow: [...TICKET_MEMBER_ALLOW] }] : []),
+  ];
+}
+
+/**
+ * Saves the ticket row, then posts the opening message. When either step fails the channel is
+ * deleted and the row removed (best effort), and the original error is rethrown.
+ */
+export async function saveAndPostTicketOpening({ channel, save, removeRow, payload }) {
+  try {
+    await save();
+    return await channel.send(payload);
+  } catch (error) {
+    // Removing a row that was never written is harmless; a save that threw may have written it.
+    await Promise.resolve().then(removeRow).catch((cleanupError) => {
+      logger.warn('Could not remove the row of a ticket that failed to open', { channelId: channel?.id, error: cleanupError?.message });
+    });
+    await Promise.resolve().then(() => channel.delete('Ticket could not be opened')).catch((cleanupError) => {
+      logger.warn('Could not delete a ticket channel that failed to open', { channelId: channel?.id, error: cleanupError?.message });
+    });
+    throw error;
+  }
+}
+
 export const getUserTicketCount = wrapServiceBoundary(async function getUserTicketCount(guildId, userId) {
   return await getOpenTicketCountForUser(guildId, userId);
 }, {
@@ -110,6 +158,9 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
             id: guild.id,
             deny: [PermissionFlagsBits.ViewChannel],
           },
+          ...((guild.members?.me?.id ?? guild.client?.user?.id)
+            ? [{ id: guild.members?.me?.id ?? guild.client.user.id, allow: [...TICKET_BOT_ALLOW] }]
+            : []),
         ],
       });
     }
@@ -129,30 +180,12 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
       name: channelName,
       type: ChannelType.GuildText,
       parent: category?.id,
-      permissionOverwrites: [
-        {
-          id: guild.id,
-          deny: [PermissionFlagsBits.ViewChannel],
-        },
-        {
-          id: member.id,
-          allow: [
-            PermissionFlagsBits.ViewChannel,
-            PermissionFlagsBits.SendMessages,
-            PermissionFlagsBits.AttachFiles,
-            PermissionFlagsBits.ReadMessageHistory,
-          ],
-        },
-        ...(config.ticketStaffRoleId ? [{
-          id: config.ticketStaffRoleId,
-          allow: [
-            PermissionFlagsBits.ViewChannel,
-            PermissionFlagsBits.SendMessages,
-            PermissionFlagsBits.AttachFiles,
-            PermissionFlagsBits.ReadMessageHistory,
-          ],
-        }] : []),
-      ],
+      permissionOverwrites: buildTicketPermissionOverwrites({
+        guildId: guild.id,
+        memberId: member.id,
+        botId: guild.members?.me?.id ?? guild.client?.user?.id ?? null,
+        staffRoleId: config.ticketStaffRoleId || null,
+      }),
     });
     
     const ticketData = {
@@ -165,8 +198,6 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
       priority: priority || 'none',
       reason,
     };
-    
-    await saveTicketData(guild.id, channel.id, ticketData);
     
     const priorityInfo = PRIORITY_MAP[priority] || PRIORITY_MAP.none;
     
@@ -199,12 +230,19 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
     const staffMention = config.ticketStaffRoleId ? ` <@&${config.ticketStaffRoleId}>` : '';
     const messageContent = `${member.toString()}${staffMention}`;
     
-    const ticketMessage = await channel.send({
-      content: messageContent,
-      embeds: [embed],
-      components: [row],
-      // The client default pings no roles; the staff role is pinged here on purpose.
-      allowedMentions: { users: [member.id], roles: config.ticketStaffRoleId ? [config.ticketStaffRoleId] : [] },
+    // The row is saved and the opening message posted together: if either fails the channel and
+    // the row go again, so a half-made ticket never counts against maxTicketsPerUser.
+    const ticketMessage = await saveAndPostTicketOpening({
+      channel,
+      save: () => saveTicketData(guild.id, channel.id, ticketData),
+      removeRow: () => deleteTicketData(guild.id, channel.id),
+      payload: {
+        content: messageContent,
+        embeds: [embed],
+        components: [row],
+        // The client default pings no roles; the staff role is pinged here on purpose.
+        allowedMentions: { users: [member.id], roles: config.ticketStaffRoleId ? [config.ticketStaffRoleId] : [] },
+      },
     });
 
     await ticketMessage.pin().catch(() => {});

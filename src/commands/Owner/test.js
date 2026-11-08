@@ -139,7 +139,6 @@ export async function buildPreview({ action, guild, invoker, target, reason, dur
 
 export default {
     // Every server (multi-server B4), for that server's Administrators.
-    scope: 'main',
     data: new SlashCommandBuilder()
         .setName('test')
         .setDescription('Send yourself the DM an action would send and save a test case. Nothing is executed')

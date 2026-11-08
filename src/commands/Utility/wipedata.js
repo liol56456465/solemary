@@ -9,12 +9,12 @@ export default {
     slashOnly: true,
     data: new SlashCommandBuilder()
         .setName('wipedata')
-        .setDescription('Delete your levels, balance, AFK, birthday, to-do list, reminders and login token (cannot be undone)'),
+        .setDescription('Delete your levels, birthday, to-do list, reminders and login token (cannot be undone)'),
 
     async execute(interaction, guildConfig, client) {
         const warningMessage =
             'This permanently deletes your data in this server:\n'
-            + WIPE_ITEMS.map((item) => `- ${item.label}`).join('\n')
+            + WIPE_ITEMS.filter((item) => !item.legacy).map((item) => `- ${item.label}`).join('\n')
             + "\n\nYour to-do list, reminders and stored login token are the same in every server, so they are deleted everywhere. "
             + 'Without the login token the bot can no longer add you to the support server; Verify with Discord stores a new one. '
             + 'Moderation, appeal, report and verification records are kept.\n\n**This cannot be undone.**';

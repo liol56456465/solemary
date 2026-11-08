@@ -42,7 +42,6 @@ function readChannels(interaction, name) {
 
 export default {
     // show/list: everyone (commandAccess.js). create/edit/delete: admin-only.
-    scope: 'main',
     slashOnly: true,
     category: 'Community',
     data: new SlashCommandBuilder()

@@ -18,9 +18,8 @@ import { isCommandEnabled } from '../services/commandAccessService.js';
 import { resolveSlashAccessKey } from '../utils/messageAdapter.js';
 import { isCollectorManagedComponent } from '../utils/collectorComponents.js';
 import { ResponseCoordinator } from '../utils/responseCoordinator.js';
-import { enforceDefaultCommandPermissions } from '../utils/permissionGuard.js';
 import { checkCommandAccess } from '../utils/commandGate.js';
-import { resolveBotLanguage } from '../utils/botText.js';
+import { botText, resolveBotLanguage } from '../utils/botText.js';
 import { BLACKLIST_MESSAGE, blacklistHit } from '../services/owner/blacklistCache.js';
 import { noteOwnerOverride } from '../services/ownerOverride.js';
 import { skipIfArrivedTooLate, noticeIfHandlerMissedDeadline } from '../utils/lateInteractionNotice.js';
@@ -115,12 +114,14 @@ export default {
             }, interactionTraceContext));
 
             const command = client.commands.get(interaction.commandName);
+            // Ephemeral refusals below: the user's Discord language (utils/botText.js).
+            const replyText = botText(resolveBotLanguage({ interaction, guildId: interaction.guildId, member: interaction.member, userId: interaction.user.id, purpose: 'reply' }));
 
             if (!command) {
               throw createError(
                 `No command matching ${interaction.commandName} was found.`,
                 ErrorTypes.CONFIGURATION,
-                'Sorry, that command does not exist.',
+                replyText.t('errors.dispatch.unknownCommand'),
                 withTraceContext({ commandName: interaction.commandName }, interactionTraceContext)
               );
             }
@@ -191,7 +192,7 @@ export default {
               throw createError(
                 `Risky command cooldown active for ${interaction.commandName}`,
                 ErrorTypes.RATE_LIMIT,
-                `This command is on cooldown. Please wait ${formattedCooldown} before trying again.`,
+                replyText.t('errors.dispatch.cooldown', { time: formattedCooldown }),
                 withTraceContext({
                   commandName: interaction.commandName,
                   subtype: 'command_cooldown',
@@ -211,19 +212,15 @@ export default {
                 throw createError(
                   `Command ${accessKey} is disabled in this guild`,
                   ErrorTypes.CONFIGURATION,
-                  'This command has been disabled for this server.',
+                  replyText.t('errors.dispatch.disabledHere'),
                   withTraceContext({ commandName: accessKey, guildId: interaction.guild.id }, interactionTraceContext)
                 );
               }
             }
 
-            const permissionAllowed = await enforceDefaultCommandPermissions(interaction, command, {
-              source: 'interactionCreate',
-              guildConfig,
-            });
-            if (!permissionAllowed) {
-              return;
-            }
+            // Access was decided by checkCommandAccess above (the single source of truth); a
+            // command's setDefaultMemberPermissions is not enforced again here (it is stripped at
+            // registration, commandLoader.js collectCommandPayloads).
 
             if (await skipIfArrivedTooLate(interaction)) return;
             dispatched = true;
@@ -241,7 +238,8 @@ export default {
           try {
             if (!command) {
               throw createError(`No context menu command ${interaction.commandName}`, ErrorTypes.CONFIGURATION,
-                'Sorry, that command does not exist.', withTraceContext({ commandName: interaction.commandName }, interactionTraceContext));
+                botText(resolveBotLanguage({ interaction, guildId: interaction.guildId, userId: interaction.user.id, purpose: 'reply' })).t('errors.dispatch.unknownCommand'),
+                withTraceContext({ commandName: interaction.commandName }, interactionTraceContext));
             }
             const access = checkCommandAccess({
               command,
@@ -342,76 +340,6 @@ export default {
               );
             } catch (error) {
               logger.error('Error handling app-admin autocomplete:', {
-                error: error.message,
-                guildId: interaction.guildId,
-                commandName: interaction.commandName
-              });
-              await interaction.respond([]);
-            }
-          } else if (interaction.commandName === 'reactroles' && focusedOption.name === 'panel') {
-            try {
-              const { getAllReactionRoleMessages, deleteReactionRoleMessage } = await import('../services/reactionRoleService.js');
-              const guildId = interaction.guildId;
-              const guild = interaction.guild;
-              
-              let panels = await getAllReactionRoleMessages(client, guildId);
-              
-              if (!panels || panels.length === 0) {
-                await interaction.respond([]);
-                return;
-              }
-
-              const validPanels = [];
-              for (const panel of panels) {
-                if (!panel.messageId || !panel.channelId) {
-                  continue;
-                }
-                
-                const channel = guild.channels.cache.get(panel.channelId);
-                if (!channel) {
-                  await deleteReactionRoleMessage(client, guildId, panel.messageId).catch(() => {});
-                  continue;
-                }
-                
-                const msg = await channel.messages.fetch(panel.messageId).catch(() => null);
-                if (!msg) {
-                  await deleteReactionRoleMessage(client, guildId, panel.messageId).catch(() => {});
-                  continue;
-                }
-                validPanels.push(panel);
-              }
-              
-              if (validPanels.length === 0) {
-                await interaction.respond([]);
-                return;
-              }
-              
-              const choices = await Promise.all(
-                validPanels.slice(0, 25).map(async panel => {
-                  try {
-                    const channel = guild.channels.cache.get(panel.channelId);
-                    if (!channel) return null;
-                    
-                    const msg = await channel.messages.fetch(panel.messageId).catch(() => null);
-                    if (!msg) return null;
-                    
-                    const title = msg?.embeds?.[0]?.title ?? 'Untitled Panel';
-                    const channelName = channel?.name ?? 'unknown';
-                    
-                    return {
-                      name: `${title} (${channelName})`.substring(0, 100),
-                      value: panel.messageId
-                    };
-                  } catch (e) {
-                    return null;
-                  }
-                })
-              );
-              
-              const validChoices = choices.filter(c => c !== null);
-              await interaction.respond(validChoices);
-            } catch (error) {
-              logger.error('Error handling reactroles autocomplete:', {
                 error: error.message,
                 guildId: interaction.guildId,
                 commandName: interaction.commandName

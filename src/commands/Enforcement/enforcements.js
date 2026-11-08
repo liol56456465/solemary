@@ -6,8 +6,6 @@ import { assertBotPermissions, isAdministrator } from '../../services/enforcemen
 import { resolveTargetUser } from '../../handlers/backgroundView.js';
 
 export default {
-    // Registered as a guild command in MAIN_GUILD_ID only.
-    scope: 'main',
     data: new SlashCommandBuilder()
         .setName('enforcements')
         .setDescription('Open the enforcement panel for a user (ban, kick, mute, warn and more)')

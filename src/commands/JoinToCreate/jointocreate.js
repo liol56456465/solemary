@@ -4,12 +4,12 @@ import { successEmbed, warningEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { TitanBotError, ErrorTypes, replyUserError } from '../../utils/errorHandler.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+import { hasAdminAccess } from '../../utils/commandGate.js';
 import {
     setupJoinToCreate,
     getChannelConfiguration,
     updateChannelConfig,
     removeTriggerChannel,
-    hasManageGuildPermission,
     logConfigurationChange,
     getConfiguration,
     validateBitrate,
@@ -43,7 +43,6 @@ export default {
                             { name: "{username}'s Space", value: "{username}'s Space" },
                             { name: "{displayName}'s Room", value: "{displayName}'s Room" },
                             { name: "{username}'s VC", value: "{username}'s VC" },
-                            { name: "{username}'s Music Room", value: "{username}'s Music Room" },
                             { name: "{username}'s Gaming Room", value: "{username}'s Gaming Room" },
                             { name: "{username}'s Chat Room", value: "{username}'s Chat Room" },
                             { name: "{username}'s Private Room", value: "{username}'s Private Room" }
@@ -77,11 +76,11 @@ export default {
     async execute(interaction, config, client) {
         try {
             
-            if (!hasManageGuildPermission(interaction.member)) {
+            if (!hasAdminAccess(interaction)) {
                 throw new TitanBotError(
-                    'User lacks ManageGuild permission',
+                    'User lacks Administrator',
                     ErrorTypes.PERMISSION,
-                    'You need **Manage Server** permission to use this command.'
+                    'You need the **Administrator** permission to use this command.'
                 );
             }
 
@@ -239,9 +238,9 @@ async function handleConfigSubcommand(interaction, client) {
         collector.on('collect', async (buttonInteraction) => {
             try {
                 
-                if (!hasManageGuildPermission(buttonInteraction.member)) {
+                if (!hasAdminAccess(buttonInteraction)) {
                     await buttonInteraction.reply({
-                        content: 'You need **Manage Server** permission to use these controls.',
+                        content: 'You need the **Administrator** permission to use these controls.',
                         flags: MessageFlags.Ephemeral
                     });
                     return;
@@ -312,7 +311,6 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
             { label: "{username}'s Space",          value: "{username}'s Space" },
             { label: "{displayName}'s Room",        value: "{displayName}'s Room" },
             { label: "{username}'s VC",             value: "{username}'s VC" },
-            { label: "{username}'s Music Room",  value: "{username}'s Music Room" },
             { label: "{username}'s Gaming Room", value: "{username}'s Gaming Room" },
             { label: "{username}'s Chat Room",   value: "{username}'s Chat Room" },
             { label: "{username}'s Private Room",   value: "{username}'s Private Room" },
@@ -349,9 +347,9 @@ async function handleNameTemplateModal(interaction, triggerChannel, currentConfi
             time: 60000
         });
 
-        if (!hasManageGuildPermission(modalSubmission.member)) {
+        if (!hasAdminAccess(modalSubmission)) {
             await modalSubmission.reply({
-                content: 'You need **Manage Server** permission to modify these settings.',
+                content: 'You need the **Administrator** permission to change these settings.',
                 flags: MessageFlags.Ephemeral
             });
             return;
@@ -430,9 +428,9 @@ async function handleUserLimitModal(interaction, triggerChannel, currentConfig, 
             time: 60000
         });
 
-        if (!hasManageGuildPermission(modalSubmission.member)) {
+        if (!hasAdminAccess(modalSubmission)) {
             await modalSubmission.reply({
-                content: 'You need **Manage Server** permission to modify these settings.',
+                content: 'You need the **Administrator** permission to change these settings.',
                 flags: MessageFlags.Ephemeral
             });
             return;
@@ -511,9 +509,9 @@ async function handleBitrateModal(interaction, triggerChannel, currentConfig, cl
             time: 60000
         });
 
-        if (!hasManageGuildPermission(modalSubmission.member)) {
+        if (!hasAdminAccess(modalSubmission)) {
             await modalSubmission.reply({
-                content: 'You need **Manage Server** permission to modify these settings.',
+                content: 'You need the **Administrator** permission to change these settings.',
                 flags: MessageFlags.Ephemeral
             });
             return;
@@ -595,9 +593,9 @@ async function handleChannelDeletion(interaction, triggerChannel, currentConfig,
         deleteCollector.on('collect', async (buttonInteraction) => {
             try {
                 
-                if (!hasManageGuildPermission(buttonInteraction.member)) {
+                if (!hasAdminAccess(buttonInteraction)) {
                     await buttonInteraction.reply({
-                        content: 'You need **Manage Server** permission to remove channels.',
+                        content: 'You need the **Administrator** permission to remove channels.',
                         flags: MessageFlags.Ephemeral
                     });
                     return;
