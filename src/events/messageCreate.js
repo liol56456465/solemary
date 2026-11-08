@@ -18,7 +18,7 @@ import { enforceAbuseProtection, formatCooldownDuration } from '../utils/abusePr
 import { createEmbed } from '../utils/embeds.js';
 import { isCommandEnabled } from '../services/commandAccessService.js';
 import { checkCommandAccess } from '../utils/commandGate.js';
-import { resolveBotLanguage } from '../utils/botText.js';
+import { resolveBotLanguage, textForGuild } from '../utils/botText.js';
 import { noteOwnerOverride } from '../services/ownerOverride.js';
 import { handleModmailDm, handleModmailStaffMessage, isModmailStaff, modmailUserId } from '../services/modmailService.js';
 import { enforceNoContact } from '../services/enforcement/noContactService.js';
@@ -229,8 +229,10 @@ async function handleCountingGame(message, client) {
 
     if (outcome === 'broken') {
       await message.delete().catch(() => {});
+      // A public notice addressed to one member: their language role, else the server's language.
+      const tr = textForGuild(message.guild.id, { member: message.member, userId: message.author.id, purpose: 'member' });
       const failureMessage = await message.channel.send({
-        content: `<@${message.author.id}> broke the count. Start again from **1**.`,
+        content: tr.t('fun.count.broke', { user: `<@${message.author.id}>` }),
         allowedMentions: { users: [message.author.id] },
       }).catch(() => null);
       if (failureMessage) {

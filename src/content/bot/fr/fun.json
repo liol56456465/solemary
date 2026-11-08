@@ -58,7 +58,8 @@
         "leaderboardTitle": "Classement du jeu de comptage",
         "leaderboardEmpty": "Personne n’a encore compté.",
         "invalidAction": "Choisis une action valide pour le jeu de comptage.",
-        "failed": "Un problème est survenu lors de la gestion du jeu de comptage."
+        "failed": "Un problème est survenu lors de la gestion du jeu de comptage.",
+        "broke": "{user} a cassé le compte. On recommence à **1**."
     },
     "slash": {
         "fun": {

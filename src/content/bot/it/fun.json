@@ -58,7 +58,8 @@
         "leaderboardTitle": "Classifica del conteggio",
         "leaderboardEmpty": "Nessuno ha ancora contato.",
         "invalidAction": "Scegli un’azione valida per il gioco del conteggio.",
-        "failed": "Qualcosa è andato storto durante la gestione del gioco del conteggio."
+        "failed": "Qualcosa è andato storto durante la gestione del gioco del conteggio.",
+        "broke": "{user} ha interrotto il conteggio. Si riparte da **1**."
     },
     "slash": {
         "fun": {

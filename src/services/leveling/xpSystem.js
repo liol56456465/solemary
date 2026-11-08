@@ -145,7 +145,7 @@ export async function levelUpCardFor(guild, member, levelData, config, permissio
       xp: levelData.xp,
       xpNeeded: levelData.level >= 1000 ? 0 : getXpForLevel(levelData.level),
       accent: config.cardAccent,
-      lang: textForGuild(guild.id, { member, purpose: 'public' }).lang,
+      lang: textForGuild(guild.id, { member, purpose: 'member' }).lang,
     });
   } catch {
     return null;
@@ -169,7 +169,7 @@ export async function sendLevelUpAnnouncement(guild, member, levelData, config, 
       return;
     }
 
-    const message = levelUpTemplate(config.levelUpMessage, textForGuild(guild.id, { member, purpose: 'public' }).lang)
+    const message = levelUpTemplate(config.levelUpMessage, textForGuild(guild.id, { member, purpose: 'member' }).lang)
       .replace(/{user}/g, member.toString())
       .replace(/{level}/g, levelData.level)
       .replace(/{xp}/g, levelData.xp)

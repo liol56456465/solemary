@@ -1,0 +1,36 @@
+{
+    "cmd": {
+        "desc": "Choose the language Mewvo uses for you",
+        "set": "Pick your language: Mewvo then uses it for messages meant for you",
+        "panel": "Post a panel where members pick their language",
+        "channel": "Where to post the panel (default: this channel)"
+    },
+    "pick": {
+        "title": "Your language",
+        "text": "Pick the language Mewvo should use for messages meant for you. You get the matching role; your other language roles are removed.",
+        "placeholder": "Choose a language"
+    },
+    "panel": {
+        "title": "Choose your language",
+        "text": "Click your language. Mewvo then uses it for messages meant for you (answers, DMs, level-ups). Click another one to switch.",
+        "posted": "Language panel posted in {channel}.",
+        "noPerms": "I can't post in {channel}: I need View Channel, Send Messages and Embed Links there.",
+        "textOnly": "Pick a text channel for the panel."
+    },
+    "notSetUp": "This server has no language roles yet. An admin can set them on the dashboard (Bot language).",
+    "notYours": "This menu belongs to someone else. Run /language set yourself.",
+    "done": "Done. Mewvo now uses {language} for messages meant for you.",
+    "already": "You already have {language}.",
+    "error": {
+        "unknown": "That language is not available.",
+        "notOffered": "{language} has no role in this server yet.",
+        "memberMissing": "I could not find you in this server.",
+        "noManageRoles": "I need the Manage Roles permission to change language roles. Ask an admin.",
+        "roleMissing": "The role for {language} no longer exists. Ask an admin to pick it again on the dashboard.",
+        "managed": "The role **{role}** is managed by an integration, so I can't give or remove it.",
+        "dangerous": "The role **{role}** has staff permissions, so I won't hand it out. Ask an admin to pick another language role.",
+        "hierarchy": "The role **{role}** is not below my highest role, so I can't give or remove it. Ask an admin to move my role up.",
+        "failed": "Discord refused the role change. Try again in a moment.",
+        "dbDown": "The settings can't be read right now (database not responding). Nothing was changed."
+    }
+}

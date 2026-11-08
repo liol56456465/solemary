@@ -1,0 +1,36 @@
+{
+    "cmd": {
+        "desc": "Scegli la lingua che Mewvo usa per te",
+        "set": "Scegli la tua lingua: Mewvo la usa per i messaggi rivolti a te",
+        "panel": "Pubblica un pannello dove i membri scelgono la lingua",
+        "channel": "Dove pubblicare il pannello (predefinito: questo canale)"
+    },
+    "pick": {
+        "title": "La tua lingua",
+        "text": "Scegli la lingua che Mewvo deve usare per i messaggi rivolti a te. Ricevi il ruolo corrispondente; gli altri ruoli di lingua vengono rimossi.",
+        "placeholder": "Scegli una lingua"
+    },
+    "panel": {
+        "title": "Scegli la tua lingua",
+        "text": "Clicca sulla tua lingua. Mewvo la userà per i messaggi rivolti a te (risposte, DM, passaggi di livello). Clicca su un'altra per cambiare.",
+        "posted": "Pannello delle lingue pubblicato in {channel}.",
+        "noPerms": "Non posso scrivere in {channel}: lì mi servono «Visualizza canale», «Invia messaggi» e «Incorpora link».",
+        "textOnly": "Scegli un canale testuale per il pannello."
+    },
+    "notSetUp": "Questo server non ha ancora ruoli di lingua. Un admin può impostarli nella dashboard (Lingua del bot).",
+    "notYours": "Questo menu appartiene a qualcun altro. Usa /language set tu stesso.",
+    "done": "Fatto. Ora Mewvo usa {language} per i messaggi rivolti a te.",
+    "already": "Hai già {language}.",
+    "error": {
+        "unknown": "Questa lingua non è disponibile.",
+        "notOffered": "{language} non ha ancora un ruolo in questo server.",
+        "memberMissing": "Non ti ho trovato in questo server.",
+        "noManageRoles": "Mi serve il permesso «Gestisci ruoli» per cambiare i ruoli di lingua. Chiedi a un admin.",
+        "roleMissing": "Il ruolo per {language} non esiste più. Chiedi a un admin di sceglierlo di nuovo nella dashboard.",
+        "managed": "Il ruolo **{role}** è gestito da un'integrazione, quindi non posso darlo né toglierlo.",
+        "dangerous": "Il ruolo **{role}** ha permessi da staff, quindi non lo assegno. Chiedi a un admin di scegliere un altro ruolo di lingua.",
+        "hierarchy": "Il ruolo **{role}** non è sotto il mio ruolo più alto, quindi non posso darlo né toglierlo. Chiedi a un admin di spostare più in alto il mio ruolo.",
+        "failed": "Discord ha rifiutato la modifica del ruolo. Riprova tra poco.",
+        "dbDown": "Al momento le impostazioni non si possono leggere (il database non risponde). Non è stato cambiato nulla."
+    }
+}

@@ -1,0 +1,36 @@
+{
+    "cmd": {
+        "desc": "Choisis la langue que Mewvo utilise pour toi",
+        "set": "Choisis ta langue : Mewvo l'utilise pour les messages qui te sont destinés",
+        "panel": "Publier un panneau où les membres choisissent leur langue",
+        "channel": "Où publier le panneau (par défaut : ce salon)"
+    },
+    "pick": {
+        "title": "Ta langue",
+        "text": "Choisis la langue que Mewvo doit utiliser pour les messages qui te sont destinés. Tu reçois le rôle correspondant ; tes autres rôles de langue sont retirés.",
+        "placeholder": "Choisir une langue"
+    },
+    "panel": {
+        "title": "Choisis ta langue",
+        "text": "Clique sur ta langue. Mewvo l'utilise ensuite pour les messages qui te sont destinés (réponses, MP, passages de niveau). Clique sur une autre pour changer.",
+        "posted": "Panneau des langues publié dans {channel}.",
+        "noPerms": "Je ne peux pas publier dans {channel} : il me faut « Voir le salon », « Envoyer des messages » et « Intégrer des liens ».",
+        "textOnly": "Choisis un salon textuel pour le panneau."
+    },
+    "notSetUp": "Ce serveur n'a pas encore de rôles de langue. Un admin peut les définir dans le tableau de bord (Langue du bot).",
+    "notYours": "Ce menu appartient à quelqu'un d'autre. Utilise /language set toi-même.",
+    "done": "C'est fait. Mewvo utilise maintenant {language} pour les messages qui te sont destinés.",
+    "already": "Tu as déjà {language}.",
+    "error": {
+        "unknown": "Cette langue n'est pas disponible.",
+        "notOffered": "{language} n'a pas encore de rôle sur ce serveur.",
+        "memberMissing": "Je ne t'ai pas trouvé sur ce serveur.",
+        "noManageRoles": "J'ai besoin de la permission « Gérer les rôles » pour changer les rôles de langue. Demande à un admin.",
+        "roleMissing": "Le rôle pour {language} n'existe plus. Demande à un admin de le choisir à nouveau dans le tableau de bord.",
+        "managed": "Le rôle **{role}** est géré par une intégration, je ne peux donc ni le donner ni le retirer.",
+        "dangerous": "Le rôle **{role}** a des permissions de staff, je ne le distribue donc pas. Demande à un admin de choisir un autre rôle de langue.",
+        "hierarchy": "Le rôle **{role}** n'est pas sous mon rôle le plus haut, je ne peux donc ni le donner ni le retirer. Demande à un admin de monter mon rôle.",
+        "failed": "Discord a refusé le changement de rôle. Réessaie dans un instant.",
+        "dbDown": "Les paramètres ne peuvent pas être lus pour le moment (la base de données ne répond pas). Rien n'a été modifié."
+    }
+}

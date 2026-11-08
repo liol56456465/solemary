@@ -146,7 +146,8 @@ test('neutralValue: places are null/empty for every entry; generic defaults kept
         const value = neutralValue(entry);
         if (['channel', 'category', 'role', 'url'].includes(entry.kind)) assert.equal(value, null, entry.key);
         if (entry.kind === 'list') assert.deepEqual(value, [], entry.key);
-        if (entry.prodOnly) assert.ok(value === null || (Array.isArray(value) && !value.length), entry.key);
+        // Empty: null, [] or {} (languageRoles: no language has a role).
+        if (entry.prodOnly) assert.ok(value === null || (Array.isArray(value) && !value.length) || (value && typeof value === 'object' && !Object.keys(value).length), entry.key);
         if (value !== null && typeof value === 'object') assert.equal(Object.isFrozen(value), false, `${entry.key} is a copy`);
     }
 });

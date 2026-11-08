@@ -6,19 +6,25 @@ dashboard: en, ru, de, fr, it, pl, es, pt-BR. They use the website's i18n core
 
 ## Which language a message gets (owner's "mixed" rule)
 
+First, for `'reply'`, `'dm'` and `'member'`: the member's **language role** (setting `languageRoles`,
+`/language`, see docs/language-roles.md), when the caller passes a `member` object. Without one:
+
 | Message | Language | `purpose` |
 | --- | --- | --- |
 | Ephemeral / private answer to the person who ran the command | that person's Discord language (`interaction.locale`) | `'reply'` |
+| Prefix-command answer (posted in the channel) | the server's language | `'reply'` (detected via `_isPrefixCommand`) |
 | DM to a member (punishment, unban/unmute, appeal result, case removed) | the server's language | `'dm'` |
-| Public post in a channel (also a prefix-command reply) | the server's language | `'public'` |
+| Public post addressed to ONE member (counting notice, level-up, welcome post, a single birthday wish) | the server's language | `'member'` |
+| Channel-wide post (panels, giveaways, mod log, review cards); never a language role | the server's language | `'public'` |
 
 - Discord locales: `en-US`/`en-GB` → en, `pt-BR` → pt-BR, `es-ES`/`es-419` → es, others by prefix. Anything else → English.
 - Server language: setting `botLanguage` (registry, `guild_settings`), Dashboard → Bot → **Bot language**. Default English.
 - If the setting cannot be read (database down), the message is English and one warning is logged. This is the
   only read that falls back to a default on error (the language is cosmetic; a DM must still go out).
 - **One function decides:** `resolveBotLanguage({ guildId, member, userId, interaction, purpose })` in
-  `src/utils/botText.js`. A later member preference (e.g. a language role) goes in there only. Always pass
-  `member` or `userId` when you have them, so call sites don't change then.
+  `src/utils/botText.js`. Pass `member` whenever you have one: only a member object lets the language role count
+  (a bare `userId` skips that step). Several language roles: fixed order en, ru, de, fr, it, pl, es, pt-BR.
+  A failed `languageRoles` read is cosmetic like the server language: the next step decides, logged once.
 
 ## API (`src/utils/botText.js`)
 

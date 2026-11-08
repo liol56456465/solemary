@@ -18,5 +18,12 @@
   },
   "saved": {
     "done": "Agora o Mewvo usa {language} para mensagens e DMs neste servidor."
+  },
+  "roles": {
+    "title": "Cargos de idioma",
+    "help": "Um cargo por idioma. Um membro com um desses cargos recebe as mensagens para ele (respostas, DMs, subidas de nível, o aviso do jogo de contagem) nesse idioma; sem cargo, valem as regras abaixo. Os membros escolhem o cargo com /language set ou com o painel de /language panel. Cada cargo precisa ser seguro para distribuir (sem permissões de equipe, abaixo do cargo do Mewvo).",
+    "none": "Sem cargo",
+    "duplicate": "{first} e {second} têm o mesmo cargo. Cada idioma precisa do próprio cargo.",
+    "saved": "Cargos de idioma salvos."
   }
 }

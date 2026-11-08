@@ -791,6 +791,9 @@ const CASES = {
     },
     'bot-language': {
         language: { form: { botLanguage: 'de' }, service: 'updateSettings', bad: { form: { botLanguage: 'xx' }, message: /Language for posts and DMs/ } },
+        // Role-granting: Administrator-only; two languages on one role are refused.
+        'language-roles': { admin: true, form: { role_en: ROLE_OK, role_de: ROLE_OK2 }, service: 'updateSettings',
+            bad: { form: { role_en: ROLE_OK, role_de: ROLE_OK }, message: /same role/ } },
     },
     automod: {
         // Turning automod off needs Administrator (needsAct: the action itself is open to every editor for turning it on).

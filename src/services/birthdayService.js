@@ -467,8 +467,11 @@ export async function checkBirthdays(client, { query } = {}) {
 
       if (birthdayMembers.length > 0) {
         const mentionList = birthdayMembers.map(m => m.toString()).join(', ');
-        // A public post: the server's language.
-        const tr = textForGuild(guildId, { purpose: 'public' });
+        // A wish for one member: their language role, else the server's language. Several
+        // members in one post: the server's language.
+        const tr = birthdayMembers.length === 1
+          ? textForGuild(guildId, { member: birthdayMembers[0], purpose: 'member' })
+          : textForGuild(guildId, { purpose: 'public' });
 
         await channel.send({
           embeds: [{

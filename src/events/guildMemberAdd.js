@@ -142,9 +142,10 @@ export default {
             // join pipeline (auto-role, verification, logging, counters) must still run.
             if (permissions?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages])) {
                 const formatData = { user, guild, member };
-                // A post in the channel: the bot's own default texts in the server's language. The
-                // admin's own message, title and footer are shown as written.
-                const tr = textForGuild(guild.id, { member, purpose: 'public' });
+                // A post for this one member: the bot's own default texts in their language role's
+                // language (Onboarding may give one at join), else the server's. The admin's own
+                // message, title and footer are shown as written.
+                const tr = textForGuild(guild.id, { member, purpose: 'member' });
                 const welcomeMessage = defaultWelcomeText(welcomeConfig, formatData, tr);
 
                 const messageContent = welcomeConfig.welcomePing ? user.toString() : null;

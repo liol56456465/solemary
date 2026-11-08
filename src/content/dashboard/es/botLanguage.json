@@ -18,5 +18,12 @@
   },
   "saved": {
     "done": "Mewvo ahora usa {language} para publicaciones y MD en este servidor."
+  },
+  "roles": {
+    "title": "Roles de idioma",
+    "help": "Un rol por idioma. Un miembro con uno de estos roles recibe los mensajes para él (respuestas, MD, subidas de nivel, el aviso del juego de contar) en ese idioma; sin rol, se aplican las reglas de abajo. Los miembros eligen su rol con /language set o con el panel de /language panel. Cada rol debe poder repartirse sin riesgo (sin permisos de staff, por debajo del rol de Mewvo).",
+    "none": "Sin rol",
+    "duplicate": "{first} y {second} tienen el mismo rol. Cada idioma necesita su propio rol.",
+    "saved": "Roles de idioma guardados."
   }
 }

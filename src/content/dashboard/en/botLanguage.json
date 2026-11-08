@@ -18,5 +18,12 @@
   },
   "saved": {
     "done": "Mewvo now uses {language} for posts and DMs in this server."
+  },
+  "roles": {
+    "title": "Language roles",
+    "help": "One role per language. A member with one of these roles gets messages meant for them (answers, DMs, level-ups, the counting notice) in that language; without one, the rules below apply. Members pick their role with /language set or the panel from /language panel. Each role must be safe to hand out (no staff permissions, below Mewvo's role).",
+    "none": "No role",
+    "duplicate": "{first} and {second} have the same role. Each language needs its own role.",
+    "saved": "Language roles saved."
   }
 }

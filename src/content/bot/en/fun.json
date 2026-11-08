@@ -58,7 +58,8 @@
         "leaderboardTitle": "Counting leaderboard",
         "leaderboardEmpty": "Nobody has counted yet.",
         "invalidAction": "Please choose a valid counting game action.",
-        "failed": "Something went wrong while managing the counting game."
+        "failed": "Something went wrong while managing the counting game.",
+        "broke": "{user} broke the count. Start again from **1**."
     },
     "slash": {
         "fun": {

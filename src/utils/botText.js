@@ -5,14 +5,18 @@
 // See docs/bot-i18n.md for how to translate a command.
 //
 // Which language (owner's "mixed" rule), decided in ONE place: resolveBotLanguage().
+//   step 1 (purposes 'reply', 'dm', 'member'): the member's language role (setting
+//                            languageRoles, /language), when a member object is passed
 //   purpose 'reply'          an ephemeral / private answer to the person who ran the command:
-//                            their Discord language (interaction.locale)
-//   purpose 'dm' | 'public'  a DM to a member (punishments, appeal results …) or a post in a
-//                            channel: the server's language (setting botLanguage, Dashboard →
-//                            Bot language; default English)
+//                            their Discord language (interaction.locale). A prefix command's
+//                            answer is a channel post: the server's language.
+//   purpose 'member'         a public post addressed to ONE member (counting notice, level-up,
+//                            welcome, a single birthday wish ...): the server's language
+//   purpose 'dm' | 'public'  a DM to a member (punishments, appeal results ...) or a channel-wide
+//                            post (panels, giveaways, mod log): the server's language (setting
+//                            botLanguage, Dashboard -> Bot language; default English).
+//                            'public' never looks at a language role.
 // Anything unknown (a Discord language we don't have, no server) is English.
-// Later: a member's own choice (e.g. a language role) can slot in as the first step of
-// resolveBotLanguage; callers already pass `member` / `userId` so they won't need to change.
 
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_LANG, LANG_CODES, createCatalog, formatNumberIn } from '../services/site/i18n.js';
@@ -22,7 +26,10 @@ import { logger } from './logger.js';
 
 export { LANG_CODES };
 export const BOT_LANGUAGE_KEY = 'botLanguage';
-export const BOT_PURPOSES = Object.freeze(['reply', 'dm', 'public']);
+export const BOT_PURPOSES = Object.freeze(['reply', 'dm', 'member', 'public']);
+export const LANGUAGE_ROLES_KEY = 'languageRoles';
+/** Purposes where a member's language role wins (a channel-wide 'public' post never). */
+const MEMBER_PURPOSES = new Set(['reply', 'dm', 'member']);
 
 /** The bot's own catalog (src/content/bot/<lang>/*.json); no owner edits. */
 export const BOT_CATALOG = createCatalog({ dir: fileURLToPath(new URL('../content/bot/', import.meta.url)) });
@@ -36,6 +43,7 @@ let languageReadFailed = false;
 /** For tests: forget that a failed read was already logged. */
 export function resetBotLanguageLogForTests() {
     languageReadFailed = false;
+    languageRolesReadFailed = false;
 }
 
 /**
@@ -62,21 +70,70 @@ export function serverLanguage(guildId, { resolve = resolveSetting } = {}) {
     }
 }
 
+let languageRolesReadFailed = false;
+
+/** The member's role ids (a GuildMember: roles.cache; an API member: roles is an array of ids). */
+function memberRoleIds(member) {
+    const roles = member?.roles;
+    if (!roles) return null;
+    if (Array.isArray(roles)) return new Set(roles.map(String));
+    if (roles.cache && typeof roles.cache.has === 'function') return { has: (id) => roles.cache.has(id) };
+    return null;
+}
+
 /**
- * The language of one bot message. Every bot text goes through this, so a later step (a member's
- * own language, e.g. from a role) only has to be added here.
+ * The language a member chose through a language role in this server, or null (no member, no
+ * role, no setting). Several language roles: Discord does not tell when a role was added, so a
+ * fixed order decides (the order of LANG_CODES: en, ru, de, fr, it, pl, es, pt-BR); /language
+ * itself always leaves exactly one. Like serverLanguage, a failed settings read is cosmetic:
+ * it gives null (the next step decides) and is logged once per failing stretch.
+ */
+export function memberLanguage(guildId, member, { resolve = resolveSetting } = {}) {
+    if (!guildId || !member) return null;
+    const ids = memberRoleIds(member);
+    if (!ids) return null;
+    let map;
+    try {
+        map = resolve(String(guildId), LANGUAGE_ROLES_KEY);
+        languageRolesReadFailed = false;
+    } catch (error) {
+        if (!languageRolesReadFailed) {
+            languageRolesReadFailed = true;
+            logger.warn(`Language roles of server ${guildId} could not be read (${error?.message || error}); using the next language step. Logged once until a read works again.`);
+        }
+        return null;
+    }
+    if (!map || typeof map !== 'object') return null;
+    for (const code of LANG_CODES) {
+        const roleId = map[code];
+        if (roleId && ids.has(String(roleId))) return code;
+    }
+    return null;
+}
+
+/**
+ * The language of one bot message. Every bot text goes through this.
  * @param {object} p
  * @param {string|null} [p.guildId]   the server the message is about (DMs: the server that acted)
- * @param {object|null} [p.member]    the member it is for, when known (reserved for a member preference)
- * @param {string|null} [p.userId]    the user it is for, when there is no member object (same)
+ * @param {object|null} [p.member]    the member it is for, when known: their language role wins
+ *                                    (purposes 'reply', 'dm', 'member')
+ * @param {string|null} [p.userId]    the user it is for, when there is no member object (no
+ *                                    role lookup without a member: the next step decides)
  * @param {object|null} [p.interaction]  the interaction being answered (reply: its locale)
- * @param {'reply'|'dm'|'public'} [p.purpose]
+ * @param {'reply'|'dm'|'member'|'public'} [p.purpose]
  * @param {object} [p.resolve]        tests: replaces resolveSetting
  */
 export function resolveBotLanguage({ guildId = null, member = null, userId = null, interaction = null, purpose = 'reply', resolve } = {}) {
-    void member; void userId; // a member-preference step goes here later (not built yet)
-    if (purpose === 'reply') return languageFromLocale(interaction?.locale);
-    return serverLanguage(guildId ?? interaction?.guildId ?? null, resolve ? { resolve } : {});
+    void userId;
+    const opts = resolve ? { resolve } : {};
+    const guild = guildId ?? interaction?.guildId ?? null;
+    if (MEMBER_PURPOSES.has(purpose)) {
+        const chosen = memberLanguage(guild, member ?? (purpose === 'reply' ? interaction?.member ?? null : null), opts);
+        if (chosen) return chosen;
+    }
+    // A prefix command's "reply" is a message in the channel (no locale): the server's language.
+    if (purpose === 'reply' && !interaction?._isPrefixCommand) return languageFromLocale(interaction?.locale);
+    return serverLanguage(guild, opts);
 }
 
 // {count} is written the language's way ("1,5" in German); English keeps the plain number.
@@ -104,7 +161,7 @@ export function textForInteraction(interaction, { purpose = 'reply' } = {}) {
     return botText(resolveBotLanguage({ interaction, guildId: interaction?.guildId ?? null, member: interaction?.member ?? null, userId: interaction?.user?.id ?? null, purpose }));
 }
 
-/** Text for a DM to a member or a public post: the server's language. */
+/** Text for a DM to a member ('dm'), a post for one member ('member', pass `member`) or a channel post ('public'). */
 export function textForGuild(guildId, { member = null, userId = null, purpose = 'dm' } = {}) {
     return botText(resolveBotLanguage({ guildId, member, userId, purpose }));
 }

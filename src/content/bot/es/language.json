@@ -1,0 +1,36 @@
+{
+    "cmd": {
+        "desc": "Elige el idioma que Mewvo usa contigo",
+        "set": "Elige tu idioma: Mewvo lo usará en los mensajes para ti",
+        "panel": "Publicar un panel donde los miembros eligen su idioma",
+        "channel": "Dónde publicar el panel (por defecto: este canal)"
+    },
+    "pick": {
+        "title": "Tu idioma",
+        "text": "Elige el idioma que Mewvo debe usar en los mensajes para ti. Recibes el rol correspondiente; tus otros roles de idioma se quitan.",
+        "placeholder": "Elige un idioma"
+    },
+    "panel": {
+        "title": "Elige tu idioma",
+        "text": "Haz clic en tu idioma. Mewvo lo usará en los mensajes para ti (respuestas, MD, subidas de nivel). Haz clic en otro para cambiar.",
+        "posted": "Panel de idiomas publicado en {channel}.",
+        "noPerms": "No puedo publicar en {channel}: allí necesito «Ver canal», «Enviar mensajes» e «Insertar enlaces».",
+        "textOnly": "Elige un canal de texto para el panel."
+    },
+    "notSetUp": "Este servidor aún no tiene roles de idioma. Un admin puede configurarlos en el panel de control (Idioma del bot).",
+    "notYours": "Este menú es de otra persona. Usa /language set tú mismo.",
+    "done": "Listo. Mewvo ahora usa {language} en los mensajes para ti.",
+    "already": "Ya tienes {language}.",
+    "error": {
+        "unknown": "Ese idioma no está disponible.",
+        "notOffered": "{language} aún no tiene rol en este servidor.",
+        "memberMissing": "No te encontré en este servidor.",
+        "noManageRoles": "Necesito el permiso «Gestionar roles» para cambiar los roles de idioma. Pídeselo a un admin.",
+        "roleMissing": "El rol de {language} ya no existe. Pide a un admin que lo elija de nuevo en el panel de control.",
+        "managed": "El rol **{role}** lo gestiona una integración, así que no puedo darlo ni quitarlo.",
+        "dangerous": "El rol **{role}** tiene permisos de staff, así que no lo reparto. Pide a un admin que elija otro rol de idioma.",
+        "hierarchy": "El rol **{role}** no está por debajo de mi rol más alto, así que no puedo darlo ni quitarlo. Pide a un admin que suba mi rol.",
+        "failed": "Discord rechazó el cambio de rol. Inténtalo de nuevo en un momento.",
+        "dbDown": "Ahora mismo no se pueden leer los ajustes (la base de datos no responde). No se cambió nada."
+    }
+}

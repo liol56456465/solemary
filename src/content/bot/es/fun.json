@@ -58,7 +58,8 @@
         "leaderboardTitle": "Clasificación del juego de contar",
         "leaderboardEmpty": "Nadie ha contado todavía.",
         "invalidAction": "Elige una acción válida del juego de contar.",
-        "failed": "Algo salió mal al gestionar el juego de contar."
+        "failed": "Algo salió mal al gestionar el juego de contar.",
+        "broke": "{user} rompió la cuenta. Hay que empezar de nuevo desde **1**."
     },
     "slash": {
         "fun": {
