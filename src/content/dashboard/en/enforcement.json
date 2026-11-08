@@ -181,5 +181,17 @@
     "transparencyOff": "The transparency report is off: /transparency is gone from the website.",
     "trustOn": "The trust card is on: /trust is public.",
     "trustOff": "The trust card is off: /trust is gone from the website."
+  },
+  "appealsHome": {
+    "title": "Where members appeal",
+    "help": "Punishment messages (DMs) tell members where they can ask for a punishment to be lifted. Mewvo support: they appeal in the Mewvo support server. Our own server: the DM names an invite to a server you run.",
+    "choice": "Members appeal in",
+    "mewvo": "Mewvo support",
+    "own": "Our own server",
+    "invite": "Invite to our own server",
+    "inviteHelp": "A discord.gg invite that does not expire. Used only with \"Our own server\". Empty: the DM has no invite line.",
+    "badInvite": "Invite to our own server: must be a discord.gg invite link. Nothing was changed.",
+    "homeNote": "This does not apply here: members of Mewvo's own servers always appeal in the Mewvo support server.",
+    "homeOnlyAction": "This setting does not apply in Mewvo's own servers. Nothing was changed."
   }
 }

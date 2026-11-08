@@ -22,5 +22,6 @@
   "action": {
     "saved": "Impostazioni dei compleanni salvate.",
     "off": "Gli annunci di compleanno sono disattivati."
-  }
+  },
+  "roleNeedsAdmin": "Per cambiare il ruolo del compleanno ti serve il permesso Amministratore in questo server. Non è stato cambiato nulla."
 }

@@ -22,5 +22,6 @@
   "action": {
     "saved": "Ustawienia urodzin zapisane.",
     "off": "Życzenia urodzinowe są wyłączone."
-  }
+  },
+  "roleNeedsAdmin": "Aby zmienić rolę urodzinową, potrzebujesz uprawnienia Administrator na tym serwerze. Nic nie zostało zmienione."
 }

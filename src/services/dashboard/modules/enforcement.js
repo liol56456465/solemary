@@ -4,11 +4,13 @@
 
 import { ENFORCEMENT_REASONS, enforcementConfig } from '../../../config/enforcement.js';
 import { AUTOMOD_RULES } from '../../../config/automod.js';
-import { html } from '../html.js';
-import { InputError, PERMS, boolField, channelField, channelPicker, checkbox, numberInput, postForm, roleField, rolePicker, switchInput, text, textInput, toggleForm } from '../forms.js';
+import { html, raw } from '../html.js';
+import { InputError, PERMS, boolField, channelField, channelPicker, checkbox, choiceField, numberInput, postForm, roleField, rolePicker, switchInput, text, textInput, toggleForm } from '../forms.js';
 import { MAX_TEMPLATES, TEMPLATE_ACTIONS, TEMPLATE_NAME_MAX, cleanTemplates } from '../../enforcement/templateService.js';
 import { DAY, MINUTE, changedOnly, durationField, registryValue, saveRegistry, section, table, topic } from './common.js';
 import { textFor } from '../language.js';
+import { inviteOrNull } from '../../site/shell.js';
+import { isHomeScope } from './serverScope.js';
 
 // Words: src/content/dashboard/<lang>/enforcement.json. Reason labels (config/enforcement.js) and
 // automod rule names (config/automod.js) come from the config and stay as they are.
@@ -16,13 +18,34 @@ import { textFor } from '../language.js';
 const KEYS = [
     'adminRequestChannelId', 'modLogChannelId', 'evidenceChannelId', 'appealsCategoryId', 'reportsCategoryId', 'modmailCategoryId',
     'openChannelCap', 'mutedRoleId', 'warnRoleIds',
-    'supportServerInvite', 'appealWindowMs', 'appealCooldownMs', 'rejoinInviteMaxAgeSeconds', 'staleReportMs',
-    'staleAppealReminderMs', 'transparencyReportEnabled', 'trustCardEnabled', 'independentAppealReview', 'massActionLimit', 'massMuteLimit', 'massActionWindowMs', 'massActionBlockMs',
+    'appealWindowMs', 'appealCooldownMs', 'rejoinInviteMaxAgeSeconds', 'staleReportMs',
+    'staleAppealReminderMs', 'independentAppealReview', 'massActionLimit', 'massMuteLimit', 'massActionWindowMs', 'massActionBlockMs',
     'enforcementTemplates',
 ];
+// Mewvo's own servers only (multi-server B3, section 4): the Support invite and the public pages.
+const HOME_KEYS = ['supportServerInvite', 'transparencyReportEnabled', 'trustCardEnabled'];
+// Other servers only: where their members appeal (Mewvo support or their own server).
+const OTHER_KEYS = ['appealsHome', 'appealsInvite'];
+export const APPEALS_HOME_CHOICES = Object.freeze(['mewvo', 'own']);
 
 function current(ctx) {
-    return Object.fromEntries(KEYS.map((key) => [key, registryValue(ctx, key)]));
+    const keys = [...KEYS, ...(isHomeScope(ctx) ? HOME_KEYS : OTHER_KEYS)];
+    return Object.fromEntries(keys.map((key) => [key, registryValue(ctx, key)]));
+}
+
+/** The appeals-home form, checked: { appealsHome, appealsInvite }. 'own' without an invite is allowed (the DM then has no invite line). */
+export function appealsHomeForm(ctx, form) {
+    const tr = textFor(ctx);
+    const appealsHome = choiceField(form, 'appealsHome', APPEALS_HOME_CHOICES, tr.t('enforcement.appealsHome.choice'));
+    const typed = text(form, 'appealsInvite', 200);
+    const appealsInvite = typed ? inviteOrNull(typed) : null;
+    if (typed && !appealsInvite) throw new InputError(tr.t('enforcement.appealsHome.badInvite'), 400, 'appealsInvite');
+    return { appealsHome, appealsInvite };
+}
+
+/** Radio buttons: one name, [value, label] choices. */
+function radios(name, value, choices, legend) {
+    return html`<fieldset class="radios"><legend>${legend}</legend>${choices.map(([v, label]) => html`<label class="check"><input type="radio" name="${name}" value="${v}"${v === value ? raw(' checked') : ''}> ${label}</label>`)}</fieldset>`;
 }
 
 /** "Nothing changed." in the request's language (the same words routes.js uses). */
@@ -80,6 +103,13 @@ export default {
         const tr = textFor(ctx);
         const t = (key, params) => tr.t(key, params);
         const warn = v.warnRoleIds || [];
+        const home = isHomeScope(ctx);
+        // Roles, safety limits and appeal review: Administrator only (a Manage Server manager must not raise their own access).
+        const adminEdit = ctx.canEdit && ctx.canAct;
+        const appealsHome = home
+            ? html`<p class="muted">${t('enforcement.appealsHome.homeNote')}</p>`
+            : postForm(ctx, 'enforcement', 'appeals-home', html`${radios('appealsHome', v.appealsHome === 'own' ? 'own' : 'mewvo', [['mewvo', t('enforcement.appealsHome.mewvo')], ['own', t('enforcement.appealsHome.own')]], t('enforcement.appealsHome.choice'))}
+${textInput('appealsInvite', v.appealsInvite || '', { label: t('enforcement.appealsHome.invite'), max: 200, placeholder: 'https://discord.gg/…', help: t('enforcement.appealsHome.inviteHelp') })}`);
         const channels = postForm(ctx, 'enforcement', 'channels', html`<div class="grid">
 ${channelPicker(g, 'modLogChannelId', v.modLogChannelId, { label: t('enforcement.channels.modLog'), perms: PERMS.post, help: t('enforcement.channels.modLogHelp') })}
 ${channelPicker(g, 'evidenceChannelId', v.evidenceChannelId, { label: t('enforcement.channels.evidence'), perms: PERMS.postFiles, help: t('enforcement.channels.evidenceHelp') })}
@@ -88,14 +118,14 @@ ${channelPicker(g, 'appealsCategoryId', v.appealsCategoryId, { label: t('enforce
 ${channelPicker(g, 'reportsCategoryId', v.reportsCategoryId, { label: t('enforcement.channels.reportsCategory'), kinds: ['category'], perms: PERMS.category, help: t('enforcement.channels.reportsCategoryHelp') })}
 ${channelPicker(g, 'modmailCategoryId', v.modmailCategoryId, { label: t('enforcement.channels.modmailCategory'), kinds: ['category'], perms: PERMS.category, help: t('enforcement.channels.modmailCategoryHelp') })}
 ${numberInput('openChannelCap', v.openChannelCap, { label: t('enforcement.channels.openCap'), min: 1, max: 45, help: t('enforcement.channels.openCapHelp') })}
-${textInput('supportServerInvite', v.supportServerInvite, { label: t('enforcement.channels.invite'), max: 100, placeholder: 'https://discord.gg/…', help: t('enforcement.channels.inviteHelp') })}
+${home ? textInput('supportServerInvite', v.supportServerInvite, { label: t('enforcement.channels.invite'), max: 100, placeholder: 'https://discord.gg/…', help: t('enforcement.channels.inviteHelp') }) : ''}
 </div>`);
         const roles = postForm(ctx, 'enforcement', 'roles', html`<div class="grid">
 ${rolePicker(g, 'mutedRoleId', v.mutedRoleId, { label: t('enforcement.roles.muted'), help: t('enforcement.roles.mutedHelp') })}
 ${rolePicker(g, 'warnRole1', warn[0] || null, { label: t('enforcement.roles.warn1') })}
 ${rolePicker(g, 'warnRole2', warn[1] || null, { label: t('enforcement.roles.warn2') })}
 ${rolePicker(g, 'warnRole3', warn[2] || null, { label: t('enforcement.roles.warn3') })}
-</div>`);
+</div>`, { canEdit: adminEdit });
         const timings = postForm(ctx, 'enforcement', 'timings', html`<div class="grid">
 ${numberInput('appealWindowDays', Math.round(v.appealWindowMs / DAY), { label: t('enforcement.timings.window'), min: 1, max: 365, help: t('enforcement.timings.windowHelp') })}
 ${numberInput('appealCooldownDays', Math.round(v.appealCooldownMs / DAY), { label: t('enforcement.timings.cooldown'), min: 0, max: 90, help: t('enforcement.timings.cooldownHelp') })}
@@ -106,13 +136,13 @@ ${numberInput('staleAppealReminderDays', Math.round(v.staleAppealReminderMs / DA
         const review = postForm(ctx, 'enforcement', 'appeal-review', switchInput('independentAppealReview', v.independentAppealReview === true, {
             label: t('enforcement.review.label'),
             help: t('enforcement.review.labelHelp'),
-        }));
+        }), { canEdit: adminEdit });
         const mass = postForm(ctx, 'enforcement', 'mass-action', html`<div class="grid">
 ${numberInput('massActionLimit', v.massActionLimit, { label: t('enforcement.mass.limit'), min: 1, max: 100, help: t('enforcement.mass.limitHelp') })}
 ${numberInput('massMuteLimit', v.massMuteLimit, { label: t('enforcement.mass.muteLimit'), min: 1, max: 200, help: t('enforcement.mass.muteLimitHelp') })}
 ${numberInput('massActionWindowMinutes', Math.round(v.massActionWindowMs / MINUTE), { label: t('enforcement.mass.window'), min: 1, max: 1440 })}
 ${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE), { label: t('enforcement.mass.block'), min: 1, max: 10080, help: t('enforcement.mass.blockHelp') })}
-</div>`);
+</div>`, { canEdit: adminEdit });
         const ladder = table([t('enforcement.rules.level'), t('enforcement.rules.banLength')], Object.entries(enforcementConfig.ladderBans).map(([level, ms]) => [level, ms ? durationText(tr, ms) : t('enforcement.rules.permanent')]));
         const words = actionWords(tr);
         const templates = Array.isArray(v.enforcementTemplates) ? v.enforcementTemplates : [];
@@ -146,18 +176,20 @@ ${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE)
         // v6: cards grouped by topic (common.js topic/section). Explicit keys: the ids stay the English slugs in every language.
         const adminOnly = ctx.canAct ? '' : t('enforcement.adminOnly');
         const where = topic(t('enforcement.topic.where'), t('enforcement.topic.whereLine'), html`${section(t('enforcement.channels.title'), channels, t('enforcement.channels.help'), { key: 'channels', size: 'wide' })}
-${section(t('enforcement.roles.title'), roles, t('enforcement.roles.help'), { key: 'roles', size: 'full' })}`, { key: 'channels-and-roles' });
+${section(t('enforcement.roles.title'), roles, `${t('enforcement.roles.help')}${adminOnly}`, { key: 'roles', size: 'full' })}`, { key: 'channels-and-roles' });
         const appeals = topic(t('enforcement.topic.appeals'), t('enforcement.topic.appealsLine'), html`${section(t('enforcement.panels.title'), appealPanels, `${t('enforcement.panels.help')}${adminOnly}`, { key: 'appeal-panels' })}
-${section(t('enforcement.review.title'), review, t('enforcement.review.help'), { key: 'independent-appeal-review' })}
+${section(t('enforcement.appealsHome.title'), appealsHome, t('enforcement.appealsHome.help'), { key: 'where-members-appeal' })}
+${section(t('enforcement.review.title'), review, `${t('enforcement.review.help')}${adminOnly}`, { key: 'independent-appeal-review' })}
 ${section(t('enforcement.timings.title'), timings, t('enforcement.timings.help'), { key: 'appeals-and-reports', size: 'full' })}`, { key: 'appeals' });
-        const safety = topic(t('enforcement.topic.safety'), t('enforcement.topic.safetyLine'), html`${section(t('enforcement.mass.title'), mass, t('enforcement.mass.help'), { key: 'safety-limit-too-many-bans-or-kicks-in-a-short-time', size: 'full' })}
+        const safety = topic(t('enforcement.topic.safety'), t('enforcement.topic.safetyLine'), html`${section(t('enforcement.mass.title'), mass, `${t('enforcement.mass.help')}${adminOnly}`, { key: 'safety-limit-too-many-bans-or-kicks-in-a-short-time', size: 'full' })}
 ${section(t('enforcement.templates.title'), html`${templateList}${templateAdd}`, t('enforcement.templates.help'), { key: 'templates', size: 'wide' })}`, { key: 'moderator-tools-and-safety' });
         const pages = topic(t('enforcement.topic.pages'), t('enforcement.topic.pagesLine'), html`${section(t('enforcement.pages.transparencyTitle'), transparency, [t('enforcement.pages.transparencyHelp'), `${t('enforcement.pages.transparencyMore')}${adminOnly}`], { key: 'transparency-report' })}
 ${section(t('enforcement.pages.trustTitle'), trust, [t('enforcement.pages.trustHelp'), `${t('enforcement.pages.trustMore')}${adminOnly}`], { key: 'trust-card' })}`, { key: 'public-pages' });
         const rules = topic(t('enforcement.topic.rules'), t('enforcement.topic.rulesLine'), html`${section(t('enforcement.rules.ladderTitle'), html`<p class="muted">${tr.tx('enforcement.rules.ladderText', { count: tr.fmtNumber(enforcementConfig.warnsPerLevel) })}</p>${ladder}`, t('enforcement.rules.ladderHelp'), { key: 'warn-ladder', size: 'normal' })}
 ${section(t('enforcement.rules.reasonsTitle'), reasons, [t('enforcement.rules.reasonsHelp'), t('enforcement.rules.reasonsMore')], { key: 'reasons', size: 'normal' })}
 ${section(t('enforcement.rules.stepsTitle'), steps, t('enforcement.rules.stepsHelp'), { key: 'automod-steps', size: 'full' })}`, { key: 'how-punishments-add-up' });
-        return html`${where}${appeals}${safety}${pages}${rules}`;
+        // The public pages (transparency report, trust card) are Mewvo's own servers only for now.
+        return html`${where}${appeals}${safety}${home ? pages : ''}${rules}`;
     },
 
     actions: {
@@ -194,6 +226,14 @@ ${section(t('enforcement.rules.stepsTitle'), steps, t('enforcement.rules.stepsHe
             const result = await saveRegistry(ctx, { enforcementTemplates: list.filter((_, i) => i !== index) }, 'enforcement');
             return { ...result, message: tr.t('enforcement.result.templateRemoved', { name: removed.name }) };
         },
+        // Other servers only: where members appeal (punishment DMs). Home servers always use the Mewvo support server.
+        async 'appeals-home'(ctx, form) {
+            const tr = textFor(ctx);
+            if (isHomeScope(ctx)) throw new InputError(tr.t('enforcement.appealsHome.homeOnlyAction'));
+            const patch = changedOnly(appealsHomeForm(ctx, form), current(ctx));
+            if (!Object.keys(patch).length) return nothing(ctx);
+            return saveRegistry(ctx, patch, 'enforcement');
+        },
         transparency: {
             admin: true,
             async run(ctx, form) {
@@ -219,7 +259,8 @@ ${section(t('enforcement.rules.stepsTitle'), steps, t('enforcement.rules.stepsHe
         async channels(ctx, form) {
             const g = ctx.guild;
             const tr = textFor(ctx);
-            const invite = text(form, 'supportServerInvite', 100);
+            // The Support invite is a setting of Mewvo's own servers only.
+            const invite = isHomeScope(ctx) ? text(form, 'supportServerInvite', 100) : '';
             // A field absent from the form stays unchanged (Setup step by step sends only its one field).
             const sent = (name, opts) => (form[name] !== undefined ? { [name]: channelField(g, form, name, opts) } : {});
             const patch = changedOnly({
@@ -235,19 +276,23 @@ ${section(t('enforcement.rules.stepsTitle'), steps, t('enforcement.rules.stepsHe
             if (!Object.keys(patch).length) return nothing(ctx);
             return saveRegistry(ctx, patch, 'enforcement');
         },
-        async roles(ctx, form) {
-            const g = ctx.guild;
-            const tr = textFor(ctx);
-            // Absent from the form: unchanged (Setup step by step sends only the Muted role).
-            const warnNames = ['warnRole1', 'warnRole2', 'warnRole3'];
-            const warnSent = warnNames.some((name) => form[name] !== undefined);
-            const warn = warnSent ? warnNames.map((name, i) => roleField(g, form, name, { label: tr.t('enforcement.roles.warnRoleN', { number: i + 1 }) })).filter(Boolean) : null;
-            const patch = changedOnly({
-                ...(form.mutedRoleId !== undefined ? { mutedRoleId: roleField(g, form, 'mutedRoleId', { label: tr.t('enforcement.roles.muted') }) } : {}),
-                ...(warnSent ? { warnRoleIds: warn } : {}),
-            }, current(ctx));
-            if (!Object.keys(patch).length) return nothing(ctx);
-            return saveRegistry(ctx, patch, 'enforcement');
+        // Administrator only: the bot gives these roles (and denies the Muted role in every channel).
+        roles: {
+            admin: true,
+            async run(ctx, form) {
+                const g = ctx.guild;
+                const tr = textFor(ctx);
+                // Absent from the form: unchanged (Setup step by step sends only the Muted role).
+                const warnNames = ['warnRole1', 'warnRole2', 'warnRole3'];
+                const warnSent = warnNames.some((name) => form[name] !== undefined);
+                const warn = warnSent ? warnNames.map((name, i) => roleField(g, form, name, { label: tr.t('enforcement.roles.warnRoleN', { number: i + 1 }) })).filter(Boolean) : null;
+                const patch = changedOnly({
+                    ...(form.mutedRoleId !== undefined ? { mutedRoleId: roleField(g, form, 'mutedRoleId', { label: tr.t('enforcement.roles.muted') }) } : {}),
+                    ...(warnSent ? { warnRoleIds: warn } : {}),
+                }, current(ctx));
+                if (!Object.keys(patch).length) return nothing(ctx);
+                return saveRegistry(ctx, patch, 'enforcement');
+            },
         },
         async timings(ctx, form) {
             const tr = textFor(ctx);
@@ -261,21 +306,28 @@ ${section(t('enforcement.rules.stepsTitle'), steps, t('enforcement.rules.stepsHe
             if (!Object.keys(patch).length) return nothing(ctx);
             return saveRegistry(ctx, patch, 'enforcement');
         },
-        async 'appeal-review'(ctx, form) {
-            const patch = changedOnly({ independentAppealReview: checkbox(form, 'independentAppealReview') }, current(ctx));
-            if (!Object.keys(patch).length) return nothing(ctx);
-            return saveRegistry(ctx, patch, 'enforcement');
+        // Safety settings: Administrator only.
+        'appeal-review': {
+            admin: true,
+            async run(ctx, form) {
+                const patch = changedOnly({ independentAppealReview: checkbox(form, 'independentAppealReview') }, current(ctx));
+                if (!Object.keys(patch).length) return nothing(ctx);
+                return saveRegistry(ctx, patch, 'enforcement');
+            },
         },
-        async 'mass-action'(ctx, form) {
-            const tr = textFor(ctx);
-            const patch = changedOnly({
-                massActionLimit: durationField(form, 'massActionLimit', 1, { min: 1, max: 100, label: tr.t('enforcement.mass.limit') }),
-                massMuteLimit: durationField(form, 'massMuteLimit', 1, { min: 1, max: 200, label: tr.t('enforcement.mass.muteLimit') }),
-                massActionWindowMs: durationField(form, 'massActionWindowMinutes', MINUTE, { min: 1, max: 1440, label: tr.t('enforcement.mass.window') }),
-                massActionBlockMs: durationField(form, 'massActionBlockMinutes', MINUTE, { min: 1, max: 10080, label: tr.t('enforcement.mass.block') }),
-            }, current(ctx));
-            if (!Object.keys(patch).length) return nothing(ctx);
-            return saveRegistry(ctx, patch, 'enforcement');
+        'mass-action': {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const patch = changedOnly({
+                    massActionLimit: durationField(form, 'massActionLimit', 1, { min: 1, max: 100, label: tr.t('enforcement.mass.limit') }),
+                    massMuteLimit: durationField(form, 'massMuteLimit', 1, { min: 1, max: 200, label: tr.t('enforcement.mass.muteLimit') }),
+                    massActionWindowMs: durationField(form, 'massActionWindowMinutes', MINUTE, { min: 1, max: 1440, label: tr.t('enforcement.mass.window') }),
+                    massActionBlockMs: durationField(form, 'massActionBlockMinutes', MINUTE, { min: 1, max: 10080, label: tr.t('enforcement.mass.block') }),
+                }, current(ctx));
+                if (!Object.keys(patch).length) return nothing(ctx);
+                return saveRegistry(ctx, patch, 'enforcement');
+            },
         },
     },
 };

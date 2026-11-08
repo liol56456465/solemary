@@ -9,7 +9,7 @@
     "prefixHelp": "Algunos comandos también funcionan en un mensaje normal: escribe este signo y luego el nombre del comando, en lugar de usar un comando de barra. De 1 a 10 caracteres, sin espacios.",
     "modRole": "Rol de moderador",
     "modRoleHelp": "Los miembros con este rol pueden usar los comandos de moderación. También pueden iniciar sesión en este panel de control como moderadores: ven los miembros, los casos y las apelaciones, y pueden advertir, silenciar, quitar el silencio, expulsar y aislar temporalmente. No pueden banear ni cambiar ajustes. Mewvo nunca da este rol a nadie por sí solo.",
-    "needsAdmin": "Para cambiar los ajustes del bot y usar las utilidades de aquí necesitas el permiso de Administrador en el servidor principal.",
+    "needsAdmin": "Para cambiar los ajustes del bot y usar las utilidades de aquí necesitas el permiso de Administrador en este servidor.",
     "saved": "Ajustes del bot guardados.",
     "nothing": "No ha cambiado nada.",
     "prefixRule": "El prefijo debe tener de 1 a 10 caracteres, sin espacios.",

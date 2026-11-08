@@ -9,7 +9,7 @@
     "prefixHelp": "Some commands also work in a normal message: type this sign and then the command name, instead of using a slash command. 1 to 10 characters, no spaces.",
     "modRole": "Moderator role",
     "modRoleHelp": "Members with this role can use moderation commands. They can also log in to this dashboard as moderators: they see members, cases and appeals, and can warn, mute, unmute, kick and time out. They cannot ban or change settings. Mewvo never gives this role to anyone by itself.",
-    "needsAdmin": "To change bot settings and use the utilities here you need the Administrator permission in the main server.",
+    "needsAdmin": "To change bot settings and use the utilities here you need the Administrator permission in this server.",
     "saved": "Bot settings saved.",
     "nothing": "Nothing changed.",
     "prefixRule": "The prefix must be 1 to 10 characters, with no spaces.",

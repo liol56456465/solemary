@@ -5,12 +5,29 @@
 // Words: src/content/dashboard/<lang>/support.json.
 
 import { html, path } from '../html.js';
-import { PERMS, channelField, channelPicker, postForm, roleField, rolePicker } from '../forms.js';
+import { InputError, PERMS, channelField, channelPicker, postForm, roleField, rolePicker } from '../forms.js';
 import { registryGuildId, registryValue, saveRegistry, section, slug } from './common.js';
 import { textFor } from '../language.js';
 
 /** "Nothing changed." in the page language. */
 const nothing = (ctx) => ({ changes: [], message: textFor(ctx).t('errors.nothingChanged') });
+
+/**
+ * The support server a key lives on, for this dashboard (registryGuildId(ctx, key)): Mewvo's
+ * support server in the home servers, null in any other server (it has no support server of
+ * its own), so this page never reads or writes the home support server from elsewhere.
+ */
+function supportGuildOf(ctx, key) {
+    const supportGuildId = registryGuildId(ctx, key);
+    return { supportGuildId, supportGuild: supportGuildId ? ctx.client?.guilds?.cache?.get(supportGuildId) || null : null };
+}
+
+/** For actions: the support server, or a refusal (nothing changed) when this server has none. */
+function requireSupportGuild(ctx, key) {
+    const found = supportGuildOf(ctx, key);
+    if (!found.supportGuildId) throw new InputError(textFor(ctx).t('support.notConnected'));
+    return found;
+}
 
 export default {
     key: 'support',
@@ -18,10 +35,11 @@ export default {
     help: 'A second Discord server that banned members can still join. They ask for their ban to be lifted (appeal) there, because they cannot reach your main server. The invite link to it is set on Enforcement & appeals.',
 
     async load(ctx) {
-        const supportGuildId = registryGuildId('bannedRoleId', ctx.env);
+        const { supportGuildId, supportGuild } = supportGuildOf(ctx, 'bannedRoleId');
+        if (!supportGuildId) return { supportGuildId: null, supportGuild: null };
         return {
             supportGuildId,
-            supportGuild: supportGuildId ? ctx.client?.guilds?.cache?.get(supportGuildId) || null : null,
+            supportGuild,
             bannedRoleId: registryValue(ctx, 'bannedRoleId'),
             supportAppealsCategoryId: registryValue(ctx, 'supportAppealsCategoryId'),
             invite: registryValue(ctx, 'supportServerInvite'),
@@ -33,7 +51,7 @@ export default {
         // Card ids: the slug of the English title, as before.
         if (!d.supportGuildId) return section(tr.t('support.title'), html`<p class="warn">${tr.t('support.notConnected')}</p>`, '', { key: 'support-server' });
         const form = d.supportGuild
-            ? postForm(ctx, 'support', 'banned-role', rolePicker(d.supportGuild, 'bannedRoleId', d.bannedRoleId, { label: tr.t('support.bannedRole'), help: tr.t('support.bannedRoleHelp') }))
+            ? postForm(ctx, 'support', 'banned-role', rolePicker(d.supportGuild, 'bannedRoleId', d.bannedRoleId, { label: tr.t('support.bannedRole'), help: tr.t('support.bannedRoleHelp') }), { canEdit: ctx.canEdit && ctx.canAct })
             : html`<p class="warn">${tr.t('support.cannotSee')}</p>`;
         const appeals = d.supportGuild
             ? postForm(ctx, 'support', 'appeals-category', channelPicker(d.supportGuild, 'supportAppealsCategoryId', d.supportAppealsCategoryId, {
@@ -49,16 +67,18 @@ export default {
     },
 
     actions: {
-        async 'banned-role'(ctx, form) {
-            const supportGuildId = registryGuildId('bannedRoleId', ctx.env);
-            const supportGuild = supportGuildId ? ctx.client?.guilds?.cache?.get(supportGuildId) : null;
-            const bannedRoleId = roleField(supportGuild, form, 'bannedRoleId', { label: textFor(ctx).t('support.bannedRoleShort') });
-            if (bannedRoleId === registryValue(ctx, 'bannedRoleId')) return nothing(ctx);
-            return saveRegistry(ctx, { bannedRoleId }, 'support');
+        // Administrator only (a role setting).
+        'banned-role': {
+            admin: true,
+            async run(ctx, form) {
+                const { supportGuild } = requireSupportGuild(ctx, 'bannedRoleId');
+                const bannedRoleId = roleField(supportGuild, form, 'bannedRoleId', { label: textFor(ctx).t('support.bannedRoleShort') });
+                if (bannedRoleId === registryValue(ctx, 'bannedRoleId')) return nothing(ctx);
+                return saveRegistry(ctx, { bannedRoleId }, 'support');
+            },
         },
         async 'appeals-category'(ctx, form) {
-            const supportGuildId = registryGuildId('supportAppealsCategoryId', ctx.env);
-            const supportGuild = supportGuildId ? ctx.client?.guilds?.cache?.get(supportGuildId) : null;
+            const { supportGuild } = requireSupportGuild(ctx, 'supportAppealsCategoryId');
             const supportAppealsCategoryId = channelField(supportGuild, form, 'supportAppealsCategoryId', { kinds: ['category'], label: textFor(ctx).t('support.appealsCategory') });
             if (supportAppealsCategoryId === registryValue(ctx, 'supportAppealsCategoryId')) return nothing(ctx);
             return saveRegistry(ctx, { supportAppealsCategoryId }, 'support');

@@ -232,9 +232,9 @@ ${channelPicker(g, 'goodbyeChannelId', w.goodbyeChannelId, { label: tr.t('welcom
 ${switchInput('goodbyePing', w.goodbyePing, { label: tr.t('welcome.leave.ping'), help: tr.t('welcome.leave.pingHelp') })}
 ${textArea('leaveMessage', w.leaveMessage, { label: tr.t('welcome.leave.message'), max: 2000, help: tr.t('welcome.leave.messageHelp') })}</div>`)}`;
         const roles = html`${table([tr.t('welcome.autoRole.role'), tr.t('welcome.autoRole.problems'), ''], (w.roleIds || []).map((id) => [roleName(g, id), roleWarnings(g, id, { autoAssign: true }).join('; ') || html`<span class="ok">${tr.t('welcome.autoRole.ok')}</span>`,
-            buttonForm(ctx, 'welcome', 'autorole-remove', tr.t('welcome.autoRole.remove'), { roleId: id })]), tr.t('welcome.autoRole.none'))}
-${postForm(ctx, 'welcome', 'autorole-add', rolePicker(g, 'roleId', null, { label: tr.t('welcome.autoRole.pick'), optional: false, autoAssign: true, includeManaged: false }), { submit: tr.t('welcome.autoRole.set'), inline: true })}
-${postForm(ctx, 'welcome', 'autorole-delay', html`<div class="grid">${numberInput('autoRoleDelay', w.autoRoleDelay || 0, { label: tr.t('welcome.autoRole.delay'), min: 0, max: 3600, help: tr.t('welcome.autoRole.delayHelp') })}</div>`)}`;
+            buttonForm(ctx, 'welcome', 'autorole-remove', tr.t('welcome.autoRole.remove'), { roleId: id }, { canEdit: ctx.canEdit && ctx.canAct })]), tr.t('welcome.autoRole.none'))}
+${postForm(ctx, 'welcome', 'autorole-add', rolePicker(g, 'roleId', null, { label: tr.t('welcome.autoRole.pick'), optional: false, autoAssign: true, includeManaged: false }), { submit: tr.t('welcome.autoRole.set'), inline: true, canEdit: ctx.canEdit && ctx.canAct })}
+${postForm(ctx, 'welcome', 'autorole-delay', html`<div class="grid">${numberInput('autoRoleDelay', w.autoRoleDelay || 0, { label: tr.t('welcome.autoRole.delay'), min: 0, max: 3600, help: tr.t('welcome.autoRole.delayHelp') })}</div>`, { canEdit: ctx.canEdit && ctx.canAct })}`;
         const logs = postForm(ctx, 'welcome', 'logs', html`<div class="grid">
 ${switchInput('joinLogsEnabled', w.joinLogs?.enabled, { label: tr.t('welcome.logs.joins'), help: tr.t('welcome.logs.joinsHelp') })}
 ${channelPicker(g, 'joinLogsChannelId', w.joinLogs?.channelId || null, { label: tr.t('welcome.logs.joinChannel'), perms: PERMS.post })}
@@ -362,24 +362,36 @@ ${section(tr.t('welcome.logs.title'), logs, tr.t('welcome.logs.help'), { key: 'j
                 return update(ctx, changedOnly({ leaveEmbed, goodbyeImageRef: null }, current), textFor(ctx).t('welcome.action.goodbyeImageRemoved'));
             },
         },
-        async 'autorole-add'(ctx, form) {
-            const tr = textFor(ctx);
-            const roleId = autoRoleField(ctx.guild, form, 'roleId', { optional: false, label: tr.t('welcome.autoRole.pick') });
-            const { before, after, changed } = await ctx.services.addAutoRole(ctx.client, ctx.guildId, roleId);
-            if (!changed) return { changes: [], message: tr.t('welcome.action.autoRoleAlready') };
-            return { changes: diffSnapshots(before, after, ['roleIds']), message: tr.t('welcome.action.autoRoleSet') };
+        // Administrator only: roles the bot gives to new members.
+        'autorole-add': {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const roleId = autoRoleField(ctx.guild, form, 'roleId', { optional: false, label: tr.t('welcome.autoRole.pick') });
+                const { before, after, changed } = await ctx.services.addAutoRole(ctx.client, ctx.guildId, roleId);
+                if (!changed) return { changes: [], message: tr.t('welcome.action.autoRoleAlready') };
+                return { changes: diffSnapshots(before, after, ['roleIds']), message: tr.t('welcome.action.autoRoleSet') };
+            },
         },
-        async 'autorole-remove'(ctx, form) {
-            const tr = textFor(ctx);
-            const roleId = text(form, 'roleId', 25);
-            const { before, after, changed } = await ctx.services.removeAutoRole(ctx.client, ctx.guildId, roleId);
-            if (!changed) return { changes: [], message: tr.t('welcome.action.autoRoleNotSet') };
-            return { changes: diffSnapshots(before, after, ['roleIds']), message: tr.t('welcome.action.autoRoleRemoved') };
+        // Administrator only: roles the bot gives to new members.
+        'autorole-remove': {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const roleId = text(form, 'roleId', 25);
+                const { before, after, changed } = await ctx.services.removeAutoRole(ctx.client, ctx.guildId, roleId);
+                if (!changed) return { changes: [], message: tr.t('welcome.action.autoRoleNotSet') };
+                return { changes: diffSnapshots(before, after, ['roleIds']), message: tr.t('welcome.action.autoRoleRemoved') };
+            },
         },
-        async 'autorole-delay'(ctx, form) {
-            const tr = textFor(ctx);
-            const autoRoleDelay = intField(form, 'autoRoleDelay', { min: 0, max: 3600, label: tr.t('welcome.autoRole.delayLabel') });
-            return update(ctx, { autoRoleDelay }, tr.t('welcome.action.delaySaved'));
+        // Administrator only: roles the bot gives to new members.
+        'autorole-delay': {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const autoRoleDelay = intField(form, 'autoRoleDelay', { min: 0, max: 3600, label: tr.t('welcome.autoRole.delayLabel') });
+                return update(ctx, { autoRoleDelay }, tr.t('welcome.action.delaySaved'));
+            },
         },
         async logs(ctx, form) {
             const tr = textFor(ctx);

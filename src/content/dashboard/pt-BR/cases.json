@@ -233,7 +233,9 @@
     "open": "Abrir",
     "decideHere": "Decida aqui ou no Discord (Aceitar / Negar na mensagem da apelação): o efeito é o mesmo.",
     "adminsDecide": "Os administradores decidem as apelações aqui (com a edição ativada) ou no Discord.",
-    "empty": "Nenhuma apelação pendente. As novas aparecem aqui e nos canais de apelação do Discord."
+    "empty": "Nenhuma apelação pendente. As novas aparecem aqui e nos canais de apelação do Discord.",
+    "noChannel": "Sem canal: decida aqui",
+    "noChannelTitle": "Este servidor não tem categoria de recursos, então este recurso não tem canal no Discord. Decida aqui."
   },
   "change": {
     "title": "Alterar este caso",
@@ -288,7 +290,8 @@
     "ownerOverride": "Você aplicou esta punição. Como dono do bot você pode decidir mesmo assim; isso é registrado como exceção do dono.",
     "note": "Nota (opcional, mostrada no canal da apelação e no registro)",
     "accept": "Aceitar…",
-    "deny": "Negar…"
+    "deny": "Negar…",
+    "noChannel": "Este recurso não tem canal no Discord (o servidor não tem categoria de recursos). Decida aqui."
   },
   "appealConfirm": {
     "effect": {

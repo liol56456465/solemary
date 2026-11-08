@@ -44,11 +44,11 @@ ${rolePicker(g, 'roleIds', [], { label: tr.t('reactionRoles.create.roles'), auto
         const existing = panels.map((panel) => {
             const roles = Array.isArray(panel.roles) ? panel.roles : Object.values(panel.roles || {});
             const rows = roles.map((roleId) => [roleName(g, roleId), roleWarnings(g, roleId, { autoAssign: true }).join('; ') || html`<span class="ok">${tr.t('reactionRoles.panel.ok')}</span>`,
-                buttonForm(ctx, 'reaction-roles', 'role-remove', tr.t('reactionRoles.panel.remove'), { messageId: panel.messageId, roleId })]);
+                buttonForm(ctx, 'reaction-roles', 'role-remove', tr.t('reactionRoles.panel.remove'), { messageId: panel.messageId, roleId }, { canEdit: canPost })]);
             const body = html`<p>${tr.tx('reactionRoles.panel.info', { channel: channelName(g, panel.channelId), message: html`<code>${panel.messageId}</code>`, count: tr.fmtNumber(roles.length) })}</p>
 ${table([tr.t('reactionRoles.panel.role'), tr.t('reactionRoles.panel.problems'), ''], rows, tr.t('reactionRoles.panel.noRoles'))}
-<div class="row-actions">${postForm(ctx, 'reaction-roles', 'role-add', rolePicker(g, 'roleId', null, { label: tr.t('reactionRoles.panel.addRole'), optional: false, autoAssign: true }), { submit: tr.t('reactionRoles.panel.add'), inline: true, hidden: { messageId: panel.messageId } })}
-${buttonForm(ctx, 'reaction-roles', 'panel-delete', tr.t('reactionRoles.panel.delete'), { messageId: panel.messageId }, { confirm: tr.t('reactionRoles.panel.deleteConfirm') })}</div>`;
+<div class="row-actions">${postForm(ctx, 'reaction-roles', 'role-add', rolePicker(g, 'roleId', null, { label: tr.t('reactionRoles.panel.addRole'), optional: false, autoAssign: true }), { submit: tr.t('reactionRoles.panel.add'), inline: true, hidden: { messageId: panel.messageId }, canEdit: canPost })}
+${buttonForm(ctx, 'reaction-roles', 'panel-delete', tr.t('reactionRoles.panel.delete'), { messageId: panel.messageId }, { confirm: tr.t('reactionRoles.panel.deleteConfirm'), canEdit: canPost })}</div>`;
             // Explicit keys: the card ids stay the English slugs in every language.
             return section(tr.t('reactionRoles.panel.title', { id: panel.messageId }), body, '', { key: `panel-${panel.messageId}` });
         });
@@ -77,33 +77,45 @@ ${existing.length ? existing : section(tr.t('reactionRoles.panels.title'), html`
                 };
             },
         },
-        async 'role-add'(ctx, form) {
-            const tr = textFor(ctx);
-            const messageId = messageIdField(ctx, form);
-            const roleId = text(form, 'roleId', 25);
-            if (!isSnowflake(roleId) || !ctx.guild?.roles?.cache?.get(roleId)) throw new InputError(tr.t('reactionRoles.action.roleMissing'));
-            const before = await ctx.services.getAllReactionRoleMessages(ctx.client, ctx.guildId).then((p) => p.find((x) => x.messageId === messageId));
-            const { panel } = await ctx.services.addPanelRole(ctx.client, ctx.guildId, messageId, roleId);
-            return { changes: [{ key: `panel.${messageId}.roles`, old: before?.roles || [], new: panel.roles }], message: tr.t('reactionRoles.action.roleAdded') };
+        // Administrator only: roles members can give themselves.
+        'role-add': {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const messageId = messageIdField(ctx, form);
+                const roleId = text(form, 'roleId', 25);
+                if (!isSnowflake(roleId) || !ctx.guild?.roles?.cache?.get(roleId)) throw new InputError(tr.t('reactionRoles.action.roleMissing'));
+                const before = await ctx.services.getAllReactionRoleMessages(ctx.client, ctx.guildId).then((p) => p.find((x) => x.messageId === messageId));
+                const { panel } = await ctx.services.addPanelRole(ctx.client, ctx.guildId, messageId, roleId);
+                return { changes: [{ key: `panel.${messageId}.roles`, old: before?.roles || [], new: panel.roles }], message: tr.t('reactionRoles.action.roleAdded') };
+            },
         },
-        async 'role-remove'(ctx, form) {
-            const tr = textFor(ctx);
-            const messageId = messageIdField(ctx, form);
-            const roleId = text(form, 'roleId', 25);
-            if (!isSnowflake(roleId)) throw new InputError(tr.t('reactionRoles.action.unknownRole'));
-            const { panel, deletedPanel } = await ctx.services.removePanelRole(ctx.client, ctx.guildId, messageId, roleId);
-            const old = [...(panel?.roles || []), roleId];
-            return {
-                changes: [{ key: `panel.${messageId}.roles`, old, new: deletedPanel ? null : panel.roles }],
-                message: tr.t(deletedPanel ? 'reactionRoles.action.lastRole' : 'reactionRoles.action.roleRemoved'),
-            };
+        // Administrator only: roles members can give themselves.
+        'role-remove': {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const messageId = messageIdField(ctx, form);
+                const roleId = text(form, 'roleId', 25);
+                if (!isSnowflake(roleId)) throw new InputError(tr.t('reactionRoles.action.unknownRole'));
+                const { panel, deletedPanel } = await ctx.services.removePanelRole(ctx.client, ctx.guildId, messageId, roleId);
+                const old = [...(panel?.roles || []), roleId];
+                return {
+                    changes: [{ key: `panel.${messageId}.roles`, old, new: deletedPanel ? null : panel.roles }],
+                    message: tr.t(deletedPanel ? 'reactionRoles.action.lastRole' : 'reactionRoles.action.roleRemoved'),
+                };
+            },
         },
-        async 'panel-delete'(ctx, form) {
-            const tr = textFor(ctx);
-            const messageId = messageIdField(ctx, form);
-            const { deleted, panel } = await ctx.services.deletePanel(ctx.client, ctx.guildId, messageId, { actorId: ctx.actor.userId, actorTag: `${ctx.actor.username} (dashboard)` });
-            if (!deleted) throw new InputError(tr.t('reactionRoles.action.panelGone'));
-            return { changes: [{ key: `panel.${messageId}`, old: panel?.roles || null, new: null }], message: tr.t('reactionRoles.action.panelDeleted') };
+        // Administrator only: roles members can give themselves.
+        'panel-delete': {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const messageId = messageIdField(ctx, form);
+                const { deleted, panel } = await ctx.services.deletePanel(ctx.client, ctx.guildId, messageId, { actorId: ctx.actor.userId, actorTag: `${ctx.actor.username} (dashboard)` });
+                if (!deleted) throw new InputError(tr.t('reactionRoles.action.panelGone'));
+                return { changes: [{ key: `panel.${messageId}`, old: panel?.roles || null, new: null }], message: tr.t('reactionRoles.action.panelDeleted') };
+            },
         },
     },
 };

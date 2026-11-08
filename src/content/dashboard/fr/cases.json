@@ -233,7 +233,9 @@
     "open": "Ouvrir",
     "decideHere": "Décide ici ou dans Discord (Accepter / Refuser sur le message d’appel) : l’effet est le même.",
     "adminsDecide": "Les administrateurs décident des appels ici (modification activée) ou dans Discord.",
-    "empty": "Aucun appel en attente. Les nouveaux appels apparaissent ici et dans les salons d’appel sur Discord."
+    "empty": "Aucun appel en attente. Les nouveaux appels apparaissent ici et dans les salons d’appel sur Discord.",
+    "noChannel": "Pas de salon : décider ici",
+    "noChannelTitle": "Ce serveur n’a pas de catégorie d’appels, donc cet appel n’a pas de salon sur Discord. Décide-le ici."
   },
   "change": {
     "title": "Modifier ce dossier",
@@ -288,7 +290,8 @@
     "ownerOverride": "Tu as donné cette sanction. En tant que propriétaire du bot, tu peux quand même décider ; c’est enregistré comme une dérogation du propriétaire.",
     "note": "Note (facultatif, visible dans le salon d’appel et le journal)",
     "accept": "Accepter…",
-    "deny": "Refuser…"
+    "deny": "Refuser…",
+    "noChannel": "Cet appel n’a pas de salon sur Discord (le serveur n’a pas de catégorie d’appels). Décide-le ici."
   },
   "appealConfirm": {
     "effect": {

@@ -1,4 +1,4 @@
-// rules.js — Rules: the main server's rules (an ordered list, max 30: short title, text and
+// rules.js — Rules: this server's rules (an ordered list, max 30: short title, text and
 // an optional consequence), shown on the public /rules page, and which prebuilt reason links
 // to which rule. A case with a linked reason gets "Rule 3: No spam" (+ the /rules link when
 // PUBLIC_URL is set) in the member's punishment DM (dmTemplates.js via
@@ -43,6 +43,7 @@ import {
 import { RULES_POST_LIMITS } from '../../settings/settingsRegistry.js';
 import { EMBED_COLOURS, colourFromKey, parseHexColour } from '../../botMessageService.js';
 import { siteOrigin } from '../../site/shell.js';
+import { isHomeScope } from './serverScope.js';
 import { logger } from '../../../utils/logger.js';
 import { textFor } from '../language.js';
 
@@ -383,9 +384,11 @@ ${textInput('consequence', '', { label: tr.t('rules.rule.consequence'), max: con
             ? postForm(ctx, 'rules', 'links', html`<div class="grid">${ENFORCEMENT_REASONS.map((reason) => selectInput(`link_${reason.key}`, d.links[reason.key] || '', choices, { label: reason.label }))}</div>`)
             : html`<p class="muted">${tr.t('rules.links.empty')}</p>`;
         const updated = d.updatedAt ? html` ${tr.t('rules.list.updated', { date: tr.fmtDateTime(d.updatedAt) })}` : '';
-        const page = d.origin
-            ? html` ${tr.tx('rules.list.pageAt', { link: html`<a href="${`${d.origin}/rules`}" rel="noopener">${d.origin}/rules</a>` })}`
-            : ` ${tr.t('rules.list.pageNoSite')}`;
+        // The public /rules page shows Mewvo's own server's rules: linked in the home servers only (B3, section 4).
+        const page = !isHomeScope(ctx) ? ''
+            : d.origin
+                ? html` ${tr.tx('rules.list.pageAt', { link: html`<a href="${`${d.origin}/rules`}" rel="noopener">${d.origin}/rules</a>` })}`
+                : ` ${tr.t('rules.list.pageNoSite')}`;
         // Card keys: the English titles' slugs (stable ids in every language).
         return html`${section(tr.t('rules.list.title'), html`${table([tr.t('rules.list.no'), tr.t('rules.list.rule'), tr.t('rules.rule.consequence'), ''], rows, tr.t('rules.list.empty'))}${edits}`,
             html`${tr.t('rules.list.count', { count: tr.fmtNumber(d.rules.length), max: tr.fmtNumber(maxRules) })}${updated}${page}`, { key: 'rules' })}

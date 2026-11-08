@@ -241,7 +241,9 @@
     "open": "Otwórz",
     "decideHere": "Decyduj tutaj albo w Discordzie (Przyjmij / Odrzuć przy wiadomości z odwołaniem): skutek jest ten sam.",
     "adminsDecide": "Administratorzy decydują o odwołaniach tutaj (przy włączonej edycji) albo w Discordzie.",
-    "empty": "Brak oczekujących odwołań. Nowe pojawią się tutaj i na kanałach odwołań w Discordzie."
+    "empty": "Brak oczekujących odwołań. Nowe pojawią się tutaj i na kanałach odwołań w Discordzie.",
+    "noChannel": "Brak kanału: zdecyduj tutaj",
+    "noChannelTitle": "Ten serwer nie ma kategorii odwołań, więc to odwołanie nie ma kanału na Discordzie. Zdecyduj o nim tutaj."
   },
   "change": {
     "title": "Zmień tę sprawę",
@@ -296,7 +298,8 @@
     "ownerOverride": "To ty nałożyłeś tę karę. Jako właściciel bota możesz mimo to zdecydować; zostanie to zapisane jako wyjątek właściciela.",
     "note": "Notatka (opcjonalnie, widoczna na kanale odwołania i w dzienniku)",
     "accept": "Przyjmij…",
-    "deny": "Odrzuć…"
+    "deny": "Odrzuć…",
+    "noChannel": "To odwołanie nie ma kanału na Discordzie (serwer nie ma kategorii odwołań). Zdecyduj o nim tutaj."
   },
   "appealConfirm": {
     "effect": {

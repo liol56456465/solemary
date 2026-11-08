@@ -81,9 +81,9 @@ ${types.map((type) => checkboxInput(fieldName(type), events[type] !== false, { l
         ];
         const add = tr.t('logging.ignore.add');
         const ignoreForms = html`${table([tr.t('logging.ignore.type'), tr.t('logging.ignore.ignored'), ''], ignoreRows, tr.t('logging.ignore.empty'))}
-<div class="grid">${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="channel">${channelPicker(g, 'id', null, { label: tr.t('logging.ignore.channel'), kinds: ['text', 'voice', 'category', 'forum'], perms: [], optional: false })}`, { submit: add, inline: true })}
-${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="role"><label>${tr.t('logging.ignore.role')}<select name="id">${roleList(g, { includeManaged: true }).map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select></label>`, { submit: add, inline: true })}
-${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="user">${memberField({ name: 'id', label: tr.t('logging.ignore.member'), value: pickedFromQuery(ctx.query, 'ignore_user'), required: true, pick: 'ignore_user', back: path('/logging'), anchor: 'ignore-lists', guild: g })}`, { submit: add, inline: true })}</div>`;
+<div class="grid">${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="channel">${channelPicker(g, 'id', null, { label: tr.t('logging.ignore.channel'), kinds: ['text', 'voice', 'category', 'forum'], perms: [], optional: false })}`, { submit: add, inline: true, canEdit: ctx.canEdit && ctx.canAct })}
+${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="role"><label>${tr.t('logging.ignore.role')}<select name="id">${roleList(g, { includeManaged: true }).map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select></label>`, { submit: add, inline: true, canEdit: ctx.canEdit && ctx.canAct })}
+${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" value="user">${memberField({ name: 'id', label: tr.t('logging.ignore.member'), value: pickedFromQuery(ctx.query, 'ignore_user'), required: true, pick: 'ignore_user', back: path('/logging'), anchor: 'ignore-lists', guild: g })}`, { submit: add, inline: true, canEdit: ctx.canEdit && ctx.canAct })}</div>`;
         // The on/off switch is in the page header (pages.js moduleSettingsPage). Keys: the English titles' slugs.
         const modLog = tr.tx('logging.modLog.text', {
             channel: channelName(g, modLogChannelId),
@@ -146,20 +146,24 @@ ${section(tr.t('logging.ignore.title'), ignoreForms, tr.t('logging.ignore.help')
             if (!changes.length) return nothing(ctx);
             return { changes, message: textFor(ctx).t('logging.action.eventsSaved') };
         },
-        async 'ignore-add'(ctx, form) {
-            const tr = textFor(ctx);
-            const type = choiceField(form, 'type', Object.keys(IGNORE_TYPES), tr.t('logging.ignore.type'));
-            let id;
-            if (type === 'channel') id = channelField(ctx.guild, form, 'id', { kinds: ['text', 'voice', 'category', 'forum'], optional: false, label: tr.t('logging.action.channelLabel') });
-            else if (type === 'role') {
-                id = text(form, 'id', 25);
-                if (!ctx.guild?.roles?.cache?.get(id)) throw new InputError(tr.t('logging.action.roleMissing'));
-            } else id = userIdField(form, 'id', tr.t('logging.action.userIdLabel'));
-            const before = await ctx.services.getLoggingStatus(ctx.client, ctx.guildId);
-            const list = before.ignore?.[IGNORE_TYPES[type]] || [];
-            if (list.includes(id)) return { changes: [], message: tr.t('logging.action.already') };
-            failIfFalse(await ctx.services.updateIgnoreList(ctx.client, ctx.guildId, { action: 'add', type, id }));
-            return { changes: [{ key: `logging.ignore.${IGNORE_TYPES[type]}`, old: list, new: [...list, id] }], message: tr.t(IGNORING[type]) };
+        // Administrator only: hiding a channel, role or member from the logs is a safety setting (a manager must not hide their own actions).
+        'ignore-add': {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const type = choiceField(form, 'type', Object.keys(IGNORE_TYPES), tr.t('logging.ignore.type'));
+                let id;
+                if (type === 'channel') id = channelField(ctx.guild, form, 'id', { kinds: ['text', 'voice', 'category', 'forum'], optional: false, label: tr.t('logging.action.channelLabel') });
+                else if (type === 'role') {
+                    id = text(form, 'id', 25);
+                    if (!ctx.guild?.roles?.cache?.get(id)) throw new InputError(tr.t('logging.action.roleMissing'));
+                } else id = userIdField(form, 'id', tr.t('logging.action.userIdLabel'));
+                const before = await ctx.services.getLoggingStatus(ctx.client, ctx.guildId);
+                const list = before.ignore?.[IGNORE_TYPES[type]] || [];
+                if (list.includes(id)) return { changes: [], message: tr.t('logging.action.already') };
+                failIfFalse(await ctx.services.updateIgnoreList(ctx.client, ctx.guildId, { action: 'add', type, id }));
+                return { changes: [{ key: `logging.ignore.${IGNORE_TYPES[type]}`, old: list, new: [...list, id] }], message: tr.t(IGNORING[type]) };
+            },
         },
         async 'ignore-remove'(ctx, form) {
             const tr = textFor(ctx);

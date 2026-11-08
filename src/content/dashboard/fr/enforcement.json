@@ -185,5 +185,17 @@
     "transparencyOff": "Le rapport de transparence est désactivé : /transparency a disparu du site.",
     "trustOn": "La carte de confiance est activée : /trust est public.",
     "trustOff": "La carte de confiance est désactivée : /trust a disparu du site."
+  },
+  "appealsHome": {
+    "title": "Où les membres font appel",
+    "help": "Les messages de sanction (MP) indiquent aux membres où demander la levée d’une sanction. Support Mewvo : ils font appel sur le serveur de support de Mewvo. Notre propre serveur : le MP donne une invitation vers un serveur que vous gérez.",
+    "choice": "Les membres font appel sur",
+    "mewvo": "Support Mewvo",
+    "own": "Notre propre serveur",
+    "invite": "Invitation vers notre propre serveur",
+    "inviteHelp": "Une invitation discord.gg qui n’expire pas. Utilisée seulement avec « Notre propre serveur ». Vide : le MP n’a pas de ligne d’invitation.",
+    "badInvite": "Invitation vers notre propre serveur : doit être un lien d’invitation discord.gg. Rien n’a été modifié.",
+    "homeNote": "Cela ne s’applique pas ici : les membres des serveurs de Mewvo font toujours appel sur le serveur de support de Mewvo.",
+    "homeOnlyAction": "Ce réglage ne s’applique pas aux serveurs de Mewvo. Rien n’a été modifié."
   }
 }

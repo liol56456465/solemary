@@ -44,6 +44,8 @@ import {
 import { guildPlan as defaultGuildPlan } from '../../billing/premiumEffects.js';
 import { planName } from '../../billing/premiumService.js';
 import { textFor } from '../language.js';
+import { isLegacyAutomodGuild } from '../../automod/automodSettings.js';
+import { requireCanAct } from './serverScope.js';
 
 // Words: src/content/dashboard/<lang>/automod.json. English rule, join-gate check and policy names
 // come from config/automod.js, joinGate.js and nativeBridge.js as before; other languages take
@@ -382,7 +384,7 @@ export default {
     key: 'automod',
     label: 'Automod',
     state: 'automod',
-    help: 'Automod watches messages and joins in the main server and acts on spam, bad words, unwanted links and raids by itself, so staff do not have to catch everything. You can also change these with /automod in Discord.',
+    help: 'Automod watches messages and joins in this server and acts on spam, bad words, unwanted links and raids by itself, so staff do not have to catch everything. You can also change these with /automod in Discord.',
 
     async load(ctx) {
         const settings = await ctx.services.getAutomodSettings(ctx.guildId);
@@ -468,7 +470,7 @@ ${postForm(ctx, 'automod', 'exempt-add', channelPicker(g, 'channel', null, { lab
 ${data.registry.exemptChannelIds.length ? html`<p class="muted">${tr.tx('automod.exempt.alsoIgnored', { channels: html`${data.registry.exemptChannelIds.map((id, i) => html`${i ? ', ' : ''}${channelName(g, id)}`)}` })}</p>` : ''}`;
         const trusted = postForm(ctx, 'automod', 'trusted', html`<div class="grid">
 ${rolePicker(g, 'roleId', s.trusted.roleId, { label: tr.t('automod.trusted.role'), assign: false, noneLabel: tr.t('automod.trusted.none'), help: tr.t('automod.trusted.roleHelp') })}
-${numberInput('minLevel', s.trusted.minLevel, { label: tr.t('automod.trusted.minLevel'), min: 0, max: 1000, help: tr.t('automod.trusted.minLevelHelp') })}</div>`);
+${numberInput('minLevel', s.trusted.minLevel, { label: tr.t('automod.trusted.minLevel'), min: 0, max: 1000, help: tr.t('automod.trusted.minLevelHelp') })}</div>`, { canEdit: ctx.canEdit && ctx.canAct });
         const secondChance = html`${toggleForm(ctx, 'automod', 'second-chance', s.secondChance, { label: tr.t('automod.secondChance.label') })}
 `;
         const mood = toggleForm(ctx, 'automod', 'mood', s.moodAlerts, { label: tr.t('automod.mood.label') });
@@ -557,9 +559,19 @@ ${section(tr.t('automod.testRun.title'), testRunSection(ctx, data.backtest, data
     },
 
     actions: {
+        // Turning automod on: any editor. Turning it off is a safety change: Administrator, and while
+        // the staff guard is on only the server owner (turning automod off also stops the guard),
+        // the same rule as /automod enable (commands/Enforcement/automod.js).
         async enabled(ctx, form) {
             const tr = textFor(ctx);
             const enabled = boolField(form, 'enabled', tr.t('frame.nav.items.automod'));
+            if (!enabled) {
+                requireCanAct(ctx, tr.t('automod.error.offNeedsAdmin'));
+                if (!isLegacyAutomodGuild(ctx.guildId) && ctx.actor?.userId !== ctx.guild?.ownerId) {
+                    const settings = await ctx.services.getAutomodSettings(ctx.guildId);
+                    if (settings?.staffGuard) throw new InputError(tr.t('automod.error.staffGuardOwnerOnly'), 403);
+                }
+            }
             return change(ctx, ['enabled'], () => ctx.services.setAutomodEnabled(ctx.guildId, enabled), tr.t(enabled ? 'automod.action.automodOn' : 'automod.action.automodOff'));
         },
         async mode(ctx, form) {
@@ -679,16 +691,20 @@ ${section(tr.t('automod.testRun.title'), testRunSection(ctx, data.backtest, data
             if (!/^\d{17,20}$/.test(channelId)) throw new InputError(tr.t('forms.error.notChannelId', { label: tr.t('automod.exempt.channel') }));
             return change(ctx, ['exemptChannelIds'], () => ctx.services.setExemptChannel(ctx.guildId, channelId, false), tr.t('automod.action.exemptRemoved'));
         },
-        async trusted(ctx, form) {
-            const tr = textFor(ctx);
-            const roleId = roleField(ctx.guild, form, 'roleId', { label: tr.t('automod.trusted.role') });
-            if (roleId) {
-                const problem = ctx.services.getTrustedRoleProblem(ctx.guild, ctx.guild.roles.cache.get(roleId));
-                if (problem) throw new InputError(plainText(problem));
-            }
-            const minLevel = intField(form, 'minLevel', { min: 0, max: 1000, label: tr.t('automod.trusted.minLevel'), fallback: 0 });
-            const clear = !roleId && minLevel === 0;
-            return change(ctx, ['trusted'], () => ctx.services.setTrusted(ctx.guildId, clear ? { clear: true } : { roleId, minLevel }), tr.t('automod.action.trustedSaved'));
+        // Administrator only: trusted members skip automod (a safety setting).
+        trusted: {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const roleId = roleField(ctx.guild, form, 'roleId', { label: tr.t('automod.trusted.role') });
+                if (roleId) {
+                    const problem = ctx.services.getTrustedRoleProblem(ctx.guild, ctx.guild.roles.cache.get(roleId));
+                    if (problem) throw new InputError(plainText(problem));
+                }
+                const minLevel = intField(form, 'minLevel', { min: 0, max: 1000, label: tr.t('automod.trusted.minLevel'), fallback: 0 });
+                const clear = !roleId && minLevel === 0;
+                return change(ctx, ['trusted'], () => ctx.services.setTrusted(ctx.guildId, clear ? { clear: true } : { roleId, minLevel }), tr.t('automod.action.trustedSaved'));
+            },
         },
         async 'second-chance'(ctx, form) {
             const tr = textFor(ctx);

@@ -225,7 +225,9 @@
     "open": "Open",
     "decideHere": "Decide here or in Discord (Accept / Deny on the appeal message): the effects are the same.",
     "adminsDecide": "Administrators decide appeals here (with editing on) or in Discord.",
-    "empty": "No pending appeals. New appeals show up here and in the appeal channels in Discord."
+    "empty": "No pending appeals. New appeals show up here and in the appeal channels in Discord.",
+    "noChannel": "No channel: decide here",
+    "noChannelTitle": "This server has no appeals category, so this appeal has no channel in Discord. Decide it here."
   },
   "change": {
     "title": "Change this case",
@@ -280,7 +282,8 @@
     "ownerOverride": "You issued this punishment. As a bot owner you may decide anyway; it is logged as an owner override.",
     "note": "Note (optional, shown in the appeal channel and the log)",
     "accept": "Accept…",
-    "deny": "Deny…"
+    "deny": "Deny…",
+    "noChannel": "This appeal has no channel in Discord (the server has no appeals category). Decide it here."
   },
   "appealConfirm": {
     "effect": {

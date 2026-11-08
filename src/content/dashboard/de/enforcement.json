@@ -181,5 +181,17 @@
     "transparencyOff": "Der Transparenzbericht ist aus: /transparency ist nicht mehr auf der Website.",
     "trustOn": "Die Vertrauenskarte ist an: /trust ist öffentlich.",
     "trustOff": "Die Vertrauenskarte ist aus: /trust ist nicht mehr auf der Website."
+  },
+  "appealsHome": {
+    "title": "Wo Mitglieder Einspruch einlegen",
+    "help": "Die Nachrichten zu Strafen (DMs) sagen Mitgliedern, wo sie bitten können, eine Strafe aufzuheben. Mewvo-Support: Sie legen im Mewvo-Supportserver Einspruch ein. Unser eigener Server: Die DM nennt eine Einladung zu einem Server, den ihr betreibt.",
+    "choice": "Mitglieder legen Einspruch ein in",
+    "mewvo": "Mewvo-Support",
+    "own": "Unser eigener Server",
+    "invite": "Einladung zu unserem eigenen Server",
+    "inviteHelp": "Eine discord.gg-Einladung, die nicht abläuft. Nur mit „Unser eigener Server“ genutzt. Leer: Die DM hat keine Einladungszeile.",
+    "badInvite": "Einladung zu unserem eigenen Server: muss ein discord.gg-Einladungslink sein. Es wurde nichts geändert.",
+    "homeNote": "Das gilt hier nicht: Mitglieder von Mewvos eigenen Servern legen immer im Mewvo-Supportserver Einspruch ein.",
+    "homeOnlyAction": "Diese Einstellung gilt nicht auf Mewvos eigenen Servern. Es wurde nichts geändert."
   }
 }

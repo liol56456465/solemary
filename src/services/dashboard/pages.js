@@ -40,7 +40,7 @@ function link(url, label = url) {
         : html`<span>${label}</span>`;
 }
 
-const caseLink = (code) => html`<a href="/dashboard/cases/${encodeURIComponent(code)}"><code>${code}</code></a>`;
+const caseLink = (code) => html`<a href="${path('/cases/')}${encodeURIComponent(code)}"><code>${code}</code></a>`;
 
 function statusClass(label) {
     if (/active|pending/.test(label)) return 'warn';
@@ -174,18 +174,18 @@ export function casesPage({ session, access = null, moduleStates = {}, query = {
     const pages = Math.max(1, Math.ceil(total / pageSize));
     const keep = { member: query.member, moderator: query.moderator, type: query.type, status: query.status, text: query.text, from: query.from, to: query.to, tag: query.tag };
     const pager = html`<div class="pager">
-${page > 0 ? html`<a href="/dashboard/cases${queryString({ ...keep, page: page - 1 })}">${t('cases.pager.newer')}</a>` : ''}
+${page > 0 ? html`<a href="${path('/cases')}${queryString({ ...keep, page: page - 1 })}">${t('cases.pager.newer')}</a>` : ''}
 <span class="muted">${t('frame.pager.pageOf', { page: tr.fmtNumber(page + 1), pages: tr.fmtNumber(pages) })} · ${tr.tp('cases.list.count', total)}</span>
-${page + 1 < pages ? html`<a href="/dashboard/cases${queryString({ ...keep, page: page + 1 })}">${t('cases.pager.older')}</a>` : ''}
+${page + 1 < pages ? html`<a href="${path('/cases')}${queryString({ ...keep, page: page + 1 })}">${t('cases.pager.older')}</a>` : ''}
 </div>`;
     const filtered = Object.values(keep).some(Boolean);
     const exportLine = !canExport ? '' : exportDays === null
         ? html`<p class="muted">${tx('cases.list.exportPlan', { plans: html`<a href="/pricing">${t('cases.list.plans')}</a>` })}</p>`
-        : html`<p><a class="btn" href="/dashboard/cases/export.csv" download>${t('cases.list.download')}</a> <span class="muted">${Number.isFinite(exportDays) ? tr.tp('cases.list.exportDays', exportDays) : t('cases.list.exportAll')}</span></p>`;
+        : html`<p><a class="btn" href="${path('/cases/export.csv')}" download>${t('cases.list.download')}</a> <span class="muted">${Number.isFinite(exportDays) ? tr.tp('cases.list.exportDays', exportDays) : t('cases.list.exportAll')}</span></p>`;
     const typeOption = (v) => (tr.has(`cases.type.${v}`) ? t(`cases.type.${v}`) : v);
     const statusOption = (v) => (tr.has(`cases.searchStatus.${v}`) ? t(`cases.searchStatus.${v}`) : v);
     const body = html`<header class="page-head"><h1>${t('cases.list.title')}</h1><p class="muted">${t('cases.list.help')}</p>${exportLine}</header>
-<form class="filters" method="get" action="/dashboard/cases">
+<form class="filters" method="get" action="${path('/cases')}">
 <label>${t('cases.filter.member')}<input name="member" value="${query.member || ''}" inputmode="numeric" maxlength="20"></label>
 <label>${t('cases.filter.moderator')}<input name="moderator" value="${query.moderator || ''}" inputmode="numeric" maxlength="20"></label>
 <label>${t('cases.filter.type')}<select name="type">${option('', t('cases.filter.any'), !query.type)}${SEARCH_TYPES.map((v) => option(v, typeOption(v), query.type === v))}</select></label>
@@ -194,13 +194,13 @@ ${page + 1 < pages ? html`<a href="/dashboard/cases${queryString({ ...keep, page
 <label>${t('cases.filter.tag')}<input name="tag" value="${query.tag || ''}" maxlength="21" placeholder="${t('cases.filter.tagPlaceholder')}"></label>
 <label>${t('cases.filter.from')}<input type="date" name="from" value="${query.from || ''}"></label>
 <label>${t('cases.filter.to')}<input type="date" name="to" value="${query.to || ''}"></label>
-<button class="primary" type="submit">${t('cases.filter.search')}</button> <a href="/dashboard/cases">${t('cases.filter.clear')}</a>
+<button class="primary" type="submit">${t('cases.filter.search')}</button> <a href="${path('/cases')}">${t('cases.filter.clear')}</a>
 </form>
-${saved.length ? html`<p class="saved-searches">${t('cases.saved.label')} ${saved.map((s, i) => html`${i ? ' · ' : ''}<a href="/dashboard/cases${queryString(s.query)}">${s.name}</a>${canSaveSearch ? html` <form method="post" action="/dashboard/cases/searches/delete" class="inline-form"><input type="hidden" name="csrf" value="${session.csrf}"><input type="hidden" name="name" value="${s.name}"><button type="submit" class="link-button" aria-label="${t('cases.saved.deleteLabel', { name: s.name })}">${t('cases.saved.delete')}</button></form>` : ''}`)}</p>` : ''}
-${canSaveSearch && filtered ? html`<form method="post" action="/dashboard/cases/searches/save" class="inline-form save-search"><input type="hidden" name="csrf" value="${session.csrf}">${Object.entries(keep).filter(([, v]) => v).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`)}<label>${t('cases.saved.saveAs')} <input name="name" maxlength="40" required placeholder="${t('cases.saved.namePlaceholder')}"></label> <button type="submit">${t('cases.saved.save')}</button></form>` : ''}
+${saved.length ? html`<p class="saved-searches">${t('cases.saved.label')} ${saved.map((s, i) => html`${i ? ' · ' : ''}<a href="${path('/cases')}${queryString(s.query)}">${s.name}</a>${canSaveSearch ? html` <form method="post" action="${path('/cases/searches/delete')}" class="inline-form"><input type="hidden" name="csrf" value="${session.csrf}"><input type="hidden" name="name" value="${s.name}"><button type="submit" class="link-button" aria-label="${t('cases.saved.deleteLabel', { name: s.name })}">${t('cases.saved.delete')}</button></form>` : ''}`)}</p>` : ''}
+${canSaveSearch && filtered ? html`<form method="post" action="${path('/cases/searches/save')}" class="inline-form save-search"><input type="hidden" name="csrf" value="${session.csrf}">${Object.entries(keep).filter(([, v]) => v).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`)}<label>${t('cases.saved.saveAs')} <input name="name" maxlength="40" required placeholder="${t('cases.saved.namePlaceholder')}"></label> <button type="submit">${t('cases.saved.save')}</button></form>` : ''}
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${error ? html`<p class="bad">${error}</p>` : ''}
-${rows.length && canBulk ? html`<form method="post" action="/dashboard/cases/bulk" id="bulk-cases" class="filters bulk-cases"><input type="hidden" name="csrf" value="${session.csrf}">
+${rows.length && canBulk ? html`<form method="post" action="${path('/cases/bulk')}" id="bulk-cases" class="filters bulk-cases"><input type="hidden" name="csrf" value="${session.csrf}">
 <label>${t('cases.bulk.with')}<select name="action"><option value="tag-add">${t('cases.bulk.tagAdd')}</option><option value="tag-remove">${t('cases.bulk.tagRemove')}</option><option value="void">${t('cases.bulk.void')}</option></select></label>
 <label>${t('cases.filter.tag')}<input name="tag" maxlength="21" placeholder="scam"></label>
 <label class="wide">${t('cases.bulk.reason')}<input name="reason" maxlength="500"></label>
@@ -214,7 +214,7 @@ ${rows.map((row) => {
 <td>${row.reason}</td><td>${timeTag(row.created_at)}</td><td class="${statusClass(label)}">${statusLabelText(label, tr)}</td></tr>`;
     })}
 </tbody></table></div>${pager}` : error ? '' : filtered
-        ? html`<p class="empty">${t('cases.list.noMatch')} <a href="/dashboard/cases">${t('cases.list.clearFilters')}</a></p>`
+        ? html`<p class="empty">${t('cases.list.noMatch')} <a href="${path('/cases')}">${t('cases.list.clearFilters')}</a></p>`
         : html`<p class="empty">${t('cases.list.empty')}</p>`}`;
     return layout({ title: t('cases.list.title'), active: 'cases', session, access, moduleStates, body });
 }
@@ -246,13 +246,13 @@ export function caseDetailPage({ session, access = null, moduleStates = {}, reco
     const d = (v) => dateIn(v, tr);
     const r = record;
     const appealStatus = (s) => (tr.has(`cases.appealStatus.${s}`) ? t(`cases.appealStatus.${s}`) : s);
-    const body = html`<a class="back" href="/dashboard/cases">${t('cases.detail.back')}</a>
+    const body = html`<a class="back" href="${path('/cases')}">${t('cases.detail.back')}</a>
 <h1 class="title-with-badge">${t('cases.detail.case')} <code data-copy="${r.case_code}">${r.case_code}</code> ${typeBadge(r.type)}${r.is_test ? html` <span class="muted">${t('cases.test')}</span>` : ''}</h1>
 ${top}
 <section class="card"><dl>
 <dt>${t('cases.detail.name')}</dt><dd>${r.name}</dd>
 <dt>${t('cases.table.status')}</dt><dd class="${statusClass(statusLabel)}">${statusLabelText(statusLabel, tr)}</dd>
-<dt>${t('cases.table.member')}</dt><dd><a href="/dashboard/users/${encodeURIComponent(r.target_user_id)}">${r.target_username}</a> <span class="muted">${r.target_user_id}</span> · <a href="/dashboard/cases${queryString({ member: r.target_user_id })}">${t('cases.detail.allTheirCases')}</a></dd>
+<dt>${t('cases.table.member')}</dt><dd><a href="${path('/users/')}${encodeURIComponent(r.target_user_id)}">${r.target_username}</a> <span class="muted">${r.target_user_id}</span> · <a href="${path('/cases')}${queryString({ member: r.target_user_id })}">${t('cases.detail.allTheirCases')}</a></dd>
 <dt>${t('cases.table.moderator')}</dt><dd>${r.moderator_username} <span class="muted">${r.moderator_id}</span>${r.is_auto ? t('cases.detail.automatic') : ''}</dd>
 <dt>${t('cases.table.reason')}</dt><dd>${r.reason}${r.reason_key ? html` <span class="muted">(${r.reason_key})</span>` : ''}</dd>
 <dt>${t('cases.detail.created')}</dt><dd>${d(r.created_at)}</dd>
@@ -262,7 +262,7 @@ ${r.appeal_deadline ? html`<dt>${t('cases.detail.appealDeadline')}</dt><dd>${d(r
 <dt>${t('cases.detail.canAppeal')}</dt><dd>${r.unappealable ? t('cases.detail.no') : t('cases.detail.yes')}</dd>
 <dt>${t('cases.detail.dmDelivered')}</dt><dd>${r.dm_delivered ? t('cases.detail.yesLower') : t('cases.detail.noLower')}</dd>
 <dt>${t('cases.detail.stageAfter')}</dt><dd>${r.ladder_level_after == null ? '-' : stageText(r.ladder_level_after, tr)}</dd>
-<dt>${t('cases.detail.tags')}</dt><dd>${r.tags?.length ? r.tags.map((tag) => html`<a class="role-chip" href="/dashboard/cases${queryString({ tag })}">#${tag}</a>`) : html`<span class="muted">${t('cases.detail.none')}</span>`}</dd>
+<dt>${t('cases.detail.tags')}</dt><dd>${r.tags?.length ? r.tags.map((tag) => html`<a class="role-chip" href="${path('/cases')}${queryString({ tag })}">#${tag}</a>`) : html`<span class="muted">${t('cases.detail.none')}</span>`}</dd>
 ${r.revoked_at ? html`<dt>${t('cases.detail.liftedEarly')}</dt><dd>${d(r.revoked_at)}${r.revoke_reason ? html`: ${r.revoke_reason}` : ''}</dd>` : ''}
 ${r.voided_at ? html`<dt>${t('cases.detail.removed')}</dt><dd>${d(r.voided_at)}${r.void_reason ? html`: ${r.void_reason}` : ''}</dd>` : ''}
 </dl></section>
@@ -280,17 +280,28 @@ ${bottom}`;
 
 // ── Appeals ───────────────────────────────────────────────────────────────
 
-export function appealsPage({ session, access = null, moduleStates = {}, settingsRows = [], appeals = [], now = Date.now(), flash = null, canWrite = false }) {
+/**
+ * Pending appeals for the page: those without a channel first (no Discord channel to decide
+ * in: the dashboard is the only place), then the rest; each group keeps its order (oldest first).
+ */
+export function orderAppeals(appeals = []) {
+    const noChannel = appeals.filter((a) => !a.channel_id);
+    return [...noChannel, ...appeals.filter((a) => a.channel_id)];
+}
+
+export function appealsPage({ session, access = null, moduleStates = {}, settingsRows = [], appeals: list = [], now = Date.now(), flash = null, canWrite = false }) {
     const tr = dashboardText(session?.lang);
     const { t } = tr;
+    const appeals = orderAppeals(list);
     const body = html`<header class="page-head"><h1>${t('cases.appeals.title', { count: appeals.length })}</h1><p>${t('cases.appeals.help')}</p></header>
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 ${appeals.length ? html`<div class="scroll"><table><thead><tr><th>${t('cases.table.case')}</th><th>${t('cases.table.type')}</th><th>${t('cases.table.member')}</th><th>${t('cases.detail.filed')}</th><th>${t('cases.appeals.waiting')}</th><th></th></tr></thead><tbody>
 ${appeals.map((a) => {
         const days = (now - new Date(a.created_at).getTime()) / 86400000;
-        return html`<tr><td>${caseLink(a.case_code)}${a.needsSecondReviewer ? html` <span class="warn" title="${t('cases.appeals.secondReviewerTitle')}">${t('cases.appeals.secondReviewer')}</span>` : ''}</td><td>${typeBadge(a.type)}${a.is_test ? ` ${t('cases.test')}` : ''}</td><td>${a.username} <span class="muted">${a.user_id}</span></td>
+        const noChannel = !a.channel_id ? html` <span class="warn" title="${t('cases.appeals.noChannelTitle')}">${t('cases.appeals.noChannel')}</span>` : '';
+        return html`<tr><td>${caseLink(a.case_code)}${noChannel}${a.needsSecondReviewer ? html` <span class="warn" title="${t('cases.appeals.secondReviewerTitle')}">${t('cases.appeals.secondReviewer')}</span>` : ''}</td><td>${typeBadge(a.type)}${a.is_test ? ` ${t('cases.test')}` : ''}</td><td>${a.username} <span class="muted">${a.user_id}</span></td>
 <td>${dateIn(a.created_at, tr)}</td><td class="${days >= 3 ? 'bad' : days >= 1 ? 'warn' : ''}">${ageIn(a.created_at, now, tr)}</td>
-<td><a href="/dashboard/appeals/${encodeURIComponent(a.case_code)}">${canWrite ? t('cases.appeals.review') : t('cases.appeals.open')}</a></td></tr>`;
+<td><a href="${path('/appeals/')}${encodeURIComponent(a.case_code)}">${canWrite ? t('cases.appeals.review') : t('cases.appeals.open')}</a></td></tr>`;
     })}
 </tbody></table></div><p class="muted">${canWrite ? t('cases.appeals.decideHere') : t('cases.appeals.adminsDecide')}</p>` : html`<p class="empty">${t('cases.appeals.empty')}</p>`}`;
     return layout({ title: t('cases.appeals.pageTitle'), active: 'appeals', session, access, moduleStates, body: html`${body}${settingsSection(settingsRows)}` });
@@ -308,9 +319,9 @@ export function periodLabel(key, tr = currentText()) {
 export function statsPage({ session, access = null, moduleStates = {}, settingsRows = [], period = '30d', rows = [], sections = [], flash = null, error = null }) {
     const tr = dashboardText(session?.lang);
     const { t } = tr;
-    const periodChips = html`<nav class="chips" aria-label="${t('staffPage.stats.period')}">${Object.keys(STATS_PERIODS).map((key) => html`<a class="chip${key === period ? ' is-active' : ''}" href="/dashboard/staff${queryString({ period: key })}"${key === period ? raw(' aria-current="page"') : ''}>${periodLabel(key, tr)}</a>`)}</nav>`;
+    const periodChips = html`<nav class="chips" aria-label="${t('staffPage.stats.period')}">${Object.keys(STATS_PERIODS).map((key) => html`<a class="chip${key === period ? ' is-active' : ''}" href="${path('/staff')}${queryString({ period: key })}"${key === period ? raw(' aria-current="page"') : ''}>${periodLabel(key, tr)}</a>`)}</nav>`;
     const table = html`${rows.length ? html`<div class="scroll"><table><thead><tr><th>${t('staffPage.stats.moderator')}</th><th>${t('staffPage.stats.total')}</th><th>${t('staffPage.stats.bans')}</th><th>${t('staffPage.stats.kicks')}</th><th>${t('staffPage.stats.mutes')}</th><th>${t('staffPage.stats.warns')}</th><th>${t('staffPage.stats.accepted')}</th><th>${t('staffPage.stats.denied')}</th><th>${t('staffPage.stats.removed')}</th></tr></thead><tbody>
-${rows.map((r) => html`<tr><td><a href="/dashboard/cases${queryString({ moderator: r.moderatorId })}">${r.username}</a></td><td>${r.total}</td><td>${r.actions.ban}</td><td>${r.actions.kick}</td><td>${r.actions.mute}</td><td>${r.actions.warn}</td><td>${r.appealsAccepted}</td><td>${r.appealsDenied}</td><td>${r.voided}</td></tr>`)}
+${rows.map((r) => html`<tr><td><a href="${path('/cases')}${queryString({ moderator: r.moderatorId })}">${r.username}</a></td><td>${r.total}</td><td>${r.actions.ban}</td><td>${r.actions.kick}</td><td>${r.actions.mute}</td><td>${r.actions.warn}</td><td>${r.appealsAccepted}</td><td>${r.appealsDenied}</td><td>${r.voided}</td></tr>`)}
 </tbody></table></div><p class="muted">${t('staffPage.stats.note')}</p>` : html`<p class="empty">${t('staffPage.stats.empty')}</p>`}`;
     const body = html`<header class="page-head"><h1>${t('staffPage.title')}</h1><p>${t('staffPage.help')}</p></header>
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
@@ -341,22 +352,22 @@ export function auditPage({ session, access = null, moduleStates = {}, rows = []
     const pages = Math.max(1, Math.ceil(total / pageSize));
     const keep = { user: filters.user, module: filters.module };
     const pager = html`<div class="pager">
-${page > 0 ? html`<a href="/dashboard/audit${queryString({ ...keep, page: page - 1 })}">${t('cases.pager.newer')}</a>` : ''}
+${page > 0 ? html`<a href="${path('/audit')}${queryString({ ...keep, page: page - 1 })}">${t('cases.pager.newer')}</a>` : ''}
 <span class="muted">${t('frame.pager.pageOf', { page: tr.fmtNumber(page + 1), pages: tr.fmtNumber(pages) })} · ${tr.tp('audit.count', total)}</span>
-${page + 1 < pages ? html`<a href="/dashboard/audit${queryString({ ...keep, page: page + 1 })}">${t('cases.pager.older')}</a>` : ''}
+${page + 1 < pages ? html`<a href="${path('/audit')}${queryString({ ...keep, page: page + 1 })}">${t('cases.pager.older')}</a>` : ''}
 </div>`;
     const navItem = (key) => navItems().find((i) => i.key === key);
     const moduleLabel = (key) => (navItem(key) ? navLabel(navItem(key), tr) : null) || modules.find((m) => m.key === key)?.label || key;
     const body = html`<header class="page-head"><h1>${t('audit.title')}</h1><p class="muted">${t('audit.help')}</p></header>
-<form class="filters" method="get" action="/dashboard/audit">
+<form class="filters" method="get" action="${path('/audit')}">
 <label>${t('audit.who')}<select name="user">${option('', t('audit.anyone'), !filters.user)}${users.map((u) => option(u.user_id, `${u.username || u.user_id} (${u.user_id})`, filters.user === u.user_id))}</select></label>
 <label>${t('audit.module')}<select name="module">${option('', t('cases.filter.any'), !filters.module)}${modules.map((m) => option(m.key, navItem(m.key) && navItem(m.key).label === m.label ? navLabel(navItem(m.key), tr) : m.label, filters.module === m.key))}</select></label>
-<button class="primary" type="submit">${t('audit.filter')}</button> <a href="/dashboard/audit">${t('cases.filter.clear')}</a>
+<button class="primary" type="submit">${t('audit.filter')}</button> <a href="${path('/audit')}">${t('cases.filter.clear')}</a>
 </form>
 ${rows.length ? html`<div class="scroll"><table><thead><tr><th>${t('cases.detail.when')}</th><th>${t('audit.who')}</th><th>${t('audit.module')}</th><th>${t('audit.setting')}</th><th>${t('cases.detail.old')}</th><th>${t('cases.detail.new')}</th></tr></thead><tbody>
 ${rows.map((r) => html`<tr><td>${timeTag(r.created_at)}</td><td>${r.username || r.user_id || '-'} <span class="muted">${r.user_id || ''}</span></td><td>${moduleLabel(r.module)}</td><td><code>${r.key}</code></td><td class="value">${auditValue(r.old, tr)}</td><td class="value">${auditValue(r.new, tr)}</td></tr>`)}
 </tbody></table></div>${pager}` : filters.user || filters.module
-        ? html`<p class="empty">${t('audit.noMatch')} <a href="/dashboard/audit">${t('cases.list.clearFilters')}</a></p>`
+        ? html`<p class="empty">${t('audit.noMatch')} <a href="${path('/audit')}">${t('cases.list.clearFilters')}</a></p>`
         : html`<p class="empty">${t('audit.empty')}</p>`}`;
     return layout({ title: t('audit.title'), active: 'audit', session, access, moduleStates, body });
 }

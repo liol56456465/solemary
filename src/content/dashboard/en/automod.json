@@ -1,6 +1,6 @@
 {
   "page": {
-    "help": "Automod watches messages and joins in the main server and acts on spam, bad words, unwanted links and raids by itself, so staff do not have to catch everything. You can also change these with /automod in Discord."
+    "help": "Automod watches messages and joins in this server and acts on spam, bad words, unwanted links and raids by itself, so staff do not have to catch everything. You can also change these with /automod in Discord."
   },
   "ruleNames": {
     "scam": "Scam or phishing link",
@@ -387,7 +387,9 @@
     "noProbation": "That member is not in an extra-watch period.",
     "pickChannel": "Pick at least one channel.",
     "tooManyChannels": "Pick at most {max} channels ({picked} picked).",
-    "ignoredChannel": "Automod ignores #{channel}, so a test run there finds nothing. Pick another channel."
+    "ignoredChannel": "Automod ignores #{channel}, so a test run there finds nothing. Pick another channel.",
+    "offNeedsAdmin": "To turn automod off you need the Administrator permission in this server. Nothing was changed.",
+    "staffGuardOwnerOnly": "Only the server owner can turn automod off while the staff guard is on (turning automod off also stops the staff guard). Nothing was changed."
   },
   "action": {
     "automodOn": "Automod is now on.",

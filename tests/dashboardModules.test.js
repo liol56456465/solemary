@@ -21,6 +21,7 @@ import { lockChannel, purgeChannelMessages, unlockChannel } from '../src/service
 import { resolveLogChannel } from '../src/services/loggingService.js';
 import { storeWelcomeImage } from '../src/utils/welcomeImageStore.js';
 import { BacktestError } from '../src/services/automod/backtest.js';
+import { FIELD_LEVEL, NOT_PRIVILEGED } from './helpers/privilegedActions.js';
 
 const ALLOWED_SCRIPT = `<script src="${JS_PATH}" defer></script>`;
 const SECRET = 'x'.repeat(64);
@@ -737,11 +738,13 @@ const CASES = {
             bad: { form: { channelId: VOICE }, message: /must be a text channel/ } },
         channels: { form: { modLogChannelId: TEXT, evidenceChannelId: '', adminRequestChannelId: '', appealsCategoryId: CAT, reportsCategoryId: CAT, modmailCategoryId: '', openChannelCap: '15', supportServerInvite: 'https://discord.gg/abc' }, service: 'updateSettings',
             bad: { form: { modLogChannelId: MISSING }, message: /not in the server/ } },
-        roles: { form: { mutedRoleId: ROLE_OK, warnRole1: ROLE_OK2 }, service: 'updateSettings', bad: { form: { mutedRoleId: GUILD }, message: /@everyone/ } },
+        roles: { form: { mutedRoleId: ROLE_OK, warnRole1: ROLE_OK2 }, service: 'updateSettings', admin: true, bad: { form: { mutedRoleId: GUILD }, message: /@everyone/ } },
         timings: { form: { appealWindowDays: '20', appealCooldownDays: '7', rejoinInviteHours: '168', staleReportDays: '7', staleAppealReminderDays: '3' }, service: 'updateSettings',
             bad: { form: { appealWindowDays: '999', appealCooldownDays: '7', rejoinInviteHours: '1', staleReportDays: '7', staleAppealReminderDays: '3' }, message: /between 1 and 365/ } },
-        'appeal-review': { form: { independentAppealReview: '1' }, service: 'updateSettings' },
-        'mass-action': { form: { massActionLimit: '7', massMuteLimit: '12', massActionWindowMinutes: '10', massActionBlockMinutes: '60' }, service: 'updateSettings',
+        'appeal-review': { form: { independentAppealReview: '1' }, service: 'updateSettings', admin: true },
+        // Other servers only: refused in Mewvo's own servers (the generic tests run in the main server).
+        'appeals-home': { form: { appealsHome: 'own', appealsInvite: 'https://discord.gg/ours' }, service: 'updateSettings', homeRefused: /This setting does not apply in Mewvo/ },
+        'mass-action': { form: { massActionLimit: '7', massMuteLimit: '12', massActionWindowMinutes: '10', massActionBlockMinutes: '60' }, service: 'updateSettings', admin: true,
             bad: { form: { massActionLimit: 'x', massActionWindowMinutes: '10', massActionBlockMinutes: '60' }, message: /whole number/ } },
         transparency: { form: { enabled: 'true' }, service: 'updateSettings', admin: true, bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
         'trust-card': { form: { enabled: 'true' }, service: 'updateSettings', admin: true, bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
@@ -761,7 +764,8 @@ const CASES = {
         language: { form: { botLanguage: 'de' }, service: 'updateSettings', bad: { form: { botLanguage: 'xx' }, message: /Language for posts and DMs/ } },
     },
     automod: {
-        enabled: { form: { enabled: 'false' }, service: 'setAutomodEnabled', bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
+        // Turning automod off needs Administrator (needsAct: the action itself is open to every editor for turning it on).
+        enabled: { form: { enabled: 'false' }, service: 'setAutomodEnabled', needsAct: true, bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
         mode: { form: { mode: 'monitor' }, service: 'setAutomodMode', bad: { form: { mode: 'chaos' }, message: /unknown choice/ } },
         rules: { form: { 'rule:caps': 'off' }, service: 'setRuleMode', bad: { form: { 'rule:caps': 'loud' }, message: /unknown mode/ } },
         'test-run-rule': { form: { rule: 'caps', mode: 'monitor' }, service: 'setRuleMode', bad: { form: { rule: 'nope', mode: 'off' }, message: /Rule: unknown choice/ } },
@@ -777,7 +781,7 @@ const CASES = {
         'channel-remove': { seed: (s) => { s.automod.channelRules = { [TEXT]: { caps: 'off' } }; }, form: { channel: TEXT, rule: 'caps' }, service: 'setChannelRuleMode', bad: { form: { channel: 'x', rule: 'caps' }, message: /not a channel ID/ } },
         'exempt-add': { form: { channel: TEXT }, service: 'setExemptChannel', bad: { form: { channel: MISSING }, message: /not in the server/ } },
         'exempt-remove': { form: { channel: TEXT2 }, service: 'setExemptChannel', bad: { form: { channel: '1' }, message: /not a channel ID/ } },
-        trusted: { form: { roleId: ROLE_OK, minLevel: '5' }, service: 'setTrusted', bad: { form: { roleId: ROLE_MANAGED, minLevel: '5' }, message: /managed/ } },
+        trusted: { form: { roleId: ROLE_OK, minLevel: '5' }, service: 'setTrusted', admin: true, bad: { form: { roleId: ROLE_MANAGED, minLevel: '5' }, message: /managed/ } },
         'second-chance': { form: { enabled: 'false' }, service: 'setSecondChance', bad: { form: {}, message: /on or off/ } },
         mood: { form: { enabled: 'false' }, service: 'setMoodAlerts', bad: { form: { enabled: '' }, message: /on or off/ } },
         panic: { form: { hours: '5', enabled: '1' }, service: 'setPanic', bad: { form: { hours: '99' }, message: /between 1 and 24/ } },
@@ -796,7 +800,7 @@ const CASES = {
         enabled: { form: { enabled: 'true' }, service: 'setLoggingEnabled', bad: { form: { enabled: 'x' }, message: /on or off/ } },
         channels: { form: { audit: TEXT, applications: '', reports: '' }, service: 'setLogChannel', bad: { form: { audit: VOICE }, message: /must be a text channel/ } },
         events: { form: {}, service: 'toggleEventLogging' },
-        'ignore-add': { form: { type: 'role', id: ROLE_OK }, service: 'updateIgnoreList', bad: { form: { type: 'user', id: 'abc' }, message: /Discord user ID/ } },
+        'ignore-add': { form: { type: 'role', id: ROLE_OK }, service: 'updateIgnoreList', admin: true, bad: { form: { type: 'user', id: 'abc' }, message: /Discord user ID/ } },
         'ignore-remove': { form: { type: 'channel', id: TEXT2 }, service: 'updateIgnoreList', bad: { form: { type: 'planet', id: TEXT2 }, message: /unknown choice/ } },
     },
     welcome: {
@@ -804,9 +808,9 @@ const CASES = {
         'goodbye-enabled': { form: { enabled: 'true' }, service: 'updateWelcomeSettings', bad: { form: {}, message: /on or off/ } },
         welcome: { form: { channelId: TEXT, welcomeMessage: 'Hi {user}', welcomePing: '1', dmMessage: '' }, service: 'updateWelcomeSettings', bad: { form: { channelId: CAT }, message: /must be a text channel/ } },
         goodbye: { form: { goodbyeChannelId: TEXT, leaveMessage: 'Bye {user}' }, service: 'updateWelcomeSettings', bad: { form: { goodbyeChannelId: MISSING }, message: /not in the server/ } },
-        'autorole-add': { form: { roleId: ROLE_OK2 }, service: 'addAutoRole', bad: { form: { roleId: ROLE_DANGER }, message: /staff permissions/ } },
-        'autorole-remove': { form: { roleId: ROLE_OK }, service: 'removeAutoRole' },
-        'autorole-delay': { form: { autoRoleDelay: '30' }, service: 'updateWelcomeSettings', bad: { form: { autoRoleDelay: '-1' }, message: /between 0 and 3600/ } },
+        'autorole-add': { form: { roleId: ROLE_OK2 }, service: 'addAutoRole', admin: true, bad: { form: { roleId: ROLE_DANGER }, message: /staff permissions/ } },
+        'autorole-remove': { form: { roleId: ROLE_OK }, service: 'removeAutoRole', admin: true },
+        'autorole-delay': { form: { autoRoleDelay: '30' }, service: 'updateWelcomeSettings', admin: true, bad: { form: { autoRoleDelay: '-1' }, message: /between 0 and 3600/ } },
         logs: { form: { joinLogsEnabled: '1', joinLogsChannelId: TEXT, leaveLogsChannelId: '' }, service: 'updateWelcomeSettings', bad: { form: { joinLogsChannelId: VOICE }, message: /must be a text channel/ } },
         'welcome-embed': { form: { welcomeTitle: 'Hi {user}', welcomeColor: '#112233', welcomeFooter: 'Enjoy', welcomeImage: 'https://example.com/a.png' }, service: 'updateWelcomeSettings', admin: true,
             bad: { form: { welcomeTitle: 'Hi', welcomeImage: 'http://example.com/a.png' }, message: /must start with https/ } },
@@ -825,7 +829,7 @@ const CASES = {
         'panel-publish': { form: {}, service: 'publishTicketPanel', admin: true,
             bad: { seed: (s) => { s.tickets.ticketPanelChannelId = null; }, form: {}, message: /not set up yet/ } },
         settings: { form: { ticketCategoryId: CAT, ticketClosedCategoryId: '', ticketStaffRoleId: ROLE_OK, maxTicketsPerUser: '3', dmOnClose: '1', ticketLogsChannelId: '', ticketTranscriptChannelId: '', ticketButtonLabel: 'Help', ticketPanelMessage: 'Open a ticket' },
-            service: 'updateTicketSettings', bad: { form: { ticketCategoryId: TEXT, maxTicketsPerUser: '3' }, message: /must be a category/ } },
+            service: 'updateTicketSettings', needsAct: true, bad: { form: { ticketCategoryId: TEXT, maxTicketsPerUser: '3' }, message: /must be a category/ } },
         block: { form: { userId: STRANGER, reason: 'spam' }, service: 'setModmailBlocked', admin: true, bad: { form: { userId: 'abc' }, message: /Discord user ID/ } },
         unblock: { form: { userId: MEMBER }, service: 'setModmailBlocked', bad: { form: { userId: 'me' }, message: /Discord user ID/ } },
         'canned-add': { form: { name: 'hello', text: 'Hello there' }, service: 'saveCanned', bad: { form: { name: 'Bad Name', text: 'x' }, message: /small letters, numbers and -/ } },
@@ -837,11 +841,11 @@ const CASES = {
             bad: { form: { xpMin: '30', xpMax: '20', xpCooldown: '30' }, message: /cannot be more than Most XP/ } },
         'ignore-add': { form: { type: 'channel', id: TEXT }, service: 'updateLevelingConfig', bad: { form: { type: 'role', id: MISSING }, message: /not in the server/ } },
         'ignore-remove': { form: { type: 'channel', id: TEXT2 }, service: 'updateLevelingConfig' },
-        'reward-add': { form: { level: '10', roleId: ROLE_OK2 }, service: 'setLevelRoleReward', bad: { form: { level: '10', roleId: ROLE_HIGH }, message: /not below my highest role/ } },
-        'reward-remove': { form: { level: '5' }, service: 'setLevelRoleReward', bad: { form: { level: '0' }, message: /between 1 and 1000/ } },
+        'reward-add': { form: { level: '10', roleId: ROLE_OK2 }, service: 'setLevelRoleReward', admin: true, bad: { form: { level: '10', roleId: ROLE_HIGH }, message: /not below my highest role/ } },
+        'reward-remove': { form: { level: '5' }, service: 'setLevelRoleReward', admin: true, bad: { form: { level: '0' }, message: /between 1 and 1000/ } },
         'boost-add': { form: { type: 'channel', id: TEXT, multiplier: '1.5' }, service: 'setLevelBoost', bad: { form: { type: 'role', id: ROLE_OK, multiplier: '5.5' }, message: /between 1.1 and 5/ } },
         'boost-remove': { seed: (s) => { s.leveling.roleMultipliers = { [ROLE_OK]: 2 }; }, form: { type: 'role', id: ROLE_OK }, service: 'setLevelBoost' },
-        'reward-mode': { form: { rewardMode: 'highest' }, service: 'updateLevelingConfig', bad: { form: { rewardMode: 'all' }, message: /unknown choice/ } },
+        'reward-mode': { form: { rewardMode: 'highest' }, service: 'updateLevelingConfig', admin: true, bad: { form: { rewardMode: 'all' }, message: /unknown choice/ } },
         card: { form: { levelUpCard: '1', colour: 'purple', hex: '' }, service: 'updateLevelingConfig', bad: { form: { levelUpCard: '1', hex: '#12' }, message: /colour code like #9B59B6/ } },
         member: { form: { userId: MEMBER, op: 'add', levels: '2' }, service: 'addLevels', bad: { form: { userId: STRANGER, op: 'add', levels: '2' }, message: /not in the server/ }, admin: true },
         'cat-name': { form: { catName: 'Mochi <b>' }, service: 'updateSettings', admin: true, bad: { form: { catName: '@@ <>' }, message: /use letters, numbers and spaces/ } },
@@ -852,10 +856,10 @@ const CASES = {
             bad: { form: { channelId: TEXT, roleId: ROLE_OK2 }, message: /already set up/ } },
         'panel-publish': { form: {}, service: 'publishVerificationPanel', admin: true,
             bad: { seed: (s) => { s.verification.channelId = null; }, form: {}, message: /not set up yet/ } },
-        enabled: { form: { enabled: 'true' }, service: 'updateVerificationSettings', bad: { seed: (s) => { s.verification.autoVerify.enabled = true; }, form: { enabled: 'true' }, message: /Auto-verify is on/ } },
-        settings: { form: { roleId: ROLE_OK2, buttonText: 'Go', message: 'Press it' }, service: 'updateVerificationSettings', bad: { form: { roleId: ROLE_DANGER, buttonText: 'Go', message: 'x' }, message: /staff permissions/ } },
-        'auto-enabled': { seed: (s) => { s.welcome.roleIds = []; }, form: { enabled: 'true' }, service: 'updateVerificationSettings', bad: { form: { enabled: 'true' }, message: /auto roles are configured/ } },
-        auto: { form: { criteria: 'account_age', accountAgeDays: '7', autoRoleId: '' }, service: 'updateVerificationSettings', bad: { form: { criteria: 'account_age', accountAgeDays: '' }, message: /Account age must be/ } },
+        enabled: { form: { enabled: 'true' }, service: 'updateVerificationSettings', admin: true, bad: { seed: (s) => { s.verification.autoVerify.enabled = true; }, form: { enabled: 'true' }, message: /Auto-verify is on/ } },
+        settings: { form: { roleId: ROLE_OK2, buttonText: 'Go', message: 'Press it' }, service: 'updateVerificationSettings', admin: true, bad: { form: { roleId: ROLE_DANGER, buttonText: 'Go', message: 'x' }, message: /staff permissions/ } },
+        'auto-enabled': { seed: (s) => { s.welcome.roleIds = []; }, form: { enabled: 'true' }, service: 'updateVerificationSettings', admin: true, bad: { form: { enabled: 'true' }, message: /auto roles are configured/ } },
+        auto: { form: { criteria: 'account_age', accountAgeDays: '7', autoRoleId: '' }, service: 'updateVerificationSettings', admin: true, bad: { form: { criteria: 'account_age', accountAgeDays: '' }, message: /Account age must be/ } },
         redirect: { form: { verifySuccessRedirect: 'https://example.com/ok' }, service: 'updateSettings', bad: { form: { verifySuccessRedirect: 'javascript:alert(1)' }, message: /https/ } },
         'quiz-enabled': { form: { enabled: 'true' }, service: 'updateVerificationSettings', bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
         quiz: { form: { q1: 'Is spam allowed?', q1a1: 'No', q1a2: 'Yes', q1c: '1', cooldownMinutes: '5' }, service: 'updateVerificationSettings',
@@ -868,9 +872,9 @@ const CASES = {
     'reaction-roles': {
         'panel-create': { form: { channelId: TEXT, title: 'Pick roles', description: 'Colours', roleIds: [ROLE_OK, ROLE_OK2] }, service: 'createReactionRolePanel', admin: true,
             bad: { form: { channelId: TEXT, title: 'x', description: 'y', roleIds: [] }, message: /Choose at least one role/ } },
-        'role-add': { form: { messageId: PANEL, roleId: ROLE_DANGER }, service: 'addPanelRole', bad: { form: { messageId: PANEL, roleId: MISSING }, message: /not in the server/ } },
-        'role-remove': { form: { messageId: PANEL, roleId: ROLE_OK }, service: 'removePanelRole', bad: { form: { messageId: 'x', roleId: ROLE_OK }, message: /Unknown panel/ } },
-        'panel-delete': { form: { messageId: PANEL }, service: 'deletePanel', bad: { form: { messageId: MISSING }, message: /no longer exists/ } },
+        'role-add': { form: { messageId: PANEL, roleId: ROLE_DANGER }, service: 'addPanelRole', admin: true, bad: { form: { messageId: PANEL, roleId: MISSING }, message: /not in the server/ } },
+        'role-remove': { form: { messageId: PANEL, roleId: ROLE_OK }, service: 'removePanelRole', admin: true, bad: { form: { messageId: 'x', roleId: ROLE_OK }, message: /Unknown panel/ } },
+        'panel-delete': { form: { messageId: PANEL }, service: 'deletePanel', admin: true, bad: { form: { messageId: MISSING }, message: /no longer exists/ } },
     },
     messages: {
         send: { form: { channelId: TEXT, content: 'Hello @everyone', title: 'News', description: 'Line 1\r\nLine 2', colour: 'purple', hex: '', imageUrl: 'https://example.com/a.png', footer: 'Staff' },
@@ -906,7 +910,7 @@ const CASES = {
             bad: { form: { roleId: ROLE_OK2 }, message: /No users have the Helper role/ } },
     },
     birthdays: {
-        settings: { form: { channelId: TEXT, timezone: 'Europe/London', roleId: ROLE_OK }, service: 'updateBirthdaySettings', bad: { form: { channelId: TEXT, timezone: 'Mars/Base', roleId: '' }, message: /not a known time zone/ } },
+        settings: { form: { channelId: TEXT, timezone: 'Europe/London', roleId: ROLE_OK }, service: 'updateBirthdaySettings', needsAct: true, bad: { form: { channelId: TEXT, timezone: 'Mars/Base', roleId: '' }, message: /not a known time zone/ } },
         off: { seed: (s) => { s.config.birthdayChannelId = TEXT; }, form: {}, service: 'updateBirthdaySettings' },
     },
     counters: {
@@ -928,16 +932,16 @@ const CASES = {
     applications: {
         review: { form: { id: '1700000000000-abc', decision: 'approve', note: 'Welcome' }, service: 'reviewApplicationAndNotify', admin: true,
             bad: { form: { id: '1700000000000-abc', decision: 'maybe' }, message: /Decision: unknown choice/ } },
-        'role-create': { form: { roleId: ROLE_OK2, name: 'Moderator', questions: 'Why?\nAge? [min:2]' }, service: 'createApplicationRole',
+        'role-create': { form: { roleId: ROLE_OK2, name: 'Moderator', questions: 'Why?\nAge? [min:2]' }, service: 'createApplicationRole', admin: true,
             bad: { form: { roleId: ROLE_OK, name: 'Again' }, message: /already configured/ } },
-        'role-update': { form: { roleId: ROLE_OK, name: 'Helpers', enabled: '1', logChannelId: TEXT, questions: 'Why join? [min:10]' }, service: 'updateApplicationRole',
+        'role-update': { form: { roleId: ROLE_OK, name: 'Helpers', enabled: '1', logChannelId: TEXT, questions: 'Why join? [min:10]' }, service: 'updateApplicationRole', admin: true,
             bad: { form: { roleId: ROLE_OK, name: 'Helpers', questions: 'a\nb\nc\nd\ne\nf' }, message: /At most 5 questions/ } },
-        'role-delete': { form: { roleId: ROLE_OK }, service: 'deleteApplicationRole', bad: { form: { roleId: MISSING }, message: /no longer exists/ } },
+        'role-delete': { form: { roleId: ROLE_OK }, service: 'deleteApplicationRole', admin: true, bad: { form: { roleId: MISSING }, message: /no longer exists/ } },
         enabled: { form: { enabled: 'true' }, service: 'updateApplicationSettings', bad: { form: { enabled: 'yes please' }, message: /on or off/ } },
         settings: { form: { logChannelId: TEXT, pendingDays: '30', reviewedDays: '14' }, service: 'updateApplicationSettings', bad: { form: { logChannelId: '', pendingDays: '0', reviewedDays: '14' }, message: /between 1 and 3650/ } },
         questions: { form: { questions: 'Why do you want to join?\nAge? [min:2]' }, service: 'updateApplicationSettings', bad: { form: { questions: 'a\nb\nc\nd\ne\nf' }, message: /At most 5 questions/ } },
-        'manager-add': { form: { roleId: ROLE_OK }, service: 'updateApplicationSettings', bad: { form: { roleId: MISSING }, message: /not in the server/ } },
-        'manager-remove': { form: { roleId: ROLE_OK2 }, service: 'updateApplicationSettings', bad: { form: { roleId: ROLE_OK }, message: /not a manager role/ } },
+        'manager-add': { form: { roleId: ROLE_OK }, service: 'updateApplicationSettings', admin: true, bad: { form: { roleId: MISSING }, message: /not in the server/ } },
+        'manager-remove': { form: { roleId: ROLE_OK2 }, service: 'updateApplicationSettings', admin: true, bad: { form: { roleId: ROLE_OK }, message: /not a manager role/ } },
     },
     community: {
         'suggestion-status': { form: { id: '4', status: 'approved', reason: 'Good idea' }, service: 'decideSuggestion', admin: true,
@@ -971,7 +975,7 @@ const CASES = {
             bad: { form: { channelId: MISSING }, message: /not in the server/ } },
     },
     support: {
-        'banned-role': { form: { bannedRoleId: SUPPORT_ROLE }, service: 'updateSettings', bad: { form: { bannedRoleId: ROLE_OK }, message: /not in the server/ } },
+        'banned-role': { form: { bannedRoleId: SUPPORT_ROLE }, service: 'updateSettings', admin: true, bad: { form: { bannedRoleId: ROLE_OK }, message: /not in the server/ } },
         'appeals-category': { form: { supportAppealsCategoryId: SUPPORT_CAT }, service: 'updateSettings', bad: { form: { supportAppealsCategoryId: CAT }, message: /not in the server/ } },
     },
     rules: {
@@ -1004,6 +1008,8 @@ test('every module action has a test case', () => {
     for (const module of MODULES) {
         for (const action of Object.keys(module.actions)) {
             assert.ok(CASES[module.key]?.[action], `missing case for ${module.key}/${action}`);
+            // B3: the case table says which actions are Administrator-only; the descriptor must agree.
+            assert.equal(getAction(module, action).admin, Boolean(CASES[module.key][action].admin), `${module.key}/${action}: admin marker`);
         }
     }
 });
@@ -1047,7 +1053,10 @@ test('every POST action: users without access are refused; admin-only actions re
             const owner = await setup({ userId: OWNER });
             c.seed?.(owner.state, owner.guild);
             const asOwner = await postConfirmed(owner, module.key, action, c.form);
-            if (getAction(module, action).admin) {
+            if (c.homeRefused) {
+                assert.equal(asOwner.statusCode, 400, `${module.key}/${action} refused in a home server`);
+                assert.match(asOwner.body, c.homeRefused);
+            } else if (getAction(module, action).admin || c.needsAct) {
                 assert.equal(asOwner.statusCode, 403, `${module.key}/${action} owner must be refused`);
                 assert.match(asOwner.body, /Administrator/);
                 assert.equal(owner.calls.length, 0);
@@ -1113,6 +1122,13 @@ test('every POST action with valid input: service called, audit row, one mod-log
             const h = await setup();
             c.seed?.(h.state, h.guild);
             const res = await postConfirmed(h, module.key, action, c.form, { upload: c.upload });
+            if (c.homeRefused) {
+                // Refused in Mewvo's own servers, nothing written (tests/dashboardModulesB3.test.js runs it for another server).
+                assert.equal(res.statusCode, 400, `${module.key}/${action} refused in a home server`);
+                assert.match(res.body, c.homeRefused);
+                assert.ok(!h.calls.some((call) => call.name === c.service), `${module.key}/${action}: nothing saved`);
+                continue;
+            }
             assert.equal(res.statusCode, 303, `${module.key}/${action} → 303 (got ${res.statusCode}: ${String(res.body).match(/role="alert">([^<]*)/)?.[1] || ''})`);
             assert.equal(res.redirectedTo, `/dashboard/${module.key}`);
             assert.ok(h.calls.some((call) => call.name === c.service), `${module.key}/${action} calls ${c.service}`);
@@ -1210,6 +1226,27 @@ test('array values for repeated keys never reach a service', async () => {
 });
 
 // ── pages ─────────────────────────────────────────────────────────────────
+
+test('B3: every form on a module page that picks a role posts to an Administrator-only action (or a listed field-level / XP-only one)', async () => {
+    const offenders = [];
+    let checked = 0;
+    for (const module of MODULES) {
+        const h = await setup();
+        const res = await get(h, module.key);
+        assert.equal(res.statusCode, 200, module.key);
+        for (const [, actionPath, body] of res.body.matchAll(/<form method="post" action="\/dashboard\/([^"]+)"[^>]*>([\s\S]*?)<\/form>/g)) {
+            // A role select: its options are "@Role name" (forms.js rolePicker).
+            if (!/<option value="\d{17,20}"[^>]*>@/.test(body)) continue;
+            const [moduleKey, name] = actionPath.split('/');
+            const action = getAction(MODULES.find((m) => m.key === moduleKey), name);
+            const id = `${moduleKey}/${name}`;
+            checked += 1;
+            if (!action?.admin && !FIELD_LEVEL.has(id) && !NOT_PRIVILEGED.has(id)) offenders.push(id);
+        }
+    }
+    assert.ok(checked >= 15, `role forms found: ${checked}`);
+    assert.deepEqual([...new Set(offenders)], []);
+});
 
 test('every module page renders: 200, escaped values, no inline styles or scripts, CSRF in every form', async () => {
     for (const module of MODULES) {

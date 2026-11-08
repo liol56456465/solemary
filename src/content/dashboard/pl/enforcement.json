@@ -189,5 +189,17 @@
     "transparencyOff": "Raport przejrzystości jest wyłączony: /transparency zniknął ze strony.",
     "trustOn": "Karta zaufania jest włączona: /trust jest publiczna.",
     "trustOff": "Karta zaufania jest wyłączona: /trust zniknęła ze strony."
+  },
+  "appealsHome": {
+    "title": "Gdzie członkowie składają odwołania",
+    "help": "Wiadomości o karach (DM) mówią członkom, gdzie mogą poprosić o zdjęcie kary. Wsparcie Mewvo: odwołują się na serwerze wsparcia Mewvo. Nasz własny serwer: DM podaje zaproszenie na serwer, który prowadzicie.",
+    "choice": "Członkowie odwołują się na",
+    "mewvo": "Wsparcie Mewvo",
+    "own": "Nasz własny serwer",
+    "invite": "Zaproszenie na nasz własny serwer",
+    "inviteHelp": "Zaproszenie discord.gg, które nie wygasa. Używane tylko z opcją „Nasz własny serwer”. Puste: DM nie ma linii z zaproszeniem.",
+    "badInvite": "Zaproszenie na nasz własny serwer: musi to być link z zaproszeniem discord.gg. Nic nie zostało zmienione.",
+    "homeNote": "Tu to nie ma zastosowania: członkowie serwerów Mewvo zawsze odwołują się na serwerze wsparcia Mewvo.",
+    "homeOnlyAction": "To ustawienie nie dotyczy serwerów Mewvo. Nic nie zostało zmienione."
   }
 }

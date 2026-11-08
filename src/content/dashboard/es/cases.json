@@ -233,7 +233,9 @@
     "open": "Abrir",
     "decideHere": "Decide aquí o en Discord (Aceptar / Rechazar en el mensaje de la apelación): el efecto es el mismo.",
     "adminsDecide": "Los administradores deciden las apelaciones aquí (con la edición activada) o en Discord.",
-    "empty": "No hay apelaciones pendientes. Las nuevas aparecen aquí y en los canales de apelaciones de Discord."
+    "empty": "No hay apelaciones pendientes. Las nuevas aparecen aquí y en los canales de apelaciones de Discord.",
+    "noChannel": "Sin canal: decide aquí",
+    "noChannelTitle": "Este servidor no tiene categoría de apelaciones, así que esta apelación no tiene canal en Discord. Decídela aquí."
   },
   "change": {
     "title": "Cambiar este caso",
@@ -288,7 +290,8 @@
     "ownerOverride": "Tú pusiste esta sanción. Como dueño del bot puedes decidir igualmente; queda registrado como excepción del dueño.",
     "note": "Nota (opcional, se muestra en el canal de la apelación y en el registro)",
     "accept": "Aceptar…",
-    "deny": "Rechazar…"
+    "deny": "Rechazar…",
+    "noChannel": "Esta apelación no tiene canal en Discord (el servidor no tiene categoría de apelaciones). Decídela aquí."
   },
   "appealConfirm": {
     "effect": {

@@ -233,7 +233,9 @@
     "open": "Apri",
     "decideHere": "Decidi qui o su Discord (Accetta / Respingi sul messaggio del ricorso): l’effetto è lo stesso.",
     "adminsDecide": "Gli amministratori decidono i ricorsi qui (con la modifica attiva) o su Discord.",
-    "empty": "Nessun ricorso in attesa. I nuovi ricorsi compaiono qui e nei canali dei ricorsi su Discord."
+    "empty": "Nessun ricorso in attesa. I nuovi ricorsi compaiono qui e nei canali dei ricorsi su Discord.",
+    "noChannel": "Nessun canale: decidi qui",
+    "noChannelTitle": "Questo server non ha una categoria per i ricorsi, quindi questo ricorso non ha un canale su Discord. Decidilo qui."
   },
   "change": {
     "title": "Modifica questo caso",
@@ -288,7 +290,8 @@
     "ownerOverride": "Hai dato tu questa sanzione. Come proprietario del bot puoi decidere comunque; viene registrato come eccezione del proprietario.",
     "note": "Nota (facoltativa, mostrata nel canale del ricorso e nel registro)",
     "accept": "Accetta…",
-    "deny": "Respingi…"
+    "deny": "Respingi…",
+    "noChannel": "Questo ricorso non ha un canale su Discord (il server non ha una categoria per i ricorsi). Decidilo qui."
   },
   "appealConfirm": {
     "effect": {
