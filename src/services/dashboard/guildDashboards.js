@@ -14,26 +14,31 @@ export const MAX_GUILD_DASHBOARDS = 500;
 export const GUILD_DASHBOARD_IDLE_MS = 2 * 60 * 60 * 1000;
 
 /**
- * A small LRU map with an idle timeout: get(key) refreshes the entry; entries unused for
- * `ttlMs` are dropped; above `max` the least recently used goes first.
+ * A small LRU map with a timeout: get(key) refreshes the entry (idle timeout), or with
+ * `absolute` keeps the time it was set (dropped `ttlMs` after set, however often it is read).
+ * Above `max` the least recently used goes first. Expired entries are swept on set and, at most
+ * once per `sweepMs`, on get too (so entries nobody asks for again do not stay in memory).
  */
-export function createLruCache({ max = 1000, ttlMs = Infinity, now = () => Date.now() } = {}) {
+export function createLruCache({ max = 1000, ttlMs = Infinity, now = () => Date.now(), absolute = false, sweepMs = 60 * 1000 } = {}) {
     const entries = new Map(); // key → { value, at }
+    let swept = 0;
     function sweep(at) {
+        swept = at;
         if (Number.isFinite(ttlMs)) for (const [key, entry] of entries) if (at - entry.at >= ttlMs) entries.delete(key);
         while (entries.size > max) entries.delete(entries.keys().next().value);
     }
     return {
         get(key) {
+            const at = now();
+            if (Number.isFinite(ttlMs) && at - swept >= sweepMs) sweep(at);
             const entry = entries.get(key);
             if (!entry) return undefined;
-            const at = now();
             if (at - entry.at >= ttlMs) {
                 entries.delete(key);
                 return undefined;
             }
             entries.delete(key);
-            entries.set(key, { value: entry.value, at });
+            entries.set(key, { value: entry.value, at: absolute ? entry.at : at });
             return entry.value;
         },
         set(key, value) {
@@ -58,7 +63,7 @@ export function createLruCache({ max = 1000, ttlMs = Infinity, now = () => Date.
 export function scopedConfirms(store, guildId) {
     const prefix = `${guildId}:`;
     return {
-        issue: ({ subject, ...rest }, ...more) => store.issue({ ...rest, subject: `${prefix}${subject}` }, ...more),
+        issue: ({ subject, ...rest }, ...more) => store.issue({ ...rest, subject: `${prefix}${subject}`, scope: String(guildId) }, ...more),
         consume: (token, { subject, ...rest } = {}, ...more) => store.consume(token, { ...rest, subject: `${prefix}${subject}` }, ...more),
         size: () => store.size(),
         guildId: String(guildId),

@@ -22,6 +22,7 @@ import { isAllowedImageUrl, isSafeLink } from '../pages.js';
 import { diffSnapshots } from '../audit.js';
 import { currentText, textFor } from '../language.js';
 import { changedOnly, section, table, topic } from './common.js';
+import { managerActions } from './serverScope.js';
 
 const KEYS = ['enabled', 'channelId', 'welcomeMessage', 'welcomePing', 'dmMessage', 'goodbyeEnabled', 'goodbyeChannelId',
     'leaveMessage', 'goodbyePing', 'roleIds', 'autoRoleDelay', 'joinLogs', 'leaveLogs',
@@ -254,7 +255,7 @@ ${topic(tr.t('welcome.members.topic'), tr.t('welcome.members.topicLine'), html`$
 ${section(tr.t('welcome.logs.title'), logs, tr.t('welcome.logs.help'), { key: 'join-and-leave-logs' })}`, { key: 'new-members' })}`;
     },
 
-    actions: {
+    actions: managerActions(['welcome-enabled', 'goodbye-enabled', 'welcome', 'goodbye'], {
         async 'welcome-enabled'(ctx, form) {
             const tr = textFor(ctx);
             const enabled = boolField(form, 'enabled', tr.t('welcome.join.toggle'));
@@ -401,5 +402,5 @@ ${section(tr.t('welcome.logs.title'), logs, tr.t('welcome.logs.help'), { key: 'j
                 leaveLogs: { enabled: checkbox(form, 'leaveLogsEnabled'), channelId: channelField(ctx.guild, form, 'leaveLogsChannelId', { label: tr.t('welcome.logs.leaveChannel') }) },
             }, current), tr.t('welcome.action.logsSaved'));
         },
-    },
+    }),
 };

@@ -593,7 +593,8 @@ export function createDashboard({
             avatar: typeof me.avatar === 'string' ? me.avatar : null,
         });
         res.append('Set-Cookie', serializeCookie(SESSION_COOKIE, signValue(session.id, secret), { ...cookieOptions, maxAgeMs: SESSION_TTL_MS }));
-        if (guildList && session.idHash) guildLists.set(session.idHash, guildList);
+        // Keyed by the user: a new login replaces the list (never one list per session).
+        if (guildList) guildLists.set(String(session.userId), guildList);
         logger.info(`Dashboard login: ${me.id} (${guildList ? `${guildList.length} server(s) listed` : 'server list unavailable'})`);
         return res.redirect(303, safeReturnPath(taken.returnTo));
     }
@@ -716,7 +717,8 @@ export function createDashboard({
 
     // ── Saved case searches (Cases page) ─────────────────────────────────
     const SEARCH_KEYS = ['member', 'moderator', 'type', 'status', 'text', 'from', 'to', 'tag'];
-    const savedSearches = () => { try { return resolveSetting(guildId, 'savedCaseSearches', env) || []; } catch { return []; } };
+    // An unreadable setting throws (data-layer rule): a save must never start from a guessed empty list.
+    const savedSearches = () => resolveSetting(guildId, 'savedCaseSearches', env) || [];
     function searchGuard(req, res) {
         if (!postLimiter.allow(req.dashboard.session.idHash)) { res.set('Retry-After', '60'); return failT(res, 429, 'slowDown', 'tooManyChanges', req); }
         if (!checkPost(req)) return failT(res, 403, 'notAllowed', 'csrf', req);
@@ -801,10 +803,19 @@ export function createDashboard({
         const { rows, total } = await data.searchCaseRecords(guildId, filters, { page, pageSize: CASES_PAGE_SIZE });
         const appealStatuses = await data.getLatestAppealStatusesForCases(rows.map((row) => row.case_code));
         const planId = data.guildPlan ? data.guildPlan(guildId) : 'free';
+        // Saved searches unreadable (settings not loaded): the cases still show, but no saved
+        // list and no Save button (a save must never start from a guessed empty list).
+        let saved = null;
+        try {
+            saved = savedSearches();
+        } catch (error) {
+            if (error?.name !== 'SettingsUnavailableError') throw error;
+            logger.warn(`Dashboard cases in ${guildId}: saved searches not read: ${error.message}`);
+        }
         return sendHtml(res, 200, casesPage({
             ...shellOf(req), query, rows, total, page, pageSize: CASES_PAGE_SIZE, exportDays: exportWindowDays(planId), canExport: allows(req.dashboard.access, 'case.export'),
             canBulk: Boolean(settings.editEnabled && allows(req.dashboard.access, 'case.edit')), flash: req.dashboard.flash,
-            saved: savedSearches(), canSaveSearch: Boolean(settings.editEnabled && allows(req.dashboard.access, 'case.searches')),
+            saved: saved || [], canSaveSearch: Boolean(saved && settings.editEnabled && allows(req.dashboard.access, 'case.searches')),
             statusLabel: (row) => caseStatusLabel(row, appealStatuses.get(row.case_code)),
         }));
     }
@@ -1089,8 +1100,10 @@ export function createDashboard({
         if (!module || !action) return failT(res, 404, 'notFound', 'noSuchForm', req);
         const decision = req.dashboard.access;
         // 'settings.edit' alone lets a manager post to any module: the module's own page key must
-        // be allowed too (MANAGER_PAGES, permissions.js).
-        if (!decision.canView || !allows(decision, 'settings.edit') || !allows(decision, `page:${module.key}`) || (action.admin && !decision.canAct)) {
+        // be allowed too (MANAGER_PAGES, permissions.js). Without Administrator (canAct false:
+        // managers, OWNER_IDS at home without it) only actions marked `manager` run; the default
+        // is closed, so a new or unmarked action is Administrator-only.
+        if (!decision.canView || !allows(decision, 'settings.edit') || !allows(decision, `page:${module.key}`) || (!decision.canAct && !action.manager)) {
             return failT(res, 403, 'notAllowed', 'needsAdmin', req);
         }
         const ctx = contextFor(req);
@@ -1186,7 +1199,7 @@ export function createDashboard({
         if (!checkPost(req)) return failT(res, 403, 'notAllowed', 'logoutCsrf', req);
         await sessions.destroy(req.dashboard.session.id);
         res.append('Set-Cookie', clearCookie(SESSION_COOKIE, cookieOptions));
-        if (req.dashboard.session.idHash) guildLists.delete(req.dashboard.session.idHash);
+        guildLists.delete(String(req.dashboard.session.userId));
         // To the website, not a dashboard page: one would start a new Discord login (often silent).
         return res.redirect(303, '/');
     }
@@ -1349,8 +1362,8 @@ export function createDashboardApp({
             return res.status(403).type('html').send(messagePage(tr.t('errors.noAccess'), tr.t('errors.blockedText'), null, { lang }));
         }
         const data = await collectPicker({
-            client, list: shared.guildLists.get(session.idHash) ?? null, mainGuildId: settings.mainGuildId,
-            isOwner: isOwner(session.userId), checkAccess: (id) => accessOf(id).check(session.userId, { guildId: id }),
+            client, list: shared.guildLists.get(String(session.userId)) ?? null, mainGuildId: settings.mainGuildId,
+            isOwner: isOwner(session.userId), checkAccess: (id) => accessOf(id).check(session.userId, { guildId: id, force: false }),
             isBlockedGuild: (id) => blacklist({ guildId: id })?.kind === 'guild', clientId: settings.clientId,
         });
         let flash = null;
@@ -1373,7 +1386,7 @@ export function createDashboardApp({
         build: (guildId) => (guildId === settings.mainGuildId ? home : build(guildId)),
         ...(maxGuilds ? { max: maxGuilds } : {}), ...(idleMs ? { idleMs } : {}),
     });
-    const router = dashboardAppRouter({ home, registry, settings, client, blacklist, limiters: shared.limiters });
+    const router = dashboardAppRouter({ home, registry, settings, client, blacklist, limiters: shared.limiters, accessOf });
     return { router, registry, home, accessOf, guildLists: shared.guildLists, picker };
 }
 
@@ -1418,7 +1431,7 @@ function redirectKeepingMethod(req, res, location, notFound) {
  * /:guildId → validation → that server's instance (runInGuild: path() keeps the prefix).
  * Old links and the support server's id redirect to the main server.
  */
-export function dashboardAppRouter({ home, registry, settings, client, blacklist = blacklistHit, limiters = home.limiters }) {
+export function dashboardAppRouter({ home, registry, settings, client, blacklist = blacklistHit, limiters = home.limiters, accessOf = null }) {
     const router = express.Router();
     router.use(home.securityHeaders);
     // The request's language for helpers without a context (language.js); pages get it explicitly.
@@ -1463,6 +1476,14 @@ export function dashboardAppRouter({ home, registry, settings, client, blacklist
             return res.status(403).type('html').send(messagePage(tr.t('errors.noAccess'), tr.t('errors.blockedText')));
         }
         if (hit?.kind === 'guild') return notFound(req, res);
+        // Access before the instance: a stranger gets the same 404 on every path (also the bare
+        // /dashboard/<id>/ redirect, which would otherwise say "the bot is in this server") and
+        // never builds or refreshes an instance in the registry (no LRU churn). The access cache
+        // answers here; requireUser still checks fresh on every POST.
+        if (accessOf) {
+            const decision = await accessOf(guildId).check(session.userId, { guildId });
+            if (!decision?.allowed) return notFound(req, res);
+        }
         const instance = registry.get(guildId);
         req.dashboardSession = session; // read once: requireUser reuses it (and the limit is counted once)
         req.dashboardGuildId = guildId;

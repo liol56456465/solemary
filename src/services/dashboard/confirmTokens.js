@@ -10,6 +10,8 @@ import { safeEqual } from './security.js';
 
 export const CONFIRM_TTL_MS = 5 * 60 * 1000;
 const MAX_TOKENS = 2000;
+/** Per scope (one server, guildDashboards.js scopedConfirms): one busy server can't evict another's confirmations. */
+export const MAX_TOKENS_PER_SCOPE = 200;
 
 /** A stable hash of a flow / decision (Maps and undefined values left out). */
 export function flowHash(payload) {
@@ -17,21 +19,39 @@ export function flowHash(payload) {
     return crypto.createHash('sha256').update(json || '').digest('base64url').slice(0, 32);
 }
 
-export function createConfirmStore({ ttlMs = CONFIRM_TTL_MS, maxTokens = MAX_TOKENS } = {}) {
-    const tokens = new Map(); // token → { session, subject, hash, payload, expiresAt }
+export function createConfirmStore({ ttlMs = CONFIRM_TTL_MS, maxTokens = MAX_TOKENS, maxPerScope = MAX_TOKENS_PER_SCOPE } = {}) {
+    const tokens = new Map(); // token → { session, subject, hash, payload, expiresAt, scope }
+    const scopes = new Map(); // scope → Set of its tokens (insertion order = oldest first)
+
+    function drop(token) {
+        const entry = tokens.get(token);
+        if (!entry) return;
+        tokens.delete(token);
+        const set = scopes.get(entry.scope);
+        set?.delete(token);
+        if (set && !set.size) scopes.delete(entry.scope);
+    }
 
     function sweep(now) {
-        for (const [token, entry] of tokens) if (entry.expiresAt <= now) tokens.delete(token);
-        while (tokens.size >= maxTokens) tokens.delete(tokens.keys().next().value);
+        for (const [token, entry] of tokens) if (entry.expiresAt <= now) drop(token);
+        while (tokens.size >= maxTokens) drop(tokens.keys().next().value);
     }
 
     return {
-        /** Stores `payload`; returns { token, hash } for the confirm page. */
-        issue({ session, subject, payload }, now = Date.now()) {
+        /**
+         * Stores `payload`; returns { token, hash } for the confirm page. `scope` (a server id,
+         * set by scopedConfirms) caps that server's tokens at `maxPerScope`: its oldest go first.
+         */
+        issue({ session, subject, payload, scope = '' }, now = Date.now()) {
             sweep(now);
+            const key = String(scope);
+            const own = scopes.get(key);
+            while (own && own.size >= maxPerScope) drop(own.values().next().value);
             const token = crypto.randomBytes(24).toString('base64url');
             const hash = flowHash(payload);
-            tokens.set(token, { session: String(session), subject: String(subject), hash, payload, expiresAt: now + ttlMs });
+            tokens.set(token, { session: String(session), subject: String(subject), hash, payload, expiresAt: now + ttlMs, scope: key });
+            if (!scopes.has(key)) scopes.set(key, new Set());
+            scopes.get(key).add(token);
             return { token, hash };
         },
         /**
@@ -42,7 +62,7 @@ export function createConfirmStore({ ttlMs = CONFIRM_TTL_MS, maxTokens = MAX_TOK
             const key = String(token || '');
             const entry = key ? tokens.get(key) : null;
             if (!entry) return null;
-            tokens.delete(key);
+            drop(key);
             if (entry.expiresAt <= now) return null;
             if (!safeEqual(entry.session, String(session)) || entry.subject !== String(subject) || !safeEqual(entry.hash, String(hash || ''))) return null;
             return entry.payload;

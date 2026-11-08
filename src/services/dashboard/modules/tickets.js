@@ -12,7 +12,7 @@ import {
 import { diffSnapshots } from '../audit.js';
 import { changedOnly, section, table, topic } from './common.js';
 import { textFor } from '../language.js';
-import { requireCanAct } from './serverScope.js';
+import { requireCanAct, managerActions } from './serverScope.js';
 
 // Words: src/content/dashboard/<lang>/tickets.json. The default button text and panel message
 // ("Open ticket", "Need help from staff? …") are posted in Discord and stay as they are.
@@ -80,7 +80,7 @@ ${topic(tr.t('tickets.topic.modmail'), tr.t('tickets.topic.modmailLine'), html`$
 ${section(tr.t('tickets.canned.title'), html`${table([tr.t('tickets.canned.name'), tr.t('tickets.canned.text'), ''], cannedRows)}${cannedAdd}`, tr.t('tickets.canned.help'), { key: 'canned-answers', size: 'normal' })}`, { key: 'modmail-and-saved-answers' })}`;
     },
 
-    actions: {
+    actions: managerActions(['canned-add', 'canned-remove'], {
         setup: {
             admin: true,
             async run(ctx, form) {
@@ -186,5 +186,5 @@ ${section(tr.t('tickets.canned.title'), html`${table([tr.t('tickets.canned.name'
             return { changes: [{ key: `canned.${name}`, old: before, new: after }], message: tr.t('tickets.canned.deleted', { name }) };
 
         },
-    },
+    }),
 };

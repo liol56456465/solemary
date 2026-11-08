@@ -20,3 +20,22 @@ export const NOT_PRIVILEGED = new Map([
     ['leveling/ignore-remove', 'no XP for members with a role'],
     ['logging/ignore-remove', 'logs a channel, role or member again (only makes logging stricter)'],
 ]);
+
+/**
+ * The only module actions a viewer without Administrator (Manage Server manager, OWNER_IDS at
+ * home without it) may run: `manager: true` (modules/serverScope.js managerActions). Every
+ * other action is Administrator-only by default (routes.js moduleAction). Adding an action here
+ * is a decision: it must be a plainly harmless community setting (no role, permission, staff
+ * list, safety or logging setting, no channel the bot posts manager-written text into, no
+ * command switch that could lock admins out).
+ */
+export const MANAGER_ACTIONS = new Set([
+    'welcome/welcome-enabled', 'welcome/goodbye-enabled', 'welcome/welcome', 'welcome/goodbye',
+    'tickets/canned-add', 'tickets/canned-remove',
+    'leveling/enabled', 'leveling/settings', 'leveling/card',
+    'birthdays/settings', 'birthdays/off', // the birthday role inside settings: requireCanAct (FIELD_LEVEL)
+    'counters/counter-type', 'counters/counter-delete', 'counters/counting-setup', 'counters/counting-reset', 'counters/counting-off',
+    'join-to-create/trigger', 'join-to-create/trigger-remove',
+    'community/suggestions', 'community/starboard', 'community/starboard-off',
+    'bot-language/language',
+]);

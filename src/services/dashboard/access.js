@@ -23,6 +23,8 @@
 //   Module/form actions marked `admin: true` stay Administrator-only (canAct), whatever the level.
 //   createAccessChecker(client, { guildId }) → { check, checkFresh, forget }:
 //     check(userId, { guildId, now })   cached 30 s per (user, server)
+//     check(userId, { guildId, force: false })  the picker: cached answer, else the bot's member
+//                                       cache; not stored (pages still fetch the member fresh)
 //     checkFresh(userId, { guildId })   drops the cached answer and asks Discord again (every POST)
 //     forget(userId[, guildId])         drops one server's answer, or every server's for that user
 //   check(userId, now) with a number still works (older callers and tests).
@@ -81,13 +83,14 @@ export async function hasModeratorRole(client, guildId, member, loadConfig = get
  * The facts for decideAccess, fetched from Discord for one server. `owners` and `isHome` are
  * injectable for tests; isOwnerId = hasOwnerPower(userId, guildId).
  */
-export async function memberFacts(client, userId, guildId, owners = getBotOwners(), loadConfig = getGuildConfig, { isHome = isMewvoServer } = {}) {
+export async function memberFacts(client, userId, guildId, owners = getBotOwners(), loadConfig = getGuildConfig, { isHome = isMewvoServer, force = true } = {}) {
     const isOwnerId = hasOwnerPower(userId, guildId, { isOwner: (id) => owners.includes(id), isHome });
     const none = { inGuild: false, isAdmin: false, isOwnerId, isManager: false, isModerator: false };
     const guild = guildId ? client.guilds?.cache?.get(guildId) : null;
     if (!guild) return none;
     // force: true so permission and role changes are seen (the cache answers otherwise until the next event).
-    const member = await guild.members.fetch({ user: userId, force: true }).catch(() => null);
+    // force: false only for the picker's list (the bot's member cache is enough there).
+    const member = await guild.members.fetch({ user: userId, force }).catch(() => null);
     if (!member) return none;
     // GuildMember#permissions includes every permission for the server owner.
     const isAdmin = Boolean(member.permissions?.has?.(PermissionFlagsBits.Administrator));
@@ -99,15 +102,18 @@ const cacheKey = (userId, guildId) => `${userId}:${guildId || '-'}`;
 
 /** check(userId, now) (legacy) or check(userId, { guildId, now }). */
 function options(arg, defaultGuildId) {
-    if (typeof arg === 'number') return { guildId: defaultGuildId, now: arg };
-    return { guildId: arg?.guildId ?? defaultGuildId, now: arg?.now ?? Date.now() };
+    if (typeof arg === 'number') return { guildId: defaultGuildId, now: arg, force: true };
+    return { guildId: arg?.guildId ?? defaultGuildId, now: arg?.now ?? Date.now(), force: arg?.force !== false };
 }
+
+/** The default facts: memberFacts with its defaults; `force: false` reads the bot's member cache. */
+const defaultFacts = (client, userId, guildId, { force = true } = {}) => memberFacts(client, userId, guildId, undefined, undefined, { force });
 
 /**
  * A checker with a 30-second cache per (user, server). `guildId` is the default server
  * (the main server today); `facts` is injectable for tests.
  */
-export function createAccessChecker(client, { guildId = null, facts = memberFacts, ttlMs = ACCESS_CACHE_MS, maxEntries = ACCESS_CACHE_MAX } = {}) {
+export function createAccessChecker(client, { guildId = null, facts = defaultFacts, ttlMs = ACCESS_CACHE_MS, maxEntries = ACCESS_CACHE_MAX } = {}) {
     const cache = new Map(); // `${userId}:${guildId}` → { decision, at }
 
     function prune(now) {
@@ -121,10 +127,13 @@ export function createAccessChecker(client, { guildId = null, facts = memberFact
     }
 
     async function check(userId, arg) {
-        const { guildId: gid, now } = options(arg, guildId);
+        const { guildId: gid, now, force } = options(arg, guildId);
         const key = cacheKey(userId, gid);
         const hit = cache.get(key);
         if (hit && now - hit.at < ttlMs) return hit.decision;
+        // force: false (the picker): the cached answer if any, else the bot's member cache; that
+        // answer is not stored, so pages still check with a fresh member fetch.
+        if (!force) return decideAccess(await facts(client, userId, gid, { force: false }));
         const decision = decideAccess(await facts(client, userId, gid));
         cache.delete(key);
         cache.set(key, { decision, at: now });

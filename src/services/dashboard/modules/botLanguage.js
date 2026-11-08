@@ -10,6 +10,7 @@ import { choiceField, postForm, selectInput } from '../forms.js';
 import { textFor } from '../language.js';
 import { LANGUAGES, LANG_CODES } from '../../site/i18n.js';
 import { registryValue, saveRegistry, section } from './common.js';
+import { managerActions } from './serverScope.js';
 
 const languageName = (code) => LANGUAGES.find((l) => l.code === code)?.name || code;
 
@@ -31,7 +32,7 @@ export default {
 ${section(tr.t('botLanguage.rule.title'), html`<ul><li>${tr.t('botLanguage.rule.public')}</li><li>${tr.t('botLanguage.rule.private')}</li><li>${tr.t('botLanguage.rule.done')}</li></ul>`, '', { key: 'rule' })}`;
     },
 
-    actions: {
+    actions: managerActions(['language'], {
         async language(ctx, form) {
             const tr = textFor(ctx);
             const botLanguage = choiceField(form, 'botLanguage', LANG_CODES, tr.t('botLanguage.form.label'));
@@ -40,5 +41,5 @@ ${section(tr.t('botLanguage.rule.title'), html`<ul><li>${tr.t('botLanguage.rule.
             const result = await saveRegistry(ctx, { botLanguage }, 'botLanguage');
             return { ...result, message: tr.t('botLanguage.saved.done', { language: languageName(botLanguage) }) };
         },
-    },
+    }),
 };

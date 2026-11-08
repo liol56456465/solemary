@@ -21,6 +21,7 @@ import { logger } from '../../../utils/logger.js';
 import { EMBED_COLOURS, colourFromKey, parseHexColour } from '../../botMessageService.js';
 import { cardAccentOf } from '../../leveling/levelCard.js';
 import { textFor } from '../language.js';
+import { managerActions } from './serverScope.js';
 
 // Words: src/content/dashboard/<lang>/leveling.json. The cat's sentence, stage and mood come from
 // community/catModel.js and the role-sync note from leveling/levelRoleSyncService.js (English).
@@ -147,7 +148,7 @@ ${section(tr.t('leveling.member.title'), members, tr.t('leveling.member.help'), 
 ${topic(tr.t('leveling.topic.cat'), tr.t('leveling.topic.catLine'), section(tr.t('leveling.cat.title'), catPart, [tr.t('leveling.cat.help'), tr.t('leveling.cat.more')], { key: 'server-cat', size: 'full' }), { key: 'server-cat' })}`;
     },
 
-    actions: {
+    actions: managerActions(['enabled', 'settings', 'card'], {
         'cat-name': {
             admin: true,
             async run(ctx, form) {
@@ -316,5 +317,5 @@ ${topic(tr.t('leveling.topic.cat'), tr.t('leveling.topic.catLine'), section(tr.t
                 };
             },
         },
-    },
+    }),
 };

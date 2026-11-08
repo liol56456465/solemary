@@ -4,6 +4,7 @@
 //                     with its state and a small form for its one setting (setupForms.js).
 
 import { html, layout, path, raw } from './html.js';
+import { isHomeOnlyPage } from './homeOnly.js';
 import { dashboardText, textFor } from './language.js';
 import { permissionsList } from './overview.js';
 import { setupStepForm } from './setupForms.js';
@@ -77,9 +78,11 @@ export const wordKey = (term) => term.replace(/[^A-Za-z0-9]+/g, ' ').trim().spli
 
 export function glossaryPage({ session, access = null, moduleStates = {} }) {
     const tr = dashboardText(session?.lang);
+    // Home-only pages (homeOnly.js: /support, /backup) 404 in other servers: no "Open" link there.
+    const linkable = (target) => Boolean(target) && !(session?.isHomeServer === false && isHomeOnlyPage(target));
     const body = html`<header class="page-head"><h1>${tr.t('help.glossary.title')}</h1>
 <p>${tr.t('help.glossary.intro')}</p></header>
-${GLOSSARY.map((g) => html`<section class="plain-section"><h2>${tr.t(`help.groups.${g.key}`)}</h2><dl class="glossary">${g.words.map(([term, , target]) => html`<dt id="${anchor(term)}">${tr.t(`help.words.${wordKey(term)}.term`)}</dt><dd>${tr.t(`help.words.${wordKey(term)}.text`)}${target ? html` <a href="${linkFor(target)}">${tr.t('help.glossary.open')}</a>` : ''}</dd>`)}</dl></section>`)}`;
+${GLOSSARY.map((g) => html`<section class="plain-section"><h2>${tr.t(`help.groups.${g.key}`)}</h2><dl class="glossary">${g.words.map(([term, , target]) => html`<dt id="${anchor(term)}">${tr.t(`help.words.${wordKey(term)}.term`)}</dt><dd>${tr.t(`help.words.${wordKey(term)}.text`)}${linkable(target) ? html` <a href="${linkFor(target)}">${tr.t('help.glossary.open')}</a>` : ''}</dd>`)}</dl></section>`)}`;
     return layout({ title: tr.t('help.glossary.title'), active: 'help', session, access, moduleStates, body });
 }
 

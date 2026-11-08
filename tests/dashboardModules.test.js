@@ -1053,7 +1053,8 @@ test('every POST action: users without access are refused; admin-only actions re
             const owner = await setup({ userId: OWNER });
             c.seed?.(owner.state, owner.guild);
             const asOwner = await postConfirmed(owner, module.key, action, c.form);
-            if (getAction(module, action).admin || c.needsAct) {
+            // Without Administrator only actions marked `manager` run (closed by default).
+            if (!getAction(module, action).manager || c.needsAct) {
                 assert.equal(asOwner.statusCode, 403, `${module.key}/${action} owner must be refused`);
                 assert.match(asOwner.body, /Administrator/);
                 assert.equal(owner.calls.length, 0);
@@ -1061,7 +1062,7 @@ test('every POST action: users without access are refused; admin-only actions re
                 assert.equal(asOwner.statusCode, 400, `${module.key}/${action} refused in a home server`);
                 assert.match(asOwner.body, c.homeRefused);
             } else {
-                assert.equal(asOwner.statusCode, 303, `${module.key}/${action} owner may change settings (decision 4)`);
+                assert.equal(asOwner.statusCode, 303, `${module.key}/${action} owner may change manager-level settings (decision 4)`);
             }
         }
     }

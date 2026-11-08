@@ -9,7 +9,7 @@ import { diffSnapshots } from '../audit.js';
 import { DEFAULT_TIMEZONE } from '../../../utils/timezone.js';
 import { changedOnly, section } from './common.js';
 import { textFor } from '../language.js';
-import { requireCanAct } from './serverScope.js';
+import { requireCanAct, managerActions } from './serverScope.js';
 
 // Words: src/content/dashboard/<lang>/birthdays.json.
 
@@ -43,7 +43,7 @@ ${rolePicker(g, 'roleId', b.roleId, { label: tr.t('birthdays.settings.role'), au
         return html`${section(tr.t('birthdays.status.title'), status, '', { key: 'status' })}${section(tr.t('birthdays.settings.title'), form, '', { key: 'settings' })}`;
     },
 
-    actions: {
+    actions: managerActions(['settings', 'off'], {
         async settings(ctx, form) {
             const tr = textFor(ctx);
             const current = await load(ctx);
@@ -66,5 +66,5 @@ ${rolePicker(g, 'roleId', b.roleId, { label: tr.t('birthdays.settings.role'), au
             return { changes, message: textFor(ctx).t('birthdays.action.off') };
 
         },
-    },
+    }),
 };
