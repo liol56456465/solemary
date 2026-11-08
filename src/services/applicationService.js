@@ -1,6 +1,7 @@
 // applicationService.js
 
 import { logger } from '../utils/logger.js';
+import { BoundedMap } from '../utils/boundedMap.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { PermissionFlagsBits } from 'discord.js';
 import { sanitizeInput, sanitizeMarkdown } from '../utils/validation.js';
@@ -18,7 +19,10 @@ import {
 import botConfig from '../config/bot.js';
 import { normalizeApplicationQuestion, DEFAULT_MIN_ANSWER_LENGTH } from '../utils/applicationQuestions.js';
 
-const applicationCooldowns = new Map();
+// userId → last submit (ms). Bounded (B5): dropping the oldest entry only lets that member
+// submit again sooner; expired entries are pruned when the map is near full.
+export const APPLICATION_COOLDOWN_MAX = 20_000;
+const applicationCooldowns = new BoundedMap(APPLICATION_COOLDOWN_MAX);
 const APPLICATION_SUBMIT_COOLDOWN = (botConfig.applications?.applicationCooldown ?? 24) * 60 * 60 * 1000;
 
 class ApplicationService {
@@ -103,7 +107,13 @@ class ApplicationService {
     }
 
     static recordApplicationCooldown(userId) {
-        applicationCooldowns.set(`submit_${userId}`, Date.now());
+        const now = Date.now();
+        if (applicationCooldowns.size >= APPLICATION_COOLDOWN_MAX) {
+            for (const [key, at] of applicationCooldowns) {
+                if (now - at >= APPLICATION_SUBMIT_COOLDOWN) applicationCooldowns.delete(key);
+            }
+        }
+        applicationCooldowns.set(`submit_${userId}`, now);
     }
 
     static async checkManagerPermission(client, guildId, member) {

@@ -49,10 +49,11 @@ function removalProblem(role, me) {
  * (database) throws, so callers catch and log it.
  *
  * options: config (leveling config, read when missing), level (read when missing),
- * removeUnearned (default false), reason (audit log reason).
+ * removeUnearned (default false), reason (audit log reason), log (default true: one summary
+ * line per call; the startup sync passes false and logs one line per server).
  * Returns { added: roleId[], removed: roleId[], skipped: [{roleId, problem}], errors }.
  */
-export async function syncLevelRolesForMember(client, member, { config = null, level = null, removeUnearned = false, reason = 'Level reward' } = {}) {
+export async function syncLevelRolesForMember(client, member, { config = null, level = null, removeUnearned = false, reason = 'Level reward', log = true } = {}) {
     const summary = { added: [], removed: [], skipped: [], errors: 0 };
     const guild = member?.guild;
     if (!guild || member.user?.bot) return summary;
@@ -75,8 +76,8 @@ export async function syncLevelRolesForMember(client, member, { config = null, l
     const canManageRoles = Boolean(me?.permissions?.has?.(PermissionFlagsBits.ManageRoles));
     const skip = (roleId, problem) => {
         summary.skipped.push({ roleId, problem });
-        logger.warn(`Level reward role ${roleId} not changed for ${member.id} in guild ${guild.id}: ${problem}`);
     };
+    const errorNotes = [];
 
     for (const roleId of plan.add) {
         const role = await resolveRole(guild, roleId);
@@ -87,10 +88,9 @@ export async function syncLevelRolesForMember(client, member, { config = null, l
         try {
             await member.roles.add(role, reason);
             summary.added.push(roleId);
-            logger.info(`Gave level reward role ${role.name} to ${member.id} in guild ${guild.id} (level ${memberLevel})`);
         } catch (error) {
             summary.errors += 1;
-            logger.warn(`Could not give level reward role ${roleId} to ${member.id} in guild ${guild.id}: ${error.message}`);
+            errorNotes.push(`give ${roleId}: ${error.message}`);
         }
     }
 
@@ -113,14 +113,33 @@ export async function syncLevelRolesForMember(client, member, { config = null, l
         try {
             await member.roles.remove(role, reason);
             summary.removed.push(roleId);
-            logger.info(`Took level reward role ${role.name} from ${member.id} in guild ${guild.id} (level ${memberLevel})`);
         } catch (error) {
             summary.errors += 1;
-            logger.warn(`Could not take level reward role ${roleId} from ${member.id} in guild ${guild.id}: ${error.message}`);
+            errorNotes.push(`take ${roleId}: ${error.message}`);
         }
     }
 
+    if (log) logRoleSyncSummary(summary, { memberId: member.id, guildId: guild.id, level: memberLevel, errorNotes });
     return summary;
+}
+
+/**
+ * One log line per sync (not one per role): info when roles changed, warn when some were
+ * skipped or failed (with the first few reasons). Nothing when nothing happened.
+ */
+export function roleSyncLogLine(summary, { memberId, guildId, level, errorNotes = [] }) {
+    const { added, removed, skipped, errors } = summary;
+    if (!added.length && !removed.length && !skipped.length && !errors) return null;
+    const problems = [...skipped.map((s) => `${s.roleId}: ${s.problem}`), ...errorNotes];
+    const text = `Level reward roles for ${memberId} in guild ${guildId} (level ${level}): `
+        + `${added.length} given, ${removed.length} taken off, ${skipped.length} skipped, ${errors} failed`
+        + (problems.length ? ` — ${problems.slice(0, 3).join('; ')}${problems.length > 3 ? ` (+${problems.length - 3} more)` : ''}` : '');
+    return { level: skipped.length || errors ? 'warn' : 'info', text };
+}
+
+function logRoleSyncSummary(summary, details) {
+    const line = roleSyncLogLine(summary, details);
+    if (line) logger[line.level](line.text);
 }
 
 /** One short line for a command reply or dashboard message; '' when nothing happened. */
@@ -215,6 +234,7 @@ export async function reconcileLevelRoles(client, guildId = null, { fetchTimeout
 
             const userIds = await listLevelUserIds(client, guild.id);
             const config = { ...cfg, roleRewards: rewards };
+            const guildTotals = { added: 0, removed: 0, skipped: 0, errors: 0, firstProblem: null };
 
             for (const userId of userIds) {
                 // Former members keep their level data but are not in the cache: skipped, no read.
@@ -227,11 +247,24 @@ export async function reconcileLevelRoles(client, guildId = null, { fetchTimeout
                     config,
                     level: levelData.level,
                     reason: 'Level reward (startup sync)',
+                    log: false,
                 });
+                guildTotals.added += result.added.length;
+                guildTotals.removed += result.removed.length;
+                guildTotals.skipped += result.skipped.length;
+                guildTotals.errors += result.errors;
+                if (!guildTotals.firstProblem && result.skipped.length) guildTotals.firstProblem = result.skipped[0].problem;
                 summary.rolesReAwarded += result.added.length;
                 summary.rolesRemoved += result.removed.length;
                 summary.rolesSkipped += result.skipped.length;
                 summary.errors += result.errors;
+            }
+            if (guildTotals.added || guildTotals.removed || guildTotals.skipped || guildTotals.errors) {
+                const text = `Level role sync for guild ${guild.id}: ${guildTotals.added} given, ${guildTotals.removed} taken off, `
+                    + `${guildTotals.skipped} skipped, ${guildTotals.errors} failed`
+                    + (guildTotals.firstProblem ? ` (first problem: ${guildTotals.firstProblem})` : '');
+                if (guildTotals.skipped || guildTotals.errors) logger.warn(text);
+                else logger.info(text);
             }
         } catch (error) {
             summary.errors += 1;

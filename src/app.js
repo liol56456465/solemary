@@ -9,6 +9,7 @@ import express from 'express';
 import cron from 'node-cron';
 
 import config from './config/application.js';
+import { makeCache, sweepers } from './config/clientCache.js';
 import { initializeDatabase } from './utils/database.js';
 import { getGuildConfig } from './services/config/guildConfig.js';
 import { updateAllServerCounters } from './services/serverstatsService.js';
@@ -91,6 +92,9 @@ class Mewvo extends Client {
       // (prizes, reports, names) ends up in bot messages. Messages that ping a role on
       // purpose list it in their own allowedMentions (tickets, modmail, reminders, feeds).
       allowedMentions: { parse: ['users'], repliedUser: true },
+      // Cache limits and sweepers (B5): config/clientCache.js says what is kept and why.
+      makeCache: makeCache(),
+      sweepers: sweepers(),
     });
 
     this.config = config;

@@ -12,10 +12,12 @@
 
 import { PermissionFlagsBits } from 'discord.js';
 import { logger } from './logger.js';
+import { BoundedMap, BoundedSet } from './boundedMap.js';
 
 const REFRESH_CACHE_MS = 60 * 60 * 1000;
-const refreshCache = new Map();
-const warnedLegacyUrls = new Set();
+// Bounded (B5): a dropped entry is fetched again / warned about again.
+const refreshCache = new BoundedMap(2000);
+const warnedLegacyUrls = new BoundedSet(2000);
 
 /**
  * True when a Discord CDN attachment URL carries an `ex` expiry (hex unix seconds)

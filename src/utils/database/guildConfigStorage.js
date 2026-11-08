@@ -2,6 +2,23 @@ import { GUILD_CONFIG_DEFAULTS } from '../../config/guild/guildConfigDefaults.js
 import { normalizeGuildConfig, validateGuildConfigOrThrow } from '../schemas.js';
 import { createError, ErrorTypes } from '../errorHandler.js';
 import { getGuildConfigKey } from './keys.js';
+import { createConfigCache } from '../configCache.js';
+
+// Read cache (B5): getGuildConfig runs on every message and every log event. 2,000 servers,
+// 60 s; every write below clears the server's entry (configCache.js has the rules).
+export const GUILD_CONFIG_CACHE_SIZE = 2000;
+export const GUILD_CONFIG_CACHE_TTL_MS = 60_000;
+const configCache = createConfigCache({ maxSize: GUILD_CONFIG_CACHE_SIZE, ttlMs: GUILD_CONFIG_CACHE_TTL_MS });
+
+/** Drops a server's cached config (for a write that does not go through this module). */
+export function invalidateGuildConfigCache(client, guildId) {
+    configCache.invalidate(client?.db, guildId);
+}
+
+/** Tests / health: { hits, misses } and the entries held for this client. */
+export function guildConfigCacheInfo(client) {
+    return { ...configCache.stats(), size: configCache.size(client?.db) };
+}
 
 export function unwrapReplitData(data) {
     if (
@@ -34,11 +51,13 @@ export async function readGuildConfig(client, guildId, context = {}) {
         throw databaseUnavailable(guildId, context);
     }
 
-    const rawConfig = await client.db.get(getGuildConfigKey(guildId), null);
-    if (rawConfig === null) {
-        return normalizeGuildConfig({}, GUILD_CONFIG_DEFAULTS);
-    }
-    return normalizeGuildConfig(unwrapReplitData(rawConfig), GUILD_CONFIG_DEFAULTS);
+    return configCache.read(client.db, guildId, async () => {
+        const rawConfig = await client.db.get(getGuildConfigKey(guildId), null);
+        if (rawConfig === null) {
+            return normalizeGuildConfig({}, GUILD_CONFIG_DEFAULTS);
+        }
+        return normalizeGuildConfig(unwrapReplitData(rawConfig), GUILD_CONFIG_DEFAULTS);
+    });
 }
 
 /**
@@ -49,11 +68,11 @@ export async function updateGuildConfigAtomic(client, guildId, change, context =
     if (!client?.db || typeof client.db.update !== 'function') {
         throw databaseUnavailable(guildId, context);
     }
-    const saved = await client.db.update(getGuildConfigKey(guildId), async (raw) => {
+    const saved = await configCache.write(client.db, guildId, () => client.db.update(getGuildConfigKey(guildId), async (raw) => {
         const current = normalizeGuildConfig(unwrapReplitData(raw) || {}, GUILD_CONFIG_DEFAULTS);
         const next = normalizeGuildConfig(await change(current), GUILD_CONFIG_DEFAULTS);
         return validateGuildConfigOrThrow(next, { guildId, ...context });
-    }, {});
+    }, {}));
     notifyConfigSaved(guildId, saved);
     return saved;
 }
@@ -92,7 +111,7 @@ export async function writeGuildConfig(client, guildId, config, context = {}) {
     }
 
     const validated = validateGuildConfigOrThrow(config, { guildId, ...context });
-    await client.db.set(getGuildConfigKey(guildId), validated);
+    await configCache.write(client.db, guildId, () => client.db.set(getGuildConfigKey(guildId), validated));
     notifyConfigSaved(guildId, validated);
     return validated;
 }

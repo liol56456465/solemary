@@ -7,6 +7,20 @@ function evaluate(expression) {
     return evaluateMathExpression(expression);
 }
 
+/**
+ * The calculator context a modal submit may use: only the submitter's own. The key in the
+ * customId is client-supplied, so it must be `${userId}_<op>` for this user and the stored
+ * context must belong to them. Returns { context } (null when missing/expired) or { notYours: true }.
+ */
+export function resolveCalculatorContext(contexts, contextKey, userId) {
+    const key = String(contextKey || '');
+    const uid = String(userId || '');
+    if (!uid || !key.startsWith(`${uid}_`)) return { notYours: true };
+    const context = contexts.get(key) || null;
+    if (context && String(context.userId) !== uid) return { notYours: true };
+    return { context };
+}
+
 async function calculateModalHandler(interaction, client, args) {
     try {
         const operation = args[0];
@@ -17,8 +31,12 @@ async function calculateModalHandler(interaction, client, args) {
             return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Failed to retrieve calculation context.' });
         }
 
-        const { calculationContexts } = await import('../commands/Tools/calculate.js');
-        const context = calculationContexts.get(contextKey);
+        const { calculationContexts } = await import('../commands/Tools/modules/tools_calculate.js');
+        const lookup = resolveCalculatorContext(calculationContexts, contextKey, interaction.user.id);
+        if (lookup.notYours) {
+            return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'This isn\'t your calculator.' });
+        }
+        const context = lookup.context;
         
         if (!context) {
             return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This calculation timed out. Start a new one.' });

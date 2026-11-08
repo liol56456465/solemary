@@ -6,22 +6,30 @@
 // follows edits of the original, and it is removed when the original is
 // deleted or drops below the threshold. Bot messages are never starred.
 //
-// Settings come from the in-memory community settings and posts from an
-// in-memory map (loaded at startup), so a reaction that is not the starboard
-// emoji costs nothing, and one below the threshold costs no API call.
+// Settings come from the in-memory community settings, so a reaction that is not the
+// starboard emoji costs nothing, and one below the threshold costs no API call.
+// Posts (B5): an LRU of known posts (the last 30 days are loaded at startup, at most
+// POST_CACHE_SIZE) plus a bounded "no post" set; a message not in either is looked up
+// in the table by id (primary key / index), only in servers with a starboard.
 
 import { logger } from '../../utils/logger.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { Mutex } from '../../utils/mutex.js';
+import { BoundedMap, BoundedSet } from '../../utils/boundedMap.js';
 import { CT, query, isCommunityDbAvailable, userError } from './db.js';
 import { getCommunitySettings } from './settingsService.js';
 
 export const STARBOARD_MAX_THRESHOLD = 100;
 const UNKNOWN_MESSAGE = 10008;
 
+export const POST_CACHE_SIZE = 5000;
+export const STARTUP_LOAD_DAYS = 30;
 // sourceMessageId → { guildId, sourceChannelId, starChannelId, starMessageId, count }
-const posts = new Map();
-const byStarMessage = new Map(); // starMessageId → sourceMessageId
+const posts = new BoundedMap(POST_CACHE_SIZE);
+const byStarMessage = new BoundedMap(POST_CACHE_SIZE); // starMessageId → sourceMessageId
+// Message ids (source or star) known to have no post. Every post is created in this
+// process (remember() clears the id), so an entry stays true until it is dropped.
+const noPost = new BoundedSet(20_000);
 
 const CUSTOM_EMOJI = /^<a?:\w{2,32}:(\d{17,20})>$/;
 
@@ -90,13 +98,48 @@ export function buildStarPost(message, count, emoji) {
     };
 }
 
+const POST_COLUMNS = 'source_message_id, guild_id, source_channel_id, star_channel_id, star_message_id, count';
+
+/** Startup: the most recently updated posts of the last STARTUP_LOAD_DAYS (older ones are looked up on demand). */
 export async function loadStarboardPosts() {
     if (!isCommunityDbAvailable()) return null;
-    const { rows } = await query(`SELECT * FROM ${CT.starboard}`);
+    const { rows } = await query(
+        `SELECT ${POST_COLUMNS} FROM ${CT.starboard}
+          WHERE updated_at > NOW() - make_interval(days => $1)
+          ORDER BY updated_at ASC LIMIT $2`,
+        [STARTUP_LOAD_DAYS, POST_CACHE_SIZE]
+    );
     posts.clear();
     byStarMessage.clear();
+    noPost.clear();
     for (const row of rows) remember(row);
     return rows.length;
+}
+
+/**
+ * The post of a source message (or, with byStar, of a starboard message), from the cache or
+ * the table. null when there is none. A database error throws (callers catch and log it).
+ */
+async function findPost(messageId, { byStar = false } = {}) {
+    const id = String(messageId);
+    const cachedSource = byStar ? byStarMessage.get(id) : (posts.has(id) ? id : null);
+    if (cachedSource && posts.has(cachedSource)) {
+        const entry = posts.get(cachedSource);
+        posts.set(cachedSource, entry); // LRU: a used post stays
+        byStarMessage.set(entry.starMessageId, cachedSource);
+        return { sourceId: cachedSource, entry };
+    }
+    if (noPost.has(id)) return null;
+    // Unknown while the database is down: throw (callers log and skip) rather than answer
+    // "no post", which would post a second copy of a starred message.
+    if (!isCommunityDbAvailable()) throw new Error('database not available for the starboard lookup');
+    const column = byStar ? 'star_message_id' : 'source_message_id';
+    const { rows } = await query(`SELECT ${POST_COLUMNS} FROM ${CT.starboard} WHERE ${column} = $1 LIMIT 1`, [id]);
+    if (!rows.length) {
+        noPost.add(id);
+        return null;
+    }
+    return { sourceId: rows[0].source_message_id, entry: remember(rows[0]) };
 }
 
 function remember(row) {
@@ -107,8 +150,12 @@ function remember(row) {
         starMessageId: row.star_message_id,
         count: Number(row.count),
     };
+    const old = posts.get(row.source_message_id);
+    if (old && old.starMessageId !== entry.starMessageId) byStarMessage.delete(old.starMessageId);
     posts.set(row.source_message_id, entry);
     byStarMessage.set(entry.starMessageId, row.source_message_id);
+    noPost.delete(row.source_message_id);
+    noPost.delete(entry.starMessageId);
     return entry;
 }
 
@@ -125,6 +172,7 @@ export function getStarboardPost(sourceId) {
 async function deleteRow(sourceId) {
     forget(sourceId);
     await query(`DELETE FROM ${CT.starboard} WHERE source_message_id = $1`, [sourceId]);
+    noPost.add(String(sourceId));
 }
 
 async function fetchStarMessage(guild, entry) {
@@ -166,7 +214,7 @@ async function syncStar(reaction) {
     const guild = reaction.message.guild;
     const settings = getCommunitySettings(guild.id);
     if (!settings.starboardChannelId) return;
-    const existing = posts.get(reaction.message.id) || null;
+    const existing = (await findPost(reaction.message.id))?.entry || null;
 
     if (reaction.partial) reaction = await reaction.fetch().catch(() => reaction);
     // reaction.count includes self-stars and bots, so below the threshold nothing can change.
@@ -217,8 +265,10 @@ export async function handleStarReaction(reaction, user) {
 /** messageUpdate hook: refreshes the starboard copy of an edited message. Never throws. */
 export async function handleStarSourceEdit(newMessage) {
     try {
-        const entry = posts.get(newMessage.id);
-        if (!entry || !newMessage.guild) return;
+        if (!newMessage.guild || newMessage.author?.bot) return;
+        // Only servers with a starboard look anything up.
+        if (!getCommunitySettings(newMessage.guild.id).starboardChannelId) return;
+        if (!(await findPost(newMessage.id))) return;
         await Mutex.runExclusive(`starboard:${newMessage.id}`, async () => {
             const current = posts.get(newMessage.id);
             if (!current) return;
@@ -237,10 +287,18 @@ export async function handleStarSourceEdit(newMessage) {
 export async function handleStarMessageDelete(message) {
     try {
         if (!message.guild) return;
-        const sourceId = posts.has(message.id) ? message.id : byStarMessage.get(message.id);
+        // Known posts first (no read); else only servers with a starboard look it up: as a
+        // source message, or as a post when it was in the starboard channel.
+        let sourceId = posts.has(message.id) ? message.id : byStarMessage.get(message.id);
+        if (!sourceId) {
+            const settings = getCommunitySettings(message.guild.id);
+            if (!settings.starboardChannelId) return;
+            const inBoard = message.channelId === settings.starboardChannelId;
+            sourceId = (await findPost(message.id, { byStar: inBoard }))?.sourceId;
+        }
         if (!sourceId) return;
         await Mutex.runExclusive(`starboard:${sourceId}`, async () => {
-            const entry = posts.get(sourceId);
+            const entry = posts.get(sourceId) || (await findPost(sourceId))?.entry;
             if (!entry) return;
             if (sourceId === message.id) {
                 const post = await fetchStarMessage(message.guild, entry);
@@ -266,5 +324,6 @@ export function starboardSettingsPatch({ channelId, emoji, threshold }) {
 export function setStarboardPostsForTests(rows) {
     posts.clear();
     byStarMessage.clear();
+    noPost.clear();
     for (const row of rows) remember(row);
 }

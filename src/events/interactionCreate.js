@@ -101,7 +101,7 @@ export default {
 
         if (interaction.isChatInputCommand()) {
           try {
-            logger.info(`Command executed: /${interaction.commandName} by ${interaction.user.tag}`, {
+            logger.debug(`Command received: /${interaction.commandName}`, {
               event: 'interaction.command.received',
               traceId: interactionTraceContext.traceId,
               guildId: interaction.guildId,

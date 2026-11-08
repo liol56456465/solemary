@@ -45,10 +45,10 @@ export const addXp = wrapServiceBoundary(async function addXp(client, guild, mem
       levelData.level += 1;
       didLevelUp = true;
       xpNeededForNextLevel = getXpForLevel(levelData.level);
-
-      logger.info(`🎉 ${member.user.tag} leveled up to level ${levelData.level} in ${guild.name}`);
-
     }
+
+    // One line per level-up (not per level crossed), debug: routine and member-identifying.
+    if (didLevelUp) logger.debug(`Level up: user ${member.id} reached level ${levelData.level} in guild ${guild.id}`);
 
     if (didLevelUp) {
       try {
