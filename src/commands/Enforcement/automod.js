@@ -21,6 +21,7 @@ import { guildPlan } from '../../services/billing/premiumEffects.js';
 import { planName } from '../../services/billing/premiumService.js';
 import { updateSettings } from '../../services/settings/guildSettings.js';
 import { hasRuleOverride, isRelaxableRule, ruleMode } from '../../services/automod/policy.js';
+import { snapshotIfStale } from '../../services/structureBackupService.js';
 
 const RULE_CHOICES = Object.entries(AUTOMOD_RULES)
     .sort(([, a], [, b]) => b.severity - a.severity)
@@ -456,10 +457,13 @@ export default {
             // A rogue admin must not be able to switch off the guard that limits them (anti-nuke).
             if (!enabled && interaction.user.id !== interaction.guild.ownerId) throw userError(STAFF_GUARD_OWNER_ONLY);
             const saved = await setStaffGuard(guildId, enabled);
+            // A first structure snapshot right away (when none is under an hour old), so "Show what
+            // changed" / "Revert…" on a nuke alert work before the daily job reaches this server.
+            if (enabled && saved.enabled) snapshotIfStale(interaction.guild).catch(() => {});
             const me = interaction.guild.members.me;
             const canAct = me?.permissions.has([PermissionFlagsBits.ManageRoles, PermissionFlagsBits.ViewAuditLog]);
             note = enabled
-                ? `Staff guard is **on**${saved.enabled ? '' : ' (it starts working once automod is on: `/automod enable`)'}: an admin who mass-bans, mass-kicks or mass-deletes channels or roles loses their staff roles, and a bot added by a non-owner is kicked. The server owner is never affected.${canAct ? '' : '\nI need **Manage Roles** and **View Audit Log** for it to work.'}`
+                ? `Staff guard is **on**${saved.enabled ? '' : ' (it starts working once automod is on: `/automod enable`)'}: an admin who mass-bans, mass-kicks or mass-deletes channels or roles loses their staff roles, and a bot added by a non-owner is kicked. The server owner is never affected. I keep a daily snapshot of the channels and roles, so a nuke alert can show what changed and revert it.${canAct ? '' : '\nI need **Manage Roles** and **View Audit Log** for it to work.'}`
                 : 'Staff guard is **off**.';
         } else if (sub === 'exempt') {
             const channel = interaction.options.getChannel('channel');

@@ -1,13 +1,19 @@
-// structureBackupService.js — daily snapshots of the main server's roles, categories
-// and channels (with their role permission overwrites), and rebuilding them in another
-// server, so a nuked server can be recreated: /backup rebuild after /backup restore.
+// structureBackupService.js — daily snapshots of a server's roles, categories and channels
+// (with their role permission overwrites), and rebuilding them in another server, so a nuked
+// server can be recreated: /backup rebuild after /backup restore.
+//
+// Which servers (anti-nuke "Wick-style extras"): the main and support servers, and every server
+// where the staff guard runs (staffGuardOn: automod on + staff guard on). One SQL query finds
+// them (guildScan.js), the job pauses between servers, and each keeps its newest KEEP_SNAPSHOTS.
+// A nuke alert also takes one at once (snapshotIfStale) when the newest is over an hour old.
 //
 // Rebuild only adds: it never deletes or edits what the target server already has,
 // and refuses to run on the main server itself. Member-specific overwrites, managed
 // (bot/integration) roles, emojis, webhooks and messages are not part of a snapshot.
 //
-// Undo the nuke (/backup changes, /backup revert, "Show diff" on staff-guard alerts):
-// diffStructure compares a snapshot with the live main server; revertToSnapshot
+// Undo the nuke (/backup changes, /backup revert, "Show what changed" / "Revert" on staff-guard
+// alerts in any server with the guard on): diffStructure compares a snapshot with the live
+// server; revertToSnapshot
 // recreates deleted roles and channels (with their role overwrites, in order) and puts
 // back changed role permissions and channel overwrites. Roles and channels created
 // since the snapshot are listed but never deleted. Members do not get recreated roles
@@ -18,9 +24,15 @@ import { isBotOwner } from '../config/bot.js';
 import { enforcementConfig } from '../config/enforcement.js';
 import { logger } from '../utils/logger.js';
 import { query, T, isEnforcementDbAvailable } from './enforcement/db.js';
+import { GUILD_SQL, guildIdsFromSql } from './scheduling/guildScan.js';
+import { getAutomodSettings } from './automod/automodSettings.js';
 
-const KEEP_SNAPSHOTS = 7;
+export const KEEP_SNAPSHOTS = 7;
 const PAUSE_MS = 400;
+/** Pause between servers in the daily snapshot job (reading the cache is cheap; the DB write is not). */
+export const SNAPSHOT_PAUSE_MS = 1500;
+/** A nuke alert takes a fresh snapshot when the newest one is older than this. */
+export const STALE_SNAPSHOT_MS = 60 * 60 * 1000;
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const REBUILDABLE_CHANNELS = new Set([
@@ -28,7 +40,19 @@ const REBUILDABLE_CHANNELS = new Set([
     ChannelType.GuildStageVoice, ChannelType.GuildForum,
 ]);
 
-let rebuilding = false; // one rebuild or revert at a time
+// One rebuild or revert at a time per server (the target's id), so two servers can recover at once
+// but one server never runs two that fight over the same channels.
+const busy = new Set();
+function claim(guildId) {
+    if (busy.has(guildId)) throw new Error('A rebuild or revert is already running for this server.');
+    busy.add(guildId);
+}
+
+/** Test hook. */
+export function resetStructureBackupState() {
+    busy.clear();
+    staleChecks.clear();
+}
 
 /** Bot owners (OWNER_IDS) or the main server's owner: who may use /backup. */
 export function isBackupOwner(client, userId) {
@@ -82,9 +106,8 @@ export function captureStructure(guild) {
 }
 
 /** Takes and stores a snapshot, keeping the latest KEEP_SNAPSHOTS. Returns the stored row. */
-export async function takeSnapshot(guild) {
+export async function takeSnapshot(guild, data = captureStructure(guild)) {
     if (!isEnforcementDbAvailable()) throw new Error('The database is unavailable');
-    const data = captureStructure(guild);
     const categories = data.channels.filter((c) => c.type === ChannelType.GuildCategory).length;
     const summary = `${data.roles.length} roles, ${categories} categories, ${data.channels.length - categories} channels`;
     const { rows } = await query(
@@ -100,21 +123,92 @@ export async function takeSnapshot(guild) {
 }
 
 /**
- * The daily job: snapshot the main server, and the support server too (multi-server B4: its
- * nuke alerts' "Show what changed" compares the support server itself). Revert stays main-only.
+ * The servers the daily job snapshots (ids, in the bot's cache): main + support, plus every
+ * server with automod and the staff guard on. One SQL query; without SQL (in-memory storage)
+ * each cached server's settings are read. Throws on a database error (the job skips the run).
  */
-export async function snapshotMainServer(client) {
-    if (!isEnforcementDbAvailable()) return;
-    for (const guildId of [enforcementConfig.mainGuildId, enforcementConfig.supportGuildId]) {
-        const guild = guildId ? client.guilds.cache.get(guildId) : null;
+export async function snapshotGuildIds(client, { query: runQuery } = {}) {
+    const cached = client.guilds.cache;
+    const ids = [enforcementConfig.mainGuildId, enforcementConfig.supportGuildId].filter((id) => id && cached.has(id));
+    const found = await guildIdsFromSql(client, GUILD_SQL.staffGuard, [], { query: runQuery });
+    if (found) {
+        for (const id of found) if (cached.has(id) && !ids.includes(id)) ids.push(id);
+        return ids;
+    }
+    for (const id of cached.keys()) {
+        if (ids.includes(id)) continue;
+        const settings = await getAutomodSettings(id);
+        if (settings.enabled && settings.staffGuard) ids.push(id);
+    }
+    return ids;
+}
+
+/**
+ * The daily job: snapshot every server from snapshotGuildIds, pausing between them. One failing
+ * server is logged and skipped. Returns { taken, failed }. (Still named for app.js's cron.)
+ */
+export async function snapshotMainServer(client, { pauseMs = SNAPSHOT_PAUSE_MS, query: runQuery, snapshot = takeSnapshot } = {}) {
+    if (!runQuery && !isEnforcementDbAvailable()) return { taken: 0, failed: 0 };
+    let ids;
+    try {
+        ids = await snapshotGuildIds(client, { query: runQuery });
+    } catch (error) {
+        logger.warn(`Server structure snapshots skipped: could not read which servers use the staff guard: ${error.message}`);
+        return { taken: 0, failed: 0 };
+    }
+    const result = { taken: 0, failed: 0 };
+    for (const [index, guildId] of ids.entries()) {
+        const guild = client.guilds.cache.get(guildId);
         if (!guild) continue;
+        if (index > 0 && pauseMs) await sleep(pauseMs);
         try {
-            const row = await takeSnapshot(guild);
+            const row = await snapshot(guild);
+            result.taken += 1;
             logger.info(`Server structure snapshot #${row.id} of ${guild.id}: ${row.summary}`);
         } catch (error) {
+            result.failed += 1;
             logger.warn(`Server structure snapshot of ${guild.id} failed: ${error.message}`);
         }
     }
+    return result;
+}
+export const snapshotGuardedServers = snapshotMainServer;
+
+const staleChecks = new Map(); // guildId → running snapshotIfStale promise
+
+/**
+ * Takes a snapshot of `guild` when its newest one is older than `maxAgeMs` (or there is none).
+ * For nuke alerts: called first, before the guard acts. Concurrent calls for one server share
+ * one check. Resolves the new row, or null when a fresh one exists / it failed (logged; never
+ * throws, it must not hold up the guard).
+ */
+export function snapshotIfStale(guild, { maxAgeMs = STALE_SNAPSHOT_MS, now = Date.now() } = {}) {
+    if (staleChecks.has(guild.id)) return staleChecks.get(guild.id);
+    let data;
+    try {
+        data = captureStructure(guild); // now, before the guard (or the nuker) changes anything else
+    } catch (error) {
+        logger.warn(`Snapshot at a nuke alert in ${guild.id} failed: ${error.message}`);
+        return Promise.resolve(null);
+    }
+    const run = (async () => {
+        try {
+            if (!isEnforcementDbAvailable()) return null;
+            const { rows } = await query(`SELECT MAX(created_at) AS newest FROM ${T.serverSnapshots} WHERE guild_id = $1`, [guild.id]);
+            const newest = rows[0]?.newest ? new Date(rows[0].newest).getTime() : 0;
+            if (newest && now - newest < maxAgeMs) return null;
+            const row = await takeSnapshot(guild, data);
+            logger.info(`Server structure snapshot #${row.id} of ${guild.id} at a nuke alert: ${row.summary}`);
+            return row;
+        } catch (error) {
+            logger.warn(`Snapshot at a nuke alert in ${guild.id} failed: ${error.message}`);
+            return null;
+        } finally {
+            staleChecks.delete(guild.id);
+        }
+    })();
+    staleChecks.set(guild.id, run);
+    return run;
 }
 
 export async function listSnapshots(guildId) {
@@ -149,8 +243,7 @@ export async function rebuildFromSnapshot(target, snapshot, report) {
     if (target.id === enforcementConfig.mainGuildId || target.id === snapshot.guild_id) {
         throw new Error('Rebuild only works into a different server than the one the snapshot is of.');
     }
-    if (rebuilding) throw new Error('A rebuild or revert is already running.');
-    rebuilding = true;
+    claim(target.id);
     const data = snapshot.data;
     const counts = { roles: 0, channels: 0, failed: 0 };
     const roleMap = new Map(); // snapshot role id → new role id
@@ -213,7 +306,7 @@ export async function rebuildFromSnapshot(target, snapshot, report) {
         }
         return counts;
     } finally {
-        rebuilding = false;
+        busy.delete(target.id);
     }
 }
 
@@ -330,29 +423,63 @@ export function formatDiff(diff, { max = 15 } = {}) {
     return text.length > 3800 ? `${text.slice(0, 3799)}…` : text;
 }
 
-/** Diff of a stored snapshot row against the live main server. */
+/** Diff of a stored snapshot row against the live server. */
 export function diffAgainstLive(guild, snapshot) {
     return diffStructure(snapshot.data, captureStructure(guild));
 }
 
 /**
- * Undo the nuke: puts the snapshot's deleted roles and channels, role permissions and
- * channel overwrites back in the live main server, pausing between calls (discord.js
- * also waits out rate limits). `report(text)` gets progress lines.
- * Returns { rolesCreated, rolesFixed, channelsCreated, overwritesFixed, failed, skipped: string[] }.
+ * What a revert from `diff` would do, for the confirm step (pure). Nothing created since the
+ * snapshot is deleted: those roles and channels are only listed (`leftAlone`).
  */
-export async function revertToSnapshot(guild, snapshot, report = async () => {}) {
-    if (guild.id !== enforcementConfig.mainGuildId || snapshot.guild_id !== guild.id) {
-        throw new Error('Revert only works on the main server, from one of its own snapshots.');
+export function revertPlan(diff) {
+    const overwrites = diff.overwriteChanges.reduce((n, entry) => n + entry.changes.length, 0);
+    return {
+        recreateRoles: diff.deletedRoles.map((role) => role.name),
+        recreateCategories: diff.deletedChannels.filter((c) => c.type === ChannelType.GuildCategory).map((c) => c.name),
+        recreateChannels: diff.deletedChannels.filter((c) => c.type !== ChannelType.GuildCategory).map((c) => c.name),
+        fixRolePermissions: [...(diff.everyone ? ['@everyone'] : []), ...diff.changedRoles.map((role) => role.name)],
+        fixOverwrites: overwrites,
+        leftAlone: diff.addedRoles.length + diff.addedChannels.length,
+        empty: !diffHasChanges(diff),
+    };
+}
+
+/** The confirm text for a revert plan (at most ~1500 characters). */
+export function formatRevertPlan(plan) {
+    if (plan.empty) return 'Nothing to revert: the server matches the snapshot.';
+    const few = (names) => listOf(names, (name) => `\`${name}\``, 10);
+    return [
+        plan.recreateRoles.length ? `- Recreate **${plan.recreateRoles.length}** role(s): ${few(plan.recreateRoles)} (members do not get them back)` : null,
+        plan.recreateCategories.length ? `- Recreate **${plan.recreateCategories.length}** categor${plan.recreateCategories.length === 1 ? 'y' : 'ies'}: ${few(plan.recreateCategories)}` : null,
+        plan.recreateChannels.length ? `- Recreate **${plan.recreateChannels.length}** channel(s) with their category, position and role permissions: ${few(plan.recreateChannels)}` : null,
+        plan.fixRolePermissions.length ? `- Put back the permissions of ${few(plan.fixRolePermissions)}` : null,
+        plan.fixOverwrites ? `- Put back **${plan.fixOverwrites}** channel permission overwrite(s)` : null,
+        plan.leftAlone ? `- Leave alone **${plan.leftAlone}** role(s)/channel(s) created since the snapshot (nothing is deleted)` : null,
+        '-# Paced to stay inside Discord\'s rate limits: a big server takes a few minutes.',
+    ].filter(Boolean).join('\n').slice(0, 1500);
+}
+
+/**
+ * Undo the nuke: puts the snapshot's deleted roles and channels, role permissions and
+ * channel overwrites back in the live server (any server, from one of its own snapshots),
+ * pausing between calls (discord.js also waits out rate limits). It never deletes a role or a
+ * channel. `report(text)` gets progress lines.
+ * Returns { rolesCreated, rolesFixed, channelsCreated, overwritesFixed, failed, skipped: string[], failedItems: string[] }.
+ */
+export async function revertToSnapshot(guild, snapshot, report = async () => {}, { pauseMs = PAUSE_MS } = {}) {
+    if (!snapshot || String(snapshot.guild_id) !== guild.id || snapshot.data?.guildId !== guild.id) {
+        throw new Error('Revert only works from one of this server\'s own snapshots.');
     }
-    if (rebuilding) throw new Error('A rebuild or revert is already running.');
-    rebuilding = true;
+    claim(guild.id);
     const data = snapshot.data;
-    const counts = { rolesCreated: 0, rolesFixed: 0, channelsCreated: 0, overwritesFixed: 0, failed: 0, skipped: [] };
+    const counts = { rolesCreated: 0, rolesFixed: 0, channelsCreated: 0, overwritesFixed: 0, failed: 0, skipped: [], failedItems: [] };
     const fail = (what, error) => {
         counts.failed += 1;
+        if (counts.failedItems.length < 50) counts.failedItems.push(what);
         logger.warn(`Revert: ${what} failed: ${error.message}`);
     };
+    const pause = () => (pauseMs ? sleep(pauseMs) : null);
 
     try {
         const diff = diffAgainstLive(guild, snapshot);
@@ -379,7 +506,7 @@ export async function revertToSnapshot(guild, snapshot, report = async () => {})
             } catch (error) {
                 fail(`role ${role.name}`, error);
             }
-            await sleep(PAUSE_MS);
+            await pause();
         }
         // Recreated roles back at their old height, below my own role.
         const rolePositions = diff.deletedRoles.filter((role) => roleMap.has(role.id))
@@ -394,7 +521,7 @@ export async function revertToSnapshot(guild, snapshot, report = async () => {})
             }
             await live.setPermissions(BigInt(role.before), 'Revert to snapshot: permissions changed')
                 .then(() => { counts.rolesFixed += 1; }).catch((error) => fail(`permissions of ${role.name}`, error));
-            await sleep(PAUSE_MS);
+            await pause();
         }
         await report(`Roles: ${counts.rolesCreated} recreated, ${counts.rolesFixed} fixed. Restoring channels…`).catch(() => {});
 
@@ -407,6 +534,7 @@ export async function revertToSnapshot(guild, snapshot, report = async () => {})
             const parent = channel.parentId
                 ? channelMap.get(channel.parentId) || (guild.channels.cache.has(channel.parentId) ? channel.parentId : undefined)
                 : undefined;
+            if (channel.parentId && !parent) counts.skipped.push(`category of #${channel.name} (it could not be recreated)`);
             try {
                 const created = await guild.channels.create({
                     name: channel.name,
@@ -426,7 +554,7 @@ export async function revertToSnapshot(guild, snapshot, report = async () => {})
             } catch (error) {
                 fail(`channel ${channel.name}`, error);
             }
-            await sleep(PAUSE_MS);
+            await pause();
         }
         if (channelPositions.length) await guild.channels.setPositions(channelPositions).catch((error) => fail('channel order', error));
 
@@ -447,12 +575,12 @@ export async function revertToSnapshot(guild, snapshot, report = async () => {})
                 } catch (error) {
                     fail(`overwrite of ${change.roleName} on #${entry.name}`, error);
                 }
-                await sleep(PAUSE_MS);
+                await pause();
             }
         }
         return counts;
     } finally {
-        rebuilding = false;
+        busy.delete(guild.id);
     }
 }
 
@@ -461,6 +589,7 @@ export function formatRevertSummary(counts) {
     return [
         `${counts.rolesCreated} role(s) recreated, ${counts.rolesFixed} role permission(s) fixed,`,
         `${counts.channelsCreated} channel(s) recreated, ${counts.overwritesFixed} overwrite(s) fixed, ${counts.failed} failed.`,
+        counts.failedItems?.length ? `Could not restore: ${counts.failedItems.slice(0, 10).join(', ')}${counts.failedItems.length > 10 ? ` and ${counts.failedItems.length - 10} more` : ''}.` : null,
         counts.skipped.length ? `Skipped: ${counts.skipped.slice(0, 10).join(', ')}.` : null,
         counts.rolesCreated ? 'Recreated roles are empty: give them back to members by hand.' : null,
     ].filter(Boolean).join(' ');

@@ -573,7 +573,7 @@ test('staff guard: another server needs automod on AND the staff guard on; the m
     await assert.rejects(guard.handleAuditLogEntry(entry, third), /must not be read/, 'a watched action does read them');
 });
 
-test('staff guard: "Show what changed" and the /backup revert hint only in Mewvo\'s servers; the diff button refuses elsewhere', async () => {
+test('staff guard: every server with the guard on gets the nuke buttons for itself; an old main-server button refuses elsewhere', async () => {
     setup();
     const ALERTS = '400000000000000077';
     const posted = { [OTHER]: [], [MAIN]: [] };
@@ -593,10 +593,12 @@ test('staff guard: "Show what changed" and the /backup revert hint only in Mewvo
     const ids = (p) => JSON.stringify(p.components || []);
     assert.ok(posted[OTHER].length >= 1, 'the other server got its alert');
     for (const p of posted[OTHER]) {
-        assert.doesNotMatch(ids(p), /nukediff/);
+        assert.match(ids(p), new RegExp(`nukediff:\\d+:${OTHER}:200000000000000099`));
+        assert.match(ids(p), new RegExp(`nukerevert:ask:\\d+:${OTHER}:200000000000000099`));
+        assert.match(ids(p), new RegExp(`nukepanic:${OTHER}:200000000000000099`));
         assert.doesNotMatch(JSON.stringify(p.embeds), /backup revert/);
     }
-    assert.ok(posted[MAIN].some((p) => /nukediff/.test(ids(p))), 'the main server keeps the button');
+    assert.ok(posted[MAIN].some((p) => new RegExp(`nukediff:\\d+:${MAIN}`).test(ids(p))), 'the main server keeps the button');
 
     const { handleNukeDiff } = await import('../../src/handlers/backupRevert.js');
     const replies = [];
@@ -612,7 +614,7 @@ test('staff guard: "Show what changed" and the /backup revert hint only in Mewvo
     };
     await handleNukeDiff(click, other.client, [String(Math.floor(Date.now() / 1000))]);
     assert.equal(deferred, false, 'refused before any lookup');
-    assert.match(JSON.stringify(replies), /only kept for Mewvo/);
+    assert.match(JSON.stringify(replies), /belongs to another server/, 'an old button (no guild id) means the main server');
 });
 
 test('impersonation names: another server only with automod on; non-English names left alone by default', async () => {
@@ -983,4 +985,30 @@ test('join gate: a "Verify with Discord" counts only in its own server (the home
     assert.deepEqual(verificationScope(SUPPORT), [MAIN, SUPPORT]);
     assert.deepEqual(verificationScope(OTHER), [OTHER]);
     assert.deepEqual(verificationScope(OTHER2), [OTHER2]);
+});
+
+test('"Lock down (panic)" from a nuke alert: per server, pauses invites and DMs even with panic mode off; one at a time; lockdown-end lifts it', async () => {
+    setup();
+    const guild = fakeGuild(OTHER);
+    const calls = [];
+    Object.assign(guild, {
+        verificationLevel: 1,
+        setVerificationLevel: async (level) => { calls.push(['verification', level]); guild.verificationLevel = level; },
+        setIncidentActions: async (actions) => { calls.push(['incident', actions.invitesDisabledUntil ? 'paused' : 'resumed']); },
+    });
+    guild.members.me = { permissions: { has: () => true } };
+    fakeClient([guild, fakeGuild(OTHER2)]);
+    await settingsMod.setPanic(OTHER, { enabled: false, hours: 3 });
+    const admin = { id: '500000000000000001', username: 'admin' };
+    await captureLogs(async () => {
+        const lockdown = await raid.startManualLockdown(guild, admin);
+        assert.equal(lockdown.raised, true);
+        assert.equal(lockdown.panic.applied, true, 'the button asks for the pause: forced even with panic mode off');
+        assert.deepEqual(calls, [['verification', 3], ['incident', 'paused']]);
+        assert.equal(await raid.isLockdownActive(OTHER), true);
+        assert.equal(await raid.isLockdownActive(OTHER2), false, 'only that server');
+        assert.equal(await raid.startManualLockdown(guild, admin), null, 'already in lockdown');
+        assert.equal(await raid.endLockdown(guild, admin), true);
+    });
+    assert.deepEqual(calls.slice(-2), [['verification', 1], ['incident', 'resumed']]);
 });

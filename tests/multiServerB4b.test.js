@@ -360,7 +360,7 @@ test('nuke diff: a support-server nuke compares the support server\'s snapshot, 
         await handleNukeDiff(click, client, ['1700000000', SUPPORT]);
         assert.equal(queries[0].params[0], SUPPORT, 'support snapshot read');
         assert.match(text(replies), /Snapshot #7/);
-        assert.doesNotMatch(text(replies), /backuprevert/, 'revert is main-only');
+        assert.doesNotMatch(text(replies), /backuprevert|nukerevert/, 'nothing changed: no revert buttons');
     });
     await withPool(() => [], async (queries) => {
         const { click } = diffClick(main, OWNER_ID);
@@ -369,7 +369,7 @@ test('nuke diff: a support-server nuke compares the support server\'s snapshot, 
     });
 });
 
-test('nuke diff: a button naming a server that is not Mewvo\'s is refused before any lookup', async () => {
+test('nuke diff: a button naming another server than the one it is clicked in is refused before any lookup', async () => {
     const main = fakeGuild(MAIN);
     const client = fakeClient([main, fakeGuild(OTHER)]);
     await withPool(() => [], async (queries) => {
@@ -377,6 +377,6 @@ test('nuke diff: a button naming a server that is not Mewvo\'s is refused before
         await handleNukeDiff(click, client, ['1700000000', OTHER]);
         assert.equal(queries.length, 0);
         assert.equal(click.deferred, false);
-        assert.match(text(replies), /only kept for Mewvo/);
+        assert.match(text(replies), /belongs to another server/);
     });
 });
