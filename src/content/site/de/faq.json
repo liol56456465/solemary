@@ -52,6 +52,29 @@
       "a": "Ja. Melde dich unter [My appeals](/me/appeals) mit Discord an. Du siehst die Fälle aus jedem Server, der Mewvo nutzt, gegen die du gerade Einspruch einlegen kannst, und den Stand deiner Einsprüche. Das funktioniert auch, wenn du keinen Server mehr mit Mewvo teilst. Es entscheidet das Team des Servers, der dich bestraft hat."
     }
   },
+  "admins": {
+    "title": "Für Server-Admins",
+    "whoDecides": {
+      "q": "Wer entscheidet über Einsprüche auf unserem Server?",
+      "a": "Die Administratoren deines Servers. Mitglieder legen den Einspruch bei dem Server ein, der sie bestraft hat, und deine Admins drücken **Accept** oder **Deny** auf der Einspruchskarte oder im Dashboard. Mewvo setzt die Entscheidung um; weder Mewvo noch sein Inhaber entscheidet über eure Einsprüche. [So funktionieren Einsprüche für deinen Server](/admins#appeals)."
+    },
+    "otherServers": {
+      "q": "Können andere Server unsere Fälle sehen?",
+      "a": "Nein. Fälle, Einsprüche, Teamnotizen und die Beobachtungsliste gehören zu deinem Server: Das Team anderer Server kann sie weder sehen noch durchsuchen, und über einen Einspruch kann nur der Server entscheiden, zu dem er gehört. Das Mitglied sieht seine eigenen Fälle aus jedem Server unter Meine Akte."
+    },
+    "removeBot": {
+      "q": "Was passiert, wenn wir den Bot entfernen?",
+      "a": "Er hört sofort auf, auf deinem Server zu arbeiten. Einstellungen, Fälle und Level bleiben gespeichert, damit alles wieder da ist, wenn du Mewvo erneut hinzufügst. Die Daten bleiben, bis der Serverinhaber ihre Löschung verlangt: im Dashboard, solange Mewvo noch auf dem Server ist, oder danach über die [Kontaktseite](/contact). Siehe die [Datenschutzseite](/privacy)."
+    },
+    "dashboardTeam": {
+      "q": "Wer in unserem Team kann das Dashboard nutzen?",
+      "a": "Mitglieder mit **Administrator** können alles. **Server verwalten** ohne Administrator öffnet nur die Einstellungsseiten, keine Moderationsaktionen. Mitglieder mit eurer **Moderatorrolle** (im Dashboard festgelegt) sehen die Moderationsseiten; Aktionen und Einstellungen bleiben bei den Administratoren. Der Zugriff wird auf jeder Seite erneut bei Discord geprüft."
+    },
+    "readMessages": {
+      "q": "Liest Mewvo unsere Nachrichten?",
+      "a": "Nur um das auszuführen, was du einschaltest. Wo der Automod an ist, wird jede neue Nachricht beim Eintreffen mit deinen Regeln abgeglichen. Nachrichtentext wird nicht in Mewvos Datenbank gespeichert: Wenn der Automod eingreift, zeigt seine Prüfkarte in deinem Teamkanal auf Discord einen kurzen Auszug, und das Team kann einen Auszug als Beweis an einen Fall anhängen. Wenn du Nachrichten-Logs einschaltest, werden bearbeitete und gelöschte Nachrichten in deinem Log-Kanal auf Discord gepostet."
+    }
+  },
   "data": {
     "title": "Daten und Kontakt",
     "stored": {

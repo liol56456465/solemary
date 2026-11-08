@@ -1,0 +1,112 @@
+{
+  "meta": {
+    "title": "Für Server-Admins",
+    "description": "Was Mewvo auf deinem Server braucht und warum, die ersten 10 Minuten, was Mitglieder sehen, Einsprüche, Daten und Limits pro Plan."
+  },
+  "head": {
+    "title": "Für Server-Admins",
+    "lead": "Was du wissen solltest, bevor und nachdem du Mewvo zu deinem Server hinzufügst.",
+    "justAdded": "Mewvo gerade hinzugefügt? [Fang hier an](/added)."
+  },
+  "permissions": {
+    "title": "Was Mewvo braucht und warum",
+    "intro": "Mewvo fragt diese Berechtigungen an, wenn du es hinzufügst (Berechtigungszahl `{bits}`). Nach **Administrator** fragt es nie.",
+    "later": "Du kannst eine Berechtigung später wieder entziehen; dann funktioniert nur die Funktion nicht mehr, die sie braucht, und das Dashboard zeigt, was fehlt. Mewvos Rolle muss über den Rollen stehen, die es vergibt oder entfernt, und es handelt nie gegen den Serverinhaber oder gegen Mitglieder, deren höchste Rolle gleich hoch oder höher ist als seine eigene.",
+    "items": {
+      "ViewChannel": { "name": "Kanäle ansehen", "why": "Die Kanäle sehen, die es moderiert, in die es loggt und in denen es Panels postet." },
+      "SendMessages": { "name": "Nachrichten senden", "why": "Logs, Panels, Prüfkarten und Antworten posten." },
+      "SendMessagesInThreads": { "name": "Nachrichten in Threads senden", "why": "In Ticket-, Einspruchs- und Team-Threads antworten." },
+      "EmbedLinks": { "name": "Links einbetten", "why": "Fälle, Logs und Panels als Embeds zeigen." },
+      "AttachFiles": { "name": "Dateien anhängen", "why": "Transkripte, Exporte und Bilder anhängen." },
+      "ReadMessageHistory": { "name": "Nachrichtenverlauf anzeigen", "why": "Die eigenen Panels und Karten wiederfinden und eine gemeldete Nachricht lesen." },
+      "AddReactions": { "name": "Reaktionen hinzufügen", "why": "Reaktionsrollen, Umfragen und Gewinnspiele." },
+      "UseExternalEmojis": { "name": "Externe Emojis verwenden", "why": "Emojis von anderen Servern in seinen Nachrichten." },
+      "ManageMessages": { "name": "Nachrichten verwalten", "why": "Löschungen durch den Automod und der Purge-Befehl." },
+      "ManageThreads": { "name": "Threads verwalten", "why": "Die Threads schließen und archivieren, die es öffnet." },
+      "CreatePrivateThreads": { "name": "Private Threads erstellen", "why": "Private Ticket- und Einspruchs-Threads." },
+      "ManageChannels": { "name": "Kanäle verwalten", "why": "Die Muted-Rolle in jedem Kanal, Sperren und Entsperren, neue Ticket- und Sprachkanäle." },
+      "ManageRoles": { "name": "Rollen verwalten", "why": "Die Muted-Rolle und das Vergeben oder Entfernen von Rollen (Verifizierung, Reaktionsrollen, Level-Belohnungen)." },
+      "ManageGuild": { "name": "Server verwalten", "why": "Discords eigene AutoMod-Regeln und das Pausieren von Einladungen während eines Raids." },
+      "ViewAuditLog": { "name": "Audit-Log anzeigen", "why": "Protokollieren, wer was getan hat, und den Team-Schutz sehen lassen, wer gebannt oder gelöscht hat." },
+      "CreateInstantInvite": { "name": "Einladung erstellen", "why": "Die einmalige Einladung zurück nach einem Kick oder einem angenommenen Einspruch." },
+      "KickMembers": { "name": "Mitglieder kicken", "why": "Kicks durch das Team, den Automod und die Beitrittsschranke." },
+      "BanMembers": { "name": "Mitglieder bannen", "why": "Banns, auch die der Verwarnungsleiter, und Entbannungen, wenn sie enden." },
+      "ModerateMembers": { "name": "Mitglieder timeouten", "why": "Timeouts durch den Automod und ihr Aufheben." },
+      "ManageNicknames": { "name": "Spitznamen verwalten", "why": "Namen zurücksetzen, die gegen die Namensregeln verstoßen." },
+      "MoveMembers": { "name": "Mitglieder verschieben", "why": "Join-to-Create-Sprachkanäle und das Trennen stummgeschalteter Mitglieder." },
+      "Connect": { "name": "Verbinden", "why": "Braucht Discord, um Mitglieder zwischen Sprachkanälen zu verschieben." }
+    }
+  },
+  "first": {
+    "title": "Die ersten 10 Minuten",
+    "intro": "Du brauchst **Administrator** auf dem Server (für Einstellungen reicht Server verwalten). Mehr Details stehen in der [Einrichtungsanleitung](/docs/setup).",
+    "steps": {
+      "setup": "Führe `/setup` auf deinem Server aus. Es zeigt, was eingerichtet ist und was fehlt, verlinkt das Dashboard und listet jeden Befehl auf. Es ändert nichts.",
+      "dashboard": "Öffne das [Dashboard]({dashboard}), melde dich mit Discord an und wähle deinen Server. Auf der Seite Übersicht geht **Mewvo Schritt für Schritt einrichten** die Einstellungen eine nach der anderen durch.",
+      "logging": "Wähle einen **Mod-Log-Kanal**, den nur das Team sehen kann: Jede Verwarnung, Stummschaltung, jeder Kick und Bann wird dort festgehalten. Andere Logs (Beitritte, Rollenänderungen, bearbeitete und gelöschte Nachrichten) findest du auf der Seite **Logs**.",
+      "automod": "Der Automod ist auf einem neuen Server **aus**. Schalte ihn auf der Seite **Automod** ein und fang mit **Nur melden (nicht löschen)** an: Das Team sieht, was er getan hätte, und niemandem passiert etwas. Stell eine Regel auf **An**, wenn du ihr vertraust.",
+      "staffGuard": "Der **Team-Schutz** ist auch aus. Schalte ihn mit `/automod staffguard` ein: Ein Admin, der massenhaft bannt, kickt oder Kanäle oder Rollen löscht, verliert seine Teamrollen, und der Serverinhaber wird alarmiert; `/staff restore` gibt die Rollen zurück. Er funktioniert, solange der Automod an ist, und nur der Serverinhaber kann ihn ausschalten.",
+      "appeals": "Poste das Einspruchs-Panel mit `/setappeal` in einem Kanal, den alle Mitglieder sehen können.",
+      "test": "Führe `/test` aus, um genau die Direktnachricht zu bekommen, die ein Mitglied bekommen würde. Niemandem passiert etwas."
+    }
+  },
+  "members": {
+    "title": "Was Mitglieder sehen",
+    "list": {
+      "commands": "Befehle für alle, zum Beispiel `/help`, `/rank` und `/report`. Alles, was moderiert oder Einstellungen ändert, braucht Administrator. Die [Befehlsseite](/commands) listet sie auf.",
+      "dms": "Eine Direktnachricht zu jeder Verwarnung, Stummschaltung, jedem Kick und Bann: der Grund, der Fallcode, bis wann, und wie man Einspruch einlegt oder dass kein Einspruch möglich ist.",
+      "appeals": "Das Einspruchs-Panel von `/setappeal` mit **Appeal**, **My appeals** und **My record**.",
+      "record": "Ihre eigenen Fälle aus jedem Server, der Mewvo nutzt, unter [Meine Akte](/me) auf dieser Website.",
+      "automod": "Wenn der Automod gegen sie vorgeht, eine Direktnachricht mit der Regel und einem Button **Contest this**. Das Team bekommt eine Prüfkarte, auf der es die Aktion beibehält, rückgängig macht oder ändert."
+    }
+  },
+  "appeals": {
+    "title": "So funktionieren Einsprüche für deinen Server",
+    "who": "Mitglieder legen den Einspruch bei dem Server ein, der sie bestraft hat, und deine **Administratoren** entscheiden: **Accept** oder **Deny** auf der Einspruchskarte in deinem Teamkanal oder auf der Dashboard-Seite **Einsprüche**. Ein angenommener Einspruch hebt auf, was noch aktiv ist; bei einem Bann oder Kick gibt es eine einmalige Einladung zurück.",
+    "panel": "**In Discord:** das Einspruchs-Panel, das du mit `/setappeal` postest. Stummgeschaltete und verwarnte Mitglieder nutzen es auf deinem Server.",
+    "web": "**Auf der Website:** Mitglieder melden sich unter [Meine Einsprüche](/me/appeals) mit Discord an. Das funktioniert auch nach einem Bann, wenn sie keinen Server mehr mit Mewvo teilen.",
+    "home": "Du legst fest, wo Mitglieder laut der Strafnachricht Einspruch einlegen: Wähle im Dashboard unter **Strafen & Einsprüche → Wo Mitglieder Einspruch einlegen** entweder **Mewvo-Support** (den Mewvo-Support-Server) oder **Unser eigener Server** mit einer Einladung zu einem Server, den du betreibst."
+  },
+  "data": {
+    "title": "Daten und Löschung",
+    "kept": "Mewvo speichert die Einstellungen, Fälle, Einsprüche und Level deines Servers, solange es auf deinem Server ist und auch nachdem es entfernt wurde, damit alles wieder da ist, wenn du es erneut hinzufügst. Die Daten bleiben, bis der Serverinhaber ihre Löschung verlangt. Die [Datenschutzseite](/privacy) listet auf, was wie lange gespeichert wird.",
+    "delete": "Der Serverinhaber kann die Löschung im Dashboard beantragen. Wenn Mewvo schon entfernt ist, frag über die [Kontaktseite](/contact) mit der ID des Servers. Mitglieder können ihre eigenen Level und persönlichen Daten jederzeit mit `/wipedata` löschen; Moderationsakten bleiben, wie die Datenschutzseite erklärt."
+  },
+  "limits": {
+    "title": "Limits pro Plan",
+    "intro": "Jeder Server bekommt alles, was Mewvo im Plan Free kann. Der Plan des **Serverinhabers** legt diese Limits fest:",
+    "caption": "Limits pro Plan",
+    "limit": "Limit",
+    "more": "Preise und was jeder Plan sonst noch bietet: [Preise](/pricing)."
+  },
+  "added": {
+    "description": "Mewvo wurde zu deinem Server hinzugefügt: Öffne das Dashboard und mach die ersten Schritte.",
+    "added": {
+      "title": "Mewvo ist auf deinem Server",
+      "lead": "Danke, dass du Mewvo hinzugefügt hast. Öffne das Dashboard für deinen Server, um es einzurichten, oder fang mit den Schritten unten in Discord an."
+    },
+    "unknown": {
+      "title": "Mewvo gerade hinzugefügt?",
+      "lead": "Öffne das Dashboard und wähle deinen Server, oder fang mit den Schritten unten in Discord an."
+    },
+    "cancelled": {
+      "title": "Mewvo wurde nicht hinzugefügt",
+      "lead": "Auf deinem Server hat sich nichts geändert. Versuch es jederzeit noch einmal, oder lies zuerst, was Mewvo braucht."
+    },
+    "openDashboard": "Dashboard öffnen",
+    "pickServer": "Server wählen",
+    "setupGuide": "Einrichtungsanleitung",
+    "readFirst": "Was Mewvo braucht",
+    "noDashboard": "Das Dashboard ist gerade nicht verfügbar. Führe `/setup` auf deinem Server aus: Es zeigt, was eingerichtet ist und was fehlt.",
+    "firstSteps": "Erste Schritte",
+    "steps": {
+      "setup": "Führe `/setup` auf deinem Server aus: Es zeigt, was eingerichtet ist und was fehlt.",
+      "logging": "Wähle einen **Mod-Log-Kanal**, den nur das Team sehen kann.",
+      "automod": "Der Automod ist auf einem neuen Server **aus**: Schalte ihn zuerst mit **Nur melden (nicht löschen)** ein.",
+      "staffGuard": "Schalte den **Team-Schutz** mit `/automod staffguard` ein, um den Server vor einem abtrünnigen Admin zu schützen.",
+      "appeals": "Poste das Einspruchs-Panel mit `/setappeal`."
+    },
+    "more": "Berechtigungen, Einsprüche, Daten und Limits: [Für Server-Admins](/admins).",
+    "accessNote": "Das Dashboard prüft, ob du diesen Server verwalten darfst, bevor es irgendetwas zeigt."
+  }
+}

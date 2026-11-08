@@ -1,0 +1,178 @@
+{
+  "meta": {
+    "title": "Pour les admins de serveur",
+    "description": "Ce dont Mewvo a besoin sur ton serveur et pourquoi, les 10 premières minutes, ce que voient les membres, les appels, les données et les limites par offre."
+  },
+  "head": {
+    "title": "Pour les admins de serveur",
+    "lead": "Ce qu’il faut savoir avant et après avoir ajouté Mewvo à ton serveur.",
+    "justAdded": "Tu viens d’ajouter Mewvo ? [Commence ici](/added)."
+  },
+  "permissions": {
+    "title": "Ce dont Mewvo a besoin et pourquoi",
+    "intro": "Mewvo demande ces permissions quand tu l’ajoutes (entier de permissions `{bits}`). Il ne demande jamais **Administrateur**.",
+    "later": "Tu peux retirer une permission plus tard : seule la fonction qui en a besoin cesse de marcher, et le tableau de bord indique ce qui manque. Le rôle de Mewvo doit être au-dessus des rôles qu’il donne ou retire, et il n’agit jamais sur le propriétaire du serveur ni sur les membres dont le rôle le plus élevé est égal ou supérieur au sien.",
+    "items": {
+      "ViewChannel": {
+        "name": "Voir les salons",
+        "why": "Voir les salons qu’il modère, où il écrit ses journaux et où il publie ses panneaux."
+      },
+      "SendMessages": {
+        "name": "Envoyer des messages",
+        "why": "Publier les journaux, les panneaux, les cartes de vérification et les réponses."
+      },
+      "SendMessagesInThreads": {
+        "name": "Envoyer des messages dans les fils",
+        "why": "Répondre dans les fils de tickets, d’appels et de l’équipe."
+      },
+      "EmbedLinks": {
+        "name": "Intégrer des liens",
+        "why": "Afficher les dossiers, les journaux et les panneaux sous forme d’embeds."
+      },
+      "AttachFiles": {
+        "name": "Joindre des fichiers",
+        "why": "Joindre des transcriptions, des exports et des images."
+      },
+      "ReadMessageHistory": {
+        "name": "Voir les anciens messages",
+        "why": "Retrouver ses propres panneaux et cartes, et lire un message signalé."
+      },
+      "AddReactions": {
+        "name": "Ajouter des réactions",
+        "why": "Rôles par réaction, sondages et giveaways."
+      },
+      "UseExternalEmojis": {
+        "name": "Utiliser des émojis externes",
+        "why": "Des émojis d’autres serveurs dans ses messages."
+      },
+      "ManageMessages": {
+        "name": "Gérer les messages",
+        "why": "Les suppressions de l’automod et la commande de purge."
+      },
+      "ManageThreads": {
+        "name": "Gérer les fils",
+        "why": "Fermer et archiver les fils qu’il ouvre."
+      },
+      "CreatePrivateThreads": {
+        "name": "Créer des fils privés",
+        "why": "Fils privés de tickets et d’appels."
+      },
+      "ManageChannels": {
+        "name": "Gérer les salons",
+        "why": "Le rôle Muted sur chaque salon, verrouiller et déverrouiller, nouveaux salons de tickets et vocaux."
+      },
+      "ManageRoles": {
+        "name": "Gérer les rôles",
+        "why": "Le rôle Muted, et donner ou retirer des rôles (vérification, rôles par réaction, récompenses de niveau)."
+      },
+      "ManageGuild": {
+        "name": "Gérer le serveur",
+        "why": "Les règles AutoMod de Discord, et la suspension des invitations pendant un raid."
+      },
+      "ViewAuditLog": {
+        "name": "Voir les logs du serveur",
+        "why": "Consigner qui a fait quoi, et permettre à la protection de l’équipe de voir qui a banni ou supprimé."
+      },
+      "CreateInstantInvite": {
+        "name": "Créer une invitation",
+        "why": "L’invitation à usage unique pour revenir après une expulsion ou un appel accepté."
+      },
+      "KickMembers": {
+        "name": "Expulser des membres",
+        "why": "Les expulsions par l’équipe, l’automod et le filtre d’arrivée."
+      },
+      "BanMembers": {
+        "name": "Bannir des membres",
+        "why": "Les bannissements, y compris ceux de l’échelle d’avertissements, et les débannissements quand ils prennent fin."
+      },
+      "ModerateMembers": {
+        "name": "Exclure temporairement des membres",
+        "why": "Les exclusions temporaires de l’automod et leur levée."
+      },
+      "ManageNicknames": {
+        "name": "Gérer les pseudos",
+        "why": "Réinitialiser les noms qui enfreignent les règles de nom."
+      },
+      "MoveMembers": {
+        "name": "Déplacer des membres",
+        "why": "Les salons vocaux Join to Create et la déconnexion des membres en sourdine."
+      },
+      "Connect": {
+        "name": "Se connecter",
+        "why": "Nécessaire à Discord pour déplacer des membres entre les salons vocaux."
+      }
+    }
+  },
+  "first": {
+    "title": "Les 10 premières minutes",
+    "intro": "Tu as besoin de la permission **Administrateur** sur le serveur (Gérer le serveur suffit pour les paramètres). Le [guide de configuration](/docs/setup) donne plus de détails.",
+    "steps": {
+      "setup": "Lance `/setup` sur ton serveur. Il montre ce qui est configuré et ce qui manque, donne le lien du tableau de bord et liste toutes les commandes. Il ne modifie rien.",
+      "dashboard": "Ouvre le [tableau de bord]({dashboard}), connecte-toi avec Discord et choisis ton serveur. Sur la page Vue d’ensemble, **Configurer Mewvo pas à pas** passe les paramètres en revue un par un.",
+      "logging": "Choisis un **Salon du journal de modération** que seule l’équipe peut voir : chaque avertissement, mise en sourdine, expulsion et bannissement y est consigné. Les autres journaux (arrivées, changements de rôles, messages modifiés et supprimés) sont sur la page **Journaux**.",
+      "automod": "L’automod est **désactivé** sur un nouveau serveur. Active-le sur la page **Automod** et commence par **Signaler seulement (ne pas supprimer)** : l’équipe voit ce qu’il aurait fait et rien n’arrive à personne. Passe une règle sur **Activé** quand tu lui fais confiance.",
+      "staffGuard": "La **protection de l’équipe** est désactivée elle aussi. Active-la avec `/automod staffguard` : un admin qui bannit ou expulse en masse, ou supprime en masse des salons ou des rôles, perd ses rôles d’équipe et le propriétaire du serveur est alerté ; `/staff restore` rend les rôles. Elle fonctionne tant que l’automod est activé, et seul le propriétaire du serveur peut la désactiver.",
+      "appeals": "Publie le panneau d’appel avec `/setappeal` dans un salon que tous les membres peuvent voir.",
+      "test": "Lance `/test` pour recevoir exactement le message privé qu’un membre recevrait. Rien n’est fait à personne."
+    }
+  },
+  "members": {
+    "title": "Ce que voient les membres",
+    "list": {
+      "commands": "Des commandes pour tout le monde, comme `/help`, `/rank` et `/report`. Tout ce qui modère ou modifie les paramètres demande Administrateur. La [page des commandes](/commands) les liste.",
+      "dms": "Un message privé pour chaque avertissement, mise en sourdine, expulsion et bannissement : la raison, le code du dossier, jusqu’à quand, et comment faire appel ou le fait qu’on ne peut pas faire appel.",
+      "appeals": "Le panneau d’appel de `/setappeal`, avec **Appeal**, **My appeals** et **My record**.",
+      "record": "Leurs propres dossiers de chaque serveur qui utilise Mewvo, sur [Mon dossier](/me), sur ce site.",
+      "automod": "Quand l’automod agit sur eux, un message privé avec la règle et un bouton **Contest this**. L’équipe reçoit une carte de vérification où elle maintient, annule ou modifie l’action."
+    }
+  },
+  "appeals": {
+    "title": "Comment fonctionnent les appels pour ton serveur",
+    "who": "Les membres font appel auprès du serveur qui les a sanctionnés, et ce sont tes **administrateurs** qui décident : **Accept** ou **Deny** sur la carte d’appel dans ton salon de l’équipe, ou sur la page **Appels** du tableau de bord. Un appel accepté lève ce qui est encore en cours ; un bannissement ou une expulsion s’accompagne d’une invitation à usage unique pour revenir.",
+    "panel": "**Sur Discord :** le panneau d’appel que tu publies avec `/setappeal`. Les membres en sourdine ou avertis l’utilisent sur ton serveur.",
+    "web": "**Sur le site :** les membres se connectent avec Discord sur [My appeals](/me/appeals). Cela fonctionne même après un bannissement, quand ils ne partagent plus aucun serveur avec Mewvo.",
+    "home": "Tu choisis où le message privé de sanction envoie les membres pour faire appel : dans le tableau de bord, **Sanctions et appels → Où les membres font appel**, choisis **Support Mewvo** (le serveur d’assistance Mewvo) ou **Notre propre serveur** avec une invitation vers un serveur que tu gères."
+  },
+  "data": {
+    "title": "Données et suppression",
+    "kept": "Mewvo conserve les paramètres, les dossiers, les appels et les niveaux de ton serveur tant qu’il est sur ton serveur et après son retrait, pour que tout revienne si tu l’ajoutes de nouveau. Ils sont conservés jusqu’à ce que le propriétaire du serveur en demande la suppression. La [page de confidentialité](/privacy) indique ce qui est stocké et pendant combien de temps.",
+    "delete": "Le propriétaire du serveur peut demander la suppression dans le tableau de bord. Si Mewvo est déjà retiré, fais la demande via la [page de contact](/contact) avec l’ID du serveur. Les membres peuvent supprimer leurs propres niveaux et données personnelles avec `/wipedata` à tout moment ; les dossiers de modération restent, comme l’explique la page de confidentialité."
+  },
+  "limits": {
+    "title": "Limites par offre",
+    "intro": "Chaque serveur a accès à tout ce que fait Mewvo en Free. L’offre du **propriétaire du serveur** fixe ces limites :",
+    "caption": "Limites par offre",
+    "limit": "Limite",
+    "more": "Les prix et ce que chaque offre ajoute d’autre : [Tarifs](/pricing)."
+  },
+  "added": {
+    "description": "Mewvo a été ajouté à ton serveur : ouvre le tableau de bord et fais les premiers pas.",
+    "added": {
+      "title": "Mewvo est sur ton serveur",
+      "lead": "Merci d’avoir ajouté Mewvo. Ouvre le tableau de bord de ton serveur pour le configurer, ou commence par les étapes ci-dessous sur Discord."
+    },
+    "unknown": {
+      "title": "Tu viens d’ajouter Mewvo ?",
+      "lead": "Ouvre le tableau de bord et choisis ton serveur, ou commence par les étapes ci-dessous sur Discord."
+    },
+    "cancelled": {
+      "title": "Mewvo n’a pas été ajouté",
+      "lead": "Rien n’a changé sur ton serveur. Réessaie quand tu veux, ou lis d’abord ce dont Mewvo a besoin."
+    },
+    "openDashboard": "Ouvrir le tableau de bord",
+    "pickServer": "Choisir ton serveur",
+    "setupGuide": "Guide de configuration",
+    "readFirst": "Ce dont Mewvo a besoin",
+    "noDashboard": "Le tableau de bord n’est pas disponible pour le moment. Lance `/setup` sur ton serveur : il montre ce qui est configuré et ce qui manque.",
+    "firstSteps": "Premiers pas",
+    "steps": {
+      "setup": "Lance `/setup` sur ton serveur : il montre ce qui est configuré et ce qui manque.",
+      "logging": "Choisis un **Salon du journal de modération** que seule l’équipe peut voir.",
+      "automod": "L’automod est **désactivé** sur un nouveau serveur : active-le d’abord avec **Signaler seulement (ne pas supprimer)**.",
+      "staffGuard": "Active la **protection de l’équipe** avec `/automod staffguard` pour protéger le serveur d’un admin malveillant.",
+      "appeals": "Publie le panneau d’appel avec `/setappeal`."
+    },
+    "more": "Permissions, appels, données et limites : [Pour les admins de serveur](/admins).",
+    "accessNote": "Le tableau de bord vérifie que tu peux gérer ce serveur avant d’afficher quoi que ce soit."
+  }
+}

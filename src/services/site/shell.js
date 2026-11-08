@@ -48,12 +48,48 @@ export function installPermissionBits() {
 const SNOWFLAKE = /^\d{17,20}$/;
 const INVITE = /^https:\/\/(discord\.gg|discord\.com\/invite)\/[\w-]+$/;
 
-/** The OAuth2 install link for CLIENT_ID, or null when the id is missing or malformed. */
-export function installUrl(clientId) {
+/** Where Discord sends the admin back after adding the bot (site.js GET /added). */
+export const ADDED_PATH = '/added';
+
+/**
+ * The OAuth2 install link for CLIENT_ID, or null when the id is missing or malformed.
+ * With `redirectUri` (an absolute http(s) URL, see installRedirectUri) it also asks Discord to
+ * send the admin back: response_type=code + redirect_uri. Discord then adds the bot and
+ * redirects to `redirectUri?code=…&guild_id=…&permissions=…` (Advanced Bot Authorization,
+ * discord-api-docs topics/oauth2), or `?error=access_denied` when the admin cancels. The code is
+ * never exchanged and guild_id is only a hint, so /added uses it for a link and nothing else.
+ * The redirect URI must be registered under OAuth2 → Redirects in the Developer Portal, or
+ * Discord refuses the whole link; that is why it is opt-in (INSTALL_REDIRECT_ENABLED).
+ */
+export function installUrl(clientId, { redirectUri = null } = {}) {
     const id = String(clientId || '').trim();
     if (!SNOWFLAKE.test(id)) return null;
     const params = new URLSearchParams({ client_id: id, permissions: installPermissionBits().toString(), scope: 'bot applications.commands' });
+    if (typeof redirectUri === 'string' && /^https?:\/\/[^\s"'<>]+$/.test(redirectUri)) {
+        params.set('response_type', 'code');
+        params.set('redirect_uri', redirectUri);
+    }
     return `https://discord.com/oauth2/authorize?${params.toString()}`;
+}
+
+/**
+ * `${PUBLIC_URL}/added` when INSTALL_REDIRECT_ENABLED is "true" and PUBLIC_URL is set, else null
+ * (the install link then has no redirect and Discord shows its own "added" screen).
+ */
+export function installRedirectUri(env = process.env) {
+    if (!/^(1|true|yes|on)$/i.test(String(env.INSTALL_REDIRECT_ENABLED || '').trim())) return null;
+    const origin = siteOrigin(env);
+    return origin ? `${origin}${ADDED_PATH}` : null;
+}
+
+/** The site's "Add to Discord" link for this environment (with the /added redirect when enabled). */
+export function siteInstallUrl(env = process.env) {
+    return installUrl(env.CLIENT_ID, { redirectUri: installRedirectUri(env) });
+}
+
+/** True for a Discord snowflake ("123456789012345678"); /added only links with one. */
+export function isSnowflakeText(value) {
+    return typeof value === 'string' && SNOWFLAKE.test(value);
 }
 
 /** A Discord invite link, or null (anything else is never put in a page). */
@@ -187,6 +223,7 @@ function footerColumns(ctx, active) {
 ${ctx.dashboardEnabled ? html`<li><a href="${DASHBOARD_PATH}">${t('shell.links.dashboard')}</a></li>` : ''}`)}
 ${col(t('shell.footer.columns.help'), html`<li><a href="${href('/docs')}"${current('docs')}>${t('shell.links.docs')}</a></li>
 <li><a href="${href('/faq')}"${current('faq')}>${t('shell.links.faq')}</a></li>
+<li><a href="${href('/admins')}"${current('admins')}>${t('shell.links.admins')}</a></li>
 <li><a href="${href('/status')}"${current('status')}>${t('shell.links.status')}</a></li>
 ${ctx.supportInvite ? html`<li><a href="${ctx.supportInvite}" rel="noopener">${t('shell.links.supportServer')}</a></li>` : ''}`)}
 ${col(t('shell.footer.columns.community'), html`<li><a href="${href('/leaderboard')}"${current('leaderboard')}>${t('shell.links.leaderboard')}</a></li>

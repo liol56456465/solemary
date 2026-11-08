@@ -52,6 +52,29 @@
       "a": "Sì. Accedi con Discord su [My appeals](/me/appeals). Vedi i casi di ogni server che usa Mewvo contro cui puoi fare ricorso ora e lo stato dei tuoi ricorsi. Funziona anche se non condividi più alcun server con Mewvo. Decide lo staff del server che ti ha sanzionato."
     }
   },
+  "admins": {
+    "title": "Per gli admin dei server",
+    "whoDecides": {
+      "q": "Chi decide i ricorsi nel nostro server?",
+      "a": "Gli Amministratori del tuo server. I membri fanno ricorso al server che li ha sanzionati, e i tuoi admin premono **Accept** o **Deny** sulla scheda del ricorso o nella dashboard. Mewvo esegue la decisione; né Mewvo né il suo proprietario decidono i vostri ricorsi. [Come funzionano i ricorsi per il tuo server](/admins#appeals)."
+    },
+    "otherServers": {
+      "q": "Altri server possono vedere i nostri casi?",
+      "a": "No. Casi, ricorsi, note dello staff e la lista di osservazione appartengono al tuo server: lo staff di altri server non può vederli né cercarli, e un ricorso può essere deciso solo dal server a cui appartiene. Il membro può vedere i propri casi, di ogni server, su Il mio storico."
+    },
+    "removeBot": {
+      "q": "Cosa succede se rimuoviamo il bot?",
+      "a": "Smette subito di funzionare nel tuo server. Impostazioni, casi e livelli vengono conservati, così tutto torna se aggiungi di nuovo Mewvo. I dati restano finché il proprietario del server non ne chiede l'eliminazione: nella dashboard finché Mewvo è ancora nel server, oppure dopo tramite la [pagina dei contatti](/contact). Vedi la [pagina sulla privacy](/privacy)."
+    },
+    "dashboardTeam": {
+      "q": "Chi del nostro team può usare la dashboard?",
+      "a": "I membri con **Amministratore** possono fare tutto. **Gestire il server** senza Amministratore apre solo le pagine delle impostazioni, nessuna azione di moderazione. I membri con il vostro **ruolo di moderatore** (impostato nella dashboard) vedono le pagine di moderazione; azioni e impostazioni restano agli Amministratori. L'accesso viene ricontrollato con Discord a ogni pagina."
+    },
+    "readMessages": {
+      "q": "Mewvo legge i nostri messaggi?",
+      "a": "Solo per far funzionare ciò che attivi. Dove l'automod è attivo, ogni nuovo messaggio viene confrontato con le tue regole appena arriva. Il testo dei messaggi non viene salvato nel database di Mewvo: quando l'automod agisce, la sua scheda di revisione nel tuo canale dello staff su Discord mostra un breve estratto, e lo staff può allegare un estratto a un caso come prova. Se attivi i log dei messaggi, i messaggi modificati ed eliminati vengono pubblicati nel tuo canale dei log su Discord."
+    }
+  },
   "data": {
     "title": "Dati e contatti",
     "stored": {

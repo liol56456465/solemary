@@ -1,0 +1,112 @@
+{
+  "meta": {
+    "title": "Para administradores de servidores",
+    "description": "O que o Mewvo precisa no seu servidor e por quê, os primeiros 10 minutos, o que os membros veem, apelações, dados e limites por plano."
+  },
+  "head": {
+    "title": "Para administradores de servidores",
+    "lead": "O que saber antes e depois de adicionar o Mewvo ao seu servidor.",
+    "justAdded": "Acabou de adicionar o Mewvo? [Comece aqui](/added)."
+  },
+  "permissions": {
+    "title": "O que o Mewvo precisa e por quê",
+    "intro": "O Mewvo pede estas permissões quando você o adiciona (número de permissões `{bits}`). Ele nunca pede **Administrador**.",
+    "later": "Você pode retirar uma permissão depois; só o recurso que precisa dela para de funcionar, e o painel mostra o que está faltando. O cargo do Mewvo precisa estar acima dos cargos que ele dá ou tira, e ele nunca age sobre o dono do servidor nem sobre membros cujo cargo mais alto seja igual ou superior ao dele.",
+    "items": {
+      "ViewChannel": { "name": "Ver canais", "why": "Ver os canais que ele modera, onde registra e onde publica painéis." },
+      "SendMessages": { "name": "Enviar mensagens", "why": "Publicar registros, painéis, cartões de revisão e respostas." },
+      "SendMessagesInThreads": { "name": "Enviar mensagens em tópicos", "why": "Responder em tópicos de tickets, de apelações e da equipe." },
+      "EmbedLinks": { "name": "Inserir links", "why": "Mostrar casos, registros e painéis como embeds." },
+      "AttachFiles": { "name": "Anexar arquivos", "why": "Anexar transcrições, exportações e imagens." },
+      "ReadMessageHistory": { "name": "Ver histórico de mensagens", "why": "Encontrar de novo os próprios painéis e cartões, e ler uma mensagem denunciada." },
+      "AddReactions": { "name": "Adicionar reações", "why": "Cargos por reação, enquetes e sorteios." },
+      "UseExternalEmojis": { "name": "Usar emojis externos", "why": "Emojis de outros servidores nas mensagens dele." },
+      "ManageMessages": { "name": "Gerenciar mensagens", "why": "Exclusões do automod e o comando de limpeza." },
+      "ManageThreads": { "name": "Gerenciar tópicos", "why": "Fechar e arquivar os tópicos que ele abre." },
+      "CreatePrivateThreads": { "name": "Criar tópicos privados", "why": "Tópicos privados de tickets e de apelações." },
+      "ManageChannels": { "name": "Gerenciar canais", "why": "O cargo Muted em todos os canais, trancar e destrancar, novos canais de ticket e de voz." },
+      "ManageRoles": { "name": "Gerenciar cargos", "why": "O cargo Muted, e dar ou remover cargos (verificação, cargos por reação, recompensas de nível)." },
+      "ManageGuild": { "name": "Gerenciar servidor", "why": "As regras do AutoMod do próprio Discord, e pausar convites durante uma raid." },
+      "ViewAuditLog": { "name": "Ver registro de auditoria", "why": "Registrar quem fez o quê, e deixar a proteção da equipe ver quem baniu ou apagou." },
+      "CreateInstantInvite": { "name": "Criar convite", "why": "O convite de uso único para voltar depois de uma expulsão ou de uma apelação aceita." },
+      "KickMembers": { "name": "Expulsar membros", "why": "Expulsões feitas pela equipe, pelo automod e pelo filtro de entrada." },
+      "BanMembers": { "name": "Banir membros", "why": "Banimentos, inclusive os da escada de advertências, e desbanir quando terminam." },
+      "ModerateMembers": { "name": "Castigar membros", "why": "Castigos (timeouts) do automod e a retirada deles." },
+      "ManageNicknames": { "name": "Gerenciar apelidos", "why": "Redefinir nomes que quebram as regras de nomes." },
+      "MoveMembers": { "name": "Mover membros", "why": "Canais de voz de Entrar para criar e desconectar membros silenciados." },
+      "Connect": { "name": "Conectar", "why": "O Discord exige isso para mover membros entre canais de voz." }
+    }
+  },
+  "first": {
+    "title": "Os primeiros 10 minutos",
+    "intro": "Você precisa de **Administrador** no servidor (Gerenciar servidor basta para as configurações). O [guia de configuração](/docs/setup) tem mais detalhes.",
+    "steps": {
+      "setup": "Use `/setup` no seu servidor. Ele mostra o que está configurado e o que falta, traz o link do painel e lista todos os comandos. Ele não muda nada.",
+      "dashboard": "Abra o [painel]({dashboard}), entre com o Discord e escolha o seu servidor. Na página Visão geral, **Configurar o Mewvo passo a passo** passa pelas configurações uma de cada vez.",
+      "logging": "Escolha um **canal de registro de moderação** que só a equipe possa ver: cada advertência, silenciamento, expulsão e banimento é anotado lá. Os outros registros (entradas, mudanças de cargos, mensagens editadas e apagadas) ficam na página **Registros**.",
+      "automod": "O automod vem **desligado** em um servidor novo. Ligue-o na página **Automod** e comece com **Só avisar (não apagar)**: a equipe vê o que ele teria feito e nada acontece com ninguém. Mude uma regra para **Ativado** quando confiar nela.",
+      "staffGuard": "A **proteção da equipe** também vem desligada. Ligue-a com `/automod staffguard`: um admin que bane ou expulsa em massa, ou apaga canais ou cargos em massa, perde os cargos da equipe e o dono do servidor é avisado; `/staff restore` devolve os cargos. Ela funciona enquanto o automod está ligado, e só o dono do servidor pode desligá-la.",
+      "appeals": "Publique o painel de apelações com `/setappeal` em um canal que todos os membros possam ver.",
+      "test": "Use `/test` para receber exatamente a mensagem direta que um membro receberia. Nada é feito com ninguém."
+    }
+  },
+  "members": {
+    "title": "O que os membros veem",
+    "list": {
+      "commands": "Comandos para todos, como `/help`, `/rank` e `/report`. Tudo o que modera ou muda configurações exige Administrador. A [página de comandos](/commands) lista todos eles.",
+      "dms": "Uma mensagem direta para cada advertência, silenciamento, expulsão e banimento: o motivo, o código do caso, até quando vale e como apelar, ou que não é possível apelar.",
+      "appeals": "O painel de apelações do `/setappeal`, com **Appeal** (apelar), **My appeals** (minhas apelações) e **My record** (meu histórico).",
+      "record": "Os próprios casos, de todos os servidores que usam o Mewvo, em [Meu histórico](/me), neste site.",
+      "automod": "Quando o automod age sobre eles, uma mensagem direta com a regra e um botão **Contest this** (contestar). A equipe recebe um cartão de revisão, onde mantém, desfaz ou muda a ação."
+    }
+  },
+  "appeals": {
+    "title": "Como as apelações funcionam no seu servidor",
+    "who": "Os membros apelam ao servidor que os puniu, e os seus **Administradores** decidem: **Accept** (aceitar) ou **Deny** (negar) no cartão da apelação no canal da equipe, ou na página **Apelações** do painel. Uma apelação aceita retira o que ainda estiver ativo; um banimento ou uma expulsão vem com um convite de uso único para voltar.",
+    "panel": "**No Discord:** o painel de apelações que você publica com `/setappeal`. Membros silenciados e advertidos o usam no seu servidor.",
+    "web": "**No site:** os membros entram com o Discord em [My appeals](/me/appeals). Funciona mesmo depois de um banimento, quando eles não compartilham mais nenhum servidor com o Mewvo.",
+    "home": "Você escolhe onde a mensagem direta de punição diz para os membros apelarem: no painel, em **Punições e apelações → Onde os membros recorrem**, escolha **Suporte do Mewvo** (o servidor de suporte do Mewvo) ou **Nosso próprio servidor**, com um convite para um servidor que vocês administram."
+  },
+  "data": {
+    "title": "Dados e exclusão",
+    "kept": "O Mewvo guarda as configurações, os casos, as apelações e os níveis do seu servidor enquanto está nele e depois de ser removido, para que tudo volte se você o adicionar de novo. Os dados ficam guardados até o dono do servidor pedir a exclusão. A [página de privacidade](/privacy) lista o que é armazenado e por quanto tempo.",
+    "delete": "O dono do servidor pode pedir a exclusão no painel. Se o Mewvo já tiver sido removido, peça pela [página de contato](/contact) com o ID do servidor. Os membros podem apagar os próprios níveis e dados pessoais com `/wipedata` a qualquer momento; os registros de moderação ficam, como explica a página de privacidade."
+  },
+  "limits": {
+    "title": "Limites por plano",
+    "intro": "Todo servidor recebe tudo o que o Mewvo faz no Free. O plano do **dono do servidor** define estes limites:",
+    "caption": "Limites por plano",
+    "limit": "Limite",
+    "more": "Preços e o que mais cada plano acrescenta: [Preços](/pricing)."
+  },
+  "added": {
+    "description": "O Mewvo foi adicionado ao seu servidor: abra o painel e dê os primeiros passos.",
+    "added": {
+      "title": "O Mewvo está no seu servidor",
+      "lead": "Obrigado por adicionar o Mewvo. Abra o painel do seu servidor para configurá-lo, ou comece pelos passos abaixo no Discord."
+    },
+    "unknown": {
+      "title": "Acabou de adicionar o Mewvo?",
+      "lead": "Abra o painel e escolha o seu servidor, ou comece pelos passos abaixo no Discord."
+    },
+    "cancelled": {
+      "title": "O Mewvo não foi adicionado",
+      "lead": "Nada mudou no seu servidor. Tente de novo quando quiser, ou leia antes o que o Mewvo precisa."
+    },
+    "openDashboard": "Abrir o painel",
+    "pickServer": "Escolher o seu servidor",
+    "setupGuide": "Guia de configuração",
+    "readFirst": "O que o Mewvo precisa",
+    "noDashboard": "O painel não está disponível agora. Use `/setup` no seu servidor: ele mostra o que está configurado e o que falta.",
+    "firstSteps": "Primeiros passos",
+    "steps": {
+      "setup": "Use `/setup` no seu servidor: ele mostra o que está configurado e o que falta.",
+      "logging": "Escolha um **canal de registro de moderação** que só a equipe possa ver.",
+      "automod": "O automod vem **desligado** em um servidor novo: ligue-o primeiro com **Só avisar (não apagar)**.",
+      "staffGuard": "Ligue a **proteção da equipe** com `/automod staffguard` para proteger o servidor de um admin descontrolado.",
+      "appeals": "Publique o painel de apelações com `/setappeal`."
+    },
+    "more": "Permissões, apelações, dados e limites: [Para administradores de servidores](/admins).",
+    "accessNote": "O painel confere se você pode gerenciar este servidor antes de mostrar qualquer coisa."
+  }
+}

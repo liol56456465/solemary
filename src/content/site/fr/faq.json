@@ -52,6 +52,29 @@
       "a": "Oui. Connecte-toi avec Discord sur [My appeals](/me/appeals). Tu vois les dossiers de chaque serveur qui utilise Mewvo dont tu peux faire appel maintenant, et l’état de tes appels. Cela fonctionne même si tu ne partages plus aucun serveur avec Mewvo. C’est l’équipe du serveur qui t’a sanctionné qui décide."
     }
   },
+  "admins": {
+    "title": "Pour les admins de serveur",
+    "whoDecides": {
+      "q": "Qui décide des appels sur notre serveur ?",
+      "a": "Les administrateurs de ton serveur. Les membres font appel auprès du serveur qui les a sanctionnés, et tes admins appuient sur **Accept** ou **Deny** sur la carte d’appel ou dans le tableau de bord. Mewvo applique la décision ; ni Mewvo ni son propriétaire ne décident de tes appels. [Comment fonctionnent les appels pour ton serveur](/admins#appeals)."
+    },
+    "otherServers": {
+      "q": "Les autres serveurs peuvent-ils voir nos dossiers ?",
+      "a": "Non. Les dossiers, les appels, les notes de l’équipe et la liste de surveillance appartiennent à ton serveur : l’équipe des autres serveurs ne peut ni les voir ni les rechercher, et un appel ne peut être tranché que par le serveur auquel il appartient. Le membre peut voir ses propres dossiers, de tous les serveurs, sur Mon dossier."
+    },
+    "removeBot": {
+      "q": "Que se passe-t-il si nous retirons le bot ?",
+      "a": "Il cesse aussitôt de fonctionner sur ton serveur. Les paramètres, les dossiers et les niveaux sont conservés, pour que tout revienne si tu ajoutes de nouveau Mewvo. Les données restent jusqu’à ce que le propriétaire du serveur en demande la suppression : dans le tableau de bord tant que Mewvo est encore sur le serveur, ou via la [page de contact](/contact) ensuite. Voir la [page de confidentialité](/privacy)."
+    },
+    "dashboardTeam": {
+      "q": "Qui dans notre équipe peut utiliser le tableau de bord ?",
+      "a": "Les membres avec **Administrateur** peuvent tout faire. **Gérer le serveur** sans Administrateur ouvre seulement les pages de paramètres, sans actions de modération. Les membres qui ont ton **Rôle de modérateur** (défini dans le tableau de bord) voient les pages de modération ; les actions et les paramètres restent aux administrateurs. L’accès est revérifié auprès de Discord sur chaque page."
+    },
+    "readMessages": {
+      "q": "Mewvo lit-il nos messages ?",
+      "a": "Seulement pour faire tourner ce que tu actives. Là où l’automod est activé, chaque nouveau message est comparé à tes règles dès son arrivée. Le texte des messages n’est pas stocké dans la base de données de Mewvo : quand l’automod agit, sa carte de vérification dans ton salon de l’équipe sur Discord montre un court extrait, et l’équipe peut joindre un extrait à un dossier comme preuve. Si tu actives les journaux de messages, les messages modifiés et supprimés sont publiés dans ton salon de journaux sur Discord."
+    }
+  },
   "data": {
     "title": "Données et contact",
     "stored": {

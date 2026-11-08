@@ -30,6 +30,16 @@ function faqItems(ctx) {
             ],
         },
         {
+            group: t('faq.admins.title'),
+            items: [
+                qa('admins', 'whoDecides'),
+                qa('admins', 'otherServers'),
+                qa('admins', 'removeBot'),
+                qa('admins', 'dashboardTeam'),
+                qa('admins', 'readMessages'),
+            ],
+        },
+        {
             group: t('faq.data.title'),
             items: [
                 qa('data', 'stored'),
