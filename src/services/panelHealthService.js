@@ -24,7 +24,7 @@ async function persistReactionRoleMessageId(client, guildId, panelData, messageI
     await client.db.delete(oldKey).catch(() => {});
 }
 
-export async function reconcileTicketPanels(client) {
+export async function reconcileTicketPanels(client, { guilds = null } = {}) {
     const summary = {
         scannedGuilds: 0,
         healthyPanels: 0,
@@ -34,7 +34,7 @@ export async function reconcileTicketPanels(client) {
         errors: 0,
     };
 
-    for (const guild of client.guilds.cache.values()) {
+    for (const guild of guilds || client.guilds.cache.values()) {
         summary.scannedGuilds += 1;
 
         try {
@@ -69,7 +69,7 @@ export async function reconcileTicketPanels(client) {
     return summary;
 }
 
-export async function reconcileVerificationPanels(client) {
+export async function reconcileVerificationPanels(client, { guilds = null } = {}) {
     const summary = {
         scannedGuilds: 0,
         healthyPanels: 0,
@@ -79,7 +79,7 @@ export async function reconcileVerificationPanels(client) {
         errors: 0,
     };
 
-    for (const guild of client.guilds.cache.values()) {
+    for (const guild of guilds || client.guilds.cache.values()) {
         summary.scannedGuilds += 1;
 
         try {
@@ -114,7 +114,7 @@ export async function reconcileVerificationPanels(client) {
     return summary;
 }
 
-export async function reconcileReactionRolePanelHealth(client) {
+export async function reconcileReactionRolePanelHealth(client, { guilds = null } = {}) {
     const summary = {
         scannedGuilds: 0,
         scannedPanels: 0,
@@ -125,7 +125,7 @@ export async function reconcileReactionRolePanelHealth(client) {
         errors: 0,
     };
 
-    for (const guild of client.guilds.cache.values()) {
+    for (const guild of guilds || client.guilds.cache.values()) {
         summary.scannedGuilds += 1;
 
         try {

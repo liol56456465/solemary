@@ -23,7 +23,7 @@ export async function handleList(interaction, client) {
 
     try {
         const counters = await getServerCounters(client, guild.id);
-        const stats = await getGuildCounterStats(guild);
+        const stats = getGuildCounterStats(guild); // memberCount + cached bots, no member fetch
 
         const validCounters = [];
         const orphanedCounters = [];

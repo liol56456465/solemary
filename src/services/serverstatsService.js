@@ -3,9 +3,8 @@
 import { ChannelType } from 'discord.js';
 import { logger } from '../utils/logger.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
-import { logEvent, EVENT_TYPES } from './loggingService.js';
-import { formatLogLine } from '../utils/logging/logEmbeds.js';
 import { getServerCountersKey } from '../utils/database/keys.js';
+import { GUILD_SQL, sleep } from './scheduling/guildScan.js';
 import botConfig from '../config/bot.js';
 
 export const COUNTER_TYPE_CONFIG = {
@@ -62,19 +61,16 @@ export function getCounterActionMessage(action, values = {}) {
   );
 }
 
-export async function getGuildCounterStats(guild) {
-  let memberCollection = guild.members.cache;
-
-  try {
-    memberCollection = await guild.members.fetch();
-  } catch (error) {
-    if (process.env.NODE_ENV !== 'production') {
-      logger.debug(`Failed to fetch all guild members for ${guild.id}, using cache only`, error);
-    }
-  }
-
-  const botCount = memberCollection.filter((member) => member.user.bot).size;
-  const totalCount = typeof guild.memberCount === 'number' ? guild.memberCount : memberCollection.size;
+/**
+ * Member stats of a server without a member fetch: the total is Discord's own count
+ * (guild.memberCount, kept current by the gateway); bots are counted from the member cache
+ * (bots are few and usually cached). This replaced a full member fetch per counter per server
+ * every 15 minutes. Compute once per server per run and pass it to updateCounter.
+ */
+export function getGuildCounterStats(guild) {
+  const cache = guild.members?.cache;
+  const botCount = cache ? cache.filter((member) => member.user?.bot).size : 0;
+  const totalCount = typeof guild.memberCount === 'number' ? guild.memberCount : (cache?.size ?? 0);
   const humanCount = Math.max(totalCount - botCount, 0);
 
   return {
@@ -84,9 +80,8 @@ export async function getGuildCounterStats(guild) {
   };
 }
 
-export async function getCounterCount(guild, type) {
-  const stats = await getGuildCounterStats(guild);
-
+/** The number a counter of `type` shows, from getGuildCounterStats; null for an unknown type. */
+export function counterCountFromStats(stats, type) {
   switch (type) {
     case 'members':
       return stats.totalCount;
@@ -97,6 +92,44 @@ export async function getCounterCount(guild, type) {
     default:
       return null;
   }
+}
+
+export async function getCounterCount(guild, type) {
+  return counterCountFromStats(getGuildCounterStats(guild), type);
+}
+
+// ── 403 backoff ──────────────────────────────────────────────────────────
+// A channel the bot may not rename (Missing Access / Missing Permissions) is skipped for a while
+// instead of failing every 15 minutes: Discord bans an IP for a time after 10,000 invalid
+// (401/403/429) requests in 10 minutes. 1 h, doubling up to 24 h; a successful rename clears it.
+const RENAME_BACKOFF_START_MS = 60 * 60 * 1000;
+const RENAME_BACKOFF_MAX_MS = 24 * 60 * 60 * 1000;
+const RENAME_BACKOFF_MAX_ENTRIES = 5000;
+const renameBackoff = new Map(); // channelId → { until, delay }
+
+/** True for a Discord "not allowed" answer (HTTP 403, Missing Access 50001, Missing Permissions 50013). */
+export function isForbiddenError(error) {
+  return error?.status === 403 || error?.code === 50001 || error?.code === 50013;
+}
+
+/** Milliseconds this channel is still skipped for (0 = not skipped). */
+export function renameBackoffRemaining(channelId, now = Date.now()) {
+  const entry = renameBackoff.get(channelId);
+  return entry ? Math.max(0, entry.until - now) : 0;
+}
+
+function noteForbidden(channelId, now) {
+  const previous = renameBackoff.get(channelId);
+  const delay = previous ? Math.min(previous.delay * 2, RENAME_BACKOFF_MAX_MS) : RENAME_BACKOFF_START_MS;
+  renameBackoff.delete(channelId);
+  if (renameBackoff.size >= RENAME_BACKOFF_MAX_ENTRIES) renameBackoff.delete(renameBackoff.keys().next().value);
+  renameBackoff.set(channelId, { until: now + delay, delay });
+  return delay;
+}
+
+/** For tests. */
+export function _resetRenameBackoff() {
+  renameBackoff.clear();
 }
 
 function isValidCounterShape(counter) {
@@ -138,14 +171,24 @@ function sanitizeCounters(counters, guildId) {
     .map(counter => normalizeCounter(counter, guildId));
 }
 
-export async function updateCounter(client, guild, counter) {
+/**
+ * Renames a counter's channel to its current count. `stats` (getGuildCounterStats) lets a caller
+ * that updates several counters of one server compute them once. Routine renames are not sent to
+ * the server's log channel any more (one log line per counter every 15 minutes was noise). A
+ * channel the bot may not rename is skipped for a while (403 backoff above).
+ * Returns true when the channel shows the right count.
+ */
+export async function updateCounter(client, guild, counter, { stats = null, now = Date.now() } = {}) {
   try {
     if (!counter || !counter.type || !counter.channelId) {
       logger.warn('Skipping invalid counter in updateCounter:', counter);
       return false;
     }
-    
+
     const { type, channelId } = counter;
+    if (renameBackoffRemaining(channelId, now) > 0) {
+      return false;
+    }
     let channel = guild.channels.cache.get(channelId);
     if (!channel) {
       try {
@@ -159,7 +202,7 @@ export async function updateCounter(client, guild, counter) {
       return false;
     }
 
-    const count = await getCounterCount(guild, type);
+    const count = counterCountFromStats(stats || getGuildCounterStats(guild), type);
     if (count === null) {
       logger.error('Unknown counter type:', type);
       return false;
@@ -178,30 +221,16 @@ export async function updateCounter(client, guild, counter) {
     if (channel.name !== newName) {
       try {
         await channel.setName(newName);
+        renameBackoff.delete(channelId);
         if (process.env.NODE_ENV !== 'production') {
           logger.debug(`Updated channel name to: "${newName}"`);
         }
-
-        try {
-          await logEvent({
-            client,
-            guildId: guild.id,
-            eventType: EVENT_TYPES.COUNTER_UPDATE,
-            data: {
-              title: 'Counter updated',
-              lines: [
-                formatLogLine('Type', getCounterTypeLabel(type)),
-                formatLogLine('Count', count.toString()),
-                formatLogLine('Channel', channel.toString()),
-              ],
-              channelId: channel.id,
-            },
-          });
-        } catch (error) {
-          logger.debug('Error logging counter update:', error);
-        }
-
       } catch (error) {
+        if (isForbiddenError(error)) {
+          const delay = noteForbidden(channelId, now);
+          logger.warn(`Counter channel ${channel.id} in guild ${guild.id} cannot be renamed (${error.message}); skipped for ${Math.round(delay / 60000)} min`);
+          return false;
+        }
         logger.error(`Failed to update channel name for ${channel.id}:`, error);
         return false;
       }
@@ -215,6 +244,74 @@ export async function updateCounter(client, guild, counter) {
     logger.error("Error updating counter:", error);
     return false;
   }
+}
+
+/**
+ * Every server's counters in one query: Map guildId → counters (sanitized, non-empty lists only).
+ * Null when the bot runs on in-memory storage (no SQL; the caller reads each server instead).
+ * Throws on a database error. `query` is for tests.
+ */
+export async function listGuildCounters(client, { query } = {}) {
+  if (!query && !client?.db?.rows?.()) return null;
+  const run = query || (await import('./enforcement/db.js')).query;
+  const { rows } = await run(GUILD_SQL.counters, []);
+  const out = new Map();
+  for (const row of rows) {
+    const guildId = String(row.id);
+    const counters = sanitizeCounters(row.counters, guildId);
+    if (counters.length) out.set(guildId, counters);
+  }
+  return out;
+}
+
+export const COUNTER_SERVER_PAUSE_MS = 250;
+
+/**
+ * The 15-minute counter cron: only servers that have counters (one query), member stats computed
+ * once per server (no member fetch), a short pause between servers. Counters whose channel is
+ * gone are removed under the row lock (disabled counters are kept). A database error on the
+ * list query throws (the cron logs it and tries again next run). Returns
+ * { servers, renamedOk, removed, errors }. `query`, `pauseMs`, `sleepFn` are for tests.
+ */
+export async function updateAllServerCounters(client, { query, pauseMs = COUNTER_SERVER_PAUSE_MS, sleepFn = sleep } = {}) {
+  const summary = { servers: 0, renamedOk: 0, removed: 0, errors: 0 };
+  let byGuild = await listGuildCounters(client, { query });
+  const readEach = byGuild === null; // in-memory storage: no SQL, read each server
+  if (readEach) byGuild = new Map([...client.guilds.cache.keys()].map((id) => [id, null]));
+
+  let first = true;
+  for (const [guildId, listed] of byGuild) {
+    const guild = client.guilds.cache.get(guildId);
+    if (!guild) continue; // the bot left; the stored counters stay until the server's data is deleted
+    try {
+      const counters = listed || await getServerCounters(client, guildId);
+      if (!counters.length) continue;
+      if (!first) await sleepFn(pauseMs);
+      first = false;
+      summary.servers += 1;
+
+      const stats = getGuildCounterStats(guild);
+      const orphaned = new Set();
+      for (const counter of counters) {
+        if (counter.enabled === false) continue;
+        if (!guild.channels.cache.get(counter.channelId)) {
+          orphaned.add(counter.id);
+          logger.info(`Removing orphaned counter ${counter.id} (type: ${counter.type}, deleted channel: ${counter.channelId}) from guild ${guildId}`);
+          continue;
+        }
+        if (await updateCounter(client, guild, counter, { stats })) summary.renamedOk += 1;
+      }
+      if (orphaned.size) {
+        await mutateServerCounters(client, guildId, (current) => current.filter((c) => !orphaned.has(c.id)));
+        summary.removed += orphaned.size;
+        logger.info(`Cleaned up ${orphaned.size} orphaned counter(s) from guild ${guildId} during scheduled update`);
+      }
+    } catch (error) {
+      summary.errors += 1;
+      logger.error(`Error updating counters for guild ${guildId}:`, error);
+    }
+  }
+  return summary;
 }
 
 export async function getServerCounters(client, guildId) {

@@ -34,7 +34,12 @@ export const FEED_MAX_POSTS_PER_POLL = 3;
 export const DEFAULT_FEED_TEMPLATE = '**{author}** posted a new video: **{title}**\n{url}';
 export const DEFAULT_TWITCH_TEMPLATE = '**{author}** is live on Twitch: **{title}**\n{url}';
 export const FEED_PLATFORMS = ['youtube', 'twitch'];
-const FETCH_TIMEOUT_MS = 10_000;
+const FETCH_TIMEOUT_MS = 15_000;
+// A YouTube poll: 4 feeds fetched at once, and it stops after about 10 minutes (the cron runs
+// every 15); the next poll starts with the feeds this one did not reach.
+export const FEED_POLL_CONCURRENCY = 4;
+export const FEED_POLL_BUDGET_MS = 10 * 60_000;
+let feedCursor = null; // the source id the next poll starts with, or null (from the start)
 const MAX_FEED_BYTES = 1_000_000;
 const YOUTUBE_CHANNEL_ID = /^UC[\w-]{22}$/;
 
@@ -273,8 +278,24 @@ async function postEntries(client, feed, entries) {
     return posted;
 }
 
-/** One poll of every YouTube feed (cron, every 15 minutes). Returns { sources, posted }. */
-export async function pollFeeds(client, fetchImpl = fetch) {
+/**
+ * The poll order: source ids sorted, starting at `cursor` (the first one not reached last time),
+ * then wrapping around; pure.
+ */
+export function feedPollOrder(sourceIds, cursor) {
+    const ids = [...sourceIds].sort();
+    if (!cursor) return ids;
+    const start = ids.findIndex((id) => id >= cursor);
+    return start <= 0 ? ids : [...ids.slice(start), ...ids.slice(0, start)];
+}
+
+/**
+ * One poll of the YouTube feeds (cron, every 15 minutes): FEED_POLL_CONCURRENCY fetches at once,
+ * no new fetch after FEED_POLL_BUDGET_MS; the feeds not reached go first next time. Returns
+ * { sources, posted }, plus `stoppedAt` (feeds left) when the time ran out.
+ * `options` (tests): concurrency, budgetMs, now().
+ */
+export async function pollFeeds(client, fetchImpl = fetch, { concurrency = FEED_POLL_CONCURRENCY, budgetMs = FEED_POLL_BUDGET_MS, now = Date.now } = {}) {
     if (!(await ensureLoaded())) return { sources: 0, posted: 0 };
     const bySource = new Map();
     for (const feed of feeds) {
@@ -282,27 +303,49 @@ export async function pollFeeds(client, fetchImpl = fetch) {
         if (!bySource.has(feed.sourceId)) bySource.set(feed.sourceId, []);
         bySource.get(feed.sourceId).push(feed);
     }
+    const order = feedPollOrder(bySource.keys(), feedCursor);
+    const deadline = now() + budgetMs;
+    let next = 0;
     let posted = 0;
-    for (const [sourceId, followers] of bySource) {
-        let entries;
-        try {
-            entries = await fetchYoutubeFeed(sourceId, fetchImpl);
-        } catch (error) {
-            logger.warn(`YouTube feed ${sourceId} could not be fetched: ${error.message}`);
-            continue;
+    const worker = async () => {
+        while (next < order.length && now() < deadline) {
+            const sourceId = order[next++];
+            posted += await pollSource(client, sourceId, bySource.get(sourceId), fetchImpl);
         }
-        for (const feed of followers) {
-            const { toPost, marker } = selectNewEntries(entries, feed.lastItemId);
-            if (!marker || marker === feed.lastItemId) continue;
-            if (toPost.length) posted += await postEntries(client, feed, toPost);
-            feed.lastItemId = marker;
-            // The marker only moves when a new video was posted, or (rarely) when it was
-            // missing or fell out of the feed, so this is the only write a poll makes.
-            await query(`UPDATE ${CT.feeds} SET last_item_id = $2 WHERE id = $1`, [feed.id, marker])
-                .catch((error) => logger.warn(`Feed #${feed.id}: marker not saved: ${error.message}`));
-        }
+    };
+    await Promise.all(Array.from({ length: Math.max(1, Math.min(concurrency, order.length)) }, worker));
+    const result = { sources: bySource.size, posted };
+    if (next < order.length) {
+        feedCursor = order[next];
+        result.stoppedAt = order.length - next;
+        logger.warn(`YouTube feeds: poll stopped after ${Math.round(budgetMs / 60000)} min with ${result.stoppedAt} of ${order.length} channel(s) left; they go first next time`);
+    } else {
+        feedCursor = null;
     }
-    return { sources: bySource.size, posted };
+    return result;
+}
+
+/** Fetches one YouTube channel and posts its new videos to every feed following it; the number posted. */
+async function pollSource(client, sourceId, followers, fetchImpl) {
+    let entries;
+    try {
+        entries = await fetchYoutubeFeed(sourceId, fetchImpl);
+    } catch (error) {
+        logger.warn(`YouTube feed ${sourceId} could not be fetched: ${error.message}`);
+        return 0;
+    }
+    let posted = 0;
+    for (const feed of followers) {
+        const { toPost, marker } = selectNewEntries(entries, feed.lastItemId);
+        if (!marker || marker === feed.lastItemId) continue;
+        if (toPost.length) posted += await postEntries(client, feed, toPost);
+        feed.lastItemId = marker;
+        // The marker only moves when a new video was posted, or (rarely) when it was
+        // missing or fell out of the feed, so this is the only write a poll makes.
+        await query(`UPDATE ${CT.feeds} SET last_item_id = $2 WHERE id = $1`, [feed.id, marker])
+            .catch((error) => logger.warn(`Feed #${feed.id}: marker not saved: ${error.message}`));
+    }
+    return posted;
 }
 
 /**

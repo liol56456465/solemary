@@ -263,7 +263,7 @@ test('server cat cron: a server whose settings cannot be read is noted at most o
     const warnings = captureWarnings();
     try {
         const client = { guilds: { cache: new Map([[OTHER, { id: OTHER }]]) } };
-        const deps = { getLevelingConfig: async () => ({}), getState: async () => { throw new SettingsUnavailableError(OTHER); } };
+        const deps = { getLevelingConfig: async () => ({}), activeGuilds: () => [OTHER], getState: async () => { throw new SettingsUnavailableError(OTHER); } };
         await checkCatGrowth(client, deps);
         await checkCatGrowth(client, deps);
         await checkCatGrowth(client, deps);
