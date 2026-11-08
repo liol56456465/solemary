@@ -336,3 +336,31 @@ Public Bot toggle on (see the deploy notes). Global commands can take up to an h
 | 23.14 | Remove the bot from the fresh server | Console: `Bot left guild; its data is kept`. Nothing deleted (re-add: `/setup` shows the same settings) |
 
 When done: run the clean-up from "Before testing in Discord".
+
+## 24. B1/B2/B3 multi-server (second, non-Mewvo test server)
+
+Use the fresh test server from section 23 (call it **Test**, ID `<T>`): you are its owner, **Alt A** is a plain
+member there and in the main server, **Alt B** has only **Manage Server** in Test (no Administrator). Give Test a `#mod-log` and a ticket category first (`/setup` lists them).
+Dashboard steps use the Replit URL in a normal and a private browser window.
+
+| # | Do | Expected |
+|---|---|---|
+| 24.1 | Add Mewvo to Test | Welcome post with **Open the dashboard** (link `…/dashboard/<T>`) and **Mewvo support server**; no "coming soon" line; nobody pinged |
+| 24.2 | Test, you: `/setup` | Ephemeral checklist; **Open the dashboard** button links to `…/dashboard/<T>`; no "coming soon" or "not available" line |
+| 24.3 | Test, Alt B: `/automod enable enabled:True`, then `/automod staffguard enabled:True` | Both refused for Alt B ("You need the Administrator role…"). As you (owner): both work, staff guard on |
+| 24.4 | Give Alt B Administrator in Test; Alt B: `/automod enable enabled:False` | "Only the server owner can turn the staff guard off (or turn automod off while the staff guard is on)." Automod stays on. You (owner): same command works. Take Administrator from Alt B again |
+| 24.5 | Alt A: DM the bot "test modmail" | "Which server's staff should get this message?" with a select listing the main server and Test (Support is never listed) |
+| 24.6 | Pick **Test** → Send | A modmail channel opens in Test's ticket/modmail category, not in the main server; staff reply comes back as a DM. `/modmail close` there |
+| 24.7 | Test, you: `/enforcements user:Alt A` → Warn → a reason → confirm | DM "Warning 1 of 3" naming Test. Main server: `/background user:Alt A` shows **no** Test case; Alt A's main-server ladder count unchanged |
+| 24.8 | Main server: warn Alt A once (then remove it with Remove warn) | Test's `/background user:Alt A` shows only the Test warn; Test's ladder count stays 1 |
+| 24.9 | Browser: open `/dashboard`, log in as you | Discord consent lists "Know what servers you're in" (first time). Back on a server picker with the main server and Test; servers where you can add Mewvo show **Add Mewvo** |
+| 24.10 | Pick Test | URL `/dashboard/<T>/…`; Overview shows Test's name and icon; Test's settings, not the main server's |
+| 24.11 | Private window: log in as **Alt A**, open `/dashboard/<T>` (copy the URL) | 404 "Server not found or you can't manage it"; no Test name or data. Same for `/dashboard/<T>/cases` and for a server ID the bot is not in |
+| 24.12 | Private window: log in as **Alt B**, open `/dashboard/<T>` | Opens; level shows "Manage Server"; settings pages save (one Audit log row). Members → Alt A: no Warn/Mute/Kick/Ban; Cases: no edit/void; role, permission and safety settings refused (403 or not shown) |
+| 24.13 | Alt B, while logged in: you take Manage Server from Alt B in Test; Alt B reloads | `/dashboard/<T>` now 404; Alt B is still logged in (picker works) |
+| 24.14 | As you: open an old link `/dashboard/overview` and `/dashboard/cases` | Redirects to `/dashboard/1527697154926182492/overview` (and `/cases`); same page as before. `/dashboard/1564312871976829009/overview` (Support ID) also lands on the main server |
+| 24.15 | Old bookmarked settings form (main server): save something | Saved on the main server (the POST is redirected with 307), one Audit log row |
+| 24.16 | Restart the bot (Ramūnas only), reload the picker | "Refresh server list"; after it, the picker is back. Direct `/dashboard/<T>` links work without the refresh |
+
+When done: remove Alt B's Manage Server, close leftover modmail, remove Test's warn from Alt A (Remove warn), and run
+the clean-up from "Before testing in Discord".

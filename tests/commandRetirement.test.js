@@ -53,22 +53,25 @@ test('the gate while retired: everyone-commands work, admin keys point to their 
             const member = { has: () => false };
             const check = (key, permissions, userId = 'someone') => checkCommandAccess({ command: {}, accessKey: key, guild, userId, permissions });
             assert.deepEqual(check('birthday set', member), { allowed: true });
-            assert.deepEqual(check('automod mode', admin), { allowed: false, message: 'This command moved to the dashboard: https://bot.example/dashboard/automod' }, 'even admins use the dashboard');
-            assert.equal(check('purge', admin).message, 'This command moved to the dashboard: https://bot.example/dashboard/channels');
+            assert.deepEqual(check('automod mode', admin), { allowed: false, message: 'This command moved to the dashboard: https://bot.example/dashboard/1700000000000000001/automod' }, 'even admins use the dashboard, on this server');
+            assert.equal(check('purge', admin).message, 'This command moved to the dashboard: https://bot.example/dashboard/1700000000000000001/channels');
             assert.equal(check('enforcements', admin).allowed, false, 'kit: not for admins');
             assert.deepEqual(check('enforcements', member, owner), { allowed: true, ownerOverride: true }, 'kit: owners, logged as override without Administrator');
             assert.deepEqual(check('automod panic', admin, owner), { allowed: true });
             assert.equal(check('automod mode', admin, owner).allowed, false, 'owners too: everything else is on the dashboard');
             assert.deepEqual(check('test', admin), { allowed: true }, '/test stays a command for admins');
             assert.equal(check('test', member).allowed, false, '/test is still Administrator-only');
-            assert.notEqual(check('test', member).message, retiredMessage('test'), 'non-admins get the admin refusal, not "moved"');
+            assert.notEqual(check('test', member).message, retiredMessage('test', guild.id), 'non-admins get the admin refusal, not "moved"');
         });
     } finally {
         botConfig.commands.owners = owners;
         enforcementConfig.mainGuildId = savedMain;
     }
     assert.equal(dashboardPageFor('case evidence add'), 'cases');
-    assert.equal(retiredMessage('poll', ''), 'This command moved to the dashboard (messages page).');
+    assert.equal(retiredMessage('poll', '1700000000000000001', {}), 'This command moved to the dashboard (messages page).', 'no PUBLIC_URL: the page name only');
+    const env = { PUBLIC_URL: 'https://bot.example/' };
+    assert.equal(retiredMessage('poll', '100000000000000777', env), 'This command moved to the dashboard: https://bot.example/dashboard/100000000000000777/messages', 'any server: its own dashboard');
+    assert.equal(retiredMessage('poll', undefined, env), 'This command moved to the dashboard: https://bot.example/dashboard/messages', 'no server: the old path (redirects to the main server)');
 });
 
 test('registerCommandSets while retired registers the reduced lists', async () => {

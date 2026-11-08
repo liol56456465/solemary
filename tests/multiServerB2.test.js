@@ -299,14 +299,17 @@ test('welcomeOnJoin: posts once with the /setup line, dashboard and support butt
     assert.equal(embed.title, 'Thanks for adding Mewvo!');
     assert.ok(embed.description.startsWith('An admin can type **/setup** to get started.'));
     const buttons = payload.components[0].toJSON().components;
-    // Until B3: no link to Mewvo's own dashboard for another server, a neutral line instead.
-    assert.deepEqual(buttons.map((b) => b.url), ['https://discord.gg/7Ckv9Bt577']);
-    assert.equal(dashboardUrlFor(OTHER), null);
-    assert.equal(dashboardUrlFor(MAIN), 'https://bot.example/dashboard', 'home servers keep the link');
-    assert.equal(dashboardUrlFor(SUPPORT), 'https://bot.example/dashboard');
-    assert.ok(embed.description.includes('-# The web dashboard for your server is coming soon.'), embed.description);
+    // B3: every server gets a link to its own dashboard, no "coming soon" line.
+    assert.deepEqual(buttons.map((b) => b.url), [`https://bot.example/dashboard/${OTHER}`, 'https://discord.gg/7Ckv9Bt577']);
+    assert.ok(!embed.description.includes('coming soon'), embed.description);
+    assert.equal(dashboardUrlFor(OTHER), `https://bot.example/dashboard/${OTHER}`);
+    assert.equal(dashboardUrlFor(MAIN), `https://bot.example/dashboard/${MAIN}`, 'home servers too');
+    assert.equal(dashboardUrlFor(SUPPORT), `https://bot.example/dashboard/${SUPPORT}`, 'the dashboard redirects the Support id to main');
+    assert.equal(dashboardUrlFor(undefined), 'https://bot.example/dashboard', 'no server: the picker');
+    assert.equal(dashboardUrlFor('../owner'), 'https://bot.example/dashboard', 'never a path from a non-snowflake');
+    assert.equal(dashboardUrlFor(OTHER, {}), null, 'no PUBLIC_URL: no link');
     const home = welcome.welcomeMessage({ id: MAIN, name: 'Mewvo' }, botText('en'));
-    assert.deepEqual(home.components[0].toJSON().components.map((b) => b.url), ['https://bot.example/dashboard', 'https://discord.gg/7Ckv9Bt577']);
+    assert.deepEqual(home.components[0].toJSON().components.map((b) => b.url), [`https://bot.example/dashboard/${MAIN}`, 'https://discord.gg/7Ckv9Bt577']);
     assert.ok(!home.embeds[0].toJSON().description.includes('coming soon'));
     assert.deepEqual(saved, [{ guildId: OTHER, at: '2026-11-08T12:00:00.000Z' }], 'one atomic stamp (a row-locked merge, other keys untouched)');
     assert.equal(guild.fetches.length, 0, 'no View Audit Log: no audit-log read, no DM');
@@ -400,7 +403,7 @@ const moduleData = (config, welcomeConfig, automod) => ({
     getAutomodSettings: async () => automod,
 });
 
-test('/setup on a configured non-home server: every line ✅, dashboard "coming soon" (no link), category select', async () => {
+test('/setup on a configured non-home server: every line ✅, a button to its own dashboard, category select', async () => {
     setSettingsCacheForTests(OTHER, {
         modLogChannelId: '300000000000000001', reviewChannelId: '300000000000000002',
         appealsHome: 'own', appealsInvite: 'https://discord.gg/catsco', botLanguage: 'de',
@@ -421,11 +424,12 @@ test('/setup on a configured non-home server: every line ✅, dashboard "coming 
     assert.ok(embed.description.includes('✅ **Mod log channel**: <#300000000000000001>'));
     assert.ok(embed.description.includes('✅ **Appeals**: Members appeal in your own server: https://discord.gg/catsco'));
     assert.ok(embed.description.includes('✅ **Bot language**: Deutsch'));
-    // Until B3 the dashboard serves only Mewvo's own servers: a neutral line, no link, no button.
-    const [select, ...rest] = payload.components.map((c) => c.toJSON());
-    assert.equal(rest.length, 0, 'no dashboard button');
-    assert.ok(!JSON.stringify(payload).includes('bot.example/dashboard'));
-    assert.ok(embed.description.includes('-# The web dashboard for your server is coming soon.'), embed.description);
+    // B3: the button opens this server's own dashboard; no "coming soon" or "not available" line.
+    const rows = payload.components.map((c) => c.toJSON());
+    const dashboard = rows.find((r) => r.components[0].type === 2);
+    const select = rows.find((r) => r.components[0].type === 3);
+    assert.deepEqual(dashboard.components.map((b) => b.url), [`https://bot.example/dashboard/${OTHER}`]);
+    assert.ok(!embed.description.includes('coming soon') && !embed.description.includes('not available'), embed.description);
     assert.equal(select.components[0].custom_id, `setup-cat:${MANAGER}`);
     const categories = select.components[0].options.map((o) => o.value);
     assert.ok(categories.includes('Enforcement') && categories.includes('Core'));

@@ -141,7 +141,7 @@ export function checkCommandAccess({ command, accessKey, guild, userId, permissi
         if (isOwnerKit(accessKey) && hasOwnerPower(userId, guild.id)) {
             return hasAdministrator({ guild, userId, permissions }) ? { allowed: true } : { allowed: true, ownerOverride: true };
         }
-        return { allowed: false, message: retiredMessage(accessKey) };
+        return { allowed: false, message: retiredMessage(accessKey, guild.id) };
     }
     if (hasAdministrator({ guild, userId, permissions })) return { allowed: true };
     // OWNER_IDS override Administrator in Mewvo's own servers only (multi-server B1, utils/ownerPower.js).
