@@ -5,6 +5,7 @@ import { createAllCommandsMenu } from './helpSelectMenus.js';
 import { createInitialHelpMenu } from '../../commands/Core/help.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import { logger } from '../../utils/logger.js';
+import { replyText } from '../../commands/Core/modules/commandText.js';
 
 const BACK_BUTTON_ID = "help-back-to-main";
 const PAGINATION_PREFIX = "help-page";
@@ -18,7 +19,7 @@ export const helpBackButton = {
                 await interaction.deferUpdate();
             }
 
-            const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId, canSeeAdminCommands(interaction));
+            const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId, canSeeAdminCommands(interaction), replyText(interaction));
             await interaction.editReply({
                 embeds,
                 components,
@@ -42,20 +43,18 @@ export const helpBackButton = {
 export const helpBugReportButton = {
     name: BUG_REPORT_BUTTON_ID,
     async execute(interaction, client) {
+        const tr = replyText(interaction);
         // Bugs are reported in the Mewvo support server (the same invite as /support).
         const supportButton = new ButtonBuilder()
-            .setLabel('Open the support server')
+            .setLabel(tr.t('core.help.bug.button'))
             .setStyle(ButtonStyle.Link)
             .setURL(supportInviteUrl());
 
         const bugRow = new ActionRowBuilder().addComponents(supportButton);
 
         const bugReportEmbed = createEmbed({
-            title: 'Report a bug',
-            description: 'Tell us in the support server what happened. It helps if you include:\n'
-                + '- what you did (the command and its options)\n'
-                + '- what you expected and what happened instead\n'
-                + '- a screenshot, if you have one',
+            title: tr.t('core.help.bug.title'),
+            description: tr.t('core.help.bug.description'),
             color: 'error'
         });
         bugReportEmbed.setFooter({ text: 'Mewvo', iconURL: client.user.displayAvatarURL() });
@@ -116,7 +115,7 @@ export const helpPaginationButton = {
                     break;
             }
 
-            const { embeds, components } = await createAllCommandsMenu(nextPage, client, interaction.guildId, canSeeAdminCommands(interaction));
+            const { embeds, components } = await createAllCommandsMenu(nextPage, client, interaction.guildId, canSeeAdminCommands(interaction), replyText(interaction));
             await interaction.editReply({ embeds, components });
         } catch (error) {
             if (error?.code === 40060 || error?.code === 10062) {

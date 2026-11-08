@@ -10,6 +10,8 @@ import { logger } from '../../utils/logger.js';
 import { isCommandAvailableInGuild, canSeeAdminCommands } from '../../utils/commandGate.js';
 import { hasEveryoneAccess } from '../../config/commands/commandAccess.js';
 import { createEmbed } from "../../utils/embeds.js";
+import { botText } from '../../utils/botText.js';
+import { localized, replyText } from './modules/commandText.js';
 import {
     createSelectMenu,
 } from "../../utils/components.js";
@@ -31,7 +33,8 @@ function formatCategoryName(rawCategory) {
         .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export async function createInitialHelpMenu(client, guildId = null, showAdmin = true) {
+/** The help start page. `tr`: the viewer's text functions (ephemeral menu: their Discord language). */
+export async function createInitialHelpMenu(client, guildId = null, showAdmin = true, tr = botText('en')) {
     const commandsPath = path.join(__dirname, "../../commands");
     // Only list categories with at least one command this viewer can use in this server.
     const availableCategories = new Set(
@@ -50,15 +53,15 @@ export async function createInitialHelpMenu(client, guildId = null, showAdmin = 
 
     const options = [
         {
-            label: "All commands",
-            description: "Every command in one list",
+            label: tr.t('core.help.menu.allLabel'),
+            description: tr.t('core.help.menu.allDescription'),
             value: ALL_COMMANDS_ID,
         },
         ...categoryDirs.map((category) => {
             const categoryName = formatCategoryName(category);
             return {
                 label: categoryName,
-                description: `${categoryName} commands`,
+                description: tr.t('core.help.menu.categoryDescription', { category: categoryName }).slice(0, 100),
                 value: category,
             };
         }),
@@ -66,40 +69,28 @@ export async function createInitialHelpMenu(client, guildId = null, showAdmin = 
 
     const botName = client?.user?.username || "Bot";
     const embed = createEmbed({
-        title: `${botName} help`,
-        description: 'support us by boosting',
+        title: tr.t('core.help.menu.title', { bot: botName }),
+        description: tr.t('core.help.menu.description'),
         color: 'primary',
         thumbnail: client.user?.displayAvatarURL?.({ size: 1024 }),
         fields: [
             {
-                name: 'Getting started',
-                value: (showAdmin ? [
-                    '1. **/configwizard** sets the mod role and log channel.',
-                    '2. **/commands dashboard** turns categories on or off.',
-                    '3. Pick a category in the menu below to see its commands.',
-                ] : [
-                    'Pick a category in the menu below to see its commands.',
-                    'Need staff? DM the bot: your message goes to the team privately (modmail).',
-                ]).join('\n'),
+                name: tr.t('core.help.menu.gettingStarted'),
+                value: showAdmin ? tr.t('core.help.menu.adminSteps') : tr.t('core.help.menu.memberSteps'),
                 inline: false,
             },
             {
-                name: 'Access',
+                name: tr.t('core.help.menu.access'),
                 value: [
-                    showAdmin
-                        ? '• Commands marked 🔒 need the **Administrator** permission; the rest are for everyone.'
-                        : '• This list shows the commands you can use.',
-                    ...(showAdmin ? ['• **/setup** shows what is set up in this server, with a link to the dashboard.'] : []),
-                    ...(showAdmin ? ['• **/setappeal** posts the appeal panels; **/appeals** lists, shows and decides appeals.'] : []),
+                    showAdmin ? tr.t('core.help.menu.accessAdmin') : tr.t('core.help.menu.accessMember'),
+                    ...(showAdmin ? [tr.t('core.help.menu.accessSetup')] : []),
+                    ...(showAdmin ? [tr.t('core.help.menu.accessAppeals')] : []),
                 ].join('\n'),
                 inline: false,
             },
             {
-                name: 'Good to know',
-                value: [
-                    '• Most features have a dashboard command for their settings',
-                    '• Settings are saved per server',
-                ].join('\n'),
+                name: tr.t('core.help.menu.goodToKnow'),
+                value: tr.t('core.help.menu.goodToKnowText'),
                 inline: false,
             },
         ],
@@ -108,13 +99,13 @@ export async function createInitialHelpMenu(client, guildId = null, showAdmin = 
     embed.setTimestamp();
 
     const supportButton = new ButtonBuilder()
-        .setLabel("Support Server")
+        .setLabel(tr.t('core.help.menu.supportButton'))
         .setURL(supportInviteUrl())
         .setStyle(ButtonStyle.Link);
 
     const selectRow = createSelectMenu(
         CATEGORY_SELECT_ID,
-        "Pick a category",
+        tr.t('core.help.menu.placeholder'),
         options,
     );
 
@@ -132,7 +123,8 @@ export default {
     slashOnly: true,
     data: new SlashCommandBuilder()
         .setName("help")
-        .setDescription("Show the commands you can use"),
+        .setDescription("Show the commands you can use")
+        .setDescriptionLocalizations(localized('core.slash.help.description')),
 
     async execute(interaction, guildConfig, client) {
         
@@ -140,7 +132,8 @@ export default {
         // Private: only the person who asked sees it and can use its menu.
         await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
 
-        const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId, canSeeAdminCommands(interaction));
+        const tr = replyText(interaction);
+        const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId, canSeeAdminCommands(interaction), tr);
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds,
@@ -154,8 +147,8 @@ export default {
                 }
 
                 const closedEmbed = createEmbed({
-                    title: "Help menu closed",
-                    description: "Run /help again to open it.",
+                    title: tr.t('core.help.closed.title'),
+                    description: tr.t('core.help.closed.description'),
                     color: "secondary",
                 });
 

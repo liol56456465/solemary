@@ -1,0 +1,112 @@
+{
+    "unknownSubcommand": "Unknown subcommand.",
+    "flip": {
+        "title": "Coin flip",
+        "heads": "Heads",
+        "tails": "Tails",
+        "result": "It's **{result}**."
+    },
+    "roll": {
+        "invalid": "Invalid notation. Use format like `1d20` or `3d6+5`.",
+        "diceRange": "Please keep the number of dice between 1 and 20.",
+        "sidesRange": "Please keep the number of sides between 1 and 1000.",
+        "title": "Rolled {dice}",
+        "rolls": "**Rolls:** {rolls}\n",
+        "total": "**Total:** {total} = **{final}**"
+    },
+    "fight": {
+        "selfTitle": "Can't fight yourself",
+        "selfText": "**{name}**, that would be a draw before it starts. Pick someone else.",
+        "botTitle": "Can't fight a bot",
+        "botText": "Bots don't fight back. Pick a real person.",
+        "start": "**{challenger}** challenges **{opponent}** to a fight. {rounds} rounds.",
+        "action": {
+            "punch": "**Round {round}:** {attacker} throws a wild punch on {target} for {damage} damage.",
+            "critical": "**Round {round}:** {attacker} lands a critical hit on {target} for {damage} damage.",
+            "spell": "**Round {round}:** {attacker} uses a weak spell on {target} for {damage} damage.",
+            "parry": "**Round {round}:** {attacker} parries and counterattacks on {target} for {damage} damage."
+        },
+        "winner": "**{winner}** beats {loser}.",
+        "title": "Fight over"
+    },
+    "count": {
+        "textChannel": "Please choose a text channel for the counting game.",
+        "alreadyActive": "This server already has an active counting channel configured: <#{channelId}>. Disable the current counting game first, or use that existing channel.",
+        "onTitle": "Counting game on",
+        "onText": "Counting is on in {channel} (**{system}**). Start at **1**. Nobody can post two numbers in a row.",
+        "offTitle": "Counting game off",
+        "alreadyOff": "The counting game is already off.",
+        "turnedOff": "The counting game is turned off.",
+        "status": {
+            "enabled": "Enabled",
+            "yes": "Yes",
+            "no": "No",
+            "channel": "Channel",
+            "notConfigured": "Not configured",
+            "system": "System",
+            "next": "Next count",
+            "streak": "Current streak",
+            "best": "Best streak",
+            "last": "Last counter",
+            "none": "None",
+            "title": "Counting game",
+            "description": "Current settings and streaks."
+        },
+        "enableFirst": "Enable the counting game first with `/count setup`.",
+        "resetTitle": "Counting reset",
+        "resetText": "Count reset. Start again with **{start}** in <#{channelId}>.",
+        "leaderboardTitle": "Counting leaderboard",
+        "leaderboardEmpty": "Nobody has counted yet.",
+        "invalidAction": "Please choose a valid counting game action.",
+        "failed": "Something went wrong while managing the counting game."
+    },
+    "slash": {
+        "fun": {
+            "description": "Quick games: fights, coin flips and dice",
+            "sub": {
+                "fight": {
+                    "description": "Start a simulated 1v1 text battle",
+                    "options": {
+                        "opponent": "The user to fight."
+                    }
+                },
+                "flip": {
+                    "description": "Flip a coin"
+                },
+                "roll": {
+                    "description": "Roll dice (e.g. 2d20, 1d6 + 5)",
+                    "options": {
+                        "notation": "The dice notation (e.g., 2d6, 1d20 + 4)"
+                    }
+                }
+            }
+        },
+        "count": {
+            "description": "Manage the server counting game",
+            "sub": {
+                "setup": {
+                    "description": "Start a counting game in a text channel",
+                    "options": {
+                        "channel": "The channel where counting will take place",
+                        "system": "The counting system to use"
+                    }
+                },
+                "disable": {
+                    "description": "Disable the counting game for this server"
+                },
+                "status": {
+                    "description": "View current counting game status"
+                },
+                "reset": {
+                    "description": "Reset the current counting sequence",
+                    "options": {
+                        "start": "The number to start at after reset"
+                    }
+                },
+                "leaderboard": {
+                    "description": "Show the counting game leaderboard"
+                }
+            }
+        }
+    }
+}

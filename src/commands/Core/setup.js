@@ -5,6 +5,7 @@
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { textForInteraction } from '../../utils/botText.js';
+import { localized } from './modules/commandText.js';
 import { collectSetupState, defaultSetupData, setupReply } from '../../services/setup/setupGuide.js';
 
 /** Runs /setup. `data` is injectable for tests (services/setup/setupGuide.js defaultSetupData). */
@@ -21,7 +22,8 @@ export default {
     slashOnly: true,
     data: new SlashCommandBuilder()
         .setName('setup')
-        .setDescription('See what is set up in this server, open the dashboard, browse all commands'),
+        .setDescription('See what is set up in this server, open the dashboard, browse all commands')
+        .setDescriptionLocalizations(localized('core.slash.setup.description')),
 
     async execute(interaction, guildConfig, client) {
         return runSetup(interaction, guildConfig, client);

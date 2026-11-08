@@ -1,0 +1,504 @@
+{
+    "embed": {
+        "preview": {
+            "empty": "*(Empty. Use the menu below to add something.)*"
+        },
+        "dash": {
+            "title": "Embed builder",
+            "footer": "The preview above updates live · Closes after 15 min",
+            "label": {
+                "title": "Title",
+                "description": "Description",
+                "colour": "Colour",
+                "author": "Author",
+                "footer": "Footer",
+                "thumbnail": "Thumbnail",
+                "image": "Image",
+                "timestamp": "Timestamp",
+                "fields": "Fields"
+            },
+            "notSet": "Not set",
+            "default": "Default",
+            "set": "Set",
+            "on": "On",
+            "off": "Off",
+            "characters": {
+                "one": "{count} character(s)",
+                "other": "{count} character(s)"
+            }
+        },
+        "menu": {
+            "placeholder": "What do you want to change?",
+            "template": {
+                "label": "Start from a template",
+                "description": "Ready-made announcements, like how to appeal"
+            },
+            "content": {
+                "label": "Edit content",
+                "description": "Set the title and description"
+            },
+            "colour": {
+                "label": "Colour",
+                "description": "Pick a preset or type a hex code"
+            },
+            "author": {
+                "label": "Author",
+                "description": "The name line at the top of the embed"
+            },
+            "footer": {
+                "label": "Footer",
+                "description": "Footer text and icon"
+            },
+            "images": {
+                "label": "Images",
+                "description": "Thumbnail or large image"
+            },
+            "addField": {
+                "label": "Add field ({count}/{max})",
+                "description": "Add a new field"
+            },
+            "editField": {
+                "label": "Edit field",
+                "description": "Change a field's name, value or layout"
+            },
+            "removeField": {
+                "label": "Remove field",
+                "description": "Delete a field"
+            },
+            "reorder": {
+                "label": "Reorder fields",
+                "description": "Move a field up or down"
+            },
+            "timestamp": {
+                "off": "Turn timestamp off",
+                "on": "Turn timestamp on",
+                "description": "Show the time in the footer"
+            },
+            "post": {
+                "label": "Post embed",
+                "description": "Send it to a channel"
+            },
+            "json": {
+                "label": "Show JSON",
+                "description": "See the raw JSON"
+            },
+            "reset": {
+                "label": "Start over",
+                "description": "Clear everything"
+            }
+        },
+        "content": {
+            "modalTitle": "Edit content",
+            "titleLabel": "Title (max 256 characters)",
+            "titlePlaceholder": "Title",
+            "descriptionLabel": "Description (max 4000 characters)",
+            "descriptionPlaceholder": "Text of the embed"
+        },
+        "color": {
+            "placeholder": "Pick a colour",
+            "customDescription": "Type your own #RRGGBB",
+            "title": "Colour",
+            "intro": "Pick a preset, or **Custom hex** to type your own `#RRGGBB`.",
+            "modalTitle": "Custom colour",
+            "hexLabel": "Hex colour code",
+            "invalid": "`{hex}` isn't a valid hex colour. Use `#RRGGBB` (e.g. `#5865F2`).",
+            "preset": {
+                "primary": "Primary (Blue)",
+                "success": "Success (Green)",
+                "error": "Error (Red)",
+                "warning": "Warning (Yellow)",
+                "info": "Info (Bright blue)",
+                "blurple": "Blurple (Discord)",
+                "fuchsia": "Fuchsia",
+                "gold": "Gold",
+                "white": "White",
+                "dark": "Dark",
+                "custom": "Custom hex"
+            }
+        },
+        "template": {
+            "groupPlaceholder": "Pick a group",
+            "title": "Start from a template",
+            "intro": "Pick a group, then a template. It replaces the title, text and colour. Edit it before you post: parts in [square brackets] are for you to fill in.",
+            "pickPlaceholder": "Pick a template",
+            "loadedTitle": "Template loaded",
+            "loaded": "\"{name}\" is in the preview. Use Edit content to change it.",
+            "count": {
+                "one": "{count} template",
+                "other": "{count} templates"
+            }
+        },
+        "author": {
+            "modalTitle": "Author",
+            "nameLabel": "Author name (empty to remove)",
+            "namePlaceholder": "Name",
+            "iconLabel": "Author icon URL (optional)",
+            "urlLabel": "Author link URL (optional)",
+            "badIcon": "Author icon URL must be a valid `https://` URL.",
+            "badUrl": "Author link URL must be a valid `https://` URL."
+        },
+        "footer": {
+            "modalTitle": "Footer",
+            "textLabel": "Footer text (empty to remove)",
+            "textPlaceholder": "Footer text",
+            "iconLabel": "Footer icon URL (optional)",
+            "badIcon": "Footer icon URL must be a valid `https://` URL."
+        },
+        "images": {
+            "setThumbnail": {
+                "label": "Set thumbnail",
+                "description": "Small image in the top right"
+            },
+            "setImage": {
+                "label": "Set large image",
+                "description": "Wide image at the bottom"
+            },
+            "clearThumbnail": {
+                "label": "Clear thumbnail",
+                "description": "Remove the current thumbnail"
+            },
+            "clearImage": {
+                "label": "Clear large image",
+                "description": "Remove the current large image"
+            },
+            "title": "Images",
+            "intro": "Pick an image to set or remove.",
+            "thumbnailField": "Thumbnail",
+            "imageField": "Large Image",
+            "view": "View",
+            "thumbnailTitle": "Thumbnail",
+            "imageTitle": "Large image",
+            "urlLabel": "Image URL",
+            "badUrl": "The image URL must be a public `https://` link."
+        },
+        "field": {
+            "max": "Embeds can have a maximum of {max} fields.",
+            "addTitle": "Add field",
+            "nameLabel": "Field name (max 256 characters)",
+            "namePlaceholder": "Name",
+            "valueLabel": "Field value (max 1024 characters)",
+            "valuePlaceholder": "Text of the field",
+            "inlineNo": "No, full width",
+            "inlineYes": "Yes, side-by-side",
+            "inlineLabel": "Display inline?",
+            "editPlaceholder": "Pick a field to edit",
+            "inline": "Inline",
+            "block": "Block",
+            "editTitle": "Edit field",
+            "editIntro": "Pick the field you want to change.",
+            "editModalTitle": "Edit field {n}",
+            "editNameLabel": "Field name",
+            "editValueLabel": "Field value",
+            "removePlaceholder": "Pick a field to remove",
+            "removeTitle": "Remove field",
+            "removeIntro": "Pick the field you want to delete.",
+            "reorderPlaceholder": "Pick a field to move",
+            "reorderTitle": "Reorder fields",
+            "reorderIntro": "Pick a field, then move it up or down.",
+            "up": "Move up",
+            "down": "Move down",
+            "cancel": "Cancel",
+            "moveTitle": "Move field",
+            "moving": "Moving **{name}**. It is at position **{position}** of **{total}**."
+        },
+        "post": {
+            "empty": "Add a title, text or a field first.",
+            "channelPlaceholder": "Pick a channel",
+            "title": "Post embed",
+            "intro": "Pick the channel to post it in.",
+            "noChannel": "I couldn't find that channel.",
+            "noPermission": "I need **Send Messages** and **Embed Links** permissions in {channel} to post there.",
+            "postedTitle": "Embed posted",
+            "posted": "Posted in {channel}."
+        },
+        "json": {
+            "title": "Embed JSON",
+            "tooLong": "The JSON is too long to show here. See the attached file."
+        },
+        "error": {
+            "generic": "An error occurred.",
+            "unexpected": "An unexpected error occurred.",
+            "open": "Failed to open the embed builder."
+        }
+    },
+    "slash": {
+        "embedbuilder": {
+            "description": "Build an embed with a live preview and post it"
+        },
+        "tools": {
+            "description": "Small utilities: calculator, converters, passwords and more",
+            "sub": {
+                "calculate": {
+                    "description": "Evaluate a math expression",
+                    "options": {
+                        "expression": "The mathematical expression to evaluate (e.g., 2+2*3, sin(45 deg), 16^0.5)"
+                    }
+                },
+                "baseconvert": {
+                    "description": "Convert numbers between bases",
+                    "options": {
+                        "number": "The number to convert",
+                        "from": "Source base/format",
+                        "to": "Target base/format (default: all)"
+                    }
+                },
+                "hexcolor": {
+                    "description": "Random hex color with preview",
+                    "options": {
+                        "color": "Specific hex color (e.g., #FF5733 or FF5733)"
+                    }
+                },
+                "generatepassword": {
+                    "description": "Generate a strong random password",
+                    "options": {
+                        "length": "Password length (default: 16, max: 50)",
+                        "uppercase": "Include uppercase letters (A-Z)",
+                        "numbers": "Include numbers (0-9)",
+                        "symbols": "Include symbols (!@#$%^&*)"
+                    }
+                },
+                "time": {
+                    "description": "Current time in different timezones",
+                    "options": {
+                        "timezone": "The timezone to display (e.g., UTC, America/New_York)"
+                    }
+                },
+                "unixtime": {
+                    "description": "Current Unix timestamp"
+                },
+                "randomuser": {
+                    "description": "Pick a random member",
+                    "options": {
+                        "role": "Limit selection to users with this role",
+                        "bots": "Include bots in the selection (default: false)",
+                        "online": "Only select from online users (default: false)",
+                        "mention": "Mention the selected user (default: false)"
+                    }
+                }
+            }
+        },
+        "countdown": {
+            "description": "Start a countdown timer",
+            "options": {
+                "minutes": "Number of minutes to count down (0-1440)",
+                "seconds": "Number of seconds to count down (0-59)",
+                "title": "Optional title for the countdown"
+            }
+        },
+        "poll": {
+            "description": "Post a poll, or end one early",
+            "sub": {
+                "create": {
+                    "description": "Post a Discord poll with 2 to 10 options",
+                    "options": {
+                        "question": "The poll question",
+                        "option1": "First option: up to 55 characters, 100 if anonymous",
+                        "option2": "Second option: up to 55 characters, 100 if anonymous",
+                        "option3": "Third option (optional): up to 55 characters, 100 if anonymous",
+                        "option4": "Fourth option (optional): up to 55 characters, 100 if anonymous",
+                        "option5": "Fifth option (optional): up to 55 characters, 100 if anonymous",
+                        "option6": "Sixth option (optional): up to 55 characters, 100 if anonymous",
+                        "option7": "Seventh option (optional): up to 55 characters, 100 if anonymous",
+                        "option8": "Eighth option (optional): up to 55 characters, 100 if anonymous",
+                        "option9": "Ninth option (optional): up to 55 characters, 100 if anonymous",
+                        "option10": "Tenth option (optional): up to 55 characters, 100 if anonymous",
+                        "hours": "How long the poll stays open, in hours: 1 to 168 (7 days). Default 24.",
+                        "multiple": "Let members pick more than one option (default: no)",
+                        "anonymous": "Use a number-reaction poll instead, since Discord polls list who voted. No time limit."
+                    }
+                },
+                "end": {
+                    "description": "End one of Mewvo's Discord polls now and show the final results",
+                    "options": {
+                        "message_link": "The poll's message link (right-click the poll, then Copy Message Link)"
+                    }
+                }
+            }
+        },
+        "shorten": {
+            "description": "Shorten a URL using is.gd",
+            "options": {
+                "url": "The URL to shorten",
+                "custom": "Custom URL ending (optional)"
+            }
+        }
+    },
+    "common": {
+        "unknownSubcommand": "Unknown subcommand."
+    },
+    "calculate": {
+        "badCharacters": "**That has characters the calculator can't use.**\n\nAllowed: numbers, decimals, + - * / ^ %, sin cos tan sqrt abs log exp, pi e, ()\nNot allowed: square brackets, curly braces and other symbols",
+        "looksLikeCode": "**That looks like code, not maths.**\n\n**Blocked:** import, require, eval, Function, setTimeout, setInterval, process, fs, document, window, fetch, loops, async/await\n\nOnly plain maths works here.",
+        "noResult": "No result",
+        "history": "History",
+        "resultTitle": "Result",
+        "resultBody": "**Expression:** `{expression}`\n**Result:** `{result}`\n\n-# Use the buttons to keep calculating with this result.",
+        "noHistory": "No calculation history found.",
+        "historyTitle": "**Your recent calculations**\n\n{list}",
+        "modalTitle": {
+            "add": "Enter a number to add",
+            "subtract": "Enter a number to subtract",
+            "multiply": "Enter a number to multiply",
+            "divide": "Enter a number to divide"
+        },
+        "operandLabel": "Number to {operator} with {result}",
+        "operandPlaceholder": "Enter a number...",
+        "modalFailed": "Couldn't open the calculator. Try again.",
+        "buttonFailed": "An error occurred while processing your request.",
+        "expiredButton": "Calculator Expired",
+        "timedOut": "This calculator timed out. Run the command again to keep going.",
+        "evalFailed": "Failed to evaluate the expression.",
+        "unsupported": "The expression contains an unsupported operation or function.",
+        "undefinedSymbol": "The expression contains an undefined variable or function.",
+        "unbalanced": "The expression has unbalanced brackets.",
+        "badOperator": "The expression contains an invalid operator or character.",
+        "checkAgain": "Check the expression and try again.",
+        "modal": {
+            "noContext": "Failed to retrieve calculation context.",
+            "notYours": "This isn't your calculator.",
+            "contextTimedOut": "This calculation timed out. Start a new one.",
+            "notNumber": "That isn't a number.",
+            "updatedBody": "**Expression:** `{expression}`\n**Result:** `{result}`\n\n*Use the buttons in the channel message to perform more operations.*",
+            "failed": "An error occurred processing your calculation."
+        }
+    },
+    "baseconvert": {
+        "base": {
+            "BIN": "Binary",
+            "OCT": "Octal",
+            "DEC": "Decimal",
+            "HEX": "Hexadecimal",
+            "B64": "Base64",
+            "B36": "Base36",
+            "B58": "Base58",
+            "B62": "Base62"
+        },
+        "noNumber": "You must provide a number to convert.\n\n**Example:** `/baseconvert number:1010 from:BIN to:DEC`",
+        "example": {
+            "BIN": "\n\n**Valid:** 101, 1010, 11111 | **Invalid:** 5 (digit 5 not allowed)",
+            "OCT": "\n\n**Valid:** 77, 123, 755 | **Invalid:** 8 (only 0-7 allowed)",
+            "DEC": "\n\n**Valid:** 42, 123, 999 | **Invalid:** 12.34 (no decimals)",
+            "HEX": "\n\n**Valid:** FF, A1B2, DEADBEEF | **Invalid:** G (only 0-9, A-F)"
+        },
+        "badInput": "You provided: `{input}`\n\nValid characters: `{alphabet}`{examples}",
+        "tooLarge": "The number is too large to process.\n\nTry with a smaller number.",
+        "title": "Base conversion",
+        "fromTo": "**From {fromName} ({fromBase}):** `{from}`\n**To {toName} ({toBase}):** `{to}`\n**Decimal:** `{decimal}`",
+        "resultTooLarge": "The result would be too large or incompatible.\n\nTry with a smaller number or different target base.",
+        "input": "**Input ({fromName}):** `{from}`\n",
+        "decimal": "**Decimal:** `{decimal}`\n\n",
+        "row": "**{name} ({base}):** `{value}`\n",
+        "rowTooLarge": "**{name} ({base}):** *Too large to convert*\n"
+    },
+    "hexcolor": {
+        "invalid": "That isn't a valid hex code.\n\n**Valid formats:**\n• `#FF5733` (with hash)\n• `FF5733` (without hash)\n• `F57` (3-digit shorthand)\n\n**Invalid:** `#GG5733` (G is not a hex digit)",
+        "title": "Colour info",
+        "body": "**Hex:** `{hex}`\n**RGB:** `{rgb}`\n**HSL:** `{hsl}`\n**Name:** {name}",
+        "custom": "Custom Color",
+        "closeTo": "Close to {color}",
+        "random": "Randomly generated color",
+        "failed": "Couldn't get the colour info. Try again.",
+        "color": {
+            "red": "Red",
+            "green": "Green",
+            "blue": "Blue",
+            "yellow": "Yellow",
+            "magenta": "Magenta",
+            "cyan": "Cyan",
+            "black": "Black",
+            "white": "White",
+            "gray": "Gray",
+            "orange": "Orange",
+            "purple": "Purple",
+            "brown": "Brown",
+            "pink": "Pink",
+            "darkGreen": "Dark Green",
+            "navy": "Navy",
+            "gold": "Gold",
+            "silver": "Silver",
+            "tomato": "Tomato",
+            "turquoise": "Turquoise",
+            "lavender": "Lavender"
+        }
+    },
+    "password": {
+        "badLength": "Password must be 8-50 characters. You provided: {length}",
+        "strength": {
+            "weak": "Weak",
+            "good": "Good",
+            "strong": "Strong",
+            "veryStrong": "Very strong"
+        },
+        "title": "Your password",
+        "body": "**Password:** ||`{password}`||\n**Length:** {length}\n**Strength:** {strength}\n**Contains:** {contains}",
+        "characters": {
+            "one": "{count} character",
+            "other": "{count} characters"
+        },
+        "lowercase": "Lowercase",
+        "uppercase": "Uppercase",
+        "numbers": "Numbers",
+        "symbols": "Symbols"
+    },
+    "randomuser": {
+        "guildOnly": "This command can only be used in a server/guild.",
+        "pickFailed": "Could not pick a member. Try adjusting your filters.",
+        "title": "Random member",
+        "username": "Username",
+        "bot": "Bot",
+        "yes": "Yes",
+        "no": "No",
+        "roles": "Roles ({count})",
+        "more": "+{count} more",
+        "noRoles": "No roles",
+        "fromCache": "Picked from the members Mewvo has cached; the full member list was not loaded.",
+        "again": "Pick another",
+        "picked": "{member}, you were picked.",
+        "noMatch": "No users found matching the criteria.",
+        "againFailed": "An error occurred while selecting another user."
+    },
+    "time": {
+        "unknownZone": "Unknown timezone. Try something like UTC, America/New_York or Europe/London.",
+        "title": "Current time",
+        "body": "**{zone}:** {time}\n**Unix Timestamp:** `{unix}`\n**ISO String:** `{iso}`",
+        "failed": "Couldn't get the time. Try again."
+    },
+    "unixtime": {
+        "title": "Unix timestamp",
+        "body": "**Seconds since Unix Epoch:** `{seconds}`\n**Milliseconds since Unix Epoch:** `{ms}`\n\n**Human-readable (UTC):** {utc}\n**ISO String:** {iso}",
+        "failed": "Couldn't get the timestamp. Try again."
+    },
+    "countdown": {
+        "defaultTitle": "Countdown",
+        "tooShort": "The duration has to be at least 1 second.",
+        "tooLong": "Countdown cannot be longer than 24 hours.",
+        "started": "Countdown started.",
+        "pause": "Pause",
+        "resume": "Resume",
+        "cancel": "Cancel",
+        "remaining": "Time remaining: **{time}** (ends {ends})",
+        "remainingPaused": "Time remaining: **{time}**",
+        "finishedTitle": "{title} (finished)",
+        "finished": "Time's up.",
+        "pausedTitle": "{title} (paused)",
+        "cancelledTitle": "{title} (cancelled)",
+        "cancelledBody": "The countdown was cancelled.",
+        "expired": "This countdown has expired or was cancelled.",
+        "adminOnly": "You need the Administrator role to control countdowns.",
+        "resumed": "Countdown resumed.",
+        "paused": "Countdown paused.",
+        "cancelled": "Countdown cancelled.",
+        "failed": "An error occurred controlling the countdown."
+    },
+    "poll": {
+        "ended": "Poll ended. The final results are now shown on it: {url}",
+        "ignored": " Hours and multiple only apply to Discord polls, so they were ignored.",
+        "reactionPosted": "Reaction poll posted.{ignored}",
+        "posted": "Poll posted. It closes <t:{unix}:F> (<t:{unix}:R>). To close it early, use /poll end with this link: {url}"
+    },
+    "shorten": {
+        "failed": "Couldn't shorten that link. Try again later.",
+        "title": "URL Shortened",
+        "body": "Here's your shortened URL: {url}"
+    }
+}

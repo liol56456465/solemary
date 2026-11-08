@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, ChannelType } from 'discord.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+import { localized, replyText } from '../Core/modules/commandText.js';
 
 import report from './modules/report.js';
 import reportSetchannel from './modules/report_setchannel.js';
@@ -9,21 +10,25 @@ export default {
     data: new SlashCommandBuilder()
         .setName('report')
         .setDescription('Report a user to server staff, or configure where reports are sent.')
+        .setDescriptionLocalizations(localized('utility.slash.report.description'))
         .setDMPermission(false)
         .addSubcommand(subcommand =>
             subcommand
                 .setName('file')
                 .setDescription('Report a user to the server moderation team.')
+                .setDescriptionLocalizations(localized('utility.slash.report.sub.file.description'))
                 .addUserOption(option =>
                     option
                         .setName('user')
                         .setDescription('The user you want to report.')
+                        .setDescriptionLocalizations(localized('utility.slash.report.sub.file.options.user'))
                         .setRequired(true),
                 )
                 .addStringOption(option =>
                     option
                         .setName('reason')
                         .setDescription('The reason for the report (be detailed).')
+                        .setDescriptionLocalizations(localized('utility.slash.report.sub.file.options.reason'))
                         .setRequired(true)
                         .setMaxLength(500),
                 ),
@@ -32,10 +37,12 @@ export default {
             subcommand
                 .setName('setchannel')
                 .setDescription('Set the channel where user reports are sent. (Administrator)')
+                .setDescriptionLocalizations(localized('utility.slash.report.sub.setchannel.description'))
                 .addChannelOption(option =>
                     option
                         .setName('channel')
                         .setDescription('The text channel to receive reports.')
+                        .setDescriptionLocalizations(localized('utility.slash.report.sub.setchannel.options.channel'))
                         .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                         .setRequired(true),
                 ),
@@ -53,6 +60,6 @@ export default {
             return await reportSetchannel.execute(interaction, config, client);
         }
 
-        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Unknown subcommand.' });
+        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: replyText(interaction).t('utility.report.unknownSubcommand') });
     },
 };

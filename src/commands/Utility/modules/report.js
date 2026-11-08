@@ -6,6 +6,8 @@ import { formatLogLine, resolveUserAuthor } from '../../../utils/logging/logEmbe
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { logger } from '../../../utils/logger.js';
+import { textForGuild } from '../../../utils/botText.js';
+import { replyText } from '../../Core/modules/commandText.js';
 import { checkRateLimit } from '../../../utils/rateLimiter.js';
 
 // Each report pings the server owner, so members may file only a few at a time.
@@ -21,8 +23,11 @@ export default {
         }
 
         const guildId = interaction.guildId;
+        // The answers are private (the reporter's language); the post in the report channel is the server's.
+        const tr = replyText(interaction);
+        const staff = textForGuild(guildId, { purpose: 'public' });
         if (!(await checkRateLimit(`report:${guildId}:${interaction.user.id}`, REPORT_LIMIT, REPORT_WINDOW_MS))) {
-            return await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: 'You have filed several reports recently. Please wait a few minutes before filing another.' });
+            return await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: tr.t('utility.report.rateLimited') });
         }
 
         const targetUser = interaction.options.getUser('user');
@@ -32,12 +37,12 @@ export default {
         const reportChannelId = resolveLogChannel(guildConfig, 'reports');
 
         if (!reportChannelId) {
-            return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'The report channel has not been set up. Ask a moderator to use `/logging dashboard` or `/logging channel`.' });
+            return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('utility.report.noChannel') });
         }
 
         const ownerMention = interaction.guild.ownerId
-            ? `<@${interaction.guild.ownerId}> New report`
-            : 'New report';
+            ? staff.t('utility.report.ownerPing', { ownerId: interaction.guild.ownerId })
+            : staff.t('utility.report.newReport');
 
         const sent = await logEvent({
             client,
@@ -45,13 +50,13 @@ export default {
             eventType: EVENT_TYPES.REPORT_FILE,
             content: ownerMention,
             data: {
-                title: 'User Report',
+                title: staff.t('utility.report.logTitle'),
                 lines: [
-                    formatLogLine('Reported User', `${targetUser.tag} (\`${targetUser.id}\`)`),
-                    formatLogLine('Reported By', `${interaction.user.tag} (\`${interaction.user.id}\`)`),
-                    formatLogLine('Channel', interaction.channel.toString()),
+                    formatLogLine(staff.t('utility.report.reportedUser'), `${targetUser.tag} (\`${targetUser.id}\`)`),
+                    formatLogLine(staff.t('utility.report.reportedBy'), `${interaction.user.tag} (\`${interaction.user.id}\`)`),
+                    formatLogLine(staff.t('utility.report.channel'), interaction.channel.toString()),
                 ],
-                blockFields: [{ name: 'Reason', value: reason }],
+                blockFields: [{ name: staff.t('utility.report.reason'), value: reason }],
                 author: await resolveUserAuthor(client, targetUser.id),
                 thumbnail: targetUser.displayAvatarURL(),
             },
@@ -60,13 +65,13 @@ export default {
         // logEvent returns null (without throwing) when logging is disabled, the channel
         // is gone, or the bot lacks permissions there — don't claim the report was filed.
         if (!sent) {
-            return await replyUserError(interaction, { type: ErrorTypes.CONFIGURATION, message: 'Your report could not be delivered: the report channel is missing, logging is disabled, or I lack permission to post there. Please contact a moderator directly.' });
+            return await replyUserError(interaction, { type: ErrorTypes.CONFIGURATION, message: tr.t('utility.report.notDelivered') });
         }
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [createEmbed({
-                title: 'Report Submitted',
-                description: `Your report against **${targetUser.tag}** was sent to the moderators. Thanks for letting us know.`,
+                title: tr.t('utility.report.submittedTitle'),
+                description: tr.t('utility.report.submitted', { tag: targetUser.tag }),
             })],
         });
 

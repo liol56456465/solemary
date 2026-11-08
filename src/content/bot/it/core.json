@@ -1,0 +1,364 @@
+{
+    "help": {
+        "menu": {
+            "allLabel": "Tutti i comandi",
+            "allDescription": "Tutti i comandi in un unico elenco",
+            "categoryDescription": "Comandi: {category}",
+            "title": "Guida di {bot}",
+            "description": "supportaci con un boost",
+            "gettingStarted": "Per iniziare",
+            "adminSteps": "1. **/configwizard** imposta il ruolo moderatore e il canale dei log.\n2. **/commands dashboard** attiva o disattiva le categorie.\n3. Scegli una categoria nel menu qui sotto per vederne i comandi.",
+            "memberSteps": "Scegli una categoria nel menu qui sotto per vederne i comandi.\nTi serve lo staff? Scrivi al bot in DM: il tuo messaggio arriva allo staff in privato (modmail).",
+            "access": "Accesso",
+            "accessAdmin": "• I comandi con 🔒 richiedono il permesso **Amministratore**; gli altri sono per tutti.",
+            "accessMember": "• Questo elenco mostra i comandi che puoi usare.",
+            "accessSetup": "• **/setup** mostra cosa è configurato in questo server, con un link alla dashboard.",
+            "accessAppeals": "• **/setappeal** pubblica i pannelli dei ricorsi; **/appeals** elenca, mostra e decide i ricorsi.",
+            "goodToKnow": "Buono a sapersi",
+            "goodToKnowText": "• La maggior parte delle funzioni ha un comando dashboard per le impostazioni\n• Le impostazioni sono salvate per server",
+            "supportButton": "Server di supporto",
+            "placeholder": "Scegli una categoria"
+        },
+        "closed": {
+            "title": "Menu della guida chiuso",
+            "description": "Esegui di nuovo /help per aprirlo."
+        },
+        "bug": {
+            "button": "Apri il server di supporto",
+            "title": "Segnala un bug",
+            "description": "Raccontaci nel server di supporto cosa è successo. Aiuta se includi:\n- cosa hai fatto (il comando e le sue opzioni)\n- cosa ti aspettavi e cosa è successo invece\n- uno screenshot, se ne hai uno"
+        },
+        "list": {
+            "categoryTitle": "Comandi: {category}",
+            "click": "Clicca su un comando per usarlo.",
+            "empty": "Non ci sono ancora comandi in **{category}**.",
+            "commands": "Comandi",
+            "commandsCont": "Comandi (continua)",
+            "commandsPage": "Comandi (pagina {page})",
+            "back": "Indietro",
+            "noDescription": "Nessuna descrizione",
+            "allTitle": "Tutti i comandi",
+            "changePage": "Usa i pulsanti qui sotto per cambiare pagina."
+        }
+    },
+    "commands": {
+        "manageServer": "Ti serve il permesso **Gestisci server** per gestire i comandi.",
+        "updateFailed": "Impossibile aggiornare l’accesso ai comandi.",
+        "noCategory": "Nessuna categoria corrisponde a `{target}`. Usa `/commands dashboard` per sfogliare le categorie.",
+        "categoryDisabled": {
+            "title": "Categoria disattivata",
+            "text": "Tutti i comandi **{category}** ora sono disattivati.\n`/commands` e `/configwizard` restano attivi."
+        },
+        "categoryEnabled": {
+            "title": "Categoria attivata",
+            "text": "I comandi **{category}** sono di nuovo attivi, tranne quelli che hai disattivato uno per uno."
+        },
+        "commandDisabled": {
+            "title": "Comando disattivato",
+            "text": "`/{command}` ora è disattivato in questo server."
+        },
+        "commandEnabled": {
+            "title": "Comando attivato",
+            "text": "`/{command}` ora è attivo in questo server."
+        },
+        "dashboard": {
+            "status": {
+                "on": "Attivo",
+                "partial": "In parte attivo",
+                "off": "Disattivato",
+                "always": "Attivo (sempre)"
+            },
+            "title": "Accesso ai comandi",
+            "description": "Comandi per **{server}**. I sottocomandi (come `birthday list`) contano da soli.",
+            "footer": "/commands e /configwizard restano sempre attivi",
+            "summary": "Riepilogo",
+            "summaryCommands": "**{on}/{total}** comandi attivi",
+            "summaryCategories": "Categorie: {full} del tutto attive · {partial} in parte · {off} disattivate",
+            "categories": "Categorie",
+            "categoriesCont": "Categorie (continua)",
+            "howTo": "Come si usa",
+            "howToOverview": "• Scegli una categoria qui sotto per attivarne o disattivarne i comandi\n• `/commands disable` disattiva una categoria o un comando\n• `/commands enable` li riattiva",
+            "categoryOff": "Categoria disattivata",
+            "everythingOn": "Tutto attivo",
+            "someOff": "{off} su {total} disattivati",
+            "statusField": "Stato",
+            "countField": "Numero",
+            "countValue": "{on}/{total} attivi",
+            "commands": "Comandi",
+            "commandsCont": "Comandi (continua)",
+            "howToCategory": "• Scegli un comando nel menu per attivarlo o disattivarlo\n• **Disattiva tutti** disattiva l’intera categoria\n• **Annulla eccezioni** riattiva quelli che hai disattivato uno per uno",
+            "categoryDescription": "Accesso ai comandi per **{server}**.",
+            "categoryFooter": "I comandi segnati «sempre» non si possono disattivare",
+            "pickCategory": "Scegli una categoria",
+            "refresh": "Aggiorna",
+            "pickToOff": "Attivo. Scegli per disattivare.",
+            "pickToOn": "Disattivato. Scegli per attivare.",
+            "back": "Indietro",
+            "turnCategoryOn": "Attiva la categoria",
+            "turnCategoryOff": "Disattiva la categoria",
+            "enableAll": "Attiva tutti",
+            "disableAll": "Disattiva tutti",
+            "clearOverrides": "Annulla eccezioni",
+            "pickCommand": "Attiva o disattiva un comando",
+            "otherServer": "Questa dashboard appartiene a un altro server.",
+            "unknownAction": "Azione della dashboard sconosciuta."
+        }
+    },
+    "slash": {
+        "help": {
+            "description": "Mostra i comandi che puoi usare"
+        },
+        "commands": {
+            "description": "Attiva o disattiva comandi e categorie del bot in questo server",
+            "sub": {
+                "dashboard": {
+                    "description": "Attiva o disattiva i comandi con i pulsanti"
+                },
+                "disable": {
+                    "description": "Disattiva un comando o un’intera categoria",
+                    "options": {
+                        "scope": "Disattiva un solo comando o tutta una categoria",
+                        "target": "Categoria o nome del comando"
+                    }
+                },
+                "enable": {
+                    "description": "Attiva un comando o un’intera categoria",
+                    "options": {
+                        "scope": "Attiva un solo comando o tutta una categoria",
+                        "target": "Categoria o nome del comando"
+                    }
+                }
+            }
+        },
+        "ping": {
+            "description": "Controlla la latenza del bot"
+        },
+        "stats": {
+            "description": "Vedi le statistiche del bot"
+        },
+        "uptime": {
+            "description": "Vedi da quanto tempo il bot è online"
+        },
+        "support": {
+            "description": "Ottieni il link del server di supporto"
+        },
+        "setup": {
+            "description": "Vedi cosa è configurato qui, apri la dashboard, sfoglia tutti i comandi"
+        },
+        "configwizard": {
+            "description": "Apri le impostazioni del server e la configurazione guidata"
+        },
+        "premium": {
+            "description": "Il tuo piano Mewvo",
+            "sub": {
+                "status": {
+                    "description": "Mostra il tuo piano e quando scade"
+                },
+                "redeem": {
+                    "description": "Riscatta una chiave Mewvo",
+                    "options": {
+                        "key": "MEWVO-XXXX-XXXX-XXXX"
+                    }
+                },
+                "gift": {
+                    "description": "Regala un piano a qualcuno (modalità test, nessun addebito)",
+                    "options": {
+                        "user": "Chi lo riceve",
+                        "plan": "Quale piano",
+                        "period": "Per quanto tempo (predefinito: un mese)",
+                        "message": "Un breve messaggio con il regalo"
+                    }
+                }
+            }
+        }
+    },
+    "ping": {
+        "pinging": "Misuro...",
+        "title": "Pong!",
+        "botLatency": "Latenza del bot",
+        "apiLatency": "Latenza dell'API",
+        "ms": "{value} ms",
+        "errorTitle": "Qualcosa è andato storto",
+        "error": "Non è stato possibile misurare la latenza."
+    },
+    "stats": {
+        "title": "Statistiche del bot",
+        "servers": "Server",
+        "users": "Utenti",
+        "memory": "Memoria",
+        "errorTitle": "Qualcosa è andato storto",
+        "error": "Non è stato possibile ottenere le statistiche."
+    },
+    "uptime": {
+        "title": "Tempo online",
+        "value": "{days} g {hours} h {minutes} min {seconds} s",
+        "errorTitle": "Qualcosa è andato storto",
+        "error": "Non è stato possibile calcolare il tempo online."
+    },
+    "support": {
+        "button": "Entra nel server di supporto",
+        "privacy": "Informativa sulla privacy",
+        "terms": "Termini",
+        "title": "Ti serve aiuto?",
+        "text": "Entra nel server di supporto di Mewvo per fare domande, presentare ricorso, segnalare bug o suggerire funzioni.",
+        "errorTitle": "Qualcosa è andato storto",
+        "error": "Non è stato possibile mostrare le informazioni di supporto."
+    },
+    "config": {
+        "dmHelp": "1. Fai clic destro sul nome di questo server (da mobile: tocca il nome del server in alto).\n2. Apri **Impostazioni privacy**.\n3. Attiva **Consenti messaggi diretti dai membri del server**.\n4. Fai di nuovo clic su **Avvia configurazione**.",
+        "startedTitle": "Configurazione avviata",
+        "started": "Controlla i tuoi messaggi diretti, la prima domanda è lì. Premi **Salta** sotto una domanda per tenere il valore attuale.",
+        "dmBlocked": "Non sono riuscito a mandarti un messaggio diretto. Consenti i messaggi diretti da questo server, poi riprova.\n\n{help}",
+        "notSet": "Non impostato",
+        "notConfigured": "Non configurato",
+        "activity": {
+            "playing": "Gioca a **{name}**",
+            "streaming": "In diretta su **{name}**",
+            "listening": "Ascolta **{name}**",
+            "watching": "Guarda **{name}**",
+            "competing": "Partecipa a **{name}**"
+        },
+        "colorsPrimary": "Primario `{primary}` · Successo `{success}`",
+        "colorsWarning": "Avviso `{warning}` · Errore `{error}`",
+        "panel": {
+            "title": "Impostazioni del server",
+            "description": "Impostazioni di base per **{server}**. Scegline una qui sotto per cambiarla, o avvia la configurazione guidata.",
+            "prefix": "Prefisso",
+            "modRole": "Ruolo di moderatore",
+            "logChannel": "Canale dei log",
+            "botStatus": "Stato del bot",
+            "colors": "Colori degli embed",
+            "colorsNote": "-# Impostati nella configurazione del bot, uguali per ogni server.",
+            "access": "Accesso ai comandi",
+            "accessText": "Usa `/commands dashboard` per attivare o disattivare i comandi.",
+            "setup": "Configurazione",
+            "setupDone": "Fatta. Puoi riavviare la configurazione guidata quando vuoi.",
+            "setupNotDone": "Non ancora fatta. La configurazione guidata fa qualche domanda in messaggio diretto.",
+            "footer": "Si chiude dopo 10 minuti senza uso"
+        },
+        "select": {
+            "placeholder": "Scegli un'impostazione da cambiare",
+            "prefixHelp": "Il prefisso per i comandi testuali",
+            "modRoleHelp": "Ruolo usato per i comandi di moderazione",
+            "logChannelHelp": "Dove il bot pubblica i suoi log"
+        },
+        "startButton": "Avvia configurazione",
+        "againButton": "Rifai la configurazione",
+        "skipButton": "Salta (tieni l'attuale)",
+        "stopButton": "Ferma configurazione",
+        "questionTitle": "Domanda di configurazione {step}/{total}",
+        "timeout": "Non hai risposto in tempo. Riavvia la configurazione guidata quando sei pronto.",
+        "cancelledTitle": "Configurazione annullata",
+        "cancelled": "Fermata. Tutto ciò a cui hai già risposto è salvato.",
+        "saved": {
+            "prefix": "Prefisso del server salvato: `{value}`.",
+            "logCleared": "Canale dei log rimosso.",
+            "log": "Canale dei log salvato: {channel}.",
+            "modCleared": "Ruolo di moderatore rimosso.",
+            "mod": "Ruolo di moderatore salvato: {role}.",
+            "setting": "Impostazione salvata."
+        },
+        "channelNotFound": "Quel canale non è stato trovato in questo server o non è un canale testuale.",
+        "roleNotFound": "Quel ruolo non è stato trovato in questo server.",
+        "runningTitle": "Configurazione già in corso",
+        "running": "Hai già la configurazione aperta nei messaggi diretti. Rispondi lì, o premi **Ferma configurazione** sotto la domanda.",
+        "prompt": {
+            "prefixSkip": "Il prefisso attuale del server resta.",
+            "prefixQuestion": "Quale prefisso dei comandi deve usare questo server?\nAttuale: `{prefix}`\nScrivi il nuovo prefisso, o premi **Salta** per tenerlo.",
+            "prefixRule": "Il prefisso deve avere da 1 a 10 caratteri, senza spazi.",
+            "logSkip": "Il canale dei log attuale resta.",
+            "logQuestion": "Quale canale deve ricevere i log del bot?\nInvia una menzione o un ID di canale, o `none` per rimuoverlo. Premi **Salta** per tenere quello attuale.",
+            "logInvalid": "Indica una menzione o un ID di canale valido di questo server.",
+            "modSkip": "Il ruolo di moderatore attuale resta.",
+            "modQuestion": "Quale ruolo devono avere i moderatori?\nInvia una menzione o un ID di ruolo, o `none` per rimuoverlo. Premi **Salta** per tenere quello attuale.",
+            "modInvalid": "Indica una menzione o un ID di ruolo valido di questo server."
+        },
+        "introTitle": "Configurazione",
+        "intro": "Rispondi a ogni domanda qui.\n\n• **Salta** tiene il valore attuale\n• **Ferma configurazione** ferma la configurazione",
+        "lostAdmin": "Non hai più il permesso di Amministratore in {server}, quindi non è stato salvato altro. Configurazione fermata.",
+        "skippedTitle": "Saltato",
+        "savedTitle": "Salvato",
+        "retry": "{error}\n\nRispondi di nuovo, o premi **Salta** o **Ferma configurazione** sotto la nuova domanda.",
+        "summary": {
+            "stoppedTitle": "Configurazione fermata",
+            "doneTitle": "Configurazione completata",
+            "stoppedSaved": {
+                "one": "Configurazione fermata in anticipo. **{count}** impostazione salvata prima dello stop.",
+                "many": "Configurazione fermata in anticipo. **{count}** impostazioni salvate prima dello stop.",
+                "other": "Configurazione fermata in anticipo. **{count}** impostazioni salvate prima dello stop."
+            },
+            "stoppedNothing": "Fermata prima che venisse salvato qualcosa.",
+            "updated": {
+                "one": "**{count}** impostazione aggiornata.",
+                "many": "**{count}** impostazioni aggiornate.",
+                "other": "**{count}** impostazioni aggiornate."
+            },
+            "retried": "Alcune risposte sono state ripetute.",
+            "nothing": "Non è cambiato niente.",
+            "issues": "Problemi"
+        },
+        "modal": {
+            "channelPlaceholder": "Scegli un canale testuale",
+            "rolePlaceholder": "Scegli un ruolo",
+            "prefixLabel": "Nuovo prefisso (1-10 caratteri, senza spazi)"
+        },
+        "pickLog": "Scegli un canale dei log.",
+        "pickMod": "Scegli un ruolo di moderatore.",
+        "set": {
+            "log": "Canale dei log impostato: {channel}.",
+            "mod": "Ruolo di moderatore impostato: {role}.",
+            "prefix": "Prefisso del server impostato: `{value}`."
+        },
+        "tryAgain": "Riprova.",
+        "failed": "Non ha funzionato. Riprova.",
+        "openFailed": "Non è stato possibile aprire le impostazioni. Riprova.",
+        "needManageServer": "Per usare questo comando ti serve il permesso **Gestisci server**."
+    },
+    "premium": {
+        "title": "Piano Mewvo",
+        "off": "I piani non sono ancora disponibili.",
+        "free": "Hai il piano **Free**.",
+        "plans": "Piani: {url}",
+        "haveKey": "Hai una chiave? Usa `/premium redeem`.",
+        "limits": "Nei server di tua proprietà: tag: {tags}, messaggi fissi: {stickies}, feed YouTube o Twitch: {feeds}, messaggi programmati: {scheduled}.",
+        "active": "**Mewvo {plan}** fino al {until} ({relative}).",
+        "giftBot": "I bot non possono avere un piano.",
+        "giftSelf": "Sei tu. Per avere un piano tu stesso, usa il sito, o chiedi a qualcun altro di regalartelo.",
+        "giftLimit": "Puoi inviare 3 regali all'ora. Riprova più tardi.",
+        "linkRemoved": "(link rimosso)",
+        "giftDm": {
+            "gave": {
+                "one": "{from} ti ha regalato **Mewvo {plan}** per {count} giorno.",
+                "many": "{from} ti ha regalato **Mewvo {plan}** per {count} giorni.",
+                "other": "{from} ti ha regalato **Mewvo {plan}** per {count} giorni."
+            },
+            "note": "Il suo messaggio: {note}",
+            "key": "La tua chiave: `{code}`",
+            "redeem": "Riscattala con `/premium redeem`. Si può usare una volta, entro un anno.",
+            "redeemOrUrl": "Riscattala con `/premium redeem` o su {url}. Si può usare una volta, entro un anno."
+        },
+        "giftSent": {
+            "one": "Inviato. {name} ha ricevuto un messaggio diretto con la chiave per **Mewvo {plan}** ({count} giorno). Modalità test: nessun addebito.\nLa chiave, nel caso la perda: `{code}`",
+            "many": "Inviato. {name} ha ricevuto un messaggio diretto con la chiave per **Mewvo {plan}** ({count} giorni). Modalità test: nessun addebito.\nLa chiave, nel caso la perda: `{code}`",
+            "other": "Inviato. {name} ha ricevuto un messaggio diretto con la chiave per **Mewvo {plan}** ({count} giorni). Modalità test: nessun addebito.\nLa chiave, nel caso la perda: `{code}`"
+        },
+        "giftClosed": {
+            "one": "I suoi messaggi diretti sono chiusi, quindi dagli tu questa chiave: `{code}`\nÈ **Mewvo {plan}** per {count} giorno, riscattabile una volta con `/premium redeem`. Modalità test: nessun addebito.",
+            "many": "I suoi messaggi diretti sono chiusi, quindi dagli tu questa chiave: `{code}`\nÈ **Mewvo {plan}** per {count} giorni, riscattabile una volta con `/premium redeem`. Modalità test: nessun addebito.",
+            "other": "I suoi messaggi diretti sono chiusi, quindi dagli tu questa chiave: `{code}`\nÈ **Mewvo {plan}** per {count} giorni, riscattabile una volta con `/premium redeem`. Modalità test: nessun addebito."
+        },
+        "giftReadyTitle": "Regalo pronto",
+        "tooManyTries": "Troppi tentativi. Aspetta un minuto e riprova.",
+        "converted": "Il tempo {plan} che ti restava è stato convertito.",
+        "redeemed": {
+            "one": "Chiave riscattata: **Mewvo {plan}**, {count} giorno aggiunto.{converted}\nAttivo fino al {until}.",
+            "many": "Chiave riscattata: **Mewvo {plan}**, {count} giorni aggiunti.{converted}\nAttivo fino al {until}.",
+            "other": "Chiave riscattata: **Mewvo {plan}**, {count} giorni aggiunti.{converted}\nAttivo fino al {until}."
+        },
+        "redeemedTitle": "Chiave riscattata",
+        "notSentTitle": "Non inviato",
+        "notRedeemedTitle": "Non riscattata",
+        "databaseDown": "Il database non risponde. Non è cambiato niente; riprova tra qualche minuto.",
+        "databaseDownTitle": "Riprova più tardi"
+    }
+}

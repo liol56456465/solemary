@@ -3,6 +3,7 @@ import { createEmbed, successEmbed, infoEmbed, warningEmbed } from '../../../uti
 import { logger } from '../../../utils/logger.js';
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { localized, replyText } from '../../Core/modules/commandText.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('time')
@@ -10,9 +11,11 @@ export default {
         .addStringOption(option =>
             option.setName('timezone')
                 .setDescription('The timezone to display (e.g., UTC, America/New_York)')
+                .setDescriptionLocalizations(localized('tools.slash.tools.sub.time.options.timezone'))
                 .setRequired(false)),
 
     async execute(interaction) {
+        const tr = replyText(interaction);
         await InteractionHelper.safeExecute(
             interaction,
             async () => {
@@ -20,7 +23,8 @@ export default {
 
                 let timeString;
                 try {
-                    timeString = new Date().toLocaleString('en-US', {
+                    // English keeps the US format; other languages write the date their way.
+                    timeString = new Date().toLocaleString(tr.lang === 'en' ? 'en-US' : tr.lang, {
                         timeZone: timezone,
                         weekday: 'long',
                         year: 'numeric',
@@ -35,7 +39,8 @@ export default {
                     logger.warn(`Invalid timezone requested: ${timezone}`);
                     await replyUserError(interaction, {
                         type: ErrorTypes.VALIDATION,
-                        message: 'Unknown timezone. Try something like UTC, America/New_York or Europe/London.',
+                        message: tr.t('tools.time.unknownZone'),
+                        context: { lang: tr.lang },
                     });
                     return;
                 }
@@ -44,15 +49,13 @@ export default {
                 const unixTimestamp = Math.floor(now.getTime() / 1000);
 
                 const embed = successEmbed(
-                    'Current time',
-                    `**${timezone}:** ${timeString}\n` +
-                    `**Unix Timestamp:** \`${unixTimestamp}\`\n` +
-                    `**ISO String:** \`${now.toISOString()}\``
+                    tr.t('tools.time.title'),
+                    tr.t('tools.time.body', { zone: timezone, time: timeString, unix: unixTimestamp, iso: now.toISOString() }),
                 );
 
                 await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
             },
-            'Couldn\'t get the time. Try again.',
+            tr.t('tools.time.failed'),
             {
                 autoDefer: true,
                 deferOptions: { flags: MessageFlags.Ephemeral }

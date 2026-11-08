@@ -4,6 +4,8 @@ import { logger } from '../../../utils/logger.js';
 import { handleInteractionError, replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { BoundedMap } from '../../../utils/boundedMap.js';
+import { botText } from '../../../utils/botText.js';
+import { publicText, replyText } from '../../Core/modules/commandText.js';
 
 // B5: dictionaryapi.dev is a free service. Answers are kept in an LRU of 500 words (a day; a
 // word with no entry for an hour), and each user may cause one API call per DEFINE_COOLDOWN_MS
@@ -62,19 +64,23 @@ export default {
             }
 
             const word = interaction.options.getString('word');
+            // Errors are private answers (the user's language); the definition is a public reply (the
+            // server's). The definitions themselves come from an English dictionary and stay English.
+            const err = replyText(interaction);
 
             if (word.length < 2) {
-                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Please enter a word with at least 2 characters.' });
+                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: err.t('search.define.tooShort') });
             }
 
             const result = await lookupDefinition(word, interaction.user.id);
             if (result.cooldownMs) {
-                return await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: `Wait ${Math.ceil(result.cooldownMs / 1000)} s before looking up another word.` });
+                return await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: err.t('search.define.cooldown', { seconds: Math.ceil(result.cooldownMs / 1000) }) });
             }
             if (!result.entry) {
-                return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: `No definitions found for "${word}".` });
+                return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: err.t('search.define.notFound', { word }) });
             }
 
+            const tr = publicText(interaction);
             const data = result.entry;
             const embed = createEmbed({
                 title: data.word,
@@ -88,7 +94,7 @@ export default {
                     .map((def, idx) => {
                         let text = `${idx + 1}. ${def.definition}`;
                         if (def.example) {
-                            text += `\n *Example: ${def.example}*`;
+                            text += tr.t('search.define.example', { example: def.example });
                         }
                         return text;
                     })
@@ -97,16 +103,16 @@ export default {
 
                 if (definitions) {
                     embed.addFields({
-                        name: `**${meaning.partOfSpeech || 'Definition'}**`,
+                        name: `**${meaning.partOfSpeech || tr.t('search.define.definition')}**`,
                         value: definitions,
                         inline: false
                     });
                 }
             });
 
-            const credit = wiktionaryCredit(data);
-            embed.addFields({ name: 'Source', value: credit.line, inline: false });
-            embed.setFooter({ text: `${credit.footer} · via Free Dictionary API` });
+            const credit = wiktionaryCredit(data, { lang: tr.lang });
+            embed.addFields({ name: tr.t('search.define.source'), value: credit.line, inline: false });
+            embed.setFooter({ text: tr.t('search.define.footer', { credit: credit.footer }) });
 
             await InteractionHelper.safeEditReply(interaction, { embeds: [embed], allowedMentions: { parse: [] } });
 
@@ -134,7 +140,8 @@ const DEFAULT_LICENSE = { name: 'CC BY-SA 3.0', url: 'https://creativecommons.or
  * Wiktionary credit for a dictionaryapi.dev entry. The API passes on Wiktionary's licence
  * (`license: { name, url }`) and the page it used (`sourceUrls`); CC BY-SA needs both shown.
  */
-export function wiktionaryCredit(entry) {
+export function wiktionaryCredit(entry, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     const license = entry?.license?.name ? entry.license : DEFAULT_LICENSE;
     const safeUrl = (u) => (typeof u === 'string' && /^https:\/\/[^\s<>()]+$/.test(u) ? u : null);
     const licenseUrl = safeUrl(license.url) || DEFAULT_LICENSE.url;
@@ -142,7 +149,7 @@ export function wiktionaryCredit(entry) {
     const wiktionary = source ? `[Wiktionary](${source})` : 'Wiktionary';
     const name = String(license.name).replace(/[[\]()]/g, '').slice(0, 40);
     return {
-        line: `Definitions from ${wiktionary} ([${name}](${licenseUrl}))`.slice(0, 1024),
-        footer: 'Definitions from Wiktionary (CC BY-SA)',
+        line: tr.t('search.define.creditLine', { wiktionary, license: `[${name}](${licenseUrl})` }).slice(0, 1024),
+        footer: tr.t('search.define.creditFooter'),
     };
 }

@@ -22,6 +22,7 @@ import {
   createDashboardCollectorFilter,
   isCommandAccessCustomId,
 } from './modules/commands_dashboard.js';
+import { localized, replyText } from './modules/commandText.js';
 
 const DASHBOARD_TIMEOUT_MS = 10 * 60 * 1000;
 
@@ -36,9 +37,9 @@ function buildCategoryChoices(client) {
     }));
 }
 
-async function ensureManageGuild(interaction) {
+async function ensureManageGuild(interaction, tr) {
   if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
-    await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the **Manage Server** permission to manage commands.' });
+    await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('core.commands.manageServer') });
     return false;
   }
 
@@ -49,21 +50,25 @@ export default {
   data: new SlashCommandBuilder()
     .setName('commands')
     .setDescription('Enable or disable bot commands and categories for this server')
+    .setDescriptionLocalizations(localized('core.slash.commands.description'))
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .setDMPermission(false)
     .addSubcommand((subcommand) =>
       subcommand
         .setName('dashboard')
-        .setDescription('Turn commands on or off with buttons'),
+        .setDescription('Turn commands on or off with buttons')
+        .setDescriptionLocalizations(localized('core.slash.commands.sub.dashboard.description')),
     )
     .addSubcommand((subcommand) =>
       subcommand
         .setName('disable')
         .setDescription('Disable a command or entire category')
+        .setDescriptionLocalizations(localized('core.slash.commands.sub.disable.description'))
         .addStringOption((option) =>
           option
             .setName('scope')
             .setDescription('Disable a single command or a whole category')
+            .setDescriptionLocalizations(localized('core.slash.commands.sub.disable.options.scope'))
             .setRequired(true)
             .addChoices(
               { name: 'Category', value: 'category' },
@@ -74,6 +79,7 @@ export default {
           option
             .setName('target')
             .setDescription('Category or command name')
+            .setDescriptionLocalizations(localized('core.slash.commands.sub.disable.options.target'))
             .setRequired(true)
             .setAutocomplete(true),
         ),
@@ -82,10 +88,12 @@ export default {
       subcommand
         .setName('enable')
         .setDescription('Enable a command or entire category')
+        .setDescriptionLocalizations(localized('core.slash.commands.sub.enable.description'))
         .addStringOption((option) =>
           option
             .setName('scope')
             .setDescription('Enable a single command or a whole category')
+            .setDescriptionLocalizations(localized('core.slash.commands.sub.enable.options.scope'))
             .setRequired(true)
             .addChoices(
               { name: 'Category', value: 'category' },
@@ -96,6 +104,7 @@ export default {
           option
             .setName('target')
             .setDescription('Category or command name')
+            .setDescriptionLocalizations(localized('core.slash.commands.sub.enable.options.target'))
             .setRequired(true)
             .setAutocomplete(true),
         ),
@@ -154,7 +163,8 @@ export default {
   },
 
   async execute(interaction, config, client) {
-    if (!(await ensureManageGuild(interaction))) {
+    const tr = replyText(interaction);
+    if (!(await ensureManageGuild(interaction, tr))) {
       return;
     }
 
@@ -166,7 +176,7 @@ export default {
         return;
       }
 
-      const view = await buildDashboardView(client, interaction.guildId, interaction.guild, 'overview');
+      const view = await buildDashboardView(client, interaction.guildId, interaction.guild, 'overview', null, tr);
       await InteractionHelper.safeEditReply(interaction, {
         embeds: [view.embed],
         components: view.components,
@@ -196,13 +206,13 @@ export default {
           });
           await replyUserError(componentInteraction, {
             type: ErrorTypes.UNKNOWN,
-            message: error.message || 'Failed to update command access.',
+            message: error.message || replyText(componentInteraction).t('core.commands.updateFailed'),
           }).catch(() => {});
         }
       });
 
       collector.on('end', async () => {
-        const finalView = await buildDashboardView(client, interaction.guildId, interaction.guild, 'overview');
+        const finalView = await buildDashboardView(client, interaction.guildId, interaction.guild, 'overview', null, tr);
         const disabledComponents = finalView.components.map((row) => {
           const newRow = row.toJSON();
           newRow.components = newRow.components.map((component) => ({ ...component, disabled: true }));
@@ -227,7 +237,7 @@ export default {
     if (scope === 'category') {
       const category = resolveCategoryChoice(client, target);
       if (!category) {
-        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `No category matched \`${target}\`. Use \`/commands dashboard\` to browse categories.` });
+        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('core.commands.noCategory', { target }) });
       }
 
       if (isDisable) {
@@ -235,8 +245,8 @@ export default {
         return InteractionHelper.safeEditReply(interaction, {
           embeds: [
             successEmbed(
-              'Category disabled',
-              `All **${category.displayName}** commands are now off now.\n\`/commands\` and \`/configwizard\` stay on.`,
+              tr.t('core.commands.categoryDisabled.title'),
+              tr.t('core.commands.categoryDisabled.text', { category: category.displayName }),
             ),
           ],
         });
@@ -244,7 +254,7 @@ export default {
 
       await enableCategory(client, interaction.guildId, category.key);
       return InteractionHelper.safeEditReply(interaction, {
-        embeds: [successEmbed('Category enabled', `**${category.displayName}** commands are on again, except ones you turned off one by one.`)],
+        embeds: [successEmbed(tr.t('core.commands.categoryEnabled.title'), tr.t('core.commands.categoryEnabled.text', { category: category.displayName }))],
       });
     }
 
@@ -252,13 +262,13 @@ export default {
     if (isDisable) {
       await disableCommand(client, interaction.guildId, commandName);
       return InteractionHelper.safeEditReply(interaction, {
-        embeds: [successEmbed('Command disabled', `\`/${commandName}\` is now disabled in this server.`)],
+        embeds: [successEmbed(tr.t('core.commands.commandDisabled.title'), tr.t('core.commands.commandDisabled.text', { command: commandName }))],
       });
     }
 
     await enableCommand(client, interaction.guildId, commandName);
     return InteractionHelper.safeEditReply(interaction, {
-      embeds: [successEmbed('Command enabled', `\`/${commandName}\` is now enabled in this server.`)],
+      embeds: [successEmbed(tr.t('core.commands.commandEnabled.title'), tr.t('core.commands.commandEnabled.text', { command: commandName }))],
     });
   },
 };

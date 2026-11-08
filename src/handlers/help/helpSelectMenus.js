@@ -8,6 +8,8 @@ import { isCommandAvailableInGuild, canSeeAdminCommands } from '../../utils/comm
 import { isEveryoneCommand } from '../../config/commands/commandAccess.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError } from '../../utils/errorHandler.js';
+import { botText } from '../../utils/botText.js';
+import { DISCORD_LOCALES, replyText } from '../../commands/Core/modules/commandText.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -62,14 +64,20 @@ function visibleEntries(entries, showAdmin) {
     return showAdmin ? entries : entries.filter((entry) => isEveryoneCommand(entry.displayName));
 }
 
-function buildHelpEntries(command, category) {
+/** A command's (or option's) description in the viewer's language, else its English one. */
+function describe(node, locale) {
+    return (locale && node?.description_localizations?.[locale]) || node?.description;
+}
+
+function buildHelpEntries(command, category, tr = botText('en')) {
+    const locale = DISCORD_LOCALES[tr.lang]?.[0];
     const commandData = normalizeCommandData(command);
     if (!commandData?.name) {
         return [];
     }
 
     const baseName = commandData.name;
-    const baseDescription = commandData.description || "No description";
+    const baseDescription = describe(commandData, locale) || tr.t('core.help.list.noDescription');
     const options = commandData.options || [];
 
     const entries = [];
@@ -81,7 +89,7 @@ function buildHelpEntries(command, category) {
             entries.push({
                 baseName,
                 displayName: `${baseName} ${option.name}`,
-                description: option.description || baseDescription,
+                description: describe(option, locale) || baseDescription,
                 category,
             });
             continue;
@@ -95,7 +103,7 @@ function buildHelpEntries(command, category) {
                 entries.push({
                     baseName,
                     displayName: `${baseName} ${option.name} ${nested.name}`,
-                    description: nested.description || option.description || baseDescription,
+                    description: describe(nested, locale) || describe(option, locale) || baseDescription,
                     category,
                 });
             }
@@ -135,7 +143,7 @@ function normalizeCommandData(command) {
     };
 }
 
-async function createCategoryCommandsMenu(category, client, guildId = null, showAdmin = true) {
+async function createCategoryCommandsMenu(category, client, guildId = null, showAdmin = true, tr = botText('en')) {
     const categoryName = formatCategoryName(category);
 
     const categoryCommands = [];
@@ -160,7 +168,7 @@ async function createCategoryCommandsMenu(category, client, guildId = null, show
                     continue;
                 if (!isCommandAvailableInGuild(command, guildId)) continue;
 
-                categoryCommands.push(...visibleEntries(buildHelpEntries(command, categoryName), showAdmin));
+                categoryCommands.push(...visibleEntries(buildHelpEntries(command, categoryName, tr), showAdmin));
             }
         }
     } catch (error) {
@@ -175,10 +183,10 @@ async function createCategoryCommandsMenu(category, client, guildId = null, show
     const registeredCommands = await getRegisteredCommands(client);
 
     const embed = createEmbed({
-        title: `${categoryName} commands`,
+        title: tr.t('core.help.list.categoryTitle', { category: categoryName }),
         description: categoryCommands.length > 0
-            ? `Click a command to use it.`
-            : `There are no commands in **${categoryName}** yet.`
+            ? tr.t('core.help.list.click')
+            : tr.t('core.help.list.empty', { category: categoryName })
     });
 
     if (categoryCommands.length > 0) {
@@ -195,7 +203,7 @@ async function createCategoryCommandsMenu(category, client, guildId = null, show
         const maxLength = 1000;
         if (commandMentions.length <= maxLength) {
             embed.addFields({
-                name: "Commands",
+                name: tr.t('core.help.list.commands'),
                 value: commandMentions,
                 inline: false,
             });
@@ -216,7 +224,7 @@ async function createCategoryCommandsMenu(category, client, guildId = null, show
 
             chunks.forEach((chunk, index) => {
                 embed.addFields({
-                    name: index === 0 ? 'Commands' : 'Commands (cont.)',
+                    name: index === 0 ? tr.t('core.help.list.commands') : tr.t('core.help.list.commandsCont'),
                     value: chunk,
                     inline: false,
                 });
@@ -228,7 +236,7 @@ async function createCategoryCommandsMenu(category, client, guildId = null, show
 
     const backButton = createButton(
         BACK_BUTTON_ID,
-        "Back",
+        tr.t('core.help.list.back'),
         "primary",
         null,
         false,
@@ -242,7 +250,7 @@ async function createCategoryCommandsMenu(category, client, guildId = null, show
     };
 }
 
-export async function createAllCommandsMenu(page = 1, client, guildId = null, showAdmin = true) {
+export async function createAllCommandsMenu(page = 1, client, guildId = null, showAdmin = true, tr = botText('en')) {
     const commandsPerPage = 45;
     const allCommands = [];
 
@@ -281,7 +289,7 @@ export async function createAllCommandsMenu(page = 1, client, guildId = null, sh
 
                     const categoryName = formatCategoryName(category);
 
-                    allCommands.push(...visibleEntries(buildHelpEntries(command, categoryName), showAdmin));
+                    allCommands.push(...visibleEntries(buildHelpEntries(command, categoryName, tr), showAdmin));
                 }
             }
         } catch (error) {
@@ -302,8 +310,8 @@ export async function createAllCommandsMenu(page = 1, client, guildId = null, sh
     const pageCommands = allCommands.slice(startIndex, endIndex);
 
     const embed = createEmbed({
-        title: "All commands",
-        description: totalPages > 1 ? `Use the buttons below to change page.` : null
+        title: tr.t('core.help.list.allTitle'),
+        description: totalPages > 1 ? tr.t('core.help.list.changePage') : null
     });
 
     embed.setTimestamp();
@@ -328,7 +336,7 @@ export async function createAllCommandsMenu(page = 1, client, guildId = null, sh
             if (!chunk) continue;
 
             embed.addFields({
-                name: i === 0 ? `Commands (Page ${page})` : "Commands (cont.)",
+                name: i === 0 ? tr.t('core.help.list.commandsPage', { page }) : tr.t('core.help.list.commandsCont'),
                 value: chunk,
                 inline: columnCount > 1,
             });
@@ -348,7 +356,7 @@ export async function createAllCommandsMenu(page = 1, client, guildId = null, sh
 
     const backButton = createButton(
         BACK_BUTTON_ID,
-        "Back",
+        tr.t('core.help.list.back'),
         "primary",
         null,
         false,
@@ -374,15 +382,16 @@ export const helpCategorySelectMenu = {
             }
 
             const selectedCategory = interaction.values[0];
+            const tr = replyText(interaction);
 
             if (selectedCategory === ALL_COMMANDS_ID) {
-                const { embeds, components } = await createAllCommandsMenu(1, client, interaction.guildId, canSeeAdminCommands(interaction));
+                const { embeds, components } = await createAllCommandsMenu(1, client, interaction.guildId, canSeeAdminCommands(interaction), tr);
                 await interaction.editReply({
                     embeds,
                     components,
                 });
             } else {
-                const { embeds, components } = await createCategoryCommandsMenu(selectedCategory, client, interaction.guildId, canSeeAdminCommands(interaction));
+                const { embeds, components } = await createCategoryCommandsMenu(selectedCategory, client, interaction.guildId, canSeeAdminCommands(interaction), tr);
                 await interaction.editReply({
                     embeds,
                     components,

@@ -1,0 +1,112 @@
+{
+    "unknownSubcommand": "Subcomando desconhecido.",
+    "flip": {
+        "title": "Cara ou coroa",
+        "heads": "Cara",
+        "tails": "Coroa",
+        "result": "Deu **{result}**."
+    },
+    "roll": {
+        "invalid": "Notação inválida. Use um formato como `1d20` ou `3d6+5`.",
+        "diceRange": "Escolha entre 1 e 20 dados.",
+        "sidesRange": "Escolha entre 1 e 1000 lados.",
+        "title": "Rolagem de {dice}",
+        "rolls": "**Rolagens:** {rolls}\n",
+        "total": "**Total:** {total} = **{final}**"
+    },
+    "fight": {
+        "selfTitle": "Você não pode lutar com você mesmo",
+        "selfText": "**{name}**, isso seria empate antes de começar. Escolha outra pessoa.",
+        "botTitle": "Você não pode lutar com um bot",
+        "botText": "Bots não revidam. Escolha uma pessoa de verdade.",
+        "start": "**{challenger}** desafia **{opponent}** para uma luta. {rounds} rodadas.",
+        "action": {
+            "punch": "**Rodada {round}:** {attacker} dá um soco desajeitado em {target} e causa {damage} de dano.",
+            "critical": "**Rodada {round}:** {attacker} acerta um golpe crítico em {target} e causa {damage} de dano.",
+            "spell": "**Rodada {round}:** {attacker} usa um feitiço fraco em {target} e causa {damage} de dano.",
+            "parry": "**Rodada {round}:** {attacker} bloqueia e contra-ataca {target} e causa {damage} de dano."
+        },
+        "winner": "**{winner}** vence {loser}.",
+        "title": "Fim da luta"
+    },
+    "count": {
+        "textChannel": "Escolha um canal de texto para o jogo de contagem.",
+        "alreadyActive": "Este servidor já tem um canal de contagem ativo: <#{channelId}>. Desative o jogo atual primeiro ou use esse canal.",
+        "onTitle": "Jogo de contagem ativado",
+        "onText": "A contagem está ativa em {channel} (**{system}**). Comecem no **1**. Ninguém pode enviar dois números seguidos.",
+        "offTitle": "Jogo de contagem desativado",
+        "alreadyOff": "O jogo de contagem já está desativado.",
+        "turnedOff": "O jogo de contagem foi desativado.",
+        "status": {
+            "enabled": "Ativado",
+            "yes": "Sim",
+            "no": "Não",
+            "channel": "Canal",
+            "notConfigured": "Não configurado",
+            "system": "Sistema",
+            "next": "Próximo número",
+            "streak": "Sequência atual",
+            "best": "Melhor sequência",
+            "last": "Último a contar",
+            "none": "Ninguém",
+            "title": "Jogo de contagem",
+            "description": "Configurações e sequências atuais."
+        },
+        "enableFirst": "Ative primeiro o jogo de contagem com `/count setup`.",
+        "resetTitle": "Contagem reiniciada",
+        "resetText": "Contagem reiniciada. Comecem de novo com **{start}** em <#{channelId}>.",
+        "leaderboardTitle": "Ranking do jogo de contagem",
+        "leaderboardEmpty": "Ninguém contou ainda.",
+        "invalidAction": "Escolha uma ação válida do jogo de contagem.",
+        "failed": "Algo deu errado ao gerenciar o jogo de contagem."
+    },
+    "slash": {
+        "fun": {
+            "description": "Jogos rápidos: lutas, cara ou coroa e dados",
+            "sub": {
+                "fight": {
+                    "description": "Comece uma luta de texto simulada 1 contra 1",
+                    "options": {
+                        "opponent": "A pessoa com quem lutar."
+                    }
+                },
+                "flip": {
+                    "description": "Jogue uma moeda"
+                },
+                "roll": {
+                    "description": "Role dados (ex.: 2d20, 1d6 + 5)",
+                    "options": {
+                        "notation": "A notação dos dados (ex.: 2d6, 1d20 + 4)"
+                    }
+                }
+            }
+        },
+        "count": {
+            "description": "Gerencie o jogo de contagem do servidor",
+            "sub": {
+                "setup": {
+                    "description": "Comece um jogo de contagem em um canal de texto",
+                    "options": {
+                        "channel": "O canal onde a contagem vai acontecer",
+                        "system": "O sistema de contagem a usar"
+                    }
+                },
+                "disable": {
+                    "description": "Desative o jogo de contagem neste servidor"
+                },
+                "status": {
+                    "description": "Veja o estado atual do jogo de contagem"
+                },
+                "reset": {
+                    "description": "Reinicie a contagem atual",
+                    "options": {
+                        "start": "O número para recomeçar depois de reiniciar"
+                    }
+                },
+                "leaderboard": {
+                    "description": "Mostre o ranking do jogo de contagem"
+                }
+            }
+        }
+    }
+}

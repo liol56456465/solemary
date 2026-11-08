@@ -1,0 +1,236 @@
+{
+    "avatar": {
+        "title": "Avatar di {name}",
+        "download": "[Scarica]({url})"
+    },
+    "firstmsg": {
+        "title": "Primo messaggio",
+        "none": "Nessun messaggio in questo canale!",
+        "titleIn": "Primo messaggio in #{channel}",
+        "link": "Link al messaggio: {link}"
+    },
+    "serverinfo": {
+        "title": "Info server: {name}",
+        "id": "ID server: {id}",
+        "owner": "Proprietario",
+        "members": "Membri",
+        "channels": "Canali",
+        "roles": "Ruoli",
+        "boosts": "Boost",
+        "boostValue": "Livello {tier} ({count})",
+        "created": "Data di creazione"
+    },
+    "userinfo": {
+        "title": "Info utente: {name}",
+        "id": "ID",
+        "bot": "Bot",
+        "yes": "Sì",
+        "no": "No",
+        "roles": "Ruoli",
+        "none": "Nessuno",
+        "created": "Account creato",
+        "joined": "Entrato nel server",
+        "notInServer": "Non è nel server",
+        "highestRole": "Ruolo più alto"
+    },
+    "weather": {
+        "title": "Meteo a {place}",
+        "sources": "Fonti: dati meteo di [MET Norway](https://api.met.no/) ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), valori arrotondati e convertiti); località da [© contributori di OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL).",
+        "temperature": "Temperatura",
+        "humidity": "Umidità",
+        "wind": "Vento",
+        "windValue": "{speed} km/h",
+        "windFrom": "{speed} km/h da {direction}",
+        "precipitation": "Precipitazioni (prossima ora)",
+        "notAvailable": "N/D",
+        "busy": "Il servizio meteo è occupato o non risponde in questo momento. Riprova tra un minuto.",
+        "notFound": "Non ho trovato questa località. Controlla come l'hai scritta.",
+        "noForecast": "Il servizio meteo non ha inviato previsioni per questo luogo."
+    },
+    "report": {
+        "unknownSubcommand": "Sottocomando sconosciuto.",
+        "rateLimited": "Hai inviato diverse segnalazioni di recente. Aspetta qualche minuto prima di inviarne un'altra.",
+        "noChannel": "Il canale delle segnalazioni non è configurato. Chiedi a un moderatore di usare `/logging dashboard` o `/logging channel`.",
+        "ownerPing": "<@{ownerId}> Nuova segnalazione",
+        "newReport": "Nuova segnalazione",
+        "logTitle": "Segnalazione di un utente",
+        "reportedUser": "Utente segnalato",
+        "reportedBy": "Segnalato da",
+        "channel": "Canale",
+        "reason": "Motivo",
+        "notDelivered": "Non è stato possibile consegnare la tua segnalazione: il canale delle segnalazioni manca, i log sono disattivati o non ho il permesso di scrivere lì. Contatta direttamente un moderatore.",
+        "submittedTitle": "Segnalazione inviata",
+        "submitted": "La tua segnalazione su **{tag}** è stata inviata ai moderatori. Grazie per averci avvisato.",
+        "setchannel": {
+            "noAdmin": "Ti serve il permesso **Amministratore** per impostare il canale delle segnalazioni.",
+            "saveFailed": "Non è stato possibile salvare l'impostazione del canale.",
+            "title": "Canale delle segnalazioni impostato",
+            "done": "Tutte le nuove segnalazioni ora arrivano in {channel}.\nPuoi gestirlo anche da `/logging dashboard`."
+        }
+    },
+    "remind": {
+        "title": "Promemoria",
+        "none": "Non hai promemoria. Creane uno con `/remind me`.",
+        "set": "Ok, te lo ricorderò {relative} ({time}). Arriva in DM, o qui se i tuoi DM sono chiusi.",
+        "setTitle": "Promemoria impostato",
+        "deleted": "Promemoria `{id}` eliminato.",
+        "deletedTitle": "Promemoria eliminato",
+        "notFound": "Non hai un promemoria con quel numero. Controlla `/remind list`.",
+        "dbDown": "Il database non risponde, quindi non è stato salvato nulla. Riprova tra qualche minuto.",
+        "dbDownTitle": "Riprova più tardi"
+    },
+    "cooldown": {
+        "title": "Pausa",
+        "serverOnly": "/cooldown funziona solo in un server.",
+        "pickDuration": "Scegli una delle durate proposte.",
+        "notFound": "Non ti trovo in questo server. Riprova tra un attimo.",
+        "limited": "Hai avviato {limit} pause nelle ultime 24 ore. Puoi avviarne un'altra {when}.",
+        "confirmTitle": "Avviare una pausa?",
+        "start": "Avvia pausa",
+        "cancel": "Annulla",
+        "notYours": "Questo pulsante non è per te. Usa /cooldown tu stesso se vuoi una pausa.",
+        "expired": "È scaduto, usa di nuovo /cooldown.",
+        "notStarted": "Non è stata avviata nessuna pausa.",
+        "cancelledTitle": "Annullato",
+        "notFoundButton": "Non ti trovo in questo server, quindi non è stata avviata nessuna pausa.",
+        "alreadyStarting": "Una pausa per te è già in fase di avvio, quindi questa no.",
+        "refused": "Discord ha rifiutato il timeout, quindi non è stata avviata nessuna pausa. Chiedi allo staff di controllare i miei permessi e la posizione del mio ruolo.",
+        "started": "La tua pausa ({duration}) è iniziata. Finisce da sola il {date} ({relative}). Abbi cura di te.",
+        "startedTitle": "Pausa avviata",
+        "duration": {
+            "1h": "1 ora",
+            "6h": "6 ore",
+            "12h": "12 ore",
+            "1d": "1 giorno",
+            "3d": "3 giorni",
+            "7d": "7 giorni"
+        }
+    },
+    "wipedata": {
+        "title": "Eliminare i tuoi dati?",
+        "intro": "Questo elimina per sempre i tuoi dati in questo server:",
+        "body": "La tua lista di cose da fare, i promemoria e il token di accesso salvato sono gli stessi in ogni server, quindi vengono eliminati ovunque. Senza il token di accesso il bot non può più aggiungerti al server di supporto; \"Verifica con Discord\" ne salva uno nuovo. I registri di moderazione, ricorsi, segnalazioni e verifiche vengono conservati.",
+        "final": "**Non si può annullare.**",
+        "confirm": "Conferma",
+        "cancel": "Annulla",
+        "item": {
+            "levels": "Livelli e XP",
+            "birthday": "Compleanno",
+            "todo": "Lista personale di cose da fare",
+            "reminders": "Promemoria",
+            "oauth": "Token di accesso Discord salvato (da \"Verifica con Discord\")"
+        },
+        "partialTitle": "Non è stato eliminato tutto",
+        "partialFailed": "Il database non ha risposto per: {items}. ",
+        "partialDeleted": "Eliminato: {items}. ",
+        "partialRetry": "Usa di nuovo /wipedata tra qualche minuto.",
+        "doneTitle": "I tuoi dati sono stati eliminati",
+        "done": "Eliminato: {items}.\nLivelli e compleanno in questo server; lista di cose da fare, promemoria e token di accesso salvato ovunque.\n\nI registri di moderazione, ricorsi, segnalazioni e verifiche vengono conservati, perché sono i registri di sicurezza del server. Nell'Informativa sulla privacy trovi come chiedere informazioni su di essi.",
+        "nothingStored": "non c'era nulla di salvato",
+        "failed": "Il database non risponde. Potrebbe non essere stato eliminato nulla; riprova tra qualche minuto.",
+        "cancelledTitle": "Non è stato eliminato nulla",
+        "cancelled": "I tuoi dati non sono cambiati.",
+        "cancelFailed": "Non è stato possibile annullare l'eliminazione dei dati."
+    },
+    "todo": {
+        "invalidSubcommand": "Sottocomando non valido.",
+        "listNotFound": "Lista condivisa non trovata.",
+        "onlyCreator": "Solo chi ha creato la lista può aggiungere membri.",
+        "alreadyMember": "Questo utente fa già parte della lista.",
+        "noAccess": "Non hai accesso a questa lista.",
+        "taskNotFound": "Attività non trovata.",
+        "alreadyDone": "L'attività #{id} è già completata.",
+        "createdTitle": "Lista condivisa creata",
+        "created": "Lista condivisa \"{name}\" creata con ID: `{id}`\nUsa `/todo share add list_id:{id} user:@username` per aggiungere membri.",
+        "memberAddedTitle": "Membro aggiunto",
+        "memberAdded": "{user} è stato aggiunto alla lista condivisa \"{name}\"",
+        "sharedTitle": "Lista condivisa (ID: `{id}`)",
+        "owner": "**Proprietario:** {name}",
+        "members": "**Membri:** {names}",
+        "tasks": "**Attività:**",
+        "emptyShared": "*Questa lista è vuota. Clicca su \"Aggiungi attività\" per aggiungerne una.*",
+        "done": "Fatta",
+        "open": "Da fare",
+        "completedBy": "• Completata da {user}",
+        "addTask": "Aggiungi attività",
+        "completeTask": "Completa attività",
+        "removeTask": "Rimuovi attività",
+        "taskAddedTitle": "Attività aggiunta",
+        "taskAddedShared": "\"{task}\" aggiunta alla lista condivisa \"{name}\"",
+        "taskAddedSharedShort": "\"{task}\" aggiunta alla lista condivisa.",
+        "taskAdded": "\"{task}\" aggiunta alla tua lista di cose da fare.",
+        "taskRemovedTitle": "Attività rimossa",
+        "taskRemovedShared": "\"{task}\" rimossa dalla lista condivisa \"{name}\".",
+        "taskRemovedSharedShort": "\"{task}\" rimossa dalla lista condivisa.",
+        "taskRemoved": "\"{task}\" rimossa dalla tua lista di cose da fare.",
+        "yourList": "La tua lista di cose da fare",
+        "emptyList": "La tua lista di cose da fare è vuota.",
+        "taskDoneTitle": "Attività completata",
+        "taskDone": "\"{task}\" segnata come completata.",
+        "invalidListId": "ID della lista condivisa non valido.",
+        "modalAddTitle": "Aggiungi un'attività",
+        "modalCompleteTitle": "Completa un'attività",
+        "modalRemoveTitle": "Rimuovi un'attività",
+        "taskLabel": "Attività",
+        "taskNumberLabel": "Numero dell'attività",
+        "taskNumberPlaceholder": "Per esempio 3",
+        "tooFast": "Stai andando un po' veloce. Aspetta un attimo e riprova.",
+        "emptyText": "Il testo dell'attività non può essere vuoto.",
+        "badTaskId": "Il numero dell'attività deve essere un numero positivo.",
+        "addFailed": "Si è verificato un errore durante l'aggiunta dell'attività.",
+        "completeFailed": "Si è verificato un errore durante il completamento dell'attività.",
+        "removeFailed": "Si è verificato un errore durante la rimozione dell'attività."
+    },
+    "slash": {
+        "avatar": {
+            "description": "Mostra l'avatar di un utente",
+            "options": { "target": "L'utente di cui vuoi vedere l'avatar (predefinito: tu)" }
+        },
+        "cooldown": {
+            "description": "Fai una pausa: mettiti in timeout per un po'",
+            "options": { "duration": "Per quanto tempo", "reason": "Perché (facoltativo; lo vede solo lo staff)" }
+        },
+        "firstmsg": { "description": "Ottieni il link al primo messaggio di questo canale" },
+        "remind": {
+            "description": "Promemoria per te",
+            "sub": {
+                "me": { "description": "Ricordami qualcosa più tardi", "options": { "in": "Quando, ad es. 10m, 2h, 1d o 1d12h", "text": "Cosa devo ricordarti" } },
+                "list": { "description": "I tuoi promemoria non ancora scattati" },
+                "delete": { "description": "Elimina uno dei tuoi promemoria", "options": { "id": "Il numero da /remind list" } }
+            }
+        },
+        "report": {
+            "description": "Segnala un utente allo staff o scegli dove arrivano le segnalazioni.",
+            "sub": {
+                "file": { "description": "Segnala un utente al team di moderazione del server.", "options": { "user": "L'utente che vuoi segnalare.", "reason": "Il motivo della segnalazione (con dettagli)." } },
+                "setchannel": { "description": "Imposta il canale delle segnalazioni. (Amministratore)", "options": { "channel": "Il canale testuale che riceve le segnalazioni." } }
+            }
+        },
+        "serverinfo": { "description": "Informazioni dettagliate sul server" },
+        "todo": {
+            "description": "Gestisci la tua lista personale di cose da fare",
+            "sub": {
+                "add": { "description": "Aggiungi un'attività alla tua lista", "options": { "task": "L'attività da aggiungere" } },
+                "list": { "description": "Vedi la tua lista di cose da fare" },
+                "complete": { "description": "Segna un'attività come completata", "options": { "number": "Il numero dell'attività da completare" } },
+                "remove": { "description": "Rimuovi un'attività dalla tua lista", "options": { "number": "Il numero dell'attività da rimuovere" } },
+                "share": { "description": "Gestisci le liste condivise" },
+                "shareCreate": { "description": "Crea una nuova lista condivisa", "options": { "name": "Nome della lista condivisa" } },
+                "shareAdd": { "description": "Aggiungi un membro a una lista condivisa", "options": { "user": "L'utente da aggiungere alla lista" } },
+                "shareView": { "description": "Vedi una lista condivisa" },
+                "shareAddtask": { "description": "Aggiungi un'attività a una lista condivisa" },
+                "shareRemove": { "description": "Rimuovi un'attività da una lista condivisa" }
+            },
+            "options": { "listId": "ID della lista condivisa" }
+        },
+        "userinfo": {
+            "description": "Informazioni dettagliate su un utente",
+            "options": { "target": "L'utente da vedere (predefinito: tu)" }
+        },
+        "weather": {
+            "description": "Meteo in tempo reale per un luogo",
+            "options": { "city": "Il nome della città, ad es. \"Roma\" o \"Tokyo\"" }
+        },
+        "wipedata": { "description": "Elimina livelli, compleanno, cose da fare, promemoria e token di accesso (irreversibile)" }
+    }
+}

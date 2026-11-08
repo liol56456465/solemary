@@ -1,0 +1,504 @@
+{
+    "embed": {
+        "preview": {
+            "empty": "*(Leer. Füge über das Menü unten etwas hinzu.)*"
+        },
+        "dash": {
+            "title": "Embed-Editor",
+            "footer": "Die Vorschau oben aktualisiert sich live · Schließt nach 15 Min.",
+            "label": {
+                "title": "Titel",
+                "description": "Beschreibung",
+                "colour": "Farbe",
+                "author": "Autor",
+                "footer": "Fußzeile",
+                "thumbnail": "Vorschaubild",
+                "image": "Bild",
+                "timestamp": "Zeitstempel",
+                "fields": "Felder"
+            },
+            "notSet": "Nicht gesetzt",
+            "default": "Standard",
+            "set": "Gesetzt",
+            "on": "An",
+            "off": "Aus",
+            "characters": {
+                "one": "{count} Zeichen",
+                "other": "{count} Zeichen"
+            }
+        },
+        "menu": {
+            "placeholder": "Was möchtest du ändern?",
+            "template": {
+                "label": "Mit einer Vorlage beginnen",
+                "description": "Fertige Ankündigungen, z. B. wie man Einspruch einlegt"
+            },
+            "content": {
+                "label": "Inhalt bearbeiten",
+                "description": "Titel und Beschreibung festlegen"
+            },
+            "colour": {
+                "label": "Farbe",
+                "description": "Wähle eine Vorgabe oder gib einen Hex-Code ein"
+            },
+            "author": {
+                "label": "Autor",
+                "description": "Die Namenszeile oben im Embed"
+            },
+            "footer": {
+                "label": "Fußzeile",
+                "description": "Text und Symbol der Fußzeile"
+            },
+            "images": {
+                "label": "Bilder",
+                "description": "Vorschaubild oder großes Bild"
+            },
+            "addField": {
+                "label": "Feld hinzufügen ({count}/{max})",
+                "description": "Ein neues Feld hinzufügen"
+            },
+            "editField": {
+                "label": "Feld bearbeiten",
+                "description": "Name, Wert oder Anordnung eines Felds ändern"
+            },
+            "removeField": {
+                "label": "Feld entfernen",
+                "description": "Ein Feld löschen"
+            },
+            "reorder": {
+                "label": "Felder sortieren",
+                "description": "Ein Feld nach oben oder unten verschieben"
+            },
+            "timestamp": {
+                "off": "Zeitstempel ausschalten",
+                "on": "Zeitstempel einschalten",
+                "description": "Zeigt die Uhrzeit in der Fußzeile"
+            },
+            "post": {
+                "label": "Embed posten",
+                "description": "In einen Kanal senden"
+            },
+            "json": {
+                "label": "JSON anzeigen",
+                "description": "Das rohe JSON ansehen"
+            },
+            "reset": {
+                "label": "Neu anfangen",
+                "description": "Alles leeren"
+            }
+        },
+        "content": {
+            "modalTitle": "Inhalt bearbeiten",
+            "titleLabel": "Titel (max. 256 Zeichen)",
+            "titlePlaceholder": "Titel",
+            "descriptionLabel": "Beschreibung (max. 4000 Zeichen)",
+            "descriptionPlaceholder": "Text des Embeds"
+        },
+        "color": {
+            "placeholder": "Wähle eine Farbe",
+            "customDescription": "Gib dein eigenes #RRGGBB ein",
+            "title": "Farbe",
+            "intro": "Wähle eine Vorgabe oder **Eigener Hex-Code**, um dein eigenes `#RRGGBB` einzugeben.",
+            "modalTitle": "Eigene Farbe",
+            "hexLabel": "Hex-Farbcode",
+            "invalid": "`{hex}` ist kein gültiger Hex-Farbcode. Nutze `#RRGGBB` (z. B. `#5865F2`).",
+            "preset": {
+                "primary": "Primär (Blau)",
+                "success": "Erfolg (Grün)",
+                "error": "Fehler (Rot)",
+                "warning": "Warnung (Gelb)",
+                "info": "Info (Hellblau)",
+                "blurple": "Blurple (Discord)",
+                "fuchsia": "Fuchsia",
+                "gold": "Gold",
+                "white": "Weiß",
+                "dark": "Dunkel",
+                "custom": "Eigener Hex-Code"
+            }
+        },
+        "template": {
+            "groupPlaceholder": "Wähle eine Gruppe",
+            "title": "Mit einer Vorlage beginnen",
+            "intro": "Wähle eine Gruppe, dann eine Vorlage. Sie ersetzt Titel, Text und Farbe. Bearbeite sie vor dem Posten: Teile in [eckigen Klammern] füllst du selbst aus.",
+            "pickPlaceholder": "Wähle eine Vorlage",
+            "loadedTitle": "Vorlage geladen",
+            "loaded": "„{name}“ ist in der Vorschau. Mit „Inhalt bearbeiten“ kannst du sie ändern.",
+            "count": {
+                "one": "{count} Vorlage",
+                "other": "{count} Vorlagen"
+            }
+        },
+        "author": {
+            "modalTitle": "Autor",
+            "nameLabel": "Autorname (leer = entfernen)",
+            "namePlaceholder": "Name",
+            "iconLabel": "URL des Autor-Symbols (optional)",
+            "urlLabel": "Link-URL des Autors (optional)",
+            "badIcon": "Die URL des Autor-Symbols muss eine gültige `https://`-URL sein.",
+            "badUrl": "Die Link-URL des Autors muss eine gültige `https://`-URL sein."
+        },
+        "footer": {
+            "modalTitle": "Fußzeile",
+            "textLabel": "Fußzeilentext (leer = entfernen)",
+            "textPlaceholder": "Fußzeilentext",
+            "iconLabel": "URL des Fußzeilen-Symbols (optional)",
+            "badIcon": "Die URL des Fußzeilen-Symbols muss eine gültige `https://`-URL sein."
+        },
+        "images": {
+            "setThumbnail": {
+                "label": "Vorschaubild setzen",
+                "description": "Kleines Bild oben rechts"
+            },
+            "setImage": {
+                "label": "Großes Bild setzen",
+                "description": "Breites Bild unten"
+            },
+            "clearThumbnail": {
+                "label": "Vorschaubild entfernen",
+                "description": "Das aktuelle Vorschaubild entfernen"
+            },
+            "clearImage": {
+                "label": "Großes Bild entfernen",
+                "description": "Das aktuelle große Bild entfernen"
+            },
+            "title": "Bilder",
+            "intro": "Wähle ein Bild zum Setzen oder Entfernen.",
+            "thumbnailField": "Vorschaubild",
+            "imageField": "Großes Bild",
+            "view": "Ansehen",
+            "thumbnailTitle": "Vorschaubild",
+            "imageTitle": "Großes Bild",
+            "urlLabel": "Bild-URL",
+            "badUrl": "Die Bild-URL muss ein öffentlicher `https://`-Link sein."
+        },
+        "field": {
+            "max": "Embeds können höchstens {max} Felder haben.",
+            "addTitle": "Feld hinzufügen",
+            "nameLabel": "Feldname (max. 256 Zeichen)",
+            "namePlaceholder": "Name",
+            "valueLabel": "Feldwert (max. 1024 Zeichen)",
+            "valuePlaceholder": "Text des Felds",
+            "inlineNo": "Nein, volle Breite",
+            "inlineYes": "Ja, nebeneinander",
+            "inlineLabel": "Nebeneinander anzeigen?",
+            "editPlaceholder": "Wähle ein Feld zum Bearbeiten",
+            "inline": "Nebeneinander",
+            "block": "Volle Breite",
+            "editTitle": "Feld bearbeiten",
+            "editIntro": "Wähle das Feld, das du ändern möchtest.",
+            "editModalTitle": "Feld {n} bearbeiten",
+            "editNameLabel": "Feldname",
+            "editValueLabel": "Feldwert",
+            "removePlaceholder": "Wähle ein Feld zum Entfernen",
+            "removeTitle": "Feld entfernen",
+            "removeIntro": "Wähle das Feld, das du löschen möchtest.",
+            "reorderPlaceholder": "Wähle ein Feld zum Verschieben",
+            "reorderTitle": "Felder sortieren",
+            "reorderIntro": "Wähle ein Feld und verschiebe es nach oben oder unten.",
+            "up": "Nach oben",
+            "down": "Nach unten",
+            "cancel": "Abbrechen",
+            "moveTitle": "Feld verschieben",
+            "moving": "**{name}** wird verschoben. Es steht an Position **{position}** von **{total}**."
+        },
+        "post": {
+            "empty": "Füge zuerst einen Titel, Text oder ein Feld hinzu.",
+            "channelPlaceholder": "Wähle einen Kanal",
+            "title": "Embed posten",
+            "intro": "Wähle den Kanal, in dem es gepostet werden soll.",
+            "noChannel": "Ich konnte diesen Kanal nicht finden.",
+            "noPermission": "Ich brauche in {channel} die Berechtigungen **Nachrichten senden** und **Links einbetten**, um dort zu posten.",
+            "postedTitle": "Embed gepostet",
+            "posted": "Gepostet in {channel}."
+        },
+        "json": {
+            "title": "Embed-JSON",
+            "tooLong": "Das JSON ist zu lang für hier. Sieh dir die angehängte Datei an."
+        },
+        "error": {
+            "generic": "Ein Fehler ist aufgetreten.",
+            "unexpected": "Ein unerwarteter Fehler ist aufgetreten.",
+            "open": "Der Embed-Editor konnte nicht geöffnet werden."
+        }
+    },
+    "slash": {
+        "embedbuilder": {
+            "description": "Ein Embed mit Live-Vorschau bauen und posten"
+        },
+        "tools": {
+            "description": "Kleine Helfer: Rechner, Umrechner, Passwörter und mehr",
+            "sub": {
+                "calculate": {
+                    "description": "Einen mathematischen Ausdruck berechnen",
+                    "options": {
+                        "expression": "Der Ausdruck, der berechnet werden soll (z. B. 2+2*3, sin(45 deg), 16^0.5)"
+                    }
+                },
+                "baseconvert": {
+                    "description": "Zahlen zwischen Zahlensystemen umrechnen",
+                    "options": {
+                        "number": "Die Zahl, die umgerechnet werden soll",
+                        "from": "Ausgangssystem/-format",
+                        "to": "Zielsystem/-format (Standard: alle)"
+                    }
+                },
+                "hexcolor": {
+                    "description": "Zufällige Hex-Farbe mit Vorschau",
+                    "options": {
+                        "color": "Eine bestimmte Hex-Farbe (z. B. #FF5733 oder FF5733)"
+                    }
+                },
+                "generatepassword": {
+                    "description": "Ein starkes zufälliges Passwort erzeugen",
+                    "options": {
+                        "length": "Länge des Passworts (Standard: 16, max.: 50)",
+                        "uppercase": "Großbuchstaben verwenden (A-Z)",
+                        "numbers": "Zahlen verwenden (0-9)",
+                        "symbols": "Symbole verwenden (!@#$%^&*)"
+                    }
+                },
+                "time": {
+                    "description": "Aktuelle Uhrzeit in verschiedenen Zeitzonen",
+                    "options": {
+                        "timezone": "Die Zeitzone, die angezeigt werden soll (z. B. UTC, America/New_York)"
+                    }
+                },
+                "unixtime": {
+                    "description": "Aktueller Unix-Zeitstempel"
+                },
+                "randomuser": {
+                    "description": "Ein zufälliges Mitglied auswählen",
+                    "options": {
+                        "role": "Nur Mitglieder mit dieser Rolle auswählen",
+                        "bots": "Bots mit auswählen (Standard: nein)",
+                        "online": "Nur aus Mitgliedern auswählen, die online sind (Standard: nein)",
+                        "mention": "Das ausgewählte Mitglied erwähnen (Standard: nein)"
+                    }
+                }
+            }
+        },
+        "countdown": {
+            "description": "Einen Countdown starten",
+            "options": {
+                "minutes": "Anzahl der Minuten für den Countdown (0-1440)",
+                "seconds": "Anzahl der Sekunden für den Countdown (0-59)",
+                "title": "Optionaler Titel für den Countdown"
+            }
+        },
+        "poll": {
+            "description": "Eine Umfrage posten oder früher beenden",
+            "sub": {
+                "create": {
+                    "description": "Eine Discord-Umfrage mit 2 bis 10 Antworten posten",
+                    "options": {
+                        "question": "Die Frage der Umfrage",
+                        "option1": "Erste Antwort: bis zu 55 Zeichen, 100 bei anonym",
+                        "option2": "Zweite Antwort: bis zu 55 Zeichen, 100 bei anonym",
+                        "option3": "Dritte Antwort (optional): bis zu 55 Zeichen, 100 bei anonym",
+                        "option4": "Vierte Antwort (optional): bis zu 55 Zeichen, 100 bei anonym",
+                        "option5": "Fünfte Antwort (optional): bis zu 55 Zeichen, 100 bei anonym",
+                        "option6": "Sechste Antwort (optional): bis zu 55 Zeichen, 100 bei anonym",
+                        "option7": "Siebte Antwort (optional): bis zu 55 Zeichen, 100 bei anonym",
+                        "option8": "Achte Antwort (optional): bis zu 55 Zeichen, 100 bei anonym",
+                        "option9": "Neunte Antwort (optional): bis zu 55 Zeichen, 100 bei anonym",
+                        "option10": "Zehnte Antwort (optional): bis zu 55 Zeichen, 100 bei anonym",
+                        "hours": "Wie lange die Umfrage offen bleibt, in Stunden: 1 bis 168 (7 Tage). Standard 24.",
+                        "multiple": "Mitglieder dürfen mehr als eine Antwort wählen (Standard: nein)",
+                        "anonymous": "Stattdessen eine Umfrage mit Zahlen-Reaktionen, da Discord-Umfragen Wähler zeigen. Kein Zeitlimit."
+                    }
+                },
+                "end": {
+                    "description": "Eine Discord-Umfrage von Mewvo jetzt beenden und die Endergebnisse zeigen",
+                    "options": {
+                        "message_link": "Nachrichtenlink der Umfrage (Rechtsklick auf die Umfrage, dann Nachrichtenlink kopieren)"
+                    }
+                }
+            }
+        },
+        "shorten": {
+            "description": "Eine URL mit is.gd kürzen",
+            "options": {
+                "url": "Die URL, die gekürzt werden soll",
+                "custom": "Eigenes URL-Ende (optional)"
+            }
+        }
+    },
+    "common": {
+        "unknownSubcommand": "Unbekannter Unterbefehl."
+    },
+    "calculate": {
+        "badCharacters": "**Darin sind Zeichen, die der Rechner nicht verwenden kann.**\n\nErlaubt: Zahlen, Dezimalzahlen, + - * / ^ %, sin cos tan sqrt abs log exp, pi e, ()\nNicht erlaubt: eckige Klammern, geschweifte Klammern und andere Symbole",
+        "looksLikeCode": "**Das sieht nach Code aus, nicht nach Mathe.**\n\n**Blockiert:** import, require, eval, Function, setTimeout, setInterval, process, fs, document, window, fetch, Schleifen, async/await\n\nHier funktioniert nur einfache Mathematik.",
+        "noResult": "Kein Ergebnis",
+        "history": "Verlauf",
+        "resultTitle": "Ergebnis",
+        "resultBody": "**Ausdruck:** `{expression}`\n**Ergebnis:** `{result}`\n\n-# Mit den Buttons rechnest du mit diesem Ergebnis weiter.",
+        "noHistory": "Noch keine Rechnungen im Verlauf.",
+        "historyTitle": "**Deine letzten Rechnungen**\n\n{list}",
+        "modalTitle": {
+            "add": "Zahl zum Addieren eingeben",
+            "subtract": "Zahl zum Subtrahieren eingeben",
+            "multiply": "Zahl zum Multiplizieren eingeben",
+            "divide": "Zahl zum Dividieren eingeben"
+        },
+        "operandLabel": "Zahl für {operator} mit {result}",
+        "operandPlaceholder": "Zahl eingeben...",
+        "modalFailed": "Der Rechner konnte nicht geöffnet werden. Versuch es noch einmal.",
+        "buttonFailed": "Bei deiner Anfrage ist ein Fehler aufgetreten.",
+        "expiredButton": "Rechner abgelaufen",
+        "timedOut": "Dieser Rechner ist abgelaufen. Führe den Befehl noch einmal aus, um weiterzurechnen.",
+        "evalFailed": "Der Ausdruck konnte nicht berechnet werden.",
+        "unsupported": "Der Ausdruck enthält eine nicht unterstützte Operation oder Funktion.",
+        "undefinedSymbol": "Der Ausdruck enthält eine unbekannte Variable oder Funktion.",
+        "unbalanced": "Im Ausdruck passen die Klammern nicht zusammen.",
+        "badOperator": "Der Ausdruck enthält einen ungültigen Operator oder ein ungültiges Zeichen.",
+        "checkAgain": "Prüfe den Ausdruck und versuch es noch einmal.",
+        "modal": {
+            "noContext": "Die Rechnung konnte nicht gefunden werden.",
+            "notYours": "Das ist nicht dein Rechner.",
+            "contextTimedOut": "Diese Rechnung ist abgelaufen. Starte eine neue.",
+            "notNumber": "Das ist keine Zahl.",
+            "updatedBody": "**Ausdruck:** `{expression}`\n**Ergebnis:** `{result}`\n\n*Mit den Buttons an der Nachricht im Kanal rechnest du weiter.*",
+            "failed": "Bei deiner Rechnung ist ein Fehler aufgetreten."
+        }
+    },
+    "baseconvert": {
+        "base": {
+            "BIN": "Binär",
+            "OCT": "Oktal",
+            "DEC": "Dezimal",
+            "HEX": "Hexadezimal",
+            "B64": "Base64",
+            "B36": "Base36",
+            "B58": "Base58",
+            "B62": "Base62"
+        },
+        "noNumber": "Gib eine Zahl zum Umrechnen an.\n\n**Beispiel:** `/baseconvert number:1010 from:BIN to:DEC`",
+        "example": {
+            "BIN": "\n\n**Gültig:** 101, 1010, 11111 | **Ungültig:** 5 (die Ziffer 5 ist nicht erlaubt)",
+            "OCT": "\n\n**Gültig:** 77, 123, 755 | **Ungültig:** 8 (nur 0-7 erlaubt)",
+            "DEC": "\n\n**Gültig:** 42, 123, 999 | **Ungültig:** 12.34 (keine Dezimalzahlen)",
+            "HEX": "\n\n**Gültig:** FF, A1B2, DEADBEEF | **Ungültig:** G (nur 0-9, A-F)"
+        },
+        "badInput": "Du hast angegeben: `{input}`\n\nGültige Zeichen: `{alphabet}`{examples}",
+        "tooLarge": "Die Zahl ist zu groß zum Verarbeiten.\n\nVersuch es mit einer kleineren Zahl.",
+        "title": "Zahlensystem umrechnen",
+        "fromTo": "**Von {fromName} ({fromBase}):** `{from}`\n**Nach {toName} ({toBase}):** `{to}`\n**Dezimal:** `{decimal}`",
+        "resultTooLarge": "Das Ergebnis wäre zu groß oder passt nicht.\n\nVersuch es mit einer kleineren Zahl oder einem anderen Zielsystem.",
+        "input": "**Eingabe ({fromName}):** `{from}`\n",
+        "decimal": "**Dezimal:** `{decimal}`\n\n",
+        "row": "**{name} ({base}):** `{value}`\n",
+        "rowTooLarge": "**{name} ({base}):** *Zu groß zum Umrechnen*\n"
+    },
+    "hexcolor": {
+        "invalid": "Das ist kein gültiger Hex-Code.\n\n**Gültige Formate:**\n• `#FF5733` (mit Raute)\n• `FF5733` (ohne Raute)\n• `F57` (dreistellige Kurzform)\n\n**Ungültig:** `#GG5733` (G ist keine Hex-Ziffer)",
+        "title": "Farbinfo",
+        "body": "**Hex:** `{hex}`\n**RGB:** `{rgb}`\n**HSL:** `{hsl}`\n**Name:** {name}",
+        "custom": "Eigene Farbe",
+        "closeTo": "Ähnlich wie {color}",
+        "random": "Zufällig erzeugte Farbe",
+        "failed": "Die Farbinfo konnte nicht geladen werden. Versuch es noch einmal.",
+        "color": {
+            "red": "Rot",
+            "green": "Grün",
+            "blue": "Blau",
+            "yellow": "Gelb",
+            "magenta": "Magenta",
+            "cyan": "Cyan",
+            "black": "Schwarz",
+            "white": "Weiß",
+            "gray": "Grau",
+            "orange": "Orange",
+            "purple": "Lila",
+            "brown": "Braun",
+            "pink": "Rosa",
+            "darkGreen": "Dunkelgrün",
+            "navy": "Marineblau",
+            "gold": "Gold",
+            "silver": "Silber",
+            "tomato": "Tomatenrot",
+            "turquoise": "Türkis",
+            "lavender": "Lavendel"
+        }
+    },
+    "password": {
+        "badLength": "Das Passwort muss 8-50 Zeichen lang sein. Du hast angegeben: {length}",
+        "strength": {
+            "weak": "Schwach",
+            "good": "Gut",
+            "strong": "Stark",
+            "veryStrong": "Sehr stark"
+        },
+        "title": "Dein Passwort",
+        "body": "**Passwort:** ||`{password}`||\n**Länge:** {length}\n**Stärke:** {strength}\n**Enthält:** {contains}",
+        "characters": {
+            "one": "{count} Zeichen",
+            "other": "{count} Zeichen"
+        },
+        "lowercase": "Kleinbuchstaben",
+        "uppercase": "Großbuchstaben",
+        "numbers": "Zahlen",
+        "symbols": "Symbole"
+    },
+    "randomuser": {
+        "guildOnly": "Diesen Befehl kannst du nur in einem Server verwenden.",
+        "pickFailed": "Es konnte kein Mitglied ausgewählt werden. Versuch es mit anderen Filtern.",
+        "title": "Zufälliges Mitglied",
+        "username": "Benutzername",
+        "bot": "Bot",
+        "yes": "Ja",
+        "no": "Nein",
+        "roles": "Rollen ({count})",
+        "more": "+{count} weitere",
+        "noRoles": "Keine Rollen",
+        "fromCache": "Aus den Mitgliedern gewählt, die Mewvo zwischengespeichert hat; die vollständige Mitgliederliste wurde nicht geladen.",
+        "again": "Noch eins auswählen",
+        "picked": "{member}, du wurdest ausgewählt.",
+        "noMatch": "Keine Mitglieder passen zu diesen Filtern.",
+        "againFailed": "Beim Auswählen eines anderen Mitglieds ist ein Fehler aufgetreten."
+    },
+    "time": {
+        "unknownZone": "Unbekannte Zeitzone. Versuch etwas wie UTC, America/New_York oder Europe/London.",
+        "title": "Aktuelle Uhrzeit",
+        "body": "**{zone}:** {time}\n**Unix-Zeitstempel:** `{unix}`\n**ISO-String:** `{iso}`",
+        "failed": "Die Uhrzeit konnte nicht geladen werden. Versuch es noch einmal."
+    },
+    "unixtime": {
+        "title": "Unix-Zeitstempel",
+        "body": "**Sekunden seit der Unix-Epoche:** `{seconds}`\n**Millisekunden seit der Unix-Epoche:** `{ms}`\n\n**Lesbar (UTC):** {utc}\n**ISO-String:** {iso}",
+        "failed": "Der Zeitstempel konnte nicht geladen werden. Versuch es noch einmal."
+    },
+    "countdown": {
+        "defaultTitle": "Countdown",
+        "tooShort": "Die Dauer muss mindestens 1 Sekunde betragen.",
+        "tooLong": "Ein Countdown kann nicht länger als 24 Stunden dauern.",
+        "started": "Countdown gestartet.",
+        "pause": "Pausieren",
+        "resume": "Fortsetzen",
+        "cancel": "Abbrechen",
+        "remaining": "Verbleibende Zeit: **{time}** (endet {ends})",
+        "remainingPaused": "Verbleibende Zeit: **{time}**",
+        "finishedTitle": "{title} (beendet)",
+        "finished": "Die Zeit ist um.",
+        "pausedTitle": "{title} (pausiert)",
+        "cancelledTitle": "{title} (abgebrochen)",
+        "cancelledBody": "Der Countdown wurde abgebrochen.",
+        "expired": "Dieser Countdown ist abgelaufen oder wurde abgebrochen.",
+        "adminOnly": "Du brauchst die Administrator-Rolle, um Countdowns zu steuern.",
+        "resumed": "Countdown fortgesetzt.",
+        "paused": "Countdown pausiert.",
+        "cancelled": "Countdown abgebrochen.",
+        "failed": "Beim Steuern des Countdowns ist ein Fehler aufgetreten."
+    },
+    "poll": {
+        "ended": "Umfrage beendet. Die Endergebnisse stehen jetzt an der Umfrage: {url}",
+        "ignored": " Stunden und Mehrfachauswahl gelten nur für Discord-Umfragen und wurden daher ignoriert.",
+        "reactionPosted": "Reaktions-Umfrage gepostet.{ignored}",
+        "posted": "Umfrage gepostet. Sie endet <t:{unix}:F> (<t:{unix}:R>). Um sie früher zu beenden, nutze /poll end mit diesem Link: {url}"
+    },
+    "shorten": {
+        "failed": "Der Link konnte nicht gekürzt werden. Versuch es später noch einmal.",
+        "title": "URL gekürzt",
+        "body": "Hier ist deine gekürzte URL: {url}"
+    }
+}

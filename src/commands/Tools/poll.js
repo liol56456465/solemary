@@ -5,8 +5,16 @@ import {
     NATIVE_POLL_DEFAULT_HOURS, NATIVE_POLL_MAX_HOURS, NATIVE_POLL_MIN_HOURS, NATIVE_POLL_QUESTION_MAX, POLL_MAX_OPTIONS as MAX_OPTIONS, POLL_OPTION_MAX,
     createNativePoll, createPoll, endPoll,
 } from '../../services/botMessageService.js';
+import { localized, replyText } from '../Core/modules/commandText.js';
 
 const ORDINALS = ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth', 'Seventh', 'Eighth', 'Ninth', 'Tenth'];
+// Catalog keys of the option descriptions' translations (the English is built from ORDINALS).
+const OPTION_KEYS = [
+    'tools.slash.poll.sub.create.options.option1', 'tools.slash.poll.sub.create.options.option2', 'tools.slash.poll.sub.create.options.option3',
+    'tools.slash.poll.sub.create.options.option4', 'tools.slash.poll.sub.create.options.option5', 'tools.slash.poll.sub.create.options.option6',
+    'tools.slash.poll.sub.create.options.option7', 'tools.slash.poll.sub.create.options.option8', 'tools.slash.poll.sub.create.options.option9',
+    'tools.slash.poll.sub.create.options.option10',
+];
 
 // /poll create posts a native Discord poll (or, with anonymous, the old reaction poll);
 // /poll end ends one of Mewvo's native polls right away. Both are Administrator-only
@@ -16,40 +24,51 @@ export default {
     data: new SlashCommandBuilder()
         .setName('poll')
         .setDescription('Post a poll, or end one early')
+        .setDescriptionLocalizations(localized('tools.slash.poll.description'))
         .addSubcommand((sub) => {
             sub.setName('create')
                 .setDescription('Post a Discord poll with 2 to 10 options')
+                .setDescriptionLocalizations(localized('tools.slash.poll.sub.create.description'))
                 .addStringOption((option) => option.setName('question')
                     .setDescription('The poll question')
+                    .setDescriptionLocalizations(localized('tools.slash.poll.sub.create.options.question'))
                     .setMaxLength(NATIVE_POLL_QUESTION_MAX)
                     .setRequired(true));
             for (let i = 1; i <= MAX_OPTIONS; i++) {
                 sub.addStringOption((option) => option.setName(`option${i}`)
                     .setDescription(`${ORDINALS[i - 1]} option${i <= 2 ? '' : ' (optional)'}: up to 55 characters, 100 if anonymous`)
+                    .setDescriptionLocalizations(localized(OPTION_KEYS[i - 1]))
                     .setMaxLength(POLL_OPTION_MAX)
                     .setRequired(i <= 2));
             }
             return sub
                 .addIntegerOption((option) => option.setName('hours')
                     .setDescription(`How long the poll stays open, in hours: ${NATIVE_POLL_MIN_HOURS} to ${NATIVE_POLL_MAX_HOURS} (7 days). Default ${NATIVE_POLL_DEFAULT_HOURS}.`)
+                    .setDescriptionLocalizations(localized('tools.slash.poll.sub.create.options.hours'))
                     .setMinValue(NATIVE_POLL_MIN_HOURS)
                     .setMaxValue(NATIVE_POLL_MAX_HOURS)
                     .setRequired(false))
                 .addBooleanOption((option) => option.setName('multiple')
                     .setDescription('Let members pick more than one option (default: no)')
+                    .setDescriptionLocalizations(localized('tools.slash.poll.sub.create.options.multiple'))
                     .setRequired(false))
                 .addBooleanOption((option) => option.setName('anonymous')
                     .setDescription('Use a number-reaction poll instead, since Discord polls list who voted. No time limit.')
+                    .setDescriptionLocalizations(localized('tools.slash.poll.sub.create.options.anonymous'))
                     .setRequired(false));
         })
         .addSubcommand((sub) => sub.setName('end')
             .setDescription('End one of Mewvo\'s Discord polls now and show the final results')
+            .setDescriptionLocalizations(localized('tools.slash.poll.sub.end.description'))
             .addStringOption((option) => option.setName('message_link')
                 .setDescription('The poll\'s message link (right-click the poll, then Copy Message Link)')
+                .setDescriptionLocalizations(localized('tools.slash.poll.sub.end.options.message_link'))
                 .setMaxLength(200)
                 .setRequired(true))),
 
     async execute(interaction) {
+        // The confirmations are ephemeral: the user's language. The poll itself is the member's own text.
+        const tr = replyText(interaction);
         const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
         if (!deferSuccess) {
             logger.warn(`Poll interaction defer failed`, {
@@ -63,7 +82,7 @@ export default {
         if (interaction.options.getSubcommand() === 'end') {
             const { message } = await endPoll(interaction.guild, interaction.options.getString('message_link'));
             await InteractionHelper.safeEditReply(interaction, {
-                content: `Poll ended. The final results are now shown on it: ${message.url}`,
+                content: tr.t('tools.poll.ended', { url: message.url }),
             });
             return;
         }
@@ -81,9 +100,9 @@ export default {
         if (interaction.options.getBoolean('anonymous')) {
             await createPoll(interaction.guild, { channel: interaction.channel, question, options, anonymous: true });
             const ignored = hours !== null || multiple !== null
-                ? ' Hours and multiple only apply to Discord polls, so they were ignored.'
+                ? tr.t('tools.poll.ignored')
                 : '';
-            await InteractionHelper.safeEditReply(interaction, { content: `Reaction poll posted.${ignored}` });
+            await InteractionHelper.safeEditReply(interaction, { content: tr.t('tools.poll.reactionPosted', { ignored }) });
             return;
         }
 
@@ -92,7 +111,7 @@ export default {
         });
         const unix = Math.floor(endsAt / 1000);
         await InteractionHelper.safeEditReply(interaction, {
-            content: `Poll posted. It closes <t:${unix}:F> (<t:${unix}:R>). To close it early, use /poll end with this link: ${message.url}`,
+            content: tr.t('tools.poll.posted', { unix, url: message.url }),
         });
     },
 };

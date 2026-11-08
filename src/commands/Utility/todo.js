@@ -5,6 +5,25 @@ import { logger } from '../../utils/logger.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import crypto from 'crypto';
+import { localized, publicText, replyText } from '../Core/modules/commandText.js';
+
+/** The Add / Complete / Remove task buttons under a shared list (labels in the post's language). */
+function sharedListButtons(listId, tr) {
+    return new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId(`shared_todo_add_${listId}`)
+            .setLabel(tr.t('utility.todo.addTask'))
+            .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+            .setCustomId(`shared_todo_complete_${listId}`)
+            .setLabel(tr.t('utility.todo.completeTask'))
+            .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+            .setCustomId(`shared_todo_remove_${listId}`)
+            .setLabel(tr.t('utility.todo.removeTask'))
+            .setStyle(ButtonStyle.Danger)
+    );
+}
 
 // User text goes into embed markdown; escape it (escapeMarkdown also escapes backslashes) so it
 // cannot form masked links or formatting.
@@ -20,14 +39,17 @@ export default {
     data: new SlashCommandBuilder()
         .setName("todo")
         .setDescription("Manage your personal to-do list")
+        .setDescriptionLocalizations(localized('utility.slash.todo.description'))
         .addSubcommand(subcommand =>
             subcommand
                 .setName("add")
                 .setDescription("Add a task to your to-do list")
+                .setDescriptionLocalizations(localized('utility.slash.todo.sub.add.description'))
                 .addStringOption(option =>
                     option
                         .setName("task")
                         .setDescription("The task to add")
+                        .setDescriptionLocalizations(localized('utility.slash.todo.sub.add.options.task'))
                         .setRequired(true)
                 )
         )
@@ -35,15 +57,18 @@ export default {
             subcommand
                 .setName("list")
                 .setDescription("View your to-do list")
+                .setDescriptionLocalizations(localized('utility.slash.todo.sub.list.description'))
         )
         .addSubcommand(subcommand =>
             subcommand
                 .setName("complete")
                 .setDescription("Mark a task as complete")
+                .setDescriptionLocalizations(localized('utility.slash.todo.sub.complete.description'))
                 .addIntegerOption(option =>
                     option
                         .setName("number")
                         .setDescription("The number of the task to complete")
+                        .setDescriptionLocalizations(localized('utility.slash.todo.sub.complete.options.number'))
                         .setRequired(true)
                 )
         )
@@ -51,10 +76,12 @@ export default {
             subcommand
                 .setName("remove")
                 .setDescription("Remove a task from your to-do list")
+                .setDescriptionLocalizations(localized('utility.slash.todo.sub.remove.description'))
                 .addIntegerOption(option =>
                     option
                         .setName("number")
                         .setDescription("The number of the task to remove")
+                        .setDescriptionLocalizations(localized('utility.slash.todo.sub.remove.options.number'))
                         .setRequired(true)
                 )
         )
@@ -62,14 +89,17 @@ export default {
             group
                 .setName("share")
                 .setDescription("Manage shared to-do lists")
+                .setDescriptionLocalizations(localized('utility.slash.todo.sub.share.description'))
                 .addSubcommand(subcommand =>
                     subcommand
                         .setName("create")
                         .setDescription("Create a new shared to-do list")
+                        .setDescriptionLocalizations(localized('utility.slash.todo.sub.shareCreate.description'))
                         .addStringOption(option =>
                             option
                                 .setName("name")
                                 .setDescription("Name for the shared list")
+                                .setDescriptionLocalizations(localized('utility.slash.todo.sub.shareCreate.options.name'))
                                 .setRequired(true)
                         )
                 )
@@ -77,16 +107,19 @@ export default {
                     subcommand
                         .setName("add")
                         .setDescription("Add a member to a shared list")
+                        .setDescriptionLocalizations(localized('utility.slash.todo.sub.shareAdd.description'))
                         .addStringOption(option =>
                             option
                                 .setName("list_id")
                                 .setDescription("ID of the shared list")
+                                .setDescriptionLocalizations(localized('utility.slash.todo.options.listId'))
                                 .setRequired(true)
                         )
                         .addUserOption(option =>
                             option
                                 .setName("user")
                                 .setDescription("User to add to the list")
+                                .setDescriptionLocalizations(localized('utility.slash.todo.sub.shareAdd.options.user'))
                                 .setRequired(true)
                         )
                 )
@@ -94,10 +127,12 @@ export default {
                     subcommand
                         .setName("view")
                         .setDescription("View a shared to-do list")
+                        .setDescriptionLocalizations(localized('utility.slash.todo.sub.shareView.description'))
                         .addStringOption(option =>
                             option
                                 .setName("list_id")
                                 .setDescription("ID of the shared list")
+                                .setDescriptionLocalizations(localized('utility.slash.todo.options.listId'))
                                 .setRequired(true)
                         )
                 )
@@ -105,16 +140,19 @@ export default {
                     subcommand
                         .setName("addtask")
                         .setDescription("Add a task to a shared to-do list")
+                        .setDescriptionLocalizations(localized('utility.slash.todo.sub.shareAddtask.description'))
                         .addStringOption(option =>
                             option
                                 .setName("list_id")
                                 .setDescription("ID of the shared list")
+                                .setDescriptionLocalizations(localized('utility.slash.todo.options.listId'))
                                 .setRequired(true)
                         )
                         .addStringOption(option =>
                             option
                                 .setName("task")
                                 .setDescription("The task to add")
+                                .setDescriptionLocalizations(localized('utility.slash.todo.sub.add.options.task'))
                                 .setRequired(true)
                         )
                 )
@@ -122,16 +160,19 @@ export default {
                     subcommand
                         .setName("remove")
                         .setDescription("Remove a task from a shared to-do list")
+                        .setDescriptionLocalizations(localized('utility.slash.todo.sub.shareRemove.description'))
                         .addStringOption(option =>
                             option
                                 .setName("list_id")
                                 .setDescription("ID of the shared list")
+                                .setDescriptionLocalizations(localized('utility.slash.todo.options.listId'))
                                 .setRequired(true)
                         )
                         .addIntegerOption(option =>
                             option
                                 .setName("number")
                                 .setDescription("The number of the task to remove")
+                                .setDescriptionLocalizations(localized('utility.slash.todo.sub.remove.options.number'))
                                 .setRequired(true)
                         )
                 )
@@ -141,6 +182,9 @@ export default {
 
     async execute(interaction, config, client) {
         const userId = interaction.user.id;
+        // Private answers: the user's language; the shared-list view is posted for everyone: the server's.
+        const tr = replyText(interaction);
+        const pub = publicText(interaction);
                 const subcommand = interaction.options.getSubcommand();
                 const shareSubcommand = interaction.options.getSubcommandGroup() === 'share' ? interaction.options.getSubcommand() : null;
 
@@ -207,9 +251,8 @@ export default {
                     return await InteractionHelper.safeEditReply(interaction, {
                         embeds: [
                             successEmbed(
-                                "Shared list created",
-                                `Created shared list "${escapeUserText(listName)}" with ID: \`${listId}\`\n` +
-                                `Use \`/todo share add list_id:${listId} user:@username\` to add members.`
+                                tr.t('utility.todo.createdTitle'),
+                                tr.t('utility.todo.created', { name: escapeUserText(listName), id: listId })
                             )
                         ]
                     });
@@ -221,11 +264,11 @@ export default {
 
                     const listData = await getOrCreateSharedList(listId);
                     if (!listData) {
-                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Shared list not found.' });
+                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('utility.todo.listNotFound') });
                     }
 
                     if (listData.creatorId !== userId) {
-                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Only the list creator can add members.' });
+                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('utility.todo.onlyCreator') });
                     }
 
                     if (!listData.members.includes(memberToAdd.id)) {
@@ -241,13 +284,13 @@ export default {
 
                         return await InteractionHelper.safeEditReply(interaction, {
                             embeds: [
-                                successEmbed('Member added', 
-                                    `Added ${memberToAdd.username} to the shared list "${escapeUserText(listData.name)}"`
+                                successEmbed(tr.t('utility.todo.memberAddedTitle'),
+                                    tr.t('utility.todo.memberAdded', { user: memberToAdd.username, name: escapeUserText(listData.name) })
                                 )
                             ]
                         });
                     } else {
-                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'User is already a member of this list.' });
+                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('utility.todo.alreadyMember') });
                     }
                 }
 
@@ -256,11 +299,11 @@ export default {
                     const listData = await getOrCreateSharedList(listId);
 
                     if (!listData) {
-                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Shared list not found.' });
+                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('utility.todo.listNotFound') });
                     }
 
                     if (!listData.members.includes(userId)) {
-                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'You don\'t have access to this list.' });
+                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('utility.todo.noAccess') });
                     }
 
                     if (listData.tasks.length === 0) {
@@ -275,37 +318,22 @@ export default {
                         return await InteractionHelper.safeEditReply(interaction, {
                                 embeds: [
                                     successEmbed(
-                                        `Shared list (ID: \`${listId}\`)`,
+                                        pub.t('utility.todo.sharedTitle', { id: listId }),
                                         `**${escapeUserText(listData.name)}**\n\n` +
-                                        `**Owner:** ${ownerName}\n` +
-                                        `**Members:** ${memberList}\n\n` +
-                                        `*This list is empty. Click "Add task" to add one.*`
+                                        `${pub.t('utility.todo.owner', { name: ownerName })}\n` +
+                                        `${pub.t('utility.todo.members', { names: memberList })}\n\n` +
+                                        pub.t('utility.todo.emptyShared')
                                     )
                                 ],
-                                components: [
-                                    new ActionRowBuilder().addComponents(
-                                        new ButtonBuilder()
-                                            .setCustomId(`shared_todo_add_${listId}`)
-                                            .setLabel('Add task')
-                                            .setStyle(ButtonStyle.Primary),
-                                        new ButtonBuilder()
-                                            .setCustomId(`shared_todo_complete_${listId}`)
-                                            .setLabel('Complete task')
-                                            .setStyle(ButtonStyle.Success),
-                                        new ButtonBuilder()
-                                            .setCustomId(`shared_todo_remove_${listId}`)
-                                            .setLabel('Remove task')
-                                            .setStyle(ButtonStyle.Danger)
-                                    )
-                                ]
+                                components: [sharedListButtons(listId, pub)]
                             });
                     }
 
                     const taskList = listData.tasks
                         .map(task => 
-                            `${task.completed ? 'Done' : 'Open'} · #${task.id} ${escapeUserText(task.text)}` +
+                            `${task.completed ? pub.t('utility.todo.done') : pub.t('utility.todo.open')} · #${task.id} ${escapeUserText(task.text)}` +
                             `\`[${new Date(task.createdAt).toLocaleDateString()}]` +
-                            (task.completed ? `• Completed by ${task.completedBy}` : '') + '`'
+                            (task.completed ? pub.t('utility.todo.completedBy', { user: task.completedBy }) : '') + '`'
                         )
                         .join('\n');
 
@@ -318,30 +346,15 @@ export default {
                     const ownerName = owner ? owner.user.username : `<@${listData.creatorId}>`;
 
                     const fullListDisplay = `**${escapeUserText(listData.name)}**\n\n` +
-                        `**Owner:** ${ownerName}\n` +
-                        `**Members:** ${memberList}\n\n` +
-                        `**Tasks:**\n${taskList}`;
+                        `${pub.t('utility.todo.owner', { name: ownerName })}\n` +
+                        `${pub.t('utility.todo.members', { names: memberList })}\n\n` +
+                        `${pub.t('utility.todo.tasks')}\n${taskList}`;
 
                     return await InteractionHelper.safeEditReply(interaction, {
                         embeds: [
-                            successEmbed(`Shared list (ID: \`${listId}\`)`, fullListDisplay)
+                            successEmbed(pub.t('utility.todo.sharedTitle', { id: listId }), fullListDisplay)
                         ],
-                        components: [
-                            new ActionRowBuilder().addComponents(
-                                new ButtonBuilder()
-                                    .setCustomId(`shared_todo_add_${listId}`)
-                                    .setLabel('Add task')
-                                    .setStyle(ButtonStyle.Primary),
-                                new ButtonBuilder()
-                                    .setCustomId(`shared_todo_complete_${listId}`)
-                                    .setLabel('Complete task')
-                                    .setStyle(ButtonStyle.Success),
-                                new ButtonBuilder()
-                                    .setCustomId(`shared_todo_remove_${listId}`)
-                                    .setLabel('Remove task')
-                                    .setStyle(ButtonStyle.Danger)
-                            )
-                        ]
+                        components: [sharedListButtons(listId, pub)]
                     });
                 }
 
@@ -352,11 +365,11 @@ export default {
                     const listData = await getOrCreateSharedList(listId);
 
                     if (!listData) {
-                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Shared list not found.' });
+                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('utility.todo.listNotFound') });
                     }
 
                     if (!listData.members.includes(userId)) {
-                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'You don\'t have access to this list.' });
+                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('utility.todo.noAccess') });
                     }
 
                     const newTask = {
@@ -372,7 +385,7 @@ export default {
 
                     return await InteractionHelper.safeEditReply(interaction, {
                         embeds: [
-                            successEmbed('Task added', `Added "${escapeUserText(taskText)}" to the shared list "${escapeUserText(listData.name)}"`)
+                            successEmbed(tr.t('utility.todo.taskAddedTitle'), tr.t('utility.todo.taskAddedShared', { task: escapeUserText(taskText), name: escapeUserText(listData.name) }))
                         ]
                     });
                 }
@@ -384,16 +397,16 @@ export default {
                     const listData = await getOrCreateSharedList(listId);
 
                     if (!listData) {
-                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Shared list not found.' });
+                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('utility.todo.listNotFound') });
                     }
 
                     if (!listData.members.includes(userId)) {
-                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'You don\'t have access to this list.' });
+                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('utility.todo.noAccess') });
                     }
 
                     const taskIndex = listData.tasks.findIndex(task => task.id === taskNumber);
                     if (taskIndex === -1) {
-                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Task not found.' });
+                        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('utility.todo.taskNotFound') });
                     }
 
                     const [removedTask] = listData.tasks.splice(taskIndex, 1);
@@ -401,7 +414,7 @@ export default {
 
                     return await InteractionHelper.safeEditReply(interaction, {
                         embeds: [
-                            successEmbed('Task removed', `Removed "${escapeUserText(removedTask.text)}" from the shared list "${escapeUserText(listData.name)}".`)
+                            successEmbed(tr.t('utility.todo.taskRemovedTitle'), tr.t('utility.todo.taskRemovedShared', { task: escapeUserText(removedTask.text), name: escapeUserText(listData.name) }))
                         ]
                     });
                 }
@@ -436,8 +449,8 @@ export default {
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         successEmbed(
-                            "Task added",
-                            `Added "${escapeUserText(taskText)}" to your to-do list.`
+                            tr.t('utility.todo.taskAddedTitle'),
+                            tr.t('utility.todo.taskAdded', { task: escapeUserText(taskText) })
                         ),
                     ],
                 });
@@ -446,20 +459,20 @@ export default {
             case 'list': {
                 if (userData.tasks.length === 0) {
                     return await InteractionHelper.safeEditReply(interaction, {
-                        embeds: [successEmbed("Your to-do list", 'Your to-do list is empty.')],
+                        embeds: [successEmbed(tr.t('utility.todo.yourList'), tr.t('utility.todo.emptyList'))],
                     });
                 }
 
                 const taskList = userData.tasks
                     .map(task => 
-                        `${task.completed ? 'Done' : 'Open'} · #${task.id} ${escapeUserText(task.text)}` +
+                        `${task.completed ? tr.t('utility.todo.done') : tr.t('utility.todo.open')} · #${task.id} ${escapeUserText(task.text)}` +
                         `\`[${new Date(task.createdAt).toLocaleDateString()}]\``
                     )
                     .join('\n');
 
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
-                        successEmbed('Your to-do list', taskList)
+                        successEmbed(tr.t('utility.todo.yourList'), taskList)
                     ],
                 });
             }
@@ -469,11 +482,11 @@ export default {
                 const task = userData.tasks.find(t => t.id === taskNumber);
 
                 if (!task) {
-                    return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Task not found.' });
+                    return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('utility.todo.taskNotFound') });
                 }
 
                 if (task.completed) {
-                    return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `Task #${task.id} is already completed.` });
+                    return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('utility.todo.alreadyDone', { id: task.id }) });
                 }
 
                 task.completed = true;
@@ -481,7 +494,7 @@ export default {
 
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
-                        successEmbed('Task done', `Marked "${escapeUserText(task.text)}" as done.`)
+                        successEmbed(tr.t('utility.todo.taskDoneTitle'), tr.t('utility.todo.taskDone', { task: escapeUserText(task.text) }))
                     ],
                 });
             }
@@ -491,7 +504,7 @@ export default {
                 const taskIndex = userData.tasks.findIndex(t => t.id === taskNumber);
 
                 if (taskIndex === -1) {
-                    return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Task not found.' });
+                    return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('utility.todo.taskNotFound') });
                 }
 
                 const [removedTask] = userData.tasks.splice(taskIndex, 1);
@@ -499,13 +512,13 @@ export default {
 
                 return await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
-                        successEmbed('Task removed', `Removed "${escapeUserText(removedTask.text)}" from your to-do list.`)
+                        successEmbed(tr.t('utility.todo.taskRemovedTitle'), tr.t('utility.todo.taskRemoved', { task: escapeUserText(removedTask.text) }))
                     ],
                 });
             }
 
             default:
-                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Invalid subcommand.' });
+                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('utility.todo.invalidSubcommand') });
         }
     },
 };

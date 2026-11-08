@@ -1,0 +1,510 @@
+{
+    "embed": {
+        "preview": {
+            "empty": "*(Pusto. Dodaj coś w menu poniżej.)*"
+        },
+        "dash": {
+            "title": "Kreator embedów",
+            "footer": "Podgląd powyżej odświeża się na bieżąco · Zamyka się po 15 min",
+            "label": {
+                "title": "Tytuł",
+                "description": "Opis",
+                "colour": "Kolor",
+                "author": "Autor",
+                "footer": "Stopka",
+                "thumbnail": "Miniatura",
+                "image": "Obraz",
+                "timestamp": "Znacznik czasu",
+                "fields": "Pola"
+            },
+            "notSet": "Nie ustawiono",
+            "default": "Domyślny",
+            "set": "Ustawiono",
+            "on": "Wł.",
+            "off": "Wył.",
+            "characters": {
+                "one": "{count} znak",
+                "few": "{count} znaki",
+                "many": "{count} znaków",
+                "other": "{count} znaku"
+            }
+        },
+        "menu": {
+            "placeholder": "Co chcesz zmienić?",
+            "template": {
+                "label": "Zacznij od szablonu",
+                "description": "Gotowe ogłoszenia, np. jak złożyć odwołanie"
+            },
+            "content": {
+                "label": "Edytuj treść",
+                "description": "Ustaw tytuł i opis"
+            },
+            "colour": {
+                "label": "Kolor",
+                "description": "Wybierz gotowy kolor lub wpisz kod hex"
+            },
+            "author": {
+                "label": "Autor",
+                "description": "Linia z nazwą na górze embeda"
+            },
+            "footer": {
+                "label": "Stopka",
+                "description": "Tekst i ikona stopki"
+            },
+            "images": {
+                "label": "Obrazy",
+                "description": "Miniatura lub duży obraz"
+            },
+            "addField": {
+                "label": "Dodaj pole ({count}/{max})",
+                "description": "Dodaj nowe pole"
+            },
+            "editField": {
+                "label": "Edytuj pole",
+                "description": "Zmień nazwę, wartość lub układ pola"
+            },
+            "removeField": {
+                "label": "Usuń pole",
+                "description": "Usuń jedno pole"
+            },
+            "reorder": {
+                "label": "Zmień kolejność pól",
+                "description": "Przesuń pole w górę lub w dół"
+            },
+            "timestamp": {
+                "off": "Wyłącz znacznik czasu",
+                "on": "Włącz znacznik czasu",
+                "description": "Pokazuje godzinę w stopce"
+            },
+            "post": {
+                "label": "Opublikuj embed",
+                "description": "Wyślij na kanał"
+            },
+            "json": {
+                "label": "Pokaż JSON",
+                "description": "Zobacz surowy JSON"
+            },
+            "reset": {
+                "label": "Zacznij od nowa",
+                "description": "Wyczyść wszystko"
+            }
+        },
+        "content": {
+            "modalTitle": "Edytuj treść",
+            "titleLabel": "Tytuł (maks. 256 znaków)",
+            "titlePlaceholder": "Tytuł",
+            "descriptionLabel": "Opis (maks. 4000 znaków)",
+            "descriptionPlaceholder": "Tekst embeda"
+        },
+        "color": {
+            "placeholder": "Wybierz kolor",
+            "customDescription": "Wpisz własny #RRGGBB",
+            "title": "Kolor",
+            "intro": "Wybierz gotowy kolor albo **Własny hex**, aby wpisać własny `#RRGGBB`.",
+            "modalTitle": "Własny kolor",
+            "hexLabel": "Kod koloru hex",
+            "invalid": "`{hex}` to nie jest poprawny kod koloru hex. Użyj `#RRGGBB` (np. `#5865F2`).",
+            "preset": {
+                "primary": "Główny (niebieski)",
+                "success": "Sukces (zielony)",
+                "error": "Błąd (czerwony)",
+                "warning": "Ostrzeżenie (żółty)",
+                "info": "Info (jasnoniebieski)",
+                "blurple": "Blurple (Discord)",
+                "fuchsia": "Fuksja",
+                "gold": "Złoty",
+                "white": "Biały",
+                "dark": "Ciemny",
+                "custom": "Własny hex"
+            }
+        },
+        "template": {
+            "groupPlaceholder": "Wybierz grupę",
+            "title": "Zacznij od szablonu",
+            "intro": "Wybierz grupę, potem szablon. Zastąpi tytuł, tekst i kolor. Popraw go przed publikacją: części w [nawiasach kwadratowych] uzupełniasz sam.",
+            "pickPlaceholder": "Wybierz szablon",
+            "loadedTitle": "Szablon wczytany",
+            "loaded": "„{name}” jest w podglądzie. Zmienisz go przez Edytuj treść.",
+            "count": {
+                "one": "{count} szablon",
+                "few": "{count} szablony",
+                "many": "{count} szablonów",
+                "other": "{count} szablonu"
+            }
+        },
+        "author": {
+            "modalTitle": "Autor",
+            "nameLabel": "Nazwa autora (puste = usuń)",
+            "namePlaceholder": "Nazwa",
+            "iconLabel": "URL ikony autora (opcjonalnie)",
+            "urlLabel": "URL linku autora (opcjonalnie)",
+            "badIcon": "URL ikony autora musi być poprawnym adresem `https://`.",
+            "badUrl": "URL linku autora musi być poprawnym adresem `https://`."
+        },
+        "footer": {
+            "modalTitle": "Stopka",
+            "textLabel": "Tekst stopki (puste = usuń)",
+            "textPlaceholder": "Tekst stopki",
+            "iconLabel": "URL ikony stopki (opcjonalnie)",
+            "badIcon": "URL ikony stopki musi być poprawnym adresem `https://`."
+        },
+        "images": {
+            "setThumbnail": {
+                "label": "Ustaw miniaturę",
+                "description": "Mały obraz w prawym górnym rogu"
+            },
+            "setImage": {
+                "label": "Ustaw duży obraz",
+                "description": "Szeroki obraz na dole"
+            },
+            "clearThumbnail": {
+                "label": "Usuń miniaturę",
+                "description": "Usuń obecną miniaturę"
+            },
+            "clearImage": {
+                "label": "Usuń duży obraz",
+                "description": "Usuń obecny duży obraz"
+            },
+            "title": "Obrazy",
+            "intro": "Wybierz obraz do ustawienia lub usunięcia.",
+            "thumbnailField": "Miniatura",
+            "imageField": "Duży obraz",
+            "view": "Zobacz",
+            "thumbnailTitle": "Miniatura",
+            "imageTitle": "Duży obraz",
+            "urlLabel": "URL obrazu",
+            "badUrl": "URL obrazu musi być publicznym linkiem `https://`."
+        },
+        "field": {
+            "max": "Embed może mieć najwyżej {max} pól.",
+            "addTitle": "Dodaj pole",
+            "nameLabel": "Nazwa pola (maks. 256 znaków)",
+            "namePlaceholder": "Nazwa",
+            "valueLabel": "Wartość pola (maks. 1024 znaki)",
+            "valuePlaceholder": "Tekst pola",
+            "inlineNo": "Nie, na całą szerokość",
+            "inlineYes": "Tak, obok siebie",
+            "inlineLabel": "Wyświetlać obok siebie?",
+            "editPlaceholder": "Wybierz pole do edycji",
+            "inline": "Obok siebie",
+            "block": "Cała szerokość",
+            "editTitle": "Edytuj pole",
+            "editIntro": "Wybierz pole, które chcesz zmienić.",
+            "editModalTitle": "Edytuj pole {n}",
+            "editNameLabel": "Nazwa pola",
+            "editValueLabel": "Wartość pola",
+            "removePlaceholder": "Wybierz pole do usunięcia",
+            "removeTitle": "Usuń pole",
+            "removeIntro": "Wybierz pole, które chcesz usunąć.",
+            "reorderPlaceholder": "Wybierz pole do przesunięcia",
+            "reorderTitle": "Zmień kolejność pól",
+            "reorderIntro": "Wybierz pole, potem przesuń je w górę lub w dół.",
+            "up": "W górę",
+            "down": "W dół",
+            "cancel": "Anuluj",
+            "moveTitle": "Przesuń pole",
+            "moving": "Przesuwasz **{name}**. Jest na pozycji **{position}** z **{total}**."
+        },
+        "post": {
+            "empty": "Najpierw dodaj tytuł, tekst albo pole.",
+            "channelPlaceholder": "Wybierz kanał",
+            "title": "Opublikuj embed",
+            "intro": "Wybierz kanał, na którym go opublikować.",
+            "noChannel": "Nie mogę znaleźć tego kanału.",
+            "noPermission": "Żeby publikować na {channel}, potrzebuję uprawnień **Wysyłanie wiadomości** i **Osadzanie linków**.",
+            "postedTitle": "Embed opublikowany",
+            "posted": "Opublikowano na {channel}."
+        },
+        "json": {
+            "title": "JSON embeda",
+            "tooLong": "JSON jest za długi, żeby go tu pokazać. Zobacz załączony plik."
+        },
+        "error": {
+            "generic": "Wystąpił błąd.",
+            "unexpected": "Wystąpił nieoczekiwany błąd.",
+            "open": "Nie udało się otworzyć kreatora embedów."
+        }
+    },
+    "slash": {
+        "embedbuilder": {
+            "description": "Zbuduj embed z podglądem na żywo i opublikuj go"
+        },
+        "tools": {
+            "description": "Małe narzędzia: kalkulator, konwertery, hasła i więcej",
+            "sub": {
+                "calculate": {
+                    "description": "Oblicz wyrażenie matematyczne",
+                    "options": {
+                        "expression": "Wyrażenie do obliczenia (np. 2+2*3, sin(45 deg), 16^0.5)"
+                    }
+                },
+                "baseconvert": {
+                    "description": "Przelicz liczby między systemami liczbowymi",
+                    "options": {
+                        "number": "Liczba do przeliczenia",
+                        "from": "System/format źródłowy",
+                        "to": "System/format docelowy (domyślnie: wszystkie)"
+                    }
+                },
+                "hexcolor": {
+                    "description": "Losowy kolor hex z podglądem",
+                    "options": {
+                        "color": "Konkretny kolor hex (np. #FF5733 lub FF5733)"
+                    }
+                },
+                "generatepassword": {
+                    "description": "Wygeneruj silne, losowe hasło",
+                    "options": {
+                        "length": "Długość hasła (domyślnie: 16, maks.: 50)",
+                        "uppercase": "Dodaj wielkie litery (A-Z)",
+                        "numbers": "Dodaj cyfry (0-9)",
+                        "symbols": "Dodaj symbole (!@#$%^&*)"
+                    }
+                },
+                "time": {
+                    "description": "Aktualny czas w różnych strefach czasowych",
+                    "options": {
+                        "timezone": "Strefa czasowa do pokazania (np. UTC, America/New_York)"
+                    }
+                },
+                "unixtime": {
+                    "description": "Aktualny znacznik czasu Unix"
+                },
+                "randomuser": {
+                    "description": "Wylosuj członka serwera",
+                    "options": {
+                        "role": "Losuj tylko spośród członków z tą rolą",
+                        "bots": "Uwzględnij boty (domyślnie: nie)",
+                        "online": "Losuj tylko spośród członków online (domyślnie: nie)",
+                        "mention": "Oznacz wylosowaną osobę (domyślnie: nie)"
+                    }
+                }
+            }
+        },
+        "countdown": {
+            "description": "Uruchom odliczanie",
+            "options": {
+                "minutes": "Liczba minut odliczania (0-1440)",
+                "seconds": "Liczba sekund odliczania (0-59)",
+                "title": "Tytuł odliczania (opcjonalnie)"
+            }
+        },
+        "poll": {
+            "description": "Opublikuj ankietę lub zakończ ją wcześniej",
+            "sub": {
+                "create": {
+                    "description": "Opublikuj ankietę Discorda z 2 do 10 odpowiedziami",
+                    "options": {
+                        "question": "Pytanie ankiety",
+                        "option1": "Pierwsza odpowiedź: do 55 znaków, 100 w anonimowej",
+                        "option2": "Druga odpowiedź: do 55 znaków, 100 w anonimowej",
+                        "option3": "Trzecia odpowiedź (opcjonalnie): do 55 znaków, 100 w anonimowej",
+                        "option4": "Czwarta odpowiedź (opcjonalnie): do 55 znaków, 100 w anonimowej",
+                        "option5": "Piąta odpowiedź (opcjonalnie): do 55 znaków, 100 w anonimowej",
+                        "option6": "Szósta odpowiedź (opcjonalnie): do 55 znaków, 100 w anonimowej",
+                        "option7": "Siódma odpowiedź (opcjonalnie): do 55 znaków, 100 w anonimowej",
+                        "option8": "Ósma odpowiedź (opcjonalnie): do 55 znaków, 100 w anonimowej",
+                        "option9": "Dziewiąta odpowiedź (opcjonalnie): do 55 znaków, 100 w anonimowej",
+                        "option10": "Dziesiąta odpowiedź (opcjonalnie): do 55 znaków, 100 w anonimowej",
+                        "hours": "Ile godzin ankieta jest otwarta: od 1 do 168 (7 dni). Domyślnie 24.",
+                        "multiple": "Pozwól wybrać więcej niż jedną odpowiedź (domyślnie: nie)",
+                        "anonymous": "Ankieta z reakcjami-cyframi, bo ankiety Discorda pokazują, kto głosował. Bez limitu."
+                    }
+                },
+                "end": {
+                    "description": "Zakończ teraz ankietę Discorda od Mewvo i pokaż wyniki końcowe",
+                    "options": {
+                        "message_link": "Link do wiadomości z ankietą (prawy klik na ankietę, potem Kopiuj link do wiadomości)"
+                    }
+                }
+            }
+        },
+        "shorten": {
+            "description": "Skróć link za pomocą is.gd",
+            "options": {
+                "url": "Link do skrócenia",
+                "custom": "Własna końcówka linku (opcjonalnie)"
+            }
+        }
+    },
+    "common": {
+        "unknownSubcommand": "Nieznana podkomenda."
+    },
+    "calculate": {
+        "badCharacters": "**Są tu znaki, których kalkulator nie może użyć.**\n\nDozwolone: liczby, ułamki dziesiętne, + - * / ^ %, sin cos tan sqrt abs log exp, pi e, ()\nNiedozwolone: nawiasy kwadratowe, nawiasy klamrowe i inne symbole",
+        "looksLikeCode": "**To wygląda na kod, a nie na matematykę.**\n\n**Zablokowane:** import, require, eval, Function, setTimeout, setInterval, process, fs, document, window, fetch, pętle, async/await\n\nTu działa tylko zwykła matematyka.",
+        "noResult": "Brak wyniku",
+        "history": "Historia",
+        "resultTitle": "Wynik",
+        "resultBody": "**Wyrażenie:** `{expression}`\n**Wynik:** `{result}`\n\n-# Użyj przycisków, aby liczyć dalej z tym wynikiem.",
+        "noHistory": "Brak obliczeń w historii.",
+        "historyTitle": "**Twoje ostatnie obliczenia**\n\n{list}",
+        "modalTitle": {
+            "add": "Wpisz liczbę do dodania",
+            "subtract": "Wpisz liczbę do odjęcia",
+            "multiply": "Wpisz liczbę do mnożenia",
+            "divide": "Wpisz liczbę do dzielenia"
+        },
+        "operandLabel": "Liczba dla {result} {operator} …",
+        "operandPlaceholder": "Wpisz liczbę...",
+        "modalFailed": "Nie udało się otworzyć kalkulatora. Spróbuj ponownie.",
+        "buttonFailed": "Podczas obsługi Twojej prośby wystąpił błąd.",
+        "expiredButton": "Kalkulator wygasł",
+        "timedOut": "Ten kalkulator wygasł. Uruchom komendę ponownie, aby liczyć dalej.",
+        "evalFailed": "Nie udało się obliczyć wyrażenia.",
+        "unsupported": "Wyrażenie zawiera nieobsługiwane działanie lub funkcję.",
+        "undefinedSymbol": "Wyrażenie zawiera nieznaną zmienną lub funkcję.",
+        "unbalanced": "W wyrażeniu nawiasy się nie zgadzają.",
+        "badOperator": "Wyrażenie zawiera nieprawidłowy operator lub znak.",
+        "checkAgain": "Sprawdź wyrażenie i spróbuj ponownie.",
+        "modal": {
+            "noContext": "Nie udało się odnaleźć tego obliczenia.",
+            "notYours": "To nie jest Twój kalkulator.",
+            "contextTimedOut": "To obliczenie wygasło. Zacznij nowe.",
+            "notNumber": "To nie jest liczba.",
+            "updatedBody": "**Wyrażenie:** `{expression}`\n**Wynik:** `{result}`\n\n*Użyj przycisków pod wiadomością na kanale, aby wykonać kolejne działania.*",
+            "failed": "Podczas obliczania wystąpił błąd."
+        }
+    },
+    "baseconvert": {
+        "base": {
+            "BIN": "Dwójkowy",
+            "OCT": "Ósemkowy",
+            "DEC": "Dziesiętny",
+            "HEX": "Szesnastkowy",
+            "B64": "Base64",
+            "B36": "Base36",
+            "B58": "Base58",
+            "B62": "Base62"
+        },
+        "noNumber": "Podaj liczbę do przeliczenia.\n\n**Przykład:** `/baseconvert number:1010 from:BIN to:DEC`",
+        "example": {
+            "BIN": "\n\n**Poprawne:** 101, 1010, 11111 | **Niepoprawne:** 5 (cyfra 5 jest niedozwolona)",
+            "OCT": "\n\n**Poprawne:** 77, 123, 755 | **Niepoprawne:** 8 (tylko 0-7)",
+            "DEC": "\n\n**Poprawne:** 42, 123, 999 | **Niepoprawne:** 12.34 (bez ułamków)",
+            "HEX": "\n\n**Poprawne:** FF, A1B2, DEADBEEF | **Niepoprawne:** G (tylko 0-9, A-F)"
+        },
+        "badInput": "Podano: `{input}`\n\nDozwolone znaki: `{alphabet}`{examples}",
+        "tooLarge": "Liczba jest za duża do przetworzenia.\n\nSpróbuj z mniejszą liczbą.",
+        "title": "Zmiana systemu liczbowego",
+        "fromTo": "**Z: {fromName} ({fromBase}):** `{from}`\n**Na: {toName} ({toBase}):** `{to}`\n**Dziesiętnie:** `{decimal}`",
+        "resultTooLarge": "Wynik byłby za duży lub niezgodny.\n\nSpróbuj z mniejszą liczbą albo innym systemem docelowym.",
+        "input": "**Wejście ({fromName}):** `{from}`\n",
+        "decimal": "**Dziesiętnie:** `{decimal}`\n\n",
+        "row": "**{name} ({base}):** `{value}`\n",
+        "rowTooLarge": "**{name} ({base}):** *Za duża do przeliczenia*\n"
+    },
+    "hexcolor": {
+        "invalid": "To nie jest poprawny kod hex.\n\n**Poprawne formaty:**\n• `#FF5733` (z krzyżykiem)\n• `FF5733` (bez krzyżyka)\n• `F57` (skrót z 3 cyfr)\n\n**Niepoprawne:** `#GG5733` (G nie jest cyfrą hex)",
+        "title": "Informacje o kolorze",
+        "body": "**Hex:** `{hex}`\n**RGB:** `{rgb}`\n**HSL:** `{hsl}`\n**Nazwa:** {name}",
+        "custom": "Własny kolor",
+        "closeTo": "Podobny do: {color}",
+        "random": "Losowo wygenerowany kolor",
+        "failed": "Nie udało się pobrać informacji o kolorze. Spróbuj ponownie.",
+        "color": {
+            "red": "Czerwony",
+            "green": "Zielony",
+            "blue": "Niebieski",
+            "yellow": "Żółty",
+            "magenta": "Magenta",
+            "cyan": "Cyjan",
+            "black": "Czarny",
+            "white": "Biały",
+            "gray": "Szary",
+            "orange": "Pomarańczowy",
+            "purple": "Fioletowy",
+            "brown": "Brązowy",
+            "pink": "Różowy",
+            "darkGreen": "Ciemnozielony",
+            "navy": "Granatowy",
+            "gold": "Złoty",
+            "silver": "Srebrny",
+            "tomato": "Pomidorowy",
+            "turquoise": "Turkusowy",
+            "lavender": "Lawendowy"
+        }
+    },
+    "password": {
+        "badLength": "Hasło musi mieć 8-50 znaków. Podano: {length}",
+        "strength": {
+            "weak": "Słabe",
+            "good": "Dobre",
+            "strong": "Silne",
+            "veryStrong": "Bardzo silne"
+        },
+        "title": "Twoje hasło",
+        "body": "**Hasło:** ||`{password}`||\n**Długość:** {length}\n**Siła:** {strength}\n**Zawiera:** {contains}",
+        "characters": {
+            "one": "{count} znak",
+            "few": "{count} znaki",
+            "many": "{count} znaków",
+            "other": "{count} znaku"
+        },
+        "lowercase": "Małe litery",
+        "uppercase": "Wielkie litery",
+        "numbers": "Cyfry",
+        "symbols": "Symbole"
+    },
+    "randomuser": {
+        "guildOnly": "Tej komendy można użyć tylko na serwerze.",
+        "pickFailed": "Nie udało się wybrać członka. Spróbuj zmienić filtry.",
+        "title": "Losowy członek",
+        "username": "Nazwa użytkownika",
+        "bot": "Bot",
+        "yes": "Tak",
+        "no": "Nie",
+        "roles": "Role ({count})",
+        "more": "+{count} więcej",
+        "noRoles": "Brak ról",
+        "fromCache": "Wybrano spośród członków zapisanych w pamięci podręcznej Mewvo; pełna lista członków nie została wczytana.",
+        "again": "Wylosuj kolejną osobę",
+        "picked": "{member}, padło na Ciebie.",
+        "noMatch": "Żaden członek nie pasuje do tych kryteriów.",
+        "againFailed": "Podczas wybierania innej osoby wystąpił błąd."
+    },
+    "time": {
+        "unknownZone": "Nieznana strefa czasowa. Spróbuj np. UTC, America/New_York albo Europe/London.",
+        "title": "Aktualny czas",
+        "body": "**{zone}:** {time}\n**Znacznik czasu Unix:** `{unix}`\n**Ciąg ISO:** `{iso}`",
+        "failed": "Nie udało się pobrać czasu. Spróbuj ponownie."
+    },
+    "unixtime": {
+        "title": "Znacznik czasu Unix",
+        "body": "**Sekundy od epoki Unix:** `{seconds}`\n**Milisekundy od epoki Unix:** `{ms}`\n\n**Czytelnie (UTC):** {utc}\n**Ciąg ISO:** {iso}",
+        "failed": "Nie udało się pobrać znacznika czasu. Spróbuj ponownie."
+    },
+    "countdown": {
+        "defaultTitle": "Odliczanie",
+        "tooShort": "Czas musi wynosić co najmniej 1 sekundę.",
+        "tooLong": "Odliczanie nie może trwać dłużej niż 24 godziny.",
+        "started": "Odliczanie rozpoczęte.",
+        "pause": "Wstrzymaj",
+        "resume": "Wznów",
+        "cancel": "Anuluj",
+        "remaining": "Pozostało: **{time}** (koniec {ends})",
+        "remainingPaused": "Pozostało: **{time}**",
+        "finishedTitle": "{title} (zakończone)",
+        "finished": "Czas minął.",
+        "pausedTitle": "{title} (wstrzymane)",
+        "cancelledTitle": "{title} (anulowane)",
+        "cancelledBody": "Odliczanie zostało anulowane.",
+        "expired": "To odliczanie wygasło lub zostało anulowane.",
+        "adminOnly": "Do sterowania odliczaniem potrzebujesz roli Administrator.",
+        "resumed": "Odliczanie wznowione.",
+        "paused": "Odliczanie wstrzymane.",
+        "cancelled": "Odliczanie anulowane.",
+        "failed": "Podczas sterowania odliczaniem wystąpił błąd."
+    },
+    "poll": {
+        "ended": "Ankieta zakończona. Teraz widać w niej wyniki końcowe: {url}",
+        "ignored": " Godziny i wielokrotny wybór działają tylko w ankietach Discorda, więc zostały pominięte.",
+        "reactionPosted": "Ankieta z reakcjami opublikowana.{ignored}",
+        "posted": "Ankieta opublikowana. Zamknie się <t:{unix}:F> (<t:{unix}:R>). Aby zamknąć ją wcześniej, użyj /poll end z tym linkiem: {url}"
+    },
+    "shorten": {
+        "failed": "Nie udało się skrócić tego linku. Spróbuj później.",
+        "title": "Link skrócony",
+        "body": "Oto Twój skrócony link: {url}"
+    }
+}

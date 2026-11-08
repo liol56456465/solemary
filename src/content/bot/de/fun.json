@@ -1,0 +1,112 @@
+{
+    "unknownSubcommand": "Unbekannter Unterbefehl.",
+    "flip": {
+        "title": "Münzwurf",
+        "heads": "Kopf",
+        "tails": "Zahl",
+        "result": "Es ist **{result}**."
+    },
+    "roll": {
+        "invalid": "Ungültige Schreibweise. Nutze ein Format wie `1d20` oder `3d6+5`.",
+        "diceRange": "Bitte nimm zwischen 1 und 20 Würfel.",
+        "sidesRange": "Bitte nimm zwischen 1 und 1000 Seiten.",
+        "title": "{dice} gewürfelt",
+        "rolls": "**Würfe:** {rolls}\n",
+        "total": "**Summe:** {total} = **{final}**"
+    },
+    "fight": {
+        "selfTitle": "Du kannst nicht gegen dich selbst kämpfen",
+        "selfText": "**{name}**, das wäre ein Unentschieden, bevor es losgeht. Such dir jemand anderen aus.",
+        "botTitle": "Du kannst nicht gegen einen Bot kämpfen",
+        "botText": "Bots wehren sich nicht. Such dir eine echte Person aus.",
+        "start": "**{challenger}** fordert **{opponent}** zum Kampf heraus. {rounds} Runden.",
+        "action": {
+            "punch": "**Runde {round}:** {attacker} schlägt wild auf {target} ein und macht {damage} Schaden.",
+            "critical": "**Runde {round}:** {attacker} landet einen kritischen Treffer bei {target} und macht {damage} Schaden.",
+            "spell": "**Runde {round}:** {attacker} wirkt einen schwachen Zauber auf {target} und macht {damage} Schaden.",
+            "parry": "**Runde {round}:** {attacker} pariert, kontert gegen {target} und macht {damage} Schaden."
+        },
+        "winner": "**{winner}** besiegt {loser}.",
+        "title": "Kampf vorbei"
+    },
+    "count": {
+        "textChannel": "Wähle einen Textkanal für das Zählspiel.",
+        "alreadyActive": "Dieser Server hat schon einen aktiven Zählkanal: <#{channelId}>. Schalte das aktuelle Zählspiel zuerst aus oder nutze diesen Kanal.",
+        "onTitle": "Zählspiel an",
+        "onText": "In {channel} wird jetzt gezählt (**{system}**). Fangt bei **1** an. Niemand darf zwei Zahlen hintereinander schreiben.",
+        "offTitle": "Zählspiel aus",
+        "alreadyOff": "Das Zählspiel ist schon aus.",
+        "turnedOff": "Das Zählspiel ist jetzt aus.",
+        "status": {
+            "enabled": "Aktiv",
+            "yes": "Ja",
+            "no": "Nein",
+            "channel": "Kanal",
+            "notConfigured": "Nicht eingerichtet",
+            "system": "System",
+            "next": "Nächste Zahl",
+            "streak": "Aktuelle Serie",
+            "best": "Beste Serie",
+            "last": "Zuletzt gezählt von",
+            "none": "Niemand",
+            "title": "Zählspiel",
+            "description": "Aktuelle Einstellungen und Serien."
+        },
+        "enableFirst": "Schalte das Zählspiel zuerst mit `/count setup` ein.",
+        "resetTitle": "Zählen zurückgesetzt",
+        "resetText": "Zählung zurückgesetzt. Fangt in <#{channelId}> wieder mit **{start}** an.",
+        "leaderboardTitle": "Bestenliste des Zählspiels",
+        "leaderboardEmpty": "Noch hat niemand gezählt.",
+        "invalidAction": "Wähle eine gültige Aktion für das Zählspiel.",
+        "failed": "Beim Verwalten des Zählspiels ist etwas schiefgelaufen."
+    },
+    "slash": {
+        "fun": {
+            "description": "Schnelle Spiele: Kämpfe, Münzwurf und Würfel",
+            "sub": {
+                "fight": {
+                    "description": "Einen simulierten 1-gegen-1-Textkampf starten",
+                    "options": {
+                        "opponent": "Gegen wen du kämpfen willst."
+                    }
+                },
+                "flip": {
+                    "description": "Eine Münze werfen"
+                },
+                "roll": {
+                    "description": "Würfeln (z. B. 2d20, 1d6 + 5)",
+                    "options": {
+                        "notation": "Die Würfel-Schreibweise (z. B. 2d6, 1d20 + 4)"
+                    }
+                }
+            }
+        },
+        "count": {
+            "description": "Das Zählspiel des Servers verwalten",
+            "sub": {
+                "setup": {
+                    "description": "Ein Zählspiel in einem Textkanal starten",
+                    "options": {
+                        "channel": "Der Kanal, in dem gezählt wird",
+                        "system": "Das Zahlensystem, mit dem gezählt wird"
+                    }
+                },
+                "disable": {
+                    "description": "Das Zählspiel in diesem Server ausschalten"
+                },
+                "status": {
+                    "description": "Den aktuellen Stand des Zählspiels ansehen"
+                },
+                "reset": {
+                    "description": "Die aktuelle Zählung zurücksetzen",
+                    "options": {
+                        "start": "Mit welcher Zahl es nach dem Zurücksetzen weitergeht"
+                    }
+                },
+                "leaderboard": {
+                    "description": "Die Bestenliste des Zählspiels zeigen"
+                }
+            }
+        }
+    }
+}

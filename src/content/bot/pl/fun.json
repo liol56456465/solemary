@@ -1,0 +1,112 @@
+{
+    "unknownSubcommand": "Nieznana podkomenda.",
+    "flip": {
+        "title": "Rzut monetą",
+        "heads": "Orzeł",
+        "tails": "Reszka",
+        "result": "Wypadł **{result}**."
+    },
+    "roll": {
+        "invalid": "Nieprawidłowy zapis. Użyj formatu jak `1d20` lub `3d6+5`.",
+        "diceRange": "Liczba kości musi wynosić od 1 do 20.",
+        "sidesRange": "Liczba ścianek musi wynosić od 1 do 1000.",
+        "title": "Rzut {dice}",
+        "rolls": "**Rzuty:** {rolls}\n",
+        "total": "**Suma:** {total} = **{final}**"
+    },
+    "fight": {
+        "selfTitle": "Nie możesz walczyć sam ze sobą",
+        "selfText": "**{name}**, to byłby remis, zanim walka się zacznie. Wybierz kogoś innego.",
+        "botTitle": "Nie możesz walczyć z botem",
+        "botText": "Boty nie oddają. Wybierz prawdziwą osobę.",
+        "start": "**{challenger}** wyzywa **{opponent}** na pojedynek. Liczba rund: {rounds}.",
+        "action": {
+            "punch": "**Runda {round}:** {attacker} wyprowadza dziki cios w {target} i zadaje {damage} obrażeń.",
+            "critical": "**Runda {round}:** {attacker} trafia krytycznie w {target} i zadaje {damage} obrażeń.",
+            "spell": "**Runda {round}:** {attacker} rzuca słabe zaklęcie na {target} i zadaje {damage} obrażeń.",
+            "parry": "**Runda {round}:** {attacker} paruje i kontratakuje {target}, zadając {damage} obrażeń."
+        },
+        "winner": "**{winner}** pokonuje {loser}.",
+        "title": "Koniec walki"
+    },
+    "count": {
+        "textChannel": "Wybierz kanał tekstowy do gry w liczenie.",
+        "alreadyActive": "Ten serwer ma już aktywny kanał do liczenia: <#{channelId}>. Najpierw wyłącz obecną grę albo użyj tego kanału.",
+        "onTitle": "Gra w liczenie włączona",
+        "onText": "Liczenie działa w {channel} (**{system}**). Zacznijcie od **1**. Nikt nie może wpisać dwóch liczb z rzędu.",
+        "offTitle": "Gra w liczenie wyłączona",
+        "alreadyOff": "Gra w liczenie jest już wyłączona.",
+        "turnedOff": "Gra w liczenie została wyłączona.",
+        "status": {
+            "enabled": "Włączona",
+            "yes": "Tak",
+            "no": "Nie",
+            "channel": "Kanał",
+            "notConfigured": "Nie ustawiono",
+            "system": "System",
+            "next": "Następna liczba",
+            "streak": "Obecna seria",
+            "best": "Najlepsza seria",
+            "last": "Ostatnio liczył(a)",
+            "none": "Nikt",
+            "title": "Gra w liczenie",
+            "description": "Obecne ustawienia i serie."
+        },
+        "enableFirst": "Najpierw włącz grę w liczenie komendą `/count setup`.",
+        "resetTitle": "Liczenie zresetowane",
+        "resetText": "Liczenie zresetowane. Zacznijcie od nowa od **{start}** w <#{channelId}>.",
+        "leaderboardTitle": "Ranking gry w liczenie",
+        "leaderboardEmpty": "Nikt jeszcze nie liczył.",
+        "invalidAction": "Wybierz prawidłową akcję gry w liczenie.",
+        "failed": "Coś poszło nie tak podczas zarządzania grą w liczenie."
+    },
+    "slash": {
+        "fun": {
+            "description": "Szybkie gry: walki, rzut monetą i kości",
+            "sub": {
+                "fight": {
+                    "description": "Rozpocznij symulowaną tekstową walkę 1 na 1",
+                    "options": {
+                        "opponent": "Osoba, z którą chcesz walczyć."
+                    }
+                },
+                "flip": {
+                    "description": "Rzuć monetą"
+                },
+                "roll": {
+                    "description": "Rzuć kośćmi (np. 2d20, 1d6 + 5)",
+                    "options": {
+                        "notation": "Zapis rzutu (np. 2d6, 1d20 + 4)"
+                    }
+                }
+            }
+        },
+        "count": {
+            "description": "Zarządzaj grą w liczenie na serwerze",
+            "sub": {
+                "setup": {
+                    "description": "Uruchom grę w liczenie na kanale tekstowym",
+                    "options": {
+                        "channel": "Kanał, na którym będzie się liczyć",
+                        "system": "System liczenia, którego chcesz użyć"
+                    }
+                },
+                "disable": {
+                    "description": "Wyłącz grę w liczenie na tym serwerze"
+                },
+                "status": {
+                    "description": "Zobacz obecny stan gry w liczenie"
+                },
+                "reset": {
+                    "description": "Zresetuj obecne liczenie",
+                    "options": {
+                        "start": "Od jakiej liczby zacząć po resecie"
+                    }
+                },
+                "leaderboard": {
+                    "description": "Pokaż ranking gry w liczenie"
+                }
+            }
+        }
+    }
+}

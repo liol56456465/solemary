@@ -1,0 +1,112 @@
+{
+    "unknownSubcommand": "Sottocomando sconosciuto.",
+    "flip": {
+        "title": "Lancio della moneta",
+        "heads": "Testa",
+        "tails": "Croce",
+        "result": "È uscito **{result}**."
+    },
+    "roll": {
+        "invalid": "Notazione non valida. Usa un formato come `1d20` o `3d6+5`.",
+        "diceRange": "Scegli da 1 a 20 dadi.",
+        "sidesRange": "Scegli da 1 a 1000 facce.",
+        "title": "Lancio di {dice}",
+        "rolls": "**Lanci:** {rolls}\n",
+        "total": "**Totale:** {total} = **{final}**"
+    },
+    "fight": {
+        "selfTitle": "Non puoi combattere contro te stesso",
+        "selfText": "**{name}**, sarebbe un pareggio prima ancora di iniziare. Scegli qualcun altro.",
+        "botTitle": "Non puoi combattere contro un bot",
+        "botText": "I bot non reagiscono. Scegli una persona vera.",
+        "start": "**{challenger}** sfida **{opponent}** a duello. {rounds} round.",
+        "action": {
+            "punch": "**Round {round}:** {attacker} tira un pugno selvaggio a {target} e infligge {damage} danni.",
+            "critical": "**Round {round}:** {attacker} mette a segno un colpo critico su {target} e infligge {damage} danni.",
+            "spell": "**Round {round}:** {attacker} lancia un incantesimo debole su {target} e infligge {damage} danni.",
+            "parry": "**Round {round}:** {attacker} para e contrattacca {target} e infligge {damage} danni."
+        },
+        "winner": "**{winner}** batte {loser}.",
+        "title": "Combattimento finito"
+    },
+    "count": {
+        "textChannel": "Scegli un canale testuale per il gioco del conteggio.",
+        "alreadyActive": "Questo server ha già un canale del conteggio attivo: <#{channelId}>. Disattiva prima il gioco attuale o usa quel canale.",
+        "onTitle": "Gioco del conteggio attivo",
+        "onText": "Il conteggio è attivo in {channel} (**{system}**). Si parte da **1**. Nessuno può scrivere due numeri di fila.",
+        "offTitle": "Gioco del conteggio disattivato",
+        "alreadyOff": "Il gioco del conteggio è già disattivato.",
+        "turnedOff": "Il gioco del conteggio è disattivato.",
+        "status": {
+            "enabled": "Attivo",
+            "yes": "Sì",
+            "no": "No",
+            "channel": "Canale",
+            "notConfigured": "Non configurato",
+            "system": "Sistema",
+            "next": "Prossimo numero",
+            "streak": "Serie attuale",
+            "best": "Serie migliore",
+            "last": "Ultimo a contare",
+            "none": "Nessuno",
+            "title": "Gioco del conteggio",
+            "description": "Impostazioni e serie attuali."
+        },
+        "enableFirst": "Attiva prima il gioco del conteggio con `/count setup`.",
+        "resetTitle": "Conteggio azzerato",
+        "resetText": "Conteggio azzerato. Ricominciate da **{start}** in <#{channelId}>.",
+        "leaderboardTitle": "Classifica del conteggio",
+        "leaderboardEmpty": "Nessuno ha ancora contato.",
+        "invalidAction": "Scegli un’azione valida per il gioco del conteggio.",
+        "failed": "Qualcosa è andato storto durante la gestione del gioco del conteggio."
+    },
+    "slash": {
+        "fun": {
+            "description": "Giochi veloci: combattimenti, testa o croce e dadi",
+            "sub": {
+                "fight": {
+                    "description": "Avvia un combattimento testuale simulato 1 contro 1",
+                    "options": {
+                        "opponent": "La persona da sfidare."
+                    }
+                },
+                "flip": {
+                    "description": "Lancia una moneta"
+                },
+                "roll": {
+                    "description": "Lancia i dadi (es. 2d20, 1d6 + 5)",
+                    "options": {
+                        "notation": "La notazione dei dadi (es. 2d6, 1d20 + 4)"
+                    }
+                }
+            }
+        },
+        "count": {
+            "description": "Gestisci il gioco del conteggio del server",
+            "sub": {
+                "setup": {
+                    "description": "Avvia un gioco del conteggio in un canale testuale",
+                    "options": {
+                        "channel": "Il canale in cui si conterà",
+                        "system": "Il sistema di conteggio da usare"
+                    }
+                },
+                "disable": {
+                    "description": "Disattiva il gioco del conteggio in questo server"
+                },
+                "status": {
+                    "description": "Vedi lo stato attuale del gioco del conteggio"
+                },
+                "reset": {
+                    "description": "Azzera il conteggio in corso",
+                    "options": {
+                        "start": "Il numero da cui ripartire dopo l’azzeramento"
+                    }
+                },
+                "leaderboard": {
+                    "description": "Mostra la classifica del gioco del conteggio"
+                }
+            }
+        }
+    }
+}

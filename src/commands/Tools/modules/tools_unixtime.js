@@ -3,12 +3,14 @@ import { createEmbed, errorEmbed, successEmbed, infoEmbed, warningEmbed } from '
 import { logger } from '../../../utils/logger.js';
 import { getColor } from '../../../config/bot.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { replyText } from '../../Core/modules/commandText.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('unixtime')
         .setDescription('Get the current Unix timestamp'),
 
     async execute(interaction) {
+        const tr = replyText(interaction);
         await InteractionHelper.safeExecute(
             interaction,
             async () => {
@@ -16,11 +18,8 @@ export default {
                 const unixTimestamp = Math.floor(now.getTime() / 1000);
 
                 const embed = successEmbed(
-                    'Unix timestamp',
-                    `**Seconds since Unix Epoch:** \`${unixTimestamp}\`\n` +
-                    `**Milliseconds since Unix Epoch:** \`${now.getTime()}\`\n\n` +
-                    `**Human-readable (UTC):** ${now.toUTCString()}\n` +
-                    `**ISO String:** ${now.toISOString()}`
+                    tr.t('tools.unixtime.title'),
+                    tr.t('tools.unixtime.body', { seconds: unixTimestamp, ms: now.getTime(), utc: now.toUTCString(), iso: now.toISOString() }),
                 );
                 embed.setColor(getColor('success'));
 
@@ -28,7 +27,7 @@ export default {
                     embeds: [embed],
                 });
             },
-            'Couldn\'t get the timestamp. Try again.',
+            tr.t('tools.unixtime.failed'),
             {
                 autoDefer: true,
                 deferOptions: { flags: MessageFlags.Ephemeral }

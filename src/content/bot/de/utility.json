@@ -1,0 +1,236 @@
+{
+    "avatar": {
+        "title": "Avatar von {name}",
+        "download": "[Herunterladen]({url})"
+    },
+    "firstmsg": {
+        "title": "Erste Nachricht",
+        "none": "In diesem Kanal gibt es keine Nachrichten!",
+        "titleIn": "Erste Nachricht in #{channel}",
+        "link": "Link zur Nachricht: {link}"
+    },
+    "serverinfo": {
+        "title": "Server-Info: {name}",
+        "id": "Server-ID: {id}",
+        "owner": "Eigentümer",
+        "members": "Mitglieder",
+        "channels": "Kanäle",
+        "roles": "Rollen",
+        "boosts": "Boosts",
+        "boostValue": "Stufe {tier} ({count})",
+        "created": "Erstellt"
+    },
+    "userinfo": {
+        "title": "Benutzer-Info: {name}",
+        "id": "ID",
+        "bot": "Bot",
+        "yes": "Ja",
+        "no": "Nein",
+        "roles": "Rollen",
+        "none": "Keine",
+        "created": "Konto erstellt",
+        "joined": "Server beigetreten",
+        "notInServer": "Nicht im Server",
+        "highestRole": "Höchste Rolle"
+    },
+    "weather": {
+        "title": "Wetter in {place}",
+        "sources": "Quellen: Wetterdaten von [MET Norway](https://api.met.no/) ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), Werte gerundet und umgerechnet); Ort von [© OpenStreetMap-Mitwirkende](https://www.openstreetmap.org/copyright) (ODbL).",
+        "temperature": "Temperatur",
+        "humidity": "Luftfeuchtigkeit",
+        "wind": "Wind",
+        "windValue": "{speed} km/h",
+        "windFrom": "{speed} km/h aus {direction}",
+        "precipitation": "Niederschlag (nächste Stunde)",
+        "notAvailable": "k. A.",
+        "busy": "Der Wetterdienst ist gerade ausgelastet oder antwortet nicht. Versuch es in einer Minute noch mal.",
+        "notFound": "Diesen Ort konnte ich nicht finden. Prüf bitte die Schreibweise.",
+        "noForecast": "Der Wetterdienst hat für diesen Ort keine Vorhersage geschickt."
+    },
+    "report": {
+        "unknownSubcommand": "Unbekannter Unterbefehl.",
+        "rateLimited": "Du hast in letzter Zeit mehrere Meldungen geschickt. Warte bitte ein paar Minuten, bevor du die nächste schickst.",
+        "noChannel": "Der Meldungskanal ist noch nicht eingerichtet. Bitte einen Moderator, `/logging dashboard` oder `/logging channel` zu nutzen.",
+        "ownerPing": "<@{ownerId}> Neue Meldung",
+        "newReport": "Neue Meldung",
+        "logTitle": "Meldung über ein Mitglied",
+        "reportedUser": "Gemeldet",
+        "reportedBy": "Gemeldet von",
+        "channel": "Kanal",
+        "reason": "Grund",
+        "notDelivered": "Deine Meldung konnte nicht zugestellt werden: Der Meldungskanal fehlt, das Logging ist aus oder ich darf dort nicht schreiben. Wende dich bitte direkt an einen Moderator.",
+        "submittedTitle": "Meldung gesendet",
+        "submitted": "Deine Meldung über **{tag}** wurde an die Moderatoren geschickt. Danke für den Hinweis.",
+        "setchannel": {
+            "noAdmin": "Du brauchst die Berechtigung **Administrator**, um den Meldungskanal festzulegen.",
+            "saveFailed": "Die Kanal-Einstellung konnte nicht gespeichert werden.",
+            "title": "Meldungskanal festgelegt",
+            "done": "Alle neuen Meldungen gehen jetzt an {channel}.\nDu kannst das auch über `/logging dashboard` verwalten."
+        }
+    },
+    "remind": {
+        "title": "Erinnerungen",
+        "none": "Du hast keine Erinnerungen. Leg eine mit `/remind me` an.",
+        "set": "Okay, ich erinnere dich {relative} ({time}). Die Erinnerung kommt als DM oder hier, wenn deine DMs geschlossen sind.",
+        "setTitle": "Erinnerung gesetzt",
+        "deleted": "Erinnerung `{id}` gelöscht.",
+        "deletedTitle": "Erinnerung gelöscht",
+        "notFound": "Du hast keine Erinnerung mit dieser Nummer. Schau in `/remind list` nach.",
+        "dbDown": "Die Datenbank antwortet nicht, daher wurde nichts gespeichert. Versuch es in ein paar Minuten noch mal.",
+        "dbDownTitle": "Später noch mal versuchen"
+    },
+    "cooldown": {
+        "title": "Pause",
+        "serverOnly": "/cooldown funktioniert nur in einem Server.",
+        "pickDuration": "Wähle eine der angebotenen Dauern.",
+        "notFound": "Ich konnte dich in diesem Server nicht finden. Versuch es gleich noch mal.",
+        "limited": "Du hast in den letzten 24 Stunden {limit} Pausen gestartet. Die nächste kannst du {when} starten.",
+        "confirmTitle": "Pause starten?",
+        "start": "Pause starten",
+        "cancel": "Abbrechen",
+        "notYours": "Dieser Button ist nicht für dich. Nutze selbst /cooldown, wenn du eine Pause willst.",
+        "expired": "Das ist abgelaufen, nutze /cooldown noch mal.",
+        "notStarted": "Es wurde keine Pause gestartet.",
+        "cancelledTitle": "Abgebrochen",
+        "notFoundButton": "Ich konnte dich in diesem Server nicht finden, daher wurde keine Pause gestartet.",
+        "alreadyStarting": "Für dich wird gerade schon eine Pause gestartet, daher diese nicht.",
+        "refused": "Discord hat den Timeout abgelehnt, daher wurde keine Pause gestartet. Bitte das Team, meine Berechtigungen und meine Rollenposition zu prüfen.",
+        "started": "Deine Pause ({duration}) hat begonnen. Sie endet von selbst am {date} ({relative}). Pass auf dich auf.",
+        "startedTitle": "Pause gestartet",
+        "duration": {
+            "1h": "1 Stunde",
+            "6h": "6 Stunden",
+            "12h": "12 Stunden",
+            "1d": "1 Tag",
+            "3d": "3 Tage",
+            "7d": "7 Tage"
+        }
+    },
+    "wipedata": {
+        "title": "Deine Daten löschen?",
+        "intro": "Damit werden deine Daten in diesem Server endgültig gelöscht:",
+        "body": "Deine To-do-Liste, Erinnerungen und dein gespeichertes Login-Token sind in jedem Server dieselben, deshalb werden sie überall gelöscht. Ohne das Login-Token kann der Bot dich nicht mehr zum Support-Server hinzufügen; „Mit Discord verifizieren“ speichert ein neues. Einträge zu Moderation, Einsprüchen, Meldungen und Verifizierung bleiben erhalten.",
+        "final": "**Das kann nicht rückgängig gemacht werden.**",
+        "confirm": "Bestätigen",
+        "cancel": "Abbrechen",
+        "item": {
+            "levels": "Level und XP",
+            "birthday": "Geburtstag",
+            "todo": "Persönliche To-do-Liste",
+            "reminders": "Erinnerungen",
+            "oauth": "Gespeichertes Discord-Login-Token (aus „Mit Discord verifizieren“)"
+        },
+        "partialTitle": "Nicht alles wurde gelöscht",
+        "partialFailed": "Die Datenbank hat nicht geantwortet für: {items}. ",
+        "partialDeleted": "Gelöscht: {items}. ",
+        "partialRetry": "Nutze /wipedata in ein paar Minuten noch mal.",
+        "doneTitle": "Deine Daten wurden gelöscht",
+        "done": "Gelöscht: {items}.\nLevel und Geburtstag in diesem Server; To-do-Liste, Erinnerungen und das gespeicherte Login-Token überall.\n\nEinträge zu Moderation, Einsprüchen, Meldungen und Verifizierung bleiben erhalten, weil sie die Sicherheitsaufzeichnungen des Servers sind. In der Datenschutzerklärung steht, wie du danach fragen kannst.",
+        "nothingStored": "es war nichts gespeichert",
+        "failed": "Die Datenbank antwortet nicht. Möglicherweise wurde nichts gelöscht; versuch es in ein paar Minuten noch mal.",
+        "cancelledTitle": "Nichts wurde gelöscht",
+        "cancelled": "Deine Daten sind unverändert.",
+        "cancelFailed": "Das Löschen konnte nicht abgebrochen werden."
+    },
+    "todo": {
+        "invalidSubcommand": "Ungültiger Unterbefehl.",
+        "listNotFound": "Geteilte Liste nicht gefunden.",
+        "onlyCreator": "Nur wer die Liste erstellt hat, kann Mitglieder hinzufügen.",
+        "alreadyMember": "Diese Person ist schon Mitglied der Liste.",
+        "noAccess": "Du hast keinen Zugriff auf diese Liste.",
+        "taskNotFound": "Aufgabe nicht gefunden.",
+        "alreadyDone": "Aufgabe #{id} ist schon erledigt.",
+        "createdTitle": "Geteilte Liste erstellt",
+        "created": "Geteilte Liste „{name}“ mit der ID `{id}` erstellt\nMit `/todo share add list_id:{id} user:@username` fügst du Mitglieder hinzu.",
+        "memberAddedTitle": "Mitglied hinzugefügt",
+        "memberAdded": "{user} wurde zur geteilten Liste „{name}“ hinzugefügt",
+        "sharedTitle": "Geteilte Liste (ID: `{id}`)",
+        "owner": "**Eigentümer:** {name}",
+        "members": "**Mitglieder:** {names}",
+        "tasks": "**Aufgaben:**",
+        "emptyShared": "*Diese Liste ist leer. Klick auf „Aufgabe hinzufügen“, um eine anzulegen.*",
+        "done": "Erledigt",
+        "open": "Offen",
+        "completedBy": "• Erledigt von {user}",
+        "addTask": "Aufgabe hinzufügen",
+        "completeTask": "Aufgabe erledigen",
+        "removeTask": "Aufgabe entfernen",
+        "taskAddedTitle": "Aufgabe hinzugefügt",
+        "taskAddedShared": "„{task}“ zur geteilten Liste „{name}“ hinzugefügt",
+        "taskAddedSharedShort": "„{task}“ zur geteilten Liste hinzugefügt.",
+        "taskAdded": "„{task}“ zu deiner To-do-Liste hinzugefügt.",
+        "taskRemovedTitle": "Aufgabe entfernt",
+        "taskRemovedShared": "„{task}“ aus der geteilten Liste „{name}“ entfernt.",
+        "taskRemovedSharedShort": "„{task}“ aus der geteilten Liste entfernt.",
+        "taskRemoved": "„{task}“ aus deiner To-do-Liste entfernt.",
+        "yourList": "Deine To-do-Liste",
+        "emptyList": "Deine To-do-Liste ist leer.",
+        "taskDoneTitle": "Aufgabe erledigt",
+        "taskDone": "„{task}“ als erledigt markiert.",
+        "invalidListId": "Ungültige ID der geteilten Liste.",
+        "modalAddTitle": "Aufgabe hinzufügen",
+        "modalCompleteTitle": "Aufgabe erledigen",
+        "modalRemoveTitle": "Aufgabe entfernen",
+        "taskLabel": "Aufgabe",
+        "taskNumberLabel": "Nummer der Aufgabe",
+        "taskNumberPlaceholder": "Zum Beispiel 3",
+        "tooFast": "Du bist etwas schnell. Warte kurz und versuch es noch mal.",
+        "emptyText": "Der Aufgabentext darf nicht leer sein.",
+        "badTaskId": "Die Nummer der Aufgabe muss eine positive Zahl sein.",
+        "addFailed": "Beim Hinzufügen der Aufgabe ist ein Fehler aufgetreten.",
+        "completeFailed": "Beim Erledigen der Aufgabe ist ein Fehler aufgetreten.",
+        "removeFailed": "Beim Entfernen der Aufgabe ist ein Fehler aufgetreten."
+    },
+    "slash": {
+        "avatar": {
+            "description": "Zeigt das Avatarbild eines Mitglieds",
+            "options": { "target": "Wessen Avatar du sehen willst (Standard: du)" }
+        },
+        "cooldown": {
+            "description": "Mach eine Pause: Versetz dich selbst eine Zeit lang in einen Timeout",
+            "options": { "duration": "Wie lange", "reason": "Warum (optional; nur das Team sieht es)" }
+        },
+        "firstmsg": { "description": "Link zur ersten Nachricht in diesem Kanal" },
+        "remind": {
+            "description": "Erinnerungen für dich selbst",
+            "sub": {
+                "me": { "description": "Erinnere mich später an etwas", "options": { "in": "Wann, z. B. 10m, 2h, 1d oder 1d12h", "text": "Woran ich dich erinnern soll" } },
+                "list": { "description": "Deine Erinnerungen, die noch nicht fällig waren" },
+                "delete": { "description": "Eine deiner Erinnerungen löschen", "options": { "id": "Die Nummer aus /remind list" } }
+            }
+        },
+        "report": {
+            "description": "Ein Mitglied beim Team melden oder festlegen, wohin Meldungen gehen.",
+            "sub": {
+                "file": { "description": "Ein Mitglied beim Moderationsteam des Servers melden.", "options": { "user": "Wen du melden willst.", "reason": "Der Grund für die Meldung (möglichst genau)." } },
+                "setchannel": { "description": "Den Kanal für Meldungen festlegen. (Administrator)", "options": { "channel": "Der Textkanal, der die Meldungen bekommt." } }
+            }
+        },
+        "serverinfo": { "description": "Ausführliche Infos über den Server" },
+        "todo": {
+            "description": "Deine persönliche To-do-Liste verwalten",
+            "sub": {
+                "add": { "description": "Eine Aufgabe zu deiner To-do-Liste hinzufügen", "options": { "task": "Die Aufgabe" } },
+                "list": { "description": "Deine To-do-Liste ansehen" },
+                "complete": { "description": "Eine Aufgabe als erledigt markieren", "options": { "number": "Die Nummer der erledigten Aufgabe" } },
+                "remove": { "description": "Eine Aufgabe aus deiner To-do-Liste entfernen", "options": { "number": "Die Nummer der Aufgabe, die weg soll" } },
+                "share": { "description": "Geteilte To-do-Listen verwalten" },
+                "shareCreate": { "description": "Eine neue geteilte To-do-Liste erstellen", "options": { "name": "Name der geteilten Liste" } },
+                "shareAdd": { "description": "Ein Mitglied zu einer geteilten Liste hinzufügen", "options": { "user": "Wer zur Liste hinzukommt" } },
+                "shareView": { "description": "Eine geteilte To-do-Liste ansehen" },
+                "shareAddtask": { "description": "Eine Aufgabe zu einer geteilten To-do-Liste hinzufügen" },
+                "shareRemove": { "description": "Eine Aufgabe aus einer geteilten To-do-Liste entfernen" }
+            },
+            "options": { "listId": "ID der geteilten Liste" }
+        },
+        "userinfo": {
+            "description": "Ausführliche Infos über ein Mitglied",
+            "options": { "target": "Wen du ansehen willst (Standard: du)" }
+        },
+        "weather": {
+            "description": "Aktuelles Wetter für einen Ort",
+            "options": { "city": "Der Name der Stadt, z. B. „Berlin“ oder „Tokio“" }
+        },
+        "wipedata": { "description": "Löscht deine Level, Geburtstag, To-do-Liste, Erinnerungen und Login-Token (endgültig)" }
+    }
+}

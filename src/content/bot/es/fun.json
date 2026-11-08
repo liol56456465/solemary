@@ -1,0 +1,112 @@
+{
+    "unknownSubcommand": "Subcomando desconocido.",
+    "flip": {
+        "title": "Cara o cruz",
+        "heads": "Cara",
+        "tails": "Cruz",
+        "result": "Ha salido **{result}**."
+    },
+    "roll": {
+        "invalid": "Notación no válida. Usa un formato como `1d20` o `3d6+5`.",
+        "diceRange": "Elige entre 1 y 20 dados.",
+        "sidesRange": "Elige entre 1 y 1000 caras.",
+        "title": "Tirada de {dice}",
+        "rolls": "**Tiradas:** {rolls}\n",
+        "total": "**Total:** {total} = **{final}**"
+    },
+    "fight": {
+        "selfTitle": "No puedes pelear contigo",
+        "selfText": "**{name}**, sería un empate antes de empezar. Elige a otra persona.",
+        "botTitle": "No puedes pelear con un bot",
+        "botText": "Los bots no se defienden. Elige a una persona real.",
+        "start": "**{challenger}** reta a **{opponent}** a una pelea. {rounds} rondas.",
+        "action": {
+            "punch": "**Ronda {round}:** {attacker} lanza un puñetazo salvaje a {target} y causa {damage} de daño.",
+            "critical": "**Ronda {round}:** {attacker} asesta un golpe crítico a {target} y causa {damage} de daño.",
+            "spell": "**Ronda {round}:** {attacker} usa un hechizo débil contra {target} y causa {damage} de daño.",
+            "parry": "**Ronda {round}:** {attacker} bloquea y contraataca a {target} y causa {damage} de daño."
+        },
+        "winner": "**{winner}** vence a {loser}.",
+        "title": "Pelea terminada"
+    },
+    "count": {
+        "textChannel": "Elige un canal de texto para el juego de contar.",
+        "alreadyActive": "Este servidor ya tiene un canal para contar activo: <#{channelId}>. Desactiva primero el juego actual o usa ese canal.",
+        "onTitle": "Juego de contar activado",
+        "onText": "Se cuenta en {channel} (**{system}**). Empezad en **1**. Nadie puede publicar dos números seguidos.",
+        "offTitle": "Juego de contar desactivado",
+        "alreadyOff": "El juego de contar ya está desactivado.",
+        "turnedOff": "El juego de contar está desactivado.",
+        "status": {
+            "enabled": "Activado",
+            "yes": "Sí",
+            "no": "No",
+            "channel": "Canal",
+            "notConfigured": "Sin configurar",
+            "system": "Sistema",
+            "next": "Siguiente número",
+            "streak": "Racha actual",
+            "best": "Mejor racha",
+            "last": "Último en contar",
+            "none": "Nadie",
+            "title": "Juego de contar",
+            "description": "Ajustes y rachas actuales."
+        },
+        "enableFirst": "Activa primero el juego de contar con `/count setup`.",
+        "resetTitle": "Conteo reiniciado",
+        "resetText": "Conteo reiniciado. Empezad de nuevo con **{start}** en <#{channelId}>.",
+        "leaderboardTitle": "Clasificación del juego de contar",
+        "leaderboardEmpty": "Nadie ha contado todavía.",
+        "invalidAction": "Elige una acción válida del juego de contar.",
+        "failed": "Algo salió mal al gestionar el juego de contar."
+    },
+    "slash": {
+        "fun": {
+            "description": "Juegos rápidos: peleas, cara o cruz y dados",
+            "sub": {
+                "fight": {
+                    "description": "Empieza una pelea de texto simulada 1 contra 1",
+                    "options": {
+                        "opponent": "La persona con la que pelear."
+                    }
+                },
+                "flip": {
+                    "description": "Lanza una moneda"
+                },
+                "roll": {
+                    "description": "Tira dados (p. ej. 2d20, 1d6 + 5)",
+                    "options": {
+                        "notation": "La notación de los dados (p. ej. 2d6, 1d20 + 4)"
+                    }
+                }
+            }
+        },
+        "count": {
+            "description": "Gestiona el juego de contar del servidor",
+            "sub": {
+                "setup": {
+                    "description": "Empieza un juego de contar en un canal de texto",
+                    "options": {
+                        "channel": "El canal donde se contará",
+                        "system": "El sistema de conteo que se usará"
+                    }
+                },
+                "disable": {
+                    "description": "Desactiva el juego de contar en este servidor"
+                },
+                "status": {
+                    "description": "Mira el estado actual del juego de contar"
+                },
+                "reset": {
+                    "description": "Reinicia el conteo actual",
+                    "options": {
+                        "start": "El número con el que empezar tras reiniciar"
+                    }
+                },
+                "leaderboard": {
+                    "description": "Muestra la clasificación del juego de contar"
+                }
+            }
+        }
+    }
+}

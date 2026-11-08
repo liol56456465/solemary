@@ -1,0 +1,236 @@
+{
+    "avatar": {
+        "title": "Avatar de {name}",
+        "download": "[Baixar]({url})"
+    },
+    "firstmsg": {
+        "title": "Primeira mensagem",
+        "none": "Não há mensagens neste canal!",
+        "titleIn": "Primeira mensagem em #{channel}",
+        "link": "Link da mensagem: {link}"
+    },
+    "serverinfo": {
+        "title": "Info do servidor: {name}",
+        "id": "ID do servidor: {id}",
+        "owner": "Dono",
+        "members": "Membros",
+        "channels": "Canais",
+        "roles": "Cargos",
+        "boosts": "Impulsos",
+        "boostValue": "Nível {tier} ({count})",
+        "created": "Data de criação"
+    },
+    "userinfo": {
+        "title": "Info do usuário: {name}",
+        "id": "ID",
+        "bot": "Bot",
+        "yes": "Sim",
+        "no": "Não",
+        "roles": "Cargos",
+        "none": "Nenhum",
+        "created": "Conta criada",
+        "joined": "Entrou no servidor",
+        "notInServer": "Não está no servidor",
+        "highestRole": "Cargo mais alto"
+    },
+    "weather": {
+        "title": "Tempo em {place}",
+        "sources": "Fontes: dados do tempo do [MET Norway](https://api.met.no/) ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), valores arredondados e convertidos); local do [© colaboradores do OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL).",
+        "temperature": "Temperatura",
+        "humidity": "Umidade",
+        "wind": "Vento",
+        "windValue": "{speed} km/h",
+        "windFrom": "{speed} km/h de {direction}",
+        "precipitation": "Precipitação (próxima hora)",
+        "notAvailable": "N/D",
+        "busy": "O serviço do tempo está ocupado ou não está respondendo agora. Tente de novo em um minuto.",
+        "notFound": "Não encontrei esse lugar. Confira a grafia.",
+        "noForecast": "O serviço do tempo não enviou previsão para este lugar."
+    },
+    "report": {
+        "unknownSubcommand": "Subcomando desconhecido.",
+        "rateLimited": "Você enviou várias denúncias recentemente. Espere alguns minutos antes de enviar outra.",
+        "noChannel": "O canal de denúncias não foi configurado. Peça a um moderador para usar `/logging dashboard` ou `/logging channel`.",
+        "ownerPing": "<@{ownerId}> Nova denúncia",
+        "newReport": "Nova denúncia",
+        "logTitle": "Denúncia de usuário",
+        "reportedUser": "Usuário denunciado",
+        "reportedBy": "Denunciado por",
+        "channel": "Canal",
+        "reason": "Motivo",
+        "notDelivered": "Não foi possível entregar sua denúncia: o canal de denúncias não existe, os registros estão desativados ou não tenho permissão para escrever lá. Fale direto com um moderador.",
+        "submittedTitle": "Denúncia enviada",
+        "submitted": "Sua denúncia sobre **{tag}** foi enviada aos moderadores. Obrigado por avisar.",
+        "setchannel": {
+            "noAdmin": "Você precisa da permissão de **Administrador** para definir o canal de denúncias.",
+            "saveFailed": "Não foi possível salvar a configuração do canal.",
+            "title": "Canal de denúncias definido",
+            "done": "Todas as novas denúncias agora vão para {channel}.\nVocê também pode gerenciar isso em `/logging dashboard`."
+        }
+    },
+    "remind": {
+        "title": "Lembretes",
+        "none": "Você não tem lembretes. Crie um com `/remind me`.",
+        "set": "Certo, vou te lembrar {relative} ({time}). Chega por DM, ou aqui se suas DMs estiverem fechadas.",
+        "setTitle": "Lembrete criado",
+        "deleted": "Lembrete `{id}` apagado.",
+        "deletedTitle": "Lembrete apagado",
+        "notFound": "Você não tem lembrete com esse número. Confira `/remind list`.",
+        "dbDown": "O banco de dados não está respondendo, então nada foi salvo. Tente de novo em alguns minutos.",
+        "dbDownTitle": "Tente mais tarde"
+    },
+    "cooldown": {
+        "title": "Pausa",
+        "serverOnly": "/cooldown só funciona em um servidor.",
+        "pickDuration": "Escolha uma das durações da lista.",
+        "notFound": "Não encontrei você neste servidor. Tente de novo em instantes.",
+        "limited": "Você começou {limit} pausas nas últimas 24 horas. Pode começar outra {when}.",
+        "confirmTitle": "Começar uma pausa?",
+        "start": "Começar pausa",
+        "cancel": "Cancelar",
+        "notYours": "Este botão não é para você. Use /cooldown você mesmo se quiser uma pausa.",
+        "expired": "Isto expirou, use /cooldown de novo.",
+        "notStarted": "Nenhuma pausa foi iniciada.",
+        "cancelledTitle": "Cancelado",
+        "notFoundButton": "Não encontrei você neste servidor, então nenhuma pausa foi iniciada.",
+        "alreadyStarting": "Já tem uma pausa sendo iniciada para você, então esta não foi.",
+        "refused": "O Discord recusou o castigo, então nenhuma pausa foi iniciada. Peça à equipe para verificar minhas permissões e a posição do meu cargo.",
+        "started": "Sua pausa ({duration}) começou. Ela termina sozinha em {date} ({relative}). Se cuida.",
+        "startedTitle": "Pausa iniciada",
+        "duration": {
+            "1h": "1 hora",
+            "6h": "6 horas",
+            "12h": "12 horas",
+            "1d": "1 dia",
+            "3d": "3 dias",
+            "7d": "7 dias"
+        }
+    },
+    "wipedata": {
+        "title": "Apagar seus dados?",
+        "intro": "Isto apaga para sempre seus dados neste servidor:",
+        "body": "Sua lista de tarefas, seus lembretes e seu token de login salvo são os mesmos em todos os servidores, então são apagados em todo lugar. Sem o token de login, o bot não consegue mais adicionar você ao servidor de suporte; \"Verificar com o Discord\" salva um novo. Os registros de moderação, recursos, denúncias e verificação são mantidos.",
+        "final": "**Isto não pode ser desfeito.**",
+        "confirm": "Confirmar",
+        "cancel": "Cancelar",
+        "item": {
+            "levels": "Níveis e XP",
+            "birthday": "Aniversário",
+            "todo": "Lista de tarefas pessoal",
+            "reminders": "Lembretes",
+            "oauth": "Token de login do Discord salvo (de \"Verificar com o Discord\")"
+        },
+        "partialTitle": "Nem tudo foi apagado",
+        "partialFailed": "O banco de dados não respondeu para: {items}. ",
+        "partialDeleted": "Apagado: {items}. ",
+        "partialRetry": "Use /wipedata de novo em alguns minutos.",
+        "doneTitle": "Seus dados foram apagados",
+        "done": "Apagado: {items}.\nNíveis e aniversário neste servidor; lista de tarefas, lembretes e o token de login salvo em todo lugar.\n\nOs registros de moderação, recursos, denúncias e verificação são mantidos, porque são os registros de segurança do servidor. Veja na Política de Privacidade como perguntar sobre eles.",
+        "nothingStored": "nada estava salvo",
+        "failed": "O banco de dados não está respondendo. Talvez nada tenha sido apagado; tente de novo em alguns minutos.",
+        "cancelledTitle": "Nada foi apagado",
+        "cancelled": "Seus dados não mudaram.",
+        "cancelFailed": "Não foi possível cancelar a exclusão dos dados."
+    },
+    "todo": {
+        "invalidSubcommand": "Subcomando inválido.",
+        "listNotFound": "Lista compartilhada não encontrada.",
+        "onlyCreator": "Só quem criou a lista pode adicionar membros.",
+        "alreadyMember": "Este usuário já faz parte da lista.",
+        "noAccess": "Você não tem acesso a esta lista.",
+        "taskNotFound": "Tarefa não encontrada.",
+        "alreadyDone": "A tarefa #{id} já está concluída.",
+        "createdTitle": "Lista compartilhada criada",
+        "created": "Lista compartilhada \"{name}\" criada com o ID: `{id}`\nUse `/todo share add list_id:{id} user:@username` para adicionar membros.",
+        "memberAddedTitle": "Membro adicionado",
+        "memberAdded": "{user} foi adicionado à lista compartilhada \"{name}\"",
+        "sharedTitle": "Lista compartilhada (ID: `{id}`)",
+        "owner": "**Dono:** {name}",
+        "members": "**Membros:** {names}",
+        "tasks": "**Tarefas:**",
+        "emptyShared": "*Esta lista está vazia. Clique em \"Adicionar tarefa\" para adicionar uma.*",
+        "done": "Feita",
+        "open": "Aberta",
+        "completedBy": "• Concluída por {user}",
+        "addTask": "Adicionar tarefa",
+        "completeTask": "Concluir tarefa",
+        "removeTask": "Remover tarefa",
+        "taskAddedTitle": "Tarefa adicionada",
+        "taskAddedShared": "\"{task}\" adicionada à lista compartilhada \"{name}\"",
+        "taskAddedSharedShort": "\"{task}\" adicionada à lista compartilhada.",
+        "taskAdded": "\"{task}\" adicionada à sua lista de tarefas.",
+        "taskRemovedTitle": "Tarefa removida",
+        "taskRemovedShared": "\"{task}\" removida da lista compartilhada \"{name}\".",
+        "taskRemovedSharedShort": "\"{task}\" removida da lista compartilhada.",
+        "taskRemoved": "\"{task}\" removida da sua lista de tarefas.",
+        "yourList": "Sua lista de tarefas",
+        "emptyList": "Sua lista de tarefas está vazia.",
+        "taskDoneTitle": "Tarefa concluída",
+        "taskDone": "\"{task}\" marcada como concluída.",
+        "invalidListId": "ID de lista compartilhada inválido.",
+        "modalAddTitle": "Adicionar uma tarefa",
+        "modalCompleteTitle": "Concluir uma tarefa",
+        "modalRemoveTitle": "Remover uma tarefa",
+        "taskLabel": "Tarefa",
+        "taskNumberLabel": "Número da tarefa",
+        "taskNumberPlaceholder": "Por exemplo 3",
+        "tooFast": "Você está indo um pouco rápido. Espere um pouco e tente de novo.",
+        "emptyText": "O texto da tarefa não pode ficar vazio.",
+        "badTaskId": "O número da tarefa precisa ser um número positivo.",
+        "addFailed": "Ocorreu um erro ao adicionar a tarefa.",
+        "completeFailed": "Ocorreu um erro ao concluir a tarefa.",
+        "removeFailed": "Ocorreu um erro ao remover a tarefa."
+    },
+    "slash": {
+        "avatar": {
+            "description": "Mostra o avatar de um usuário",
+            "options": { "target": "O usuário cujo avatar você quer ver (padrão: você)" }
+        },
+        "cooldown": {
+            "description": "Faça uma pausa: coloque-se de castigo por um tempo",
+            "options": { "duration": "Por quanto tempo", "reason": "Por quê (opcional; só a equipe vê)" }
+        },
+        "firstmsg": { "description": "Receba o link da primeira mensagem deste canal" },
+        "remind": {
+            "description": "Lembretes para você",
+            "sub": {
+                "me": { "description": "Me lembre de algo mais tarde", "options": { "in": "Quando, por ex. 10m, 2h, 1d ou 1d12h", "text": "Do que devo te lembrar" } },
+                "list": { "description": "Seus lembretes que ainda não dispararam" },
+                "delete": { "description": "Apague um dos seus lembretes", "options": { "id": "O número de /remind list" } }
+            }
+        },
+        "report": {
+            "description": "Denuncie um usuário à equipe do servidor ou escolha para onde vão as denúncias.",
+            "sub": {
+                "file": { "description": "Denuncie um usuário à equipe de moderação do servidor.", "options": { "user": "O usuário que você quer denunciar.", "reason": "O motivo da denúncia (com detalhes)." } },
+                "setchannel": { "description": "Defina o canal que recebe as denúncias. (Administrador)", "options": { "channel": "O canal de texto que recebe as denúncias." } }
+            }
+        },
+        "serverinfo": { "description": "Informações detalhadas sobre o servidor" },
+        "todo": {
+            "description": "Gerencie sua lista de tarefas pessoal",
+            "sub": {
+                "add": { "description": "Adicione uma tarefa à sua lista", "options": { "task": "A tarefa a adicionar" } },
+                "list": { "description": "Veja sua lista de tarefas" },
+                "complete": { "description": "Marque uma tarefa como concluída", "options": { "number": "O número da tarefa concluída" } },
+                "remove": { "description": "Remova uma tarefa da sua lista", "options": { "number": "O número da tarefa a remover" } },
+                "share": { "description": "Gerencie listas de tarefas compartilhadas" },
+                "shareCreate": { "description": "Crie uma nova lista de tarefas compartilhada", "options": { "name": "Nome da lista compartilhada" } },
+                "shareAdd": { "description": "Adicione um membro a uma lista compartilhada", "options": { "user": "Usuário a adicionar à lista" } },
+                "shareView": { "description": "Veja uma lista de tarefas compartilhada" },
+                "shareAddtask": { "description": "Adicione uma tarefa a uma lista compartilhada" },
+                "shareRemove": { "description": "Remova uma tarefa de uma lista compartilhada" }
+            },
+            "options": { "listId": "ID da lista compartilhada" }
+        },
+        "userinfo": {
+            "description": "Informações detalhadas sobre um usuário",
+            "options": { "target": "O usuário a ver (padrão: você)" }
+        },
+        "weather": {
+            "description": "O tempo agora em um lugar",
+            "options": { "city": "O nome da cidade, por ex. \"São Paulo\" ou \"Tóquio\"" }
+        },
+        "wipedata": { "description": "Apaga seus níveis, aniversário, tarefas, lembretes e token de login (sem volta)" }
+    }
+}
