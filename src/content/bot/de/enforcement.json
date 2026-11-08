@@ -11,6 +11,8 @@
         "caseCode": "Fallcode: {code}",
         "rejoin": "Wieder beitreten: {invite}",
         "record": "Deine ganze Akte: <{url}>",
+        "appealWeb": "**Online Einspruch einlegen:** <{url}>",
+        "appealDeniedWeb": "Nach der Wartezeit kannst du online erneut Einspruch einlegen: <{url}>",
         "privacy": "-# Datenschutz: <{url}>",
         "thisServer": "dem Server",
         "ban": {

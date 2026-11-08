@@ -333,13 +333,14 @@ class Mewvo extends Client {
 
     // The front website (Home, Commands, Leaderboard, About, Status, Privacy, Terms, robots.txt) at
     // the root, after every other route. Leaderboard and status read this client (site.js defaults).
-    // "My record" (/me): members see their own moderation record (MEMBER_PORTAL_ENABLED, off by default).
+    // "My record" (/me): members see their own moderation record (MEMBER_PORTAL_ENABLED, off by default),
+    // and appeal their own cases in any server on the web (/me/appeals: needs this client, multi-server B4a).
     // Plans (test checkout): changes made on the website reach Discord through this client
     // (role + DM); a server's limits follow its owner's plan.
     // supportInvite: Mewvo's own Support server (the website is Mewvo's; home-only by design, B0b).
     setPremiumClient(this);
     setGuildOwnerResolver((guildId) => this.guilds.cache.get(guildId)?.ownerId || null);
-    const memberPortalEnabled = registerMemberPortal(app, { dashboardEnabled, supportInvite: () => enforcementConfig.supportServerInvite });
+    const memberPortalEnabled = registerMemberPortal(app, { dashboardEnabled, supportInvite: () => enforcementConfig.supportServerInvite, client: this });
     registerSite(app, this, { dashboardEnabled, memberPortalEnabled, memberAccountsEnabled: memberPortalEnabled && memberAccountsOn(), billingEnabled: premiumSettings().testCheckout, supportInvite: () => enforcementConfig.supportServerInvite });
 
     // Last: no stack traces in the browser, whatever NODE_ENV is.

@@ -48,7 +48,8 @@
     "withDiscord": "Log in with Discord",
     "withAccount": "Log in with a Mewvo account",
     "note": "Mewvo asks Discord only who you are (the identify permission): no email, no servers, nothing else. You only ever see your own record. The login lasts one hour.",
-    "signup": "No Mewvo account yet? [Create one]({href}) to log in with a username and password."
+    "signup": "No Mewvo account yet? [Create one]({href}) to log in with a username and password.",
+    "appealLead": "Log in with Discord to appeal a punishment from any server that uses Mewvo. You only ever see your own cases."
   },
   "record": {
     "title": "My record",
@@ -89,7 +90,9 @@
     "noCases": "You have no cases in {server}.",
     "noAppeals": "You have not filed any appeals.",
     "appealHintInvite": "Appeal from the appeal panel in Discord: [join the support server]({invite}) and press **Appeal** with the case code. Nothing can be appealed from this page.",
-    "appealHint": "Appeal from the appeal panel in Discord with the case code. Nothing can be appealed from this page."
+    "appealHint": "Appeal from the appeal panel in Discord with the case code. Nothing can be appealed from this page.",
+    "myAppeals": "My appeals",
+    "appealHintWeb": "Appeal a case from any server on [My appeals]({href}). You can also appeal from the appeal panel in Discord with the case code."
   },
   "message": {
     "logInAgain": "Log in again",
@@ -109,7 +112,10 @@
     "notLoggedIn": { "title": "Logged out", "message": "You are not logged in." },
     "logoutNotAllowed": { "title": "Not allowed", "message": "The logout request did not come from this page." },
     "notFound": { "title": "Not found", "message": "There is no such page." },
-    "tryLater": { "title": "Try again later", "message": "This page could not be loaded because the database is not responding. Nothing was changed." }
+    "tryLater": { "title": "Try again later", "message": "This page could not be loaded because the database is not responding. Nothing was changed." },
+    "caseNotFound": { "title": "Case not found", "message": "That case code was not found for your account. Check the code in your DM." },
+    "appealNotAllowed": { "title": "Not allowed", "message": "The appeal did not come from this page. Open the appeal page again and send it from there." },
+    "appealsUnavailable": { "title": "Appeals unavailable", "message": "Your appeals could not be loaded because the database is not responding. Nothing was changed: try again in a few minutes." }
   },
   "viewer": {
     "fallbackName": "Account"
@@ -142,5 +148,65 @@
       "other": "{count} minutes"
     },
     "lessThanMinute": "less than a minute"
+  },
+  "appeals": {
+    "title": "My appeals",
+    "lead": "Your cases in every server that uses Mewvo, logged in as **{username}**. Only you can see this.",
+    "backToRecord": "My record",
+    "whoDecides": "Only the staff of the server that gave you a case decide its appeal. Mewvo does not decide appeals for other servers.",
+    "appealable": "Cases you can appeal",
+    "noneAppealable": "You have no cases that can be appealed right now.",
+    "history": "Your appeals",
+    "noAppeals": "You have not filed any appeals.",
+    "appealButton": "Appeal",
+    "claimed": "Pending: a staff member is looking at it",
+    "unknownServer": "Unknown server",
+    "sent": "Your appeal for {code} was sent to the staff of {server}. The decision shows up here.",
+    "dmNote": "When staff decide, Mewvo also tells you by DM if Discord allows it. The decision is always shown on this page.",
+    "column": {
+      "server": "Server",
+      "case": "Case",
+      "reason": "Reason",
+      "type": "Type",
+      "date": "Date",
+      "until": "Appeal until",
+      "action": "Appeal",
+      "status": "Status",
+      "filed": "Filed",
+      "decided": "Decided"
+    }
+  },
+  "appealForm": {
+    "title": "Appeal {code}",
+    "lead": "Your appeal goes to the staff of **{server}**. They decide it, not Mewvo.",
+    "facts": {
+      "server": "Server",
+      "case": "Case code",
+      "type": "Type",
+      "reason": "Reason",
+      "date": "Date",
+      "ends": "Ends"
+    },
+    "punished": "Why did you get punished?",
+    "punishedHint": "In your own words, up to {max} characters.",
+    "reason": "Why should it be lifted?",
+    "reasonHint": "At least {min} and up to {max} characters.",
+    "didItLabel": "Did you do it?",
+    "didIt": {
+      "yes": "Yes, I did it",
+      "partly": "Partly",
+      "no": "No, I didn't do it"
+    },
+    "note": "Staff see your answers, your Discord name and this case. One appeal per case at a time; after a denied appeal you have to wait before you can appeal again.",
+    "submit": "Send appeal",
+    "back": "Back to my appeals",
+    "notAppealable": "This case cannot be appealed right now:",
+    "errors": {
+      "punished": "Tell staff why you got punished.",
+      "reason": "Explain in at least {min} characters why it should be lifted.",
+      "didIt": "Choose whether you did it.",
+      "refused": "Your appeal was not sent: this case cannot be appealed right now. It may already have a pending appeal, be in the waiting time after a denial, or have ended.",
+      "tooMany": "You sent too many appeals. Try again in an hour."
+    }
   }
 }
