@@ -1,0 +1,24 @@
+{
+  "title": "Your servers",
+  "intro": "Signed in as {name}. Pick a server to manage. Access is checked again on every page.",
+  "empty": "There is no server you can manage with Mewvo yet.",
+  "open": "Open",
+  "openLabel": "Open the dashboard of {name}",
+  "home": "Mewvo server",
+  "role": {
+    "admin": "Administrator",
+    "manager": "Manage Server",
+    "moderator": "Moderator",
+    "owner": "Bot owner"
+  },
+  "limited": "Only the first {count} servers are checked and shown.",
+  "refresh": "Refresh server list",
+  "refreshHint": "A server missing?",
+  "refreshTitle": "Server list not loaded",
+  "refreshText": "Mewvo keeps your server list only in memory, for up to 12 hours. Refresh it to see all your servers.",
+  "addTitle": "Add Mewvo to a server",
+  "addIntro": "Servers you manage where Mewvo is not added yet.",
+  "add": "Add Mewvo",
+  "addLabel": "Add Mewvo to {name}",
+  "ownerArea": "Owner area"
+}

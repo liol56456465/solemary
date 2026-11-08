@@ -315,7 +315,7 @@ test('login remembers the Discord language; a cookie wins; error pages follow co
 
 test('English output of the frame is unchanged: every frame word is the English catalog', () => {
     const page = layout({ title: 'X', session: SESSION, access: ADMIN, body: '' });
-    for (const text of ['Skip to content', 'Find a setting…', 'Moderate', 'Server setup', 'Show all pages (', 'Mewvo website', 'Same as my device', 'Main server · managing now', 'Log out', 'Administrator']) {
+    for (const text of ['Skip to content', 'Find a setting…', 'Moderate', 'Server setup', 'Show all pages (', 'Mewvo website', 'Same as my device', 'Managing now', 'Switch server', 'Log out', 'Administrator']) {
         assert.ok(page.includes(text), text);
     }
     assert.ok(page.includes('<title>X · Mewvo dashboard</title>'));

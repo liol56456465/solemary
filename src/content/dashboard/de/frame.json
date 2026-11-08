@@ -106,8 +106,9 @@
   },
   "server": {
     "label": "Server: {name}",
-    "sub": "Hauptserver · wird gerade verwaltet",
-    "note": "Vorerst kann nur dieser Server verwaltet werden."
+    "sub": "Wird gerade verwaltet",
+    "note": "Jeder Server, den du verwalten kannst, steht in deiner Serverliste.",
+    "switch": "Server wechseln"
   },
   "user": {
     "label": "Konto: {name}",
@@ -120,7 +121,8 @@
   },
   "message": {
     "backOverview": "Zurück zur Übersicht",
-    "backHome": "Zurück zur Startseite"
+    "backHome": "Zurück zur Startseite",
+    "backServers": "Zurück zu deinen Servern"
   },
   "module": {
     "readOnly": "Nur lesen: Bearbeiten im Dashboard ist ausgeschaltet (DASHBOARD_EDIT_ENABLED ist nicht true). Nutze die Befehle des Bots oder bitte den Inhaber, es einzuschalten.",

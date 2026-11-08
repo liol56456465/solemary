@@ -1,0 +1,24 @@
+{
+  "title": "Twoje serwery",
+  "intro": "Zalogowano jako {name}. Wybierz serwer do zarządzania. Dostęp jest sprawdzany ponownie na każdej stronie.",
+  "empty": "Nie ma jeszcze serwera, którym możesz zarządzać przez Mewvo.",
+  "open": "Otwórz",
+  "openLabel": "Otwórz panel serwera {name}",
+  "home": "Serwer Mewvo",
+  "role": {
+    "admin": "Administrator",
+    "manager": "Zarządzanie serwerem",
+    "moderator": "Moderator",
+    "owner": "Właściciel bota"
+  },
+  "limited": "Sprawdzane i pokazywane jest tylko pierwszych {count} serwerów.",
+  "refresh": "Odśwież listę serwerów",
+  "refreshHint": "Brakuje serwera?",
+  "refreshTitle": "Lista serwerów niewczytana",
+  "refreshText": "Mewvo trzyma twoją listę serwerów tylko w pamięci, najwyżej 12 godzin. Odśwież ją, aby zobaczyć wszystkie swoje serwery.",
+  "addTitle": "Dodaj Mewvo do serwera",
+  "addIntro": "Serwery, którymi zarządzasz, a w których nie ma jeszcze Mewvo.",
+  "add": "Dodaj Mewvo",
+  "addLabel": "Dodaj Mewvo do {name}",
+  "ownerArea": "Strefa właściciela"
+}

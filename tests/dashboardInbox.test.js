@@ -356,7 +356,8 @@ test('non-admins are refused: owner without Administrator, lost Administrator, n
     // access cache says admin, but the freshly fetched member is not: refused
     const stale = await setup();
     stale.guild.members.fetch = async (arg) => ({ id: typeof arg === 'string' ? arg : arg?.user, guild: stale.guild, permissions: { has: () => false } });
-    assert.equal((await post(stale, stale.d.inbox.reply, { params, form: { text: 'hi' } })).statusCode, 403);
+    // 403 from the handler's own fresh member fetch, or 404 when the POST's fresh access check (B3) already refuses.
+    assert.ok([403, 404].includes((await post(stale, stale.d.inbox.reply, { params, form: { text: 'hi' } })).statusCode));
     assert.equal(stale.channels.get(MODMAIL_CH).sent.length, 0);
 
     // no CSRF token
@@ -370,5 +371,5 @@ test('non-admins are refused: owner without Administrator, lost Administrator, n
     // not an admin and not an owner: no dashboard at all
     const nobody = await setup({ userId: MEMBER });
     const res = await get(nobody, nobody.d.inbox.list);
-    assert.equal(res.statusCode, 403);
+    assert.equal(res.statusCode, 404, "no access in this server: its uniform 404 (B3)");
 });

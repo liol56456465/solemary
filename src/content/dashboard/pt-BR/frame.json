@@ -108,8 +108,9 @@
   },
   "server": {
     "label": "Servidor: {name}",
-    "sub": "Servidor principal · em gerenciamento",
-    "note": "Por enquanto, só este servidor pode ser gerenciado."
+    "sub": "Gerenciando agora",
+    "note": "Todo servidor que você pode gerenciar está na sua lista de servidores.",
+    "switch": "Trocar de servidor"
   },
   "user": {
     "label": "Conta: {name}",
@@ -122,7 +123,8 @@
   },
   "message": {
     "backOverview": "Voltar para a Visão geral",
-    "backHome": "Voltar para a página inicial"
+    "backHome": "Voltar para a página inicial",
+    "backServers": "Voltar aos seus servidores"
   },
   "module": {
     "readOnly": "Somente leitura: a edição pelo painel está desativada (DASHBOARD_EDIT_ENABLED não é true). Use os comandos do bot ou peça ao dono que a ative.",

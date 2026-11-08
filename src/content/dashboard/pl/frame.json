@@ -108,8 +108,9 @@
   },
   "server": {
     "label": "Serwer: {name}",
-    "sub": "Główny serwer · zarządzasz nim teraz",
-    "note": "Na razie można zarządzać tylko tym serwerem."
+    "sub": "Zarządzasz teraz",
+    "note": "Każdy serwer, którym możesz zarządzać, jest na twojej liście serwerów.",
+    "switch": "Zmień serwer"
   },
   "user": {
     "label": "Konto: {name}",
@@ -122,7 +123,8 @@
   },
   "message": {
     "backOverview": "Wróć do przeglądu",
-    "backHome": "Wróć na stronę główną"
+    "backHome": "Wróć na stronę główną",
+    "backServers": "Wróć do swoich serwerów"
   },
   "module": {
     "readOnly": "Tylko do odczytu: edytowanie w panelu jest wyłączone (DASHBOARD_EDIT_ENABLED nie ma wartości true). Użyj komend bota albo poproś właściciela, aby je włączył.",

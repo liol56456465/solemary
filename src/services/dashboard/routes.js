@@ -1,8 +1,16 @@
 // routes.js — the web dashboard on the bot's Express server (Phase 1: login, overview,
 // records; Phase 2: module settings pages with editing).
 //
-//   GET  /dashboard                 → Overview when logged in, else Discord login
-//   GET  /dashboard/oauth/callback  Discord OAuth2 (scope identify only) comes back here
+// Multi-server (B3, docs/multi-server-b3.md): every server page lives under /dashboard/<guildId>/…
+// (the paths below are relative to that), served by that server's own createDashboard instance
+// (guildDashboards.js). Global routes, never under a server: /static/*, /theme, /lang, /nav,
+// /oauth/callback, /logout, /owner/* and /dashboard itself (the server picker, serverPicker.js).
+// Old links without a server id: GET 302, POST 307 to the same page of MAIN_GUILD_ID; the
+// support server's id 302s to the main server (home servers count as one). An invalid id, a
+// server the bot is not in, a blacklisted server or no access there: one uniform 404.
+//
+//   GET  /dashboard                 → the server picker when logged in, else Discord login (?r=<return path>)
+//   GET  /dashboard/oauth/callback  Discord OAuth2 (scopes identify guilds) comes back here
 //   GET  /dashboard/overview        bot / database / server status, Getting started checklist
 //   GET  /dashboard/cases           case search (the /case search filters), paged
 //   GET  /dashboard/cases/:code     one case: details, edit history, evidence, appeals
@@ -38,15 +46,17 @@
 //                                   gets 404), POSTs also need a login younger than 12 h.
 //   /staff, /staff/*                → 301 /dashboard (the old read-only staff dashboard)
 //
-// Access: CURRENT Administrators of the main server (canAct), OWNER_IDS (view and
-// settings only) and members with the moderator role (the Moderator level: only what
-// permissions.js marks MODERATOR; every other page/action → 403), re-checked on every
-// request (cached 60 s, access.js; POSTs fetch the member fresh). The login
-// state is HMAC-signed, expires after 10 minutes, is single use and bound to the
-// browser by a nonce cookie. Sessions are in Postgres (sessionStore.js: hashed ids,
-// rotated on login, 12 h); the browser only gets a signed random id in an HttpOnly,
-// SameSite=Lax cookie (Secure in production / https). The Discord access token is used
-// once to read the user and then dropped.
+// Access (per server, access.js): CURRENT Administrators of that server (canAct), OWNER_IDS
+// (view and settings only) and members with the server's moderator role (the Moderator level:
+// only what permissions.js marks MODERATOR; every other page/action → 403), re-checked on
+// every request (cached, access.js; every POST checks fresh). Anyone may log in; the picker
+// lists only what they may open. Losing access to one server 404s that server only: the
+// session is kept. The login state is HMAC-signed, expires after 10 minutes, is single use,
+// bound to the browser by a nonce cookie and carries the return path (checked again with
+// safeBackPath). Sessions are in Postgres (sessionStore.js: hashed ids, rotated on login,
+// 12 h); the browser only gets a signed random id in an HttpOnly, SameSite=Lax cookie (Secure
+// in production / https). The Discord access token is used once to read the user and the
+// server list (/users/@me/guilds, kept in memory only: serverPicker.js) and then dropped.
 //
 // Rate limits (owner decision 7): /dashboard is exempt from the app-wide per-IP limiter;
 // instead 300 requests/min per session, and 30/min per IP for the login routes.
@@ -83,10 +93,19 @@ import { listEvidence, resolveImageUrls } from '../enforcement/evidenceService.j
 import { listPendingAppeals } from '../enforcement/appealService.js';
 import { needsSecondReviewer } from '../enforcement/appealReviewer.js';
 import { STATS_PERIODS, staffModerationStats } from '../staffActivityService.js';
-import { getConfiguredSetting, listSettingsAudit } from '../settings/guildSettings.js';
+import {
+    isOtherGuild, listSettingsAudit, refreshGuildSettings, resolveSetting, settingsFor,
+} from '../settings/guildSettings.js';
 import { createAccessChecker } from './access.js';
 import { OWNER_AREA, allows, routeKey } from './permissions.js';
-import { BASE, NAV_COOKIE, THEME_COOKIE, html, messagePage, navModeFrom, path, queryString, themeFrom } from './html.js';
+import {
+    BASE, NAV_COOKIE, THEME_COOKIE, currentGuildId, guildPath, html, messagePage, navModeFrom, path, queryString, rootPath, runInGuild, themeFrom,
+} from './html.js';
+import { isHomeOnlyPage } from './homeOnly.js';
+import { createGuildDashboards, createLruCache, scopedConfirms } from './guildDashboards.js';
+import { collectPicker, createGuildListCache, guildListFrom, pickerPage } from './serverPicker.js';
+import { blacklistHit } from '../owner/blacklistCache.js';
+import { getBotOwners } from '../../config/bot.js';
 import {
     currentLanguage, dashboardLanguage, dashboardText, languageContext, rememberDiscordLocale, setRequestLanguage,
 } from './language.js';
@@ -125,13 +144,18 @@ import { query } from '../enforcement/db.js';
 import { pgConfig } from '../../config/database/postgres.js';
 import {
     MIN_SECRET_LENGTH, SESSION_COOKIE, SESSION_TTL_MS, STATE_COOKIE, STATE_TTL_MS,
-    clearCookie, createRateLimiter, createState, createStateStore,
+    clearCookie, createRateLimiter, createState, createStateStore, guildSegment,
     isSameOrigin, isSnowflake, parseCookies, safeEqual, serializeCookie, signValue, verifySignedValue,
 } from './security.js';
 
 const AUTHORIZE_URL = 'https://discord.com/oauth2/authorize';
 const TOKEN_URL = 'https://discord.com/api/v10/oauth2/token';
 const ME_URL = 'https://discord.com/api/v10/users/@me';
+const GUILDS_URL = 'https://discord.com/api/v10/users/@me/guilds';
+/** The OAuth2 scopes of the dashboard login: who you are, and which servers you are in (for the picker). */
+export const OAUTH_SCOPES = 'identify guilds';
+/** First path segments below /dashboard that are global routes, never a server or an old link. */
+export const GLOBAL_SEGMENTS = Object.freeze(['static', 'theme', 'lang', 'nav', 'oauth', 'logout', 'owner']);
 const HTTP_TIMEOUT_MS = 10000;
 const CASES_PAGE_SIZE = 25;
 const MAX_PAGE = 10000;
@@ -195,6 +219,8 @@ export function dashboardSettings(env = process.env) {
         publicOrigin: null,
         secure: env.NODE_ENV === 'production' || publicUrl.startsWith('https://'),
         mainGuildId: env.MAIN_GUILD_ID !== undefined ? String(env.MAIN_GUILD_ID).trim() : enforcementConfig.mainGuildId,
+        // The support server's dashboard is the main server's (home servers count as one): its id redirects.
+        supportGuildId: env.SUPPORT_GUILD_ID !== undefined ? String(env.SUPPORT_GUILD_ID).trim() : (enforcementConfig.supportGuildId || ''),
         problems: [],
     };
     try {
@@ -220,7 +246,29 @@ export function dashboardSettings(env = process.env) {
  */
 export function safeBackPath(value) {
     const text = typeof value === 'string' ? value : '';
-    return /^\/dashboard(\/[A-Za-z0-9_\-/]*)?(\?[A-Za-z0-9_\-=&%.]*)?$/.test(text) && !text.includes('//') ? text : path('/overview');
+    return isSafeDashboardPath(text) ? text : path('/overview');
+}
+
+function isSafeDashboardPath(text) {
+    return /^\/dashboard(\/[A-Za-z0-9_\-/]*)?(\?[A-Za-z0-9_\-=&%.]*)?$/.test(text) && !text.includes('//');
+}
+
+/**
+ * Where a login comes back to: a safe dashboard path (safeBackPath's rule, at most 300
+ * characters), else the server picker. Never an absolute URL, `//host`, `..` or another site.
+ */
+export function safeReturnPath(value) {
+    const text = typeof value === 'string' ? value : '';
+    return text.length <= 300 && isSafeDashboardPath(text) ? text : rootPath();
+}
+
+/** A request path with %-escapes decoded and empty segments (//) dropped; '' when it cannot be decoded. */
+function decodedPath(value) {
+    try {
+        return decodeURIComponent(String(value || '')).replace(/\/{2,}/g, '/');
+    } catch {
+        return '';
+    }
 }
 
 /** Express 5 may hand over arrays for repeated keys: keep strings only. */
@@ -250,33 +298,91 @@ async function discordFetch(fetchImpl, url, options) {
     return body;
 }
 
+/**
+ * Before a non-home server's pages render: its settings row must be in the cache (A3's
+ * resolveSetting throws SettingsUnavailableError otherwise). Reads it once when missing; throws
+ * SettingsUnavailableError (with a userMessage) when the database does not answer. Home
+ * servers: nothing to do (loadAllSettings at startup).
+ */
+export async function ensureGuildSettings(guildId, env = process.env) {
+    if (!isOtherGuild(guildId, env)) return;
+    try {
+        settingsFor(guildId, env);
+    } catch (error) {
+        if (error?.name !== 'SettingsUnavailableError') throw error;
+        await refreshGuildSettings(guildId, env);
+    }
+}
+
 function clientIp(req) {
     return String(req.ip || req.socket?.remoteAddress || 'unknown');
 }
 
+// The static files (read once, shared by every server's instance): the stylesheet and the one
+// script (progressive enhancement, CSP script-src 'self'). Nothing else is served.
+let staticFileCache = null;
+function staticFiles() {
+    staticFileCache ??= new Map(Object.entries(STATIC_FILES).map(([name, type]) => {
+        try {
+            return [name, { type, body: fs.readFileSync(new URL(`./static/${name}`, import.meta.url), 'utf8') }];
+        } catch (error) {
+            logger.error(`Dashboard static file missing (${name}): ${error.message}`);
+            return [name, { type, body: '' }];
+        }
+    }));
+    return staticFileCache;
+}
+
+/** The rate limiters shared by every server's instance (one budget per session / IP, not per server). */
+export function createDashboardLimiters(limits = DEFAULT_LIMITS) {
+    return {
+        session: createRateLimiter(limits.session),
+        ip: createRateLimiter(limits.ip),
+        static: createRateLimiter(limits.static),
+        post: createRateLimiter(limits.post || DEFAULT_LIMITS.post),
+    };
+}
+
 /**
- * The dashboard's handlers, with everything injectable for tests:
- * { client, settings, sessions, access, data, fetchImpl, states, limits }.
+ * One server's dashboard handlers (multi-server B3: one instance per server, guildDashboards.js),
+ * with everything injectable for tests:
+ * { client, settings, sessions, access, data, fetchImpl, states, limits, guildId }.
+ * `guildId` defaults to MAIN_GUILD_ID (settings.mainGuildId); every handler is bound to it.
  * `sessions` is required (createPgSessionStore in production, a memory store in tests).
+ * Shared between instances (createDashboardApp passes them): sessions, states, limiters,
+ * auditStore, confirms (scoped per server here), memberSearch, guildLists; `picker` renders
+ * GET /dashboard for a logged-in user.
  */
 export function createDashboard({
-    client, settings, sessions, access = createAccessChecker(client, { guildId: settings.mainGuildId }), data = defaultData,
-    fetchImpl = globalThis.fetch, states = createStateStore(), limits = DEFAULT_LIMITS,
+    client, settings, sessions, guildId: boundGuildId = null,
+    access = createAccessChecker(client, { guildId: boundGuildId || settings.mainGuildId }), data = defaultData,
+    fetchImpl = globalThis.fetch, states = createStateStore(), limits = DEFAULT_LIMITS, limiters = null,
     services = defaultServices, auditStore = null, modules = MODULES, env = process.env,
-    enforcement = defaultEnforcement, confirms = createConfirmStore(), owner = defaultOwnerDeps,
+    enforcement = defaultEnforcement, confirms: confirmStore = createConfirmStore(), owner = defaultOwnerDeps,
     inbox = defaultInboxData, inboxBadge = false,
     memberTools = defaultMemberTools, incidents = defaultIncidents, website = defaultWebsiteDeps,
     memberSearch = createMemberSearch(), ownerErrors = defaultErrorPageDeps,
+    guildLists = createGuildListCache(), picker = null, settingsReady = ensureGuildSettings,
 }) {
     const secret = settings.sessionSecret;
-    const guildId = settings.mainGuildId;
-    const sessionLimiter = createRateLimiter(limits.session);
-    const ipLimiter = createRateLimiter(limits.ip);
-    const staticLimiter = createRateLimiter(limits.static);
-    const postLimiter = createRateLimiter(limits.post || DEFAULT_LIMITS.post);
+    const guildId = boundGuildId || settings.mainGuildId;
+    // Mewvo's own servers (main + support): the home-only pages (homeOnly.js) exist only here.
+    const isHomeServer = guildId === settings.mainGuildId || Boolean(settings.supportGuildId && guildId === settings.supportGuildId);
+    // Confirm tokens of this server only: subjects are prefixed with the guild id.
+    const confirms = scopedConfirms(confirmStore, guildId);
+    const shared = limiters || createDashboardLimiters(limits);
+    const sessionLimiter = shared.session;
+    const ipLimiter = shared.ip;
+    const staticLimiter = shared.static;
+    const postLimiter = shared.post;
     const audits = auditStore || createAuditStore();
     const moduleList = modules;
-    const findModule = (key) => (modules === MODULES ? getModule(key) : modules.find((m) => m.key === key) || null);
+    // A home-only module (homeOnly.js) does not exist in other servers: every handler that looks a
+    // module up by the (decoded) :module param gets null there, so page, form and upload all 404.
+    const findModule = (key) => {
+        const module = modules === MODULES ? getModule(key) : modules.find((m) => m.key === key) || null;
+        return module && !isHomeServer && isHomeOnlyPage(module.key) ? null : module;
+    };
     const cookieOptions = { secure: settings.secure, path: BASE };
     let moduleStatesCache = { at: 0, value: {} };
     // The Inbox total on the sidebar (registerDashboard turns it on): cached, refreshed in the background.
@@ -324,7 +430,10 @@ export function createDashboard({
         const session = {
             ...ctx.session, theme: themeOf(req), navMode: navModeFrom(parseCookies(req?.headers?.cookie)[NAV_COOKIE]), server: serverInfo(), path: safeBackPath(req.originalUrl || req.url),
             isOwner: Boolean((owner.isBotOwner || defaultOwnerDeps.isBotOwner)(ctx.session.userId)),
-            inboxCount: badge ? badge.peek() : null,
+            // Global pages (picker, Owner area) have no server: the sidebar's server parts stay off.
+            ...(ctx.guildId === null ? { server: null } : {}),
+            isHomeServer, guildId: ctx.guildId ?? guildId,
+            inboxCount: badge && ctx.guildId !== null ? badge.peek() : null,
             lang: ctx.lang || dashboardLanguage(req, ctx.session.userId),
         };
         return { session, access: ctx.access, moduleStates: ctx.moduleStates || {} };
@@ -372,20 +481,9 @@ export function createDashboard({
         return next();
     }
 
-    // The static files (read once): the stylesheet, the one script (progressive
-    // enhancement, CSP script-src 'self') and the icon sprite. Nothing else is served.
-    const staticFiles = new Map(Object.entries(STATIC_FILES).map(([name, type]) => {
-        try {
-            return [name, { type, body: fs.readFileSync(new URL(`./static/${name}`, import.meta.url), 'utf8') }];
-        } catch (error) {
-            logger.error(`Dashboard static file missing (${name}): ${error.message}`);
-            return [name, { type, body: '' }];
-        }
-    }));
-
     function serveStatic(name, req, res) {
         if (!staticLimiter.allow(clientIp(req))) return res.status(429).type('text/plain').send('Too many requests');
-        const file = staticFiles.get(name);
+        const file = staticFiles().get(name);
         if (!file) return res.status(404).type('text/plain').send('Not found');
         res.set('Cache-Control', 'public, max-age=3600');
         return res.status(200).type(file.type).send(file.body);
@@ -410,22 +508,47 @@ export function createDashboard({
         return next();
     }
 
-    function startLogin(req, res) {
-        const { state, nonce } = createState(secret);
+    /**
+     * To Discord's authorize page. `returnTo`: the dashboard page to open afterwards (signed in
+     * the state; the picker when absent). `prompt: 'none'` (Refresh server list): no consent
+     * screen again for a user who already authorized these scopes (Discord OAuth2 docs).
+     */
+    function startLogin(req, res, { returnTo = null, prompt = null } = {}) {
+        const target = returnTo ? safeReturnPath(returnTo) : null;
+        const { state, nonce } = createState(secret, Date.now(), { returnTo: target && target !== rootPath() ? target : null });
         res.append('Set-Cookie', serializeCookie(STATE_COOKIE, nonce, { ...cookieOptions, maxAgeMs: STATE_TTL_MS }));
         const params = new URLSearchParams({
             client_id: settings.clientId,
             response_type: 'code',
             redirect_uri: settings.redirectUri,
-            scope: 'identify',
+            scope: OAUTH_SCOPES,
             state,
         });
+        if (prompt === 'none') params.set('prompt', 'none');
         return res.redirect(302, `${AUTHORIZE_URL}?${params}`);
     }
 
+    /**
+     * GET /dashboard: the server picker when logged in (?refresh=1: log in again silently to
+     * reload the server list); else the Discord login, coming back to ?r=<dashboard path>.
+     */
     async function index(req, res) {
-        if (await readSession(req)) return res.redirect(302, path('/overview'));
-        return startLogin(req, res);
+        const session = await readSession(req);
+        if (!session) return startLogin(req, res, { returnTo: str(req.query?.r, 300) || null });
+        if (str(req.query?.refresh, 1) === '1') return startLogin(req, res, { prompt: 'none' });
+        if (typeof picker === 'function') return picker(req, res, session);
+        return res.redirect(302, path('/overview'));
+    }
+
+    /** The user's servers from Discord (GET /users/@me/guilds), or null when Discord did not answer. */
+    async function fetchGuildList(accessToken) {
+        try {
+            const raw = await discordFetch(fetchImpl, GUILDS_URL, { headers: { Authorization: `Bearer ${accessToken}` } });
+            return guildListFrom(raw, { botHas: (id) => Boolean(client.guilds?.cache?.has?.(id)) });
+        } catch (error) {
+            logger.warn(`Dashboard login: server list not read: ${error.message}`);
+            return null;
+        }
     }
 
     async function callback(req, res) {
@@ -433,10 +556,12 @@ export function createDashboard({
         res.append('Set-Cookie', clearCookie(STATE_COOKIE, cookieOptions));
         if (req.query?.error) return failT(res, 400, 'loginCancelled', 'loginCancelledText', null, { base: BASE }, req);
         const code = str(req.query?.code, 200);
-        if (!code || !states.consume(str(req.query?.state, 1000), cookies[STATE_COOKIE], secret)) {
+        const taken = code ? (states.take || ((...a) => (states.consume(...a) ? { returnTo: null } : null)))(str(req.query?.state, 1000), cookies[STATE_COOKIE], secret) : null;
+        if (!taken) {
             return failT(res, 400, 'loginExpired', 'loginExpiredText', null, { base: BASE }, req);
         }
         let me;
+        let guildList = null;
         try {
             const token = await discordFetch(fetchImpl, TOKEN_URL, {
                 method: 'POST',
@@ -450,6 +575,8 @@ export function createDashboard({
                 }),
             });
             me = await discordFetch(fetchImpl, ME_URL, { headers: { Authorization: `Bearer ${token.access_token}` } });
+            // The server list for the picker, read once with the same token (then the token is dropped).
+            if (isSnowflake(String(me?.id || ''))) guildList = await fetchGuildList(token.access_token);
         } catch (error) {
             logger.warn(`Dashboard login failed: ${error.message}`);
             return failT(res, 502, 'loginFailed', 'loginNotConfirmed', null, {}, req);
@@ -458,24 +585,93 @@ export function createDashboard({
         // The Discord account's language (identify gives `locale`): used when no language cookie is set.
         rememberDiscordLocale(me.id, me.locale);
         access.forget?.(me.id);
-        const decision = await access.check(me.id);
-        if (!decision.allowed) {
-            logger.info(`Dashboard login refused for ${me.id}: ${decision.reason}`);
-            return failT(res, 403, 'noAccess', 'noAccessLogin', null, {}, req);
-        }
-        // Rotation: whatever session this browser had is dropped; a fresh id is issued.
+        // Anyone may log in (owner decision 6): the picker lists what they may open, and every
+        // server page checks access on its own.
         const session = await sessions.rotate(cookieSessionId(req), {
             userId: me.id,
             username: me.global_name || me.username || me.id,
             avatar: typeof me.avatar === 'string' ? me.avatar : null,
         });
         res.append('Set-Cookie', serializeCookie(SESSION_COOKIE, signValue(session.id, secret), { ...cookieOptions, maxAgeMs: SESSION_TTL_MS }));
-        logger.info(`Dashboard login: ${me.id} (${decision.reason})`);
-        return res.redirect(303, path('/overview'));
+        if (guildList && session.idHash) guildLists.set(session.idHash, guildList);
+        logger.info(`Dashboard login: ${me.id} (${guildList ? `${guildList.length} server(s) listed` : 'server list unavailable'})`);
+        return res.redirect(303, safeReturnPath(taken.returnTo));
+    }
+
+    /** One uniform 404 for a server that is not there for this user (bad id, bot absent, blacklisted, no access). */
+    const serverNotFound = (req, res) => failT(res, 404, 'serverNotFound', 'serverNotFoundText', req?.dashboard ? req : null, {}, req);
+
+    /** The access decision; `fresh` (every POST) skips the cache (A2's checkFresh when present). */
+    async function accessDecision(userId, { fresh = false } = {}) {
+        if (fresh) {
+            if (typeof access.checkFresh === 'function') return access.checkFresh(userId, { guildId });
+            if (typeof access.forget === 'function') access.forget(userId, guildId);
+        }
+        return access.check(userId, { guildId });
     }
 
     /** Session + rate limit + live permission check for every page. */
     async function requireUser(req, res, next) {
+        const session = req.dashboardSession || await readSession(req);
+        if (!session) {
+            if (req.method === 'GET') return res.redirect(302, loginRedirect(req));
+            return failT(res, 401, 'loggedOut', 'loggedOutText', null, { base: BASE }, req);
+        }
+        if (!req.dashboardSession && !sessionLimiter.allow(session.idHash)) {
+            res.set('Retry-After', '60');
+            return failT(res, 429, 'slowDown', 'tooManyRequests', null, {}, req);
+        }
+        // Every POST checks access fresh (owner decision 2); GETs use the access cache.
+        const decision = await accessDecision(session.userId, { fresh: req.method === 'POST' });
+        if (!decision.allowed) {
+            // Lost access to THIS server (or never had it): 404 here only; the session is kept,
+            // so the user's other servers keep working.
+            logger.info(`Dashboard ${req.method} in ${guildId} refused for ${session.userId}: ${decision.reason}`);
+            return serverNotFound(req, res);
+        }
+        // The page language: cookie → the Discord account's language → Accept-Language → English.
+        const lang = dashboardLanguage(req, session.userId);
+        setRequestLanguage(lang);
+        req.dashboard = { session, access: decision, guildId, moduleStates: await moduleStates().catch(() => ({})), flash: null, lang };
+        // A non-home server's settings must be readable before its pages render (never defaults).
+        try {
+            await settingsReady(guildId, env);
+        } catch (error) {
+            if (error?.name !== 'SettingsUnavailableError') throw error;
+            logger.warn(`Dashboard ${req.method} in ${guildId}: ${error.message}`);
+            return fail(res, 503, textOfReq(req).t('errors.serverUnavailable'), error.userMessage, req);
+        }
+        // Home-only pages (support module, settings backup) do not exist in other servers.
+        // The path check sees the decoded path too (%73upport); findModule refuses the module itself.
+        if (!isHomeServer && (isHomeOnlyPage(req.path) || isHomeOnlyPage(decodedPath(req.path)))) return notFound(req, res);
+        // The level's permissions (permissions.js): one table for every route; unknown paths are
+        // Administrator-only. The Owner area keeps its own check (requireOwner, 404).
+        const key = routeKey(req.method, req.path);
+        if (key !== OWNER_AREA && !allows(decision, key)) {
+            logger.info(`Dashboard ${req.method} ${req.path} refused for ${session.userId} (${decision.role}): ${key || 'unknown page'} needs Administrator`);
+            return decision.role === 'manager'
+                ? fail(res, 403, textOfReq(req).t('errors.notAllowed'), textOfReq(req).t('general.access.managerOnly'), req)
+                : failT(res, 403, 'notAllowed', 'moderatorOnly', req);
+        }
+        if (req.method === 'GET' && session.flash) {
+            // One-shot message from the last saved form (POST → 303 → this GET).
+            req.dashboard.flash = session.flash;
+            await sessions.setFlash?.(session.id, null)?.catch?.(() => {});
+        }
+        return next();
+    }
+
+    /** Where a GET without a session goes: the login, coming back to this page afterwards. */
+    function loginRedirect(req) {
+        const back = safeReturnPath(String(req.originalUrl || ''));
+        return back === rootPath() ? BASE : `${BASE}${queryString({ r: back })}`;
+    }
+
+    /**
+     * Global pages (picker, logout): a session and the per-session limit, no server access.
+     * req.dashboard.guildId is null and access is a no-access decision.
+     */
+    async function requireSession(req, res, next) {
         const session = await readSession(req);
         if (!session) {
             if (req.method === 'GET') return res.redirect(302, BASE);
@@ -485,25 +681,10 @@ export function createDashboard({
             res.set('Retry-After', '60');
             return failT(res, 429, 'slowDown', 'tooManyRequests', null, {}, req);
         }
-        const decision = await access.check(session.userId);
-        if (!decision.allowed) {
-            await sessions.destroy(session.id);
-            res.append('Set-Cookie', clearCookie(SESSION_COOKIE, cookieOptions));
-            return failT(res, 403, 'noAccess', 'noAccessLost', null, {}, req);
-        }
-        // The page language: cookie → the Discord account's language → Accept-Language → English.
         const lang = dashboardLanguage(req, session.userId);
         setRequestLanguage(lang);
-        req.dashboard = { session, access: decision, moduleStates: await moduleStates().catch(() => ({})), flash: null, lang };
-        // The level's permissions (permissions.js): one table for every route; unknown paths are
-        // Administrator-only. The Owner area keeps its own check (requireOwner, 404).
-        const key = routeKey(req.method, req.path);
-        if (key !== OWNER_AREA && !allows(decision, key)) {
-            logger.info(`Dashboard ${req.method} ${req.path} refused for ${session.userId} (${decision.role}): ${key || 'unknown page'} needs Administrator`);
-            return failT(res, 403, 'notAllowed', 'moderatorOnly', req);
-        }
+        req.dashboard = { session, access: { allowed: false, canView: false, canAct: false, role: null }, guildId: null, moduleStates: {}, flash: null, lang };
         if (req.method === 'GET' && session.flash) {
-            // One-shot message from the last saved form (POST → 303 → this GET).
             req.dashboard.flash = session.flash;
             await sessions.setFlash?.(session.id, null)?.catch?.(() => {});
         }
@@ -525,7 +706,7 @@ export function createDashboard({
             ? await audits.list(guildId, { page: 0, pageSize: RECENT_CHANGES, excludeModules: hiddenAuditModules(req) }).then((r) => r.rows).catch(() => null)
             : [];
         let handover = null;
-        try { handover = getConfiguredSetting('staffHandoverNote', env); } catch { handover = null; }
+        try { handover = resolveSetting(guildId, 'staffHandoverNote', env); } catch { handover = null; }
         return sendHtml(res, 200, overviewPage({
             ...shellOf(req), overview: result, recentChanges, editEnabled: settings.editEnabled,
             handover, canEditHandover: Boolean(settings.editEnabled && allows(req.dashboard.access, 'staff.handover')),
@@ -535,7 +716,7 @@ export function createDashboard({
 
     // ── Saved case searches (Cases page) ─────────────────────────────────
     const SEARCH_KEYS = ['member', 'moderator', 'type', 'status', 'text', 'from', 'to', 'tag'];
-    const savedSearches = () => { try { return getConfiguredSetting('savedCaseSearches', env) || []; } catch { return []; } };
+    const savedSearches = () => { try { return resolveSetting(guildId, 'savedCaseSearches', env) || []; } catch { return []; } };
     function searchGuard(req, res) {
         if (!postLimiter.allow(req.dashboard.session.idHash)) { res.set('Retry-After', '60'); return failT(res, 429, 'slowDown', 'tooManyChanges', req); }
         if (!checkPost(req)) return failT(res, 403, 'notAllowed', 'csrf', req);
@@ -907,7 +1088,9 @@ export function createDashboard({
         const action = module ? getAction(module, str(req.params?.action, 40)) : null;
         if (!module || !action) return failT(res, 404, 'notFound', 'noSuchForm', req);
         const decision = req.dashboard.access;
-        if (!decision.canView || !allows(decision, 'settings.edit') || (action.admin && !decision.canAct)) {
+        // 'settings.edit' alone lets a manager post to any module: the module's own page key must
+        // be allowed too (MANAGER_PAGES, permissions.js).
+        if (!decision.canView || !allows(decision, 'settings.edit') || !allows(decision, `page:${module.key}`) || (action.admin && !decision.canAct)) {
             return failT(res, 403, 'notAllowed', 'needsAdmin', req);
         }
         const ctx = contextFor(req);
@@ -1003,6 +1186,7 @@ export function createDashboard({
         if (!checkPost(req)) return failT(res, 403, 'notAllowed', 'logoutCsrf', req);
         await sessions.destroy(req.dashboard.session.id);
         res.append('Set-Cookie', clearCookie(SESSION_COOKIE, cookieOptions));
+        if (req.dashboard.session.idHash) guildLists.delete(req.dashboard.session.idHash);
         // To the website, not a dashboard page: one would start a new Discord login (often silent).
         return res.redirect(303, '/');
     }
@@ -1089,6 +1273,7 @@ export function createDashboard({
 
     return {
         memberSearch: memberSearchHtml, memberSearchJson: memberSearchJsonHandler,
+        guildId, isHomeServer, access, guildLists, startLogin, readSession, serverNotFound, requireSession, limiters: shared,
         securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, requireUser, checkPost,
         overview, handover, searchSave, searchDelete, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme, setNav, setLanguage, help, setup,
         sessions, states, confirms, permissionFix: permissionFixHandlers, enforcement: enforcementHandlers, owner: ownerHandlers, website: websiteHandlers, ownerErrors: ownerErrorsHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
@@ -1098,7 +1283,7 @@ export function createDashboard({
 
 /** Wraps an async handler so a thrown error becomes a plain 500 page (and a log line). */
 function safe(handler) {
-    return async (req, res, next) => {
+    const run = async (req, res, next) => {
         try {
             return await handler(req, res, next);
         } catch (error) {
@@ -1110,6 +1295,11 @@ function safe(handler) {
             return res.status(500).type('html').send(messagePage(tr.t('errors.wrong'), message));
         }
     };
+    // Under /dashboard/<guildId>/ the handler runs in that server's context (path() keeps the
+    // prefix), even when a body parser's callback came back outside it.
+    return (req, res, next) => (req.dashboardGuildId && currentGuildId() !== req.dashboardGuildId
+        ? runInGuild(req.dashboardGuildId, () => run(req, res, next))
+        : run(req, res, next));
 }
 
 /**
@@ -1126,6 +1316,67 @@ export function uploadBody(limitBytes, maxLabel = '8 MB') {
     });
 }
 
+/**
+ * The whole multi-server dashboard (B3): the shared parts, the per-server registry
+ * (guildDashboards.js), the picker and the router. `options` are createDashboard's (shared by
+ * every instance). `accessFor(guildId)` builds a server's access checker (default
+ * createAccessChecker(client, { guildId })); `blacklist` is blacklistHit (injectable).
+ * Returns { router, registry, home, accessOf, guildLists, picker }.
+ */
+export function createDashboardApp({
+    client, settings, sessions, env = process.env, accessFor = null, blacklist = blacklistHit, owners = getBotOwners,
+    maxGuilds = undefined, idleMs = undefined, ...options
+}) {
+    const shared = {
+        states: options.states || createStateStore(),
+        limiters: options.limiters || createDashboardLimiters(options.limits || DEFAULT_LIMITS),
+        auditStore: options.auditStore || createAuditStore(),
+        confirms: options.confirms || createConfirmStore(),
+        memberSearch: options.memberSearch || createMemberSearch(),
+        guildLists: options.guildLists || createGuildListCache(),
+    };
+    // One access checker per server (its own cache), kept like the instances (bounded, idle 2 h).
+    const accessCheckers = createLruCache({ max: maxGuilds ?? 500, ttlMs: idleMs ?? 2 * 60 * 60 * 1000 });
+    const accessOf = (guildId) => accessCheckers.get(guildId)
+        ?? accessCheckers.set(guildId, accessFor ? accessFor(guildId) : createAccessChecker(client, { guildId }));
+    const isOwner = (userId) => (typeof owners === 'function' ? owners() : owners).includes(String(userId));
+
+    async function picker(req, res, session) {
+        const lang = dashboardLanguage(req, session.userId);
+        setRequestLanguage(lang);
+        const tr = dashboardText(lang);
+        if (blacklist({ userId: session.userId })?.kind === 'user') {
+            return res.status(403).type('html').send(messagePage(tr.t('errors.noAccess'), tr.t('errors.blockedText'), null, { lang }));
+        }
+        const data = await collectPicker({
+            client, list: shared.guildLists.get(session.idHash) ?? null, mainGuildId: settings.mainGuildId,
+            isOwner: isOwner(session.userId), checkAccess: (id) => accessOf(id).check(session.userId, { guildId: id }),
+            isBlockedGuild: (id) => blacklist({ guildId: id })?.kind === 'guild', clientId: settings.clientId,
+        });
+        let flash = null;
+        if (session.flash) {
+            flash = session.flash;
+            await sessions.setFlash?.(session.id, null)?.catch?.(() => {});
+        }
+        const theme = themeFrom(parseCookies(req.headers?.cookie)[THEME_COOKIE]);
+        return res.status(200).type('html').send(pickerPage({ session: { ...session, isOwner: isOwner(session.userId) }, picker: data, lang, theme, flash }));
+    }
+
+    const build = (guildId) => {
+        const d = createDashboard({ ...options, client, settings, sessions, env, ...shared, guildId, access: accessOf(guildId), picker });
+        d.router = guildRouter(d);
+        return d;
+    };
+    // The main server's instance also serves the global routes (login, logout, Owner area).
+    const home = build(settings.mainGuildId);
+    const registry = createGuildDashboards({
+        build: (guildId) => (guildId === settings.mainGuildId ? home : build(guildId)),
+        ...(maxGuilds ? { max: maxGuilds } : {}), ...(idleMs ? { idleMs } : {}),
+    });
+    const router = dashboardAppRouter({ home, registry, settings, client, blacklist, limiters: shared.limiters });
+    return { router, registry, home, accessOf, guildLists: shared.guildLists, picker };
+}
+
 /** Adds the /dashboard routes (and the /staff redirect) when enabled. Returns true when registered. */
 export function registerDashboard(app, client, env = process.env, { sessions = null } = {}) {
     const settings = dashboardSettings(env);
@@ -1134,79 +1385,107 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
         logger.error(`Dashboard NOT enabled: ${settings.problems.join('; ')}`);
         return false;
     }
-    const d = createDashboard({ client, settings, sessions: sessions || createPgSessionStore({ query, table: pgConfig.tables.dashboard_sessions }), inboxBadge: true });
-    app.use(BASE, dashboardRouter(d));
+    const dashboard = createDashboardApp({
+        client, settings, env, sessions: sessions || createPgSessionStore({ query, table: pgConfig.tables.dashboard_sessions }), inboxBadge: true,
+    });
+    app.use(BASE, dashboard.router);
     // The old read-only staff dashboard lived at /staff.
     app.use('/staff', (req, res) => res.redirect(301, BASE));
-    logger.info(`Dashboard enabled at ${BASE} (OAuth redirect ${settings.redirectUri}; editing ${settings.editEnabled ? 'ON' : 'off (DASHBOARD_EDIT_ENABLED)'})`);
+    logger.info(`Dashboard enabled at ${BASE} (OAuth redirect ${settings.redirectUri}; per-server pages at ${BASE}/<guildId>/; editing ${settings.editEnabled ? 'ON' : 'off (DASHBOARD_EDIT_ENABLED)'})`);
     return true;
 }
 
+/** The part of the original URL after `prefix` ("/dashboard/overview?x=1", "/dashboard" → "/overview?x=1"). */
+function restOf(req, prefix) {
+    const url = String(req.originalUrl || req.url || '');
+    const rest = url.startsWith(prefix) ? url.slice(prefix.length) : '';
+    // Only a path that stays below the prefix: "/…" or "?…" (never "//host" after the redirect).
+    if (!rest || rest === '/') return '';
+    if (rest.startsWith('?')) return rest;
+    return rest.startsWith('/') && !rest.startsWith('//') ? rest : '';
+}
+
+/** GET/HEAD → 302, POST → 307 (the browser re-sends the form), anything else → 404. */
+function redirectKeepingMethod(req, res, location, notFound) {
+    const method = String(req.method || 'GET').toUpperCase();
+    if (method === 'GET' || method === 'HEAD') return res.redirect(302, location);
+    if (method === 'POST') return res.redirect(307, location);
+    return notFound(req, res);
+}
+
 /**
- * Every dashboard route on one router (the same list in production and in local previews):
- * `d` is a createDashboard() result.
+ * The multi-server router (mounted at /dashboard): global routes first, then
+ * /:guildId → validation → that server's instance (runInGuild: path() keeps the prefix).
+ * Old links and the support server's id redirect to the main server.
  */
-export function dashboardRouter(d) {
+export function dashboardAppRouter({ home, registry, settings, client, blacklist = blacklistHit, limiters = home.limiters }) {
     const router = express.Router();
-    const user = safe(d.requireUser);
-    router.use(d.securityHeaders);
+    router.use(home.securityHeaders);
     // The request's language for helpers without a context (language.js); pages get it explicitly.
     router.use(languageContext);
+    addGlobalRoutes(router, home);
+    const notFound = (req, res) => home.serverNotFound(req, res);
+    const mainId = settings.mainGuildId;
+    const supportId = settings.supportGuildId && settings.supportGuildId !== mainId ? settings.supportGuildId : null;
+
+    async function guildDispatch(req, res, next) {
+        const segment = typeof req.params?.guildId === 'string' ? req.params.guildId : '';
+        const { guildId, invalid } = guildSegment(segment);
+        if (!guildId) {
+            if (invalid) return notFound(req, res);
+            if (GLOBAL_SEGMENTS.includes(segment)) return next();
+            // An old link (/dashboard/cases/abcde): the same page of the main server. 302 for now
+            // (owner decision 5: 301 in a later release), 307 for a POST so the form is re-sent.
+            return redirectKeepingMethod(req, res, `${guildPath(mainId)}${restOf(req, BASE)}`, notFound);
+        }
+        if (supportId && guildId === supportId) {
+            return redirectKeepingMethod(req, res, `${guildPath(mainId)}${restOf(req, guildPath(supportId))}`, notFound);
+        }
+        const session = await home.readSession(req);
+        if (!session) {
+            const method = String(req.method || 'GET').toUpperCase();
+            if (method === 'GET' || method === 'HEAD') {
+                const back = safeReturnPath(String(req.originalUrl || ''));
+                return res.redirect(302, back === rootPath() ? BASE : `${BASE}${queryString({ r: back })}`);
+            }
+            const tr = dashboardText(currentLanguage());
+            return res.status(401).type('html').send(messagePage(tr.t('errors.loggedOut'), tr.t('errors.loggedOutText', { base: BASE })));
+        }
+        if (!limiters.session.allow(session.idHash)) {
+            res.set('Retry-After', '60');
+            return res.status(429).type('html').send(messagePage(dashboardText(currentLanguage()).t('errors.slowDown'), dashboardText(currentLanguage()).t('errors.tooManyRequests')));
+        }
+        // The bot must be in the server, and the server must not be blacklisted: else the same 404.
+        if (!client?.guilds?.cache?.has?.(guildId)) return notFound(req, res);
+        const hit = blacklist({ userId: session.userId, guildId });
+        if (hit?.kind === 'user') {
+            const tr = dashboardText(currentLanguage());
+            return res.status(403).type('html').send(messagePage(tr.t('errors.noAccess'), tr.t('errors.blockedText')));
+        }
+        if (hit?.kind === 'guild') return notFound(req, res);
+        const instance = registry.get(guildId);
+        req.dashboardSession = session; // read once: requireUser reuses it (and the limit is counted once)
+        req.dashboardGuildId = guildId;
+        return runInGuild(guildId, () => instance.router(req, res, next));
+    }
+
+    router.use('/:guildId', safe(guildDispatch));
+    router.use(safe(async (req, res) => home.notFound(req, res)));
+    return router;
+}
+
+/** The global routes (never under a server), on the home instance `d`. */
+function addGlobalRoutes(router, d) {
+    const user = safe(d.requireUser);
     router.get('/static/:file', d.staticFile);
     router.get('/theme', d.limitByIp, d.setTheme);
     router.get('/lang', d.limitByIp, d.setLanguage);
     router.get('/nav', d.limitByIp, d.setNav);
     router.get('/', d.limitByIp, safe(d.index));
     router.get('/oauth/callback', d.limitByIp, safe(d.callback));
-    router.post('/logout', express.urlencoded({ extended: false, limit: '2kb' }), user, safe(d.logout));
-    // Phase 3 forms (enforcement and records): registered before the settings catch-all.
+    // Logout needs a session, not access to any server.
+    router.post('/logout', express.urlencoded({ extended: false, limit: '2kb' }), safe(d.requireSession), safe(d.logout));
     const form = express.urlencoded({ extended: false, limit: '16kb' });
-    const en = d.enforcement;
-    const mt = d.memberTools;
-    router.post('/users/rules/preview', form, user, safe(mt.preview));
-    router.post('/users/rules/save', form, user, safe(mt.save));
-    router.post('/users/rules/:rid/disable', form, user, safe(mt.disable));
-    router.post('/users/rules/:rid/delete', form, user, safe(mt.remove));
-    router.post('/users/:id/action/preview', form, user, safe(en.actionPreview));
-    router.post('/users/:id/action/execute', form, user, safe(en.actionExecute));
-    router.post('/users/bulk/preview', form, user, safe(en.bulkPreview));
-    router.post('/users/bulk/execute', form, user, safe(en.bulkExecute));
-    router.post('/users/:id/roles/add', form, user, safe(en.roleAdd));
-    router.post('/users/:id/roles/remove', form, user, safe(en.roleRemove));
-    router.post('/users/:id/nickname', form, user, safe(en.nickname));
-    router.post('/users/:id/timeout', form, user, safe(en.timeout));
-    router.post('/users/:id/unverify', form, user, safe(en.unverify));
-    router.post('/users/:id/notes/add', form, user, safe(en.noteAdd));
-    router.post('/users/:id/notes/remove', form, user, safe(en.noteRemove));
-    router.post('/cases/bulk', form, user, safe(en.caseBulk));
-    router.post('/cases/bulk/void', form, user, safe(en.caseBulkVoid));
-    router.post('/cases/searches/save', form, user, safe(d.searchSave));
-    router.post('/cases/searches/delete', form, user, safe(d.searchDelete));
-    router.post('/cases/:code/edit', form, user, safe(en.caseEdit));
-    router.post('/cases/:code/void', form, user, safe(en.caseVoid));
-    router.post('/cases/:code/evidence/add', form, user, safe(en.evidenceAdd));
-    // Image upload: login is checked first (cookie only), so an anonymous request is refused before
-    // any of the body is read; then the raw body, capped at 8 MB + 64 kB of form overhead.
-    router.post('/cases/:code/evidence/upload', user, uploadBody(MAX_UPLOAD_BYTES + 64 * 1024), safe(d.parseUpload), safe(en.evidenceUpload));
-    router.post('/backup/preview', user, uploadBody(BACKUP_MAX_BYTES + 16 * 1024), safe(d.parseUpload), safe(d.backupPreview));
-    router.post('/backup/apply', form, user, safe(d.backupApply));
-    router.post('/handover', form, user, safe(d.handover));
-    router.post('/fix-permissions', form, user, safe(d.permissionFix.apply));
-    router.post('/cases/:code/evidence/remove', form, user, safe(en.evidenceRemove));
-    router.post('/cases/:code/notes', form, user, safe(en.caseNote));
-    router.post('/cases/:code/tags', form, user, safe(en.caseTags));
-    router.post('/appeals/:code/preview', form, user, safe(en.appealPreview));
-    router.post('/appeals/:code/decide', form, user, safe(en.appealDecide));
-    router.post('/nocontact/add', form, user, safe(en.noContactAdd));
-    router.post('/nocontact/end', form, user, safe(en.noContactEnd));
-    router.post('/watchlist/end', form, user, safe(en.watchlistEnd));
-    router.post('/staff/blocks/lift', form, user, safe(en.blockLift));
-    router.post('/staff/warn', form, user, safe(en.staffWarn));
-    router.post('/staff/restore', form, user, safe(en.staffRestore));
-    const ib = d.inbox;
-    router.post('/inbox/:kind/:id/reply', form, user, safe(ib.reply));
-    router.post('/inbox/:kind/:id/close/preview', form, user, safe(ib.closePreview));
-    router.post('/inbox/:kind/:id/close', form, user, safe(ib.close));
     // Owner area: login → live owner check (404 otherwise) → body. Image uploads: the owner check
     // runs before any of the body is read.
     const ow = d.owner;
@@ -1262,6 +1541,59 @@ export function dashboardRouter(d) {
     router.get('/owner/website/key', ...owner, safe(wb.key));
     router.get('/owner/announce', ...owner, safe(ow.announce));
     router.get('/owner/premium', ...owner, safe(ow.premium));
+}
+
+/** One server's routes (below /dashboard/<guildId>, or below /dashboard in the flat router). */
+function addGuildRoutes(router, d) {
+    const user = safe(d.requireUser);
+    // Phase 3 forms (enforcement and records): registered before the settings catch-all.
+    const form = express.urlencoded({ extended: false, limit: '16kb' });
+    const en = d.enforcement;
+    const mt = d.memberTools;
+    router.post('/users/rules/preview', form, user, safe(mt.preview));
+    router.post('/users/rules/save', form, user, safe(mt.save));
+    router.post('/users/rules/:rid/disable', form, user, safe(mt.disable));
+    router.post('/users/rules/:rid/delete', form, user, safe(mt.remove));
+    router.post('/users/:id/action/preview', form, user, safe(en.actionPreview));
+    router.post('/users/:id/action/execute', form, user, safe(en.actionExecute));
+    router.post('/users/bulk/preview', form, user, safe(en.bulkPreview));
+    router.post('/users/bulk/execute', form, user, safe(en.bulkExecute));
+    router.post('/users/:id/roles/add', form, user, safe(en.roleAdd));
+    router.post('/users/:id/roles/remove', form, user, safe(en.roleRemove));
+    router.post('/users/:id/nickname', form, user, safe(en.nickname));
+    router.post('/users/:id/timeout', form, user, safe(en.timeout));
+    router.post('/users/:id/unverify', form, user, safe(en.unverify));
+    router.post('/users/:id/notes/add', form, user, safe(en.noteAdd));
+    router.post('/users/:id/notes/remove', form, user, safe(en.noteRemove));
+    router.post('/cases/bulk', form, user, safe(en.caseBulk));
+    router.post('/cases/bulk/void', form, user, safe(en.caseBulkVoid));
+    router.post('/cases/searches/save', form, user, safe(d.searchSave));
+    router.post('/cases/searches/delete', form, user, safe(d.searchDelete));
+    router.post('/cases/:code/edit', form, user, safe(en.caseEdit));
+    router.post('/cases/:code/void', form, user, safe(en.caseVoid));
+    router.post('/cases/:code/evidence/add', form, user, safe(en.evidenceAdd));
+    // Image upload: login is checked first (cookie only), so an anonymous request is refused before
+    // any of the body is read; then the raw body, capped at 8 MB + 64 kB of form overhead.
+    router.post('/cases/:code/evidence/upload', user, uploadBody(MAX_UPLOAD_BYTES + 64 * 1024), safe(d.parseUpload), safe(en.evidenceUpload));
+    router.post('/backup/preview', user, uploadBody(BACKUP_MAX_BYTES + 16 * 1024), safe(d.parseUpload), safe(d.backupPreview));
+    router.post('/backup/apply', form, user, safe(d.backupApply));
+    router.post('/handover', form, user, safe(d.handover));
+    router.post('/fix-permissions', form, user, safe(d.permissionFix.apply));
+    router.post('/cases/:code/evidence/remove', form, user, safe(en.evidenceRemove));
+    router.post('/cases/:code/notes', form, user, safe(en.caseNote));
+    router.post('/cases/:code/tags', form, user, safe(en.caseTags));
+    router.post('/appeals/:code/preview', form, user, safe(en.appealPreview));
+    router.post('/appeals/:code/decide', form, user, safe(en.appealDecide));
+    router.post('/nocontact/add', form, user, safe(en.noContactAdd));
+    router.post('/nocontact/end', form, user, safe(en.noContactEnd));
+    router.post('/watchlist/end', form, user, safe(en.watchlistEnd));
+    router.post('/staff/blocks/lift', form, user, safe(en.blockLift));
+    router.post('/staff/warn', form, user, safe(en.staffWarn));
+    router.post('/staff/restore', form, user, safe(en.staffRestore));
+    const ib = d.inbox;
+    router.post('/inbox/:kind/:id/reply', form, user, safe(ib.reply));
+    router.post('/inbox/:kind/:id/close/preview', form, user, safe(ib.closePreview));
+    router.post('/inbox/:kind/:id/close', form, user, safe(ib.close));
     // Settings forms: the body parser is mounted here only (32 kB, no nested objects).
     // urlencoded skips multipart bodies, so an upload is read only after the login check.
     router.post('/:module/:action', express.urlencoded({ extended: false, limit: '32kb' }), user, safe(d.moduleUploadBody), safe(d.moduleAction));
@@ -1294,6 +1626,26 @@ export function dashboardRouter(d) {
     router.get('/setup', user, safe(d.setup));
     router.get('/fix-permissions', user, safe(d.permissionFix.page));
     router.get('/:module', user, safe(d.modulePage));
-    router.use(user, d.notFound);
+    router.use(user, safe(d.notFound));
+}
+
+/** One server's router: the guild routes, and /dashboard/<guildId> itself → its Overview. */
+export function guildRouter(d) {
+    const router = express.Router();
+    router.get('/', (req, res) => res.redirect(302, path('/overview')));
+    addGuildRoutes(router, d);
+    return router;
+}
+
+/**
+ * Every route of ONE dashboard instance on one flat router (no server prefix): local previews
+ * and tests. Production uses createDashboardApp (registerDashboard).
+ */
+export function dashboardRouter(d) {
+    const router = express.Router();
+    router.use(d.securityHeaders);
+    router.use(languageContext);
+    addGlobalRoutes(router, d);
+    addGuildRoutes(router, d);
     return router;
 }

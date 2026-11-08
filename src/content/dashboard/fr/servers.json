@@ -1,0 +1,24 @@
+{
+  "title": "Tes serveurs",
+  "intro": "Connecté en tant que {name}. Choisis un serveur à gérer. L'accès est revérifié sur chaque page.",
+  "empty": "Il n'y a encore aucun serveur que tu peux gérer avec Mewvo.",
+  "open": "Ouvrir",
+  "openLabel": "Ouvrir le tableau de bord de {name}",
+  "home": "Serveur Mewvo",
+  "role": {
+    "admin": "Administrateur",
+    "manager": "Gérer le serveur",
+    "moderator": "Modérateur",
+    "owner": "Propriétaire du bot"
+  },
+  "limited": "Seuls les {count} premiers serveurs sont vérifiés et affichés.",
+  "refresh": "Actualiser la liste des serveurs",
+  "refreshHint": "Un serveur manque ?",
+  "refreshTitle": "Liste des serveurs non chargée",
+  "refreshText": "Mewvo garde ta liste de serveurs seulement en mémoire, 12 heures au plus. Actualise-la pour voir tous tes serveurs.",
+  "addTitle": "Ajouter Mewvo à un serveur",
+  "addIntro": "Serveurs que tu gères où Mewvo n'est pas encore ajouté.",
+  "add": "Ajouter Mewvo",
+  "addLabel": "Ajouter Mewvo à {name}",
+  "ownerArea": "Espace propriétaire"
+}

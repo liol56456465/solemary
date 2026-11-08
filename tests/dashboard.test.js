@@ -252,7 +252,7 @@ test('evidence upload: an anonymous request is refused before the (up to 8 MB) b
     try {
         const status = await new Promise((resolve, reject) => {
             const req = http.request({
-                host: '127.0.0.1', port: server.address().port, method: 'POST', path: '/dashboard/cases/abc2345/evidence/upload',
+                host: '127.0.0.1', port: server.address().port, method: 'POST', path: `/dashboard/${GUILD}/cases/abc2345/evidence/upload`,
                 headers: { 'Content-Type': 'multipart/form-data; boundary=a', 'Content-Length': String(8 * 1024 * 1024) },
             }, (res) => { res.resume(); resolve(res.statusCode); });
             req.on('error', (error) => (error.code === 'ECONNRESET' || error.code === 'EPIPE' ? null : reject(error)));
@@ -276,7 +276,7 @@ test('welcome image upload: an anonymous request is refused before the (up to 8 
     try {
         const status = await new Promise((resolve, reject) => {
             const req = http.request({
-                host: '127.0.0.1', port: server.address().port, method: 'POST', path: '/dashboard/welcome/welcome-image-upload',
+                host: '127.0.0.1', port: server.address().port, method: 'POST', path: `/dashboard/${GUILD}/welcome/welcome-image-upload`,
                 headers: { 'Content-Type': 'multipart/form-data; boundary=a', 'Content-Length': String(8 * 1024 * 1024) },
             }, (res) => { res.resume(); resolve(res.statusCode); });
             req.on('error', (error) => (error.code === 'ECONNRESET' || error.code === 'EPIPE' ? null : reject(error)));
@@ -367,14 +367,15 @@ async function runProtected(d, handler, req) {
     return res;
 }
 
-test('/dashboard without a session redirects to Discord with scope identify and a state cookie', async () => {
+test('/dashboard without a session redirects to Discord with scopes identify guilds and a state cookie', async () => {
     const { d } = makeDashboard();
     const res = fakeRes();
     await d.index({ headers: {} }, res);
     assert.equal(res.statusCode, 302);
     const url = new URL(res.redirectedTo);
     assert.equal(url.origin, 'https://discord.com');
-    assert.equal(url.searchParams.get('scope'), 'identify');
+    assert.equal(url.searchParams.get('scope'), 'identify guilds');
+    assert.equal(url.searchParams.get('prompt'), null, 'the consent screen is shown on a normal login');
     assert.equal(url.searchParams.get('redirect_uri'), 'https://bot.example/dashboard/oauth/callback');
     assert.ok(url.searchParams.get('state'));
     const stateCookie = res.cookies.find((c) => c.startsWith(`${STATE_COOKIE}=`));
@@ -385,11 +386,12 @@ test('OAuth callback logs an admin in with a signed session cookie; no token rea
     const { d, fetchCalls, sessions } = makeDashboard();
     const { res, cookie } = await login(d);
     assert.equal(res.statusCode, 303);
-    assert.equal(res.redirectedTo, '/dashboard/overview');
+    assert.equal(res.redirectedTo, '/dashboard', 'no return path: the server picker');
     const sessionCookie = res.cookies.find((c) => c.startsWith(`${SESSION_COOKIE}=`));
     assert.match(sessionCookie, /Path=\/dashboard; HttpOnly; SameSite=Lax; Max-Age=43200; Secure/);
     assert.ok(!res.cookies.join().includes('tok'), 'access token never set as cookie');
-    assert.equal(fetchCalls.length, 2);
+    assert.equal(fetchCalls.length, 3, 'token, /users/@me and /users/@me/guilds, once each');
+    assert.equal(fetchCalls[2].url, 'https://discord.com/api/v10/users/@me/guilds');
     assert.equal(fetchCalls[0].options.body.get('redirect_uri'), 'https://bot.example/dashboard/oauth/callback');
     assert.equal(sessions.size(), 1);
     const again = fakeRes();
@@ -403,7 +405,7 @@ test('OAuth callback logs an admin in with a signed session cookie; no token rea
     assert.equal(old.redirectedTo, '/dashboard');
 });
 
-test('OAuth callback refuses replayed or cookie-less states and users without access', async () => {
+test('OAuth callback refuses replayed or cookie-less states; anyone may log in (B3: the picker lists what they may open)', async () => {
     const { d } = makeDashboard();
     const start = fakeRes();
     await d.index({ headers: {} }, start);
@@ -414,11 +416,12 @@ test('OAuth callback refuses replayed or cookie-less states and users without ac
 
     const stranger = makeDashboard({ me: { id: STRANGER, username: 'x' } });
     const { res } = await login(stranger.d);
-    assert.equal(res.statusCode, 403);
-    assert.equal(cookieValue(res, SESSION_COOKIE), null);
-    assert.ok(res.body.includes('<a class="brand" href="/" aria-label="Mewvo website">'), 'logo leads to the website');
-    assert.ok(res.body.includes('<a class="button-link" href="/">Back to the home page</a>'));
-    assert.ok(!res.body.includes('/dashboard/overview'), 'no link that would start a login again');
+    assert.equal(res.statusCode, 303);
+    assert.ok(cookieValue(res, SESSION_COOKIE), 'a stranger gets a session too');
+    // …but no server page: their access is checked per server (404 there, session kept).
+    const page = await runProtected(stranger.d, stranger.d.cases, { method: 'GET', headers: { cookie: `${SESSION_COOKIE}=${encodeURIComponent(cookieValue(res, SESSION_COOKIE))}` }, query: {} });
+    assert.equal(page.statusCode, 404);
+    assert.equal(stranger.sessions.size(), 1, 'session kept');
 
     const cancelled = fakeRes();
     await d.callback({ headers: {}, query: { error: 'access_denied' } }, cancelled);
@@ -437,7 +440,7 @@ test('OWNER_IDS without Administrator get in with view-only access', async () =>
     assert.match(page.body, /View and settings/i);
 });
 
-test('protected pages: redirect without a session, 403 once access is lost, 429 over the per-session limit', async () => {
+test('protected pages: redirect without a session, 404 once access is lost (session kept), 429 over the per-session limit', async () => {
     const { d } = makeDashboard({ limits: { session: { limit: 5, windowMs: 60000 }, ip: { limit: 30, windowMs: 60000 }, static: { limit: 30, windowMs: 60000 } } });
     const anon = await runProtected(d, d.cases, { method: 'GET', headers: {}, query: {} });
     assert.equal(anon.redirectedTo, '/dashboard');
@@ -463,9 +466,10 @@ test('protected pages: redirect without a session, 403 once access is lost, 429 
     let passed = false;
     await d3.requireUser({ method: 'GET', headers: { cookie: login2.cookie } }, res, () => { passed = true; });
     assert.equal(passed, false);
-    assert.equal(res.statusCode, 403);
-    assert.ok(res.cookies.some((c) => c.startsWith(`${SESSION_COOKIE}=;`)), 'session cookie cleared');
-    assert.equal(second.sessions.size(), 0, 'session destroyed');
+    assert.equal(res.statusCode, 404, 'one uniform 404 for a server without access');
+    assert.match(res.body, /Server not found or you can&#39;t manage it/);
+    assert.ok(!res.cookies.some((c) => c.startsWith(`${SESSION_COOKIE}=;`)), 'session cookie kept');
+    assert.equal(second.sessions.size(), 1, 'session kept: other servers keep working');
 });
 
 test('login routes have a per-IP limit', async () => {
@@ -507,7 +511,7 @@ test('static files: the script is served as text/javascript; nothing else is ser
     const source = readFileSync(new URL('../src/services/dashboard/static/dashboard.js', import.meta.url), 'utf8');
     assert.ok(!/XMLHttpRequest|eval\(|new Function|innerHTML|document\.write|sendBeacon|WebSocket|EventSource/.test(source));
     assert.equal((source.match(/\bfetch\(/g) || []).length, 1, 'one fetch only');
-    assert.ok(source.includes("const MEMBER_SEARCH_PATH = /^\\/dashboard\\/members\\/search\\.json(\\?bans=1)?$/;"), 'the fetched URL is pinned to the search path');
+    assert.ok(source.includes("const MEMBER_SEARCH_PATH = /^\\/dashboard(\\/\\d{17,20})?\\/members\\/search\\.json(\\?bans=1)?$/;"), 'the fetched URL is pinned to the (per-server) search path');
     assert.match(csp, /connect-src 'self'/);
 });
 
@@ -804,7 +808,8 @@ test('case page: history, evidence and appeals are collapsible sections (history
 test('layout v5: grouped sidebar with every page, breadcrumbs, phone tab bar with a More sheet', () => {
     const page = layout({ title: 'x', active: 'tickets', session: { username: 'a', csrf: 't', navMode: 'all', server: { name: 'Cats <3', iconUrl: null } }, body: html`` });
     assert.match(page, /<details class="server-switch menu-wrap"><summary aria-label="Server: Cats &lt;3">/);
-    assert.ok(page.includes('Only this server can be managed for now.'));
+    assert.ok(page.includes('Every server you can manage is on your server list.'));
+    assert.ok(page.includes('<a class="menu-item menu-link" href="/dashboard">'), 'the switcher links to the server picker');
     const side = page.slice(page.indexOf('<nav class="side-nav"'), page.indexOf('</nav>', page.indexOf('<nav class="side-nav"')));
     const groups = [...side.matchAll(/<p class="side-group-label">([^<]+)<\/p>/g)].map((m) => m[1]);
     assert.deepEqual(groups, ['Moderate', 'Community', 'Server setup', 'Bot']);

@@ -107,8 +107,9 @@
   },
   "server": {
     "label": "Serveur : {name}",
-    "sub": "Serveur principal · en cours de gestion",
-    "note": "Pour l’instant, seul ce serveur peut être géré."
+    "sub": "En cours de gestion",
+    "note": "Chaque serveur que tu peux gérer figure dans ta liste de serveurs.",
+    "switch": "Changer de serveur"
   },
   "user": {
     "label": "Compte : {name}",
@@ -121,7 +122,8 @@
   },
   "message": {
     "backOverview": "Retour à la vue d’ensemble",
-    "backHome": "Retour à l’accueil"
+    "backHome": "Retour à l’accueil",
+    "backServers": "Retour à tes serveurs"
   },
   "module": {
     "readOnly": "Lecture seule : la modification depuis le tableau de bord est désactivée (DASHBOARD_EDIT_ENABLED n’est pas à true). Utilise les commandes du bot, ou demande au propriétaire de l’activer.",
