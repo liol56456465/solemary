@@ -26,7 +26,7 @@ import { getCaseByCode } from '../enforcement/caseService.js';
 import { createRejoinInvite, executeAction, sendDm } from '../enforcement/enforcementService.js';
 import { liftCase } from '../enforcement/appealService.js';
 import { dmServerName } from '../enforcement/dmTemplates.js';
-import { fetchStaffChannel, staffGuildId } from './channelRouting.js';
+import { fetchStaffChannel } from './channelRouting.js';
 import {
     CLOSE_STATUS, REPORT_RULE, buildCardPayload, cardTier, closedTitle, describeStep, stripLeadingEmoji,
 } from './reviewFormat.js';
@@ -279,16 +279,16 @@ async function dmReversal(client, record, invite, replacement = null) {
 
 /** "a,b,c" → the existing case records, in order. Throws when none exist. */
 /**
- * The cases a card names. Only cases of the server the card belongs to (the clicking server,
- * or for a home server any home server, since they share the main server's channels): a card
- * can never reach another server's case.
+ * The cases a card names. Only cases of the card's server (`guildId`; main + support count as
+ * one, getCaseByCode): a code of another server counts as gone, so a card can never reach
+ * another server's case. `lookup`: test hook.
  */
-export async function recordsFor(codesArg, guildId = null, lookup = getCaseByCode) {
+export async function recordsFor(codesArg, guildId, lookup = getCaseByCode) {
     const codes = String(codesArg || '').split(',').map((code) => code.trim()).filter(Boolean);
     const records = [];
     for (const code of codes) {
-        const record = await lookup(code);
-        if (record && (!guildId || staffGuildId(record.guild_id) === staffGuildId(guildId))) records.push(record);
+        const record = guildId ? await lookup(code, guildId) : null;
+        if (record) records.push(record);
     }
     if (!records.length) throw userError(`Case \`${codes.join(', ') || '?'}\` no longer exists.`);
     return records;
@@ -348,7 +348,7 @@ export async function handleReviewAction(interaction, args) {
         if (!canGiveSecondOpinion(admin.id, keeperId)) {
             throw userError('You kept this one; a different administrator has to give the second opinion.');
         }
-        const records = await recordsFor(codes, guild?.id);
+        const records = await recordsFor(codes, guild?.id || interaction.guildId);
         const original = message.reference?.messageId
             ? await message.channel.messages.fetch(message.reference.messageId).catch(() => null)
             : null;
@@ -386,7 +386,7 @@ export async function handleReviewAction(interaction, args) {
     }
 
     if (action === 'keep' || action === 'undo' || action === 'change') {
-        const records = await recordsFor(rest[0], guild?.id);
+        const records = await recordsFor(rest[0], guild?.id || interaction.guildId);
 
         if (action === 'keep') {
             await closeCard(message, `Kept by ${by}: ${codeList(records)}`, { status: 'kept', by });

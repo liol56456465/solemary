@@ -65,6 +65,7 @@
     "access": {
         "adminChannel": "Do tej komendy potrzebujesz roli Administrator. Poproś o rolę moda lub admina tutaj: <#{channelId}>",
         "admin": "Do tej komendy potrzebujesz roli Administrator.",
-        "adminOther": "Do tej komendy potrzebujesz roli Administrator. Jeśli potrzebujesz dostępu, zapytaj admina tego serwera."
+        "adminOther": "Do tej komendy potrzebujesz roli Administrator. Jeśli potrzebujesz dostępu, zapytaj admina tego serwera.",
+        "manageServer": "Potrzebujesz uprawnienia Zarządzanie serwerem lub Administrator, aby użyć tej komendy."
     }
 }

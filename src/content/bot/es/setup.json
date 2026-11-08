@@ -1,0 +1,70 @@
+{
+    "title": "Configurar Mewvo en {server}",
+    "intro": "Lo que ya está configurado en este servidor. La mayoría de los ajustes están en el panel.",
+    "dashboardButton": "Abrir el panel",
+    "noDashboard": "El enlace del panel aún no está disponible para este bot.",
+    "checklistTitle": "Lista de comprobación",
+    "on": "activado",
+    "off": "desactivado",
+    "item": {
+        "modLog": {
+            "label": "Canal de registro de moderación",
+            "next": "Elige un canal en el panel (Sanciones)."
+        },
+        "staff": {
+            "label": "Canal de revisión del staff",
+            "next": "Elige un canal en el panel (Automod).",
+            "fallback": "Sin definir: las revisiones van al registro de moderación. Elige un canal en el panel (Automod)."
+        },
+        "appeals": {
+            "label": "Apelaciones",
+            "mewvo": "Los miembros apelan en el servidor de soporte de Mewvo.",
+            "mewvoChoice": "Los miembros apelan en el servidor de soporte de Mewvo. Puedes usar tu propio servidor en su lugar (panel).",
+            "own": "Los miembros apelan en tu propio servidor: {invite}",
+            "ownMissing": "Elegiste tu propio servidor, pero no hay invitación. Añade una en el panel (Sanciones)."
+        },
+        "automod": {
+            "label": "Automod",
+            "next": "Actívalo en el panel (Automod)."
+        },
+        "verification": {
+            "label": "Verificación",
+            "next": "Configúrala con /verification o en el panel."
+        },
+        "welcome": {
+            "label": "Mensajes de bienvenida",
+            "next": "Configúralos con /welcome o en el panel."
+        },
+        "tickets": {
+            "label": "Tickets",
+            "next": "Configúralos con /ticket o en el panel."
+        },
+        "leveling": {
+            "label": "Niveles",
+            "next": "Actívalos con /level o en el panel."
+        },
+        "language": {
+            "label": "Idioma del bot",
+            "default": "Inglés (predeterminado). Elige el idioma de los mensajes y MD en el panel (Idioma del bot)."
+        }
+    },
+    "commandsTitle": "Todos los comandos",
+    "commandsHint": "Elige una categoría abajo para ver sus comandos. 🔒 = solo administradores.",
+    "selectPlaceholder": "Elige una categoría",
+    "categoryTitle": "Comandos: {category}",
+    "categoryEmpty": "No hay comandos en esta categoría.",
+    "more": {
+        "one": "…y {count} más",
+        "many": "…y {count} más",
+        "other": "…y {count} más"
+    },
+    "notYours": "Este menú es de otra persona. Usa /setup para tener el tuyo.",
+    "welcome": {
+        "title": "¡Gracias por añadir Mewvo!",
+        "body": "Un admin puede escribir **/setup** para empezar.",
+        "help": "Escribe **/help** para ver los comandos. ¿Preguntas? Pregunta en el servidor de soporte de Mewvo.",
+        "dm": "Añadiste Mewvo a **{server}**. Un admin puede escribir allí **/setup** para empezar.",
+        "dashboardButton": "Abrir el panel",
+        "supportButton": "Servidor de soporte de Mewvo"
+    }
+}

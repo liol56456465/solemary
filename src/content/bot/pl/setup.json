@@ -1,0 +1,71 @@
+{
+    "title": "Konfiguracja Mewvo na {server}",
+    "intro": "Co jest już skonfigurowane na tym serwerze. Większość ustawień jest w panelu.",
+    "dashboardButton": "Otwórz panel",
+    "noDashboard": "Link do panelu nie jest jeszcze dostępny dla tego bota.",
+    "checklistTitle": "Lista kontrolna",
+    "on": "włączone",
+    "off": "wyłączone",
+    "item": {
+        "modLog": {
+            "label": "Kanał logów moderacji",
+            "next": "Wybierz kanał w panelu (Kary)."
+        },
+        "staff": {
+            "label": "Kanał przeglądu dla ekipy",
+            "next": "Wybierz kanał w panelu (Automod).",
+            "fallback": "Nie ustawiono: przeglądy trafiają do logów moderacji. Wybierz kanał w panelu (Automod)."
+        },
+        "appeals": {
+            "label": "Odwołania",
+            "mewvo": "Członkowie odwołują się na serwerze wsparcia Mewvo.",
+            "mewvoChoice": "Członkowie odwołują się na serwerze wsparcia Mewvo. Zamiast tego możesz użyć własnego serwera (panel).",
+            "own": "Członkowie odwołują się na Twoim serwerze: {invite}",
+            "ownMissing": "Wybrano Twój serwer, ale nie ustawiono zaproszenia. Dodaj je w panelu (Kary)."
+        },
+        "automod": {
+            "label": "Automod",
+            "next": "Włącz go w panelu (Automod)."
+        },
+        "verification": {
+            "label": "Weryfikacja",
+            "next": "Skonfiguruj ją przez /verification lub w panelu."
+        },
+        "welcome": {
+            "label": "Wiadomości powitalne",
+            "next": "Skonfiguruj je przez /welcome lub w panelu."
+        },
+        "tickets": {
+            "label": "Zgłoszenia",
+            "next": "Skonfiguruj je przez /ticket lub w panelu."
+        },
+        "leveling": {
+            "label": "Poziomy",
+            "next": "Włącz je przez /level lub w panelu."
+        },
+        "language": {
+            "label": "Język bota",
+            "default": "Angielski (domyślny). Wybierz język wiadomości i DM w panelu (Język bota)."
+        }
+    },
+    "commandsTitle": "Wszystkie komendy",
+    "commandsHint": "Wybierz kategorię poniżej, aby zobaczyć jej komendy. 🔒 = tylko administratorzy.",
+    "selectPlaceholder": "Wybierz kategorię",
+    "categoryTitle": "Komendy: {category}",
+    "categoryEmpty": "Brak komend w tej kategorii.",
+    "more": {
+        "one": "…i jeszcze {count}",
+        "few": "…i jeszcze {count}",
+        "many": "…i jeszcze {count}",
+        "other": "…i jeszcze {count}"
+    },
+    "notYours": "To menu należy do kogoś innego. Użyj /setup, aby dostać własne.",
+    "welcome": {
+        "title": "Dzięki za dodanie Mewvo!",
+        "body": "Administrator może wpisać **/setup**, aby zacząć.",
+        "help": "Wpisz **/help**, aby zobaczyć komendy. Pytania? Zapytaj na serwerze wsparcia Mewvo.",
+        "dm": "Dodano Mewvo do **{server}**. Administrator może tam wpisać **/setup**, aby zacząć.",
+        "dashboardButton": "Otwórz panel",
+        "supportButton": "Serwer wsparcia Mewvo"
+    }
+}

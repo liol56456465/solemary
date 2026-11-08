@@ -1491,3 +1491,39 @@ test('staff discipline: member fields for warn, warnings lookup and restore (own
     assert.equal(warned.statusCode, 303);
     assert.equal(serviceCalls(owner, ['giveStaffWarning'])[0].args[1].id, TARGET);
 });
+
+// B1 case lookups: every case / appeal page and form asks for the case in this server only, and a
+// row of another server is refused even if a lookup returned it (strict guild_id check kept).
+test('case + appeal routes: getCaseByCode gets this server; another server\'s case is never shown or changed', async () => {
+    const FOREIGN = '1800000000000000009';
+    const routes = [
+        ['get', 'caseDetail', { params: { code: CODE } }, true],
+        ['get', 'appealDetail', { params: { code: CODE } }],
+        ['post', 'caseEdit', { params: { code: CODE }, form: { reason: 'better reason' } }],
+        ['post', 'caseVoid', { params: { code: CODE }, form: { reason: 'mistake' } }],
+        ['post', 'evidenceAdd', { params: { code: CODE }, form: { link: 'https://x.example/1' } }],
+        ['post', 'evidenceRemove', { params: { code: CODE }, form: { id: '11' } }],
+        ['post', 'caseNote', { params: { code: CODE }, form: { text: 'note' } }],
+        ['post', 'caseTags', { params: { code: CODE }, form: { tags: 'scam' } }],
+        ['post', 'appealPreview', { params: { code: CODE }, form: { decision: 'accept' } }],
+        ['post', 'caseBulk', { form: { codes: CODE, action: 'tag-add', tag: 'scam' } }],
+    ];
+    const changers = ['editCase', 'voidCase', 'addEvidence', 'removeEvidence', 'addCaseNote', 'setCaseTags', 'decideAppeal'];
+    for (const [method, name, opts, core] of routes) {
+        // Own server: the lookup is asked for this server.
+        let h = await setup();
+        const own = await (method === 'get' ? get : post)(h, core ? h.d[name] : h.d.enforcement[name], opts);
+        assert.ok([200, 303].includes(own.statusCode), `${name} own: ${own.statusCode}`);
+        const lookups = serviceCalls(h, ['getCaseByCode']);
+        assert.ok(lookups.length >= 1, `${name} looked the case up`);
+        for (const call of lookups) assert.equal(call.args[1], GUILD, `${name} passes the dashboard's server`);
+
+        // Another server's row, even if returned: 404 / nothing found, nothing changed.
+        h = await setup({ overrides: { getCaseByCode: async (code) => ({ id: 1, case_code: code, guild_id: FOREIGN, target_user_id: TARGET, target_username: 'target', type: 'ban', status: 'active', reason: 'secret reason', name: 'foreign ban', moderator_username: 'mod', created_at: new Date() }) } });
+        const foreign = await (method === 'get' ? get : post)(h, core ? h.d[name] : h.d.enforcement[name], opts);
+        assert.ok([400, 404].includes(foreign.statusCode), `${name} foreign: ${foreign.statusCode}`);
+        assert.ok(!/secret reason|foreign ban/.test(foreign.body), `${name}: nothing of the other server's case shown`);
+        assert.equal(serviceCalls(h, changers).length, 0, `${name}: nothing changed`);
+        assert.equal(h.auditRows.length, 0);
+    }
+});

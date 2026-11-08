@@ -48,7 +48,7 @@ function codeOption(option) {
 }
 
 async function loadCaseInGuild(interaction, code) {
-    const record = await getCaseByCode(code);
+    const record = await getCaseByCode(code, interaction.guildId);
     if (!record || record.guild_id !== interaction.guildId) throw userError(`No case with code \`${code}\` in this server.`);
     return record;
 }
@@ -417,7 +417,7 @@ export default {
         }
 
         if (sub === 'history') {
-            const record = await getCaseByCode(code);
+            const record = await getCaseByCode(code, interaction.guildId);
             if (!record || record.guild_id !== interaction.guildId) throw userError(`No case with code \`${code}\` in this server.`);
             const edits = await getCaseEdits(code);
             const lines = edits.map((edit) => {

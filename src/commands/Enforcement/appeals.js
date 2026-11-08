@@ -72,10 +72,11 @@ export default {
         if (!caseCode) return showPending(interaction);
 
         if (!decision) {
-            const record = await getCaseByCode(caseCode);
+            // Another server's case reads as unknown: its dossier is never shown here.
+            const record = await getCaseByCode(caseCode, interaction.guildId);
             if (!record) {
                 throw new TitanBotError('Unknown case code', ErrorTypes.USER_INPUT,
-                    `No case with code \`${caseCode}\`.`, { expected: true });
+                    `No case with code \`${caseCode}\` in this server.`, { expected: true });
             }
             if (!isCaseOfCallerServer(record, interaction.guildId)) {
                 throw new TitanBotError('Case of another server', ErrorTypes.PERMISSION, OTHER_SERVER_CASE, { expected: true });

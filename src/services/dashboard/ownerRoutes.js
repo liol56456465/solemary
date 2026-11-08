@@ -18,7 +18,7 @@
 //                                                       kind/id only pre-fill the form
 //   GET  /dashboard/owner/health, POST …/maintenance    process status, maintenance switch
 //   GET  /dashboard/owner/commands                      main-server commands on Discord vs the bot's list
-//   POST /dashboard/owner/commands/register/preview|register   re-register the main server's commands
+//   POST /dashboard/owner/commands/register/preview|register   re-register the commands (global list, as at startup)
 //                                                       (startup's code; global + support never touched)
 //   GET  /dashboard/owner/announce, POST …/preview|send one message to every server's log channel
 //   GET  /dashboard/owner/premium[?status=]             premium keys (test checkout), subscriptions, orders
@@ -390,11 +390,10 @@ async function defaultManagedRoles(guild) {
     return roles;
 }
 
-/** The bot's own commands registered in that server now (one API call): [{ name, type }]. */
-async function defaultRegisteredCommands(client, guildId) {
-    const guild = client.guilds?.cache?.get?.(guildId);
-    if (!guild) throw new InputError('The bot is not in the main server.');
-    const list = await guild.commands.fetch();
+/** The bot's global commands on Discord now (one API call): [{ name, type }]. */
+async function defaultRegisteredCommands(client) {
+    if (!client.application?.commands?.fetch) throw new InputError('The bot is not logged in.');
+    const list = await client.application.commands.fetch();
     return [...list.values()].map((c) => ({ name: c.name, type: c.type }));
 }
 
@@ -412,9 +411,9 @@ export const defaultOwnerDeps = {
     // Command sync: the same list and the same registration code as startup (commandLoader.js).
     // Loaded on use: commandLoader pulls in testMode.js, whose import-time checks must not run
     // just because the dashboard module is loaded (scripts and DB tests import it).
-    expectedCommands: async (client) => (await import('../../handlers/loaders/commandLoader.js')).expectedMainCommands(client),
+    expectedCommands: async (client) => (await import('../../handlers/loaders/commandLoader.js')).expectedGlobalCommands(client),
     registeredCommands: defaultRegisteredCommands,
-    registerMainCommands: async (client) => (await import('../../handlers/loaders/commandLoader.js')).registerMainGuildCommands(client),
+    registerCommands: async (client) => (await import('../../handlers/loaders/commandLoader.js')).registerAllCommands(client),
     commandsRetired: () => adminCommandsRetired(),
     premium: premiumStore,
     premiumTestCheckout: () => premiumSettings().testCheckout,
@@ -891,7 +890,6 @@ export function createOwnerHandlers(core) {
 
     /** The comparison for the page; each side's error is kept (never shown as "in sync"). */
     async function commandState() {
-        const mainId = protectedIds()[0] || null;
         let expected = null;
         let expectedError = null;
         let registered = null;
@@ -901,16 +899,13 @@ export function createOwnerHandlers(core) {
         } catch (error) {
             expectedError = `The bot's command list could not be built: ${plainText(error.message || 'unknown error')}`;
         }
-        if (!mainId) registeredError = 'MAIN_GUILD_ID is not set.';
-        else {
-            try {
-                registered = await o.registeredCommands(client, mainId);
-            } catch (error) {
-                registeredError = `Discord's list could not be read: ${plainText(error.message || 'unknown error')}`;
-            }
+        try {
+            registered = await o.registeredCommands(client);
+        } catch (error) {
+            registeredError = `Discord's list could not be read: ${plainText(error.message || 'unknown error')}`;
         }
         return {
-            mainId, mainName: client.guilds?.cache?.get?.(mainId)?.name || null, loaded: client.commands?.size ?? 0, retired: Boolean(o.commandsRetired()),
+            loaded: client.commands?.size ?? 0, retired: Boolean(o.commandsRetired()),
             expected: expected ? commandCounts(expected) : null, registered: registered ? commandCounts(registered) : null,
             diff: expected && registered ? commandDiff(expected, registered) : null, expectedError, registeredError,
         };
@@ -924,7 +919,6 @@ export function createOwnerHandlers(core) {
 
     const registerPreview = ownerPost(async (req, res) => {
         const state = await commandState();
-        if (!state.mainId) throw new InputError('MAIN_GUILD_ID is not set; there is no main server to register in.');
         if (state.expectedError) throw new InputError(state.expectedError);
         const payload = { registered: state.registered ? state.registered.slash + state.registered.menus : null };
         const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: 'commands:register', payload });
@@ -936,15 +930,16 @@ export function createOwnerHandlers(core) {
         if (!payload) throw new InputError('This confirmation expired or was already used. Nothing was registered; start again.');
         let result;
         try {
-            result = await o.registerMainCommands(client);
+            result = await o.registerCommands(client);
         } catch (error) {
             logger.warn(`Dashboard owner ${req.dashboard.session.userId}: command registration failed: ${error.message}`);
-            throw new InputError(`Registration failed; the main server's list was not changed: ${plainText(error.message || 'unknown error')}`);
+            throw new InputError(`Registration failed; the global list was not changed: ${plainText(error.message || 'unknown error')}`);
         }
         const retired = Boolean(o.commandsRetired());
         await audit(req, [{ key: 'commands.register', old: { count: payload.registered }, new: { count: result?.count ?? null, retired } }]);
-        logger.warn(`Dashboard owner ${req.dashboard.session.userId} re-registered ${result?.count ?? '?'} command(s) in the main server`);
-        await flash(req, `Registered ${result?.count ?? 'the'} command${result?.count === 1 ? '' : 's'} in the main server${retired ? ' (admin commands retired)' : ''}. Discord shows the change within a few seconds.`);
+        logger.warn(`Dashboard owner ${req.dashboard.session.userId} re-registered ${result?.count ?? '?'} command(s) (${result?.scope || 'global'})`);
+        const where = result?.scope === 'test' ? 'in the test servers' : 'globally';
+        await flash(req, `Registered ${result?.count ?? 'the'} command${result?.count === 1 ? '' : 's'} ${where}${retired ? ' (admin commands retired)' : ''}. A changed global list can take up to an hour to show in every Discord client.`);
         return res.redirect(303, path('/owner/commands'));
     }, { rerender: rerenderCommands });
 

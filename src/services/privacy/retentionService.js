@@ -7,8 +7,11 @@
 //   no_contact    no_contact_orders that ended (or ran out) more than 1 year ago
 //   raid_reports  automod_raid_incidents (incident reports) that ended more than 1 year ago
 //   verification_audit  verification_audit rows older than 1 year
-//   verification_ips    IP hashes not seen for 60 days (members with an active main-server
-//                       ban keep theirs; verificationGuard.js)
+//   verification_ips    IP hashes not seen for 60 days (members with an active ban in that
+//                       server keep theirs; verificationGuard.js). Both tables: verification_ips
+//                       (pre-v12, home servers) and verification_guild_ips (per server, v12).
+//   oauth_verified_guilds  the servers a member used "Verify with Discord" in, once their stored
+//                       token is gone (revoked, /wipedata), after a 1-day grace
 // Elsewhere, on their own daily crons in app.js: the raid timeline (incident_timelines and
 // their events, 90 days after the end; incidentTimeline.js), member_events (90 days),
 // website accounts that never linked Discord (accountStore.prune, 7 days).
@@ -34,6 +37,7 @@ export const RETENTION_DAYS = Object.freeze({
     raid_reports: 365,
     verification_audit: 365,
     verification_ips: IP_RETENTION_MS / DAY_MS,
+    oauth_verified_guilds: 1,
 });
 
 /** Daily at 03:30 UTC, and once about 5 minutes after the bot is ready. */
@@ -87,12 +91,31 @@ export async function pruneVerificationIps({ query = dbQuery, now = Date.now(), 
     return pruneVerificationIpHashes({ q: query, now, limit });
 }
 
+/**
+ * oauth_verified_guilds: rows of members without a stored token (oauth:tokens:<id> in temp_data),
+ * last authorized more than a day ago (the grace covers a verification storing its token).
+ */
+export async function pruneOAuthVerifiedGuilds({ query = dbQuery, tables = pgConfig.tables, now = Date.now(), limit = BATCH_LIMIT } = {}) {
+    const t = tables.oauth_verified_guilds;
+    return count(await query(
+        `DELETE FROM ${t} WHERE ctid IN (
+             SELECT o.ctid FROM ${t} o
+             WHERE o.authorized_at < $1
+               AND NOT EXISTS (
+                   SELECT 1 FROM ${tables.temp_data} d
+                   WHERE d.key = 'oauth:tokens:' || o.user_id AND (d.expires_at IS NULL OR d.expires_at > $3)
+               )
+             LIMIT $2)`,
+        [cutoff(now, RETENTION_DAYS.oauth_verified_guilds), limit, new Date(now)]));
+}
+
 export const RETENTION_RULES = Object.freeze([
     ['watchlist', pruneWatchlist],
     ['no_contact', pruneNoContactOrders],
     ['raid_reports', pruneRaidIncidents],
     ['verification_audit', pruneVerificationAudit],
     ['verification_ips', pruneVerificationIps],
+    ['oauth_verified_guilds', pruneOAuthVerifiedGuilds],
 ]);
 
 /**

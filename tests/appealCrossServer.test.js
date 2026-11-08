@@ -32,6 +32,8 @@ const caseIn = (guildId, over = {}) => ({
     target_user_id: TARGET, target_username: 'target', moderator_id: '1700000000000000200', moderator_username: 'issuer',
     is_auto: false, is_test: true, reason: 'spam', created_at: new Date('2026-10-01T00:00:00Z'), ...over,
 });
+// B1: another server's case code reads as unknown (getCaseByCode is scoped to the caller's server).
+const NOT_IN_THIS_SERVER = /No case with code `abc2345` in this server\./;
 const appealIn = (guildId) => ({ id: 9, case_code: 'abc2345', kind: 'appeal', status: 'pending', guild_id: guildId, channel_id: null, staff_channel_id: null });
 
 const saved = {
@@ -154,7 +156,7 @@ test('decideAppeal: the main server cannot decide another server\'s appeal (noth
             await withPool({ record: caseIn(OTHER), appeal: appealIn(OTHER) }, async (pool) => {
                 await assert.rejects(
                     decideAppeal({ client: fakeClient(), admin, caseCode: 'abc2345', decision: 'accept', note: null, callerGuildId: caller }),
-                    (error) => error.userMessage === OTHER_SERVER_CASE,
+                    (error) => NOT_IN_THIS_SERVER.test(error.userMessage),
                 );
                 assert.equal(pool.queries.length, 1, 'only the case lookup ran');
                 assert.deepEqual(pool.writes(), []);
@@ -169,7 +171,7 @@ test('decideAppeal: another server cannot decide a home appeal, nor a third serv
         await withPool({ record, appeal: appealIn(record.guild_id) }, async (pool) => {
             await assert.rejects(
                 decideAppeal({ client: fakeClient(), admin: { id: ADMIN, username: 'admin' }, caseCode: 'abc2345', decision: 'accept', note: null, callerGuildId: caller }),
-                (error) => error.userMessage === OTHER_SERVER_CASE,
+                (error) => NOT_IN_THIS_SERVER.test(error.userMessage),
             );
             assert.deepEqual(pool.writes(), []);
         });
@@ -223,7 +225,7 @@ test('buttons refuse a case of another server, both directions, also Claim', asy
         for (const action of ['accept', 'deny', 'claim']) {
             await withPool({ record, appeal: appealIn(record.guild_id) }, async (pool) => {
                 const text = await pressButton(fakeInteraction({ guildId: at }), [action, 'abc2345']);
-                assert.match(text, /That case belongs to another server\./, `${action} in ${at} on ${record.guild_id}`);
+                assert.match(text, NOT_IN_THIS_SERVER, `${action} in ${at} on ${record.guild_id}`);
                 assert.deepEqual(pool.writes(), []);
             });
         }
@@ -248,7 +250,7 @@ test('/appeals code: the main server cannot view or decide another server\'s cas
             const error = await appealsCommand.execute(interaction, {}, fakeClient()).then(() => null, (e) => e);
             assert.ok(error, JSON.stringify(options));
             await handleInteractionError(interaction, error, { type: 'command', commandName: 'appeals' });
-            assert.match(replyText(interaction), /That case belongs to another server\./);
+            assert.match(replyText(interaction), NOT_IN_THIS_SERVER);
             assert.ok(!/cat ban 1/.test(replyText(interaction)), 'no dossier shown');
             assert.deepEqual(pool.writes(), []);
         });

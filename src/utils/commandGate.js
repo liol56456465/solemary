@@ -1,11 +1,11 @@
 // commandGate.js — who may run a command, checked centrally for slash and prefix
 // commands alike.
 //
-// 1. Commands run in the main server and the support server. Commands with
-//    scope 'main' (enforcement, appeals, /background, /test) run in the main server only.
+// 1. Every command runs in every server the bot is in (public bot, multi-server B2),
+//    except the owner tools (rule 3).
 // 2. Everything requires Administrator (the server owner counts), except the
-//    access keys listed in config/commands/commandAccess.js. OWNER_IDS is an
-//    emergency override for rule 2 only.
+//    access keys listed in config/commands/commandAccess.js (everyone, or
+//    Administrator or Manage Server). OWNER_IDS is an emergency override for rule 2 only.
 // Commands stay visible to everyone (no default_member_permissions), so
 // non-admins see this message instead of an empty command list.
 //
@@ -22,7 +22,7 @@
 import { PermissionFlagsBits } from 'discord.js';
 import { isBotOwner } from '../config/bot.js';
 import { enforcementConfig } from '../config/enforcement.js';
-import { isEveryoneCommand, isSupportServerCommand } from '../config/commands/commandAccess.js';
+import { isEveryoneCommand, isManageServerCommand } from '../config/commands/commandAccess.js';
 import { adminCommandsRetired, isKeptAdminCommand, isOwnerKit, retiredMessage } from '../config/commands/retirement.js';
 import { BLACKLIST_MESSAGE, blacklistHit } from '../services/owner/blacklistCache.js';
 import { getStoredSetting, isHomeGuild, resolveSetting } from '../services/settings/guildSettings.js';
@@ -74,13 +74,17 @@ export function getAdminRequiredMessage(guildId = null, { stored = ownRequestCha
     return isMain ? tr.t('errors.access.admin') : tr.t('errors.access.adminOther');
 }
 
-/** True when the command exists in this guild: all commands in the main server, the support list in the support server. */
+/** True when the command exists in this guild: every command in every server, the owner tools in the owner-tools server only. */
 export function isCommandAvailableInGuild(command, guildId) {
     if (!guildId) return false;
     // Owner tools exist in the owner-tools server only (never in the main or support server).
     if (command?.scope === 'owner') return guildId === ownerToolsGuildId();
-    if (guildId === enforcementConfig.mainGuildId) return true;
-    return guildId === enforcementConfig.supportGuildId && command?.scope !== 'main' && isSupportServerCommand(command?.data?.name);
+    return true;
+}
+
+/** True for Administrator (or the server owner) and for Manage Server. */
+export function hasManageServer({ guild, userId, permissions }) {
+    return hasAdministrator({ guild, userId, permissions }) || Boolean(permissions?.has?.(PermissionFlagsBits.ManageGuild));
 }
 
 export function hasAdministrator({ guild, userId, permissions }) {
@@ -121,15 +125,13 @@ export function checkCommandAccess({ command, accessKey, guild, userId, permissi
             ? { allowed: true }
             : { allowed: false, message: OWNER_TOOLS_REFUSAL };
     }
-    if (!isCommandAvailableInGuild(command, guild.id)) {
-        return {
-            allowed: false,
-            message: guild.id === enforcementConfig.supportGuildId
-                ? 'This command only works in the main Mewvo server.'
-                : 'Commands only work in the Mewvo servers.',
-        };
-    }
     if (isEveryoneCommand(accessKey)) return { allowed: true };
+    // Administrator or Manage Server (/setup); checked before retirement, so it stays usable then.
+    if (isManageServerCommand(accessKey)) {
+        if (hasManageServer({ guild, userId, permissions })) return { allowed: true };
+        if (isBotOwner(userId)) return { allowed: true, ownerOverride: true };
+        return { allowed: false, message: botText(lang).t('errors.access.manageServer') };
+    }
     // Retired admin commands (RETIRE_ADMIN_COMMANDS): the dashboard does them; the emergency kit
     // is for OWNER_IDS only (an owner without Administrator is still an override, logged).
     if (adminCommandsRetired() && !isKeptAdminCommand(accessKey)) {

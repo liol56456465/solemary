@@ -35,6 +35,10 @@ export const EXPORT_SECTIONS = [
     ['suggestionVotes', (t) => `SELECT suggestion_id, vote, voted_at FROM ${t.suggestion_votes} WHERE user_id = $1 ORDER BY voted_at`],
     ['verification', (t) => `SELECT guild_id, action, source, created_at FROM ${t.verification_audit} WHERE user_id = $1 ORDER BY created_at`],
     ['verificationIpHashSeen', (t) => `SELECT seen_at FROM ${t.verification_ips} WHERE user_id = $1 ORDER BY seen_at`],
+    // Since schema v12 per server (the hash itself is still left out).
+    ['verificationIpHashSeenPerServer', (t) => `SELECT guild_id, seen_at FROM ${t.verification_guild_ips} WHERE user_id = $1 ORDER BY seen_at LIMIT ${ROW_LIMIT}`],
+    // The servers "Verify with Discord" was used in (the token itself is never exported).
+    ['oauthVerifiedServers', (t) => `SELECT guild_id, authorized_at, verified_at FROM ${t.oauth_verified_guilds} WHERE user_id = $1 ORDER BY authorized_at LIMIT ${ROW_LIMIT}`],
     ['joinsAndLeaves', (t) => `SELECT guild_id, kind, created_at FROM ${t.member_events} WHERE user_id = $1 ORDER BY created_at`],
     // The reason is about this member too; the other party and the staff member are left out.
     ['noContactOrders', (t) => `SELECT guild_id, reason, until, created_at, ended_at FROM ${t.no_contact_orders} WHERE user_a = $1 OR user_b = $1 ORDER BY created_at LIMIT ${ROW_LIMIT}`],

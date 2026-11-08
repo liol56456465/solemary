@@ -130,6 +130,8 @@ export const USER_SECTIONS = [
     ['Verification log', (t) => `SELECT guild_id, action, source, created_at, ${COUNT} FROM ${t.verification_audit} WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2`],
     // Only when an IP was seen, never the hash itself.
     ['Verification IPs seen', (t) => `SELECT seen_at, ${COUNT} FROM ${t.verification_ips} WHERE user_id = $1 ORDER BY seen_at DESC LIMIT $2`],
+    ['Verification IPs seen, per server (v12)', (t) => `SELECT guild_id, seen_at, ${COUNT} FROM ${t.verification_guild_ips} WHERE user_id = $1 ORDER BY seen_at DESC LIMIT $2`],
+    ['OAuth verified in', (t) => `SELECT guild_id, authorized_at, verified_at, ${COUNT} FROM ${t.oauth_verified_guilds} WHERE user_id = $1 ORDER BY authorized_at DESC LIMIT $2`],
     // Only whether the OAuth record exists in the key-value store, never its value.
     ['OAuth verification link', (t) => `SELECT 'stored' AS status, created_at, expires_at, ${COUNT} FROM ${t.temp_data}
         WHERE key = 'oauth:tokens:' || $1::text LIMIT $2`],

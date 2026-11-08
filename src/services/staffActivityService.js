@@ -74,9 +74,10 @@ export async function staffActivityForWeek(guild, start) {
             [guild.id, `${start}T00:00:00Z`, end.toISOString(), guild.client.user.id]
         ),
         query(
+            // This server's decisions only (an appeal row's guild_id is the server that decides it).
             `SELECT decided_by AS user_id, COUNT(*)::int AS count FROM ${T.appeals}
-             WHERE decided_at >= $1 AND decided_at < $2 AND decided_by IS NOT NULL GROUP BY decided_by`,
-            [`${start}T00:00:00Z`, end.toISOString()]
+             WHERE guild_id = $3 AND decided_at >= $1 AND decided_at < $2 AND decided_by IS NOT NULL GROUP BY decided_by`,
+            [`${start}T00:00:00Z`, end.toISOString(), guild.id]
         ),
     ]);
     const byUser = (rows) => new Map(rows.map((row) => [row.user_id, row]));

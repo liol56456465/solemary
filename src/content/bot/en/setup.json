@@ -1,0 +1,69 @@
+{
+    "title": "Set up Mewvo in {server}",
+    "intro": "What is set up in this server so far. Most settings are on the dashboard.",
+    "dashboardButton": "Open the dashboard",
+    "noDashboard": "The dashboard link is not available on this bot yet.",
+    "checklistTitle": "Checklist",
+    "on": "on",
+    "off": "off",
+    "item": {
+        "modLog": {
+            "label": "Mod log channel",
+            "next": "Pick a channel on the dashboard (Enforcement)."
+        },
+        "staff": {
+            "label": "Staff review channel",
+            "next": "Pick a channel on the dashboard (Automod).",
+            "fallback": "Not set: reviews go to the mod log. Pick a channel on the dashboard (Automod)."
+        },
+        "appeals": {
+            "label": "Appeals",
+            "mewvo": "Members appeal in the Mewvo support server.",
+            "mewvoChoice": "Members appeal in the Mewvo support server. You can use your own server instead (dashboard).",
+            "own": "Members appeal in your own server: {invite}",
+            "ownMissing": "Your own server is chosen, but no invite is set. Add one on the dashboard (Enforcement)."
+        },
+        "automod": {
+            "label": "Automod",
+            "next": "Turn it on on the dashboard (Automod)."
+        },
+        "verification": {
+            "label": "Verification",
+            "next": "Set it up with /verification or on the dashboard."
+        },
+        "welcome": {
+            "label": "Welcome messages",
+            "next": "Set them up with /welcome or on the dashboard."
+        },
+        "tickets": {
+            "label": "Tickets",
+            "next": "Set them up with /ticket or on the dashboard."
+        },
+        "leveling": {
+            "label": "Leveling",
+            "next": "Turn it on with /level or on the dashboard."
+        },
+        "language": {
+            "label": "Bot language",
+            "default": "English (default). Pick the language of posts and DMs on the dashboard (Bot language)."
+        }
+    },
+    "commandsTitle": "All commands",
+    "commandsHint": "Pick a category below to see its commands. 🔒 = Administrator only.",
+    "selectPlaceholder": "Pick a category",
+    "categoryTitle": "{category} commands",
+    "categoryEmpty": "No commands in this category.",
+    "more": {
+        "one": "…and {count} more",
+        "other": "…and {count} more"
+    },
+    "notYours": "This menu belongs to someone else. Run /setup to get your own.",
+    "welcome": {
+        "title": "Thanks for adding Mewvo!",
+        "body": "An admin can type **/setup** to get started.",
+        "help": "Type **/help** to see the commands. Questions? Ask in the Mewvo support server.",
+        "dm": "You added Mewvo to **{server}**. An admin can type **/setup** there to get started.",
+        "dashboardButton": "Open the dashboard",
+        "supportButton": "Mewvo support server"
+    }
+}

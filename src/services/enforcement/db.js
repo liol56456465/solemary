@@ -17,6 +17,8 @@ export const T = {
     settings: pgConfig.tables.enforcement_settings,
     staffWarnings: pgConfig.tables.staff_warnings,
     verificationIps: pgConfig.tables.verification_ips,
+    verificationGuildIps: pgConfig.tables.verification_guild_ips,
+    oauthVerifiedGuilds: pgConfig.tables.oauth_verified_guilds,
     staffActivity: pgConfig.tables.staff_activity,
     tempRoles: pgConfig.tables.member_temp_roles,
     roleRules: pgConfig.tables.member_role_rules,

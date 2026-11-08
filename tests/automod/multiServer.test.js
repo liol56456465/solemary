@@ -700,11 +700,13 @@ test('bounded: raid join windows of many servers stay capped', async () => {
 
 test('review cards: a card only reaches cases of its own server (home servers share theirs)', async () => {
     const { recordsFor } = await import('../../src/services/automod/reviewCards.js');
+    const { isSameCaseServer } = await import('../../src/services/enforcement/caseService.js');
     const cases = {
         aaa: { case_code: 'aaa', guild_id: OTHER }, bbb: { case_code: 'bbb', guild_id: OTHER2 },
         ccc: { case_code: 'ccc', guild_id: SUPPORT }, ddd: { case_code: 'ddd', guild_id: MAIN },
     };
-    const lookup = async (code) => cases[code] || null;
+    // Same contract as caseService.getCaseByCode(code, guildId).
+    const lookup = async (code, guildId) => (cases[code] && isSameCaseServer(cases[code].guild_id, guildId) ? cases[code] : null);
     assert.deepEqual((await recordsFor('aaa,bbb', OTHER, lookup)).map((r) => r.case_code), ['aaa']);
     await assert.rejects(recordsFor('bbb', OTHER, lookup), /no longer exists/);
     assert.deepEqual((await recordsFor('ccc,ddd,aaa', MAIN, lookup)).map((r) => r.case_code), ['ccc', 'ddd']);

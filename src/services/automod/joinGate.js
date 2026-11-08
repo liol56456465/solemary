@@ -17,10 +17,12 @@
 // Profile bios are not visible to bots, so "invite in bio" can't be checked.
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, SnowflakeUtil } from 'discord.js';
+import { enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { deleteFromDb, getFromDb, setInDb } from '../../utils/database.js';
 import { MIN_ACCOUNT_AGE_MS } from '../verificationGuard.js';
+import { hasVerifiedIn } from '../oauthVerification.js';
 import { formatDuration } from '../enforcement/format.js';
 import { getAutomodSettings } from './automodSettings.js';
 import { reviewChannel } from './reviewCards.js';
@@ -169,6 +171,12 @@ export function gateCheckLabels(hits) {
     return [...new Set(hits.map((hit) => JOIN_GATE_CHECKS[hit.check]?.label).filter(Boolean))].join('; ');
 }
 
+/** The servers whose "Verify with Discord" counts for the join gate of `guildId`. */
+export function verificationScope(guildId) {
+    const homeIds = [enforcementConfig.mainGuildId, enforcementConfig.supportGuildId].filter(Boolean);
+    return homeIds.includes(guildId) ? homeIds : [guildId];
+}
+
 /**
  * Runs the join gate for a new member of any server where automod is on. Never throws.
  * Returns 'kicked' | 'flagged' | null. onKick / onFlag(userId, hits) run after the kick or flag.
@@ -181,8 +189,10 @@ export async function checkJoinGate(member, { onKick = null, onFlag = null } = {
         if (!settings.enabled) return null;
         const { action, hits } = evaluateJoinGate(user, settings.joinGate);
         if (action === 'off') return null;
-        // Verified with "Verify with Discord" before: already passed the verification guard.
-        if (await getFromDb(`oauth:tokens:${user.id}`, null).catch(() => null)) return null;
+        // Verified with "Verify with Discord" before: already passed the verification guard. Only a
+        // verification in this server counts (Mewvo's two home servers count as one); one in another
+        // server never lets a member past this server's gate (multi-server B1).
+        if (await hasVerifiedIn(user.id, verificationScope(guild.id)).catch(() => false)) return null;
 
         if (action === 'kick') {
             const kicked = await kickWithNotice(member, hits, `Join gate: ${hits.filter((h) => h.action === 'kick').map((h) => h.reason).join('; ')}`);

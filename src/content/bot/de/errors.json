@@ -65,6 +65,7 @@
     "access": {
         "adminChannel": "Für diesen Befehl brauchst du die Administrator-Rolle. Eine Mod- oder Admin-Rolle kannst du hier anfragen: <#{channelId}>",
         "admin": "Für diesen Befehl brauchst du die Administrator-Rolle.",
-        "adminOther": "Für diesen Befehl brauchst du die Administrator-Rolle. Frag einen Admin dieses Servers, wenn du Zugriff brauchst."
+        "adminOther": "Für diesen Befehl brauchst du die Administrator-Rolle. Frag einen Admin dieses Servers, wenn du Zugriff brauchst.",
+        "manageServer": "Du brauchst die Berechtigung „Server verwalten“ oder Administrator, um diesen Befehl zu nutzen."
     }
 }

@@ -159,7 +159,7 @@ export async function buildPanel(guild, moderatorId, targetUser) {
     const state = await getTargetState(guild, targetUser.id);
     const [{ rows: recent, total }, appealStatuses] = await Promise.all([
         listCasesForUser(guild.id, targetUser.id, { limit: RECENT_CASES_SHOWN }),
-        getLatestAppealStatuses(targetUser.id),
+        getLatestAppealStatuses(targetUser.id, guild.id),
     ]);
 
     const embed = createEmbed({
