@@ -232,11 +232,12 @@ ${section(tr.t('applications.questions.title'), questions, tr.t('applications.qu
                 pendingApplicationRetentionDays: intField(form, 'pendingDays', { min: 1, max: 3650, label: tr.t('applications.action.pendingDaysLabel') }),
                 reviewedApplicationRetentionDays: intField(form, 'reviewedDays', { min: 1, max: 3650, label: tr.t('applications.action.reviewedDaysLabel') }),
             }, s);
-            const result = await update(ctx, patch, tr.t('applications.action.settingsSaved'));
+            // The logging destination first: a false return is a failed write, so nothing else is
+            // saved and no success is shown (data-layer rule).
             if (Object.hasOwn(patch, 'logChannelId') && logChannelId) {
-                await ctx.services.setLogChannel(ctx.client, ctx.guildId, 'applications', logChannelId);
+                if (!(await ctx.services.setLogChannel(ctx.client, ctx.guildId, 'applications', logChannelId))) throw new Error('setLogChannel returned false');
             }
-            return result;
+            return update(ctx, patch, tr.t('applications.action.settingsSaved'));
         },
         async questions(ctx, form) {
             const questions = parseQuestionLines(multiline(form, 'questions', 1000));

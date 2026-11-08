@@ -725,7 +725,9 @@ async function handleLogChannel(selectInteraction, rootInteraction, settings, ro
             roleSettings.logChannelId = channelId;
             await saveApplicationRoleSettings(client, guildId, selectedRoleId, roleSettings);
         } else {
-            await setLogChannel(client, guildId, 'applications', channelId);
+            if (!(await setLogChannel(client, guildId, 'applications', channelId))) {
+                throw new Error('Could not save the application log channel. Nothing was changed for logging.');
+            }
             settings.logChannelId = channelId;
             await updateApplicationSettings(client, guildId, { logChannelId: channelId });
         }

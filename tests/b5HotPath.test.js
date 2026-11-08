@@ -340,6 +340,20 @@ test('logEvent: a temporary error loading the log channel does not pause logging
     resetLogChannelBackoff();
 });
 
+test('setLogChannel: refuses another server\'s channel id and lifts the pause for the new channel', async () => {
+    resetLogChannelBackoff();
+    const { setLogChannel } = await import('../src/services/loggingService.js');
+    const guildId = nextGuild();
+    const own = '92000000000000010';
+    const foreign = '92000000000000011';
+    const guild = { id: guildId, channels: { cache: new Map([[own, { id: own }]]) } };
+    const client = { db: countingStore({}), guilds: { cache: new Map([[guildId, guild]]) } };
+    assert.equal(await setLogChannel(client, guildId, 'audit', foreign), false, 'foreign id not saved');
+    assert.equal(await setLogChannel(client, guildId, 'audit', own), true);
+    assert.equal(await setLogChannel(client, guildId, 'audit', null), true, 'clearing always works');
+    resetLogChannelBackoff();
+});
+
 test('every src/events file parses and loads (a syntax error must fail the suite)', async () => {
     const { readdirSync } = await import('node:fs');
     const dir = new URL('../src/events/', import.meta.url);

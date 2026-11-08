@@ -593,6 +593,14 @@ export async function setLogChannel(client, guildId, destination, channelId) {
     throw new Error(`Invalid log destination: ${destination}`);
   }
 
+  // A log channel must be a channel of this server (the commands and the dashboard only offer
+  // those; this also refuses an id of another server's channel from any other caller).
+  const guild = client?.guilds?.cache?.get?.(guildId);
+  if (channelId && guild?.channels?.cache && !guild.channels.cache.has(String(channelId))) {
+    logger.warn(`setLogChannel: ${channelId} is not a channel of guild ${guildId}; not saved`);
+    return false;
+  }
+
   try {
     await updateGuildConfigAtomic(client, guildId, (config) => {
       const logging = {
@@ -605,7 +613,7 @@ export async function setLogChannel(client, guildId, destination, channelId) {
       return { ...config, logging };
     });
     // A newly chosen channel is tried right away, even if it was paused after a refusal.
-    if (channelId) logChannelBackoff.delete(String(channelId));
+    if (channelId) logChannelBackoff.delete(backoffKey(guildId, channelId));
     return true;
   } catch (error) {
     logger.error('Error setting log channel:', error);
