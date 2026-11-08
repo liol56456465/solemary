@@ -250,10 +250,9 @@ test('non-home kick appeal with its own appeals category: staff channel in that 
     assert.equal(other.created.length, 1);
     const { rows: [row] } = await pgDb.pool.query(`SELECT guild_id, channel_guild_id, staff_channel_id FROM mod_appeals WHERE case_code = $1`, [code]);
     assert.deepEqual(row, { guild_id: OTHER_GUILD, channel_guild_id: OTHER_GUILD, staff_channel_id: null });
-    // /appeals is not registered there: the staff message names only the buttons.
+    // /appeals works in every server (multi-server B1): the staff message names the buttons and /appeals.
     const posted = w.sent.filter((s) => s.where === staffChannel).map((s) => s.payload.content || '').join('\n');
-    assert.match(posted, /Decide with the buttons below\./);
-    assert.ok(!posted.includes('/appeals'), posted);
+    assert.match(posted, /Decide with the buttons below or `\/appeals`\./);
 
     // The main server cannot decide it; its own server can, and the closing note names no /appeals.
     await assert.rejects(appeals.decideAppeal({ client: w.client, admin: { id: id('6', 998), username: 'admin' }, caseCode: code, decision: 'deny', note: null, callerGuildId: w.main.id }),

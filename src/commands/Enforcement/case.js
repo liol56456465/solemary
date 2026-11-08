@@ -2,7 +2,7 @@ import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
-import { enforcementConfig, getReason } from '../../config/enforcement.js';
+import { getReason } from '../../config/enforcement.js';
 import { isAdministrator } from '../../services/enforcement/enforcementService.js';
 import { getCaseByCode } from '../../services/enforcement/caseService.js';
 import { isEnforcementDbAvailable } from '../../services/enforcement/db.js';
@@ -332,8 +332,9 @@ export default {
                     .setRequired(true).setMinValue(1)))),
 
     async execute(interaction, config, client) {
-        if (interaction.guildId !== enforcementConfig.mainGuildId) {
-            throw new TitanBotError('Wrong guild for /case', ErrorTypes.PERMISSION, 'This command only works in the main server.', { expected: true });
+        // Any server (multi-server B1): every subcommand reads and writes this server's cases only.
+        if (!interaction.guildId) {
+            throw new TitanBotError('/case outside a server', ErrorTypes.PERMISSION, 'This command only works in a server.', { expected: true });
         }
         if (!isAdministrator(interaction.member)) {
             throw new TitanBotError('Not an administrator', ErrorTypes.PERMISSION, 'You need the Administrator permission to change cases.', { expected: true });
@@ -447,7 +448,7 @@ export default {
     },
 
     async autocomplete(interaction) {
-        if (interaction.guildId !== enforcementConfig.mainGuildId || !isAdministrator(interaction.member)
+        if (!interaction.guildId || !isAdministrator(interaction.member)
             || !isEnforcementDbAvailable()) {
             return interaction.respond([]);
         }

@@ -74,8 +74,9 @@ async function guard(interaction, moderatorId) {
         });
         return false;
     }
-    if (!interaction.inGuild() || interaction.guildId !== enforcementConfig.mainGuildId) {
-        await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'This panel only works in the main server.' });
+    // Any server (multi-server B1): the panel acts in the server it was opened in (interaction.guild).
+    if (!interaction.inGuild()) {
+        await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'This panel only works in a server.' });
         return false;
     }
     if (!isAdministrator(interaction.member)) {

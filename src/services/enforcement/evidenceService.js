@@ -85,13 +85,13 @@ function quote(text, max) {
  * Display lines for evidence rows. `freshUrls` maps row id → a current attachment
  * URL for images (see resolveImageUrls); without one the stored message is linked.
  */
-export function evidenceLines(rows, freshUrls = new Map(), { excerptMax = 160 } = {}) {
+export function evidenceLines(rows, freshUrls = new Map(), { excerptMax = 160, guildIdOf = () => null } = {}) {
     return rows.map((row) => {
         const meta = `${row.added_by_username}, ${dateStamp(row.added_at)}`;
         const note = row.note ? `: ${truncate(row.note, 120)}` : '';
         if (row.kind === 'image') {
             const fresh = freshUrls.get(String(row.id));
-            const stored = row.store_channel_id && row.store_message_id ? jumpLink(row.store_channel_id, row.store_message_id) : null;
+            const stored = row.store_channel_id && row.store_message_id ? jumpLink(row.store_channel_id, row.store_message_id, guildIdOf(row.store_channel_id) || undefined) : null;
             const links = [fresh ? `[image](${fresh})` : null, stored ? `[stored](${stored})` : null].filter(Boolean);
             return `**#${row.id}** Image: ${links.join(' · ') || 'image (stored message missing)'}${note} · ${meta}`;
         }
@@ -273,7 +273,11 @@ export async function evidenceDisplay(client, caseCode, { max = 1024, excerptMax
     const fresh = await resolveImageUrls(client, rows);
     const firstImage = rows.find((row) => row.kind === 'image' && fresh.has(String(row.id)));
     return {
-        field: { name: `Evidence (${rows.length})`, value: fitLines(evidenceLines(rows, fresh, { excerptMax }), max) },
+        field: { name: `Evidence (${rows.length})`, value: fitLines(evidenceLines(rows, fresh, {
+            excerptMax,
+            // The stored image's link names the server its channel is in (another server's case is re-hosted there).
+            guildIdOf: (channelId) => client?.channels?.cache?.get?.(channelId)?.guildId || null,
+        }), max) },
         imageUrl: firstImage ? fresh.get(String(firstImage.id)) : null,
         rows,
     };

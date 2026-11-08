@@ -1,7 +1,6 @@
 import { ApplicationCommandType, ContextMenuCommandBuilder, MessageFlags } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
-import { enforcementConfig } from '../../config/enforcement.js';
 import { startWarnFromMessage } from '../../handlers/enforcementPanel.js';
 import { assertBotPermissions, assertCanTarget, isAdministrator } from '../../services/enforcement/enforcementService.js';
 
@@ -19,8 +18,9 @@ export default {
 
     async execute(interaction) {
         const message = interaction.targetMessage;
-        if (interaction.guildId !== enforcementConfig.mainGuildId || message?.guildId !== enforcementConfig.mainGuildId) {
-            throw refuse('This only works on messages in the main server.', ErrorTypes.PERMISSION);
+        // Any server, but only for a message of the server the warn is given in.
+        if (!interaction.guildId || !message?.guildId || message.guildId !== interaction.guildId) {
+            throw refuse('This only works on messages in this server.', ErrorTypes.PERMISSION);
         }
         if (!isAdministrator(interaction.member)) {
             throw refuse('You need the Administrator permission to warn members.', ErrorTypes.PERMISSION);

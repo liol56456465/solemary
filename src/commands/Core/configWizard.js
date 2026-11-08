@@ -21,7 +21,8 @@ import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 import { getGuildConfig, setConfigValue } from '../../services/config/guildConfig.js';
 import ConfigService from '../../services/config/configService.js';
 import { logger } from '../../utils/logger.js';
-import { botConfig, getCommandPrefix, isBotOwner } from '../../config/bot.js';
+import { botConfig, getCommandPrefix } from '../../config/bot.js';
+import { hasOwnerPower } from '../../utils/ownerPower.js';
 import { hasAdministrator } from '../../utils/commandGate.js';
 import { randomBytes } from 'node:crypto';
 
@@ -275,9 +276,9 @@ export async function askQuestion(dmChannel, userId, prompt, stepNumber, totalSt
     return { answer: result.text };
 }
 
-/** Still allowed to change this server's settings? Administrator (or the server owner), or OWNER_IDS. */
+/** Still allowed to change this server's settings? Administrator (or the server owner), or OWNER_IDS in Mewvo's own servers. */
 export async function stillAllowed(guild, userId) {
-    if (isBotOwner(userId)) return true;
+    if (hasOwnerPower(userId, guild?.id)) return true;
     const member = guild?.members?.cache?.get?.(userId) || await guild?.members?.fetch?.(userId).catch(() => null);
     return Boolean(member) && hasAdministrator({ guild, userId, permissions: member.permissions });
 }

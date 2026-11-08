@@ -5,7 +5,9 @@
 //    except the owner tools (rule 3).
 // 2. Everything requires Administrator (the server owner counts), except the
 //    access keys listed in config/commands/commandAccess.js (everyone, or
-//    Administrator or Manage Server). OWNER_IDS is an emergency override for rule 2 only.
+//    Administrator or Manage Server). OWNER_IDS is an emergency override for rule 2 only,
+//    and only in Mewvo's own servers (main + support, utils/ownerPower.js); in any other
+//    server they need Administrator (or Manage Server) like everyone else.
 // Commands stay visible to everyone (no default_member_permissions), so
 // non-admins see this message instead of an empty command list.
 //
@@ -28,6 +30,7 @@ import { BLACKLIST_MESSAGE, blacklistHit } from '../services/owner/blacklistCach
 import { getStoredSetting, isHomeGuild, resolveSetting } from '../services/settings/guildSettings.js';
 import { botText } from './botText.js';
 import { ownerToolsGuildId } from '../config/ownerTools.js';
+import { hasOwnerPower } from './ownerPower.js';
 
 export const OWNER_TOOLS_REFUSAL = 'This command is only for the bot owner.';
 
@@ -92,9 +95,9 @@ export function hasAdministrator({ guild, userId, permissions }) {
     return Boolean(permissions?.has?.(PermissionFlagsBits.Administrator));
 }
 
-/** True when this user sees admin-only commands in /help (admins, the owner, OWNER_IDS). */
+/** True when this user sees admin-only commands in /help (admins, the owner, OWNER_IDS in Mewvo's own servers). */
 export function canSeeAdminCommands(interaction) {
-    return isBotOwner(interaction.user.id)
+    return hasOwnerPower(interaction.user.id, interaction.guildId)
         || hasAdministrator({ guild: interaction.guild, userId: interaction.user.id, permissions: interaction.memberPermissions });
 }
 
@@ -129,18 +132,19 @@ export function checkCommandAccess({ command, accessKey, guild, userId, permissi
     // Administrator or Manage Server (/setup); checked before retirement, so it stays usable then.
     if (isManageServerCommand(accessKey)) {
         if (hasManageServer({ guild, userId, permissions })) return { allowed: true };
-        if (isBotOwner(userId)) return { allowed: true, ownerOverride: true };
+        if (hasOwnerPower(userId, guild.id)) return { allowed: true, ownerOverride: true };
         return { allowed: false, message: botText(lang).t('errors.access.manageServer') };
     }
     // Retired admin commands (RETIRE_ADMIN_COMMANDS): the dashboard does them; the emergency kit
     // is for OWNER_IDS only (an owner without Administrator is still an override, logged).
     if (adminCommandsRetired() && !isKeptAdminCommand(accessKey)) {
-        if (isOwnerKit(accessKey) && isBotOwner(userId)) {
+        if (isOwnerKit(accessKey) && hasOwnerPower(userId, guild.id)) {
             return hasAdministrator({ guild, userId, permissions }) ? { allowed: true } : { allowed: true, ownerOverride: true };
         }
         return { allowed: false, message: retiredMessage(accessKey) };
     }
     if (hasAdministrator({ guild, userId, permissions })) return { allowed: true };
-    if (isBotOwner(userId)) return { allowed: true, ownerOverride: true };
+    // OWNER_IDS override Administrator in Mewvo's own servers only (multi-server B1, utils/ownerPower.js).
+    if (hasOwnerPower(userId, guild.id)) return { allowed: true, ownerOverride: true };
     return { allowed: false, message: getAdminRequiredMessage(guild.id, { lang }) };
 }

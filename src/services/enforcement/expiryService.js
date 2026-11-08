@@ -10,6 +10,7 @@ import { OPEN_STATUSES } from './caseService.js';
 import { removeMutedRole } from './muteService.js';
 import { logEnforcement, notifyPunishmentEnded } from './enforcementService.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
+import { isHomeGuild } from '../settings/guildSettings.js';
 
 const BATCH_SIZE = 50;
 const UNKNOWN_BAN = 10026;
@@ -43,7 +44,8 @@ export async function liftExpired(client, guild, row) {
             // Already unbanned by hand — just close the record.
         }
         const closed = await expireCase(row);
-        await syncBannedRoleQuietly(client, row.target_user_id);
+        // The Support server's banned role follows Mewvo's own bans only (home-only by design).
+        if (isHomeGuild(guild.id)) await syncBannedRoleQuietly(client, row.target_user_id);
         await logEnforcement(client, guild.id, 'unban', {
             target, moderatorLabel: `${client.user.username} (automatic)`,
             extra: [{ name: 'Reason', value: `Temporary ban \`${row.case_code}\` expired` }],
@@ -81,6 +83,7 @@ export async function runEnforcementExpiry(client) {
         );
 
         for (const row of rows) {
+            // Every server's cases, each lifted in its own server (row.guild_id); a server the bot left is skipped.
             const guild = client.guilds.cache.get(row.guild_id);
             if (!guild) continue;
             try {

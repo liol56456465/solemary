@@ -1,5 +1,4 @@
 import { Events } from 'discord.js';
-import { enforcementConfig } from '../config/enforcement.js';
 import { applyMutedOverwrite, findMutedRole } from '../services/enforcement/muteService.js';
 import { isEnforcementDbAvailable } from '../services/enforcement/db.js';
 import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
@@ -20,8 +19,9 @@ export default {
       data: { title: 'Channel created', headline: `${channel.toString()} was created`, lines: channelLines(channel), channelId: channel.id },
     }).catch((error) => logger.debug(`Channel create log failed: ${error.message}`));
 
-    // New channels get the muted-role deny overwrite so muted members stay muted there.
-    if (channel.guild.id !== enforcementConfig.mainGuildId || !isEnforcementDbAvailable()) {
+    // New channels get the muted-role deny overwrite so muted members stay muted there
+    // (any server: findMutedRole only finds that server's own Muted role).
+    if (!isEnforcementDbAvailable()) {
       return;
     }
 

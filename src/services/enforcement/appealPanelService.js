@@ -86,6 +86,61 @@ export function supportAppealPanel() {
     };
 }
 
+/**
+ * The one panel of a server that is not Mewvo's (multi-server B1): appeals for its own mutes,
+ * warns and kicks, My appeals, My record and Report staff, all handled in that server.
+ */
+export function serverAppealPanel(guildName) {
+    return {
+        embeds: [createEmbed({
+            title: `${String(guildName || 'Server').slice(0, 200)} appeals`,
+            description: [
+                '**Appeal**: muted, warned or kicked here? Press **Appeal** and fill in:',
+                '1. Why it should be lifted',
+                '2. Your case code, from the DM you got',
+                '3. More info, if you want to add anything',
+                '',
+                'The administrators review your appeal and you get the decision by DM. Press **My appeals** any time to check where yours stand, or **My record** to see your warnings and what a next warning would do.',
+                '',
+                '**Report staff**: report a staff member who broke the rules. Only administrators can see reports.',
+            ].join('\n'),
+            color: 'primary',
+        })],
+        components: [new ActionRowBuilder().addComponents(
+            appealButton(),
+            myAppealsButton(),
+            myStandingButton(),
+            new ButtonBuilder().setCustomId('appeal:report').setLabel('Report staff').setStyle(ButtonStyle.Danger),
+        )],
+    };
+}
+
+/**
+ * Posts (or re-posts) the panel of a server that is not Mewvo's, in `channel` of that server.
+ * Checks first: a category to open appeals in (its appeals category, else its /ticket one) the
+ * bot can open channels in, and the bot able to post in the channel. Never touches the Support
+ * server. Resolves { channel, category }.
+ */
+export async function postServerAppealPanel(guild, channel, { reason = '/setappeal' } = {}) {
+    const category = await getAppealsCategory(guild);
+    if (!category) {
+        throw configError('There is no category to open appeals and reports in. Set a ticket category first (/ticket), then run /setappeal again.');
+    }
+    const botPermissions = category.permissionsFor(guild.members.me);
+    if (!botPermissions?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ManageChannels])) {
+        throw configError(`I need View Channel and Manage Channels in the **${category.name}** category to open appeal channels there.`);
+    }
+    const here = typeof channel?.permissionsFor === 'function' ? channel.permissionsFor(guild.members.me) : null;
+    if (!here?.has?.([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks])) {
+        throw configError(`I need View Channel, Send Messages and Embed Links in <#${channel?.id}> to post the appeal panel.`);
+    }
+    await removeOldAppealPanels(channel);
+    await channel.send(serverAppealPanel(guild.name));
+    await setInDb(appealPanelKey(guild.id), { at: new Date().toISOString(), mainChannelId: channel.id, supportChannelId: null, reason })
+        .catch((error) => logger.warn(`Could not remember the appeal panel posting: ${error.message}`));
+    return { channel, category };
+}
+
 /** The support server's #appeals channel, created read-only for members if it doesn't exist. */
 export async function ensureSupportPanelChannel(supportGuild, reason = '/setappeal') {
     const existing = supportGuild.channels.cache.find((channel) =>

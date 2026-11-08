@@ -5,7 +5,7 @@
 import { MessageFlags } from 'discord.js';
 import { textForInteraction } from '../../../utils/botText.js';
 import { hasManageServer } from '../../../utils/commandGate.js';
-import { isBotOwner } from '../../../config/bot.js';
+import { hasOwnerPower } from '../../../utils/ownerPower.js';
 import { SETUP_SELECT_ID, categoryReply } from '../../../services/setup/setupGuide.js';
 
 export async function handleSetupCategory(interaction, client, args = []) {
@@ -16,7 +16,7 @@ export async function handleSetupCategory(interaction, client, args = []) {
         return;
     }
     const allowed = hasManageServer({ guild: interaction.guild, userId: interaction.user.id, permissions: interaction.memberPermissions })
-        || isBotOwner(interaction.user.id);
+        || hasOwnerPower(interaction.user.id, interaction.guildId); // OWNER_IDS: Mewvo's own servers only
     if (!allowed) {
         await interaction.reply({ content: tr.t('errors.access.manageServer'), flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
         return;

@@ -21,7 +21,6 @@ import { checkCommandAccess } from '../utils/commandGate.js';
 import { resolveBotLanguage } from '../utils/botText.js';
 import { noteOwnerOverride } from '../services/ownerOverride.js';
 import { handleModmailDm, handleModmailStaffMessage, isModmailStaff, modmailUserId } from '../services/modmailService.js';
-import { enforcementConfig } from '../config/enforcement.js';
 import { enforceNoContact } from '../services/enforcement/noContactService.js';
 import { noteStickyActivity } from '../services/community/stickyService.js';
 import { respondToTags } from '../services/community/tagService.js';
@@ -73,9 +72,9 @@ export default {
   }
 };
 
-// Staff messages in a main-server modmail channel go to the member by DM.
+// Staff messages in a modmail channel (any server; the link in modmail_links names it) go to the member by DM.
 async function relayModmailStaffMessage(message, client) {
-  if (message.guild.id !== enforcementConfig.mainGuildId || !(await modmailUserId(message.channel))) return;
+  if (!(await modmailUserId(message.channel))) return;
   try {
     const guildConfig = await getGuildConfig(client, message.guild.id);
     if (!isModmailStaff(message.member, guildConfig)) return;

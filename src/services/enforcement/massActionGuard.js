@@ -5,11 +5,14 @@
 // moderator's own ban/kick cases instead: with MASS_ACTION_LIMIT of them inside
 // MASS_ACTION_WINDOW_MINUTES, the next ban/kick is refused and the moderator is
 // blocked from every panel action for MASS_ACTION_BLOCK_MINUTES. Mutes have their own,
-// higher count (MASS_MUTE_LIMIT) in the same window, with the same block. OWNER_IDS get a
-// DM and the alerts channel gets an entry. The block is stored with a TTL, so a restart
-// doesn't lift it; /staff restore lifts it early.
+// higher count (MASS_MUTE_LIMIT) in the same window, with the same block. The alerts channel
+// gets an entry and a DM goes out: in Mewvo's own servers to OWNER_IDS (who are exempt there),
+// in any other server to that server's owner (guild.ownerId); OWNER_IDS have no exemption
+// there (utils/ownerPower.js). The block is stored with a TTL, so a restart doesn't lift it;
+// /staff restore lifts it early.
 
-import { botConfig, isBotOwner } from '../../config/bot.js';
+import { botConfig } from '../../config/bot.js';
+import { hasOwnerPower, isMewvoServer } from '../../utils/ownerPower.js';
 import { db } from '../../utils/database/wrapper.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
@@ -19,10 +22,11 @@ import { resolveSetting } from '../settings/guildSettings.js';
 
 const blockKey = (guildId, moderatorId) => `enforcement:massguard:${guildId}:${moderatorId}`;
 
-function blockedError(block) {
+function blockedError(block, guildId) {
     const until = Math.floor(new Date(block.until).getTime() / 1000);
+    const alerted = isMewvoServer(guildId) ? 'The bot owners were alerted.' : 'The server owner was alerted.';
     return createError(`Moderator blocked by the mass-action guard until ${block.until}`, ErrorTypes.PERMISSION,
-        `Safety limit: you are blocked from the enforcement panel until <t:${until}:t> (<t:${until}:R>) after ${block.count} ${block.attempted === 'mute' ? 'mutes' : 'bans/kicks'} in a short time. The bot owners were alerted.`,
+        `Safety limit: you are blocked from the enforcement panel until <t:${until}:t> (<t:${until}:R>) after ${block.count} ${block.attempted === 'mute' ? 'mutes' : 'bans/kicks'} in a short time. ${alerted}`,
         { expected: true });
 }
 
@@ -81,8 +85,19 @@ export async function recentMuteCount(guildId, moderatorId, windowMs = resolveSe
     return rows[0]?.n ?? 0;
 }
 
-async function alertOwners(client, text) {
-    for (const ownerId of botConfig.commands?.owners ?? []) {
+/**
+ * Who gets the mass-action DM: OWNER_IDS for Mewvo's own servers (as before); for any other
+ * server only its owner (guild.ownerId), never OWNER_IDS. A server owner who tripped the guard
+ * themselves is not DM'd (the refusal already tells them). `owners`/`isHome` are for tests.
+ */
+export function massAlertRecipients(guild, moderatorId, { owners = botConfig.commands?.owners ?? [], isHome = isMewvoServer } = {}) {
+    if (isHome(guild.id)) return [...owners].map(String);
+    const ownerId = guild.ownerId ? String(guild.ownerId) : null;
+    return ownerId && ownerId !== String(moderatorId) ? [ownerId] : [];
+}
+
+async function alertOwners(client, recipients, text) {
+    for (const ownerId of recipients) {
         const owner = await client.users.fetch(ownerId).catch(() => null);
         await owner?.send({ content: text, allowedMentions: { parse: [] } })
             .catch((error) => logger.warn(`Mass-action alert DM to ${ownerId} failed: ${error.message}`));
@@ -117,7 +132,7 @@ async function blockModerator(guild, moderator, count, attempted) {
         { name: 'Blocked until', value: `<t:${Math.floor(Date.parse(until) / 1000)}:f>` },
         { name: 'Lift early', value: '`/staff restore`' },
     ], { title: `Safety limit: too many ${what} in ${windowMinutes} minutes, moderator blocked`, guildId: guild.id });
-    await alertOwners(guild.client, `**Safety limit (too many ${what} in ${windowMinutes} minutes) in ${guild.name}.** ${summary} Their panel access is blocked until <t:${Math.floor(Date.parse(until) / 1000)}:f>. Lift it early with \`/staff restore\`.`);
+    await alertOwners(guild.client, massAlertRecipients(guild, moderator.id), `**Safety limit (too many ${what} in ${windowMinutes} minutes) in ${guild.name}.** ${summary} Their panel access is blocked until <t:${Math.floor(Date.parse(until) / 1000)}:f>. Lift it early with \`/staff restore\`.`);
     return block;
 }
 
@@ -127,9 +142,10 @@ async function blockModerator(guild, moderator, count, attempted) {
  * will trigger a ladder ban is passed in as 'ban' (see executeAction).
  */
 export async function enforceMassActionGuard(guild, moderator, actionType) {
-    if (isBotOwner(moderator.id)) return;
+    // OWNER_IDS are exempt in Mewvo's own servers only.
+    if (hasOwnerPower(moderator.id, guild.id)) return;
     const existing = await getMassActionBlock(guild.id, moderator.id);
-    if (existing) throw blockedError(existing);
+    if (existing) throw blockedError(existing, guild.id);
     let count;
     let limit;
     if (actionType === 'ban' || actionType === 'kick') {
@@ -142,6 +158,6 @@ export async function enforceMassActionGuard(guild, moderator, actionType) {
         return;
     }
     if (count >= limit) {
-        throw blockedError(await blockModerator(guild, moderator, count, actionType));
+        throw blockedError(await blockModerator(guild, moderator, count, actionType), guild.id);
     }
 }

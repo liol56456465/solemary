@@ -5,7 +5,8 @@ import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { isAdministrator } from '../../services/enforcement/enforcementService.js';
 // The panels, the checks and the posting live in the service (shared with the web dashboard).
-import { postAppealPanels } from '../../services/enforcement/appealPanelService.js';
+import { postAppealPanels, postServerAppealPanel } from '../../services/enforcement/appealPanelService.js';
+import { isHomeGuild } from '../../services/settings/guildSettings.js';
 
 export default {
     // Registered as a guild command in MAIN_GUILD_ID only.
@@ -19,7 +20,8 @@ export default {
             .addChannelTypes(ChannelType.GuildText)),
 
     async execute(interaction, config, client) {
-        if (interaction.guildId !== enforcementConfig.mainGuildId) {
+        // Mewvo's support server posts nothing itself (its panel comes from the main server's run).
+        if (!interaction.guildId || interaction.guildId === enforcementConfig.supportGuildId) {
             throw new TitanBotError('Wrong guild for /setappeal', ErrorTypes.PERMISSION,
                 'This command only works in the main server.', { expected: true });
         }
@@ -32,6 +34,19 @@ export default {
         if (!deferred) return;
 
         const target = interaction.options.getChannel('channel') || interaction.channel;
+        if (!isHomeGuild(interaction.guildId)) {
+            // Any other server (multi-server B1): one panel in this server; appeals and reports open here.
+            const { channel, category } = await postServerAppealPanel(interaction.guild, target);
+            await InteractionHelper.safeEditReply(interaction, {
+                embeds: [successEmbed('Appeal panel posted', [
+                    `**Panel:** <#${channel.id}>, for appeals of this server's punishments and staff reports.`,
+                    '',
+                    `Every appeal and report opens in **${category.name}**, visible to administrators only.`,
+                    'Decide appeals with the Accept / Deny buttons on each appeal.',
+                ].join('\n'))],
+            });
+            return;
+        }
         const { mainChannel, supportChannel, created, category } = await postAppealPanels(client, interaction.guild, target);
 
         await InteractionHelper.safeEditReply(interaction, {

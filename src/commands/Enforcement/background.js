@@ -1,7 +1,6 @@
 import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
-import { enforcementConfig } from '../../config/enforcement.js';
 import { isAdministrator } from '../../services/enforcement/enforcementService.js';
 import { getCaseByName, searchCaseNames } from '../../services/enforcement/caseService.js';
 import { query, T, isEnforcementDbAvailable } from '../../services/enforcement/db.js';
@@ -29,9 +28,10 @@ export default {
             .setMaxLength(100)),
 
     async execute(interaction, config, client) {
-        if (interaction.guildId !== enforcementConfig.mainGuildId) {
-            throw new TitanBotError('Wrong guild for /background', ErrorTypes.PERMISSION,
-                'This command only works in the main server.', { expected: true });
+        // Any server: only this server's records (every query below is scoped by interaction.guildId).
+        if (!interaction.guildId) {
+            throw new TitanBotError('/background outside a server', ErrorTypes.PERMISSION,
+                'This command only works in a server.', { expected: true });
         }
         if (!isAdministrator(interaction.member)) {
             throw new TitanBotError('Not an administrator', ErrorTypes.PERMISSION,
@@ -60,7 +60,7 @@ export default {
     },
 
     async autocomplete(interaction) {
-        if (interaction.guildId !== enforcementConfig.mainGuildId || !isAdministrator(interaction.member)
+        if (!interaction.guildId || !isAdministrator(interaction.member)
             || !isEnforcementDbAvailable()) {
             return interaction.respond([]);
         }

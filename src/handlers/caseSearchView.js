@@ -10,7 +10,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, StringSelec
 import { createEmbed } from '../utils/embeds.js';
 import { ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
-import { enforcementConfig, getReason } from '../config/enforcement.js';
+import { getReason } from '../config/enforcement.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
 import { caseStatusLabel, getCaseByCode, getLatestAppealStatusesForCases } from '../services/enforcement/caseService.js';
 import {
@@ -97,7 +97,7 @@ export function filtersFromMessage(message) {
 
 function allowed(interaction, viewerId) {
     return interaction.user.id === viewerId
-        && interaction.guildId === enforcementConfig.mainGuildId
+        && Boolean(interaction.guildId) // any server: the view only searches interaction.guildId's cases
         && isAdministrator(interaction.member);
 }
 

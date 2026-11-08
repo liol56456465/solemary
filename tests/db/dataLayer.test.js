@@ -219,7 +219,7 @@ test('outage: a failed health check makes everything throw until the database is
 
 // --- mass-action guard -------------------------------------------------------------
 
-test('mass-action guard: the ban after the limit is refused, the moderator blocked, owners alerted', { skip }, async () => {
+test('mass-action guard: the ban after the limit is refused, the moderator blocked, the server owner alerted', { skip }, async () => {
     const { enforceMassActionGuard, getMassActionBlock, clearMassActionBlock } = await import('../../src/services/enforcement/massActionGuard.js');
     const { resolveSetting } = await import('../../src/services/settings/guildSettings.js');
     const moderatorId = user(900);
@@ -228,7 +228,9 @@ test('mass-action guard: the ban after the limit is refused, the moderator block
         guilds: { cache: new Map() },
         users: { fetch: async (id) => ({ send: async (msg) => dms.push({ id, msg }) }) },
     };
-    const guild = { id: guildA, name: 'Test guild', client: fakeClient };
+    // guildA is not one of Mewvo's servers: the alert goes to its owner, never to OWNER_IDS (multi-server B1).
+    const serverOwner = user(901);
+    const guild = { id: guildA, name: 'Test guild', ownerId: serverOwner, client: fakeClient };
     const moderator = { id: moderatorId, user: { username: 'rogue' } };
     try {
         for (let i = 0; i < resolveSetting(guildA, 'massActionLimit'); i++) { // guildA's own limit (the generic default)
@@ -241,11 +243,8 @@ test('mass-action guard: the ban after the limit is refused, the moderator block
         await enforceMassActionGuard(guild, moderator, 'warn'); // warns don't count and aren't blocked yet
         await assert.rejects(enforceMassActionGuard(guild, moderator, 'ban'), (error) => error.type === 'permission');
         assert.ok(await getMassActionBlock(guildA, moderatorId), 'block stored');
-        assert.equal(dms.length, (process.env.OWNER_IDS || '').split(',').filter(Boolean).length, 'every OWNER_IDS account got a DM');
+        assert.deepEqual(dms.map((d) => d.id), [serverOwner], 'only the server owner got a DM');
         await assert.rejects(enforceMassActionGuard(guild, moderator, 'warn'), (error) => error.type === 'permission', 'blocked from every action');
-        // Owners are never blocked.
-        const ownerId = (process.env.OWNER_IDS || '').split(',')[0]?.trim();
-        if (ownerId) await enforceMassActionGuard(guild, { id: ownerId, user: { username: 'owner' } }, 'ban');
         await clearMassActionBlock(guildA, moderatorId);
         assert.equal(await getMassActionBlock(guildA, moderatorId), null);
     } finally {
@@ -253,13 +252,14 @@ test('mass-action guard: the ban after the limit is refused, the moderator block
     }
 });
 
-test('mass-action guard: mutes have their own, higher limit (MASS_MUTE_LIMIT, default 10); same block and owner DM', { skip }, async () => {
+test('mass-action guard: mutes have their own, higher limit (MASS_MUTE_LIMIT, default 10); same block and server-owner DM', { skip }, async () => {
     const { enforceMassActionGuard, getMassActionBlock, clearMassActionBlock, recentBanKickCount } = await import('../../src/services/enforcement/massActionGuard.js');
     const { resolveSetting } = await import('../../src/services/settings/guildSettings.js');
     assert.equal(resolveSetting(guildA, 'massMuteLimit'), 10, 'guildA stored nothing: the generic default');
     const moderatorId = user(930);
     const dms = [];
-    const guild = { id: guildA, name: 'Test guild', client: { guilds: { cache: new Map() }, users: { fetch: async (id) => ({ send: async (msg) => dms.push({ id, msg }) }) } } };
+    const serverOwner = user(931);
+    const guild = { id: guildA, name: 'Test guild', ownerId: serverOwner, client: { guilds: { cache: new Map() }, users: { fetch: async (id) => ({ send: async (msg) => dms.push({ id, msg }) }) } } };
     const moderator = { id: moderatorId, user: { username: 'muter' } };
     try {
         for (let i = 0; i < 10; i++) {
@@ -272,7 +272,7 @@ test('mass-action guard: mutes have their own, higher limit (MASS_MUTE_LIMIT, de
         await enforceMassActionGuard(guild, moderator, 'ban'); // 0 bans: allowed
         await assert.rejects(enforceMassActionGuard(guild, moderator, 'mute'), (error) => error.type === 'permission' && /10 mutes/.test(error.userMessage || ''));
         assert.ok(await getMassActionBlock(guildA, moderatorId), 'blocked like for bans');
-        assert.equal(dms.length, (process.env.OWNER_IDS || '').split(',').filter(Boolean).length, 'owners DM\'d');
+        assert.deepEqual(dms.map((d) => d.id), [serverOwner], 'the server owner DM\'d');
         await assert.rejects(enforceMassActionGuard(guild, moderator, 'warn'), (error) => error.type === 'permission', 'blocked from every action');
         await clearMassActionBlock(guildA, moderatorId);
     } finally {

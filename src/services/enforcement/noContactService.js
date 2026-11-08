@@ -12,7 +12,6 @@
 
 import { logger } from '../../utils/logger.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
-import { enforcementConfig } from '../../config/enforcement.js';
 import { query, T, isUniqueViolation, isEnforcementDbAvailable } from './db.js';
 import { postModLog, sendDm } from './enforcementService.js';
 import { noContactEndedDm, noContactStartedDm } from './dmTemplates.js';
@@ -232,12 +231,11 @@ export async function expireNoContactOrders(client) {
     await refreshQuietly();
     for (const row of rows) {
         const { a, b } = await dmBoth(client, row, (order, other, opts) => noContactEndedDm(order, other, { ...opts, early: false }));
-        if (row.guild_id === enforcementConfig.mainGuildId) {
-            await postModLog(client, 'nocontact', [
-                { name: 'User', value: pairLabel(a, b, row) },
-                { name: 'Note', value: `order #${row.id} expired` },
-            ], { guildId: row.guild_id });
-        }
+        // The order's own server's mod log (any server; not set up there → postModLog skips it).
+        await postModLog(client, 'nocontact', [
+            { name: 'User', value: pairLabel(a, b, row) },
+            { name: 'Note', value: `order #${row.id} expired` },
+        ], { guildId: row.guild_id });
     }
     return rows.length;
 }

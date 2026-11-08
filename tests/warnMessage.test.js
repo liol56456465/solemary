@@ -69,8 +69,14 @@ function world({ admin = true, authorTop = 1, authorInGuild = true, authorBot = 
     return { interaction, replies, message };
 }
 
-test('warn for this message: refused outside the main server, for non-admins, bots, self', async () => {
-    await assert.rejects(warnMessage.execute(world({ guildId: '100000000000000777' }).interaction), /main server/);
+test('warn for this message: refused for a message of another server, outside a server, for non-admins, bots, self', async () => {
+    // Any server may warn (multi-server B1), but only for a message of the server it acts in.
+    const elsewhere = world({ guildId: '100000000000000777' });
+    elsewhere.message.guildId = MAIN;
+    await assert.rejects(warnMessage.execute(elsewhere.interaction), /messages in this server/);
+    const dm = world();
+    dm.interaction.guildId = null;
+    await assert.rejects(warnMessage.execute(dm.interaction), /messages in this server/);
     await assert.rejects(warnMessage.execute(world({ admin: false }).interaction), /Administrator/);
     await assert.rejects(warnMessage.execute(world({ authorBot: true }).interaction), /Bot, webhook/);
     await assert.rejects(warnMessage.execute(world({ authorId: MOD_ID }).interaction), /warn yourself/);
