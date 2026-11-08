@@ -17,7 +17,7 @@
   },
   "cases": {
     "invalidFilter": "Nieprawidłowy filtr.",
-    "exportAdmin": "Eksport spraw wymaga Administratora na serwerze głównym.",
+    "exportAdmin": "Eksport spraw wymaga Administratora na tym serwerze.",
     "exportFree": "Niedostępne w planie Free",
     "exportFreeText": "Eksport spraw jest w Mewvo Normal (ostatnie 90 dni) oraz Pro i Max (cała historia), w planie właściciela serwera.",
     "notFound": "Nie znaleziono sprawy",
@@ -38,5 +38,9 @@
     "inbox": "Skrzynka (odpowiedzi, zamknięcia)",
     "members": "Członkowie",
     "rolerules": "Reguły ról"
+  },
+  "access": {
+    "levelManager": "Zarządzanie serwerem",
+    "managerOnly": "To wymaga Administratora na tym serwerze. Z uprawnieniem Zarządzanie serwerem możesz zmieniać strony ustawień i przeglądać te strony, ale nie moderować: Przegląd, Członkowie, Zbanowani, Sprawy, Odwołania, Rozdzielenie."
   }
 }

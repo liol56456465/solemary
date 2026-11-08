@@ -89,7 +89,7 @@ test('matrix: the final Moderator level', () => {
 test('access: Administrator, then OWNER_IDS, then the moderator role; the role read fails closed', async () => {
     assert.equal(decideAccess({ inGuild: true, isAdmin: true, isModerator: true }).role, 'admin');
     assert.equal(decideAccess({ inGuild: true, isOwnerId: true, isModerator: true }).role, 'owner');
-    assert.deepEqual(MOD_DECISION, { allowed: true, canView: false, canAct: false, role: 'moderator', reason: 'moderator role in the main server' });
+    assert.deepEqual(MOD_DECISION, { allowed: true, canView: false, canAct: false, canEditSettings: false, role: 'moderator', reason: 'moderator role in this server' });
     assert.equal(decideAccess({ inGuild: false, isModerator: true }).allowed, false, 'must be in the main server');
     const member = (roles) => ({ roles: { cache: new Map(roles.map((id) => [id, { id }])) } });
     assert.equal(await hasModeratorRole({}, GUILD, member([MODROLE]), async () => ({ modRole: MODROLE })), true);

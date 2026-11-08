@@ -17,7 +17,7 @@
   },
   "cases": {
     "invalidFilter": "Invalid filter.",
-    "exportAdmin": "Exporting cases needs Administrator in the main server.",
+    "exportAdmin": "Exporting cases needs Administrator in this server.",
     "exportFree": "Not on the Free plan",
     "exportFreeText": "Case export comes with Mewvo Normal (last 90 days) and Pro or Max (full history), on the plan of the server owner.",
     "notFound": "Case not found",
@@ -38,5 +38,9 @@
     "inbox": "Inbox (replies, closes)",
     "members": "Members",
     "rolerules": "Role rules"
+  },
+  "access": {
+    "levelManager": "Manage Server",
+    "managerOnly": "This needs Administrator in this server. With Manage Server you can change the settings pages and view these pages, but not moderate: Overview, Members, Banned, Cases, Appeals, Keep apart."
   }
 }

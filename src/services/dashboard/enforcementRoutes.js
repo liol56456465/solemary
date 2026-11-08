@@ -13,20 +13,23 @@
 //   POST /dashboard/appeals/:code/preview|decide confirm step → decideAppeal
 //   GET  /dashboard/nocontact (also lists the staff watchlist), POST /dashboard/nocontact/add|end,
 //   POST /dashboard/watchlist/end
-//   POST /dashboard/staff/blocks/lift            OWNER_IDS only (like /staff restore)
-//   POST /dashboard/staff/warn|restore           OWNER_IDS only (/staff warn, /staff restore's roles)
+//   POST /dashboard/staff/blocks/lift            OWNER_IDS (in Mewvo's servers) or the server owner
+//   POST /dashboard/staff/warn|restore           same (/staff warn, /staff restore's roles)
 //
 // Every POST: 30/min per session, same origin + CSRF, edit switch (DASHBOARD_EDIT_ENABLED),
-// then Administrator in the main server (canAct; OWNER_IDS without it get 403, owner
-// decision 4) — except lifting a mass-action block, warning staff and restoring staff
-// roles, which are for OWNER_IDS (like /staff), and what permissions.js lets the Moderator
+// then Administrator in this server (canAct; OWNER_IDS and Manage Server without it get 403)
+// — except lifting a mass-action block, warning staff and restoring staff roles, which are
+// for OWNER_IDS with owner power here (hasOwnerPower: Mewvo's own servers only) or the server
+// owner (like /staff), and what permissions.js lets the Moderator
 // level run (warn, mute, unmute, kick, timeout): the moderator role is re-checked on a
 // fresh member fetch, and hierarchy + the mass-action guard apply as usual. Actions run
 // with the logged-in user's GuildMember fetched fresh, through the SAME services as the
 // Discord commands (DMs, ladder, hierarchy, bot permissions, mass-action guard, logs).
 
 import { PermissionFlagsBits } from 'discord.js';
-import { CUSTOM_REASON_KEY, enforcementConfig, getReason } from '../../config/enforcement.js';
+import { CUSTOM_REASON_KEY, getReason } from '../../config/enforcement.js';
+import { hasOwnerPower } from '../../utils/ownerPower.js';
+import { resolveSetting } from '../settings/guildSettings.js';
 import { logger } from '../../utils/logger.js';
 import { recordOwnerOverride } from '../ownerOverride.js';
 import { isAdministrator, previewWarn } from '../enforcement/enforcementService.js';
@@ -211,7 +214,12 @@ export function createEnforcementHandlers(core) {
     const guildOf = () => client.guilds?.cache?.get(guildId) || null;
     const actorOf = (req) => ({ userId: req.dashboard.session.userId, username: req.dashboard.session.username });
     const canWrite = (req) => Boolean(settings.editEnabled && req.dashboard.access.canAct);
-    const isOwner = (req) => Boolean(e.isBotOwner(req.dashboard.session.userId) || guildOf()?.ownerId === req.dashboard.session.userId);
+    // OWNER_IDS keep their override only in Mewvo's own servers (utils/ownerPower.js); test doubles
+    // without hasOwnerPower combine their isBotOwner with the real home-server check.
+    const ownerPower = (userId, gid) => Boolean(gid && (typeof e.hasOwnerPower === 'function'
+        ? e.hasOwnerPower(userId, gid)
+        : hasOwnerPower(userId, gid, { isOwner: (id) => Boolean(e.isBotOwner?.(id)) })));
+    const isOwner = (req) => Boolean(ownerPower(req.dashboard.session.userId, guildId) || guildOf()?.ownerId === req.dashboard.session.userId);
 
     async function audit(req, module, changes, { modLog = false, label = module } = {}) {
         if (!changes.length) return;
@@ -654,11 +662,11 @@ export function createEnforcementHandlers(core) {
         const timeoutKey = text(req.body, 'timeout', 5);
         if (action === 'timeout' && !Object.hasOwn(TIMEOUTS, timeoutKey)) throw new InputError(textOf(req).t('moderation.members.chooseTimeout'));
         const members = await bulkTargets(req, guild);
-        const owner = e.isBotOwner(req.dashboard.session.userId);
+        const owner = ownerPower(req.dashboard.session.userId, guildId);
         let guardLeft = Infinity;
         if ((action === 'kick' || action === 'ban') && !owner) {
             if (await e.getMassActionBlock(guildId, req.dashboard.session.userId)) throw new InputError(textOf(req).t('moderation.bulk.blocked'));
-            guardLeft = Math.max(0, enforcementConfig.massActionLimit - await e.recentBanKickCount(guildId, req.dashboard.session.userId));
+            guardLeft = Math.max(0, resolveSetting(guildId, 'massActionLimit') - await e.recentBanKickCount(guildId, req.dashboard.session.userId));
         }
         const plan = planBulk({ guild, members, action, role, timeoutKey, actorId: req.dashboard.session.userId, actorMember: moderator, actorIsOwner: isOwner(req), botMember: guild.members.me, guardLeft });
         // Kick / ban: the enforcement form is checked now (same flow builder as one member), so the run cannot fail on it.
@@ -988,7 +996,7 @@ export function createEnforcementHandlers(core) {
     function appealReviewState(record, viewerId) {
         const botUserId = client.user?.id || null;
         if (!needsSecondReviewer(record, { botUserId })) return { required: false };
-        const check = checkAppealReviewer(record, viewerId, { botUserId, isOwner: e.isBotOwner });
+        const check = checkAppealReviewer(record, viewerId, { botUserId, isOwner: (id) => ownerPower(id, record.guild_id) });
         return { required: true, issuer: record.moderator_username, blocked: !check.allowed, message: check.message || null, ownerOverride: Boolean(check.ownerOverride) };
     }
 
@@ -1038,7 +1046,7 @@ export function createEnforcementHandlers(core) {
         if (!appeals.some((a) => a.status === 'pending')) throw new InputError(textOf(req).t('moderation.appeal.noPending', { code }));
         const moderator = await freshModerator(req);
         // Independent appeal review: refuse before the confirm step (decideAppeal checks again).
-        assertAppealReviewer(record, moderator.id || req.dashboard.session.userId, { client, isOwner: e.isBotOwner });
+        assertAppealReviewer(record, moderator.id || req.dashboard.session.userId, { client, isOwner: (id) => ownerPower(id, record.guild_id) });
         const note = multiline(req.body, 'note', 500);
         const payload = { caseCode: code, decision, note };
         const { token, hash } = confirms.issue({ session: req.dashboard.session.idHash, subject: `appeal:${code}`, payload });
