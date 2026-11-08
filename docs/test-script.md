@@ -364,3 +364,52 @@ Dashboard steps use the Replit URL in a normal and a private browser window.
 
 When done: remove Alt B's Manage Server, close leftover modmail, remove Test's warn from Alt A (Remove warn), and run
 the clean-up from "Before testing in Discord".
+
+## 25. Staff tools in every server (B4b) — second, non-Mewvo test server
+| # | Step | Expected |
+|---|---|---|
+| 25.1 | Admin (not owner) runs `/staff restore` on another admin the staff guard demoted | Roles come back, block lifted |
+| 25.2 | Same admin runs `/staff restore` on themselves | Refused |
+| 25.3 | "Report message" with no review channel set | "could not be delivered… tell a moderator", not "Report sent" |
+| 25.4 | `/test action:ban` | DM preview shows this server's name; nothing happens |
+| 25.5 | Main server: plain admin runs `/staff restore` | Refused (owner only at home) |
+
+## 26. Web appeals (B4a) — member portal on
+| # | Step | Expected |
+|---|---|---|
+| 26.1 | Alt banned in the test server opens the ban DM | Line "Appeal online: …/me/appeal/<code>" |
+| 26.2 | Open the link logged out | Discord login, then back to the form |
+| 26.3 | Send the form | `/me/appeals` shows "Pending"; staff see it in the staff channel or the dashboard appeals list |
+| 26.4 | Send a second appeal for the same case | Refused (one pending) |
+| 26.5 | Another account opens `/me/appeal/<that code>` | Same "not found" page as an unknown code |
+
+## 27. Bot audit fixes
+| # | Step | Expected |
+|---|---|---|
+| 27.1 | Non-admin runs `/count status` | Status shown, no refusal |
+| 27.2 | Server where Mewvo is not Administrator: open a ticket | Channel opens with the welcome message |
+| 27.3 | Remove the bot's Send permission in the ticket category, open a ticket | No channel left behind, ticket count unchanged |
+| 27.4 | An uncached member leaves (after a restart) | Leave log "Joined: unknown", goodbye sent, no crash |
+| 27.5 | Giveaway End button | Winners announced in the channel |
+| 27.6 | Join to Create inside a private category | Room not visible to @everyone; owner can connect |
+| 27.7 | Two people type the same next number at once | One counts, the other breaks the count with a notice |
+
+## 28. Anti-nuke in every server (staff guard on, an alt with Administrator)
+| # | Step | Expected |
+|---|---|---|
+| 28.1 | `/automod staffguard enabled:true` (as owner) | Reply mentions snapshots |
+| 28.2 | Alt deletes 3+ channels/roles quickly | Alt loses staff roles; alert with Show what changed / Revert… / Lock down |
+| 28.3 | Alt presses any button | Refused ("acted on you") |
+| 28.4 | Another admin presses Revert… | Plan lists channels + safe roles; permission restores under "Needs the server owner" |
+| 28.5 | Admin confirms | Channels/safe roles return, nothing deleted, DM + mod-log entry |
+| 28.6 | Owner presses Revert… and confirms | Permissions restored too |
+| 28.7 | Lock down (panic) | Verification High, invites/DMs paused; `/automod lockdown-end` undoes it |
+
+## 29. Website and ops
+| # | Step | Expected |
+|---|---|---|
+| 29.1 | Reload the home page 50 times quickly | Never "Too many requests" (static files don't count; limit 400/15 min) |
+| 29.2 | Phone, logged out | "Add Mewvo" visible in the top bar |
+| 29.3 | `/me` My record for an account with cases in two servers | Both servers listed |
+| 29.4 | Republish on Replit | Log shows a clean shutdown order; no "pool ended" errors |
+| 29.5 | Owner → Recent errors after a failing event | The event error appears |
