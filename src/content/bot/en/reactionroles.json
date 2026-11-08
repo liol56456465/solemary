@@ -1,0 +1,133 @@
+{
+    "cmd": {
+        "description": "Manage reaction role assignments",
+        "setup": {
+            "description": "Set up a new reaction role panel",
+            "channel": "The channel to send the reaction role message to",
+            "title": "Title for the reaction role panel",
+            "text": "Description for the reaction role panel",
+            "role1": "First role to add",
+            "role2": "Second role to add",
+            "role3": "Third role to add",
+            "role4": "Fourth role to add",
+            "role5": "Fifth role to add"
+        },
+        "dashboard": {
+            "description": "Manage and configure your reaction role panels",
+            "panel": "Select a reaction role panel to manage"
+        }
+    },
+    "autocomplete": {
+        "roles": {
+            "one": "#{channel} · {count} role",
+            "other": "#{channel} · {count} roles"
+        }
+    },
+    "setup": {
+        "warningTitle": "Role validation warning",
+        "createdTitle": "Panel created",
+        "createdText": "Reaction role panel posted in {channel}.\n\n{url}"
+    },
+    "dashboard": {
+        "title": "Reaction roles dashboard",
+        "untitled": "Untitled Panel",
+        "none": "`None`",
+        "intro": "**Title:** {title}\n\nSelect an option below to modify a setting.",
+        "viewLink": "\n[Click Here to View Panel]({url})",
+        "fieldStatus": "Panel status",
+        "fieldChannel": "Channel",
+        "channelNotFound": "`Not found`",
+        "fieldRoles": "Roles",
+        "fieldRoleList": "Role list",
+        "footer": "Dashboard closes after 10 minutes of inactivity",
+        "repostButton": "Repost panel",
+        "editTextButton": "Edit panel text",
+        "deleteButton": "Delete panel",
+        "actionPlaceholder": "Select an action...",
+        "addRoleLabel": "Add role",
+        "addRoleHint": "Add a role to this panel (up to 25 total)",
+        "removeRoleLabel": "Remove role",
+        "removeRoleHint": "Remove a role from this panel",
+        "noPanels": "No reaction role panels found. Use `/reactroles setup` first.",
+        "panelRequired": "Multiple panels exist. Choose one using the **panel** option.",
+        "repostedTitle": "Panel reposted",
+        "repostedText": "Reaction role panel restored in {channel}.",
+        "channelMissing": "The configured panel channel no longer exists.",
+        "noValidRoles": "This panel has no valid roles left to repost.",
+        "editModalTitle": "Edit panel text",
+        "editTitleLabel": "Title",
+        "editDescriptionLabel": "Description",
+        "editModalFailed": "Failed to show the edit panel text modal. Please try again.",
+        "updatedTitle": "Panel updated",
+        "updatedText": "The title and description have been updated.",
+        "addPlaceholder": "Select a role to add...",
+        "addTitle": "Add role",
+        "addText": "**Current roles:** {current}/25\n\nSelect a role to add to this panel.",
+        "addedTitle": "Role added",
+        "addedText": "{role} has been added to the panel.",
+        "noRoleSelected": "No role selected. Nothing was changed.",
+        "rolesGone": "The roles on this panel no longer exist in the server.",
+        "removePlaceholder": "Select a role to remove...",
+        "removeTitle": "Remove role",
+        "removeText": "Select the role you want to remove from this panel.",
+        "removedTitle": "Role removed",
+        "removedLast": "That was the last role on the panel. The panel has been deleted.",
+        "removedText": "{role} has been removed from the panel.",
+        "noPanelsLeft": "No panels remain. Use `/reactroles setup` to create one.",
+        "deletedOther": "Panel deleted. Run `/reactroles dashboard` to manage another panel.",
+        "thisPanel": "this panel",
+        "deleteModalTitle": "Delete reaction role panel",
+        "deleteWarning": "You are about to permanently delete the panel **{title}**. This will remove the Discord message and all associated reaction role assignments.",
+        "deleteConfirm": "I confirm, this cannot be undone",
+        "deleteMustTick": "You must tick the confirmation checkbox to delete the panel.",
+        "deletedTitle": "Panel deleted",
+        "deletedText": "**{title}** has been deleted."
+    },
+    "panel": {
+        "defaultTitle": "Reaction Roles",
+        "defaultDescription": "Select your roles using the menu below.",
+        "availableRoles": "Available Roles",
+        "placeholder": "Select your roles",
+        "optionDescription": "Add/remove the {role} role",
+        "footer": "Select roles from the dropdown menu below"
+    },
+    "errors": {
+        "maxRoles": "This panel already has the maximum of {max} roles.",
+        "alreadyIn": "{role} is already in this panel.",
+        "everyone": "You cannot use @everyone.",
+        "managed": "Managed/bot roles cannot be used.",
+        "dangerous": "That role has sensitive permissions (Administrator, Manage Server, etc.) and cannot be used.",
+        "hierarchy": "That role is above my highest role in the hierarchy. Move my role above it first.",
+        "panelGone": "That reaction role panel no longer exists.",
+        "serverNotFound": "Server not found.",
+        "roleGone": "That role no longer exists.",
+        "rejectDuplicate": "**{role}** - This role was selected more than once",
+        "rejectHierarchy": "**{role}** - My bot's role is positioned lower than this role in your server's role hierarchy and cannot assign it",
+        "rejectDangerous": "**{role}** - This role has dangerous permissions (Administrator, Manage Server, etc.)",
+        "rejectManaged": "**{role}** - This is a managed role (integration/bot role)",
+        "rejectEveryone": "**{role}** - Cannot use the @everyone role",
+        "rejectMissing": "`{roleId}` - This role no longer exists",
+        "titleLength": "The title must be 1–{max} characters.",
+        "descriptionLength": "The description must be 1–{max} characters.",
+        "channelType": "Please select a text or announcement channel.",
+        "manageRoles": "I need the \"Manage Roles\" permission to set up reaction roles.",
+        "sendMessages": "I don't have permission to send messages (with embeds) in <#{channelId}>.",
+        "panelLimit": "Your guild has reached the maximum of {max} reaction role panels. Delete an existing panel to create a new one.",
+        "cannotAdd": "The following roles cannot be added:\n{list}",
+        "atLeastOne": "You must provide at least one valid role."
+    },
+    "select": {
+        "outsideGuild": "This reaction role menu can only be used inside a server.",
+        "inactive": "This reaction role message is no longer active.",
+        "cannotVerify": "I could not verify my server permissions. Please try again.",
+        "noManageRoles": "I do not have permission to manage roles in this server.",
+        "updated": "Your roles are updated.",
+        "added": "**Added:** {roles}",
+        "removed": "**Removed:** {roles}",
+        "nothing": "Nothing changed.",
+        "skipped": {
+            "one": "**Skipped:** {count} role (I don't have permission)",
+            "other": "**Skipped:** {count} roles (I don't have permission)"
+        }
+    }
+}

@@ -14,6 +14,7 @@ import { hasOwnerPower } from '../../../utils/ownerPower.js';
 import { getAdminRequiredMessage, hasAdministrator } from '../../../utils/commandGate.js';
 import { mutateJoinToCreateConfig } from '../../../utils/database.js';
 import { logger } from '../../../utils/logger.js';
+import { botText, textForInteraction } from '../../../utils/botText.js';
 
 export const MODAL_PREFIX = 'jtcset';
 export const MODAL_TTL_MS = 10 * 60 * 1000;
@@ -26,23 +27,26 @@ const NO_PINGS = { parse: [] };
 /** The three settings: select-menu value → modal kind. */
 export const SETTING_KINDS = { name_template: 'name', user_limit: 'limit', bitrate: 'bitrate' };
 
+// Texts: jointocreate.form.<kind>.* in the bot catalog (the admin's Discord language).
 const KINDS = {
     name: {
-        title: 'Channel name template',
-        label: 'New name template',
-        description: 'Up to 100 characters. {username}, {display_name}, {user_tag} and {guild_name} are filled in.',
+        title: (tr) => tr.t('jointocreate.form.name.title'),
+        label: (tr) => tr.t('jointocreate.form.name.label'),
+        description: (tr) => tr.t('jointocreate.form.name.hint', {
+            username: '{username}', display_name: '{display_name}', user_tag: '{user_tag}', guild_name: '{guild_name}',
+        }),
         style: TextInputStyle.Short, min: 1, max: TEMPLATE_MAX,
     },
     limit: {
-        title: 'User limit',
-        label: 'Members per temporary channel',
-        description: `A whole number from 0 to ${LIMIT_MAX}. 0 means no limit.`,
+        title: (tr) => tr.t('jointocreate.form.limit.title'),
+        label: (tr) => tr.t('jointocreate.form.limit.label'),
+        description: (tr) => tr.t('jointocreate.form.limit.hint', { max: LIMIT_MAX }),
         style: TextInputStyle.Short, min: 1, max: 2,
     },
     bitrate: {
-        title: 'Bitrate',
-        label: 'Audio quality in kbps',
-        description: `A whole number from ${BITRATE_MIN} to ${BITRATE_MAX}. 64 is normal, 96 good, 128 high.`,
+        title: (tr) => tr.t('jointocreate.form.bitrate.title'),
+        label: (tr) => tr.t('jointocreate.form.bitrate.label'),
+        description: (tr) => tr.t('jointocreate.form.bitrate.hint', { min: BITRATE_MIN, max: BITRATE_MAX }),
         style: TextInputStyle.Short, min: 1, max: 3,
     },
 };
@@ -68,9 +72,10 @@ function currentValue(kind, config, channelId) {
     return String(Math.round(bitrate / 1000));
 }
 
-/** The modal for one setting of one trigger channel, prefilled with the current value. */
-export function buildSettingsModal(kind, channelId, config, { now = Date.now() } = {}) {
+/** The modal for one setting of one trigger channel, prefilled with the current value. lang: the admin's. */
+export function buildSettingsModal(kind, channelId, config, { now = Date.now(), lang = 'en' } = {}) {
     const spec = KINDS[kind];
+    const tr = botText(lang);
     const input = new TextInputBuilder()
         .setCustomId('value')
         .setStyle(spec.style)
@@ -79,28 +84,31 @@ export function buildSettingsModal(kind, channelId, config, { now = Date.now() }
         .setMaxLength(spec.max);
     const value = currentValue(kind, config, channelId);
     if (value && value.length <= spec.max) input.setValue(value);
-    const label = new LabelBuilder().setLabel(spec.label).setDescription(spec.description).setTextInputComponent(input);
-    return new ModalBuilder().setCustomId(settingsModalId(kind, channelId, now)).setTitle(spec.title).addLabelComponents(label);
+    const label = new LabelBuilder().setLabel(spec.label(tr)).setDescription(spec.description(tr)).setTextInputComponent(input);
+    return new ModalBuilder().setCustomId(settingsModalId(kind, channelId, now)).setTitle(spec.title(tr)).addLabelComponents(label);
 }
 
 /**
  * The typed value → what is saved: { key, value, text } or { error }.
  * name: 1–100 characters, no line breaks; limit: 0–99; bitrate: 8–384 kbps (saved in bps).
  */
-export function parseSettingValue(kind, raw) {
+export function parseSettingValue(kind, raw, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     const value = String(raw ?? '').trim();
+    const limitError = () => tr.t('jointocreate.form.limit.error', { max: LIMIT_MAX });
+    const bitrateError = () => tr.t('jointocreate.form.bitrate.error', { min: BITRATE_MIN, max: BITRATE_MAX });
     if (kind === 'name') {
-        if (!value || value.length > TEMPLATE_MAX || /[\r\n]/.test(value)) return { error: `The name template must be 1 to ${TEMPLATE_MAX} characters on one line.` };
-        return { key: 'nameTemplate', value, text: `Channel name template changed to \`${value.replace(/`/g, "'")}\`.` };
+        if (!value || value.length > TEMPLATE_MAX || /[\r\n]/.test(value)) return { error: tr.t('jointocreate.form.name.error', { max: TEMPLATE_MAX }) };
+        return { key: 'nameTemplate', value, text: tr.t('jointocreate.form.name.changed', { template: value.replace(/`/g, "'") }) };
     }
-    if (!/^\d{1,3}$/.test(value)) return { error: kind === 'limit' ? `The user limit must be a whole number from 0 to ${LIMIT_MAX}.` : `The bitrate must be a whole number from ${BITRATE_MIN} to ${BITRATE_MAX} kbps.` };
+    if (!/^\d{1,3}$/.test(value)) return { error: kind === 'limit' ? limitError() : bitrateError() };
     const number = Number(value);
     if (kind === 'limit') {
-        if (number > LIMIT_MAX) return { error: `The user limit must be a whole number from 0 to ${LIMIT_MAX}.` };
-        return { key: 'userLimit', value: number, text: `User limit changed to ${number === 0 ? 'no limit' : `${number} members`}.` };
+        if (number > LIMIT_MAX) return { error: limitError() };
+        return { key: 'userLimit', value: number, text: number === 0 ? tr.t('jointocreate.form.limit.changedNone') : tr.tp('jointocreate.form.limit.changed', number) };
     }
-    if (number < BITRATE_MIN || number > BITRATE_MAX) return { error: `The bitrate must be a whole number from ${BITRATE_MIN} to ${BITRATE_MAX} kbps.` };
-    return { key: 'bitrate', value: number * 1000, text: `Bitrate changed to ${number} kbps.` };
+    if (number < BITRATE_MIN || number > BITRATE_MAX) return { error: bitrateError() };
+    return { key: 'bitrate', value: number * 1000, text: tr.t('jointocreate.form.bitrate.changed', { kbps: number }) };
 }
 
 /** May this user still change Join to Create? Administrator (or the server owner), or OWNER_IDS. */
@@ -115,14 +123,15 @@ export function canConfigure(interaction) {
  */
 export async function handleSettingsModalSubmit(interaction, client, { mutate = mutateJoinToCreateConfig, now = Date.now() } = {}) {
     const parsed = parseSettingsModalId(interaction.customId);
+    const tr = textForInteraction(interaction);
     const answer = (content) => interaction.editReply({ content, allowedMentions: NO_PINGS });
     // Ack first: everything below may wait for the database.
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    if (!parsed || !interaction.guild) return answer('This form is not valid any more. Run /jointocreate config again.');
-    if (parsed.expiresAt < now) return answer('This form expired. Run /jointocreate config again.');
-    if (!canConfigure(interaction)) return answer(getAdminRequiredMessage(interaction.guildId));
-    const result = parseSettingValue(parsed.kind, interaction.fields.getTextInputValue('value'));
-    if (result.error) return answer(`${result.error} Nothing was changed.`);
+    if (!parsed || !interaction.guild) return answer(tr.t('jointocreate.form.invalid'));
+    if (parsed.expiresAt < now) return answer(tr.t('jointocreate.form.expired'));
+    if (!canConfigure(interaction)) return answer(getAdminRequiredMessage(interaction.guildId, { lang: tr.lang }));
+    const result = parseSettingValue(parsed.kind, interaction.fields.getTextInputValue('value'), { lang: tr.lang });
+    if (result.error) return answer(tr.t('jointocreate.form.notChanged', { error: result.error }));
     try {
         const saved = await mutate(client, interaction.guild.id, (config) => {
             if (!config.triggerChannels.includes(parsed.channelId)) return false;
@@ -130,10 +139,10 @@ export async function handleSettingsModalSubmit(interaction, client, { mutate = 
             config.channelOptions[parsed.channelId] = { ...config.channelOptions[parsed.channelId], [result.key]: result.value };
             return true;
         });
-        if (!saved) return answer(`<#${parsed.channelId}> is no longer a Join to Create channel. Nothing was changed.`);
+        if (!saved) return answer(tr.t('jointocreate.form.noLongerTrigger', { channelId: parsed.channelId }));
     } catch (error) {
         logger.error('Join to Create settings modal: save failed', { guildId: interaction.guild.id, kind: parsed.kind, error: error.message });
-        return answer('The database is not responding, so nothing was changed. Try again in a minute.');
+        return answer(tr.t('jointocreate.form.database'));
     }
-    return answer(`${result.text} New temporary channels of <#${parsed.channelId}> use it.`);
+    return answer(tr.t('jointocreate.form.saved', { text: result.text, channelId: parsed.channelId }));
 }

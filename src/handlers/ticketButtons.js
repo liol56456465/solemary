@@ -8,6 +8,8 @@ import { InteractionHelper } from '../utils/interactionHelper.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
 import { replyUserError, ErrorTypes, handleInteractionError, createError, TitanBotError } from '../utils/errorHandler.js';
 import { getTicketPermissionContext } from '../utils/ticket/ticketPermissions.js';
+import { botText, textForInteraction } from '../utils/botText.js';
+import { priorityLabel } from '../services/ticket.js';
 
 function escapeHtml(text) {
   if (!text) return '';
@@ -25,20 +27,40 @@ async function ensureGuildContext(interaction) {
   }
 
   if (!interaction.replied && !interaction.deferred) {
-    await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This action can only be used in a server.' });
+    await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: textForInteraction(interaction).t('ticket.buttons.guildOnly') });
   }
 
   return false;
 }
 
+// Every reply here is ephemeral: the clicker's Discord language (docs/bot-i18n.md).
 const PERMISSION_LABELS = {
-  ViewChannel: 'View Channel',
-  SendMessages: 'Send Messages',
-  ReadMessageHistory: 'Read Message History',
-  EmbedLinks: 'Embed Links',
-  ManageChannels: 'Manage Channels',
-  ManageRoles: 'Manage Roles'
+  ViewChannel: 'ticket.permission.viewChannel',
+  SendMessages: 'ticket.permission.sendMessages',
+  ReadMessageHistory: 'ticket.permission.readMessageHistory',
+  EmbedLinks: 'ticket.permission.embedLinks',
+  ManageChannels: 'ticket.permission.manageChannels',
+  ManageRoles: 'ticket.permission.manageRoles'
 };
+
+// The action named in an access refusal (English label → catalog key; the label stays the API).
+const ACTION_KEYS = {
+  'create your ticket': 'ticket.action.createYour',
+  'close this ticket': 'ticket.action.closeThis',
+  'claim this ticket': 'ticket.action.claimThis',
+  'claim tickets': 'ticket.action.claimAny',
+  'change the priority': 'ticket.action.changeThePriority',
+  'change ticket priority': 'ticket.action.changePriority',
+  'pin this ticket': 'ticket.action.pinThis',
+  'pin tickets': 'ticket.action.pinAny',
+  'unclaim this ticket': 'ticket.action.unclaimThis',
+  'unclaim tickets': 'ticket.action.unclaimAny',
+  'reopen this ticket': 'ticket.action.reopenThis',
+  'reopen tickets': 'ticket.action.reopenAny',
+  'delete this ticket': 'ticket.action.deleteThis',
+  'delete tickets': 'ticket.action.deleteAny',
+};
+const actionText = (tr, label) => (ACTION_KEYS[label] ? tr.t(ACTION_KEYS[label]) : label);
 
 // Errors whose message is meant for the user (denied access, wrong channel, too fast).
 const USER_FACING_TYPES = new Set([ErrorTypes.PERMISSION, ErrorTypes.VALIDATION, ErrorTypes.RATE_LIMIT, ErrorTypes.USER_INPUT]);
@@ -63,19 +85,21 @@ function missingBotPermissions(interaction, channel, required) {
  * (the user's access or the bot's missing permissions in this category); anything
  * else falls back to the generic message.
  */
+// fallback: a catalog key; action: an English action label (ACTION_KEYS).
 async function replyTicketActionError(interaction, error, { fallback, action, botPermissions = ['ManageChannels'], channel = interaction.channel }) {
   if (interaction.replied && !interaction.deferred) return;
+  const tr = textForInteraction(interaction);
 
   if (isBotPermissionError(error)) {
     const missing = missingBotPermissions(interaction, channel, botPermissions);
     // If every listed permission looks granted, a channel overwrite is likely blocking; name them all.
     const shown = missing.length > 0 ? missing : botPermissions;
-    const names = shown.map(name => `**${PERMISSION_LABELS[name] || name}**`).join(', ');
+    const names = shown.map(name => `**${PERMISSION_LABELS[name] ? tr.t(PERMISSION_LABELS[name]) : name}**`).join(', ');
     const category = channel?.type === ChannelType.GuildCategory ? channel : channel?.parent;
-    const where = category ? ` in the **${category.name}** category` : ' in this server';
+    const where = category ? tr.t('ticket.buttons.whereCategory', { category: category.name }) : tr.t('ticket.buttons.whereServer');
     await replyUserError(interaction, {
       type: ErrorTypes.PERMISSION,
-      message: `I'm missing ${names}${where}, so I can't ${action}. Ask a server admin to grant ${shown.length > 1 ? 'them' : 'it'} to my role.`
+      message: tr.tp('ticket.buttons.botMissing', shown.length, { names, where, action: actionText(tr, action) })
     });
     return;
   }
@@ -85,18 +109,21 @@ async function replyTicketActionError(interaction, error, { fallback, action, bo
     return;
   }
 
-  await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: fallback });
+  await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t(fallback) });
 }
 
-function ticketAccessMessage(context, actionLabel, allowTicketCreator) {
-  const staffRole = context.config?.ticketStaffRoleId ? 'the **Ticket Staff** role' : 'the **Ticket Staff** role (none is configured yet)';
+function ticketAccessMessage(context, actionLabel, allowTicketCreator, { lang = 'en' } = {}) {
+  const tr = botText(lang);
+  const staffRole = context.config?.ticketStaffRoleId ? tr.t('ticket.buttons.staffRole') : tr.t('ticket.buttons.staffRoleNone');
+  const action = actionText(tr, actionLabel);
   return allowTicketCreator
-    ? `You need ${staffRole} or **Manage Channels**, or to be the person who opened this ticket, to ${actionLabel}.`
-    : `You need ${staffRole} or **Manage Channels** to ${actionLabel}.`;
+    ? tr.t('ticket.buttons.accessWithCreator', { staffRole, action })
+    : tr.t('ticket.buttons.accessStaff', { staffRole, action });
 }
 
 async function assertTicketPermission(interaction, client, actionLabel, options = {}, timeoutMs = 2500) {
   const { allowTicketCreator = false } = options;
+  const tr = textForInteraction(interaction);
 
   let context;
   try {
@@ -110,13 +137,13 @@ async function assertTicketPermission(interaction, client, actionLabel, options 
       throw createError(
         'Ticket permission timeout',
         ErrorTypes.RATE_LIMIT,
-        'The permission check took too long. Please try again.'
+        tr.t('ticket.buttons.permTimeout')
       );
     }
     throw createError(
       'Ticket permission check failed',
       ErrorTypes.UNKNOWN,
-      `Failed to check permissions: ${error.message}`
+      tr.t('ticket.buttons.permFailed', { error: error.message })
     );
   }
 
@@ -124,7 +151,7 @@ async function assertTicketPermission(interaction, client, actionLabel, options 
     throw createError(
       'Not a ticket channel',
       ErrorTypes.VALIDATION,
-      'This action can only be used in a valid ticket channel.'
+      tr.t('ticket.buttons.notTicketChannel')
     );
   }
 
@@ -133,7 +160,7 @@ async function assertTicketPermission(interaction, client, actionLabel, options 
     throw createError(
       'Ticket permission denied',
       ErrorTypes.PERMISSION,
-      ticketAccessMessage(context, actionLabel, allowTicketCreator)
+      ticketAccessMessage(context, actionLabel, allowTicketCreator, { lang: tr.lang })
     );
   }
 
@@ -144,15 +171,16 @@ async function ensureTicketPermission(interaction, client, actionLabel, options 
   const { allowTicketCreator = false } = options;
 
   const context = await getTicketPermissionContext({ client, interaction });
+  const tr = textForInteraction(interaction);
 
   if (!context.ticketData) {
-    await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This action can only be used in a valid ticket channel.' });
+    await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('ticket.buttons.notTicketChannel') });
     return null;
   }
 
   const allowed = allowTicketCreator ? context.canCloseTicket : context.canManageTicket;
   if (!allowed) {
-    await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: ticketAccessMessage(context, actionLabel, allowTicketCreator) });
+    await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: ticketAccessMessage(context, actionLabel, allowTicketCreator, { lang: tr.lang }) });
     return null;
   }
 
@@ -164,11 +192,12 @@ const createTicketHandler = {
   async execute(interaction, client) {
     try {
       if (!(await ensureGuildContext(interaction))) return;
+      const tr = textForInteraction(interaction);
 
       const rateLimitKey = `${interaction.user.id}:create_ticket`;
       const allowed = await checkRateLimit(rateLimitKey, 3, 60000);
       if (!allowed) {
-        await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: 'You are creating tickets too quickly. Please wait a minute and try again.' });
+        await replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: tr.t('ticket.buttons.rateLimited') });
         return;
       }
 
@@ -179,18 +208,18 @@ const createTicketHandler = {
       const currentTicketCount = await getUserTicketCount(interaction.guildId, interaction.user.id);
       
       if (currentTicketCount >= maxTicketsPerUser) {
-        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `You already have ${currentTicketCount} of ${maxTicketsPerUser} open tickets. Close one before opening a new one.` });
+        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('ticket.buttons.limitReached', { count: currentTicketCount, max: maxTicketsPerUser }) });
       }
-      
+
       const modal = new ModalBuilder()
         .setCustomId('create_ticket_modal')
-        .setTitle('Open a ticket');
+        .setTitle(tr.t('ticket.buttons.openModalTitle'));
 
       const reasonInput = new TextInputBuilder()
         .setCustomId('reason')
-        .setLabel('What do you need help with?')
+        .setLabel(tr.t('ticket.buttons.openModalLabel'))
         .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Describe the problem')
+        .setPlaceholder(tr.t('ticket.buttons.openModalPlaceholder'))
         .setRequired(true)
         .setMaxLength(1000);
 
@@ -201,7 +230,7 @@ const createTicketHandler = {
     } catch (error) {
       logger.error('Error creating ticket modal:', error);
       if (!interaction.replied && !interaction.deferred) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Could not open ticket creation form.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: textForInteraction(interaction).t('ticket.buttons.openFormFailed') });
       }
     }
   }
@@ -217,27 +246,30 @@ const createTicketModalHandler = {
       const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
       if (!deferSuccess) return;
       
+      const tr = textForInteraction(interaction);
       const reason = interaction.fields.getTextInputValue('reason');
       const config = await getGuildConfig(client, interaction.guildId);
       categoryId = config.ticketCategoryId || null;
-      
+
       const { channel } = await createTicket(
         interaction.guild,
         interaction.member,
         categoryId,
-        reason
+        reason,
+        undefined,
+        { lang: tr.lang }
       );
       await interaction.editReply({
         embeds: [successEmbed(
-          'Ticket opened',
-          `Your ticket is open: ${channel}`
+          tr.t('ticket.buttons.openedTitle'),
+          tr.t('ticket.buttons.openedBody', { channel: String(channel) })
         )]
       });
     } catch (error) {
       if (isBotPermissionError(error)) {
         const category = categoryId ? interaction.guild?.channels?.cache?.get(categoryId) : null;
         await replyTicketActionError(interaction, error, {
-          fallback: 'Failed to create ticket. Please try again in a moment.',
+          fallback: 'ticket.service.createFailed',
           action: 'create your ticket',
           botPermissions: ['ViewChannel', 'ManageChannels', 'ManageRoles'],
           channel: category ?? interaction.channel
@@ -256,16 +288,17 @@ const closeTicketHandler = {
       if (!(await ensureGuildContext(interaction))) return;
 
       await assertTicketPermission(interaction, client, 'close this ticket', { allowTicketCreator: true }, 2000);
+      const tr = textForInteraction(interaction);
 
       const modal = new ModalBuilder()
         .setCustomId('ticket_close_modal')
-        .setTitle('Close ticket');
+        .setTitle(tr.t('ticket.buttons.closeModalTitle'));
 
       const reasonInput = new TextInputBuilder()
         .setCustomId('reason')
-        .setLabel('Reason for closing (optional)')
+        .setLabel(tr.t('ticket.buttons.closeModalLabel'))
         .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Why is this ticket being closed?')
+        .setPlaceholder(tr.t('ticket.buttons.closeModalPlaceholder'))
         .setRequired(false)
         .setMaxLength(1000);
 
@@ -276,7 +309,7 @@ const closeTicketHandler = {
     } catch (error) {
       logger.error('Error closing ticket:', error);
 
-      await replyTicketActionError(interaction, error, { fallback: 'Could not open ticket close form.', action: 'close this ticket' });
+      await replyTicketActionError(interaction, error, { fallback: 'ticket.buttons.closeFormFailed', action: 'close this ticket' });
     }
   }
 };
@@ -292,14 +325,16 @@ const closeTicketModalHandler = {
       const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
       if (!deferSuccess) return;
 
+      const tr = textForInteraction(interaction);
       const providedReason = interaction.fields.getTextInputValue('reason')?.trim();
+      // The default reason is stored on the ticket record and goes into the logs: kept in English.
       const reason = providedReason || 'Closed via ticket button without a specific reason.';
 
-      await closeTicket(interaction.channel, interaction.user, reason);
-      await interaction.editReply({ embeds: [successEmbed('Ticket closed', 'This ticket is closed.')] });
+      await closeTicket(interaction.channel, interaction.user, reason, { lang: tr.lang });
+      await interaction.editReply({ embeds: [successEmbed(tr.t('ticket.reply.closedTitle'), tr.t('ticket.reply.closedBody'))] });
     } catch (error) {
       logger.error('Error submitting close ticket modal:', error);
-      await replyTicketActionError(interaction, error, { fallback: 'An error occurred while closing the ticket.', action: 'close this ticket', botPermissions: ['ManageChannels', 'ManageRoles'] });
+      await replyTicketActionError(interaction, error, { fallback: 'ticket.buttons.closeError', action: 'close this ticket', botPermissions: ['ManageChannels', 'ManageRoles'] });
     }
   }
 };
@@ -315,11 +350,12 @@ const claimTicketHandler = {
       const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
       if (!deferSuccess) return;
       
-      await claimTicket(interaction.channel, interaction.user);
-      await interaction.editReply({ embeds: [successEmbed('Ticket claimed', 'You claimed this ticket.')] });
+      const tr = textForInteraction(interaction);
+      await claimTicket(interaction.channel, interaction.user, { lang: tr.lang });
+      await interaction.editReply({ embeds: [successEmbed(tr.t('ticket.reply.claimedTitle'), tr.t('ticket.reply.claimedBody'))] });
     } catch (error) {
       logger.error('Error claiming ticket:', error);
-      await replyTicketActionError(interaction, error, { fallback: 'An error occurred while claiming the ticket.', action: 'claim this ticket', botPermissions: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'EmbedLinks'] });
+      await replyTicketActionError(interaction, error, { fallback: 'ticket.buttons.claimError', action: 'claim this ticket', botPermissions: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'EmbedLinks'] });
     }
   }
 };
@@ -335,17 +371,20 @@ const priorityTicketHandler = {
       const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
       if (!deferSuccess) return;
       
+      const tr = textForInteraction(interaction);
       const priority = args?.[0];
       if (!priority) {
-        await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'A priority value is required.' });
+        await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: tr.t('ticket.buttons.priorityRequired') });
         return;
       }
 
-      await updateTicketPriority(interaction.channel, priority, interaction.user);
-      await interaction.editReply({ embeds: [successEmbed('Priority changed', `Priority set to **${priority}**.`)] });
+      await updateTicketPriority(interaction.channel, priority, interaction.user, { lang: tr.lang });
+      // English keeps the raw value as before ("low"); other languages name the level.
+      const shown = tr.lang === 'en' ? priority : priorityLabel(priority, tr);
+      await interaction.editReply({ embeds: [successEmbed(tr.t('ticket.reply.priorityChanged'), tr.t('ticket.buttons.priorityBody', { priority: shown }))] });
     } catch (error) {
       logger.error('Error updating ticket priority:', error);
-      await replyTicketActionError(interaction, error, { fallback: 'An error occurred while updating the priority.', action: 'change the priority', botPermissions: ['ManageChannels'] });
+      await replyTicketActionError(interaction, error, { fallback: 'ticket.buttons.priorityError', action: 'change the priority', botPermissions: ['ManageChannels'] });
     }
   }
 };
@@ -361,11 +400,12 @@ const pinTicketHandler = {
       const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
       if (!deferSuccess) return;
 
+      const tr = textForInteraction(interaction);
       const channel = interaction.channel;
       const category = channel.parent;
 
       if (!category) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This ticket is not in a category.' });
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('ticket.buttons.notInCategory') });
         return;
       }
 
@@ -381,8 +421,8 @@ const pinTicketHandler = {
 
         await interaction.editReply({
           embeds: [createEmbed({
-            title: 'Ticket unpinned',
-            description: 'This ticket is no longer pinned.',
+            title: tr.t('ticket.buttons.unpinnedTitle'),
+            description: tr.t('ticket.buttons.unpinnedBody'),
             color: 0x95A5A6
           })],
           flags: MessageFlags.Ephemeral
@@ -404,8 +444,8 @@ const pinTicketHandler = {
 
         await interaction.editReply({
           embeds: [createEmbed({
-            title: 'Ticket pinned',
-            description: 'This ticket is pinned to the top of the category.',
+            title: tr.t('ticket.buttons.pinnedTitle'),
+            description: tr.t('ticket.buttons.pinnedBody'),
             color: 0x3498db
           })],
           flags: MessageFlags.Ephemeral
@@ -437,7 +477,7 @@ const pinTicketHandler = {
 
     } catch (error) {
       logger.error('Error pinning/unpinning ticket:', error);
-      await replyTicketActionError(interaction, error, { fallback: 'Failed to pin/unpin the ticket.', action: 'pin this ticket', botPermissions: ['ManageChannels'] });
+      await replyTicketActionError(interaction, error, { fallback: 'ticket.buttons.pinError', action: 'pin this ticket', botPermissions: ['ManageChannels'] });
     }
   }
 };
@@ -453,12 +493,13 @@ const unclaimTicketHandler = {
       const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
       if (!deferSuccess) return;
       
+      const tr = textForInteraction(interaction);
       const { unclaimTicket } = await import('../services/ticket.js');
-      await unclaimTicket(interaction.channel, interaction.member);
-      await interaction.editReply({ embeds: [successEmbed('Ticket unclaimed', 'You unclaimed this ticket.')] });
+      await unclaimTicket(interaction.channel, interaction.member, { lang: tr.lang });
+      await interaction.editReply({ embeds: [successEmbed(tr.t('ticket.buttons.unclaimedTitle'), tr.t('ticket.buttons.unclaimedBody'))] });
     } catch (error) {
       logger.error('Error unclaiming ticket:', error);
-      await replyTicketActionError(interaction, error, { fallback: 'An error occurred while unclaiming the ticket.', action: 'unclaim this ticket', botPermissions: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'EmbedLinks'] });
+      await replyTicketActionError(interaction, error, { fallback: 'ticket.buttons.unclaimError', action: 'unclaim this ticket', botPermissions: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'EmbedLinks'] });
     }
   }
 };
@@ -474,16 +515,17 @@ const reopenTicketHandler = {
       const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
       if (!deferSuccess) return;
       
+      const tr = textForInteraction(interaction);
       const { reopenTicket } = await import('../services/ticket.js');
-      const { movedToOpenCategory, openCategoryMoveFailed } = await reopenTicket(interaction.channel, interaction.member);
-      let reopenMessage = 'This ticket is open again.';
+      const { movedToOpenCategory, openCategoryMoveFailed } = await reopenTicket(interaction.channel, interaction.member, { lang: tr.lang });
+      let reopenMessage = tr.t('ticket.buttons.reopenedBody');
       if (openCategoryMoveFailed) {
-        reopenMessage += ' Couldn\'t move the channel back to the open tickets category.';
+        reopenMessage += tr.t('ticket.buttons.reopenMoveFailed');
       }
-      await interaction.editReply({ embeds: [successEmbed('Ticket reopened', reopenMessage)] });
+      await interaction.editReply({ embeds: [successEmbed(tr.t('ticket.reply.reopenedTitle'), reopenMessage)] });
     } catch (error) {
       logger.error('Error reopening ticket:', error);
-      await replyTicketActionError(interaction, error, { fallback: 'An error occurred while reopening the ticket.', action: 'reopen this ticket', botPermissions: ['ManageChannels', 'ManageRoles'] });
+      await replyTicketActionError(interaction, error, { fallback: 'ticket.buttons.reopenError', action: 'reopen this ticket', botPermissions: ['ManageChannels', 'ManageRoles'] });
     }
   }
 };
@@ -499,12 +541,13 @@ const deleteTicketHandler = {
       const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
       if (!deferSuccess) return;
       
+      const tr = textForInteraction(interaction);
       const { deleteTicket } = await import('../services/ticket.js');
-      await deleteTicket(interaction.channel, interaction.member);
-      await interaction.editReply({ embeds: [successEmbed('Ticket deleted', 'This ticket will be deleted in a few seconds.')] });
+      await deleteTicket(interaction.channel, interaction.member, { lang: tr.lang });
+      await interaction.editReply({ embeds: [successEmbed(tr.t('ticket.reply.deletedTitle'), tr.t('ticket.buttons.deletedBody'))] });
     } catch (error) {
       logger.error('Error deleting ticket:', error);
-      await replyTicketActionError(interaction, error, { fallback: 'An error occurred while deleting the ticket.', action: 'delete this ticket', botPermissions: ['ManageChannels'] });
+      await replyTicketActionError(interaction, error, { fallback: 'ticket.buttons.deleteError', action: 'delete this ticket', botPermissions: ['ManageChannels'] });
     }
   }
 };

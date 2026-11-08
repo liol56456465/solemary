@@ -1,0 +1,295 @@
+{
+    "cmd": {
+        "verify": {
+            "description": "Verify yourself and gain access to the server"
+        },
+        "verification": {
+            "description": "Manage the server verification system",
+            "setup": {
+                "description": "Set up the verification system",
+                "channel": "Channel where verification messages will be sent",
+                "role": "Role to give to verified users",
+                "message": "Custom verification message",
+                "buttonText": "Text for the verification button"
+            },
+            "remove": {
+                "description": "Remove verification from a user",
+                "user": "User to remove verification from"
+            },
+            "dashboard": {
+                "description": "Open the verification system configuration dashboard"
+            },
+            "auto": {
+                "description": "Automatic verification (verify members on join by rules)"
+            }
+        },
+        "autoverify": {
+            "description": "Configure automatic verification settings",
+            "setup": {
+                "description": "Set up automatic verification",
+                "role": "Role to assign to users who meet auto-verify criteria",
+                "criteria": "Criteria for automatic verification",
+                "accountAgeDays": "Minimum account age in days (required for account age criteria)",
+                "choiceAccountAge": "Account Age",
+                "choiceNone": "No Criteria"
+            },
+            "dashboard": {
+                "description": "Open the auto-verification dashboard for customization"
+            }
+        }
+    },
+    "privacy": {
+        "oauth": "Verifying stores your Discord ID, an encrypted login token (to add you to the Mewvo support server) and a scrambled fingerprint of your IP address to spot ban evasion.",
+        "direct": "Verifying stores your Discord ID and a record of when you verified.",
+        "link": "Privacy: {url}"
+    },
+    "verify": {
+        "quizTitle": "Rules quiz",
+        "quizPrefix": "Use /verify or the Verify button to take the rules quiz first.",
+        "alreadyTitle": "Already Verified",
+        "alreadyText": "You are already verified.",
+        "verifiedTitle": "Verified",
+        "verifiedText": "You're verified and got the **{role}** role.\n\n-# {privacy}"
+    },
+    "button": {
+        "oauthTitle": "Verify with Discord",
+        "oauthText": "Press the button below and authorize the bot with your Discord account. You get the role as soon as you have authorized.\n\n-# The link only works for you and expires in 10 minutes.\n-# {privacy}",
+        "oauthButton": "Verify with Discord",
+        "alreadyTitle": "Already verified",
+        "alreadyText": "You are already verified and have access to all server channels.",
+        "verifiedText": "You're verified and got the **{role}** role. Welcome in.\n\n-# {privacy}",
+        "serverOnly": "This button can only be used in a server."
+    },
+    "quiz": {
+        "notYours": "This quiz is not yours. Click Verify to start your own.",
+        "expired": "This quiz expired, click Verify again.",
+        "expiredTitle": "Quiz expired",
+        "questionTitle": "Rules quiz: question {step} of {total}",
+        "footerOne": "Answer this question to continue to verification. The quiz expires after {minutes} minutes.",
+        "footerMany": {
+            "one": "Answer all {count} questions to continue to verification. The quiz expires after {minutes} minutes.",
+            "other": "Answer all {count} questions to continue to verification. The quiz expires after {minutes} minutes."
+        },
+        "minutes": {
+            "one": "{count} minute",
+            "other": "{count} minutes"
+        },
+        "rulesChannel": "the rules channel",
+        "failedTitle": "Not quite",
+        "failedText": "Not quite — read the rules in {where} and try again in {wait}.",
+        "cooldownTitle": "Rules quiz",
+        "cooldownText": "Read the rules in {where} and try again in {wait}."
+    },
+    "review": {
+        "otherServer": "This verification belongs to another server. Approve it there.",
+        "adminOnly": "Only administrators can approve verifications.",
+        "theServer": "the server",
+        "dmApproved": "**Your verification in {server} was approved.** You now have access.",
+        "dmDenied": "**Your verification in {server} was not approved.** If you think this is a mistake, contact a staff member.",
+        "cardApproved": "Approved by {admin}. DM: {dm}.",
+        "cardApprovedAlready": "Approved by {admin} (they were already verified). DM: {dm}.",
+        "cardDenied": "Denied by {admin}. DM: {dm}.",
+        "dmDelivered": "delivered",
+        "dmNotDelivered": "not delivered",
+        "approvedTitle": "Verification approved",
+        "approvedText": "{user} now has the **{role}** role.",
+        "deniedTitle": "Verification denied",
+        "deniedText": "{user} stays unverified."
+    },
+    "hold": {
+        "title": "Verification needs approval",
+        "user": "User",
+        "created": "Account created",
+        "why": "Why it was held",
+        "footer": "Approve gives the verified role. Deny leaves them unverified and tells them by DM.",
+        "approve": "Approve",
+        "deny": "Deny",
+        "reasonYoung": "Account is only {age} old (minimum {min})",
+        "reasonNetwork": "Same network as banned member {username} (`{userId}`, ban `{caseCode}`)"
+    },
+    "panel": {
+        "title": "Server verification",
+        "defaultMessage": "Press the button below to get access to the rest of the server.",
+        "defaultButton": "Verify"
+    },
+    "errors": {
+        "notSetUp": "Verification is not set up in this server yet. Ask a server administrator to set it up with `/verification setup`.",
+        "botLeft": "I am not in that server any more, so I cannot verify you there.",
+        "roleGoneSetup": "The verified role of this server no longer exists. Ask a server administrator to run `/verification setup` again.",
+        "guildNotCached": "Guild not found in bot cache.",
+        "guildNotFound": "Guild not found.",
+        "notMember": "User is not in this server.",
+        "cannotAssign": "I can't assign the verified role. Please check my **Manage Roles** permission and role hierarchy.",
+        "verifyFailed": "Verification failed. Please try again in a moment.",
+        "disabled": "The verification system is not enabled.",
+        "roleGone": "The verified role no longer exists.",
+        "cannotRemove": "I can't remove the verified role right now. Please check my **Manage Roles** permission and role hierarchy.",
+        "removeFailed": "Failed to remove verification. Please try again in a moment.",
+        "noBotPerms": "I couldn't verify my server permissions. Please try again.",
+        "roleDeleted": "The verified role was deleted. Please run `/verification setup` again.",
+        "channelDeleted": "The verification channel was deleted.",
+        "channelPerms": "I'm missing permissions in the verification channel: {perms}",
+        "cooldown": "Please wait {seconds} seconds before verifying again.",
+        "tooMany": "You've attempted too many times. Please wait a moment.",
+        "badCriteria": "Please select a valid criteria option.",
+        "badAge": "Account age must be between {min} and {max} days.",
+        "panelPerms": "I need **View Channel**, **Send Messages**, and **Embed Links** in the verification channel.",
+        "permsUnknown": "I could not verify my permissions in this server. Please try again in a moment.",
+        "needManageRoles": "I need the 'Manage Roles' permission to give verified roles.",
+        "badRole": "Please choose a normal assignable role (not @everyone or an integration-managed role).",
+        "roleTooHigh": "The verified role must be below my highest role in the server role hierarchy.",
+        "conflict": "You cannot enable the verification system while **AutoVerify** or **AutoRole** is configured. Disable those first.",
+        "needManageServer": "You need the **Manage Server** permission to use this verification subcommand.",
+        "badSubcommand": "Please select a valid subcommand."
+    },
+    "autoDm": {
+        "title": "You're verified",
+        "text": "You were verified automatically in **{server}**.",
+        "roleName": "Role",
+        "roleText": "You got the {role} role."
+    },
+    "setup": {
+        "title": "Verification system updated",
+        "channel": "Channel: {channel}",
+        "role": "Verified Role: {role}",
+        "button": "Button Text: {text}"
+    },
+    "remove": {
+        "notTitle": "Not verified",
+        "notText": "{user} does not currently have the verified role.",
+        "doneTitle": "Verification removed",
+        "doneText": "Verification removed from {user}."
+    },
+    "dash": {
+        "notSet": "`Not set`",
+        "notConfigured": "`Not configured`",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "footer": "Dashboard closes after 10 minutes of inactivity",
+        "timedOutTitle": "Dashboard timed out",
+        "timedOutText": "This dashboard has been closed due to inactivity. Please run the command again to continue.",
+        "selectPlaceholder": "Select a setting to configure...",
+        "roleUpdated": "Role updated",
+        "noRole": "No role was selected. The setting was not changed.",
+        "rolePlaceholder": "Select a role...",
+        "autoRoleConfigured": "AutoRole is configured",
+        "conflicts": "Setup conflicts",
+        "systemStatus": "System status",
+        "panelStatus": {
+            "unknown": "`Unknown`",
+            "activeLink": "Active · [view panel]({url})",
+            "active": "Active",
+            "channelMissing": "Missing: the panel channel was deleted",
+            "panelDeleted": "Missing: the panel message was deleted. Use **{hint}** below.",
+            "noChannel": "Not set up: no panel channel yet"
+        }
+    },
+    "vdash": {
+        "title": "Verification system dashboard",
+        "intro": "Manage verification settings for **{server}**.\nSelect an option below to modify a setting.",
+        "fieldPanel": "Panel status",
+        "fieldChannel": "Verification channel",
+        "fieldRole": "Verified role",
+        "fieldButton": "Button text",
+        "fieldUsers": "Verified users",
+        "users": {
+            "one": "{count} user",
+            "other": "{count} users"
+        },
+        "fieldMessage": "Verification message",
+        "optChannel": "Change verification channel",
+        "optChannelDesc": "Set the channel where the verification panel is posted",
+        "optRole": "Change verified role",
+        "optRoleDesc": "Set the role assigned when a user verifies",
+        "optMessage": "Edit verification message",
+        "optMessageDesc": "Customise the message shown on the verification panel embed",
+        "optButton": "Edit button text",
+        "optButtonDesc": "Change the label on the verify button",
+        "repostButton": "Repost panel",
+        "toggleButton": "Verification",
+        "channelGone": "The configured verification channel no longer exists. Set a new channel from the dashboard.",
+        "autoVerifyOn": "AutoVerify is enabled",
+        "notConfigured": "The verification system has not been set up yet. Run `/verification setup` first.",
+        "repostedTitle": "Panel reposted",
+        "repostedText": "Verification panel restored in {channel}.",
+        "autoVerifyBlocks": "AutoVerify is currently enabled. Please disable AutoVerify first before enabling the manual Verification system.\n\nRun `/verification auto dashboard` to open the AutoVerify dashboard.",
+        "systemUpdatedTitle": "System updated",
+        "systemOn": "The verification system is now **enabled**.",
+        "systemOff": "The verification system is now **disabled**.",
+        "openFailed": "Failed to open the verification dashboard.",
+        "channelPlaceholder": "Select a text channel...",
+        "channelTitle": "Change verification channel",
+        "channelText": "**Current:** {current}\n\nSelect the channel where the verification panel will be posted.\n\n> The current panel will be deleted and posted again in the new channel.",
+        "channelPerms": "I need **View Channel**, **Send Messages**, and **Embed Links** permissions in {channel}.",
+        "channelUpdatedTitle": "Channel updated",
+        "channelUpdatedText": "Verification panel moved to {channel}.",
+        "noChannel": "No channel was selected. The setting was not changed.",
+        "roleTitle": "Change verified role",
+        "roleText": "**Current:** {current}\n\nSelect the role to assign when a user verifies.",
+        "roleUpdatedText": "Verified role set to {role}.",
+        "messageModal": "Edit verification message",
+        "messageLabel": "Message shown on the verification panel embed",
+        "messageUpdatedTitle": "Message updated",
+        "messageUpdatedText": "The verification panel has been updated with the new message.",
+        "buttonModal": "Edit button text",
+        "buttonLabel": "Button label (max 80 characters)",
+        "buttonUpdatedTitle": "Button text updated",
+        "buttonUpdatedText": "The verify button now reads **{text}**."
+    },
+    "auto": {
+        "conflict": "You cannot enable **AutoVerify** while the verification system or AutoRole is configured. Disable those first.",
+        "needManageRoles": "I need the 'Manage Roles' permission to assign auto-verify roles.",
+        "badSubcommand": "Invalid subcommand selected.",
+        "criteriaAge": "`{days} days` old",
+        "criteriaNone": "All users immediately",
+        "setupTitle": "Auto-verification set up",
+        "setupText": "Auto-verification is set up.\n\n**Role:** {role}\n**Criteria:** {criteria}\n\nUsers who meet these criteria will receive this role when they join the server."
+    },
+    "adash": {
+        "title": "Auto-verification dashboard",
+        "intro": "Manage auto-verification settings for **{server}**.\nSelect an option below to modify a setting.",
+        "criteriaAge": "`Account Age` - `{days} days`",
+        "criteriaNone": "`No Criteria`",
+        "fieldRole": "Target role",
+        "fieldCriteria": "Criteria",
+        "fieldAge": "Account age",
+        "ageDays": "`{days}` days",
+        "na": "`N/A`",
+        "optRole": "Change role",
+        "optRoleDesc": "Select the role to assign automatically",
+        "optAge": "Edit account age days",
+        "optAgeDesc": "Set minimum account age in days",
+        "criteriaButton": "Change criteria",
+        "toggleButton": "Auto-Verification",
+        "verificationOn": "Verification system is enabled",
+        "turnOffFirst": "**To turn on AutoVerify, first turn off:**",
+        "notConfigured": "Auto-verification is not yet configured.{blocking}\n\nUse `/verification auto setup` to configure it.",
+        "selectionError": "An error occurred while processing your selection.",
+        "unexpectedError": "An unexpected error occurred while updating the configuration.",
+        "statusTitle": "Status updated",
+        "statusOn": "Auto-verification is now **enabled**.",
+        "statusOff": "Auto-verification is now **disabled**.",
+        "openFailed": "Failed to open the auto-verification dashboard.",
+        "criteriaTitle": "Select verification criteria",
+        "criteriaText": "Choose the criteria for automatic verification",
+        "criteriaPlaceholder": "Select criteria...",
+        "criteriaOptAge": "Account Age (older than {days} days)",
+        "criteriaOptAgeDesc": "Users with older accounts will be auto-verified",
+        "criteriaOptNone": "No criteria (verify everyone)",
+        "criteriaOptNoneDesc": "All users gain the role immediately",
+        "criteriaShowAge": "Account Age ({days} days)",
+        "criteriaShowNone": "No Criteria",
+        "criteriaUpdatedTitle": "Criteria updated",
+        "criteriaUpdatedText": "Auto-verification criteria changed to **{criteria}**.",
+        "noCriteria": "No criteria selected. The setting was not changed.",
+        "roleTitle": "Auto-verification role",
+        "roleText": "Select the role to assign to auto-verified users.",
+        "roleUpdatedText": "Auto-verification role set to {role}.",
+        "ageModal": "Set account age requirement",
+        "ageLabel": "Minimum account age (days)",
+        "agePlaceholder": "Between {min} and {max}",
+        "ageInvalid": "Please enter a number between {min} and {max}.",
+        "ageUpdatedTitle": "Account age updated",
+        "ageUpdatedText": "Minimum account age requirement set to **{days} days**."
+    }
+}

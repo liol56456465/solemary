@@ -8,6 +8,7 @@ import {
 import { buildJoinToCreateOverwrites, formatChannelName } from '../services/joinToCreateService.js';
 import { sanitizeInput } from '../utils/validation.js';
 import { logger } from '../utils/logger.js';
+import { textForGuild } from '../utils/botText.js';
 
 const channelCreationCooldown = new Map();
 const VOICE_CREATE_COOLDOWN_MS = 2000;
@@ -15,7 +16,6 @@ const DEFAULT_VOICE_BITRATE = 64000;
 const MAX_VOICE_BITRATE = 384000;
 const MIN_VOICE_BITRATE = 8000;
 const MAX_CHANNEL_NAME_LENGTH = 100;
-const FALLBACK_CHANNEL_NAME = 'Voice Room';
 const MAX_TRACKED_COOLDOWNS = 10000;
 
 export default {
@@ -195,7 +195,7 @@ if (now - lastCreation < VOICE_CREATE_COOLDOWN_MS) {
                     finalName = `${triggerChannel.name} ${existingChannels + 1}`;
                 }
 
-                const channelName = sanitizeVoiceChannelName(finalName);
+                const channelName = sanitizeVoiceChannelName(finalName, guild.id);
 
                 if (!member.voice?.channel || member.voice.channel.id !== triggerChannel.id) {
                     logger.debug(`Member ${member.id} no longer in trigger channel ${triggerChannel.id}, aborting temporary channel creation`);
@@ -235,8 +235,10 @@ userLimit: userLimit === 0 ? undefined : userLimit,
                 channelCreationCooldown.delete(cooldownKey);
                 
                 try {
+                    // A DM to the member: the server's language.
                     await member.send({
-                        content: `I couldn't create your temporary voice channel. Let a server admin know.`
+                        content: textForGuild(guild.id, { member, userId: member.id, purpose: 'dm' }).t('jointocreate.createFailedDm'),
+                        allowedMentions: { parse: [] }
                     });
                 } catch (dmError) {
                     logger.debug(`Unable to send temporary channel failure DM to user ${member.id}:`, dmError);
@@ -286,7 +288,7 @@ userLimit: userLimit === 0 ? undefined : userLimit,
                     }
 
                     if (formattedName) {
-                        await channel.setName(sanitizeVoiceChannelName(formattedName));
+                        await channel.setName(sanitizeVoiceChannelName(formattedName, channel.guild.id));
                     }
                 }
 
@@ -299,13 +301,14 @@ userLimit: userLimit === 0 ? undefined : userLimit,
     }
 };
 
-function sanitizeVoiceChannelName(inputName) {
+// guildId: the fallback room name ("Voice Room") is in the server's language.
+function sanitizeVoiceChannelName(inputName, guildId = null) {
     const safeName = sanitizeInput(String(inputName || ''), MAX_CHANNEL_NAME_LENGTH)
         .replace(/[\r\n\t]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
 
-    return safeName || FALLBACK_CHANNEL_NAME;
+    return safeName || textForGuild(guildId, { purpose: 'public' }).t('jointocreate.fallbackRoomName');
 }
 
 function clampVoiceBitrate(value) {

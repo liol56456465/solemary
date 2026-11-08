@@ -223,12 +223,12 @@ async function isAlreadyVerified(client, guildId, userId) {
 const HOLD_CARD_INTERVAL_MS = 60 * 60 * 1000;
 const recentHolds = new Map();
 
-async function holdForStaff(client, guildId, userId, reasons) {
+async function holdForStaff(client, guildId, userId, reasons, items = null) {
     const key = `${guildId}:${userId}`;
     if (Date.now() - (recentHolds.get(key) || 0) < HOLD_CARD_INTERVAL_MS) return;
     recentHolds.set(key, Date.now());
     const user = await client.users.fetch(userId);
-    await postVerificationHold(client, guildId, user, reasons);
+    await postVerificationHold(client, guildId, user, reasons, items);
     logger.info(`Verification of ${userId} in ${guildId} held for staff: ${reasons.join('; ')}`);
 }
 
@@ -287,7 +287,7 @@ export function registerOAuthRoutes(app, client) {
             if (!(await isAlreadyVerified(client, state.guildId, me.id))) {
                 const assessment = await assessVerification(state.guildId, me.id, req.ip);
                 if (assessment.hold) {
-                    await holdForStaff(client, state.guildId, me.id, assessment.reasons);
+                    await holdForStaff(client, state.guildId, me.id, assessment.reasons, assessment.items);
                     return send(202, 'Waiting for approval',
                         'Thanks. A staff member needs to approve your verification first. You will get a DM when it is done.', '#fee75c',
                         { note: privacyNoteHtml() });

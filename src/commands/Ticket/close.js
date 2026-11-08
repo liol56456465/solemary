@@ -6,15 +6,19 @@ import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { getTicketPermissionContext } from '../../utils/ticket/ticketPermissions.js';
 import { closeTicket } from '../../services/ticket.js';
+import { textForInteraction } from '../../utils/botText.js';
+import { descriptionLocalizations as localizations } from '../../utils/commandLocalizations.js';
 export default {
     data: new SlashCommandBuilder()
         .setName("close")
         .setDescription("Closes the current ticket.")
+        .setDescriptionLocalizations(localizations('ticket.cmd.close.description'))
         .setDMPermission(false)
         .addStringOption((option) =>
             option
                 .setName("reason")
                 .setDescription("The reason for closing the ticket.")
+                .setDescriptionLocalizations(localizations('ticket.cmd.close.reason'))
                 .setRequired(false),
         ),
 
@@ -24,26 +28,28 @@ export default {
             return;
         }
 
+        const tr = textForInteraction(interaction);
         const permissionContext = await getTicketPermissionContext({ client, interaction });
         if (!permissionContext.ticketData) {
-            return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'This command can only be used in a valid ticket channel.' });
+            return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: tr.t('ticket.command.notTicketChannel') });
         }
 
         if (!permissionContext.canCloseTicket) {
-            return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the `Manage Channels` permission, the configured `Ticket Staff Role`, or be the ticket creator to close this ticket.' });
+            return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('ticket.command.closeDenied') });
         }
 
+        // The default reason is stored on the ticket record and goes into the logs: kept in English.
         const reason =
             interaction.options?.getString("reason") ||
             "Closed via command without a specific reason.";
 
-        await closeTicket(interaction.channel, interaction.user, reason);
+        await closeTicket(interaction.channel, interaction.user, reason, { lang: tr.lang });
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [
                 successEmbed(
-                    "Ticket closed",
-                    "This ticket is closed.",
+                    tr.t('ticket.reply.closedTitle'),
+                    tr.t('ticket.reply.closedBody'),
                 ),
             ],
         });

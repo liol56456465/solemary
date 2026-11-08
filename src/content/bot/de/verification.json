@@ -1,0 +1,295 @@
+{
+    "cmd": {
+        "verify": {
+            "description": "Verifiziere dich und erhalte Zugang zum Server"
+        },
+        "verification": {
+            "description": "Das Verifizierungssystem des Servers verwalten",
+            "setup": {
+                "description": "Das Verifizierungssystem einrichten",
+                "channel": "Kanal, in dem die Verifizierungsnachricht gepostet wird",
+                "role": "Rolle, die verifizierte Mitglieder bekommen",
+                "message": "Eigene Verifizierungsnachricht",
+                "buttonText": "Text für den Verifizierungs-Button"
+            },
+            "remove": {
+                "description": "Einem Mitglied die Verifizierung entziehen",
+                "user": "Mitglied, dem die Verifizierung entzogen wird"
+            },
+            "dashboard": {
+                "description": "Das Einstellungs-Dashboard der Verifizierung öffnen"
+            },
+            "auto": {
+                "description": "Automatische Verifizierung (Mitglieder beim Beitritt nach Regeln verifizieren)"
+            }
+        },
+        "autoverify": {
+            "description": "Automatische Verifizierung einstellen",
+            "setup": {
+                "description": "Automatische Verifizierung einrichten",
+                "role": "Rolle für Mitglieder, die die Kriterien erfüllen",
+                "criteria": "Kriterium für die automatische Verifizierung",
+                "accountAgeDays": "Mindestalter des Kontos in Tagen (nötig beim Kriterium Kontoalter)",
+                "choiceAccountAge": "Kontoalter",
+                "choiceNone": "Kein Kriterium"
+            },
+            "dashboard": {
+                "description": "Das Dashboard der automatischen Verifizierung öffnen"
+            }
+        }
+    },
+    "privacy": {
+        "oauth": "Beim Verifizieren werden deine Discord-ID, ein verschlüsselter Login-Token (um dich zum Mewvo-Support-Server hinzuzufügen) und ein unkenntlicher Fingerabdruck deiner IP-Adresse gespeichert, um Bann-Umgehung zu erkennen.",
+        "direct": "Beim Verifizieren werden deine Discord-ID und der Zeitpunkt deiner Verifizierung gespeichert.",
+        "link": "Datenschutz: {url}"
+    },
+    "verify": {
+        "quizTitle": "Regel-Quiz",
+        "quizPrefix": "Nutze /verify oder den Verifizieren-Button, um zuerst das Regel-Quiz zu machen.",
+        "alreadyTitle": "Schon verifiziert",
+        "alreadyText": "Du bist schon verifiziert.",
+        "verifiedTitle": "Verifiziert",
+        "verifiedText": "Du bist verifiziert und hast die Rolle **{role}** bekommen.\n\n-# {privacy}"
+    },
+    "button": {
+        "oauthTitle": "Mit Discord verifizieren",
+        "oauthText": "Drück den Button unten und autorisiere den Bot mit deinem Discord-Konto. Du bekommst die Rolle, sobald du autorisiert hast.\n\n-# Der Link funktioniert nur für dich und läuft nach 10 Minuten ab.\n-# {privacy}",
+        "oauthButton": "Mit Discord verifizieren",
+        "alreadyTitle": "Schon verifiziert",
+        "alreadyText": "Du bist schon verifiziert und hast Zugang zu allen Kanälen des Servers.",
+        "verifiedText": "Du bist verifiziert und hast die Rolle **{role}** bekommen. Willkommen!\n\n-# {privacy}",
+        "serverOnly": "Dieser Button funktioniert nur in einem Server."
+    },
+    "quiz": {
+        "notYours": "Dieses Quiz gehört nicht dir. Klick auf Verifizieren, um dein eigenes zu starten.",
+        "expired": "Dieses Quiz ist abgelaufen, klick noch einmal auf Verifizieren.",
+        "expiredTitle": "Quiz abgelaufen",
+        "questionTitle": "Regel-Quiz: Frage {step} von {total}",
+        "footerOne": "Beantworte diese Frage, um mit der Verifizierung weiterzumachen. Das Quiz läuft nach {minutes} Minuten ab.",
+        "footerMany": {
+            "one": "Beantworte alle {count} Fragen, um mit der Verifizierung weiterzumachen. Das Quiz läuft nach {minutes} Minuten ab.",
+            "other": "Beantworte alle {count} Fragen, um mit der Verifizierung weiterzumachen. Das Quiz läuft nach {minutes} Minuten ab."
+        },
+        "minutes": {
+            "one": "{count} Minute",
+            "other": "{count} Minuten"
+        },
+        "rulesChannel": "dem Regelkanal",
+        "failedTitle": "Nicht ganz",
+        "failedText": "Nicht ganz – lies die Regeln in {where} und versuch es in {wait} noch einmal.",
+        "cooldownTitle": "Regel-Quiz",
+        "cooldownText": "Lies die Regeln in {where} und versuch es in {wait} noch einmal."
+    },
+    "review": {
+        "otherServer": "Diese Verifizierung gehört zu einem anderen Server. Bestätige sie dort.",
+        "adminOnly": "Nur Administratoren können Verifizierungen bestätigen.",
+        "theServer": "dem Server",
+        "dmApproved": "**Deine Verifizierung in {server} wurde bestätigt.** Du hast jetzt Zugang.",
+        "dmDenied": "**Deine Verifizierung in {server} wurde nicht bestätigt.** Wenn du denkst, dass das ein Fehler ist, wende dich an ein Teammitglied.",
+        "cardApproved": "Bestätigt von {admin}. DM: {dm}.",
+        "cardApprovedAlready": "Bestätigt von {admin} (war schon verifiziert). DM: {dm}.",
+        "cardDenied": "Abgelehnt von {admin}. DM: {dm}.",
+        "dmDelivered": "zugestellt",
+        "dmNotDelivered": "nicht zugestellt",
+        "approvedTitle": "Verifizierung bestätigt",
+        "approvedText": "{user} hat jetzt die Rolle **{role}**.",
+        "deniedTitle": "Verifizierung abgelehnt",
+        "deniedText": "{user} bleibt unverifiziert."
+    },
+    "hold": {
+        "title": "Verifizierung braucht Bestätigung",
+        "user": "Mitglied",
+        "created": "Konto erstellt",
+        "why": "Warum sie angehalten wurde",
+        "footer": "Bestätigen gibt die Verifizierungsrolle. Ablehnen lässt das Mitglied unverifiziert und sagt es ihm per DM.",
+        "approve": "Bestätigen",
+        "deny": "Ablehnen",
+        "reasonYoung": "Konto ist erst {age} alt (mindestens {min})",
+        "reasonNetwork": "Gleiches Netzwerk wie das gebannte Mitglied {username} (`{userId}`, Bann `{caseCode}`)"
+    },
+    "panel": {
+        "title": "Server-Verifizierung",
+        "defaultMessage": "Drück den Button unten, um Zugang zum Rest des Servers zu bekommen.",
+        "defaultButton": "Verifizieren"
+    },
+    "errors": {
+        "notSetUp": "Die Verifizierung ist in diesem Server noch nicht eingerichtet. Bitte einen Server-Administrator, sie mit `/verification setup` einzurichten.",
+        "botLeft": "Ich bin nicht mehr in diesem Server, deshalb kann ich dich dort nicht verifizieren.",
+        "roleGoneSetup": "Die Verifizierungsrolle dieses Servers gibt es nicht mehr. Bitte einen Server-Administrator, `/verification setup` noch einmal auszuführen.",
+        "guildNotCached": "Server nicht im Cache des Bots gefunden.",
+        "guildNotFound": "Server nicht gefunden.",
+        "notMember": "Dieses Mitglied ist nicht in diesem Server.",
+        "cannotAssign": "Ich kann die Verifizierungsrolle nicht vergeben. Prüfe bitte meine Berechtigung **Rollen verwalten** und die Rollenreihenfolge.",
+        "verifyFailed": "Die Verifizierung hat nicht geklappt. Versuch es gleich noch einmal.",
+        "disabled": "Das Verifizierungssystem ist nicht eingeschaltet.",
+        "roleGone": "Die Verifizierungsrolle gibt es nicht mehr.",
+        "cannotRemove": "Ich kann die Verifizierungsrolle gerade nicht entfernen. Prüfe bitte meine Berechtigung **Rollen verwalten** und die Rollenreihenfolge.",
+        "removeFailed": "Die Verifizierung konnte nicht entzogen werden. Versuch es gleich noch einmal.",
+        "noBotPerms": "Ich konnte meine Berechtigungen im Server nicht prüfen. Versuch es noch einmal.",
+        "roleDeleted": "Die Verifizierungsrolle wurde gelöscht. Führe bitte `/verification setup` noch einmal aus.",
+        "channelDeleted": "Der Verifizierungskanal wurde gelöscht.",
+        "channelPerms": "Mir fehlen Berechtigungen im Verifizierungskanal: {perms}",
+        "cooldown": "Warte bitte {seconds} Sekunden, bevor du dich noch einmal verifizierst.",
+        "tooMany": "Du hast es zu oft versucht. Warte bitte einen Moment.",
+        "badCriteria": "Wähle bitte ein gültiges Kriterium.",
+        "badAge": "Das Kontoalter muss zwischen {min} und {max} Tagen liegen.",
+        "panelPerms": "Ich brauche **Kanal ansehen**, **Nachrichten senden** und **Links einbetten** im Verifizierungskanal.",
+        "permsUnknown": "Ich konnte meine Berechtigungen in diesem Server nicht prüfen. Versuch es gleich noch einmal.",
+        "needManageRoles": "Ich brauche die Berechtigung „Rollen verwalten“, um Verifizierungsrollen zu vergeben.",
+        "badRole": "Wähle bitte eine normale, vergebbare Rolle (nicht @everyone und keine Rolle einer Integration).",
+        "roleTooHigh": "Die Verifizierungsrolle muss in der Rollenreihenfolge unter meiner höchsten Rolle stehen.",
+        "conflict": "Du kannst das Verifizierungssystem nicht einschalten, solange **AutoVerify** oder **AutoRole** eingerichtet ist. Schalte diese zuerst aus.",
+        "needManageServer": "Für diesen Verifizierungs-Unterbefehl brauchst du die Berechtigung **Server verwalten**.",
+        "badSubcommand": "Wähle bitte einen gültigen Unterbefehl."
+    },
+    "autoDm": {
+        "title": "Du bist verifiziert",
+        "text": "Du wurdest in **{server}** automatisch verifiziert.",
+        "roleName": "Rolle",
+        "roleText": "Du hast die Rolle {role} bekommen."
+    },
+    "setup": {
+        "title": "Verifizierungssystem aktualisiert",
+        "channel": "Kanal: {channel}",
+        "role": "Verifizierungsrolle: {role}",
+        "button": "Button-Text: {text}"
+    },
+    "remove": {
+        "notTitle": "Nicht verifiziert",
+        "notText": "{user} hat die Verifizierungsrolle gerade nicht.",
+        "doneTitle": "Verifizierung entzogen",
+        "doneText": "{user} wurde die Verifizierung entzogen."
+    },
+    "dash": {
+        "notSet": "`Nicht gesetzt`",
+        "notConfigured": "`Nicht eingerichtet`",
+        "enabled": "An",
+        "disabled": "Aus",
+        "footer": "Das Dashboard schließt sich nach 10 Minuten ohne Aktivität",
+        "timedOutTitle": "Dashboard abgelaufen",
+        "timedOutText": "Dieses Dashboard wurde wegen Inaktivität geschlossen. Führe den Befehl noch einmal aus, um weiterzumachen.",
+        "selectPlaceholder": "Wähle eine Einstellung …",
+        "roleUpdated": "Rolle geändert",
+        "noRole": "Es wurde keine Rolle gewählt. Die Einstellung bleibt, wie sie war.",
+        "rolePlaceholder": "Wähle eine Rolle …",
+        "autoRoleConfigured": "AutoRole ist eingerichtet",
+        "conflicts": "Konflikte bei der Einrichtung",
+        "systemStatus": "Systemstatus",
+        "panelStatus": {
+            "unknown": "`Unbekannt`",
+            "activeLink": "Aktiv · [Panel ansehen]({url})",
+            "active": "Aktiv",
+            "channelMissing": "Fehlt: der Panel-Kanal wurde gelöscht",
+            "panelDeleted": "Fehlt: die Panel-Nachricht wurde gelöscht. Nutze unten **{hint}**.",
+            "noChannel": "Nicht eingerichtet: noch kein Panel-Kanal"
+        }
+    },
+    "vdash": {
+        "title": "Dashboard des Verifizierungssystems",
+        "intro": "Verifizierungseinstellungen für **{server}** verwalten.\nWähle unten eine Option, um eine Einstellung zu ändern.",
+        "fieldPanel": "Panel-Status",
+        "fieldChannel": "Verifizierungskanal",
+        "fieldRole": "Verifizierungsrolle",
+        "fieldButton": "Button-Text",
+        "fieldUsers": "Verifizierte Mitglieder",
+        "users": {
+            "one": "{count} Mitglied",
+            "other": "{count} Mitglieder"
+        },
+        "fieldMessage": "Verifizierungsnachricht",
+        "optChannel": "Verifizierungskanal ändern",
+        "optChannelDesc": "Den Kanal festlegen, in dem das Verifizierungspanel gepostet wird",
+        "optRole": "Verifizierungsrolle ändern",
+        "optRoleDesc": "Die Rolle festlegen, die ein Mitglied beim Verifizieren bekommt",
+        "optMessage": "Verifizierungsnachricht bearbeiten",
+        "optMessageDesc": "Die Nachricht im Embed des Verifizierungspanels anpassen",
+        "optButton": "Button-Text bearbeiten",
+        "optButtonDesc": "Die Beschriftung des Verifizieren-Buttons ändern",
+        "repostButton": "Panel neu posten",
+        "toggleButton": "Verifizierung",
+        "channelGone": "Der eingestellte Verifizierungskanal existiert nicht mehr. Wähle im Dashboard einen neuen Kanal.",
+        "autoVerifyOn": "AutoVerify ist eingeschaltet",
+        "notConfigured": "Das Verifizierungssystem ist noch nicht eingerichtet. Führe zuerst `/verification setup` aus.",
+        "repostedTitle": "Panel neu gepostet",
+        "repostedText": "Verifizierungspanel in {channel} wiederhergestellt.",
+        "autoVerifyBlocks": "AutoVerify ist gerade eingeschaltet. Schalte AutoVerify bitte zuerst aus, bevor du das manuelle Verifizierungssystem einschaltest.\n\nFühre `/verification auto dashboard` aus, um das AutoVerify-Dashboard zu öffnen.",
+        "systemUpdatedTitle": "System aktualisiert",
+        "systemOn": "Das Verifizierungssystem ist jetzt **eingeschaltet**.",
+        "systemOff": "Das Verifizierungssystem ist jetzt **ausgeschaltet**.",
+        "openFailed": "Das Verifizierungs-Dashboard konnte nicht geöffnet werden.",
+        "channelPlaceholder": "Wähle einen Textkanal …",
+        "channelTitle": "Verifizierungskanal ändern",
+        "channelText": "**Aktuell:** {current}\n\nWähle den Kanal, in dem das Verifizierungspanel gepostet wird.\n\n> Das aktuelle Panel wird gelöscht und im neuen Kanal neu gepostet.",
+        "channelPerms": "Ich brauche die Berechtigungen **Kanal ansehen**, **Nachrichten senden** und **Links einbetten** in {channel}.",
+        "channelUpdatedTitle": "Kanal geändert",
+        "channelUpdatedText": "Verifizierungspanel nach {channel} verschoben.",
+        "noChannel": "Es wurde kein Kanal gewählt. Die Einstellung bleibt, wie sie war.",
+        "roleTitle": "Verifizierungsrolle ändern",
+        "roleText": "**Aktuell:** {current}\n\nWähle die Rolle, die ein Mitglied beim Verifizieren bekommt.",
+        "roleUpdatedText": "Verifizierungsrolle auf {role} gesetzt.",
+        "messageModal": "Verifizierungsnachricht bearbeiten",
+        "messageLabel": "Nachricht im Embed des Verifizierungspanels",
+        "messageUpdatedTitle": "Nachricht geändert",
+        "messageUpdatedText": "Das Verifizierungspanel zeigt jetzt die neue Nachricht.",
+        "buttonModal": "Button-Text bearbeiten",
+        "buttonLabel": "Button-Beschriftung (max. 80 Zeichen)",
+        "buttonUpdatedTitle": "Button-Text geändert",
+        "buttonUpdatedText": "Auf dem Verifizieren-Button steht jetzt **{text}**."
+    },
+    "auto": {
+        "conflict": "Du kannst **AutoVerify** nicht einschalten, solange das Verifizierungssystem oder AutoRole eingerichtet ist. Schalte diese zuerst aus.",
+        "needManageRoles": "Ich brauche die Berechtigung „Rollen verwalten“, um AutoVerify-Rollen zu vergeben.",
+        "badSubcommand": "Ungültiger Unterbefehl gewählt.",
+        "criteriaAge": "mindestens `{days} Tage` alt",
+        "criteriaNone": "Alle Mitglieder sofort",
+        "setupTitle": "Automatische Verifizierung eingerichtet",
+        "setupText": "Die automatische Verifizierung ist eingerichtet.\n\n**Rolle:** {role}\n**Kriterium:** {criteria}\n\nMitglieder, die dieses Kriterium erfüllen, bekommen die Rolle, wenn sie dem Server beitreten."
+    },
+    "adash": {
+        "title": "Dashboard der automatischen Verifizierung",
+        "intro": "Einstellungen der automatischen Verifizierung für **{server}** verwalten.\nWähle unten eine Option, um eine Einstellung zu ändern.",
+        "criteriaAge": "`Kontoalter` - `{days} Tage`",
+        "criteriaNone": "`Kein Kriterium`",
+        "fieldRole": "Zielrolle",
+        "fieldCriteria": "Kriterium",
+        "fieldAge": "Kontoalter",
+        "ageDays": "`{days}` Tage",
+        "na": "`–`",
+        "optRole": "Rolle ändern",
+        "optRoleDesc": "Die Rolle wählen, die automatisch vergeben wird",
+        "optAge": "Kontoalter in Tagen bearbeiten",
+        "optAgeDesc": "Mindestalter des Kontos in Tagen festlegen",
+        "criteriaButton": "Kriterium ändern",
+        "toggleButton": "Automatische Verifizierung",
+        "verificationOn": "Das Verifizierungssystem ist eingeschaltet",
+        "turnOffFirst": "**Um AutoVerify einzuschalten, schalte zuerst aus:**",
+        "notConfigured": "Die automatische Verifizierung ist noch nicht eingerichtet.{blocking}\n\nNutze `/verification auto setup`, um sie einzurichten.",
+        "selectionError": "Bei deiner Auswahl ist ein Fehler aufgetreten.",
+        "unexpectedError": "Beim Ändern der Einstellungen ist ein unerwarteter Fehler aufgetreten.",
+        "statusTitle": "Status geändert",
+        "statusOn": "Die automatische Verifizierung ist jetzt **eingeschaltet**.",
+        "statusOff": "Die automatische Verifizierung ist jetzt **ausgeschaltet**.",
+        "openFailed": "Das Dashboard der automatischen Verifizierung konnte nicht geöffnet werden.",
+        "criteriaTitle": "Verifizierungskriterium wählen",
+        "criteriaText": "Wähle das Kriterium für die automatische Verifizierung",
+        "criteriaPlaceholder": "Kriterium wählen …",
+        "criteriaOptAge": "Kontoalter (älter als {days} Tage)",
+        "criteriaOptAgeDesc": "Mitglieder mit älteren Konten werden automatisch verifiziert",
+        "criteriaOptNone": "Kein Kriterium (alle verifizieren)",
+        "criteriaOptNoneDesc": "Alle Mitglieder bekommen die Rolle sofort",
+        "criteriaShowAge": "Kontoalter ({days} Tage)",
+        "criteriaShowNone": "Kein Kriterium",
+        "criteriaUpdatedTitle": "Kriterium geändert",
+        "criteriaUpdatedText": "Kriterium der automatischen Verifizierung geändert auf **{criteria}**.",
+        "noCriteria": "Es wurde kein Kriterium gewählt. Die Einstellung bleibt, wie sie war.",
+        "roleTitle": "Rolle der automatischen Verifizierung",
+        "roleText": "Wähle die Rolle für automatisch verifizierte Mitglieder.",
+        "roleUpdatedText": "Rolle der automatischen Verifizierung auf {role} gesetzt.",
+        "ageModal": "Mindestalter des Kontos festlegen",
+        "ageLabel": "Mindestalter des Kontos (Tage)",
+        "agePlaceholder": "Zwischen {min} und {max}",
+        "ageInvalid": "Gib bitte eine Zahl zwischen {min} und {max} ein.",
+        "ageUpdatedTitle": "Kontoalter geändert",
+        "ageUpdatedText": "Mindestalter des Kontos auf **{days} Tage** gesetzt."
+    }
+}

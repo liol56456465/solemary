@@ -2,30 +2,38 @@
 // A few built-in answers are always there; admins add their own per server.
 
 import { db } from '../utils/database/wrapper.js';
+import { botText } from '../utils/botText.js';
 
 export const CANNED_NAME = /^[a-z0-9-]{1,32}$/;
 export const CANNED_MAX_LENGTH = 1800;
 
-const BUILT_IN = {
-    'appeal-received': 'Thanks for your appeal. The administrators will review it and you will get the decision by DM. Please don\'t open another appeal for the same case in the meantime.',
-    'need-proof': 'Could you send screenshots or other proof? Please post them here.',
-    'closing-soon': 'If there\'s nothing else, this conversation will be closed soon. You can always start a new one.',
+// Built-in answers: the bot's own text, so in the language asked for (catalog
+// src/content/bot/<lang>/ticket.json). A server's own answers stay as written.
+const BUILT_IN_KEYS = {
+    'appeal-received': 'ticket.canned.builtInAppealReceived',
+    'need-proof': 'ticket.canned.builtInNeedProof',
+    'closing-soon': 'ticket.canned.builtInClosingSoon',
 };
+
+function builtIn(lang) {
+    const tr = botText(lang);
+    return Object.fromEntries(Object.entries(BUILT_IN_KEYS).map(([name, textKey]) => [name, tr.t(textKey)]));
+}
 
 const key = (guildId) => `guild:${guildId}:canned`;
 
-/** All answers for a guild: built-in ones, overridden by the guild's own. */
-export async function listCanned(guildId) {
+/** All answers for a guild: built-in ones (in `lang`, default English), overridden by the guild's own. */
+export async function listCanned(guildId, { lang = 'en' } = {}) {
     const own = await db.get(key(guildId), {});
-    return { ...BUILT_IN, ...(own && typeof own === 'object' ? own : {}) };
+    return { ...builtIn(lang), ...(own && typeof own === 'object' ? own : {}) };
 }
 
-export async function getCanned(guildId, name) {
-    return (await listCanned(guildId))[name] ?? null;
+export async function getCanned(guildId, name, { lang = 'en' } = {}) {
+    return (await listCanned(guildId, { lang }))[name] ?? null;
 }
 
 export function isBuiltInCanned(name) {
-    return Object.hasOwn(BUILT_IN, name);
+    return Object.hasOwn(BUILT_IN_KEYS, name);
 }
 
 export async function saveCanned(guildId, name, text) {

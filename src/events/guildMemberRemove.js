@@ -4,6 +4,7 @@ import { getColor, botConfig } from '../config/bot.js';
 import { getWelcomeConfig, getUserApplications, deleteApplication } from '../utils/database.js';
 import { formatWelcomeMessage } from '../utils/welcome.js';
 import { resolveWelcomeImageUrl } from '../utils/welcomeImageStore.js';
+import { botText, textForGuild } from '../utils/botText.js';
 import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 import { refreshCountersOnMemberChange } from '../services/serverstatsService.js';
 import { getGuildBirthdays, deleteBirthday } from '../utils/database.js';
@@ -25,6 +26,25 @@ export function describeLeaver(member) {
         : 'unknown';
     const avatarUrl = typeof user?.displayAvatarURL === 'function' ? user.displayAvatarURL() : null;
     return { id, label, joined, avatarUrl };
+}
+
+/**
+ * The goodbye text: the admin's message (or embed description) as written, else the bot's
+ * default in the server's language. A default changed in config/bot.js (not the catalog's
+ * English) is used as written, as before.
+ */
+export function defaultGoodbyeText(welcomeConfig, formatData, tr = botText()) {
+    const own = welcomeConfig?.leaveMessage || welcomeConfig?.leaveEmbed?.description;
+    if (own) return formatWelcomeMessage(own, formatData);
+    const configured = botConfig.welcome?.defaultGoodbyeMessage;
+    if (configured && configured !== botText('en').t('welcome.post.defaultGoodbye', { user: '{user}', memberCount: '{memberCount}' })) {
+        return formatWelcomeMessage(configured, formatData);
+    }
+    const { user, guild } = formatData;
+    return tr.t('welcome.post.defaultGoodbye', {
+        user: user?.toString?.() || 'User',
+        memberCount: guild?.memberCount?.toString?.() || '0',
+    });
 }
 
 export default {
@@ -53,13 +73,13 @@ export default {
             if (permissions?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages])) {
 
                 const formatData = { user, guild, member };
-                const goodbyeMessage = formatWelcomeMessage(
-                    welcomeConfig.leaveMessage || welcomeConfig.leaveEmbed?.description || botConfig.welcome?.defaultGoodbyeMessage || '{user} left the server.',
-                    formatData
-                );
+                // A post in the channel: the bot's own default texts in the server's language. The
+                // admin's own message, title and footer are shown as written.
+                const tr = textForGuild(guild.id, { userId: user.id, purpose: 'public' });
+                const goodbyeMessage = defaultGoodbyeText(welcomeConfig, formatData, tr);
 
                 const embedTitle = formatWelcomeMessage(
-                    welcomeConfig.leaveEmbed?.title || 'Goodbye',
+                    welcomeConfig.leaveEmbed?.title || tr.t('welcome.post.goodbyeTitle'),
                     formatData
                 );
                 const embedFooter = welcomeConfig.leaveEmbed?.footer
@@ -80,8 +100,8 @@ export default {
                         .setColor(welcomeConfig.leaveEmbed?.color || getColor('error'))
                         .setThumbnail(leaver.avatarUrl)
                         .addFields(
-                            { name: 'User', value: `${leaver.label} (${leaver.id})`, inline: true },
-                            { name: 'Member count', value: String(guild.memberCount ?? '?'), inline: true }
+                            { name: tr.t('welcome.post.user'), value: `${leaver.label} (${leaver.id})`, inline: true },
+                            { name: tr.t('welcome.post.memberCount'), value: String(guild.memberCount ?? '?'), inline: true }
                         )
                         .setTimestamp()
                         .setFooter({ text: embedFooter });

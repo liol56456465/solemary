@@ -1,0 +1,177 @@
+{
+    "cmd": {
+        "welcome": {
+            "description": "Configure the welcome system",
+            "setup": {
+                "description": "Set up the welcome message",
+                "channel": "The channel to send welcome messages to",
+                "message": "Welcome message. Variables:",
+                "image": "Image URL to add to the message",
+                "ping": "Ping the member in the message"
+            }
+        },
+        "goodbye": {
+            "description": "Configure the goodbye message system",
+            "setup": {
+                "description": "Set up the goodbye message",
+                "channel": "The channel to send goodbye messages to",
+                "message": "Goodbye message. Variables:"
+            }
+        },
+        "greet": {
+            "description": "Manage welcome & goodbye settings",
+            "dashboard": "Open the welcome and goodbye settings"
+        },
+        "autorole": {
+            "description": "Manage roles that are automatically assigned to new members",
+            "add": {
+                "description": "Add a role to be automatically assigned to new members",
+                "role": "The role to add"
+            },
+            "remove": {
+                "description": "Remove a role from auto-assignment",
+                "role": "The role to remove"
+            },
+            "list": "List all auto-assigned roles"
+        }
+    },
+    "manageServer": "You need the **Manage Server** permission to use `{command}`.",
+    "invalidImage": "Please provide a valid image URL (must start with http:// or https://).",
+    "setupDone": {
+        "preview": "Preview",
+        "ping": "Ping the member",
+        "status": "Status",
+        "yes": "Yes",
+        "no": "No",
+        "on": "On",
+        "footer": "More options in /greet dashboard"
+    },
+    "welcome": {
+        "alreadySet": "Welcome is already configured for <#{channelId}>. Use **/greet dashboard** to customize channel, message, ping, or image.",
+        "empty": "Welcome message cannot be empty",
+        "doneTitle": "Welcome messages set up",
+        "doneBody": "Welcome messages will go to {channel}.",
+        "failed": "An error occurred while configuring the welcome system. Please try again."
+    },
+    "goodbye": {
+        "alreadySet": "Goodbye is already configured for <#{channelId}>. Use **/greet dashboard** to customize channel, message, ping, or image.",
+        "empty": "Goodbye message cannot be empty",
+        "doneTitle": "Goodbye messages set up",
+        "doneBody": "Goodbye messages will go to {channel}.",
+        "failed": "An error occurred while configuring the goodbye system. Please try again."
+    },
+    "autorole": {
+        "verificationConflict": "You cannot add AutoRole while the verification system or AutoVerify is enabled. Disable those first.",
+        "alreadySet": "The role {role} is already set to be auto-assigned.",
+        "changed": "Auto-role changed to {role}. You can only have one.",
+        "set": "Auto-role set to {role}.",
+        "addFailed": "An error occurred while adding the role. Please try again.",
+        "notSet": "The role {role} is not set to be auto-assigned.",
+        "removed": "{role} is no longer given to new members.",
+        "removeFailed": "An error occurred while removing the role. Please try again.",
+        "verificationOn": "Verification system is enabled",
+        "autoVerifyOn": "AutoVerify is enabled",
+        "needsFixing": "\n\n**Needs fixing:**\n{list}",
+        "none": "No auto-role is set.",
+        "noneWorking": "No working auto-role found. I removed the one that no longer exists.",
+        "title": "Auto-role",
+        "footer": "You can only have one auto-role.",
+        "listFailed": "An error occurred while listing auto-assigned roles. Please try again."
+    },
+    "greet": {
+        "failed": "Something went wrong."
+    },
+    "dashboard": {
+        "notSet": "`Not set`",
+        "title": "Welcome and goodbye",
+        "description": "Welcome and goodbye messages for **{server}**.\nThe buttons turn each one on or off. Pick a setting in the menu to change it.",
+        "on": "On",
+        "off": "Off",
+        "field": {
+            "welcomeChannel": "Welcome channel",
+            "welcome": "Welcome",
+            "welcomePing": "Welcome ping",
+            "goodbyeChannel": "Goodbye channel",
+            "goodbye": "Goodbye",
+            "goodbyePing": "Goodbye ping",
+            "welcomeMessage": "Welcome message",
+            "goodbyeMessage": "Goodbye message"
+        },
+        "footer": "Closes after 10 minutes without use",
+        "menu": {
+            "placeholder": "Pick a setting to change",
+            "welcomeChannel": "Welcome channel",
+            "welcomeChannelHint": "Where welcome messages go",
+            "welcomeMessage": "Welcome message",
+            "welcomeMessageHint": "What the bot says when someone joins",
+            "welcomeImage": "Welcome image",
+            "welcomeImageHint": "Image shown with the welcome message",
+            "goodbyeChannel": "Goodbye channel",
+            "goodbyeChannelHint": "Where goodbye messages go",
+            "goodbyeMessage": "Goodbye message",
+            "goodbyeMessageHint": "What the bot says when someone leaves",
+            "goodbyeImage": "Goodbye image",
+            "goodbyeImageHint": "Image shown with the goodbye message"
+        },
+        "button": {
+            "welcome": "Welcome",
+            "goodbye": "Goodbye",
+            "pingWelcome": "Ping on welcome",
+            "pingGoodbye": "Ping on goodbye"
+        },
+        "notConfigured": "Neither Welcome nor Goodbye has been set up yet. Run `/welcome setup` or `/goodbye setup` first.",
+        "choiceFailed": "Something went wrong with that choice.",
+        "saveFailed": "Something went wrong while saving. Try again.",
+        "openFailed": "Couldn't open the welcome settings.",
+        "welcomeUpdated": "Welcome updated",
+        "welcomeNowOn": "Welcome messages are now **on**.",
+        "welcomeNowOff": "Welcome messages are now **off**.",
+        "goodbyeUpdated": "Goodbye updated",
+        "goodbyeNowOn": "Goodbye messages are now **on**.",
+        "goodbyeNowOff": "Goodbye messages are now **off**.",
+        "welcomePingUpdated": "Welcome ping updated",
+        "welcomePingOn": "New members will be pinged in the welcome message.",
+        "welcomePingOff": "New members will **not** be pinged in the welcome message.",
+        "goodbyePingUpdated": "Goodbye ping updated",
+        "goodbyePingOn": "Members who leave will be pinged in the goodbye message.",
+        "goodbyePingOff": "Members who leave will **not** be pinged in the goodbye message.",
+        "closedTitle": "Closed",
+        "closedBody": "Closed after 10 minutes without use. Run the command again to reopen it.",
+        "channelPlaceholder": "Pick a text channel",
+        "welcomeChannelTitle": "Welcome channel",
+        "welcomeChannelPrompt": "**Current:** {current}\n\nPick the channel for welcome messages.",
+        "goodbyeChannelTitle": "Goodbye channel",
+        "goodbyeChannelPrompt": "**Current:** {current}\n\nPick the channel for goodbye messages.",
+        "needPermissions": "I need **View Channel**, **Send Messages**, and **Embed Links** in {channel}.",
+        "channelUpdated": "Channel updated",
+        "welcomeChannelNow": "Welcome messages now go to {channel}.",
+        "goodbyeChannelNow": "Goodbye messages now go to {channel}.",
+        "noChannel": "No channel picked, nothing changed.",
+        "welcomeMessageTitle": "Welcome message",
+        "goodbyeMessageTitle": "Goodbye message",
+        "messageLabel": "Message (variables: {user}, {server}, etc)",
+        "saved": "Saved",
+        "welcomeSaved": "Welcome message saved.",
+        "goodbyeSaved": "Goodbye message saved.",
+        "imageHint": "Paste an image URL **or** upload a file. If you do both, the upload wins. Leave both empty to remove the image.",
+        "imageUrlLabel": "Image URL (optional)",
+        "imageUploadLabel": "Or upload an image file (optional)",
+        "imageBadProtocol": "Image URL must start with `http://` or `https://`.",
+        "imageBadUrl": "That image URL doesn't look right.",
+        "welcomeImageTitle": "Welcome image",
+        "goodbyeImageTitle": "Goodbye image",
+        "imageSaved": "Image saved.",
+        "imageRemoved": "Image removed.",
+        "welcomeCopyKept": "\nA copy is kept in <#{channelId}>. Don't delete that message, the welcome message loads the image from it.",
+        "goodbyeCopyKept": "\nA copy is kept in <#{channelId}>. Don't delete that message, the goodbye message loads the image from it.",
+        "copyFailed": "\nI couldn't keep a copy (I need View Channel, Send Messages and Attach Files in the audit log channel or here), so this image will stop showing in about a day."
+    },
+    "post": {
+        "defaultWelcome": "Welcome to {server}, {user}. You're member number {memberCount}.",
+        "defaultGoodbye": "{user} left the server. We're at {memberCount} members now.",
+        "welcomeTitle": "Welcome",
+        "goodbyeTitle": "Goodbye",
+        "user": "User",
+        "memberCount": "Member count"
+    }
+}

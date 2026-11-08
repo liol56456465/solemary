@@ -1,0 +1,301 @@
+{
+    "cmd": {
+        "verify": {
+            "description": "Zweryfikuj się i uzyskaj dostęp do serwera"
+        },
+        "verification": {
+            "description": "Zarządzaj systemem weryfikacji serwera",
+            "setup": {
+                "description": "Skonfiguruj system weryfikacji",
+                "channel": "Kanał, na którym zostanie opublikowana wiadomość weryfikacji",
+                "role": "Rola dla zweryfikowanych członków",
+                "message": "Własna wiadomość weryfikacji",
+                "buttonText": "Tekst przycisku weryfikacji"
+            },
+            "remove": {
+                "description": "Odbierz członkowi weryfikację",
+                "user": "Członek, któremu odbierasz weryfikację"
+            },
+            "dashboard": {
+                "description": "Otwórz panel ustawień systemu weryfikacji"
+            },
+            "auto": {
+                "description": "Automatyczna weryfikacja (weryfikuj członków przy dołączeniu według reguł)"
+            }
+        },
+        "autoverify": {
+            "description": "Ustaw automatyczną weryfikację",
+            "setup": {
+                "description": "Skonfiguruj automatyczną weryfikację",
+                "role": "Rola dla członków, którzy spełniają kryterium",
+                "criteria": "Kryterium automatycznej weryfikacji",
+                "accountAgeDays": "Minimalny wiek konta w dniach (wymagany przy kryterium wieku konta)",
+                "choiceAccountAge": "Wiek konta",
+                "choiceNone": "Bez kryterium"
+            },
+            "dashboard": {
+                "description": "Otwórz panel automatycznej weryfikacji"
+            }
+        }
+    },
+    "privacy": {
+        "oauth": "Weryfikacja zapisuje twoje ID Discord, zaszyfrowany token logowania (aby dodać cię do serwera wsparcia Mewvo) i zanonimizowany odcisk twojego adresu IP, aby wykrywać omijanie bana.",
+        "direct": "Weryfikacja zapisuje twoje ID Discord i czas weryfikacji.",
+        "link": "Prywatność: {url}"
+    },
+    "verify": {
+        "quizTitle": "Quiz z regulaminu",
+        "quizPrefix": "Użyj /verify lub przycisku Zweryfikuj, aby najpierw rozwiązać quiz z regulaminu.",
+        "alreadyTitle": "Już zweryfikowano",
+        "alreadyText": "Jesteś już zweryfikowany.",
+        "verifiedTitle": "Zweryfikowano",
+        "verifiedText": "Jesteś zweryfikowany i masz rolę **{role}**.\n\n-# {privacy}"
+    },
+    "button": {
+        "oauthTitle": "Weryfikacja przez Discord",
+        "oauthText": "Naciśnij przycisk poniżej i autoryzuj bota swoim kontem Discord. Rolę dostaniesz od razu po autoryzacji.\n\n-# Link działa tylko dla ciebie i wygasa po 10 minutach.\n-# {privacy}",
+        "oauthButton": "Weryfikacja przez Discord",
+        "alreadyTitle": "Już zweryfikowano",
+        "alreadyText": "Jesteś już zweryfikowany i masz dostęp do wszystkich kanałów serwera.",
+        "verifiedText": "Jesteś zweryfikowany i masz rolę **{role}**. Witaj!\n\n-# {privacy}",
+        "serverOnly": "Ten przycisk działa tylko na serwerze."
+    },
+    "quiz": {
+        "notYours": "To nie twój quiz. Kliknij Zweryfikuj, aby zacząć własny.",
+        "expired": "Ten quiz wygasł, kliknij Zweryfikuj jeszcze raz.",
+        "expiredTitle": "Quiz wygasł",
+        "questionTitle": "Quiz z regulaminu: pytanie {step} z {total}",
+        "footerOne": "Odpowiedz na to pytanie, aby przejść do weryfikacji. Quiz wygasa po {minutes} minutach.",
+        "footerMany": {
+            "one": "Odpowiedz na wszystkie pytania ({count}), aby przejść do weryfikacji. Quiz wygasa po {minutes} minutach.",
+            "few": "Odpowiedz na wszystkie {count} pytania, aby przejść do weryfikacji. Quiz wygasa po {minutes} minutach.",
+            "many": "Odpowiedz na wszystkie {count} pytań, aby przejść do weryfikacji. Quiz wygasa po {minutes} minutach.",
+            "other": "Odpowiedz na wszystkie pytania ({count}), aby przejść do weryfikacji. Quiz wygasa po {minutes} minutach."
+        },
+        "minutes": {
+            "one": "{count} minutę",
+            "few": "{count} minuty",
+            "many": "{count} minut",
+            "other": "{count} minuty"
+        },
+        "rulesChannel": "kanale z regulaminem",
+        "failedTitle": "Nie do końca",
+        "failedText": "Nie do końca — przeczytaj regulamin na {where} i spróbuj ponownie za {wait}.",
+        "cooldownTitle": "Quiz z regulaminu",
+        "cooldownText": "Przeczytaj regulamin na {where} i spróbuj ponownie za {wait}."
+    },
+    "review": {
+        "otherServer": "Ta weryfikacja należy do innego serwera. Zatwierdź ją tam.",
+        "adminOnly": "Tylko administratorzy mogą zatwierdzać weryfikacje.",
+        "theServer": "serwerze",
+        "dmApproved": "**Twoja weryfikacja na {server} została zatwierdzona.** Masz teraz dostęp.",
+        "dmDenied": "**Twoja weryfikacja na {server} nie została zatwierdzona.** Jeśli uważasz, że to pomyłka, skontaktuj się z kimś z administracji.",
+        "cardApproved": "Zatwierdził(a) {admin}. DM: {dm}.",
+        "cardApprovedAlready": "Zatwierdził(a) {admin} (był już zweryfikowany). DM: {dm}.",
+        "cardDenied": "Odrzucił(a) {admin}. DM: {dm}.",
+        "dmDelivered": "dostarczono",
+        "dmNotDelivered": "nie dostarczono",
+        "approvedTitle": "Weryfikacja zatwierdzona",
+        "approvedText": "{user} ma teraz rolę **{role}**.",
+        "deniedTitle": "Weryfikacja odrzucona",
+        "deniedText": "{user} pozostaje niezweryfikowany."
+    },
+    "hold": {
+        "title": "Weryfikacja czeka na zatwierdzenie",
+        "user": "Członek",
+        "created": "Konto utworzone",
+        "why": "Dlaczego wstrzymano",
+        "footer": "Zatwierdź daje rolę weryfikacji. Odrzuć zostawia członka niezweryfikowanego i informuje go w DM.",
+        "approve": "Zatwierdź",
+        "deny": "Odrzuć",
+        "reasonYoung": "Konto ma dopiero {age} (minimum {min})",
+        "reasonNetwork": "Ta sama sieć co zbanowany członek {username} (`{userId}`, ban `{caseCode}`)"
+    },
+    "panel": {
+        "title": "Weryfikacja na serwerze",
+        "defaultMessage": "Naciśnij przycisk poniżej, aby uzyskać dostęp do reszty serwera.",
+        "defaultButton": "Zweryfikuj"
+    },
+    "errors": {
+        "notSetUp": "Weryfikacja nie jest jeszcze skonfigurowana na tym serwerze. Poproś administratora serwera, aby ją skonfigurował poleceniem `/verification setup`.",
+        "botLeft": "Nie ma mnie już na tym serwerze, więc nie mogę cię tam zweryfikować.",
+        "roleGoneSetup": "Rola weryfikacji tego serwera już nie istnieje. Poproś administratora serwera, aby ponownie uruchomił `/verification setup`.",
+        "guildNotCached": "Nie znaleziono serwera w pamięci bota.",
+        "guildNotFound": "Nie znaleziono serwera.",
+        "notMember": "Tego członka nie ma na serwerze.",
+        "cannotAssign": "Nie mogę nadać roli weryfikacji. Sprawdź moje uprawnienie **Zarządzanie rolami** i kolejność ról.",
+        "verifyFailed": "Weryfikacja się nie udała. Spróbuj ponownie za chwilę.",
+        "disabled": "System weryfikacji nie jest włączony.",
+        "roleGone": "Rola weryfikacji już nie istnieje.",
+        "cannotRemove": "Nie mogę teraz odebrać roli weryfikacji. Sprawdź moje uprawnienie **Zarządzanie rolami** i kolejność ról.",
+        "removeFailed": "Nie udało się odebrać weryfikacji. Spróbuj ponownie za chwilę.",
+        "noBotPerms": "Nie udało mi się sprawdzić moich uprawnień na serwerze. Spróbuj ponownie.",
+        "roleDeleted": "Rola weryfikacji została usunięta. Uruchom ponownie `/verification setup`.",
+        "channelDeleted": "Kanał weryfikacji został usunięty.",
+        "channelPerms": "Brakuje mi uprawnień na kanale weryfikacji: {perms}",
+        "cooldown": "Poczekaj {seconds} s, zanim znowu się zweryfikujesz.",
+        "tooMany": "Zbyt wiele prób. Poczekaj chwilę.",
+        "badCriteria": "Wybierz prawidłowe kryterium.",
+        "badAge": "Wiek konta musi wynosić od {min} do {max} dni.",
+        "panelPerms": "Potrzebuję uprawnień **Wyświetlanie kanału**, **Wysyłanie wiadomości** i **Osadzanie linków** na kanale weryfikacji.",
+        "permsUnknown": "Nie udało mi się sprawdzić moich uprawnień na tym serwerze. Spróbuj ponownie za chwilę.",
+        "needManageRoles": "Potrzebuję uprawnienia „Zarządzanie rolami”, aby nadawać role weryfikacji.",
+        "badRole": "Wybierz zwykłą rolę, którą można nadać (nie @everyone i nie rolę integracji).",
+        "roleTooHigh": "Rola weryfikacji musi być niżej niż moja najwyższa rola w kolejności ról serwera.",
+        "conflict": "Nie możesz włączyć systemu weryfikacji, dopóki skonfigurowane jest **AutoVerify** lub **AutoRole**. Najpierw je wyłącz.",
+        "needManageServer": "Do tego podpolecenia weryfikacji potrzebujesz uprawnienia **Zarządzanie serwerem**.",
+        "badSubcommand": "Wybierz prawidłowe podpolecenie."
+    },
+    "autoDm": {
+        "title": "Jesteś zweryfikowany",
+        "text": "Zostałeś automatycznie zweryfikowany na **{server}**.",
+        "roleName": "Rola",
+        "roleText": "Dostałeś rolę {role}."
+    },
+    "setup": {
+        "title": "System weryfikacji zaktualizowany",
+        "channel": "Kanał: {channel}",
+        "role": "Rola weryfikacji: {role}",
+        "button": "Tekst przycisku: {text}"
+    },
+    "remove": {
+        "notTitle": "Niezweryfikowany",
+        "notText": "{user} nie ma obecnie roli weryfikacji.",
+        "doneTitle": "Weryfikacja odebrana",
+        "doneText": "Odebrano weryfikację: {user}."
+    },
+    "dash": {
+        "notSet": "`Nie ustawiono`",
+        "notConfigured": "`Nie skonfigurowano`",
+        "enabled": "Włączony",
+        "disabled": "Wyłączony",
+        "footer": "Panel zamyka się po 10 minutach bezczynności",
+        "timedOutTitle": "Panel wygasł",
+        "timedOutText": "Ten panel został zamknięty z powodu bezczynności. Uruchom polecenie ponownie, aby kontynuować.",
+        "selectPlaceholder": "Wybierz ustawienie…",
+        "roleUpdated": "Rola zmieniona",
+        "noRole": "Nie wybrano roli. Ustawienie się nie zmieniło.",
+        "rolePlaceholder": "Wybierz rolę…",
+        "autoRoleConfigured": "AutoRole jest skonfigurowane",
+        "conflicts": "Konflikty konfiguracji",
+        "systemStatus": "Stan systemu",
+        "panelStatus": {
+            "unknown": "`Nieznany`",
+            "activeLink": "Aktywny · [zobacz panel]({url})",
+            "active": "Aktywny",
+            "channelMissing": "Brak: kanał panelu został usunięty",
+            "panelDeleted": "Brak: wiadomość panelu została usunięta. Użyj **{hint}** poniżej.",
+            "noChannel": "Nie skonfigurowano: brak kanału panelu"
+        }
+    },
+    "vdash": {
+        "title": "Panel systemu weryfikacji",
+        "intro": "Zarządzaj ustawieniami weryfikacji dla **{server}**.\nWybierz opcję poniżej, aby zmienić ustawienie.",
+        "fieldPanel": "Stan panelu",
+        "fieldChannel": "Kanał weryfikacji",
+        "fieldRole": "Rola weryfikacji",
+        "fieldButton": "Tekst przycisku",
+        "fieldUsers": "Zweryfikowani członkowie",
+        "users": {
+            "one": "{count} członek",
+            "few": "{count} członków",
+            "many": "{count} członków",
+            "other": "{count} członka"
+        },
+        "fieldMessage": "Wiadomość weryfikacji",
+        "optChannel": "Zmień kanał weryfikacji",
+        "optChannelDesc": "Ustaw kanał, na którym publikowany jest panel weryfikacji",
+        "optRole": "Zmień rolę weryfikacji",
+        "optRoleDesc": "Ustaw rolę nadawaną po weryfikacji",
+        "optMessage": "Edytuj wiadomość weryfikacji",
+        "optMessageDesc": "Zmień wiadomość w embedzie panelu weryfikacji",
+        "optButton": "Edytuj tekst przycisku",
+        "optButtonDesc": "Zmień napis na przycisku weryfikacji",
+        "repostButton": "Opublikuj panel ponownie",
+        "toggleButton": "Weryfikacja",
+        "channelGone": "Ustawiony kanał weryfikacji już nie istnieje. Wybierz nowy kanał w panelu.",
+        "autoVerifyOn": "AutoVerify jest włączone",
+        "notConfigured": "System weryfikacji nie jest jeszcze skonfigurowany. Najpierw uruchom `/verification setup`.",
+        "repostedTitle": "Panel opublikowany ponownie",
+        "repostedText": "Panel weryfikacji przywrócony na {channel}.",
+        "autoVerifyBlocks": "AutoVerify jest teraz włączone. Najpierw wyłącz AutoVerify, a potem włącz ręczny system weryfikacji.\n\nUruchom `/verification auto dashboard`, aby otworzyć panel AutoVerify.",
+        "systemUpdatedTitle": "System zaktualizowany",
+        "systemOn": "System weryfikacji jest teraz **włączony**.",
+        "systemOff": "System weryfikacji jest teraz **wyłączony**.",
+        "openFailed": "Nie udało się otworzyć panelu weryfikacji.",
+        "channelPlaceholder": "Wybierz kanał tekstowy…",
+        "channelTitle": "Zmień kanał weryfikacji",
+        "channelText": "**Obecnie:** {current}\n\nWybierz kanał, na którym zostanie opublikowany panel weryfikacji.\n\n> Obecny panel zostanie usunięty i opublikowany ponownie na nowym kanale.",
+        "channelPerms": "Potrzebuję uprawnień **Wyświetlanie kanału**, **Wysyłanie wiadomości** i **Osadzanie linków** na {channel}.",
+        "channelUpdatedTitle": "Kanał zmieniony",
+        "channelUpdatedText": "Panel weryfikacji przeniesiony na {channel}.",
+        "noChannel": "Nie wybrano kanału. Ustawienie się nie zmieniło.",
+        "roleTitle": "Zmień rolę weryfikacji",
+        "roleText": "**Obecnie:** {current}\n\nWybierz rolę nadawaną po weryfikacji.",
+        "roleUpdatedText": "Rola weryfikacji ustawiona na {role}.",
+        "messageModal": "Edytuj wiadomość weryfikacji",
+        "messageLabel": "Wiadomość w embedzie panelu weryfikacji",
+        "messageUpdatedTitle": "Wiadomość zmieniona",
+        "messageUpdatedText": "Panel weryfikacji pokazuje teraz nową wiadomość.",
+        "buttonModal": "Edytuj tekst przycisku",
+        "buttonLabel": "Napis na przycisku (maks. 80 znaków)",
+        "buttonUpdatedTitle": "Tekst przycisku zmieniony",
+        "buttonUpdatedText": "Na przycisku weryfikacji jest teraz **{text}**."
+    },
+    "auto": {
+        "conflict": "Nie możesz włączyć **AutoVerify**, dopóki skonfigurowany jest system weryfikacji lub AutoRole. Najpierw je wyłącz.",
+        "needManageRoles": "Potrzebuję uprawnienia „Zarządzanie rolami”, aby nadawać role AutoVerify.",
+        "badSubcommand": "Wybrano nieprawidłowe podpolecenie.",
+        "criteriaAge": "konta mające co najmniej `{days} dni`",
+        "criteriaNone": "Wszyscy członkowie od razu",
+        "setupTitle": "Automatyczna weryfikacja skonfigurowana",
+        "setupText": "Automatyczna weryfikacja jest skonfigurowana.\n\n**Rola:** {role}\n**Kryterium:** {criteria}\n\nCzłonkowie, którzy spełniają to kryterium, dostaną tę rolę po dołączeniu do serwera."
+    },
+    "adash": {
+        "title": "Panel automatycznej weryfikacji",
+        "intro": "Zarządzaj ustawieniami automatycznej weryfikacji dla **{server}**.\nWybierz opcję poniżej, aby zmienić ustawienie.",
+        "criteriaAge": "`Wiek konta` - `{days} dni`",
+        "criteriaNone": "`Bez kryterium`",
+        "fieldRole": "Nadawana rola",
+        "fieldCriteria": "Kryterium",
+        "fieldAge": "Wiek konta",
+        "ageDays": "`{days}` dni",
+        "na": "`—`",
+        "optRole": "Zmień rolę",
+        "optRoleDesc": "Wybierz rolę nadawaną automatycznie",
+        "optAge": "Edytuj wiek konta",
+        "optAgeDesc": "Ustaw minimalny wiek konta w dniach",
+        "criteriaButton": "Zmień kryterium",
+        "toggleButton": "Automatyczna weryfikacja",
+        "verificationOn": "System weryfikacji jest włączony",
+        "turnOffFirst": "**Aby włączyć AutoVerify, najpierw wyłącz:**",
+        "notConfigured": "Automatyczna weryfikacja nie jest jeszcze skonfigurowana.{blocking}\n\nUżyj `/verification auto setup`, aby ją skonfigurować.",
+        "selectionError": "Podczas obsługi twojego wyboru wystąpił błąd.",
+        "unexpectedError": "Podczas zmiany ustawień wystąpił nieoczekiwany błąd.",
+        "statusTitle": "Stan zmieniony",
+        "statusOn": "Automatyczna weryfikacja jest teraz **włączona**.",
+        "statusOff": "Automatyczna weryfikacja jest teraz **wyłączona**.",
+        "openFailed": "Nie udało się otworzyć panelu automatycznej weryfikacji.",
+        "criteriaTitle": "Wybierz kryterium weryfikacji",
+        "criteriaText": "Wybierz kryterium automatycznej weryfikacji",
+        "criteriaPlaceholder": "Wybierz kryterium…",
+        "criteriaOptAge": "Wiek konta (starsze niż {days} dni)",
+        "criteriaOptAgeDesc": "Członkowie ze starszymi kontami są weryfikowani automatycznie",
+        "criteriaOptNone": "Bez kryterium (weryfikuj wszystkich)",
+        "criteriaOptNoneDesc": "Wszyscy członkowie od razu dostają rolę",
+        "criteriaShowAge": "Wiek konta ({days} dni)",
+        "criteriaShowNone": "Bez kryterium",
+        "criteriaUpdatedTitle": "Kryterium zmienione",
+        "criteriaUpdatedText": "Kryterium automatycznej weryfikacji zmienione na **{criteria}**.",
+        "noCriteria": "Nie wybrano kryterium. Ustawienie się nie zmieniło.",
+        "roleTitle": "Rola automatycznej weryfikacji",
+        "roleText": "Wybierz rolę dla automatycznie zweryfikowanych członków.",
+        "roleUpdatedText": "Rola automatycznej weryfikacji ustawiona na {role}.",
+        "ageModal": "Minimalny wiek konta",
+        "ageLabel": "Minimalny wiek konta (dni)",
+        "agePlaceholder": "Od {min} do {max}",
+        "ageInvalid": "Wpisz liczbę od {min} do {max}.",
+        "ageUpdatedTitle": "Wiek konta zmieniony",
+        "ageUpdatedText": "Minimalny wiek konta ustawiony na **{days} dni**."
+    }
+}

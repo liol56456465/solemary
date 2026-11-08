@@ -27,6 +27,7 @@ import { getGuildConfig } from './config/guildConfig.js';
 import { isHomeGuild, resolveSetting } from './settings/guildSettings.js';
 import { numberedRules } from './rules/serverRules.js';
 import { siteOrigin } from './site/shell.js';
+import { botText, textForInteraction } from '../utils/botText.js';
 
 export const QUIZ_LIMITS = Object.freeze({
     maxQuestions: 5, questionMax: 150, answerMax: 80, minAnswers: 2, maxAnswers: 4,
@@ -255,8 +256,9 @@ export function parseQuizButtonArgs(args) {
     return { userId, nonce, step: Number(step), choice: Number(choice) };
 }
 
-/** The ephemeral message for the attempt's current question. */
-export function questionPayload(attempt) {
+/** The ephemeral message for the attempt's current question (in `lang`, the member's Discord language). */
+export function questionPayload(attempt, { lang } = {}) {
+    const tr = botText(lang);
     const question = attempt.questions[attempt.step];
     const order = attempt.orders[attempt.step];
     const total = attempt.questions.length;
@@ -266,54 +268,65 @@ export function questionPayload(attempt) {
         .setStyle(ButtonStyle.Secondary)));
     return {
         embeds: [infoEmbed(
-            `Rules quiz: question ${attempt.step + 1} of ${total}`,
-            `${question.question}\n\n-# Answer ${total === 1 ? 'this question' : `all ${total} questions`} to continue to verification. The quiz expires after ${Math.round(QUIZ_TTL_MS / 60000)} minutes.`,
+            tr.t('verification.quiz.questionTitle', { step: attempt.step + 1, total }),
+            `${question.question}\n\n-# ${total === 1
+                ? tr.t('verification.quiz.footerOne', { minutes: Math.round(QUIZ_TTL_MS / 60000) })
+                : tr.tp('verification.quiz.footerMany', total, { minutes: Math.round(QUIZ_TTL_MS / 60000) })}`,
         )],
         components: [row],
         allowedMentions: NO_MENTIONS,
     };
 }
 
-const minutesText = (minutes) => `${minutes} minute${minutes === 1 ? '' : 's'}`;
+const minutesText = (tr, minutes) => tr.tp('verification.quiz.minutes', minutes);
 
 /**
  * Where to read the rules: this server's posted rules channel, else the /rules page (it shows the
  * main server's rules, so only for Mewvo's own servers), else plain words.
  */
-export function rulesLocation(guild, env = process.env) {
+export function rulesLocation(guild, env = process.env, { lang } = {}) {
+    const plainWords = botText(lang).t('verification.quiz.rulesChannel');
     const guildId = guild?.id;
     try {
         const posted = resolveSetting(guildId, 'rulesPost', env)?.posted;
         if (posted?.channelId && (!guild?.channels?.cache || guild.channels.cache.has(posted.channelId))) return `<#${posted.channelId}>`;
-        if (!isHomeGuild(guildId, env)) return 'the rules channel';
+        if (!isHomeGuild(guildId, env)) return plainWords;
         const rules = numberedRules(resolveSetting(guildId, 'serverRules', env)).rules;
         const origin = siteOrigin(env);
         if (rules.length && origin) return `<${origin}/rules>`;
     } catch {
         // Settings not readable (or no server): fall through to the plain words (the message must still go out).
     }
-    return 'the rules channel';
+    return plainWords;
 }
 
-export function failedPayload(minutes, where) {
+export function failedPayload(minutes, where, { lang } = {}) {
+    const tr = botText(lang);
     return {
-        embeds: [warningEmbed('Not quite', `Not quite — read the rules in ${where} and try again in ${minutesText(minutes)}.`)],
+        embeds: [warningEmbed(tr.t('verification.quiz.failedTitle'), tr.t('verification.quiz.failedText', { where, wait: minutesText(tr, minutes) }))],
         components: [],
         allowedMentions: NO_MENTIONS,
     };
 }
 
-export function cooldownPayload(msLeft, where) {
+export function cooldownPayload(msLeft, where, { lang } = {}) {
+    const tr = botText(lang);
     const minutes = Math.max(1, Math.ceil(msLeft / 60000));
     return {
-        embeds: [warningEmbed('Rules quiz', `Read the rules in ${where} and try again in ${minutesText(minutes)}.`)],
+        embeds: [warningEmbed(tr.t('verification.quiz.cooldownTitle'), tr.t('verification.quiz.cooldownText', { where, wait: minutesText(tr, minutes) }))],
         components: [],
         allowedMentions: NO_MENTIONS,
     };
 }
 
-export function expiredPayload() {
-    return { embeds: [warningEmbed('Quiz expired', QUIZ_EXPIRED_MESSAGE)], components: [], allowedMentions: NO_MENTIONS };
+export function expiredPayload({ lang } = {}) {
+    const tr = botText(lang);
+    return { embeds: [warningEmbed(tr.t('verification.quiz.expiredTitle'), tr.t('verification.quiz.expired'))], components: [], allowedMentions: NO_MENTIONS };
+}
+
+/** The private refusal when someone clicks another member's quiz. */
+export function notYourQuizMessage({ lang } = {}) {
+    return botText(lang).t('verification.quiz.notYours');
 }
 
 // ── The gate before verification ──────────────────────────────────────────
@@ -334,12 +347,14 @@ export async function quizGate(client, interaction, { store = quizStore, readCon
     const quiz = normalizeQuiz(verification.quiz);
     if (!quiz.active) return null;
     const userId = interaction.user.id;
+    // An ephemeral answer: the member's own Discord language.
+    const { lang } = textForInteraction(interaction);
     // Already verified: the normal step says so.
     if (verification.roleId && interaction.member?.roles?.cache?.has?.(verification.roleId)) return null;
     if (store.hasPassed(guild.id, userId, quiz.fingerprint)) return null;
     const left = store.cooldownLeft(guild.id, userId);
-    if (left > 0) return cooldownPayload(left, rulesLocation(guild, env));
-    return questionPayload(store.start(guild.id, userId, quiz));
+    if (left > 0) return cooldownPayload(left, rulesLocation(guild, env, { lang }), { lang });
+    return questionPayload(store.start(guild.id, userId, quiz), { lang });
 }
 
 // ── Suggestions for the dashboard ─────────────────────────────────────────

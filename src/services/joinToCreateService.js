@@ -12,6 +12,25 @@ import { TitanBotError, ErrorTypes } from '../utils/errorHandler.js';
 import { logEvent, EVENT_TYPES } from './loggingService.js';
 import { formatLogLine } from '../utils/logging/logEmbeds.js';
 import { ChannelType, OverwriteType, PermissionFlagsBits } from 'discord.js';
+import { botText } from '../utils/botText.js';
+
+/**
+ * A refusal whose text lives in the bot catalog (jointocreate.service.*). userMessage is the
+ * English text (the web dashboard shows it as before); a command answers in the user's language
+ * with joinToCreateErrorText(error, tr).
+ */
+export class JtcError extends TitanBotError {
+    constructor(message, type, key, context = {}, params = {}) {
+        super(message, type, botText('en').t(key, params), context);
+        this.i18n = { key, params };
+    }
+}
+
+/** The text of a Join to Create error in `tr`'s language (its English userMessage otherwise). */
+export function joinToCreateErrorText(error, tr, fallback = null) {
+    if (error?.i18n && tr) return tr.t(error.i18n.key, error.i18n.params);
+    return error?.userMessage || fallback;
+}
 
 const CHANNEL_NAME_MAX_LENGTH = 100;
 const CHANNEL_VARIABLE_MAX_LENGTH = 32;
@@ -29,38 +48,42 @@ const ALLOWED_TEMPLATE_PLACEHOLDERS = new Set([
 
 export function validateChannelNameTemplate(template) {
     if (!template || typeof template !== 'string') {
-        throw new TitanBotError(
+        throw new JtcError(
             'Invalid channel template: must be a non-empty string',
             ErrorTypes.VALIDATION,
-            'Channel name template must be valid text.'
+            'jointocreate.service.templateText'
         );
     }
 
     const normalizedTemplate = template.normalize('NFKC').replace(CONTROL_AND_INVISIBLE_CHARS_REGEX, '').trim();
 
     if (normalizedTemplate.length > CHANNEL_NAME_MAX_LENGTH) {
-        throw new TitanBotError(
+        throw new JtcError(
             'Channel template exceeds maximum length',
             ErrorTypes.VALIDATION,
-            `Channel name template cannot exceed ${CHANNEL_NAME_MAX_LENGTH} characters.`
+            'jointocreate.service.templateLength',
+            {},
+            { max: CHANNEL_NAME_MAX_LENGTH }
         );
     }
 
     if (/[@#:`]/.test(normalizedTemplate)) {
-        throw new TitanBotError(
+        throw new JtcError(
             'Channel template contains forbidden characters',
             ErrorTypes.VALIDATION,
-            'Channel template cannot contain @, #, :, or backtick characters.'
+            'jointocreate.service.templateChars'
         );
     }
 
     const placeholders = normalizedTemplate.match(/\{[^}]+\}/g) || [];
     for (const placeholder of placeholders) {
         if (!ALLOWED_TEMPLATE_PLACEHOLDERS.has(placeholder)) {
-            throw new TitanBotError(
+            throw new JtcError(
                 'Channel template contains unknown placeholders',
                 ErrorTypes.VALIDATION,
-                `Unknown placeholder: ${placeholder}. Allowed placeholders are ${Array.from(ALLOWED_TEMPLATE_PLACEHOLDERS).join(', ')}`
+                'jointocreate.service.templatePlaceholder',
+                {},
+                { placeholder, allowed: Array.from(ALLOWED_TEMPLATE_PLACEHOLDERS).join(', ') }
             );
         }
     }
@@ -72,18 +95,18 @@ export function validateBitrate(bitrate) {
     const bitrateNum = parseInt(bitrate);
 
     if (isNaN(bitrateNum)) {
-        throw new TitanBotError(
+        throw new JtcError(
             'Bitrate must be a valid number',
             ErrorTypes.VALIDATION,
-            'Please enter a valid number for bitrate.'
+            'jointocreate.service.bitrateNumber'
         );
     }
 
     if (bitrateNum < 8 || bitrateNum > 384) {
-        throw new TitanBotError(
+        throw new JtcError(
             'Bitrate out of valid range',
             ErrorTypes.VALIDATION,
-            'Bitrate must be between 8 and 384 kbps.'
+            'jointocreate.service.bitrateRange'
         );
     }
 
@@ -94,18 +117,18 @@ export function validateUserLimit(limit) {
     const limitNum = parseInt(limit);
 
     if (isNaN(limitNum)) {
-        throw new TitanBotError(
+        throw new JtcError(
             'User limit must be a valid number',
             ErrorTypes.VALIDATION,
-            'Please enter a valid number for user limit.'
+            'jointocreate.service.limitNumber'
         );
     }
 
     if (limitNum < 0 || limitNum > 99) {
-        throw new TitanBotError(
+        throw new JtcError(
             'User limit out of valid range',
             ErrorTypes.VALIDATION,
-            'User limit must be between 0 (no limit) and 99.'
+            'jointocreate.service.limitRange'
         );
     }
 
@@ -180,18 +203,18 @@ export function formatChannelName(template, variables) {
 export async function initializeJoinToCreate(client, guildId, channelId, options = {}) {
     try {
         if (!client || !client.db) {
-            throw new TitanBotError(
+            throw new JtcError(
                 'Database service not available',
                 ErrorTypes.DATABASE,
-                'System error occurred. Please try again.'
+                'jointocreate.service.systemError'
             );
         }
 
         if (!guildId || !channelId) {
-            throw new TitanBotError(
+            throw new JtcError(
                 'Missing required guild or channel ID',
                 ErrorTypes.VALIDATION,
-                'Invalid guild or channel information provided.'
+                'jointocreate.service.invalidIds'
             );
         }
 
@@ -208,18 +231,18 @@ export async function initializeJoinToCreate(client, guildId, channelId, options
         const config = await getJoinToCreateConfig(client, guildId);
 
         if (config.triggerChannels.includes(channelId)) {
-            throw new TitanBotError(
+            throw new JtcError(
                 'Channel already configured as Join to Create trigger',
                 ErrorTypes.VALIDATION,
-                'This channel is already set up as a Join to Create trigger.'
+                'jointocreate.service.alreadyTrigger'
             );
         }
 
         if (Array.isArray(config.triggerChannels) && config.triggerChannels.length > 0) {
-            throw new TitanBotError(
+            throw new JtcError(
                 'Guild already has a Join to Create trigger configured',
                 ErrorTypes.VALIDATION,
-                'This server already has a Join to Create channel configured. Use `/jointocreate dashboard` to modify it, or remove it before creating a new one.',
+                'jointocreate.service.alreadyConfigured',
                 {
                     guildId,
                     existingTriggerChannelId: config.triggerChannels[0],
@@ -247,10 +270,10 @@ export async function initializeJoinToCreate(client, guildId, channelId, options
 
         const saveResult = await saveJoinToCreateConfig(client, guildId, config);
         if (!saveResult) {
-            throw new TitanBotError(
+            throw new JtcError(
                 'Failed to save Join to Create configuration',
                 ErrorTypes.DATABASE,
-                'Failed to set up Join to Create system. Please try again.'
+                'jointocreate.service.saveFailed'
             );
         }
 
@@ -262,10 +285,10 @@ export async function initializeJoinToCreate(client, guildId, channelId, options
         if (error instanceof TitanBotError) {
             throw error;
         }
-        throw new TitanBotError(
+        throw new JtcError(
             `Failed to initialize Join to Create: ${error.message}`,
             ErrorTypes.DATABASE,
-            'Failed to set up Join to Create system.'
+            'jointocreate.service.setupFailed'
         );
     }
 }
@@ -273,10 +296,10 @@ export async function initializeJoinToCreate(client, guildId, channelId, options
 export async function updateChannelConfig(client, guildId, channelId, updates) {
     try {
         if (!client || !client.db) {
-            throw new TitanBotError(
+            throw new JtcError(
                 'Database service not available',
                 ErrorTypes.DATABASE,
-                'Database service is currently unavailable. Please try again later.'
+                'jointocreate.service.dbUnavailable'
             );
         }
 
@@ -304,10 +327,10 @@ export async function updateChannelConfig(client, guildId, channelId, updates) {
             return true;
         });
         if (!found) {
-            throw new TitanBotError(
+            throw new JtcError(
                 'Channel is not configured as a Join to Create trigger',
                 ErrorTypes.VALIDATION,
-                'This channel is not set up as a Join to Create trigger.'
+                'jointocreate.service.notTrigger'
             );
         }
 
@@ -321,10 +344,10 @@ export async function updateChannelConfig(client, guildId, channelId, updates) {
         if (error instanceof TitanBotError) {
             throw error;
         }
-        throw new TitanBotError(
+        throw new JtcError(
             `Failed to update channel config: ${error.message}`,
             ErrorTypes.DATABASE,
-            'Failed to update configuration.'
+            'jointocreate.service.updateFailed'
         );
     }
 }
@@ -332,10 +355,10 @@ export async function updateChannelConfig(client, guildId, channelId, updates) {
 export async function removeTriggerChannel(client, guildId, channelId) {
     try {
         if (!client || !client.db) {
-            throw new TitanBotError(
+            throw new JtcError(
                 'Database service not available',
                 ErrorTypes.DATABASE,
-                'Database service is currently unavailable. Please try again later.'
+                'jointocreate.service.dbUnavailable'
             );
         }
 
@@ -358,10 +381,10 @@ export async function removeTriggerChannel(client, guildId, channelId) {
             return true;
         });
         if (!found) {
-            throw new TitanBotError(
+            throw new JtcError(
                 'Channel not found in Join to Create triggers',
                 ErrorTypes.VALIDATION,
-                'This channel is not configured as a Join to Create trigger.'
+                'jointocreate.service.notConfigured'
             );
         }
 
@@ -373,10 +396,10 @@ export async function removeTriggerChannel(client, guildId, channelId) {
         if (error instanceof TitanBotError) {
             throw error;
         }
-        throw new TitanBotError(
+        throw new JtcError(
             `Failed to remove trigger channel: ${error.message}`,
             ErrorTypes.DATABASE,
-            'Failed to remove trigger channel.'
+            'jointocreate.service.removeFailed'
         );
     }
 }
@@ -384,10 +407,10 @@ export async function removeTriggerChannel(client, guildId, channelId) {
 export async function getConfiguration(client, guildId) {
     try {
         if (!client || !client.db) {
-            throw new TitanBotError(
+            throw new JtcError(
                 'Database service not available',
                 ErrorTypes.DATABASE,
-                'Database service is currently unavailable. Please try again later.'
+                'jointocreate.service.dbUnavailable'
             );
         }
 
@@ -397,10 +420,10 @@ export async function getConfiguration(client, guildId) {
         if (error instanceof TitanBotError) {
             throw error;
         }
-        throw new TitanBotError(
+        throw new JtcError(
             `Failed to retrieve configuration: ${error.message}`,
             ErrorTypes.DATABASE,
-            'Failed to retrieve settings.'
+            'jointocreate.service.readFailed'
         );
     }
 }
@@ -420,10 +443,10 @@ export async function getChannelConfiguration(client, guildId, channelId) {
         const config = await getConfiguration(client, guildId);
 
         if (!config.triggerChannels || !Array.isArray(config.triggerChannels) || !config.triggerChannels.includes(channelId)) {
-            throw new TitanBotError(
+            throw new JtcError(
                 'Channel is not a valid Join to Create trigger',
                 ErrorTypes.VALIDATION,
-                'This channel is not set up as a Join to Create trigger.'
+                'jointocreate.service.notTrigger'
             );
         }
 
@@ -436,10 +459,10 @@ export async function getChannelConfiguration(client, guildId, channelId) {
         if (error instanceof TitanBotError) {
             throw error;
         }
-        throw new TitanBotError(
+        throw new JtcError(
             `Failed to get channel configuration: ${error.message}`,
             ErrorTypes.DATABASE,
-            'Failed to retrieve channel configuration. Please try again.'
+            'jointocreate.service.channelReadFailed'
         );
     }
 }
@@ -487,11 +510,12 @@ export async function setupJoinToCreate(client, guild, {
             }
         }
         if (active.length > 0) {
-            throw new TitanBotError(
+            throw new JtcError(
                 'Guild already has a Join to Create channel',
                 ErrorTypes.VALIDATION,
-                `This server already has a Join to Create channel set up: ${active[0]}\n\nChange or remove it first before creating a new one.`,
-                { guildId, activeTriggerCount: active.length, expected: true, suppressErrorLog: true }
+                'jointocreate.service.alreadySetUp',
+                { guildId, activeTriggerCount: active.length, expected: true, suppressErrorLog: true },
+                { channel: String(active[0]) }
             );
         }
     }
@@ -502,10 +526,11 @@ export async function setupJoinToCreate(client, guild, {
     validateBitrate(bitrateKbps);
     const category = categoryId ? guild.channels.cache.get(categoryId) : null;
     if (categoryId && (!category || category.type !== ChannelType.GuildCategory)) {
-        throw new TitanBotError('Not a category', ErrorTypes.VALIDATION, 'The category must be a category in this server.', { expected: true });
+        throw new JtcError('Not a category', ErrorTypes.VALIDATION, 'jointocreate.service.notCategory', { expected: true });
     }
 
     const channel = await guild.channels.create({
+        // Kept as the feature's name in every language (the dashboard tells admins this exact name).
         name: 'Join to Create',
         type: ChannelType.GuildVoice,
         parent: category?.id,

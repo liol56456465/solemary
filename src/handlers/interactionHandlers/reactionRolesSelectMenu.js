@@ -6,8 +6,11 @@ import { getColor } from '../../config/bot.js';
 import { logEvent, EVENT_TYPES } from '../../services/loggingService.js';
 import { getReactionRoleMessage } from '../../services/reactionRoleService.js';
 import { hasDangerousPermissions } from '../../utils/roleSafety.js';
+import { textForInteraction } from '../../utils/botText.js';
 
 export async function handleReactionRolesSelectMenu(interaction, client) {
+    // An ephemeral answer to the member who picked: their Discord language.
+    const tr = textForInteraction(interaction);
     try {
         const deferSuccess = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
         if (!deferSuccess) return;
@@ -16,7 +19,7 @@ export async function handleReactionRolesSelectMenu(interaction, client) {
             throw createError(
                 'Reaction role interaction used outside a guild context',
                 ErrorTypes.VALIDATION,
-                'This reaction role menu can only be used inside a server.',
+                tr.t('reactionroles.select.outsideGuild'),
                 { userId: interaction.user.id }
             );
         }
@@ -30,7 +33,7 @@ export async function handleReactionRolesSelectMenu(interaction, client) {
             return interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
-                        .setDescription('This reaction role message is no longer active.')
+                        .setDescription(tr.t('reactionroles.select.inactive'))
                         .setColor(getColor('error'))
                 ]
             });
@@ -45,7 +48,7 @@ export async function handleReactionRolesSelectMenu(interaction, client) {
             throw createError(
                 'Unable to fetch bot member for permission validation',
                 ErrorTypes.PERMISSION,
-                'I could not verify my server permissions. Please try again.',
+                tr.t('reactionroles.select.cannotVerify'),
                 { guildId: interaction.guildId }
             );
         }
@@ -54,7 +57,7 @@ export async function handleReactionRolesSelectMenu(interaction, client) {
             throw createError(
                 'Bot missing ManageRoles permission',
                 ErrorTypes.PERMISSION,
-                'I do not have permission to manage roles in this server.',
+                tr.t('reactionroles.select.noManageRoles'),
                 { guildId: interaction.guildId }
             );
         }
@@ -126,23 +129,7 @@ export async function handleReactionRolesSelectMenu(interaction, client) {
             }
         }
 
-        let description = 'Your roles are updated.\n\n';
-
-        if (addedRoles.length > 0) {
-            description += `**Added:** ${addedRoles.map(name => `**${name}**`).join(', ')}\n`;
-        }
-
-        if (removedRoles.length > 0) {
-            description += `**Removed:** ${removedRoles.map(name => `**${name}**`).join(', ')}\n`;
-        }
-
-        if (addedRoles.length === 0 && removedRoles.length === 0) {
-            description += 'Nothing changed.';
-        }
-
-        if (skippedRoles.length > 0) {
-            description += `\n**Skipped:** ${skippedRoles.length} role${skippedRoles.length !== 1 ? 's' : ''} (I don't have permission)`;
-        }
+        const description = rolesUpdatedText(tr, { addedRoles, removedRoles, skipped: skippedRoles.length });
 
         const responseEmbed = new EmbedBuilder()
             .setDescription(description)
@@ -193,4 +180,15 @@ export async function handleReactionRolesSelectMenu(interaction, client) {
             customId: 'reaction_roles'
         });
     }
+}
+
+/** The member's "roles updated" reply text (role names are shown as typed, in bold). */
+export function rolesUpdatedText(tr, { addedRoles = [], removedRoles = [], skipped = 0 }) {
+    const bold = (names) => names.map((name) => `**${name}**`).join(', ');
+    let description = `${tr.t('reactionroles.select.updated')}\n\n`;
+    if (addedRoles.length > 0) description += `${tr.t('reactionroles.select.added', { roles: bold(addedRoles) })}\n`;
+    if (removedRoles.length > 0) description += `${tr.t('reactionroles.select.removed', { roles: bold(removedRoles) })}\n`;
+    if (addedRoles.length === 0 && removedRoles.length === 0) description += tr.t('reactionroles.select.nothing');
+    if (skipped > 0) description += `\n${tr.tp('reactionroles.select.skipped', skipped)}`;
+    return description;
 }

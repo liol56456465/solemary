@@ -1,0 +1,150 @@
+{
+    "cmd": {
+        "description": "Zarządzaj kanałami głosowymi Join to Create",
+        "setup": {
+            "description": "Skonfiguruj kanał głosowy Join to Create",
+            "category": "Kategoria, w której utworzyć kanał.",
+            "channelName": "Wybierz szablon nazw tymczasowych kanałów głosowych.",
+            "userLimit": "Maksymalna liczba osób na kanałach tymczasowych. (0 = bez limitu)",
+            "bitrate": "Bitrate kanałów tymczasowych w kb/s (8-96)."
+        },
+        "dashboard": {
+            "description": "Zmień ustawienia Join to Create",
+            "triggerChannel": "Kanał wyzwalający Join to Create do ustawienia."
+        }
+    },
+    "fallbackRoomName": "Pokój głosowy",
+    "createFailedDm": "Nie udało mi się utworzyć Twojego tymczasowego kanału głosowego. Daj znać administratorowi serwera.",
+    "error": {
+        "adminCommand": "Do użycia tej komendy potrzebujesz uprawnienia **Administrator**.",
+        "adminControls": "Do użycia tych przycisków potrzebujesz uprawnienia **Administrator**.",
+        "adminSettings": "Do zmiany tych ustawień potrzebujesz uprawnienia **Administrator**.",
+        "adminRemove": "Do usuwania kanałów potrzebujesz uprawnienia **Administrator**.",
+        "tryAgain": "Wystąpił błąd. Spróbuj ponownie.",
+        "unexpected": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie lub skontaktuj się z pomocą.",
+        "occurred": "Wystąpił błąd.",
+        "processing": "Podczas obsługi Twojej prośby wystąpił błąd.",
+        "setupFailed": "Nie udało się skonfigurować Join to Create. Sprawdź uprawnienia bota.",
+        "controlsFailed": "Nie udało się otworzyć ustawień. Uruchom ponownie `/jointocreate dashboard`.",
+        "loadFailed": "Nie udało się wczytać ustawień.",
+        "updateSettings": "Podczas zmiany ustawień wystąpił błąd.",
+        "updateTemplate": "Podczas zmiany szablonu wystąpił błąd.",
+        "updateLimit": "Podczas zmiany limitu osób wystąpił błąd.",
+        "updateBitrate": "Podczas zmiany bitrate'u wystąpił błąd.",
+        "removeFailed": "Podczas usuwania kanału wystąpił błąd."
+    },
+    "setup": {
+        "title": "Join to Create jest skonfigurowane",
+        "created": "Utworzono kanał Join to Create: {channel}",
+        "settings": "**Ustawienia:**",
+        "template": "• Szablon: `{template}`",
+        "userLimit": "• Limit osób: {limit}",
+        "bitrate": "• Bitrate: {kbps} kb/s",
+        "category": "• Kategoria: {category}",
+        "categoryRoot": "• Kategoria: brak (poziom główny)"
+    },
+    "limit": {
+        "unlimited": "Bez limitu",
+        "users": {
+            "one": "{count} osoba",
+            "few": "{count} osoby",
+            "many": "{count} osób",
+            "other": "{count} osoby"
+        }
+    },
+    "panel": {
+        "title": "Ustawienia Join to Create",
+        "description": "Ustawienia kanału {channel}",
+        "nameTemplate": "Szablon nazwy kanału",
+        "userLimit": "Limit osób",
+        "bitrate": "Bitrate",
+        "kbps": "{kbps} kb/s",
+        "footer": "Zmieniaj ustawienia przyciskami · Jeden kanał wyzwalający na serwer",
+        "expired": "Te przyciski wygasły. Uruchom komendę ponownie, aby coś zmienić.",
+        "buttonName": "Szablon nazwy",
+        "buttonLimit": "Limit osób",
+        "buttonBitrate": "Bitrate",
+        "buttonRemove": "Usuń kanał"
+    },
+    "modal": {
+        "pickTemplate": "Wybierz szablon nazwy",
+        "limitLabel": "Limit osób (0-99, 0 = bez limitu)",
+        "limitPlaceholder": "od 0 do 99",
+        "bitrateLabel": "Bitrate w kb/s (8-384)",
+        "bitratePlaceholder": "od 8 do 384",
+        "updated": "Zmieniono",
+        "templateChanged": "Szablon nazwy kanału zmieniono na `{template}`",
+        "limitChanged": "Limit osób zmieniono: {limit}",
+        "bitrateChanged": "Bitrate zmieniono na {kbps} kb/s"
+    },
+    "remove": {
+        "yes": "Tak, usuń",
+        "cancel": "Anuluj",
+        "confirmTitle": "Usunąć ten kanał?",
+        "confirmBody": "Usunąć **{channel}** z Join to Create? Tego nie da się cofnąć.",
+        "doneTitle": "Usunięto",
+        "doneBody": "**{channel}** usunięto z Join to Create.",
+        "cancelledTitle": "Anulowano",
+        "cancelledBody": "Usuwanie kanału zostało anulowane."
+    },
+    "form": {
+        "invalid": "Ten formularz jest już nieważny. Uruchom ponownie /jointocreate config.",
+        "expired": "Ten formularz wygasł. Uruchom ponownie /jointocreate config.",
+        "notChanged": "{error} Nic nie zostało zmienione.",
+        "noLongerTrigger": "<#{channelId}> nie jest już kanałem Join to Create. Nic nie zostało zmienione.",
+        "database": "Baza danych nie odpowiada, więc nic nie zostało zmienione. Spróbuj za minutę.",
+        "saved": "{text} Nowe kanały tymczasowe z <#{channelId}> będą tego używać.",
+        "name": {
+            "title": "Szablon nazwy kanału",
+            "label": "Nowy szablon nazwy",
+            "hint": "Do 100 znaków. {username}, {display_name}, {user_tag} i {guild_name} są uzupełniane.",
+            "error": "Szablon nazwy musi mieć od 1 do {max} znaków w jednej linii.",
+            "changed": "Szablon nazwy kanału zmieniono na `{template}`."
+        },
+        "limit": {
+            "title": "Limit osób",
+            "label": "Osób na kanale tymczasowym",
+            "hint": "Liczba całkowita od 0 do {max}. 0 oznacza brak limitu.",
+            "error": "Limit osób musi być liczbą całkowitą od 0 do {max}.",
+            "changedNone": "Limit osób usunięty (bez limitu).",
+            "changed": {
+                "one": "Limit osób zmieniono na {count} osobę.",
+                "few": "Limit osób zmieniono na {count} osoby.",
+                "many": "Limit osób zmieniono na {count} osób.",
+                "other": "Limit osób zmieniono na {count} osoby."
+            }
+        },
+        "bitrate": {
+            "title": "Bitrate",
+            "label": "Jakość dźwięku w kb/s",
+            "hint": "Liczba całkowita od {min} do {max}. 64 to normalna, 96 dobra, 128 wysoka.",
+            "error": "Bitrate musi być liczbą całkowitą od {min} do {max} kb/s.",
+            "changed": "Bitrate zmieniono na {kbps} kb/s."
+        }
+    },
+    "service": {
+        "templateText": "Szablon nazwy kanału musi być poprawnym tekstem.",
+        "templateLength": "Szablon nazwy kanału nie może mieć więcej niż {max} znaków.",
+        "templateChars": "Szablon nie może zawierać @, #, : ani znaku backtick.",
+        "templatePlaceholder": "Nieznany symbol zastępczy: {placeholder}. Dozwolone: {allowed}",
+        "bitrateNumber": "Podaj poprawną liczbę dla bitrate'u.",
+        "bitrateRange": "Bitrate musi wynosić od 8 do 384 kb/s.",
+        "limitNumber": "Podaj poprawną liczbę dla limitu osób.",
+        "limitRange": "Limit osób musi wynosić od 0 (bez limitu) do 99.",
+        "systemError": "Wystąpił błąd systemu. Spróbuj ponownie.",
+        "invalidIds": "Nieprawidłowe dane serwera lub kanału.",
+        "alreadyTrigger": "Ten kanał jest już wyzwalaczem Join to Create.",
+        "alreadyConfigured": "Ten serwer ma już kanał Join to Create. Zmień go przez `/jointocreate dashboard` albo usuń go przed utworzeniem nowego.",
+        "saveFailed": "Nie udało się skonfigurować Join to Create. Spróbuj ponownie.",
+        "setupFailed": "Nie udało się skonfigurować Join to Create.",
+        "dbUnavailable": "Baza danych jest teraz niedostępna. Spróbuj później.",
+        "notTrigger": "Ten kanał nie jest wyzwalaczem Join to Create.",
+        "notConfigured": "Ten kanał nie jest ustawiony jako wyzwalacz Join to Create.",
+        "updateFailed": "Nie udało się zmienić ustawień.",
+        "removeFailed": "Nie udało się usunąć kanału wyzwalającego.",
+        "readFailed": "Nie udało się odczytać ustawień.",
+        "channelReadFailed": "Nie udało się odczytać ustawień kanału. Spróbuj ponownie.",
+        "alreadySetUp": "Ten serwer ma już kanał Join to Create: {channel}\n\nNajpierw go zmień lub usuń, zanim utworzysz nowy.",
+        "notCategory": "Kategoria musi być kategorią na tym serwerze."
+    }
+}

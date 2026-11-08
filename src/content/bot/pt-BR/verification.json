@@ -1,0 +1,298 @@
+{
+    "cmd": {
+        "verify": {
+            "description": "Verifique-se e ganhe acesso ao servidor"
+        },
+        "verification": {
+            "description": "Gerencie o sistema de verificação do servidor",
+            "setup": {
+                "description": "Configure o sistema de verificação",
+                "channel": "Canal onde a mensagem de verificação será publicada",
+                "role": "Cargo dado aos membros verificados",
+                "message": "Mensagem de verificação personalizada",
+                "buttonText": "Texto do botão de verificação"
+            },
+            "remove": {
+                "description": "Tire a verificação de um membro",
+                "user": "Membro de quem tirar a verificação"
+            },
+            "dashboard": {
+                "description": "Abra o painel de configuração da verificação"
+            },
+            "auto": {
+                "description": "Verificação automática (verifica membros ao entrar, por regras)"
+            }
+        },
+        "autoverify": {
+            "description": "Configure a verificação automática",
+            "setup": {
+                "description": "Configure a verificação automática",
+                "role": "Cargo para os membros que atendem ao critério",
+                "criteria": "Critério da verificação automática",
+                "accountAgeDays": "Idade mínima da conta em dias (necessária para o critério de idade)",
+                "choiceAccountAge": "Idade da conta",
+                "choiceNone": "Sem critério"
+            },
+            "dashboard": {
+                "description": "Abra o painel da verificação automática"
+            }
+        }
+    },
+    "privacy": {
+        "oauth": "A verificação guarda seu ID do Discord, um token de login criptografado (para adicionar você ao servidor de suporte do Mewvo) e uma impressão embaralhada do seu endereço IP para detectar quem burla banimentos.",
+        "direct": "A verificação guarda seu ID do Discord e o momento em que você se verificou.",
+        "link": "Privacidade: {url}"
+    },
+    "verify": {
+        "quizTitle": "Quiz das regras",
+        "quizPrefix": "Use /verify ou o botão Verificar para fazer primeiro o quiz das regras.",
+        "alreadyTitle": "Já verificado",
+        "alreadyText": "Você já está verificado.",
+        "verifiedTitle": "Verificado",
+        "verifiedText": "Você está verificado e recebeu o cargo **{role}**.\n\n-# {privacy}"
+    },
+    "button": {
+        "oauthTitle": "Verificar com o Discord",
+        "oauthText": "Aperte o botão abaixo e autorize o bot com sua conta do Discord. Você recebe o cargo assim que autorizar.\n\n-# O link só funciona para você e expira em 10 minutos.\n-# {privacy}",
+        "oauthButton": "Verificar com o Discord",
+        "alreadyTitle": "Já verificado",
+        "alreadyText": "Você já está verificado e tem acesso a todos os canais do servidor.",
+        "verifiedText": "Você está verificado e recebeu o cargo **{role}**. Boas-vindas!\n\n-# {privacy}",
+        "serverOnly": "Este botão só funciona em um servidor."
+    },
+    "quiz": {
+        "notYours": "Este quiz não é seu. Clique em Verificar para começar o seu.",
+        "expired": "Este quiz expirou, clique em Verificar de novo.",
+        "expiredTitle": "Quiz expirado",
+        "questionTitle": "Quiz das regras: pergunta {step} de {total}",
+        "footerOne": "Responda a esta pergunta para continuar a verificação. O quiz expira depois de {minutes} minutos.",
+        "footerMany": {
+            "one": "Responda às {count} perguntas para continuar a verificação. O quiz expira depois de {minutes} minutos.",
+            "many": "Responda às {count} perguntas para continuar a verificação. O quiz expira depois de {minutes} minutos.",
+            "other": "Responda às {count} perguntas para continuar a verificação. O quiz expira depois de {minutes} minutos."
+        },
+        "minutes": {
+            "one": "{count} minuto",
+            "many": "{count} minutos",
+            "other": "{count} minutos"
+        },
+        "rulesChannel": "o canal de regras",
+        "failedTitle": "Quase",
+        "failedText": "Quase — leia as regras em {where} e tente de novo em {wait}.",
+        "cooldownTitle": "Quiz das regras",
+        "cooldownText": "Leia as regras em {where} e tente de novo em {wait}."
+    },
+    "review": {
+        "otherServer": "Esta verificação é de outro servidor. Aprove-a lá.",
+        "adminOnly": "Só administradores podem aprovar verificações.",
+        "theServer": "o servidor",
+        "dmApproved": "**Sua verificação em {server} foi aprovada.** Agora você tem acesso.",
+        "dmDenied": "**Sua verificação em {server} não foi aprovada.** Se você acha que é um erro, fale com alguém da equipe.",
+        "cardApproved": "Aprovada por {admin}. DM: {dm}.",
+        "cardApprovedAlready": "Aprovada por {admin} (já estava verificado). DM: {dm}.",
+        "cardDenied": "Recusada por {admin}. DM: {dm}.",
+        "dmDelivered": "entregue",
+        "dmNotDelivered": "não entregue",
+        "approvedTitle": "Verificação aprovada",
+        "approvedText": "{user} agora tem o cargo **{role}**.",
+        "deniedTitle": "Verificação recusada",
+        "deniedText": "{user} continua sem verificação."
+    },
+    "hold": {
+        "title": "Verificação aguardando aprovação",
+        "user": "Membro",
+        "created": "Conta criada",
+        "why": "Por que foi retida",
+        "footer": "Aprovar dá o cargo de verificado. Recusar deixa a pessoa sem verificação e avisa por DM.",
+        "approve": "Aprovar",
+        "deny": "Recusar",
+        "reasonYoung": "A conta tem só {age} (mínimo {min})",
+        "reasonNetwork": "Mesma rede do membro banido {username} (`{userId}`, banimento `{caseCode}`)"
+    },
+    "panel": {
+        "title": "Verificação do servidor",
+        "defaultMessage": "Aperte o botão abaixo para ter acesso ao resto do servidor.",
+        "defaultButton": "Verificar"
+    },
+    "errors": {
+        "notSetUp": "A verificação ainda não está configurada neste servidor. Peça a um administrador do servidor para configurá-la com `/verification setup`.",
+        "botLeft": "Não estou mais nesse servidor, então não consigo verificar você lá.",
+        "roleGoneSetup": "O cargo de verificado deste servidor não existe mais. Peça a um administrador do servidor para rodar `/verification setup` de novo.",
+        "guildNotCached": "Servidor não encontrado no cache do bot.",
+        "guildNotFound": "Servidor não encontrado.",
+        "notMember": "Este membro não está no servidor.",
+        "cannotAssign": "Não consigo dar o cargo de verificado. Confira minha permissão **Gerenciar cargos** e a ordem dos cargos.",
+        "verifyFailed": "A verificação falhou. Tente de novo daqui a pouco.",
+        "disabled": "O sistema de verificação não está ativado.",
+        "roleGone": "O cargo de verificado não existe mais.",
+        "cannotRemove": "Não consigo tirar o cargo de verificado agora. Confira minha permissão **Gerenciar cargos** e a ordem dos cargos.",
+        "removeFailed": "Não foi possível tirar a verificação. Tente de novo daqui a pouco.",
+        "noBotPerms": "Não consegui conferir minhas permissões no servidor. Tente de novo.",
+        "roleDeleted": "O cargo de verificado foi apagado. Rode `/verification setup` de novo.",
+        "channelDeleted": "O canal de verificação foi apagado.",
+        "channelPerms": "Estão faltando permissões no canal de verificação: {perms}",
+        "cooldown": "Espere {seconds} segundos antes de se verificar de novo.",
+        "tooMany": "Você tentou vezes demais. Espere um pouco.",
+        "badCriteria": "Escolha um critério válido.",
+        "badAge": "A idade da conta precisa ficar entre {min} e {max} dias.",
+        "panelPerms": "Preciso de **Ver canal**, **Enviar mensagens** e **Inserir links** no canal de verificação.",
+        "permsUnknown": "Não consegui conferir minhas permissões neste servidor. Tente de novo daqui a pouco.",
+        "needManageRoles": "Preciso da permissão \"Gerenciar cargos\" para dar cargos de verificado.",
+        "badRole": "Escolha um cargo normal que possa ser atribuído (não @everyone nem um cargo gerenciado por integração).",
+        "roleTooHigh": "O cargo de verificado precisa estar abaixo do meu cargo mais alto na ordem de cargos do servidor.",
+        "conflict": "Você não pode ativar o sistema de verificação enquanto **AutoVerify** ou **AutoRole** estiver configurado. Desative-os primeiro.",
+        "needManageServer": "Você precisa da permissão **Gerenciar servidor** para usar este subcomando de verificação.",
+        "badSubcommand": "Escolha um subcomando válido."
+    },
+    "autoDm": {
+        "title": "Você está verificado",
+        "text": "Você foi verificado automaticamente em **{server}**.",
+        "roleName": "Cargo",
+        "roleText": "Você recebeu o cargo {role}."
+    },
+    "setup": {
+        "title": "Sistema de verificação atualizado",
+        "channel": "Canal: {channel}",
+        "role": "Cargo de verificado: {role}",
+        "button": "Texto do botão: {text}"
+    },
+    "remove": {
+        "notTitle": "Não verificado",
+        "notText": "{user} não tem o cargo de verificado no momento.",
+        "doneTitle": "Verificação removida",
+        "doneText": "Verificação removida de {user}."
+    },
+    "dash": {
+        "notSet": "`Não definido`",
+        "notConfigured": "`Não configurado`",
+        "enabled": "Ativado",
+        "disabled": "Desativado",
+        "footer": "O painel fecha depois de 10 minutos sem atividade",
+        "timedOutTitle": "Painel expirado",
+        "timedOutText": "Este painel foi fechado por inatividade. Rode o comando de novo para continuar.",
+        "selectPlaceholder": "Escolha uma configuração…",
+        "roleUpdated": "Cargo atualizado",
+        "noRole": "Nenhum cargo escolhido. A configuração não mudou.",
+        "rolePlaceholder": "Escolha um cargo…",
+        "autoRoleConfigured": "AutoRole está configurado",
+        "conflicts": "Conflitos de configuração",
+        "systemStatus": "Status do sistema",
+        "panelStatus": {
+            "unknown": "`Desconhecido`",
+            "activeLink": "Ativo · [ver painel]({url})",
+            "active": "Ativo",
+            "channelMissing": "Faltando: o canal do painel foi apagado",
+            "panelDeleted": "Faltando: a mensagem do painel foi apagada. Use **{hint}** abaixo.",
+            "noChannel": "Não configurado: ainda sem canal para o painel"
+        }
+    },
+    "vdash": {
+        "title": "Painel do sistema de verificação",
+        "intro": "Gerencie as configurações de verificação de **{server}**.\nEscolha uma opção abaixo para mudar uma configuração.",
+        "fieldPanel": "Status do painel",
+        "fieldChannel": "Canal de verificação",
+        "fieldRole": "Cargo de verificado",
+        "fieldButton": "Texto do botão",
+        "fieldUsers": "Membros verificados",
+        "users": {
+            "one": "{count} membro",
+            "many": "{count} membros",
+            "other": "{count} membros"
+        },
+        "fieldMessage": "Mensagem de verificação",
+        "optChannel": "Mudar canal de verificação",
+        "optChannelDesc": "Escolha o canal onde o painel de verificação é publicado",
+        "optRole": "Mudar cargo de verificado",
+        "optRoleDesc": "Escolha o cargo dado quando alguém se verifica",
+        "optMessage": "Editar mensagem de verificação",
+        "optMessageDesc": "Personalize a mensagem do embed do painel de verificação",
+        "optButton": "Editar texto do botão",
+        "optButtonDesc": "Mude o texto do botão de verificação",
+        "repostButton": "Publicar painel de novo",
+        "toggleButton": "Verificação",
+        "channelGone": "O canal de verificação configurado não existe mais. Escolha um canal novo no painel.",
+        "autoVerifyOn": "AutoVerify está ativado",
+        "notConfigured": "O sistema de verificação ainda não está configurado. Rode primeiro `/verification setup`.",
+        "repostedTitle": "Painel publicado de novo",
+        "repostedText": "Painel de verificação restaurado em {channel}.",
+        "autoVerifyBlocks": "O AutoVerify está ativado. Desative o AutoVerify antes de ativar o sistema de verificação manual.\n\nRode `/verification auto dashboard` para abrir o painel do AutoVerify.",
+        "systemUpdatedTitle": "Sistema atualizado",
+        "systemOn": "O sistema de verificação agora está **ativado**.",
+        "systemOff": "O sistema de verificação agora está **desativado**.",
+        "openFailed": "Não foi possível abrir o painel de verificação.",
+        "channelPlaceholder": "Escolha um canal de texto…",
+        "channelTitle": "Mudar canal de verificação",
+        "channelText": "**Atual:** {current}\n\nEscolha o canal onde o painel de verificação será publicado.\n\n> O painel atual será apagado e publicado de novo no canal novo.",
+        "channelPerms": "Preciso das permissões **Ver canal**, **Enviar mensagens** e **Inserir links** em {channel}.",
+        "channelUpdatedTitle": "Canal atualizado",
+        "channelUpdatedText": "Painel de verificação movido para {channel}.",
+        "noChannel": "Nenhum canal escolhido. A configuração não mudou.",
+        "roleTitle": "Mudar cargo de verificado",
+        "roleText": "**Atual:** {current}\n\nEscolha o cargo dado quando alguém se verifica.",
+        "roleUpdatedText": "Cargo de verificado definido como {role}.",
+        "messageModal": "Editar mensagem de verificação",
+        "messageLabel": "Mensagem do embed do painel de verificação",
+        "messageUpdatedTitle": "Mensagem atualizada",
+        "messageUpdatedText": "O painel de verificação agora mostra a mensagem nova.",
+        "buttonModal": "Editar texto do botão",
+        "buttonLabel": "Texto do botão (máx. 80 caracteres)",
+        "buttonUpdatedTitle": "Texto do botão atualizado",
+        "buttonUpdatedText": "O botão de verificação agora diz **{text}**."
+    },
+    "auto": {
+        "conflict": "Você não pode ativar o **AutoVerify** enquanto o sistema de verificação ou o AutoRole estiver configurado. Desative-os primeiro.",
+        "needManageRoles": "Preciso da permissão \"Gerenciar cargos\" para dar cargos do AutoVerify.",
+        "badSubcommand": "Subcomando inválido.",
+        "criteriaAge": "contas com pelo menos `{days} dias`",
+        "criteriaNone": "Todos os membros na hora",
+        "setupTitle": "Verificação automática configurada",
+        "setupText": "A verificação automática está configurada.\n\n**Cargo:** {role}\n**Critério:** {criteria}\n\nMembros que atendem ao critério recebem este cargo ao entrar no servidor."
+    },
+    "adash": {
+        "title": "Painel da verificação automática",
+        "intro": "Gerencie as configurações da verificação automática de **{server}**.\nEscolha uma opção abaixo para mudar uma configuração.",
+        "criteriaAge": "`Idade da conta` - `{days} dias`",
+        "criteriaNone": "`Sem critério`",
+        "fieldRole": "Cargo dado",
+        "fieldCriteria": "Critério",
+        "fieldAge": "Idade da conta",
+        "ageDays": "`{days}` dias",
+        "na": "`—`",
+        "optRole": "Mudar cargo",
+        "optRoleDesc": "Escolha o cargo dado automaticamente",
+        "optAge": "Editar idade da conta",
+        "optAgeDesc": "Defina a idade mínima da conta em dias",
+        "criteriaButton": "Mudar critério",
+        "toggleButton": "Verificação automática",
+        "verificationOn": "O sistema de verificação está ativado",
+        "turnOffFirst": "**Para ativar o AutoVerify, desative primeiro:**",
+        "notConfigured": "A verificação automática ainda não está configurada.{blocking}\n\nUse `/verification auto setup` para configurá-la.",
+        "selectionError": "Ocorreu um erro ao processar sua escolha.",
+        "unexpectedError": "Ocorreu um erro inesperado ao mudar as configurações.",
+        "statusTitle": "Status atualizado",
+        "statusOn": "A verificação automática agora está **ativada**.",
+        "statusOff": "A verificação automática agora está **desativada**.",
+        "openFailed": "Não foi possível abrir o painel da verificação automática.",
+        "criteriaTitle": "Escolha o critério de verificação",
+        "criteriaText": "Escolha o critério da verificação automática",
+        "criteriaPlaceholder": "Escolha um critério…",
+        "criteriaOptAge": "Idade da conta (mais de {days} dias)",
+        "criteriaOptAgeDesc": "Membros com contas mais antigas são verificados automaticamente",
+        "criteriaOptNone": "Sem critério (verificar todos)",
+        "criteriaOptNoneDesc": "Todos os membros recebem o cargo na hora",
+        "criteriaShowAge": "Idade da conta ({days} dias)",
+        "criteriaShowNone": "Sem critério",
+        "criteriaUpdatedTitle": "Critério atualizado",
+        "criteriaUpdatedText": "Critério da verificação automática mudado para **{criteria}**.",
+        "noCriteria": "Nenhum critério escolhido. A configuração não mudou.",
+        "roleTitle": "Cargo da verificação automática",
+        "roleText": "Escolha o cargo para os membros verificados automaticamente.",
+        "roleUpdatedText": "Cargo da verificação automática definido como {role}.",
+        "ageModal": "Idade mínima da conta",
+        "ageLabel": "Idade mínima da conta (dias)",
+        "agePlaceholder": "Entre {min} e {max}",
+        "ageInvalid": "Digite um número entre {min} e {max}.",
+        "ageUpdatedTitle": "Idade da conta atualizada",
+        "ageUpdatedText": "Idade mínima da conta definida como **{days} dias**."
+    }
+}

@@ -1,0 +1,146 @@
+{
+    "cmd": {
+        "description": "Manage join to create voice channels",
+        "setup": {
+            "description": "Set up a join to create voice channel",
+            "category": "Category to create the channel in.",
+            "channelName": "Select a template for naming temporary voice channels.",
+            "userLimit": "Maximum number of users in temporary channels. (0 = unlimited)",
+            "bitrate": "Bitrate for temporary channels in kbps (8-96)."
+        },
+        "dashboard": {
+            "description": "Change join to create settings",
+            "triggerChannel": "The Join to Create trigger channel to configure."
+        }
+    },
+    "fallbackRoomName": "Voice Room",
+    "createFailedDm": "I couldn't create your temporary voice channel. Let a server admin know.",
+    "error": {
+        "adminCommand": "You need the **Administrator** permission to use this command.",
+        "adminControls": "You need the **Administrator** permission to use these controls.",
+        "adminSettings": "You need the **Administrator** permission to change these settings.",
+        "adminRemove": "You need the **Administrator** permission to remove channels.",
+        "tryAgain": "An error occurred. Please try again.",
+        "unexpected": "An unexpected error occurred. Please try again or contact support.",
+        "occurred": "An error occurred.",
+        "processing": "An error occurred while processing your request.",
+        "setupFailed": "Failed to set up Join to Create system. Please check bot permissions.",
+        "controlsFailed": "Failed to open configuration controls. Please run `/jointocreate dashboard` again.",
+        "loadFailed": "Failed to load configuration.",
+        "updateSettings": "An error occurred while updating the settings.",
+        "updateTemplate": "An error occurred while updating the template.",
+        "updateLimit": "An error occurred while updating the user limit.",
+        "updateBitrate": "An error occurred while updating the bitrate.",
+        "removeFailed": "An error occurred while removing the channel."
+    },
+    "setup": {
+        "title": "Join to create is set up",
+        "created": "Created Join to Create channel: {channel}",
+        "settings": "**Settings:**",
+        "template": "• Template: `{template}`",
+        "userLimit": "• User limit: {limit}",
+        "bitrate": "• Bitrate: {kbps} kbps",
+        "category": "• Category: {category}",
+        "categoryRoot": "• Category: Root level"
+    },
+    "limit": {
+        "unlimited": "Unlimited",
+        "users": {
+            "one": "{count} user",
+            "other": "{count} users"
+        }
+    },
+    "panel": {
+        "title": "Join to create settings",
+        "description": "Configuration for {channel}",
+        "nameTemplate": "Channel name template",
+        "userLimit": "User limit",
+        "bitrate": "Bitrate",
+        "kbps": "{kbps} kbps",
+        "footer": "Use the buttons to change settings · One trigger channel per server",
+        "expired": "These buttons expired. Run the command again to make changes.",
+        "buttonName": "Name template",
+        "buttonLimit": "User limit",
+        "buttonBitrate": "Bitrate",
+        "buttonRemove": "Remove channel"
+    },
+    "modal": {
+        "pickTemplate": "Pick a name template",
+        "limitLabel": "User limit (0-99, 0 = no limit)",
+        "limitPlaceholder": "0 to 99",
+        "bitrateLabel": "Bitrate in kbps (8-384)",
+        "bitratePlaceholder": "8 to 384",
+        "updated": "Updated",
+        "templateChanged": "Channel name template changed to `{template}`",
+        "limitChanged": "User limit changed to {limit}",
+        "bitrateChanged": "Bitrate changed to {kbps} kbps"
+    },
+    "remove": {
+        "yes": "Yes, delete",
+        "cancel": "Cancel",
+        "confirmTitle": "Remove this channel?",
+        "confirmBody": "Remove **{channel}** from join to create? This can't be undone.",
+        "doneTitle": "Removed",
+        "doneBody": "**{channel}** has been removed from the Join to Create system.",
+        "cancelledTitle": "Cancelled",
+        "cancelledBody": "Channel removal has been cancelled."
+    },
+    "form": {
+        "invalid": "This form is not valid any more. Run /jointocreate config again.",
+        "expired": "This form expired. Run /jointocreate config again.",
+        "notChanged": "{error} Nothing was changed.",
+        "noLongerTrigger": "<#{channelId}> is no longer a Join to Create channel. Nothing was changed.",
+        "database": "The database is not responding, so nothing was changed. Try again in a minute.",
+        "saved": "{text} New temporary channels of <#{channelId}> use it.",
+        "name": {
+            "title": "Channel name template",
+            "label": "New name template",
+            "hint": "Up to 100 characters. {username}, {display_name}, {user_tag} and {guild_name} are filled in.",
+            "error": "The name template must be 1 to {max} characters on one line.",
+            "changed": "Channel name template changed to `{template}`."
+        },
+        "limit": {
+            "title": "User limit",
+            "label": "Members per temporary channel",
+            "hint": "A whole number from 0 to {max}. 0 means no limit.",
+            "error": "The user limit must be a whole number from 0 to {max}.",
+            "changedNone": "User limit changed to no limit.",
+            "changed": {
+                "one": "User limit changed to {count} member.",
+                "other": "User limit changed to {count} members."
+            }
+        },
+        "bitrate": {
+            "title": "Bitrate",
+            "label": "Audio quality in kbps",
+            "hint": "A whole number from {min} to {max}. 64 is normal, 96 good, 128 high.",
+            "error": "The bitrate must be a whole number from {min} to {max} kbps.",
+            "changed": "Bitrate changed to {kbps} kbps."
+        }
+    },
+    "service": {
+        "templateText": "Channel name template must be valid text.",
+        "templateLength": "Channel name template cannot exceed {max} characters.",
+        "templateChars": "Channel template cannot contain @, #, :, or backtick characters.",
+        "templatePlaceholder": "Unknown placeholder: {placeholder}. Allowed placeholders are {allowed}",
+        "bitrateNumber": "Please enter a valid number for bitrate.",
+        "bitrateRange": "Bitrate must be between 8 and 384 kbps.",
+        "limitNumber": "Please enter a valid number for user limit.",
+        "limitRange": "User limit must be between 0 (no limit) and 99.",
+        "systemError": "System error occurred. Please try again.",
+        "invalidIds": "Invalid guild or channel information provided.",
+        "alreadyTrigger": "This channel is already set up as a Join to Create trigger.",
+        "alreadyConfigured": "This server already has a Join to Create channel configured. Use `/jointocreate dashboard` to modify it, or remove it before creating a new one.",
+        "saveFailed": "Failed to set up Join to Create system. Please try again.",
+        "setupFailed": "Failed to set up Join to Create system.",
+        "dbUnavailable": "Database service is currently unavailable. Please try again later.",
+        "notTrigger": "This channel is not set up as a Join to Create trigger.",
+        "notConfigured": "This channel is not configured as a Join to Create trigger.",
+        "updateFailed": "Failed to update configuration.",
+        "removeFailed": "Failed to remove trigger channel.",
+        "readFailed": "Failed to retrieve settings.",
+        "channelReadFailed": "Failed to retrieve channel configuration. Please try again.",
+        "alreadySetUp": "This server already has a Join to Create channel set up: {channel}\n\nChange or remove it first before creating a new one.",
+        "notCategory": "The category must be a category in this server."
+    }
+}

@@ -1,0 +1,148 @@
+{
+    "cmd": {
+        "description": "Gérer les salons vocaux Join to Create",
+        "setup": {
+            "description": "Mettre en place un salon vocal Join to Create",
+            "category": "Catégorie dans laquelle créer le salon.",
+            "channelName": "Choisis un modèle de nom pour les salons vocaux temporaires.",
+            "userLimit": "Nombre maximum de personnes dans les salons temporaires. (0 = illimité)",
+            "bitrate": "Débit des salons temporaires en kbps (8-96)."
+        },
+        "dashboard": {
+            "description": "Modifier les réglages Join to Create",
+            "triggerChannel": "Le salon déclencheur Join to Create à régler."
+        }
+    },
+    "fallbackRoomName": "Salon vocal",
+    "createFailedDm": "Je n'ai pas pu créer ton salon vocal temporaire. Préviens un admin du serveur.",
+    "error": {
+        "adminCommand": "Il te faut la permission **Administrateur** pour utiliser cette commande.",
+        "adminControls": "Il te faut la permission **Administrateur** pour utiliser ces boutons.",
+        "adminSettings": "Il te faut la permission **Administrateur** pour modifier ces réglages.",
+        "adminRemove": "Il te faut la permission **Administrateur** pour retirer des salons.",
+        "tryAgain": "Une erreur s'est produite. Réessaie.",
+        "unexpected": "Une erreur inattendue s'est produite. Réessaie ou contacte le support.",
+        "occurred": "Une erreur s'est produite.",
+        "processing": "Une erreur s'est produite pendant le traitement de ta demande.",
+        "setupFailed": "Impossible de mettre en place Join to Create. Vérifie les permissions du bot.",
+        "controlsFailed": "Impossible d'ouvrir les réglages. Relance `/jointocreate dashboard`.",
+        "loadFailed": "Impossible de charger les réglages.",
+        "updateSettings": "Une erreur s'est produite pendant la modification des réglages.",
+        "updateTemplate": "Une erreur s'est produite pendant la modification du modèle.",
+        "updateLimit": "Une erreur s'est produite pendant la modification de la limite de personnes.",
+        "updateBitrate": "Une erreur s'est produite pendant la modification du débit.",
+        "removeFailed": "Une erreur s'est produite pendant le retrait du salon."
+    },
+    "setup": {
+        "title": "Join to Create est en place",
+        "created": "Salon Join to Create créé : {channel}",
+        "settings": "**Réglages :**",
+        "template": "• Modèle : `{template}`",
+        "userLimit": "• Limite de personnes : {limit}",
+        "bitrate": "• Débit : {kbps} kbps",
+        "category": "• Catégorie : {category}",
+        "categoryRoot": "• Catégorie : aucune (niveau racine)"
+    },
+    "limit": {
+        "unlimited": "Illimité",
+        "users": {
+            "one": "{count} personne",
+            "many": "{count} personnes",
+            "other": "{count} personnes"
+        }
+    },
+    "panel": {
+        "title": "Réglages Join to Create",
+        "description": "Réglages de {channel}",
+        "nameTemplate": "Modèle de nom du salon",
+        "userLimit": "Limite de personnes",
+        "bitrate": "Débit",
+        "kbps": "{kbps} kbps",
+        "footer": "Utilise les boutons pour modifier les réglages · Un salon déclencheur par serveur",
+        "expired": "Ces boutons ont expiré. Relance la commande pour faire des modifications.",
+        "buttonName": "Modèle de nom",
+        "buttonLimit": "Limite de personnes",
+        "buttonBitrate": "Débit",
+        "buttonRemove": "Retirer le salon"
+    },
+    "modal": {
+        "pickTemplate": "Choisis un modèle de nom",
+        "limitLabel": "Limite (0-99, 0 = sans limite)",
+        "limitPlaceholder": "de 0 à 99",
+        "bitrateLabel": "Débit en kbps (8-384)",
+        "bitratePlaceholder": "de 8 à 384",
+        "updated": "Modifié",
+        "templateChanged": "Modèle de nom du salon changé en `{template}`",
+        "limitChanged": "Limite de personnes changée : {limit}",
+        "bitrateChanged": "Débit changé à {kbps} kbps"
+    },
+    "remove": {
+        "yes": "Oui, supprimer",
+        "cancel": "Annuler",
+        "confirmTitle": "Retirer ce salon ?",
+        "confirmBody": "Retirer **{channel}** de Join to Create ? C'est définitif.",
+        "doneTitle": "Retiré",
+        "doneBody": "**{channel}** a été retiré de Join to Create.",
+        "cancelledTitle": "Annulé",
+        "cancelledBody": "Le retrait du salon a été annulé."
+    },
+    "form": {
+        "invalid": "Ce formulaire n'est plus valide. Relance /jointocreate config.",
+        "expired": "Ce formulaire a expiré. Relance /jointocreate config.",
+        "notChanged": "{error} Rien n'a été modifié.",
+        "noLongerTrigger": "<#{channelId}> n'est plus un salon Join to Create. Rien n'a été modifié.",
+        "database": "La base de données ne répond pas, rien n'a donc été modifié. Réessaie dans une minute.",
+        "saved": "{text} Les nouveaux salons temporaires de <#{channelId}> l'utilisent.",
+        "name": {
+            "title": "Modèle de nom du salon",
+            "label": "Nouveau modèle de nom",
+            "hint": "Jusqu'à 100 caractères. {username}, {display_name}, {user_tag} et {guild_name} sont remplis.",
+            "error": "Le modèle de nom doit faire de 1 à {max} caractères sur une seule ligne.",
+            "changed": "Modèle de nom du salon changé en `{template}`."
+        },
+        "limit": {
+            "title": "Limite de personnes",
+            "label": "Personnes par salon temporaire",
+            "hint": "Un nombre entier de 0 à {max}. 0 veut dire sans limite.",
+            "error": "La limite de personnes doit être un nombre entier de 0 à {max}.",
+            "changedNone": "Limite de personnes retirée (sans limite).",
+            "changed": {
+                "one": "Limite de personnes changée à {count} personne.",
+                "many": "Limite de personnes changée à {count} personnes.",
+                "other": "Limite de personnes changée à {count} personnes."
+            }
+        },
+        "bitrate": {
+            "title": "Débit",
+            "label": "Qualité du son en kbps",
+            "hint": "Un nombre entier de {min} à {max}. 64 est normal, 96 bon, 128 élevé.",
+            "error": "Le débit doit être un nombre entier de {min} à {max} kbps.",
+            "changed": "Débit changé à {kbps} kbps."
+        }
+    },
+    "service": {
+        "templateText": "Le modèle de nom du salon doit être un texte valide.",
+        "templateLength": "Le modèle de nom du salon ne peut pas dépasser {max} caractères.",
+        "templateChars": "Le modèle ne peut pas contenir @, #, : ni d'accent grave (backtick).",
+        "templatePlaceholder": "Variable inconnue : {placeholder}. Variables autorisées : {allowed}",
+        "bitrateNumber": "Saisis un nombre valide pour le débit.",
+        "bitrateRange": "Le débit doit être compris entre 8 et 384 kbps.",
+        "limitNumber": "Saisis un nombre valide pour la limite de personnes.",
+        "limitRange": "La limite de personnes doit être comprise entre 0 (sans limite) et 99.",
+        "systemError": "Une erreur système s'est produite. Réessaie.",
+        "invalidIds": "Informations de serveur ou de salon invalides.",
+        "alreadyTrigger": "Ce salon est déjà un déclencheur Join to Create.",
+        "alreadyConfigured": "Ce serveur a déjà un salon Join to Create. Modifie-le avec `/jointocreate dashboard`, ou retire-le avant d'en créer un nouveau.",
+        "saveFailed": "Impossible de mettre en place Join to Create. Réessaie.",
+        "setupFailed": "Impossible de mettre en place Join to Create.",
+        "dbUnavailable": "La base de données est indisponible pour le moment. Réessaie plus tard.",
+        "notTrigger": "Ce salon n'est pas un déclencheur Join to Create.",
+        "notConfigured": "Ce salon n'est pas réglé comme déclencheur Join to Create.",
+        "updateFailed": "Impossible de modifier les réglages.",
+        "removeFailed": "Impossible de retirer le salon déclencheur.",
+        "readFailed": "Impossible de lire les réglages.",
+        "channelReadFailed": "Impossible de lire les réglages du salon. Réessaie.",
+        "alreadySetUp": "Ce serveur a déjà un salon Join to Create : {channel}\n\nModifie-le ou retire-le avant d'en créer un nouveau.",
+        "notCategory": "La catégorie doit être une catégorie de ce serveur."
+    }
+}
