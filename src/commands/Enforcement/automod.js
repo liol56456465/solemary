@@ -7,7 +7,7 @@ import { AUTOMOD_RULES } from '../../config/automod.js';
 import { isAdministrator } from '../../services/enforcement/enforcementService.js';
 import {
     exemptChannelIdsOf, getAutomodSettings, getTrustedRoleProblem, setAutomodEnabled, setAutomodMode, setChannelRuleMode,
-    setExemptChannel, setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted,
+    setExemptChannel, setInviteAllowlist, setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted,
 } from '../../services/automod/automodSettings.js';
 import { endLockdown, getLockdownState } from '../../services/automod/raidService.js';
 import { describeStep } from '../../services/automod/reviewCards.js';
@@ -76,6 +76,19 @@ function relaxedRuleLabels() {
     return Object.keys(AUTOMOD_RULES).filter((key) => isRelaxableRule(key)).map((key) => AUTOMOD_RULES[key].label).join(', ');
 }
 
+/** The invite allowlist as text: codes as `code`, server ids as `id (server)`. */
+export function inviteAllowlistText(list, maxChars = 300) {
+    if (!list?.length) return 'none';
+    const parts = list.map((entry) => (/^\d{17,20}$/.test(entry) ? `\`${entry}\` (server)` : `\`${entry}\``));
+    let text = '';
+    for (let i = 0; i < parts.length; i += 1) {
+        const next = text ? `${text}, ${parts[i]}` : parts[i];
+        if (next.length > maxChars) return `${text}, …and ${parts.length - i} more`;
+        text = next;
+    }
+    return text;
+}
+
 function trustedText(trusted) {
     const parts = [];
     if (trusted?.roleId) parts.push(`<@&${trusted.roleId}>`);
@@ -107,6 +120,7 @@ async function statusEmbed(guildId) {
             `**Mood alerts** (calm-down note + slowmode in heated channels): ${settings.moodAlerts ? 'on' : 'off'}`,
             `**Join gate** (new members): ${describeJoinGate(settings.joinGate)}`,
             `**Raid panic mode** (lockdown also pauses invites and DMs): ${settings.panic.enabled ? `on, for ${settings.panic.hours} h` : 'off'}`,
+            `**Allowed invites** (besides this server's own): ${inviteAllowlistText(settings.inviteAllowlist)}`,
             '',
             '**Punishments** (1st → 2nd → 3rd+ offence within 30 days). A mode in **bold** is set for that rule with `/automod rule`; the others follow the global mode:',
             ...rules,
@@ -227,6 +241,10 @@ export default {
         .addSubcommand((sub) => sub.setName('panic').setDescription('Raid panic mode: a lockdown also pauses invites and DMs (Discord incident actions)')
             .addBooleanOption((option) => option.setName('enabled').setDescription('On or off').setRequired(true))
             .addIntegerOption((option) => option.setName('hours').setDescription('How long the pause lasts (default 2, max 24)').setMinValue(1).setMaxValue(24)))
+        .addSubcommand((sub) => sub.setName('invites').setDescription("Invites automod allows besides this server's own (codes, invite links or server ids)")
+            .addStringOption((option) => option.setName('action').setDescription('What to do').setRequired(true)
+                .addChoices({ name: 'list', value: 'list' }, { name: 'add', value: 'add' }, { name: 'remove', value: 'remove' }, { name: 'clear', value: 'clear' }))
+            .addStringOption((option) => option.setName('invite').setDescription('Invite link, invite code or server id').setMaxLength(100)))
         .addSubcommand((sub) => sub.setName('lockdown-end').setDescription('End a join-raid lockdown: restore the verification level, resume invites and DMs'))
         .addSubcommandGroup((group) => group.setName('native').setDescription('Discord\'s own AutoMod rules: what the bot does when one blocks a message')
             .addSubcommand((sub) => sub.setName('list').setDescription('List the server\'s native AutoMod rules and their policy'))
@@ -383,6 +401,12 @@ export default {
             note = enabled
                 ? 'Friendly notice for a first small offence is **on**: a member\'s first offence in 30 days on caps, characters, English only or mild language (no slurs) gets a short notice instead of a warning.'
                 : 'Friendly notice for a first small offence is **off**: every offence gets the usual punishment.';
+        } else if (sub === 'invites') {
+            const action = interaction.options.getString('action');
+            const saved = action === 'list'
+                ? await getAutomodSettings(guildId)
+                : await setInviteAllowlist(guildId, action, interaction.options.getString('invite'));
+            note = `Allowed invites (besides this server's own): ${inviteAllowlistText(saved.inviteAllowlist)}`;
         } else if (sub === 'mood') {
             const enabled = interaction.options.getBoolean('enabled');
             await setMoodAlerts(guildId, enabled);

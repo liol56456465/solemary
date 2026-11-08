@@ -1,4 +1,5 @@
-// joinGate.js — optional checks on members joining the main server (/automod joingate).
+// joinGate.js — optional checks on members joining a server (/automod joingate). Runs in
+// every server where automod is on (off by default outside the main server).
 //
 // Checks (each off / flag / kick, all off by default):
 //   avatar   no profile picture
@@ -16,7 +17,6 @@
 // Profile bios are not visible to bots, so "invite in bio" can't be checked.
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, SnowflakeUtil } from 'discord.js';
-import { enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { deleteFromDb, getFromDb, setInDb } from '../../utils/database.js';
@@ -170,13 +170,13 @@ export function gateCheckLabels(hits) {
 }
 
 /**
- * Runs the join gate for a new member of the main server. Never throws.
+ * Runs the join gate for a new member of any server where automod is on. Never throws.
  * Returns 'kicked' | 'flagged' | null. onKick / onFlag(userId, hits) run after the kick or flag.
  */
 export async function checkJoinGate(member, { onKick = null, onFlag = null } = {}) {
     try {
         const { guild, user } = member;
-        if (guild.id !== enforcementConfig.mainGuildId || user.bot) return null;
+        if (!guild?.id || user.bot) return null;
         const settings = await getAutomodSettings(guild.id);
         if (!settings.enabled) return null;
         const { action, hits } = evaluateJoinGate(user, settings.joinGate);

@@ -1,5 +1,6 @@
-// probationService.js — probation for members who rejoin the main server after a ban
-// ended (expired, lifted on appeal, voided) within probationRecentBanMs.
+// probationService.js — probation for members who rejoin a server after a ban there
+// ended (expired, lifted on appeal, voided) within probationRecentBanMs. The main server as
+// before; any other server only while its automod is on (off by default).
 //
 // While on probation (probationMs, stored in the key-value store with a TTL):
 // automod uses the next step of the rule's ladder, trusted-member relaxing and second
@@ -7,15 +8,17 @@
 // alerts channel when it starts; /automod extrawatch ends it early.
 
 import { automodConfig } from '../../config/automod.js';
-import { enforcementConfig } from '../../config/enforcement.js';
 import { db, deleteFromDb, getFromDb, setInDb } from '../../utils/database.js';
+import { BoundedMap } from '../../utils/boundedMap.js';
 import { logger } from '../../utils/logger.js';
 import { query, T } from '../enforcement/db.js';
 import { postModLog } from '../enforcement/enforcementService.js';
 import { isProbationActive, shouldStartProbation } from './policy.js';
+import { getAutomodSettings, isLegacyAutomodGuild } from './automodSettings.js';
 
 const CACHE_MS = 60 * 1000;
-const cache = new Map(); // guildId:userId → { record, expiresAt }
+export const PROBATION_CACHE_MAX = 5000;
+const cache = new BoundedMap(PROBATION_CACHE_MAX); // guildId:userId → { record, expiresAt }
 
 const probationKey = (guildId, userId) => `automod:probation:${guildId}:${userId}`;
 
@@ -104,10 +107,11 @@ export function probationLabel(record) {
     return `in an extra-watch period after a ban (rejoined, until <t:${Math.floor(Number(record.until) / 1000)}:D>)`;
 }
 
-/** guildMemberAdd in the main server: put a member back from a recent ban on probation. */
+/** guildMemberAdd: put a member back from a recent ban in that server on probation. */
 export async function startProbationOnJoin(member, now = Date.now()) {
     const { guild } = member;
-    if (guild.id !== enforcementConfig.mainGuildId || member.user?.bot) return null;
+    if (!guild?.id || member.user?.bot) return null;
+    if (!isLegacyAutomodGuild(guild.id) && !(await getAutomodSettings(guild.id)).enabled) return null;
     const [existing, ban] = await Promise.all([
         getProbation(guild.id, member.id, now),
         findRecentBanEnd(guild.id, member.id),

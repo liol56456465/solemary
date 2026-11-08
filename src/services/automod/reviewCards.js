@@ -26,7 +26,7 @@ import { getCaseByCode } from '../enforcement/caseService.js';
 import { createRejoinInvite, executeAction, sendDm } from '../enforcement/enforcementService.js';
 import { liftCase } from '../enforcement/appealService.js';
 import { dmServerName } from '../enforcement/dmTemplates.js';
-import { fetchStaffChannel } from './channelRouting.js';
+import { fetchStaffChannel, staffGuildId } from './channelRouting.js';
 import {
     CLOSE_STATUS, REPORT_RULE, buildCardPayload, cardTier, closedTitle, describeStep, stripLeadingEmoji,
 } from './reviewFormat.js';
@@ -162,7 +162,7 @@ function alertWatchlistHit(p) {
  */
 export async function postReviewCard(p) {
     logHit(p);
-    if (!p.report) recordHit({ rule: p.rule, channelId: p.channelId, monitor: Boolean(p.monitor) });
+    if (!p.report) recordHit({ rule: p.rule, channelId: p.channelId, monitor: Boolean(p.monitor), guildId: p.guild?.id || null });
     alertWatchlistHit(p);
     const key = entryFrom(p).key;
     const run = async () => {
@@ -196,7 +196,7 @@ export async function postReviewCard(p) {
  */
 export async function noteRepeatHit(p) {
     logHit(p);
-    recordHit({ rule: p.rule, channelId: p.channelId, monitor: false });
+    recordHit({ rule: p.rule, channelId: p.channelId, monitor: false, guildId: p.guild?.id || null });
     alertWatchlistHit(p);
     const key = entryFrom(p).key;
     if (!key) return;
@@ -278,12 +278,17 @@ async function dmReversal(client, record, invite, replacement = null) {
 }
 
 /** "a,b,c" → the existing case records, in order. Throws when none exist. */
-async function recordsFor(codesArg) {
+/**
+ * The cases a card names. Only cases of the server the card belongs to (the clicking server,
+ * or for a home server any home server, since they share the main server's channels): a card
+ * can never reach another server's case.
+ */
+export async function recordsFor(codesArg, guildId = null, lookup = getCaseByCode) {
     const codes = String(codesArg || '').split(',').map((code) => code.trim()).filter(Boolean);
     const records = [];
     for (const code of codes) {
-        const record = await getCaseByCode(code);
-        if (record) records.push(record);
+        const record = await lookup(code);
+        if (record && (!guildId || staffGuildId(record.guild_id) === staffGuildId(guildId))) records.push(record);
     }
     if (!records.length) throw userError(`Case \`${codes.join(', ') || '?'}\` no longer exists.`);
     return records;
@@ -343,7 +348,7 @@ export async function handleReviewAction(interaction, args) {
         if (!canGiveSecondOpinion(admin.id, keeperId)) {
             throw userError('You kept this one; a different administrator has to give the second opinion.');
         }
-        const records = await recordsFor(codes);
+        const records = await recordsFor(codes, guild?.id);
         const original = message.reference?.messageId
             ? await message.channel.messages.fetch(message.reference.messageId).catch(() => null)
             : null;
@@ -381,7 +386,7 @@ export async function handleReviewAction(interaction, args) {
     }
 
     if (action === 'keep' || action === 'undo' || action === 'change') {
-        const records = await recordsFor(rest[0]);
+        const records = await recordsFor(rest[0], guild?.id);
 
         if (action === 'keep') {
             await closeCard(message, `Kept by ${by}: ${codeList(records)}`, { status: 'kept', by });

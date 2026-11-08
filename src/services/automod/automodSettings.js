@@ -1,9 +1,19 @@
 // automodSettings.js — per-guild automod settings and state kept in the key-value
 // store, with a short in-memory cache because messageCreate reads them constantly.
+//
+// Multi-server (B1): automod runs in every server, but only where it is turned on.
+// Defaults depend on the server (defaultsFor):
+//   main server        as before: on, staff guard on, every rule follows the global mode.
+//   any other server   (the support server included, where automod never ran) off until its
+//                      admins turn it on; staff guard off; the Mewvo house rules "English only"
+//                      and "Non-English characters" off unless set (DEFAULT_OFF_RULES).
+// A stored value always wins, so a server keeps exactly what it saved.
 
 import { db, getFromDb, setInDb } from '../../utils/database.js';
 import { AUTOMOD_RULES, automodConfig } from '../../config/automod.js';
 import { guildSetting } from '../settings/guildScoped.js';
+import { enforcementConfig } from '../../config/enforcement.js';
+import { BoundedMap } from '../../utils/boundedMap.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { clampPanicHours, DEFAULT_PANIC_HOURS, MAX_PANIC_HOURS } from './incidentActions.js';
 import {
@@ -37,11 +47,54 @@ const DEFAULT_SETTINGS = Object.freeze({
     // Join gate: check → 'off' | 'flag' | 'kick', plus ageDays (/automod joingate;
     // normalized by joinGate.js).
     joinGate: {},
+    // Invites automod never counts as advertising, besides the server's own (/automod invites):
+    // invite codes or server ids (automodService.inviteAllowed).
+    inviteAllowlist: [],
+    // Staff guard / anti-nuke (staffGuardService.js). Main server: on (as before); others: off.
+    staffGuard: true,
 });
 
-/** Stored settings (any shape, or null) → a complete settings object. */
-export function normalizeSettings(stored) {
-    const value = { ...DEFAULT_SETTINGS, ...(stored && typeof stored === 'object' ? stored : {}) };
+// Mewvo's own house rules: off in other servers unless they set them (they would punish any
+// non-English community the moment automod is turned on).
+export const DEFAULT_OFF_RULES = Object.freeze(['english', 'characters']);
+export const INVITE_ALLOWLIST_MAX = 50;
+
+/** True for the server whose automod existed before multi-server: it keeps the old defaults. */
+export function isLegacyAutomodGuild(guildId) {
+    return !guildId || guildId === enforcementConfig.mainGuildId;
+}
+
+/** The defaults of one server (no guild: the main server's, as before). */
+export function defaultsFor(guildId = null) {
+    if (isLegacyAutomodGuild(guildId)) return DEFAULT_SETTINGS;
+    return { ...DEFAULT_SETTINGS, enabled: false, staffGuard: false };
+}
+
+const INVITE_CODE = /^[A-Za-z0-9-]{2,32}$/;
+const SNOWFLAKE_ID = /^\d{17,20}$/;
+
+/** One allowlist entry as stored: a server id, or an invite code (from a code or invite link). Null when unusable. */
+export function normalizeInviteEntry(entry) {
+    const text = String(entry ?? '').trim();
+    if (SNOWFLAKE_ID.test(text)) return text;
+    const code = text.replace(/^(?:https?:\/\/)?(?:www\.)?(?:discord(?:app)?\.com\/invite|discord\.gg)\//i, '').replace(/[/?#].*$/, '');
+    return INVITE_CODE.test(code) ? code : null;
+}
+
+/**
+ * Stored settings (any shape, or null) → a complete settings object. `guildId` picks the
+ * defaults (defaultsFor); without it the main server's defaults apply, as before.
+ * `defaultOffRules` is derived, never stored: rules that are off unless ruleModes sets them.
+ */
+export function normalizeSettings(stored, guildId = null) {
+    const defaults = defaultsFor(guildId);
+    const value = { ...defaults, ...(stored && typeof stored === 'object' ? stored : {}) };
+    value.enabled = typeof value.enabled === 'boolean' ? value.enabled : defaults.enabled;
+    value.staffGuard = typeof value.staffGuard === 'boolean' ? value.staffGuard : defaults.staffGuard;
+    value.inviteAllowlist = Array.isArray(value.inviteAllowlist)
+        ? [...new Set(value.inviteAllowlist.map(normalizeInviteEntry).filter(Boolean))].slice(0, INVITE_ALLOWLIST_MAX)
+        : [];
+    value.defaultOffRules = isLegacyAutomodGuild(guildId) ? [] : [...DEFAULT_OFF_RULES];
     value.exemptChannelIds = Array.isArray(value.exemptChannelIds) ? [...value.exemptChannelIds] : [];
     value.ruleModes = value.ruleModes && typeof value.ruleModes === 'object' ? { ...value.ruleModes } : {};
     value.channelRules = value.channelRules && typeof value.channelRules === 'object'
@@ -58,7 +111,9 @@ export function normalizeSettings(stored) {
     return value;
 }
 
-const cache = new Map();
+// One entry per server that sent a message in the last CACHE_TTL_MS; bounded for thousands of servers.
+const CACHE_MAX = 5000;
+const cache = new BoundedMap(CACHE_MAX);
 
 const settingsKey = (guildId) => `automod:settings:${guildId}`;
 const lockdownKey = (guildId) => `automod:lockdown:${guildId}`;
@@ -68,9 +123,26 @@ export async function getAutomodSettings(guildId) {
     if (cached && cached.expiresAt > Date.now()) return cached.value;
 
     const stored = await getFromDb(settingsKey(guildId), null);
-    const value = normalizeSettings(stored);
+    const value = normalizeSettings(stored, guildId);
     cache.set(guildId, { value, expiresAt: Date.now() + CACHE_TTL_MS });
     return value;
+}
+
+/** Test hook: forget the cached settings. */
+export function resetAutomodSettingsCache() {
+    cache.clear();
+}
+
+/** Test hook: how many servers' settings are cached. */
+export function automodSettingsCacheSize() {
+    return cache.size;
+}
+
+/** Settings as stored: without the derived fields. */
+function storable(settings) {
+    const { defaultOffRules, ...rest } = settings || {};
+    void defaultOffRules;
+    return rest;
 }
 
 /**
@@ -80,10 +152,10 @@ export async function getAutomodSettings(guildId) {
  */
 export async function updateAutomodSettings(guildId, patch) {
     const saved = await db.update(settingsKey(guildId), (current) => {
-        const base = normalizeSettings(current);
-        return typeof patch === 'function' ? patch(base) : { ...base, ...patch };
+        const base = normalizeSettings(current, guildId);
+        return storable(typeof patch === 'function' ? patch(base) : { ...base, ...patch });
     }, null);
-    const value = normalizeSettings(saved);
+    const value = normalizeSettings(saved, guildId);
     cache.set(guildId, { value, expiresAt: Date.now() + CACHE_TTL_MS });
     return value;
 }
@@ -273,6 +345,34 @@ export async function setPanic(guildId, { enabled, hours = null } = {}) {
         ...current,
         panic: { enabled, hours: keepHours ? current.panic.hours : hours },
     }));
+}
+
+/** Staff guard / anti-nuke on or off (staffGuardService.js; off by default outside the main server). */
+export async function setStaffGuard(guildId, enabled) {
+    requireBoolean(enabled, 'Staff guard');
+    return updateAutomodSettings(guildId, { staffGuard: enabled });
+}
+
+/**
+ * The invite allowlist (/automod invites): action 'add' | 'remove' an entry (a server id,
+ * an invite code or an invite link), or 'clear'. Resolves the saved settings.
+ */
+export async function setInviteAllowlist(guildId, action, entry = null) {
+    if (!['add', 'remove', 'clear'].includes(action)) throw userError('Unknown action.');
+    const value = action === 'clear' ? null : normalizeInviteEntry(entry);
+    if (action !== 'clear' && !value) throw userError('Give an invite link, an invite code or a server id.');
+    return updateAutomodSettings(guildId, (current) => {
+        const list = new Set(current.inviteAllowlist);
+        if (action === 'clear') list.clear();
+        else if (action === 'remove') list.delete(value);
+        else {
+            if (!list.has(value) && list.size >= INVITE_ALLOWLIST_MAX) {
+                throw userError(`The allowlist holds at most ${INVITE_ALLOWLIST_MAX} entries.`);
+            }
+            list.add(value);
+        }
+        return { ...current, inviteAllowlist: [...list] };
+    });
 }
 
 /**

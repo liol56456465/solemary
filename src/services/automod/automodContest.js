@@ -19,7 +19,6 @@
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, escapeMarkdown } from 'discord.js';
 import { ruleDefinition } from './customRules.js';
-import { enforcementConfig } from '../../config/enforcement.js';
 import { getFromDb, setInDb } from '../../utils/database.js';
 import { logger } from '../../utils/logger.js';
 import { Mutex } from '../../utils/mutex.js';
@@ -38,11 +37,12 @@ const ATTACHMENT_SUFFIX = /\s*\[\d+ attachment\(s\)\]$/;
 
 /**
  * Pure: may this user contest this case? Returns { ok: true } or { ok: false, message }.
- * Only the member the case is against, only automod cases in the main server, and
- * only while the case still stands.
+ * Only the member the case is against, only automod cases, and only while the case still
+ * stands. Any server (multi-server B1): the contest goes to the case's own server's review
+ * channel (markReviewCard). `onlyGuildId`: limit it to one server (null: any).
  */
-export function checkContestTarget(record, userId, mainGuildId = enforcementConfig.mainGuildId) {
-    if (!record || (mainGuildId && record.guild_id !== mainGuildId)) {
+export function checkContestTarget(record, userId, onlyGuildId = null) {
+    if (!record || (onlyGuildId && record.guild_id !== onlyGuildId)) {
         return { ok: false, message: 'That case no longer exists.' };
     }
     if (String(record.target_user_id) !== String(userId)) {

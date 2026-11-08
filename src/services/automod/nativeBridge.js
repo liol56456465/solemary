@@ -15,8 +15,8 @@
 // Server permission (checked in the startup readiness line).
 
 import { AutoModerationActionType, AutoModerationRuleTriggerType } from 'discord.js';
-import { enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
+import { BoundedMap } from '../../utils/boundedMap.js';
 import { query, T, isEnforcementDbAvailable } from '../enforcement/db.js';
 import { executeSystemAction } from '../enforcement/enforcementService.js';
 import { getAutomodSettings } from './automodSettings.js';
@@ -28,8 +28,9 @@ export const NATIVE_POLICIES = ['ignore', 'log', 'warn'];
 export const DEFAULT_NATIVE_POLICY = Object.freeze({ policy: 'log', dedupeMinutes: 10 });
 
 const CACHE_MS = 5 * 60 * 1000;
-const policyCache = new Map(); // guildId → { rules: Map(ruleId → { policy, dedupeMinutes }), expiresAt }
-const lastActed = new Map();   // guildId:userId:ruleId → epoch ms
+export const NATIVE_STATE_MAX = 5000;
+const policyCache = new BoundedMap(NATIVE_STATE_MAX); // guildId → { rules: Map(ruleId → { policy, dedupeMinutes }), expiresAt }
+const lastActed = new BoundedMap(NATIVE_STATE_MAX * 2); // guildId:userId:ruleId → epoch ms
 
 /** ruleId → { policy, dedupeMinutes } for a guild. Throws on a DB error. */
 export async function loadNativePolicies(guildId, now = Date.now()) {
@@ -106,10 +107,10 @@ function pruneLastActed(now) {
     for (const [key, at] of lastActed) if (now - at > 24 * 60 * 60 * 1000) lastActed.delete(key);
 }
 
-/** autoModerationActionExecution in the main server. */
+/** autoModerationActionExecution, in any server where automod is on (off by default outside the main server). */
 export async function handleNativeExecution(execution) {
     const { guild } = execution;
-    if (!guild || guild.id !== enforcementConfig.mainGuildId || !isBridgedAction(execution.action)) return;
+    if (!guild || !isBridgedAction(execution.action)) return;
     if (!isEnforcementDbAvailable()) return;
     const settings = await getAutomodSettings(guild.id);
     if (!settings.enabled) return;

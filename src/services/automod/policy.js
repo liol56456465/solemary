@@ -20,10 +20,16 @@ export function globalRuleMode(settings) {
     return settings?.mode === 'monitor' ? 'monitor' : 'on';
 }
 
-/** The rule's own mode: its /automod rule override, else the global mode. */
+/**
+ * The rule's own mode: its /automod rule override, else 'off' for a rule this server has off
+ * by default (settings.defaultOffRules: Mewvo's English-only house rules outside the main
+ * server, automodSettings.js), else the global mode.
+ */
 export function ruleMode(settings, ruleKey) {
     const override = settings?.ruleModes?.[ruleKey];
-    return RULE_MODES.includes(override) ? override : globalRuleMode(settings);
+    if (RULE_MODES.includes(override)) return override;
+    if (settings?.defaultOffRules?.includes?.(ruleKey)) return 'off';
+    return globalRuleMode(settings);
 }
 
 /** Whether the rule's mode comes from an override rather than the global mode. */

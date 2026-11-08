@@ -1,8 +1,7 @@
 // joinGateButtons.js — Kick / Dismiss on a join gate flag line (joingate:<kick|dismiss>:<userId>).
-// Administrators in the main server only.
+// Administrators of the server the flag line is in (flags are stored per server).
 
 import { MessageFlags } from 'discord.js';
-import { enforcementConfig } from '../config/enforcement.js';
 import { successEmbed } from '../utils/embeds.js';
 import { ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
@@ -14,8 +13,8 @@ import { noteStaffReview } from '../services/staffActivityService.js';
 export async function handleJoinGateButton(interaction, client, args) {
     const [decision, userId] = args;
     if (!['kick', 'dismiss'].includes(decision) || !/^\d{17,20}$/.test(userId || '')) return;
-    if (interaction.guildId !== enforcementConfig.mainGuildId || !isAdministrator(interaction.member)) {
-        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Only administrators in the main server can act on join gate flags.' });
+    if (!interaction.guildId || !isAdministrator(interaction.member)) {
+        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Only administrators of this server can act on join gate flags.' });
     }
     await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
     const admin = interaction.user;
