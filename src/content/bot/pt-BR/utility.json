@@ -118,7 +118,8 @@
             "birthday": "Aniversário",
             "todo": "Lista de tarefas pessoal",
             "reminders": "Lembretes",
-            "oauth": "Token de login do Discord salvo (de \"Verificar com o Discord\")"
+            "oauth": "Token de login do Discord salvo (de \"Verificar com o Discord\")",
+            "dmlog": "Cópias salvas das DMs do bot (para traduzi-las de novo quando você muda de idioma)"
         },
         "partialTitle": "Nem tudo foi apagado",
         "partialFailed": "O banco de dados não respondeu para: {items}. ",

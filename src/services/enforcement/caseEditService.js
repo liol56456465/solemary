@@ -10,13 +10,13 @@ import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
 import { query, withTransaction, T } from './db.js';
 import { getCaseByCode, setEndDmDelivered, OPEN_STATUSES } from './caseService.js';
-import { createRejoinInvite, lockFor, postModLog, sendDm } from './enforcementService.js';
+import { createRejoinInvite, lockFor, postModLog, sendCaseDm } from './enforcementService.js';
 import { liftCase, liftNoteText } from './appealService.js';
 import { liftExpired } from './expiryService.js';
 import { syncWarnRolesQuietly } from './warnRoleService.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
-import { caseVoidedDm, durationIn } from './dmTemplates.js';
-import { botText, resolveBotLanguage, textForGuild } from '../../utils/botText.js';
+import { durationIn } from './dmTemplates.js';
+import { botText, textForGuild } from '../../utils/botText.js';
 import { dateStamp, formatDuration, parseDuration, truncate } from './format.js';
 
 // `i18n` ({ code, params }): /case shows the error in the reader's language (commands/Enforcement/case.js).
@@ -237,7 +237,7 @@ export async function voidCase(client, { guildId, caseCode, admin, reason, lang 
         const unbanned = bannedBefore && !(await isBanned(mainGuild, record.target_user_id));
         const invite = unbanned && mainGuild ? await createRejoinInvite(mainGuild, `Case ${caseCode} removed (a mistake)`) : null;
         const user = await client.users.fetch(record.target_user_id).catch(() => null);
-        const dmDelivered = user ? await sendDm(user, caseVoidedDm(record, reason, invite, { guildId: record.guild_id, serverName: mainGuild?.name, lang: resolveBotLanguage({ guildId: record.guild_id, userId: record.target_user_id, purpose: 'dm' }) })) : false;
+        const dmDelivered = user ? await sendCaseDm(user, 'enf.caseVoided', record, { guild: mainGuild ?? null, guildId: record.guild_id, reason, invite }) : false;
         if (!dmDelivered) logger.info(`Void DM for ${caseCode} to ${record.target_user_id} not delivered`);
 
         // The void DM is also the "ban/mute ended" notice when it lifted one.

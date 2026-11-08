@@ -118,7 +118,8 @@
             "birthday": "Birthday",
             "todo": "Personal to-do list",
             "reminders": "Reminders",
-            "oauth": "Stored Discord login token (from Verify with Discord)"
+            "oauth": "Stored Discord login token (from Verify with Discord)",
+            "dmlog": "Saved copies of bot DMs (to re-translate them when you change language)"
         },
         "partialTitle": "Not everything was deleted",
         "partialFailed": "The database did not respond for: {items}. ",

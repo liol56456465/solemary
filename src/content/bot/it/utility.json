@@ -118,7 +118,8 @@
             "birthday": "Compleanno",
             "todo": "Lista personale di cose da fare",
             "reminders": "Promemoria",
-            "oauth": "Token di accesso Discord salvato (da \"Verifica con Discord\")"
+            "oauth": "Token di accesso Discord salvato (da \"Verifica con Discord\")",
+            "dmlog": "Copie salvate dei DM del bot (per ritradurli quando cambi lingua)"
         },
         "partialTitle": "Non è stato eliminato tutto",
         "partialFailed": "Il database non ha risposto per: {items}. ",

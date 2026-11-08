@@ -118,7 +118,8 @@
             "birthday": "Cumpleaños",
             "todo": "Lista de tareas personal",
             "reminders": "Recordatorios",
-            "oauth": "Token de inicio de sesión de Discord guardado (de \"Verificar con Discord\")"
+            "oauth": "Token de inicio de sesión de Discord guardado (de \"Verificar con Discord\")",
+            "dmlog": "Copias guardadas de los MD del bot (para volver a traducirlos cuando cambias de idioma)"
         },
         "partialTitle": "No se eliminó todo",
         "partialFailed": "La base de datos no respondió para: {items}. ",

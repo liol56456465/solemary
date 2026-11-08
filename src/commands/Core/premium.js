@@ -15,6 +15,7 @@ import { afterPremiumChange } from '../../services/billing/premiumEffects.js';
 import { premiumErrorText } from '../../services/site/billing.js';
 import { BoundedMap } from '../../utils/boundedMap.js';
 import { botText, textForGuild } from '../../utils/botText.js';
+import { sendLoggedDm } from '../../services/botDm/dmLog.js';
 import { localized, replyText } from './modules/commandText.js';
 
 const REDEEM_LIMIT = 5;
@@ -67,13 +68,23 @@ export function plainUserText(text, { lang = 'en' } = {}) {
         .replace(/[[\]]/g, (c) => `\\${c}`);
 }
 
-/** The DM the gifted person gets (in `lang`, default English). The sender is a mention (can't be faked). Pure, for tests. */
-export function giftDm({ fromId, fromName, planId, days, code, message, redeemUrl, lang = 'en' }) {
+/** The buyer's gift message as the DM shows it: made safe (plainUserText), on one line. */
+export function giftNoteText(message, { lang = 'en' } = {}) {
+    return message ? plainUserText(message, { lang }).replace(/\n+/g, ' ') : '';
+}
+
+/**
+ * The DM the gifted person gets (in `lang`, default English). The sender is a mention (can't be faked). Pure, for tests.
+ * `safeNote`: the message already made safe (giftNoteText), used as it is: a re-rendering in
+ * another language (botDm/dmRenderers.js 'premium.gift') keeps the note exactly as first shown.
+ */
+export function giftDm({ fromId, fromName, planId, days, code, message, safeNote, redeemUrl, lang = 'en' }) {
     const tr = botText(lang);
     const from = fromId ? `<@${fromId}>` : plainUserText(fromName, { lang });
+    const note = safeNote ?? giftNoteText(message, { lang });
     return [
         tr.tp('core.premium.giftDm.gave', days, { from, plan: planName(planId) }),
-        message ? tr.t('core.premium.giftDm.note', { note: plainUserText(message, { lang }).replace(/\n+/g, ' ') }) : null,
+        note ? tr.t('core.premium.giftDm.note', { note }) : null,
         tr.t('core.premium.giftDm.key', { code }),
         redeemUrl ? tr.t('core.premium.giftDm.redeemOrUrl', { url: redeemUrl }) : tr.t('core.premium.giftDm.redeem'),
     ].filter(Boolean).join('\n');
@@ -110,14 +121,22 @@ async function gift(interaction, client, { store, env, reply, tr }) {
     const origin = String(env.PUBLIC_URL || '').replace(/\/+$/, '');
     const redeemUrl = origin && /^https?:\/\//.test(origin) ? `${origin}/me/redeem?code=${encodeURIComponent(result.key.code)}` : null;
     let delivered = false;
-    // A DM to the gifted member: the server's language (English when run outside a server).
-    const dmLang = textForGuild(interaction.guildId ?? null, { userId: target.id, purpose: 'dm' }).lang;
+    // A DM to the gifted member: their language role, else the server's language (English when
+    // run outside a server). Logged for a language change (botDm/dmLog.js; only in a server).
+    const guildId = interaction.guildId ?? null;
+    const targetMember = guildId ? interaction.options.getMember?.('user') ?? null : null;
+    const dmLang = textForGuild(guildId, { member: targetMember, userId: target.id, purpose: 'dm' }).lang;
     try {
-        await target.send({
-            content: giftDm({ fromId: buyer.id, fromName: buyer.globalName || buyer.username, planId, days: result.key.duration_days, code: result.key.code, message, redeemUrl, lang: dmLang }),
-            allowedMentions: { parse: [] },
+        delivered = await sendLoggedDm(target, {
+            key: 'premium.gift',
+            params: {
+                fromId: buyer.id, fromName: buyer.globalName || buyer.username, planId, days: result.key.duration_days,
+                code: result.key.code, safeNote: giftNoteText(message, { lang: dmLang }), redeemUrl,
+            },
+            guildId,
+            member: targetMember,
+            label: 'premium gift',
         });
-        delivered = true;
     } catch {
         delivered = false;
     }
