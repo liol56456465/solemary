@@ -4,9 +4,24 @@
   },
   "head": {
     "title": "Änderungen",
-    "lead": "Was sich an Mewvo geändert hat, das Neueste zuerst. Eine Änderung steht hier, sobald sie fertig ist. Der Bot auf deinem Server bekommt sie beim nächsten Update."
+    "lead": "Was sich an Mewvo geändert hat, das Neueste zuerst. Eine Änderung steht hier, wenn sie fertig ist. Mewvo wird für alle Server zentral betrieben, du musst also nichts installieren oder aktualisieren: Jeder Server bekommt eine Änderung zur selben Zeit."
   },
   "entries": {
+    "2026-11-08": {
+      "public": "Mewvo ist öffentlich: Jeder Server kann es mit dem Button „Zu Discord hinzufügen“ hinzufügen. Einstellungen, Fälle, Einsprüche und Limits gelten pro Server.",
+      "perServerDashboard": "Jeder Server hat sein eigenes Dashboard. Nach der Anmeldung wählst du den Server; öffnen können es nur seine eigenen Administratoren.",
+      "webAppeals": "Einsprüche auf der Website: Melde dich unter My appeals an und lege Einspruch gegen eine Strafe aus jedem Server ein, der Mewvo nutzt, auch nach einem Bann. Das Team dieses Servers entscheidet.",
+      "recordAllServers": "Meine Akte zeigt deine Fälle aus jedem Server, der Mewvo nutzt, nach Server gruppiert."
+    },
+    "2026-11-07": {
+      "languages": "Das Dashboard und die Nachrichten des Bots an Mitglieder gibt es in denselben 8 Sprachen wie die Website. Jeder Server wählt die Sprache des Bots."
+    },
+    "2026-11-05": {
+      "websiteEditor": "Website-Editor: Der Text der Website in jeder Sprache und ihre Bilder lassen sich im Dashboard ändern, ohne neue Version des Bots."
+    },
+    "2026-11-04": {
+      "languages": "Die Website gibt es in 8 Sprachen: Englisch, Deutsch, Französisch, Spanisch, Italienisch, Polnisch, brasilianisches Portugiesisch und Russisch."
+    },
     "2026-11-01": {
       "customAutomodRules": "Eigene Automod-Regeln: Füge eigene Wörter und Ausdrücke zum Blockieren hinzu, mit /automod custom oder im Dashboard. Die Wörter einer Regel kannst du später ändern. Teil der Pläne Normal, Pro und Max.",
       "remind": "/remind: Stell dir eine Erinnerung. Mewvo schickt sie dir per Direktnachricht, oder im Kanal, wenn deine Direktnachrichten geschlossen sind.",
@@ -20,7 +35,9 @@
       "shiftNote": "Dashboard: eine Notiz für die nächste Teamschicht auf der Übersichtsseite.",
       "weeklySummary": "Jeden Montag eine Wochenzusammenfassung des Servers im Mod-Log.",
       "proMaxBranding": "Pro und Max: Mewvo kann auf deinem Server einen eigenen Spitznamen und Avatar nutzen, und das Team kann Fälle als Tabelle herunterladen.",
-      "dashboardThemes": "Dashboard-Designs: Light, Dark, Dim und High contrast."
+      "dashboardThemes": "Dashboard-Designs: Light, Dark, Dim und High contrast.",
+      "accounts": "Mewvo-Konten: Melde dich auf der Website mit Benutzername und Passwort an, ohne E-Mail. Verknüpfe dein Discord-Konto, um deine Akte zu sehen.",
+      "trustPages": "Eine Vertrauenskarte unter /trust neben dem monatlichen Transparenzbericht: Bearbeitungszeiten und Ergebnisse von Einsprüchen und Mitglieder ohne Probleme über 90 Tage, für Mewvos eigenen Server. Beides lässt sich ausschalten."
     },
     "2026-10-31": {
       "legalPages": "Datenschutzerklärung und Allgemeine Geschäftsbedingungen.",

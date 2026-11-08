@@ -30,9 +30,9 @@
   },
   "about": {
     "title": "À propos",
-    "description": "À propos de Mewvo, le bot Discord du serveur Mewvo.",
+    "description": "À propos de Mewvo, un bot Discord de modération et de communauté, et de qui le gère.",
     "heading": "À propos de Mewvo",
-    "lead": "Mewvo est le bot du serveur Discord Mewvo, développé et géré par son propriétaire pour cette communauté.",
+    "lead": "Mewvo est un bot Discord de modération et de communauté. Il a commencé comme le bot du serveur Mewvo et peut maintenant être ajouté à n’importe quel serveur.",
     "started": {
       "heading": "Les débuts",
       "text": "Mewvo a commencé comme un fork de TitanBot, un bot Discord open source (MIT), et a depuis été reconstruit autour des besoins du serveur : un système de modération avec codes de dossier et appels, une échelle d’avertissements, l’automod, des tickets et le modmail, et un tableau de bord web pour l’équipe."
@@ -88,18 +88,18 @@
       }
     },
     "note": {
-      "refresh": "Cette page se rafraîchit chaque minute.",
-      "refreshSupport": "Cette page se rafraîchit chaque minute. Quelque chose ne fonctionne pas ? [Dis-le-nous sur le serveur d’assistance]({url})."
+      "refreshLink": "Actualiser",
+      "support": "Quelque chose ne fonctionne pas ? [Dis-le-nous sur le serveur d’assistance]({url})."
     }
   },
   "leaderboard": {
     "title": "Classement",
     "titlePaged": "Classement, page {page}",
-    "description": "Le classement des niveaux du serveur Mewvo.",
+    "description": "Le classement des niveaux du serveur communautaire de Mewvo.",
     "heading": "Classement",
-    "lead": "Les membres les plus actifs du serveur Mewvo par niveau et XP totale. Tu gagnes de l’XP en discutant ; les membres qui suppriment leurs données avec `/wipedata` n’apparaissent pas.",
+    "lead": "Les membres les plus actifs du serveur communautaire de Mewvo, par niveau et XP total. Tu gagnes de l’XP en discutant ; les membres qui suppriment leurs données avec `/wipedata` ne sont pas listés.",
     "unavailable": "Impossible de charger le classement pour le moment. Rien n’a été modifié ; réessaie dans une minute.",
-    "off": "Les niveaux sont désactivés sur le serveur Mewvo, il n’y a donc pas de classement pour le moment.",
+    "off": "Les niveaux sont désactivés sur le serveur communautaire de Mewvo, il n’y a donc pas de classement pour le moment.",
     "empty": {
       "firstPage": "Personne n’a encore gagné d’XP.",
       "laterPage": "Il n’y a personne sur cette page.",

@@ -35,7 +35,8 @@
     },
     "howTo": {
       "q": "Wie lege ich Einspruch ein?",
-      "a": "Nutze den Link in der Direktnachricht, die du bekommen hast. Drück im Einspruchs-Panel auf **Appeal**, gib an, warum die Strafe aufgehoben werden sollte, und trag den Fallcode aus der Direktnachricht ein. Wenn du gebannt bist, nutze das Panel auf {support}. Die Entscheidung bekommst du per Direktnachricht. [So funktionieren Einsprüche](/docs/appeals)."
+      "a": "Nutze den Link in der Direktnachricht, die du bekommen hast. Du legst den Einspruch bei dem Server ein, der dich bestraft hat, und dessen Team entscheidet. Drück im Einspruchs-Panel auf **Appeal**, gib an, warum die Strafe aufgehoben werden sollte, und trag den Fallcode aus der Direktnachricht ein. Für Mewvos eigenen Server nutzen gebannte Mitglieder das Panel auf {support}. Die Entscheidung bekommst du per Direktnachricht. [So funktionieren Einsprüche](/docs/appeals).",
+      "aPortal": "Nutze den Link in der Direktnachricht, die du bekommen hast. Du legst den Einspruch bei dem Server ein, der dich bestraft hat, und dessen Team entscheidet. Auf dieser Website meldest du dich unter [My appeals](/me/appeals) an: Das funktioniert für jeden Server, der Mewvo nutzt, auch nach einem Bann. In Discord drückst du im Einspruchs-Panel auf **Appeal** und gibst an, warum die Strafe aufgehoben werden sollte, mit dem Fallcode aus der Direktnachricht; für Mewvos eigenen Server nutzen gebannte Mitglieder das Panel auf {support}. [So funktionieren Einsprüche](/docs/appeals)."
     },
     "lostCode": {
       "q": "Ich habe meinen Fallcode verloren.",
@@ -45,21 +46,25 @@
     "everyPunishment": {
       "q": "Kann man gegen jede Strafe Einspruch einlegen?",
       "a": "Gegen die meisten. Gegen Banns und Stummschaltungen geht das, solange sie laufen, gegen Verwarnungen und Kicks innerhalb von 30 Tagen. Gegen einen permanenten Leiter-Bann ist nach 6 Monaten oder nach einem abgelehnten Einspruch kein Einspruch mehr möglich, und das Team kann einen schweren Bann als unanfechtbar markieren. Die Direktnachricht sagt immer, was gilt."
+    },
+    "web": {
+      "q": "Kann ich auf der Website Einspruch einlegen?",
+      "a": "Ja. Melde dich unter [My appeals](/me/appeals) mit Discord an. Du siehst die Fälle aus jedem Server, der Mewvo nutzt, gegen die du gerade Einspruch einlegen kannst, und den Stand deiner Einsprüche. Das funktioniert auch, wenn du keinen Server mehr mit Mewvo teilst. Es entscheidet das Team des Servers, der dich bestraft hat."
     }
   },
   "data": {
     "title": "Daten und Kontakt",
     "stored": {
       "q": "Welche Daten speichert Mewvo?",
-      "a": "Discord-IDs, deine Level und XP, Moderationsfälle, Einsprüche und was du in Formulare oder Tickets schreibst, sowie ein paar Dinge, die du selbst speicherst, etwa einen Geburtstag. Keine E-Mail, kein Passwort, niemals verkauft. Die [Datenschutzseite](/privacy) enthält die vollständige Liste, und `/wipedata` löscht deine Level, dein Guthaben, deinen AFK-Status und Geburtstag auf diesem Server sowie deine To-do-Liste, Erinnerungen und gespeicherte Discord-Anmeldung. Moderationsakten bleiben bestehen; warum, steht auf der Datenschutzseite."
+      "a": "Discord-IDs, deine Level und XP, Moderationsfälle, Einsprüche und was du in Formulare oder Tickets schreibst, sowie ein paar Dinge, die du selbst speicherst, etwa einen Geburtstag. Der Bot fragt nie nach einer E-Mail oder einem Passwort. Wenn du auf dieser Website ein Mewvo-Konto anlegst, speichert es einen Benutzernamen und einen nicht umkehrbaren scrypt-Hash deines Passworts (nie das Passwort selbst), auch dann keine E-Mail. Nichts wird je verkauft. Die [Datenschutzseite](/privacy) hat die vollständige Liste, und `/wipedata` löscht deine Level, dein Guthaben, deinen AFK-Status und deinen Geburtstag auf diesem Server, dazu deine To-do-Liste, Erinnerungen und den gespeicherten Discord-Login. Moderationsakten bleiben; warum, steht auf der Datenschutzseite."
     },
     "reachStaff": {
       "q": "Wie erreiche ich das Team?",
-      "a": "Auf drei Wegen: Schreib dem Bot eine Direktnachricht und wähle **Send to staff** (Modmail), öffne ein Ticket über das Ticket-Panel oder frag auf {support}. Um ein Teammitglied zu melden, nutze **Report staff** im Einspruchs-Panel auf dem Support-Server; nur Administratoren sehen diese Meldungen."
+      "a": "Frag zuerst das Team deines eigenen Servers: Schreib dem Bot eine Direktnachricht und wähle **Send to staff** (Modmail; Mewvo fragt, für welchen Server), oder öffne ein Ticket über das Ticket-Panel dieses Servers. Um ein Teammitglied zu melden, nutze **Report staff** im Einspruchs-Panel; nur die Administratoren dieses Servers sehen diese Meldungen. Fragen zu Mewvo selbst oder zu Mewvos eigenem Server gehören auf {support}."
     },
     "down": {
       "q": "Ist der Bot offline?",
-      "a": "Sieh auf der [Statusseite](/status) nach. Sie zeigt, ob der Bot online ist, und aktualisiert sich jede Minute."
+      "a": "Sieh auf der [Statusseite](/status) nach. Sie zeigt, ob der Bot online ist; drück dort auf Aktualisieren für den neuesten Stand."
     }
   }
 }

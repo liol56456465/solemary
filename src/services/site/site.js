@@ -54,7 +54,7 @@ import { createTransparencyReader } from '../enforcement/transparencyService.js'
 import { createTrustCardReader } from '../enforcement/trustCardService.js';
 import { logger } from '../../utils/logger.js';
 import {
-    FAVICON_PATH, LOGO_FILE, NOINDEX, SCRIPT, SECURITY_HEADERS, STYLESHEET, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
+    CSS_VERSION, FAVICON_PATH, JS_VERSION, LOGO_FILE, NOINDEX, SCRIPT, SECURITY_HEADERS, STYLESHEET, assetCacheControl, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
 } from './shell.js';
 import { homePage } from './pages/home.js';
 import { featuresPage } from './pages/features.js';
@@ -73,6 +73,7 @@ import {
 import { catStageWords, catWords } from './catWords.js';
 import { languageRouting, pickerHref, suggestedLanguage } from './language.js';
 import { readPublicRules } from '../rules/serverRules.js';
+import { databaseHealthy } from '../../utils/httpMiddleware.js';
 
 export {
     CSS_PATH, DASHBOARD_PATH, FAVICON_PATH, INSTALL_PERMISSIONS, JS_PATH, LOGO, LOGO_PATH, NOINDEX, SCRIPT, SECURITY_HEADERS, STYLESHEET, addButton,
@@ -298,9 +299,9 @@ export function leaderboardPage(ctx, { page, board, cat = null }) {
  */
 export function botStatus(client) {
     if (!client?.isReady?.()) return { state: 'starting', uptimeMs: null };
-    const db = client.db?.getStatus?.() || { isDegraded: true };
     const uptime = Number(client.uptime);
-    return { state: db.isDegraded ? 'degraded' : 'online', uptimeMs: Number.isFinite(uptime) && uptime >= 0 ? uptime : null };
+    // Same test as /ready: the memory fallback or PostgreSQL known down after boot is "degraded".
+    return { state: databaseHealthy(client.db) ? 'online' : 'degraded', uptimeMs: Number.isFinite(uptime) && uptime >= 0 ? uptime : null };
 }
 
 /** "3 days, 4 hours", "12 minutes", "less than a minute": the two largest units. */
@@ -318,17 +319,17 @@ export function uptimeWords(ms, ctx) {
 const STATUS_STATES = new Set(['online', 'starting', 'degraded']);
 
 export function statusPage(ctx, status) {
-    const { t, ti } = textOf(ctx);
+    const { t, ti, href } = textOf(ctx);
     const state = STATUS_STATES.has(status?.state) ? status.state : 'degraded';
     const uptime = state !== 'starting' && Number.isFinite(status?.uptimeMs) ? status.uptimeMs : null;
     return layout(ctx, {
-        title: t('pages.status.title'), active: 'status', refresh: 60, path: '/status',
+        title: t('pages.status.title'), active: 'status', path: '/status',
         description: t('pages.status.description'),
         body: html`<div class="wrap page prose"><h1>${t('pages.status.heading')}</h1>
 <p class="status status-${state}"><span class="status-dot" aria-hidden="true"></span>${t(`pages.status.states.${state}.label`)}</p>
 <p class="lead">${t(`pages.status.states.${state}.text`)}</p>
 ${uptime !== null ? html`<p>${t('pages.status.uptime.line', { uptime: uptimeWords(uptime, ctx) })}</p>` : ''}
-<p class="note">${ctx.supportInvite ? ti('pages.status.note.refreshSupport', { url: ctx.supportInvite }) : t('pages.status.note.refresh')}</p></div>`,
+<p class="note"><a href="${href('/status')}">${t('pages.status.note.refreshLink')}</a>${ctx.supportInvite ? html` ${ti('pages.status.note.support', { url: ctx.supportInvite })}` : ''}</p></div>`,
     });
 }
 
@@ -555,11 +556,11 @@ export function createSite({
     router.get(FAVICON_PATH, favicon);
     router.get('/favicon.ico', favicon);
     router.get('/site.css', (req, res) => {
-        res.set('Cache-Control', 'public, max-age=3600');
+        res.set('Cache-Control', assetCacheControl(req.query.v, CSS_VERSION));
         res.status(200).type('text/css').send(STYLESHEET);
     });
     router.get('/site.js', (req, res) => {
-        res.set('Cache-Control', 'public, max-age=3600');
+        res.set('Cache-Control', assetCacheControl(req.query.v, JS_VERSION));
         res.status(200).type('text/javascript').send(SCRIPT);
     });
     // Last: any other GET is a plain 404 page (the API and dashboard routes are registered before).

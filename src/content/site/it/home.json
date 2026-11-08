@@ -1,6 +1,7 @@
 {
   "meta": {
-    "description": "Mewvo è un bot Discord per la moderazione con codici caso e messaggi diretti, una scala degli avvertimenti in tre passi, ricorsi che arrivano a una persona, automod, ticket e strumenti per la community."
+    "description": "Mewvo è un bot Discord per la moderazione con codici caso e messaggi diretti, una scala degli avvertimenti in tre passi, ricorsi che arrivano a una persona, automod, ticket e strumenti per la community.",
+    "title": "Mewvo: bot di moderazione e community per Discord"
   },
   "actions": {
     "readDocs": "Leggi la guida",
@@ -34,7 +35,7 @@
       },
       "appeals": {
         "name": "Ricorsi",
-        "text": "I membri fanno ricorso con un breve modulo. I ricorsi contro i ban aprono un canale nel server di supporto, così funzionano anche dopo un ban, e decide una persona dello staff.",
+        "text": "I membri fanno ricorso con un breve modulo, su Discord o su questo sito, e decide lo staff del server che li ha sanzionati. Il sito funziona anche dopo un ban, quando il membro non condivide più alcun server con Mewvo.",
         "link": "Come funzionano i ricorsi"
       },
       "automod": {

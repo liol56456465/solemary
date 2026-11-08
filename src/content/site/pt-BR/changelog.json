@@ -4,9 +4,24 @@
   },
   "head": {
     "title": "Novidades",
-    "lead": "O que mudou no Mewvo, das mais recentes para as mais antigas. Uma mudança entra na lista quando está pronta. O bot no seu servidor a recebe na próxima atualização."
+    "lead": "O que mudou no Mewvo, do mais recente ao mais antigo. Uma mudança aparece aqui quando está pronta. O Mewvo é hospedado para todos os servidores, então não há nada para instalar ou atualizar: todo servidor recebe uma mudança ao mesmo tempo."
   },
   "entries": {
+    "2026-11-08": {
+      "public": "O Mewvo é público: qualquer servidor pode adicioná-lo com o botão Adicionar ao Discord. Configurações, casos, apelações e limites ficam separados por servidor.",
+      "perServerDashboard": "Cada servidor tem o próprio painel. Depois de entrar, você escolhe o servidor; só os administradores dele podem abri-lo.",
+      "webAppeals": "Apelações no site: entre em My appeals e apele de uma punição de qualquer servidor que use o Mewvo, mesmo depois de um banimento. A equipe desse servidor decide.",
+      "recordAllServers": "Meu histórico mostra seus casos de todos os servidores que usam o Mewvo, agrupados por servidor."
+    },
+    "2026-11-07": {
+      "languages": "O painel e as mensagens do bot para os membros estão nos mesmos 8 idiomas do site. Cada servidor escolhe o idioma do bot."
+    },
+    "2026-11-05": {
+      "websiteEditor": "Editor do site: o texto do site em todos os idiomas e as imagens dele podem ser alterados pelo painel, sem uma nova versão do bot."
+    },
+    "2026-11-04": {
+      "languages": "O site está em 8 idiomas: inglês, alemão, francês, espanhol, italiano, polonês, português do Brasil e russo."
+    },
     "2026-11-01": {
       "customAutomodRules": "Regras personalizadas de automod: adicione suas próprias palavras e frases para bloquear, com /automod custom ou no painel. Você pode mudar as palavras de uma regra depois. Faz parte dos planos Normal, Pro e Max.",
       "remind": "/remind: crie um lembrete para você. O Mewvo o envia por mensagem direta, ou no canal se as suas mensagens diretas estiverem fechadas.",
@@ -20,7 +35,9 @@
       "shiftNote": "Painel: uma nota para o próximo turno da equipe na página Overview.",
       "weeklySummary": "Um resumo semanal do servidor no registro de moderação toda segunda-feira.",
       "proMaxBranding": "Pro e Max: o Mewvo pode usar apelido e avatar próprios no seu servidor, e a equipe pode baixar os casos como planilha.",
-      "dashboardThemes": "Temas do painel: Claro, Escuro, Penumbra e Alto contraste."
+      "dashboardThemes": "Temas do painel: Claro, Escuro, Penumbra e Alto contraste.",
+      "accounts": "Contas Mewvo: entre no site com nome de usuário e senha, sem e-mail. Vincule sua conta do Discord para ver seu histórico.",
+      "trustPages": "Um cartão de confiança em /trust ao lado do relatório mensal de transparência: tempos e resultados das apelações e membros em situação regular nos últimos 90 dias, para o servidor do próprio Mewvo. Os dois podem ser desativados."
     },
     "2026-10-31": {
       "legalPages": "Política de Privacidade e Termos e Condições.",

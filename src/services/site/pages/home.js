@@ -70,7 +70,7 @@ ${tb('home.ladder.text')}</div>
 <p>${ti('home.help.text')}${ctx.supportInvite ? html` ${ti('home.help.support', { url: ctx.supportInvite })}` : ''}</p>
 </div></section>`;
     return layout(ctx, {
-        title: t('common.brand'), active: 'home', path: '/',
+        title: t('home.meta.title'), titleComplete: true, active: 'home', path: '/',
         description: t('home.meta.description'),
         body,
     });

@@ -2,7 +2,8 @@
 // /me/account …). Plain HTML forms that work without JavaScript. Pure: (ctx, values) → page.
 // Text: src/content/site/<lang>/account.json (textOf(ctx); English without a language).
 
-import { html, formatDate } from '../dashboard/html.js';
+import { html } from '../dashboard/html.js';
+import { portalTime } from './shell.js';
 import { layout } from './shell.js';
 import { hasKey, textOf, translator } from './i18n.js';
 import { MIN_AGE, PASSWORD_MAX, PASSWORD_MIN, PRO_BONUS_LIMIT, PRO_BONUS_MONTHS, USERNAME_MAX, USERNAME_MIN } from '../accounts/accountCore.js';
@@ -11,10 +12,8 @@ import { planName } from '../billing/premiumService.js';
 const notices = ({ flash = null, error = null }) => html`${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}${error ? html`<p class="error" role="alert">${error}</p>` : ''}`;
 const csrfField = (token) => html`<input type="hidden" name="csrf" value="${token}">`;
 
-function when(value) {
-    const date = value ? new Date(value) : null;
-    return date && !Number.isNaN(date.getTime()) ? html`<time datetime="${date.toISOString()}">${formatDate(date)}</time>` : '-';
-}
+/** A date in the page's language (shell.js portalTime). */
+const when = (ctx, value) => portalTime(ctx, value);
 
 // One narrow column in the middle of the page: forms read top to bottom, buttons line up on
 // the left edge of the fields.
@@ -183,7 +182,7 @@ export function bonusStatusText(bonus, text = translator()) {
     const { t, ti, tp } = text;
     if (!bonus) return null;
     const n = bonus.link_number;
-    if (bonus.pro_granted_at) return ti('account.bonus.granted', { n, bonus: bonusLength(text), date: when(bonus.pro_granted_at) });
+    if (bonus.pro_granted_at) return ti('account.bonus.granted', { n, bonus: bonusLength(text), date: when(text, bonus.pro_granted_at) });
     // pro_skip_reason is stored text (English, from the premium store).
     if (bonus.pro_skip_reason) return t('account.bonus.skipped', { n, bonus: bonusLength(text), reason: bonus.pro_skip_reason });
     if (Number(bonus.link_number) > PRO_BONUS_LIMIT) return tp('account.bonus.tooLate', PRO_BONUS_LIMIT, { n });
@@ -201,7 +200,7 @@ function planSection(ctx, { plan, bonus, now }) {
     return html`<section class="account-section"><h2>${t('account.plan.heading')}</h2>
 <dl class="summary-rows account-facts">
 <div><dt>${t('account.plan.plan')}</dt><dd>${plan ? html`<strong>${planName(plan.plan_id)}</strong>` : t('account.plan.free')}</dd></div>
-${plan ? html`<div><dt>${t('account.plan.activeUntil')}</dt><dd>${when(plan.expires_at)} <small class="note">(${daysLeftText(plan.expires_at, now, text)})</small></dd></div>
+${plan ? html`<div><dt>${t('account.plan.activeUntil')}</dt><dd>${when(ctx, plan.expires_at)} <small class="note">(${daysLeftText(plan.expires_at, now, text)})</small></dd></div>
 ${PLAN_SOURCES.has(plan.source) ? html`<div><dt>${t('account.plan.lastAddedBy')}</dt><dd>${t(`account.plan.source.${plan.source}`)}</dd></div>` : ''}` : ''}
 ${bonusLine ? html`<div><dt>${t('account.plan.bonus')}</dt><dd>${bonusLine}</dd></div>` : ''}</dl>
 <p class="form-actions">${manage}</p>
@@ -221,7 +220,7 @@ ${notices({ flash, error })}
 <dl class="summary-rows account-facts">
 <div><dt>${t('account.fields.username')}</dt><dd>${account.username}</dd></div>
 <div><dt>${t('account.settings.discord')}</dt><dd>${account.discord_user_id ? html`${account.discord_username || t('account.settings.linked')} <small class="note">(${t('account.settings.discordId', { id: account.discord_user_id })})</small>` : t('account.settings.notLinked')}</dd></div>
-<div><dt>${t('account.settings.created')}</dt><dd>${when(account.created_at)}</dd></div></dl>
+<div><dt>${t('account.settings.created')}</dt><dd>${when(ctx, account.created_at)}</dd></div></dl>
 <div class="form-actions">${canClaim ? html`<a class="button" href="/me/linked">${t('account.settings.claimLetter')}</a>` : ''}<form method="post" action="/me/account/unlink">${csrfField(session.csrf)}<button class="button button-quiet" type="submit">${t('account.settings.unlink')}</button></form></div>
 <p class="note account-foot">${t('account.settings.unlinkFoot')}</p></section>
 
@@ -235,7 +234,7 @@ ${field('cp-new', t('account.fields.newPassword'), html`<input id="cp-new" name=
 
 <section class="account-section"><h2>${t('account.twoStepSettings.heading')}</h2>
 ${twoStep
-        ? html`<p>${ti('account.twoStepSettings.on', { date: when(account.totp_enabled_at), left: recoveryLeft })}</p>
+        ? html`<p>${ti('account.twoStepSettings.on', { date: when(ctx, account.totp_enabled_at), left: recoveryLeft })}</p>
 <form class="form-stack" method="post" action="/me/account/2fa/disable">${csrfField(session.csrf)}
 ${field('td-password', t('account.fields.password'), pw('td-password'))}
 ${field('td-code', t('account.fields.codeOrRecovery'), code('td-code'))}

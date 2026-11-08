@@ -30,9 +30,9 @@
   },
   "about": {
     "title": "Sobre",
-    "description": "Sobre o Mewvo, o bot de Discord do servidor Mewvo.",
+    "description": "Sobre o Mewvo, um bot do Discord para moderação e comunidade, e quem o mantém.",
     "heading": "Sobre o Mewvo",
-    "lead": "Mewvo é o bot do servidor Mewvo no Discord, criado e mantido pelo seu dono para essa comunidade.",
+    "lead": "O Mewvo é um bot do Discord para moderação e comunidade. Começou como o bot do servidor Mewvo e agora pode ser adicionado a qualquer servidor.",
     "started": {
       "heading": "Como começou",
       "text": "O Mewvo começou como um fork do TitanBot, um bot de Discord de código aberto (MIT), e desde então foi reconstruído em torno das necessidades do próprio servidor: um sistema de punições com códigos de caso e apelações, uma escada de advertências, automod, tickets e modmail, e um painel web para a equipe."
@@ -94,18 +94,18 @@
       }
     },
     "note": {
-      "refresh": "Esta página é atualizada a cada minuto.",
-      "refreshSupport": "Esta página é atualizada a cada minuto. Algo não está funcionando? [Avise no servidor de suporte]({url})."
+      "refreshLink": "Atualizar",
+      "support": "Algo não está funcionando? [Conte para a gente no servidor de suporte]({url})."
     }
   },
   "leaderboard": {
     "title": "Classificação",
     "titlePaged": "Classificação, página {page}",
-    "description": "A classificação de níveis do servidor Mewvo.",
+    "description": "O ranking de níveis do servidor de comunidade do próprio Mewvo.",
     "heading": "Classificação",
-    "lead": "Os membros mais ativos do servidor Mewvo por nível e XP total. Você ganha XP conversando; membros que apagam os próprios dados com `/wipedata` não aparecem.",
+    "lead": "Os membros mais ativos do servidor de comunidade do próprio Mewvo por nível e XP total. Você ganha XP conversando; quem apaga os dados com `/wipedata` não aparece.",
     "unavailable": "Não foi possível carregar a classificação agora. Nada foi alterado; tente de novo em um minuto.",
-    "off": "O sistema de níveis está desativado no servidor Mewvo, então não há classificação no momento.",
+    "off": "Os níveis estão desativados no servidor de comunidade do Mewvo, então não há ranking agora.",
     "empty": {
       "firstPage": "Ninguém ganhou XP ainda.",
       "laterPage": "Não há ninguém nesta página.",

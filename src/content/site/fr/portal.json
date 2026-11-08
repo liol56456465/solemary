@@ -44,7 +44,7 @@
     }
   },
   "login": {
-    "lead": "Consulte ton propre dossier de modération sur {server} : tes avertissements, ton palier d’avertissement, tout bannissement ou mise en sourdine en cours, tes dossiers et tes appels.",
+    "lead": "Consulte ton propre dossier de modération dans chaque serveur qui utilise Mewvo : tes avertissements, ton palier, un bannissement ou une mise en sourdine en cours, tes dossiers et tes appels.",
     "withDiscord": "Se connecter avec Discord",
     "withAccount": "Se connecter avec un compte Mewvo",
     "note": "Mewvo demande seulement à Discord qui tu es (l’autorisation identify) : pas d’e-mail, pas de serveurs, rien d’autre. Tu ne vois jamais que ton propre dossier. La connexion dure une heure.",
@@ -53,7 +53,7 @@
   },
   "record": {
     "title": "Mon dossier",
-    "lead": "Ton dossier de modération sur {server}, connecté en tant que **{username}**. Toi seul peux le voir.",
+    "lead": "Ton dossier de modération dans chaque serveur qui utilise Mewvo, connecté en tant que **{username}**. Toi seul peux le voir.",
     "accountSettings": "Paramètres du compte",
     "download": "Télécharger mes données",
     "subscription": "Abonnement",
@@ -68,7 +68,6 @@
     "activeBanPermanent": "Bannissement {code} : définitif",
     "activeMuteEnds": "Mise en sourdine {code} : se termine le {date}",
     "nothingActive": "Aucun bannissement ni mise en sourdine en cours.",
-    "cases": "Dossiers",
     "appeals": "Appels",
     "column": {
       "case": "Dossier",
@@ -80,19 +79,21 @@
       "status": "Statut",
       "appeal": "Appel",
       "filed": "Déposé",
-      "decided": "Tranché"
+      "decided": "Tranché",
+      "server": "Serveur"
     },
     "permanent": "définitif",
     "truncated": {
       "one": "Affichage de ton dossier le plus récent.",
       "other": "Affichage de tes {count} dossiers les plus récents."
     },
-    "noCases": "Tu n’as aucun dossier sur {server}.",
+    "noCases": "Tu n’as aucun dossier dans les serveurs qui utilisent Mewvo.",
     "noAppeals": "Tu n’as déposé aucun appel.",
     "appealHintInvite": "Fais appel depuis le panneau d’appel sur Discord : [rejoins le serveur d’assistance]({invite}) et appuie sur **Appeal** avec le code du dossier. Aucun appel n’est possible depuis cette page.",
     "appealHint": "Fais appel depuis le panneau d’appel sur Discord avec le code du dossier. Aucun appel n’est possible depuis cette page.",
     "myAppeals": "Mes appels",
-    "appealHintWeb": "Fais appel d'un dossier de n'importe quel serveur sur [Mes appels]({href}). Tu peux aussi faire appel depuis le panneau d'appel dans Discord avec le code du dossier."
+    "appealHintWeb": "Fais appel d'un dossier de n'importe quel serveur sur [Mes appels]({href}). Tu peux aussi faire appel depuis le panneau d'appel dans Discord avec le code du dossier.",
+    "casesIn": "Dossiers sur {server}"
   },
   "message": {
     "logInAgain": "Se reconnecter",
@@ -257,7 +258,13 @@
       "reason": "Explique en au moins {min} caractères pourquoi la sanction devrait être levée.",
       "didIt": "Indique si tu l'as fait.",
       "refused": "Ton appel n'a pas été envoyé : il n'est pas possible de faire appel de ce dossier pour le moment. Il a peut-être déjà un appel en attente, le délai après un refus n'est pas écoulé, ou la sanction est terminée.",
-      "tooMany": "Tu as envoyé trop d'appels. Réessaie dans une heure."
+      "tooMany": "Tu as envoyé trop d'appels. Réessaie dans une heure.",
+      "stale": "Cette page n’était plus à jour, rien n’a donc été envoyé. Vérifie tes réponses ci-dessous et envoie l’appel à nouveau."
+    },
+    "expired": {
+      "message": "Ta connexion a expiré, rien n’a donc été envoyé. Tes réponses sont ci-dessous : copie-les, reconnecte-toi et colle-les dans le formulaire.",
+      "logIn": "Se reconnecter",
+      "copyHint": "Après la connexion, tu reviens à cet appel avec un formulaire vide."
     }
   }
 }

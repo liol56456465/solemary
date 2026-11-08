@@ -1,9 +1,9 @@
 {
   "title": "Regras",
-  "description": "As regras do servidor Mewvo no Discord.",
+  "description": "As regras do servidor de comunidade do próprio Mewvo no Discord.",
   "head": {
     "heading": "Regras do servidor",
-    "lead": "As regras do servidor Mewvo. Quando a equipe adverte, silencia, expulsa ou bane por uma delas, a mensagem direta cita a regra e traz um link para cá."
+    "lead": "As regras do servidor de comunidade do próprio Mewvo; cada outro servidor que usa o Mewvo tem as suas. Quando a equipe desse servidor adverte, silencia, expulsa ou bane por uma destas regras, a mensagem direta cita a regra e traz um link para cá."
   },
   "state": {
     "unavailable": "Não foi possível carregar as regras agora. Tente de novo em um minuto.",

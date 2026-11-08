@@ -10,7 +10,7 @@ import {
     COMPARISON, PLANS, PRICING_FAQ, YEARLY_MONTHS_CHARGED, displayCurrencyFor, monthlyCentsIn, paymentCurrencyFor, yearlyCents,
 } from '../../../config/site/plans.js';
 import { PERIODS, WITHDRAWAL_DAYS } from '../../billing/premiumService.js';
-import { layout } from '../shell.js';
+import { addButton, layout } from '../shell.js';
 import { checkoutHref, testNotice, vatLine } from '../billing.js';
 import { textOf } from '../i18n.js';
 import { approxLocal, money, wholeMoney } from '../currency.js';
@@ -25,6 +25,9 @@ const planned = (t) => html`<span class="planned">${t('pricing.card.planned')}</
 function planActions(ctx, plan) {
     const { t, ti } = textOf(ctx);
     if (!plan.monthlyCents) {
+        // Free: add Mewvo to your server (public site with a valid CLIENT_ID); before that, the invite.
+        const add = addButton(ctx, 'button button-quiet');
+        if (add) return add;
         const invite = ctx.mainInvite || ctx.supportInvite;
         return invite
             ? html`<a class="button button-quiet" href="${invite}" rel="noopener">${ctx.mainInvite ? t('pricing.card.joinServer') : t('pricing.card.joinSupport')}</a>`

@@ -21,12 +21,12 @@
 // it there (appealStaffGuildId), and nothing on this page decides anything.
 // Text: src/content/site/<lang>/portal.json (appeals.*, appealForm.*).
 
-import { html, formatDate } from '../dashboard/html.js';
+import { html } from '../dashboard/html.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { isHomeGuild } from '../settings/guildSettings.js';
 import { isSameOrigin, safeEqual } from '../dashboard/security.js';
 import { normalizeCaseCode } from '../enforcement/format.js';
-import { layout } from './shell.js';
+import { layout, portalTime } from './shell.js';
 import { textOf, translator } from './i18n.js';
 import { logger } from '../../utils/logger.js';
 
@@ -122,13 +122,12 @@ export function parseAppealForm(body, { t } = translator()) {
 
 // ── Pages ─────────────────────────────────────────────────────────────────
 
-function when(value) {
-    const date = value ? new Date(value) : null;
-    return date && !Number.isNaN(date.getTime()) ? html`<time datetime="${date.toISOString()}">${formatDate(date)}</time>` : '-';
-}
+/** A date in the page's language (shell.js portalTime). */
+const when = (ctx, value) => portalTime(ctx, value);
 
-function untilCell({ t }, item) {
-    if (item.appeal.until) return when(item.appeal.until);
+function untilCell(text, item) {
+    const { t } = text;
+    if (item.appeal.until) return when(text, item.appeal.until);
     return t('portal.appeal.appealable');
 }
 
@@ -144,19 +143,20 @@ ${sent ? html`<p class="flash" role="status">${t('portal.appeals.sent', { code: 
 <p class="note">${t('portal.appeals.whoDecides')}</p>
 <h2 id="appealable-title">${t('portal.appeals.appealable')}</h2>
 ${view.appealable.length ? html`<div class="table-wrap" role="region" aria-labelledby="appealable-title" tabindex="0"><table class="record-table appeal-table"><thead><tr>${col('server')}${col('case')}${col('reason')}${col('type')}${col('date')}${col('until')}${col('action')}</tr></thead>
-<tbody>${view.appealable.map((c) => html`<tr><td>${c.server}</td><td><code>${c.code}</code></td><td>${c.reason}</td><td>${c.type}</td><td>${when(c.createdAt)}</td><td>${untilCell(textOf(ctx), c)}</td><td><a class="button" href="${appealPath(c.code)}">${t('portal.appeals.appealButton')}</a></td></tr>`)}</tbody></table></div>`
+<tbody>${view.appealable.map((c) => html`<tr><td>${c.server}</td><td><code>${c.code}</code></td><td>${c.reason}</td><td>${c.type}</td><td>${when(ctx, c.createdAt)}</td><td>${untilCell(textOf(ctx), c)}</td><td><a class="button" href="${appealPath(c.code)}">${t('portal.appeals.appealButton')}</a></td></tr>`)}</tbody></table></div>`
         : html`<p>${t('portal.appeals.noneAppealable')}</p>`}
 <h2 id="history-title">${t('portal.appeals.history')}</h2>
 ${view.appeals.length ? html`<div class="table-wrap" role="region" aria-labelledby="history-title" tabindex="0"><table class="record-table appeal-table"><thead><tr>${col('server')}${col('case')}${col('type')}${col('status')}${col('filed')}${col('decided')}</tr></thead>
-<tbody>${view.appeals.map((a) => html`<tr><td>${a.server}</td><td><code>${a.code}</code></td><td>${a.type}</td><td>${a.status}</td><td>${when(a.filedAt)}</td><td>${when(a.decidedAt)}</td></tr>`)}</tbody></table></div>`
+<tbody>${view.appeals.map((a) => html`<tr><td>${a.server}</td><td><code>${a.code}</code></td><td>${a.type}</td><td>${a.status}</td><td>${when(ctx, a.filedAt)}</td><td>${when(ctx, a.decidedAt)}</td></tr>`)}</tbody></table></div>`
         : html`<p>${t('portal.appeals.noAppeals')}</p>`}
 <p class="note">${t('portal.appeals.dmNote')}</p></div>`,
     });
 }
 
-function caseFacts({ t }, item) {
+function caseFacts(text, item) {
+    const { t } = text;
     const row = (key, value) => html`<div><dt>${t(`portal.appealForm.facts.${key}`)}</dt><dd>${value}</dd></div>`;
-    return html`<dl class="account-facts">${row('server', item.server)}${row('case', html`<code>${item.code}</code>`)}${row('type', item.type)}${row('reason', item.reason)}${row('date', when(item.createdAt))}${item.permanent ? row('ends', t('portal.record.permanent')) : item.endsAt ? row('ends', when(item.endsAt)) : ''}</dl>`;
+    return html`<dl class="account-facts">${row('server', item.server)}${row('case', html`<code>${item.code}</code>`)}${row('type', item.type)}${row('reason', item.reason)}${row('date', when(text, item.createdAt))}${item.permanent ? row('ends', t('portal.record.permanent')) : item.endsAt ? row('ends', when(text, item.endsAt)) : ''}</dl>`;
 }
 
 /** The case and, when it can be appealed now, the form. `values` refill the form after an error. */
@@ -167,7 +167,7 @@ export function appealFormPage(ctx, { session, item, values = {}, error = null, 
     const invalid = (name) => (field === name ? html` aria-invalid="true"` : '');
     const choice = (value) => html`<div class="form-check"><input id="ap-did-${value}" name="didIt" type="radio" value="${value}" required${values.didIt === value ? html` checked` : ''}><label for="ap-did-${value}">${t(`portal.appealForm.didIt.${value}`)}</label></div>`;
     const blocked = !item.appeal.appealable;
-    const why = item.appeal.from ? html`${item.appeal.text} ${when(item.appeal.from)}` : item.appeal.text;
+    const why = item.appeal.from ? html`${item.appeal.text} ${when(text, item.appeal.from)}` : item.appeal.text;
     return layout(ctx, {
         title: t('portal.appealForm.title', { code: item.code }), active: 'me',
         body: html`<div class="wrap page"><div class="account"><h1>${t('portal.appealForm.title', { code: item.code })}</h1>
@@ -183,6 +183,28 @@ ${blocked ? html`<p class="error" role="status">${t('portal.appealForm.notAppeal
 <p class="form-hint">${t('portal.appealForm.note')}</p>
 <p class="form-actions"><button class="button" type="submit">${t('portal.appealForm.submit')}</button><a href="${APPEALS_PATH}">${t('portal.appealForm.back')}</a></p></form>`}
 </div></div>`,
+    });
+}
+
+/**
+ * The login ran out before the form was sent: nothing was sent and no case is looked up (there is
+ * no member to check it against). The typed answers are shown again to copy, outside any form, with
+ * a login link that comes back to this appeal (next=). Never submits anything.
+ */
+export function appealExpiredPage(ctx, { code, values = {} }) {
+    const { t } = textOf(ctx);
+    const L = APPEAL_FIELD_LIMITS;
+    const loginHref = `/me/login?next=${encodeURIComponent(appealPath(code))}`;
+    const didIt = DID_IT_CHOICES.includes(values.didIt) ? t(`portal.appealForm.didIt.${values.didIt}`) : '-';
+    return layout(ctx, {
+        title: t('portal.appealForm.title', { code }), active: 'me',
+        body: html`<div class="wrap page"><div class="account"><h1>${t('portal.appealForm.title', { code })}</h1>
+<p class="error" role="alert">${t('portal.appealForm.expired.message')}</p>
+<p class="form-actions"><a class="button" href="${loginHref}">${t('portal.appealForm.expired.logIn')}</a></p>
+<div class="form-stack"><div class="form-field"><label for="ap-punished">${t('portal.appealForm.punished')}</label><textarea id="ap-punished" rows="4" maxlength="${L.punishedMax}" readonly>${values.punished || ''}</textarea></div>
+<div class="form-field"><label for="ap-reason">${t('portal.appealForm.reason')}</label><textarea id="ap-reason" rows="6" maxlength="${L.reasonMax}" readonly>${values.reason || ''}</textarea></div>
+<dl class="account-facts"><div><dt>${t('portal.appealForm.didItLabel')}</dt><dd>${didIt}</dd></div></dl>
+<p class="form-hint">${t('portal.appealForm.expired.copyHint')}</p></div></div></div>`,
     });
 }
 
@@ -252,16 +274,27 @@ export function createAppealHandlers({ readSession, ctx, send, fail, data, setti
 
     async function submit(req, res) {
         const session = await readSession(req);
-        if (!session?.userId) return fail(res, 401, 'notLoggedIn', { login: true });
-        if (!isSameOrigin(req, settings.publicOrigin) || !safeEqual(String(req.body?.csrf || '').slice(0, 100), session.csrf)) {
-            return fail(res, 403, 'appealNotAllowed');
+        // From another site: refused as before, nothing echoed back.
+        if (!isSameOrigin(req, settings.publicOrigin)) {
+            return session?.userId ? fail(res, 403, 'appealNotAllowed') : fail(res, 401, 'notLoggedIn', { login: true });
         }
         const code = normalizeCaseCode(req.params?.code);
+        // The login ran out (1 h) while the member was typing: their words come back with a login link.
+        if (!session?.userId) {
+            if (!code) return fail(res, 401, 'notLoggedIn', { login: true });
+            return send(res, 401, appealExpiredPage(ctx(), { code, values: parseAppealForm(req.body).values }));
+        }
         const record = await ownCase(session, code);
         if (!record) return fail(res, 404, 'caseNotFound');
         const item = await itemFor(session, record);
         const page = ctx();
         const text = textOf(page);
+        // A stale page (e.g. logged in again in another tab: new CSRF token): nothing is sent; the
+        // form comes back with the member's words and this session's token, to send again by hand.
+        if (!safeEqual(String(req.body?.csrf || '').slice(0, 100), session.csrf)) {
+            const stale = parseAppealForm(req.body, text).values;
+            return send(res, 403, appealFormPage(page, { session, item, values: stale, error: text.t('portal.appealForm.errors.stale') }));
+        }
         if (!item.appeal.appealable) return send(res, 409, appealFormPage(page, { session, item }));
         const parsed = parseAppealForm(req.body, text);
         if (!parsed.answers) return send(res, 400, appealFormPage(page, { session, item, values: parsed.values, error: parsed.error, field: parsed.field }));

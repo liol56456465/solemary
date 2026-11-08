@@ -1,5 +1,6 @@
 // memberPortal.js — "My record" on the website: any member logs in with Discord and sees
-// their OWN moderation record in the main server. Appeals for every server: portalAppeals.js
+// their OWN moderation record in every server, grouped by server (Mewvo's two home servers are
+// one group; each group has that server's standing). Appeals for every server: portalAppeals.js
 // (/me/appeals, /me/appeal/:code; on when the bot client is passed to registerMemberPortal).
 //
 //   GET  /me           the record when logged in, else a page with "Log in with Discord"
@@ -42,14 +43,15 @@ import { homeSettingsGuild, resolveSetting } from '../settings/guildSettings.js'
 import { pgConfig } from '../../config/database/postgres.js';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { logger } from '../../utils/logger.js';
-import { html, formatDate } from '../dashboard/html.js';
+import { html } from '../dashboard/html.js';
+import { portalTime } from './shell.js';
 import {
     MIN_SECRET_LENGTH, STATE_TTL_MS, clearCookie, createRateLimiter, createState, createStateStore, hmac,
     isSameOrigin, isSnowflake, parseCookies, safeEqual, serializeCookie, signValue, verifySignedValue,
 } from '../dashboard/security.js';
 import { createPgSessionStore } from '../dashboard/sessionStore.js';
 import { query } from '../enforcement/db.js';
-import { OPEN_STATUSES, caseStatusCode, caseStatusLabel, listCasesForUser, listUserAppeals } from '../enforcement/caseService.js';
+import { OPEN_STATUSES, caseStatusCode, caseStatusLabel, listUserAppeals } from '../enforcement/caseService.js';
 import { getMemberStanding, nextWarningSteps } from '../enforcement/standingService.js';
 import { NOINDEX, installUrl, inviteOrNull, layout, legalContact, publicSiteEnabled, siteOrigin } from './site.js';
 import { createBillingHandlers } from './billing.js';
@@ -60,7 +62,7 @@ import { createAccountHandlers, memberAccountSettings } from './accountRoutes.js
 import { DEFAULT_LANG, LANG_CODES, hasKey, textOf, translator } from './i18n.js';
 import { languageCookie, requestLanguage } from './language.js';
 import { accountStore as defaultAccountStore } from '../accounts/accountStore.js';
-import { APPEALS_PATH, APPEAL_SUBMIT_LIMIT, appealPath, createAppealHandlers } from './portalAppeals.js';
+import { APPEALS_PATH, APPEAL_SUBMIT_LIMIT, appealPath, createAppealHandlers, serverLabel } from './portalAppeals.js';
 import { getCaseByCodeAnyServer, listCasesForUserAllServers } from '../enforcement/caseService.js';
 import { submitAppeal as submitAppealService } from '../enforcement/appealService.js';
 
@@ -308,20 +310,51 @@ export function buildRecordView({ standing, cases, appeals, now = Date.now(), co
     };
 }
 
-// ── Pages ─────────────────────────────────────────────────────────────────
+// Standing (warnings, ladder, active ban/mute) is read for at most this many servers per page view;
+// further servers list their cases only.
+export const MAX_STANDING_SERVERS = 20;
 
-function when(value) {
-    const date = value ? new Date(value) : null;
-    return date && !Number.isNaN(date.getTime()) ? html`<time datetime="${date.toISOString()}">${formatDate(date)}</time>` : '-';
+/** The server a case is grouped under: Mewvo's two home servers are one group (the main server's id). */
+export const recordGroupKey = (guildId) => homeSettingsGuild(guildId);
+
+/**
+ * "My record" across servers: the member's cases (every server, test cases dropped) grouped by
+ * server, newest first; each group has the buildRecordView view of its own cases with that server's
+ * standing (summary false for groups without one: cases only). `standings`: Map key -> standing.
+ * The appeals list is one table for every server, with the server name. Pure, for tests.
+ */
+export function buildRecordGroups({ cases, appeals, standings = new Map(), guildName = () => null, now = Date.now(), config, text = translator() }) {
+    const rows = (cases || []).filter((row) => !row.is_test);
+    const byKey = new Map();
+    for (const row of rows) {
+        const key = recordGroupKey(row.guild_id);
+        if (!byKey.has(key)) byKey.set(key, []);
+        byKey.get(key).push(row);
+    }
+    const empty = { ladder: { level: 0, warns_since_level: 0 }, warns: [], activeBan: null, activeMute: null };
+    const groups = [...byKey.entries()].map(([key, groupRows]) => {
+        const standing = standings.get(key) || null;
+        const view = buildRecordView({ standing: standing || empty, cases: groupRows, appeals, now, config, text });
+        return { guildId: key, server: serverLabel(key, guildName(key), text), summary: Boolean(standing), view };
+    });
+    const allAppeals = groups.flatMap((g) => g.view.appeals.map((a) => ({ ...a, server: g.server })))
+        .sort((a, b) => new Date(b.filedAt).getTime() - new Date(a.filedAt).getTime());
+    return { groups, appeals: allAppeals, truncated: rows.length >= CASE_LIMIT, caseCount: rows.length };
 }
 
-function appealCell({ t, ti }, appeal, code = null) {
+// ── Pages ─────────────────────────────────────────────────────────────────
+
+/** A date in the page's language (shell.js portalTime). */
+const when = (ctx, value) => portalTime(ctx, value);
+
+function appealCell(page, appeal, code = null) {
+    const { t, ti } = page;
     if (appeal.appealable) {
-        const text = appeal.until ? ti('portal.appeal.until', { date: when(appeal.until) }) : t('portal.appeal.yes');
+        const text = appeal.until ? ti('portal.appeal.until', { date: when(page, appeal.until) }) : t('portal.appeal.yes');
         // Web appeals on: the cell links to the form (portalAppeals.js).
         return code ? html`${text} <a href="${appealPath(code)}">${t('portal.appeals.appealButton')}</a>` : text;
     }
-    return appeal.from ? html`${appeal.text} ${when(appeal.from)}` : appeal.text;
+    return appeal.from ? html`${appeal.text} ${when(page, appeal.from)}` : appeal.text;
 }
 
 function appealHint({ ti }, ctx) {
@@ -346,36 +379,43 @@ ${ctx.accounts ? html`<p class="note">${ti('portal.login.signup', { href: `${MEM
     });
 }
 
-export function recordPage(ctx, { session, view }) {
-    const text = textOf(ctx);
-    const { t, ti } = text;
+/** One server's summary cards: counted warnings, ladder level, active ban / mute. */
+function summaryCards(ctx, view) {
+    const { t, ti } = textOf(ctx);
     const warn = view.warnings;
     const code = (value) => html`<code>${value}</code>`;
     const activeRows = [
         view.activeBan ? html`<li>${view.activeBan.endsAt
-            ? ti('portal.record.activeBanEnds', { code: code(view.activeBan.code), date: when(view.activeBan.endsAt) })
+            ? ti('portal.record.activeBanEnds', { code: code(view.activeBan.code), date: when(ctx, view.activeBan.endsAt) })
             : ti('portal.record.activeBanPermanent', { code: code(view.activeBan.code) })}</li>` : '',
-        view.activeMute ? html`<li>${ti('portal.record.activeMuteEnds', { code: code(view.activeMute.code), date: when(view.activeMute.endsAt) })}</li>` : '',
+        view.activeMute ? html`<li>${ti('portal.record.activeMuteEnds', { code: code(view.activeMute.code), date: when(ctx, view.activeMute.endsAt) })}</li>` : '',
     ].filter(Boolean);
+    return html`<ul class="record-summary">
+<li class="feature"><h3>${t('portal.record.warnings')}</h3><p class="record-big">${t('portal.record.warningsCount', { count: warn.count, threshold: warn.threshold })}</p><p>${t('portal.record.warningsNote')}</p></li>
+<li class="feature"><h3>${t('portal.record.ladder')}</h3><p class="record-big">${t('portal.record.ladderLevel', { level: view.ladder.level, max: 3 })}</p><p>${view.ladder.next}</p></li>
+<li class="feature"><h3>${t('portal.record.activeNow')}</h3>${activeRows.length ? html`<ul class="record-active">${activeRows}</ul>` : html`<p>${t('portal.record.nothingActive')}</p>`}</li>
+</ul>`;
+}
+
+/** `record`: buildRecordGroups' result (cases grouped by server, one appeals list). */
+export function recordPage(ctx, { session, record }) {
+    const text = textOf(ctx);
+    const { t, ti } = text;
     const col = (key) => html`<th scope="col">${t(`portal.record.column.${key}`)}</th>`;
+    const group = (g, i) => html`<section class="record-server" aria-labelledby="server-${String(i)}"><h2 id="server-${String(i)}">${g.server}</h2>
+${g.summary ? summaryCards(ctx, g.view) : ''}
+<div class="table-wrap" role="region" aria-label="${t('portal.record.casesIn', { server: g.server })}" tabindex="0"><table class="record-table"><caption class="visually-hidden">${t('portal.record.casesIn', { server: g.server })}</caption><thead><tr>${col('case')}${col('type')}${col('reason')}${col('by')}${col('date')}${col('ends')}${col('status')}${col('appeal')}</tr></thead>
+<tbody>${g.view.cases.map((c) => html`<tr><td><code>${c.code}</code></td><td>${c.type}</td><td>${c.reason}</td><td>${c.by}</td><td>${when(ctx, c.createdAt)}</td><td>${c.permanent ? t('portal.record.permanent') : when(ctx, c.endsAt)}</td><td>${c.status}</td><td>${appealCell(text, c.appeal, ctx.webAppeals ? c.code : null)}</td></tr>`)}</tbody></table></div></section>`;
     return layout(ctx, {
         title: t('portal.record.title'), active: 'me',
         body: html`<div class="wrap page record"><div class="record-head"><div><h1>${t('portal.record.title')}</h1>
-<p class="lead">${ti('portal.record.lead', { server: enforcementConfig.serverName, username: session.username })}</p></div>
+<p class="lead">${ti('portal.record.lead', { username: session.username })}</p></div>
 <div class="record-links">${session.accountId ? html`<a class="button button-quiet" href="${MEMBER_BASE}/account">${t('portal.record.accountSettings')}</a> ` : ''}${ctx.webAppeals ? html`<a class="button button-quiet" href="${APPEALS_PATH}">${t('portal.record.myAppeals')}</a> ` : ''}<a class="button button-quiet" href="${MEMBER_BASE}/data" download>${t('portal.record.download')}</a> ${ctx.billing ? html`<a class="button button-quiet" href="${MEMBER_BASE}/billing">${t('portal.record.subscription')}</a> ` : ''}<form method="post" action="${MEMBER_BASE}/logout"><input type="hidden" name="csrf" value="${session.csrf}"><button class="button button-quiet" type="submit">${t('portal.record.logOut')}</button></form></div></div>
-<ul class="record-summary">
-<li class="feature"><h2>${t('portal.record.warnings')}</h2><p class="record-big">${t('portal.record.warningsCount', { count: warn.count, threshold: warn.threshold })}</p><p>${t('portal.record.warningsNote')}</p></li>
-<li class="feature"><h2>${t('portal.record.ladder')}</h2><p class="record-big">${t('portal.record.ladderLevel', { level: view.ladder.level, max: 3 })}</p><p>${view.ladder.next}</p></li>
-<li class="feature"><h2>${t('portal.record.activeNow')}</h2>${activeRows.length ? html`<ul class="record-active">${activeRows}</ul>` : html`<p>${t('portal.record.nothingActive')}</p>`}</li>
-</ul>
-<h2 id="cases-title">${t('portal.record.cases')}</h2>
-${view.cases.length ? html`<div class="table-wrap" role="region" aria-labelledby="cases-title" tabindex="0"><table class="record-table"><thead><tr>${col('case')}${col('type')}${col('reason')}${col('by')}${col('date')}${col('ends')}${col('status')}${col('appeal')}</tr></thead>
-<tbody>${view.cases.map((c) => html`<tr><td><code>${c.code}</code></td><td>${c.type}</td><td>${c.reason}</td><td>${c.by}</td><td>${when(c.createdAt)}</td><td>${c.permanent ? t('portal.record.permanent') : when(c.endsAt)}</td><td>${c.status}</td><td>${appealCell(text, c.appeal, ctx.webAppeals ? c.code : null)}</td></tr>`)}</tbody></table></div>
-${view.truncated ? html`<p class="note">${text.tp('portal.record.truncated', view.cases.length)}</p>` : ''}`
-        : html`<p>${t('portal.record.noCases', { server: enforcementConfig.serverName })}</p>`}
+${record.groups.length ? html`${record.groups.map(group)}${record.truncated ? html`<p class="note">${text.tp('portal.record.truncated', record.caseCount)}</p>` : ''}`
+        : html`<p>${t('portal.record.noCases')}</p>`}
 <h2 id="appeals-title">${t('portal.record.appeals')}</h2>
-${view.appeals.length ? html`<div class="table-wrap" role="region" aria-labelledby="appeals-title" tabindex="0"><table class="record-table"><thead><tr>${col('case')}${col('type')}${col('status')}${col('filed')}${col('decided')}</tr></thead>
-<tbody>${view.appeals.map((a) => html`<tr><td><code>${a.code}</code></td><td>${a.type}</td><td>${a.status}</td><td>${when(a.filedAt)}</td><td>${when(a.decidedAt)}</td></tr>`)}</tbody></table></div>`
+${record.appeals.length ? html`<div class="table-wrap" role="region" aria-labelledby="appeals-title" tabindex="0"><table class="record-table"><thead><tr>${col('server')}${col('case')}${col('type')}${col('status')}${col('filed')}${col('decided')}</tr></thead>
+<tbody>${record.appeals.map((a) => html`<tr><td>${a.server}</td><td><code>${a.code}</code></td><td>${a.type}</td><td>${a.status}</td><td>${when(ctx, a.filedAt)}</td><td>${when(ctx, a.decidedAt)}</td></tr>`)}</tbody></table></div>`
         : html`<p>${t('portal.record.noAppeals')}</p>`}
 ${appealHint(text, ctx)}</div>`,
     });
@@ -393,7 +433,8 @@ function messagePage(ctx, title, message, { login = false } = {}) {
 // ── Handlers ──────────────────────────────────────────────────────────────
 
 const defaultData = {
-    getMemberStanding, listCasesForUser, listUserAppeals,
+    getMemberStanding, listUserAppeals,
+    listCasesAllServers: (userId, options) => listCasesForUserAllServers(userId, options),
     exportData: (userId) => buildDataExport(userId, { query, readKey: (key) => getFromDb(key, null) }),
 };
 
@@ -410,6 +451,13 @@ function memberPath(req) {
     const path = `${req.baseUrl || ''}${req.path || ''}`.replace(/(.)\/$/, '$1');
     return /^\/me(\/[A-Za-z0-9_-]+)*$/.test(path) ? path : MEMBER_BASE;
 }
+/** This request's query without setlang (the picker adds its own), e.g. "sent=abc12" on /me/appeals. */
+function memberQuery(req) {
+    const params = new URL(req.originalUrl || '/', 'http://localhost').searchParams;
+    params.delete('setlang');
+    const query = params.toString();
+    return query.length <= 500 ? query : '';
+}
 const clientIp = (req) => String(req.ip || req.socket?.remoteAddress || 'unknown');
 
 /**
@@ -424,7 +472,6 @@ export function createMemberPortal({
     const key = settings.signingKey;
     // Its own key for the return-path cookie, so it can never stand in for a session cookie.
     const nextKey = hmac('mewvo member next v1', key);
-    const guildId = settings.mainGuildId;
     const cookieOptions = { secure: settings.secure, path: MEMBER_BASE };
     const loginLimiter = createRateLimiter(limits.login);
     const pageLimiter = createRateLimiter(limits.page);
@@ -442,8 +489,8 @@ export function createMemberPortal({
         const here = requests.getStore() || { lang: DEFAULT_LANG, path: MEMBER_BASE };
         return {
             ...context(), ...translator(here.lang), memberPortal: true, billing: Boolean(premium), accounts: Boolean(accounts), webAppeals: Boolean(appeals), viewer: viewers.getStore() || null,
-            // The picker on /me pages reloads the same /me page with ?setlang=<code> (handled in `language` below).
-            languageLink: (code) => `${here.path}?setlang=${encodeURIComponent(code)}`,
+            // The picker on /me pages reloads the same /me page, query kept, with setlang=<code> (handled in `language` below).
+            languageLink: (code) => `${here.path}?${here.query ? `${here.query}&` : ''}setlang=${encodeURIComponent(code)}`,
         };
     };
     const send = (res, status, page) => res.status(status).type('html').send(page);
@@ -574,21 +621,24 @@ export function createMemberPortal({
             if (!me) return send(res, 200, loginPage(ctx()));
             return res.redirect(303, `${MEMBER_BASE}/link`);
         }
-        let view;
+        let record;
         try {
-            // The user id comes from the session only; nothing in the URL is read.
-            const [standing, cases, appeals] = await Promise.all([
-                data.getMemberStanding(guildId, session.userId),
-                data.listCasesForUser(guildId, session.userId, { limit: CASE_LIMIT }),
+            // The user id comes from the session only; nothing in the URL is read. Every server's
+            // cases (test cases excluded), then the standing of each server that has any.
+            const [cases, appeals] = await Promise.all([
+                data.listCasesAllServers(session.userId, { limit: CASE_LIMIT }),
                 data.listUserAppeals(session.userId, APPEAL_LIMIT),
             ]);
-            view = buildRecordView({ standing, cases: cases?.rows || [], appeals, text: textOf(ctx()) });
+            const own = (cases || []).filter((row) => row.target_user_id === session.userId && !row.is_test);
+            const keys = [...new Set(own.map((row) => recordGroupKey(row.guild_id)))].slice(0, MAX_STANDING_SERVERS);
+            const standings = new Map(await Promise.all(keys.map(async (key) => [key, await data.getMemberStanding(key, session.userId)])));
+            record = buildRecordGroups({ cases: own, appeals, standings, guildName: (id) => data.guildName?.(id) ?? null, text: textOf(ctx()) });
         } catch (error) {
             logger.error(`Member portal: record of ${session.userId} could not be loaded: ${error.message}`);
             res.set('Retry-After', '60');
             return fail(res, 503, 'recordUnavailable');
         }
-        return send(res, 200, recordPage(ctx(), { session, view }));
+        return send(res, 200, recordPage(ctx(), { session, record }));
     }
 
     /** GET /me/data: the member's own data as a JSON download (id from the session only). */
@@ -688,7 +738,7 @@ export function createMemberPortal({
         } catch (error) {
             logger.warn(`Member portal: top bar could not read the session: ${error.message}`);
         }
-        const here = { lang: requestLanguage(req), path: memberPath(req) };
+        const here = { lang: requestLanguage(req), path: memberPath(req), query: memberQuery(req) };
         return requests.run(here, () => {
             const who = session ? { name: session.username || textOf(ctx()).t('portal.viewer.fallbackName'), accountId: session.accountId || null, csrf: session.csrf } : null;
             return viewers.run(who, next);
@@ -827,7 +877,8 @@ export function registerMemberPortal(app, {
         appeals: appeals || (client ? portalAppealData(client) : null),
         sessions: sessions || createPgSessionStore({ query, table: pgConfig.tables.member_sessions, ttlMs: MEMBER_SESSION_TTL_MS, accounts: true }),
         context,
-        ...(data ? { data } : {}),
+        // "My record" names each server from the bot's cache (portalAppeals.serverLabel).
+        ...(data ? { data } : client ? { data: { ...defaultData, guildName: (id) => client.guilds?.cache?.get(id)?.name || null } } : {}),
         ...(fetchImpl ? { fetchImpl } : {}),
         ...(limits ? { limits } : {}),
         // Test checkout: only when PREMIUM_TEST_CHECKOUT=true (premiumService.js).

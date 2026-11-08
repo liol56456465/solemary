@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Documentation",
-    "description": "De courts guides sur Mewvo : premiers pas pour l’équipe, comment les avertissements s’aggravent, comment fonctionnent les appels et comment utiliser le tableau de bord."
+    "description": "Guides courts sur Mewvo : la configuration, les premiers pas pour l’équipe, l’escalade des avertissements, le fonctionnement des appels et l’utilisation du tableau de bord."
   },
   "hub": {
     "title": "Guides",
@@ -57,7 +57,7 @@
       "summary": "Qui peut utiliser quoi, ta première action de modération et les commandes que tu utiliseras chaque semaine.",
       "access": {
         "title": "Qui peut faire quoi",
-        "text": "Les commandes du quotidien (aide, rang, classement, divertissement, listes de tâches, signalements, etc.) sont ouvertes à tous les membres. Tout ce qui modère, modifie des paramètres, publie en tant que bot, concerne d’autres membres ou déplace de la monnaie nécessite le rôle **Administrateur**. La vérification a lieu à chaque utilisation d’une commande ou d’un bouton, pas seulement à la première ouverture.",
+        "text": "Les commandes du quotidien (aide, rang, classement, jeux, listes de tâches, signalements, etc.) sont ouvertes à tous les membres. Tout ce qui modère, change des réglages, publie au nom du bot ou touche d’autres membres demande le rôle **Administrateur**. La vérification a lieu à chaque utilisation d’une commande ou d’un bouton, pas seulement à la première ouverture.",
         "denied": "Les membres sans le rôle Administrateur qui essaient une commande de l’équipe en sont informés et sont redirigés vers le salon où ils peuvent demander un rôle."
       },
       "firstAction": {
@@ -116,7 +116,8 @@
       "summary": "Où faire appel, ce que demande le formulaire, qui décide et combien de temps attendre avant de réessayer.",
       "where": {
         "title": "Où faire appel",
-        "text": "Chaque message privé de sanction contient le lien d’appel, ou indique que la sanction est sans appel. Le panneau d’appel a trois boutons : **Appeal**, **My appeals** et **My record**. Les membres mis en sourdine ou avertis utilisent le panneau du serveur principal. Les membres bannis utilisent celui de {support}, qu’ils peuvent encore atteindre après un bannissement."
+        "text": "Chaque message privé de sanction contient le lien d’appel, ou indique que la sanction est sans appel. Tu fais toujours appel auprès du serveur qui t’a sanctionné ; c’est son équipe qui décide, pas Mewvo. Sur Discord, le panneau d’appel a trois boutons : **Appeal**, **My appeals** et **My record**. Les membres mis en sourdine ou avertis utilisent le panneau de ce serveur. Pour le serveur de Mewvo, les membres bannis utilisent celui sur {support}, qu’ils peuvent encore atteindre après un bannissement.",
+        "web": "**Sur le site :** connecte-toi avec Discord sur [My appeals](/me/appeals). La page liste tes dossiers de chaque serveur qui utilise Mewvo dont on peut faire appel maintenant, même si tu ne partages plus aucun serveur avec Mewvo. Choisis-en un, réponds aux questions et envoie. L’équipe de ce serveur décide, et la décision s’affiche sur la même page."
       },
       "form": {
         "title": "Le formulaire",
@@ -129,9 +130,9 @@
       },
       "after": {
         "title": "Ce qui se passe ensuite",
-        "banKick": "**Les appels de bannissement et d’expulsion** ouvrent un salon sur le serveur d’assistance avec toi dedans, pour que l’équipe puisse poser des questions.",
-        "muteWarn": "**Les appels de mise en sourdine et d’avertissement** sont examinés par l’équipe sur le serveur principal.",
-        "decision": "Les administrateurs décident. Tu reçois la décision en message privé. Un appel accepté lève ce qui est encore en cours et, pour les bannissements et les expulsions, s’accompagne d’une invitation à usage unique pour revenir."
+        "banKick": "**Les appels de bannissement et d’expulsion** pour le serveur de Mewvo ouvrent un salon sur le serveur d’assistance Mewvo avec toi dedans, pour que l’équipe puisse poser des questions. Les autres serveurs les traitent dans leurs propres salons d’équipe.",
+        "muteWarn": "**Les appels de mise en sourdine et d’avertissement** sont examinés par l’équipe du serveur qui t’a sanctionné.",
+        "decision": "Les administrateurs de ce serveur décident. Tu reçois la décision en message privé, et sur My appeals si tu as fait appel sur le site. Un appel accepté lève ce qui est encore en cours et, pour les bannissements et les expulsions, s’accompagne d’une invitation à usage unique pour revenir."
       },
       "limits": {
         "title": "Limites",

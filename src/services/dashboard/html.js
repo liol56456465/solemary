@@ -57,8 +57,8 @@ export function formatAge(value, now = Date.now()) {
 
 export const BASE = '/dashboard';
 /**
- * A short hash of a static file, added to its URL (?v=…). The files are cached for an hour,
- * so after a deploy the new pages would otherwise run with the old stylesheet or script.
+ * A short hash of a static file, added to its URL (?v=…). That exact URL is cached for a year
+ * (immutable, routes.js serveStatic); a deploy changes the hash, so pages never run old files.
  */
 function assetVersion(name) {
     try {

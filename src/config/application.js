@@ -41,14 +41,11 @@ const appConfig = {
 
   api: {
     port: process.env.PORT || 3000,
-    cors: {
-      origin: process.env.CORS_ORIGIN?.split(",") || "*",
-      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization"],
-    },
+    // CORS: PUBLIC_URL plus CORS_ORIGIN (comma-separated origins, never "*"), utils/httpMiddleware.js.
+    // Pages per IP per 15 minutes; static assets, /health, /ready and the dashboard are not counted.
     rateLimit: {
       windowMs: 15 * 60 * 1000,
-      max: 100,
+      max: 400,
     },
   },
 

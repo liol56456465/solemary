@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Guida",
-    "description": "Brevi guide a Mewvo: primi passi per lo staff, come aumentano gli avvertimenti, come funzionano i ricorsi e come usare la dashboard."
+    "description": "Guide brevi su Mewvo: la configurazione, i primi passi per lo staff, come crescono gli avvertimenti, come funzionano i ricorsi e come usare la dashboard."
   },
   "hub": {
     "title": "Guide",
@@ -57,7 +57,7 @@
       "summary": "Chi può usare cosa, la tua prima sanzione e i comandi che userai ogni settimana.",
       "access": {
         "title": "Chi può fare cosa",
-        "text": "I comandi di tutti i giorni (help, posizione, classifica, divertimento, liste di cose da fare, segnalazioni e così via) sono aperti a tutti i membri. Tutto ciò che modera, cambia impostazioni, pubblica come il bot, riguarda altri membri o sposta valuta richiede il ruolo **Amministratore**. Il controllo avviene ogni volta che si usa un comando o un pulsante, non solo quando viene aperto.",
+        "text": "I comandi di tutti i giorni (aiuto, grado, classifica, divertimento, liste di cose da fare, segnalazioni e così via) sono aperti a tutti i membri. Tutto ciò che modera, cambia impostazioni, pubblica come il bot o riguarda altri membri richiede il ruolo **Amministratore**. Il controllo avviene ogni volta che si usa un comando o un pulsante, non solo alla prima apertura.",
         "denied": "I membri senza Amministratore che provano un comando dello staff vengono avvisati e indirizzati al canale dove possono richiedere un ruolo."
       },
       "firstAction": {
@@ -116,7 +116,8 @@
       "summary": "Dove fare ricorso, cosa chiede il modulo, chi decide e quanto aspettare per riprovare.",
       "where": {
         "title": "Dove fare ricorso",
-        "text": "Ogni messaggio diretto di sanzione contiene il link per il ricorso, oppure dice che non si può fare ricorso. Il pannello dei ricorsi ha tre pulsanti: **Appeal**, **My appeals** e **My record**. I membri silenziati o avvertiti usano il pannello nel server principale. I membri bannati usano quello nel {support}, che possono raggiungere anche dopo un ban."
+        "text": "Ogni messaggio diretto di sanzione contiene il link per il ricorso, oppure dice che non si può fare ricorso. Fai sempre ricorso al server che ti ha sanzionato; decide il suo staff, non Mewvo. Su Discord il pannello dei ricorsi ha tre pulsanti: **Appeal**, **My appeals** e **My record**. I membri silenziati o avvertiti usano il pannello di quel server. Per il server di Mewvo, i membri bannati usano quello nel {support}, che possono raggiungere anche dopo un ban.",
+        "web": "**Sul sito:** accedi con Discord su [My appeals](/me/appeals). Trovi i tuoi casi di ogni server che usa Mewvo contro cui si può fare ricorso ora, anche se non condividi più alcun server con Mewvo. Scegline uno, rispondi alle domande e invia. Decide lo staff di quel server, e la decisione compare sulla stessa pagina."
       },
       "form": {
         "title": "Il modulo",
@@ -129,9 +130,9 @@
       },
       "after": {
         "title": "Cosa succede dopo",
-        "banKick": "**I ricorsi contro ban ed espulsioni** aprono un canale nel server di supporto in cui ci sei anche tu, così lo staff può farti domande.",
-        "muteWarn": "**I ricorsi contro silenziamenti e avvertimenti** vengono esaminati dallo staff nel server principale.",
-        "decision": "Decidono gli amministratori. Ricevi la decisione in un messaggio diretto. Un ricorso accolto revoca ciò che è ancora attivo e, per ban ed espulsioni, arriva con un invito monouso per rientrare."
+        "banKick": "**I ricorsi contro ban ed espulsioni** per il server di Mewvo aprono un canale nel server di supporto di Mewvo in cui ci sei anche tu, così lo staff può farti domande. Gli altri server li gestiscono nei propri canali dello staff.",
+        "muteWarn": "**I ricorsi contro silenziamenti e avvertimenti** vengono esaminati dallo staff del server che ti ha sanzionato.",
+        "decision": "Decidono gli amministratori di quel server. Ricevi la decisione in un messaggio diretto, e su My appeals se hai fatto ricorso sul sito. Un ricorso accolto revoca ciò che è ancora attivo e, per ban ed espulsioni, arriva con un invito monouso per rientrare."
       },
       "limits": {
         "title": "Limiti",

@@ -45,7 +45,7 @@
     }
   },
   "login": {
-    "lead": "Vedi il tuo storico di moderazione in {server}: i tuoi avvertimenti, la fase di avvertimento, eventuali ban o silenziamenti attivi, i tuoi casi e i tuoi ricorsi.",
+    "lead": "Guarda il tuo storico di moderazione in ogni server che usa Mewvo: i tuoi avvertimenti, il tuo livello, eventuali ban o silenziamenti attivi, i tuoi casi e i tuoi ricorsi.",
     "withDiscord": "Accedi con Discord",
     "withAccount": "Accedi con un account Mewvo",
     "note": "Mewvo chiede a Discord solo chi sei (il permesso identify): niente email, niente server, nient'altro. Vedi sempre e solo il tuo storico. L'accesso dura un'ora.",
@@ -54,7 +54,7 @@
   },
   "record": {
     "title": "Il mio storico",
-    "lead": "Il tuo storico di moderazione in {server}, con accesso come **{username}**. Solo tu puoi vederlo.",
+    "lead": "Il tuo storico di moderazione in ogni server che usa Mewvo, con accesso come **{username}**. Solo tu puoi vederlo.",
     "accountSettings": "Impostazioni account",
     "download": "Scarica i miei dati",
     "subscription": "Abbonamento",
@@ -69,7 +69,6 @@
     "activeBanPermanent": "Ban {code}: permanente",
     "activeMuteEnds": "Silenziamento {code}: termina il {date}",
     "nothingActive": "Nessun ban o silenziamento attivo.",
-    "cases": "Casi",
     "appeals": "Ricorsi",
     "column": {
       "case": "Caso",
@@ -81,7 +80,8 @@
       "status": "Stato",
       "appeal": "Ricorso",
       "filed": "Presentato",
-      "decided": "Deciso"
+      "decided": "Deciso",
+      "server": "Server"
     },
     "permanent": "permanente",
     "truncated": {
@@ -89,12 +89,13 @@
       "many": "Vengono mostrati i tuoi {count} casi più recenti.",
       "other": "Vengono mostrati i tuoi {count} casi più recenti."
     },
-    "noCases": "Non hai casi in {server}.",
+    "noCases": "Non hai casi in nessun server che usa Mewvo.",
     "noAppeals": "Non hai presentato nessun ricorso.",
     "appealHintInvite": "Fai ricorso dal pannello dei ricorsi su Discord: [entra nel server di supporto]({invite}) e premi **Appeal** con il codice caso. Da questa pagina non puoi fare ricorso.",
     "appealHint": "Fai ricorso dal pannello dei ricorsi su Discord con il codice caso. Da questa pagina non puoi fare ricorso.",
     "myAppeals": "I miei ricorsi",
-    "appealHintWeb": "Fai ricorso contro un caso di qualsiasi server su [I miei ricorsi]({href}). Puoi anche fare ricorso dal pannello ricorsi in Discord con il codice del caso."
+    "appealHintWeb": "Fai ricorso contro un caso di qualsiasi server su [I miei ricorsi]({href}). Puoi anche fare ricorso dal pannello ricorsi in Discord con il codice del caso.",
+    "casesIn": "Casi in {server}"
   },
   "message": {
     "logInAgain": "Accedi di nuovo",
@@ -264,7 +265,13 @@
       "reason": "Spiega in almeno {min} caratteri perché la sanzione dovrebbe essere revocata.",
       "didIt": "Scegli se l'hai fatto.",
       "refused": "Il tuo ricorso non è stato inviato: al momento non è possibile fare ricorso contro questo caso. Forse c'è già un ricorso in attesa, è in corso l'attesa dopo un rifiuto, oppure la sanzione è terminata.",
-      "tooMany": "Hai inviato troppi ricorsi. Riprova tra un'ora."
+      "tooMany": "Hai inviato troppi ricorsi. Riprova tra un'ora.",
+      "stale": "Questa pagina non era aggiornata, quindi non è stato inviato nulla. Controlla le tue risposte qui sotto e invia di nuovo il ricorso."
+    },
+    "expired": {
+      "message": "Il tuo accesso è scaduto, quindi non è stato inviato nulla. Le tue risposte sono qui sotto: copiale, accedi di nuovo e incollale nel modulo.",
+      "logIn": "Accedi di nuovo",
+      "copyHint": "Dopo l’accesso torni a questo ricorso con il modulo vuoto."
     }
   }
 }

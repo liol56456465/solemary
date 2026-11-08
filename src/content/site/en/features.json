@@ -90,7 +90,7 @@
       "items": {
         "appealPanel": {
           "term": "Appeal panel",
-          "text": "/setappeal posts the panel with Appeal, My appeals and My record buttons, in the main server and the support server."
+          "text": "/setappeal posts the panel with Appeal, My appeals and My record buttons in your server. For Mewvo’s own server it is in the Mewvo Support server too."
         },
         "appealForm": {
           "term": "Appeal form",
@@ -98,7 +98,7 @@
         },
         "banAndKickAppeals": {
           "term": "Ban and kick appeals",
-          "text": "Open a channel in the support server with the member in it, so the conversation works after a ban. The case and history go to an admin-only staff channel with Accept and Deny."
+          "text": "For Mewvo’s own server they open a channel in the Mewvo Support server with the member in it, so the conversation works after a ban. In every server the case and history go to an admin-only staff channel with Accept and Deny (or to the dashboard’s Appeals list when no appeals category is set)."
         },
         "limits": {
           "term": "Limits",
@@ -110,11 +110,15 @@
         },
         "bannedRole": {
           "term": "Banned role",
-          "text": "Members with an active ban get a role in the support server, removed when the ban ends."
+          "text": "For Mewvo’s own server: members with an active ban get a role in the Mewvo Support server, removed when the ban ends."
         },
         "staffReports": {
           "term": "Staff reports",
           "text": "Members can report a staff member privately. Only administrators see reports; one open report per person and three a day."
+        },
+        "webAppeals": {
+          "term": "Appeals on the website",
+          "text": "Members log in with Discord on My appeals and appeal their own cases from any server that uses Mewvo, even when they share no server with the bot any more. The appeal goes to the staff of the server that gave the case."
         }
       }
     },

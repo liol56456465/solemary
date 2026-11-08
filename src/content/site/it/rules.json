@@ -1,9 +1,9 @@
 {
   "title": "Regole",
-  "description": "Le regole del server Discord di Mewvo.",
+  "description": "Le regole del server della community di Mewvo su Discord.",
   "head": {
     "heading": "Regole del server",
-    "lead": "Le regole del server Mewvo. Quando lo staff dà un avvertimento, silenzia, espelle o banna per una di queste, il messaggio diretto indica la regola e rimanda qui."
+    "lead": "Le regole del server della community di Mewvo; ogni altro server che usa Mewvo ha le sue. Quando lo staff di quel server avverte, silenzia, espelle o banna per una di queste regole, il messaggio diretto nomina la regola e rimanda qui."
   },
   "state": {
     "unavailable": "Al momento non è stato possibile caricare le regole. Riprova tra un minuto.",

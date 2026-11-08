@@ -1,6 +1,7 @@
 {
   "meta": {
-    "description": "Mewvo is a Discord bot for moderation with case codes and DMs, a three-step warning ladder, appeals that reach a person, automod, tickets and community tools."
+    "description": "Mewvo is a Discord bot for moderation with case codes and DMs, a three-step warning ladder, appeals that reach a person, automod, tickets and community tools.",
+    "title": "Mewvo: moderation and community bot for Discord"
   },
   "actions": {
     "readDocs": "Read the docs",
@@ -34,7 +35,7 @@
       },
       "appeals": {
         "name": "Appeals",
-        "text": "Members appeal with a short form. Ban appeals open a channel in the support server, so they work even after a ban, and a person on the staff team decides.",
+        "text": "Members appeal with a short form, in Discord or on this website, and the staff of the server that punished them decide. The website works even after a ban, when the member shares no server with Mewvo any more.",
         "link": "How appeals work"
       },
       "automod": {

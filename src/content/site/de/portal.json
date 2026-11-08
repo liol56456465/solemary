@@ -44,7 +44,7 @@
     }
   },
   "login": {
-    "lead": "Sieh deine eigene Moderationsakte auf {server}: deine Verwarnungen, deine Verwarnungsstufe, aktive Banns oder Stummschaltungen, deine Fälle und deine Einsprüche.",
+    "lead": "Sieh deine eigene Moderationsakte aus jedem Server, der Mewvo nutzt: deine Verwarnungen, deine Verwarnungsstufe, aktive Banns oder Stummschaltungen, deine Fälle und deine Einsprüche.",
     "withDiscord": "Mit Discord anmelden",
     "withAccount": "Mit einem Mewvo-Konto anmelden",
     "note": "Mewvo fragt bei Discord nur, wer du bist (die Berechtigung identify): keine E-Mail, keine Server, sonst nichts. Du siehst immer nur deine eigene Akte. Die Anmeldung gilt eine Stunde.",
@@ -53,7 +53,7 @@
   },
   "record": {
     "title": "Meine Akte",
-    "lead": "Deine Moderationsakte auf {server}, angemeldet als **{username}**. Nur du kannst sie sehen.",
+    "lead": "Deine Moderationsakte aus jedem Server, der Mewvo nutzt, angemeldet als **{username}**. Nur du kannst sie sehen.",
     "accountSettings": "Kontoeinstellungen",
     "download": "Meine Daten herunterladen",
     "subscription": "Abo",
@@ -68,7 +68,6 @@
     "activeBanPermanent": "Bann {code}: permanent",
     "activeMuteEnds": "Stummschaltung {code}: endet {date}",
     "nothingActive": "Kein aktiver Bann und keine aktive Stummschaltung.",
-    "cases": "Fälle",
     "appeals": "Einsprüche",
     "column": {
       "case": "Fall",
@@ -80,19 +79,21 @@
       "status": "Status",
       "appeal": "Einspruch",
       "filed": "Eingereicht",
-      "decided": "Entschieden"
+      "decided": "Entschieden",
+      "server": "Server"
     },
     "permanent": "permanent",
     "truncated": {
       "one": "Es wird dein neuester Fall angezeigt.",
       "other": "Es werden deine neuesten {count} Fälle angezeigt."
     },
-    "noCases": "Du hast keine Fälle auf {server}.",
+    "noCases": "Du hast in keinem Server, der Mewvo nutzt, Fälle.",
     "noAppeals": "Du hast keine Einsprüche eingereicht.",
     "appealHintInvite": "Einspruch legst du über das Einspruchs-Panel in Discord ein: [Tritt dem Support-Server bei]({invite}) und drück **Appeal** mit dem Fallcode. Auf dieser Seite ist kein Einspruch möglich.",
     "appealHint": "Einspruch legst du mit dem Fallcode über das Einspruchs-Panel in Discord ein. Auf dieser Seite ist kein Einspruch möglich.",
     "myAppeals": "Meine Einsprüche",
-    "appealHintWeb": "Lege unter [Meine Einsprüche]({href}) Einspruch gegen einen Fall aus jedem Server ein. Du kannst auch über das Einspruchs-Panel in Discord mit dem Fallcode Einspruch einlegen."
+    "appealHintWeb": "Lege unter [Meine Einsprüche]({href}) Einspruch gegen einen Fall aus jedem Server ein. Du kannst auch über das Einspruchs-Panel in Discord mit dem Fallcode Einspruch einlegen.",
+    "casesIn": "Fälle auf {server}"
   },
   "message": {
     "logInAgain": "Erneut anmelden",
@@ -257,7 +258,13 @@
       "reason": "Erkläre in mindestens {min} Zeichen, warum die Strafe aufgehoben werden sollte.",
       "didIt": "Wähle, ob du es getan hast.",
       "refused": "Dein Einspruch wurde nicht gesendet: gegen diesen Fall kann gerade kein Einspruch eingelegt werden. Vielleicht gibt es schon einen offenen Einspruch, die Wartezeit nach einer Ablehnung läuft noch, oder die Strafe ist vorbei.",
-      "tooMany": "Du hast zu viele Einsprüche gesendet. Versuche es in einer Stunde erneut."
+      "tooMany": "Du hast zu viele Einsprüche gesendet. Versuche es in einer Stunde erneut.",
+      "stale": "Diese Seite war nicht mehr aktuell, daher wurde nichts gesendet. Prüf deine Antworten unten und schick den Einspruch noch einmal ab."
+    },
+    "expired": {
+      "message": "Deine Anmeldung ist abgelaufen, daher wurde nichts gesendet. Deine Antworten stehen unten: Kopier sie, melde dich erneut an und füg sie ins Formular ein.",
+      "logIn": "Erneut anmelden",
+      "copyHint": "Nach der Anmeldung kommst du mit einem leeren Formular zu diesem Einspruch zurück."
     }
   }
 }

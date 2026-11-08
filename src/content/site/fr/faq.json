@@ -35,7 +35,8 @@
     },
     "howTo": {
       "q": "Comment faire appel ?",
-      "a": "Utilise le lien du message privé que tu as reçu. Appuie sur **Appeal** dans le panneau d’appel, explique pourquoi la sanction devrait être levée et saisis le code du dossier indiqué dans le message privé. Si tu es banni, utilise le panneau sur {support}. Tu reçois la décision en message privé. [Comment fonctionnent les appels](/docs/appeals)."
+      "a": "Utilise le lien du message privé que tu as reçu. Tu fais appel auprès du serveur qui t’a sanctionné, et son équipe décide. Appuie sur **Appeal** dans le panneau d’appel, explique pourquoi la sanction devrait être levée et saisis le code du dossier indiqué dans le message privé. Pour le serveur de Mewvo, les membres bannis utilisent le panneau sur {support}. Tu reçois la décision en message privé. [Comment fonctionnent les appels](/docs/appeals).",
+      "aPortal": "Utilise le lien du message privé que tu as reçu. Tu fais appel auprès du serveur qui t’a sanctionné, et son équipe décide. Sur ce site, connecte-toi sur [My appeals](/me/appeals) : cela fonctionne pour chaque serveur qui utilise Mewvo, même après un bannissement. Sur Discord, appuie sur **Appeal** dans le panneau d’appel et explique pourquoi la sanction devrait être levée, avec le code du dossier du message privé ; pour le serveur de Mewvo, les membres bannis utilisent le panneau sur {support}. [Comment fonctionnent les appels](/docs/appeals)."
     },
     "lostCode": {
       "q": "J’ai perdu mon code de dossier.",
@@ -45,21 +46,25 @@
     "everyPunishment": {
       "q": "Peut-on faire appel de toutes les sanctions ?",
       "a": "De la plupart. On peut faire appel des bannissements et des mises en sourdine tant qu’ils durent, des avertissements et des expulsions dans les 30 jours. Un bannissement définitif de l’échelle n’est plus contestable après 6 mois ou après un appel refusé, et l’équipe peut marquer un bannissement grave comme sans appel. Le message privé indique toujours ce qui s’applique."
+    },
+    "web": {
+      "q": "Puis-je faire appel sur le site ?",
+      "a": "Oui. Connecte-toi avec Discord sur [My appeals](/me/appeals). Tu vois les dossiers de chaque serveur qui utilise Mewvo dont tu peux faire appel maintenant, et l’état de tes appels. Cela fonctionne même si tu ne partages plus aucun serveur avec Mewvo. C’est l’équipe du serveur qui t’a sanctionné qui décide."
     }
   },
   "data": {
     "title": "Données et contact",
     "stored": {
       "q": "Quelles données Mewvo stocke-t-il ?",
-      "a": "Les identifiants Discord, tes niveaux et ton XP, les dossiers de modération, les appels et ce que tu écris dans les formulaires ou les tickets, ainsi que quelques éléments que tu choisis d’enregistrer, comme un anniversaire. Pas d’e-mail, pas de mot de passe, jamais revendu. La [page de confidentialité](/privacy) donne la liste complète, et `/wipedata` supprime tes niveaux, ton solde, ton statut AFK et ton anniversaire sur ce serveur, ainsi que ta liste de tâches, tes rappels et ta connexion Discord enregistrée. Les dossiers de modération restent ; la page de confidentialité explique pourquoi."
+      "a": "Les identifiants Discord, tes niveaux et ton XP, les dossiers de modération, les appels et ce que tu écris dans les formulaires ou les tickets, ainsi que quelques éléments que tu choisis d’enregistrer, comme un anniversaire. Le bot ne demande jamais d’e-mail ni de mot de passe. Si tu crées un compte Mewvo sur ce site, il enregistre un nom d’utilisateur et une empreinte scrypt à sens unique de ton mot de passe (jamais le mot de passe lui-même), toujours sans e-mail. Rien n’est jamais vendu. La [page de confidentialité](/privacy) donne la liste complète, et `/wipedata` supprime tes niveaux, ton solde, ton statut AFK et ton anniversaire sur ce serveur, ainsi que ta liste de tâches, tes rappels et ta connexion Discord enregistrée. Les dossiers de modération restent ; la page de confidentialité explique pourquoi."
     },
     "reachStaff": {
       "q": "Comment joindre l’équipe ?",
-      "a": "De trois façons : envoie un message privé au bot et choisis **Send to staff** (modmail), ouvre un ticket depuis le panneau de tickets, ou demande sur {support}. Pour signaler un membre de l’équipe, utilise **Report staff** dans le panneau d’appel du serveur d’assistance ; seuls les administrateurs voient ces signalements."
+      "a": "Demande d’abord à l’équipe de ton propre serveur : envoie un message privé au bot et choisis **Send to staff** (modmail ; Mewvo demande pour quel serveur), ou ouvre un ticket depuis le panneau de tickets de ce serveur. Pour signaler un membre de l’équipe, utilise **Report staff** dans le panneau d’appel ; seuls les administrateurs de ce serveur voient ces signalements. Les questions sur Mewvo lui-même ou sur le serveur de Mewvo se posent sur {support}."
     },
     "down": {
       "q": "Le bot est-il hors ligne ?",
-      "a": "Consulte la [page de statut](/status). Elle indique si le bot est en ligne et se rafraîchit chaque minute."
+      "a": "Consulte la [page de statut](/status). Elle indique si le bot est en ligne ; appuie sur Actualiser pour voir l’état le plus récent."
     }
   }
 }

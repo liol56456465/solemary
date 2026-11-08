@@ -4,9 +4,24 @@
   },
   "head": {
     "title": "Changelog",
-    "lead": "What changed in Mewvo, newest first. A change is listed when it is finished. The bot in your server gets it at its next update."
+    "lead": "What changed in Mewvo, newest first. A change is listed when it is finished. Mewvo is hosted for every server, so there is nothing to install or update: every server gets a change at the same time."
   },
   "entries": {
+    "2026-11-08": {
+      "public": "Mewvo is public: any server can add it with the Add to Discord button. Settings, cases, appeals and limits are kept per server.",
+      "perServerDashboard": "Every server has its own dashboard. After logging in you pick the server; only its own administrators can open it.",
+      "webAppeals": "Appeals on the website: log in on My appeals and appeal a punishment from any server that uses Mewvo, even after a ban. The staff of that server decide.",
+      "recordAllServers": "My record shows your cases from every server that uses Mewvo, grouped by server."
+    },
+    "2026-11-07": {
+      "languages": "The dashboard and the bot’s messages to members are in the same 8 languages as the website. Each server chooses the bot’s language."
+    },
+    "2026-11-05": {
+      "websiteEditor": "Website editor: the site’s text in every language and its images can be changed from the dashboard, without a new version of the bot."
+    },
+    "2026-11-04": {
+      "languages": "The website is in 8 languages: English, German, French, Spanish, Italian, Polish, Brazilian Portuguese and Russian."
+    },
     "2026-11-01": {
       "customAutomodRules": "Custom automod rules: add your own words and phrases to block, with /automod custom or on the dashboard. You can change the words of a rule later. Part of the Normal, Pro and Max plans.",
       "remind": "/remind: set a reminder for yourself. Mewvo sends it to you in a DM, or in the channel if your DMs are closed.",
@@ -20,7 +35,9 @@
       "shiftNote": "Dashboard: a note for the next staff shift on the Overview page.",
       "weeklySummary": "A weekly summary of the server in the mod log every Monday.",
       "proMaxBranding": "Pro and Max: Mewvo can use its own nickname and avatar in your server, and staff can download cases as a spreadsheet.",
-      "dashboardThemes": "Dashboard themes: Light, Dark, Dim and High contrast."
+      "dashboardThemes": "Dashboard themes: Light, Dark, Dim and High contrast.",
+      "accounts": "Mewvo accounts: log in to the website with a username and password, no email needed. Link your Discord account to see your record.",
+      "trustPages": "A trust card at /trust next to the monthly transparency report: appeal times and results and members in good standing over 90 days, for Mewvo’s own server. Both can be turned off."
     },
     "2026-10-31": {
       "legalPages": "Privacy Policy and Terms and Conditions.",

@@ -35,7 +35,8 @@
     },
     "howTo": {
       "q": "Jak się odwołać?",
-      "a": "Użyj linku z wiadomości prywatnej, którą dostałeś. Naciśnij **Appeal** na panelu odwołań i wpisz, dlaczego kara powinna zostać zdjęta, oraz kod sprawy z wiadomości. Jeśli masz bana, użyj panelu na {support}. Decyzję dostaniesz w wiadomości prywatnej. [Jak działają odwołania](/docs/appeals)."
+      "a": "Użyj linku z wiadomości prywatnej, którą dostałeś. Odwołujesz się do serwera, który cię ukarał, i decyduje jego ekipa. Naciśnij **Appeal** na panelu odwołań i wpisz, dlaczego kara powinna zostać zdjęta, oraz kod sprawy z wiadomości. W przypadku własnego serwera Mewvo zbanowani członkowie używają panelu na {support}. Decyzję dostaniesz w wiadomości prywatnej. [Jak działają odwołania](/docs/appeals).",
+      "aPortal": "Użyj linku z wiadomości prywatnej, którą dostałeś. Odwołujesz się do serwera, który cię ukarał, i decyduje jego ekipa. Na tej stronie zaloguj się w [My appeals](/me/appeals): działa to dla każdego serwera, który używa Mewvo, także po banie. Na Discordzie naciśnij **Appeal** na panelu odwołań i wpisz, dlaczego kara powinna zostać zdjęta, oraz kod sprawy z wiadomości; w przypadku własnego serwera Mewvo zbanowani członkowie używają panelu na {support}. [Jak działają odwołania](/docs/appeals)."
     },
     "lostCode": {
       "q": "Zgubiłem kod sprawy.",
@@ -45,21 +46,25 @@
     "everyPunishment": {
       "q": "Czy od każdej kary można się odwołać?",
       "a": "Od większości tak. Od banów i wyciszeń można się odwołać, dopóki trwają, od ostrzeżeń i wyrzuceń w ciągu 30 dni. Od bana na stałe z drabiny nie można się już odwołać po 6 miesiącach albo po odrzuconym odwołaniu, a ekipa może oznaczyć poważny ban jako niepodlegający odwołaniu. Wiadomość prywatna zawsze mówi, który to przypadek."
+    },
+    "web": {
+      "q": "Czy mogę się odwołać na stronie?",
+      "a": "Tak. Zaloguj się przez Discorda w [My appeals](/me/appeals). Zobaczysz sprawy z każdego serwera, który używa Mewvo, od których możesz się teraz odwołać, oraz stan swoich odwołań. Działa to, nawet gdy nie masz już wspólnego serwera z Mewvo. Decyduje ekipa serwera, który cię ukarał."
     }
   },
   "data": {
     "title": "Dane i kontakt",
     "stored": {
       "q": "Jakie dane przechowuje Mewvo?",
-      "a": "Discord ID, twoje poziomy i XP, sprawy moderacyjne, odwołania i to, co piszesz w formularzach lub ticketach, oraz kilka rzeczy, które sam zapiszesz, na przykład urodziny. Bez e-maila, bez hasła, nigdy nie sprzedajemy danych. [Strona o prywatności](/privacy) ma pełną listę, a `/wipedata` usuwa twoje poziomy, saldo, status AFK i urodziny na tym serwerze, a także twoją listę zadań, przypomnienia i zapisane logowanie przez Discorda. Zapisy moderacji zostają; dlaczego, wyjaśnia strona o prywatności."
+      "a": "Discord ID, twoje poziomy i XP, sprawy moderacyjne, odwołania i to, co piszesz w formularzach lub ticketach, oraz kilka rzeczy, które sam zapiszesz, na przykład urodziny. Bot nigdy nie prosi o e-mail ani hasło. Jeśli założysz konto Mewvo na tej stronie, zapisuje ono nazwę użytkownika i jednokierunkowy skrót scrypt twojego hasła (nigdy samo hasło), nadal bez e-maila. Nic nigdy nie jest sprzedawane. [Strona prywatności](/privacy) ma pełną listę, a `/wipedata` usuwa twoje poziomy, saldo, status AFK i urodziny na tym serwerze oraz twoją listę zadań, przypomnienia i zapisane logowanie Discord. Historia moderacji zostaje; dlaczego, wyjaśnia strona prywatności."
     },
     "reachStaff": {
       "q": "Jak skontaktować się z ekipą?",
-      "a": "Na trzy sposoby: napisz do bota w wiadomości prywatnej i wybierz **Send to staff** (modmail), otwórz ticket z panelu ticketów albo zapytaj na {support}. Aby zgłosić członka ekipy, użyj **Report staff** na panelu odwołań na serwerze wsparcia; te zgłoszenia widzą tylko administratorzy."
+      "a": "Najpierw zapytaj ekipę swojego serwera: napisz do bota w wiadomości prywatnej i wybierz **Send to staff** (modmail; Mewvo zapyta, którego serwera to dotyczy) albo otwórz ticket z panelu ticketów tego serwera. Aby zgłosić członka ekipy, użyj **Report staff** na panelu odwołań; te zgłoszenia widzą tylko administratorzy tego serwera. Pytania o samo Mewvo albo o własny serwer Mewvo zadawaj na {support}."
     },
     "down": {
       "q": "Czy bot nie działa?",
-      "a": "Sprawdź [stronę statusu](/status). Pokazuje, czy bot jest online, i odświeża się co minutę."
+      "a": "Sprawdź [stronę statusu](/status). Pokazuje, czy bot jest online; naciśnij tam Odśwież, aby zobaczyć najnowszy stan."
     }
   }
 }

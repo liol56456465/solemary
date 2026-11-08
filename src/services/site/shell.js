@@ -3,8 +3,8 @@
 // for canonical / Open Graph tags. site.js re-exports everything here (memberPortal.js and
 // the tests import it from there); the page files under ./pages import it from here.
 //
-// The site has its own colour tokens (top of static/site.css, light and dark by device):
-// near-white / near-black and one accent. tests/siteContrast.test.js checks the pairs.
+// The site has its own colour tokens (top of static/site.css): dark gray and white only, the same
+// look whatever the device's colour scheme. tests/siteContrast.test.js checks the pairs.
 
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -107,7 +107,8 @@ function buildStylesheet() {
     }
 }
 export const STYLESHEET = buildStylesheet();
-export const CSS_PATH = `/site.css?v=${createHash('sha256').update(STYLESHEET).digest('hex').slice(0, 10)}`;
+export const CSS_VERSION = createHash('sha256').update(STYLESHEET).digest('hex').slice(0, 10);
+export const CSS_PATH = `/site.css?v=${CSS_VERSION}`;
 
 // The one script (static/site.js): closes the header menus on an outside tap or Escape, keeps one
 // open at a time, scrolls the phone menu to the current page. Optional: pages work without it.
@@ -120,10 +121,20 @@ function buildScript() {
     }
 }
 export const SCRIPT = buildScript();
-export const JS_PATH = `/site.js?v=${createHash('sha256').update(SCRIPT).digest('hex').slice(0, 10)}`;
+export const JS_VERSION = createHash('sha256').update(SCRIPT).digest('hex').slice(0, 10);
+export const JS_PATH = `/site.js?v=${JS_VERSION}`;
 
-// The owner's logo (static/img/logo.png, 64×64: the white cat on a black tile). The ?v= hash
-// changes with the file, so the week-long /img cache never shows an old logo.
+/**
+ * Cache-Control for a hashed asset: the URL with the current ?v= never changes content, so it is
+ * cached for a year (immutable); any other ?v= (or none) for an hour.
+ */
+export function assetCacheControl(requested, current) {
+    return typeof requested === 'string' && requested === current ? 'public, max-age=31536000, immutable' : 'public, max-age=3600';
+}
+
+// The owner's logo (static/img/logo.png, 64×64). The ?v= hash follows the bundled file; the logo is
+// a replaceable image (Owner → Website → Images, siteImages.js), served at the same path and cached
+// 5 minutes, so a replaced logo shows within minutes without a new hash.
 // Decorative where it is used: the name "Mewvo" is always next to it.
 export const LOGO_FILE = new URL('./static/img/logo.png', import.meta.url);
 function logoVersion() {
@@ -138,6 +149,16 @@ export const LOGO_PATH = `/img/logo.png?v=${logoVersion()}`;
 export const LOGO = raw(`<img class="logo" src="${LOGO_PATH}" width="28" height="28" alt="">`);
 /** The browser-tab icon (the same PNG); the dashboard links it too. */
 export const FAVICON_PATH = '/favicon.png';
+
+// Portal dates (My record, appeals, account): day, month, year and time in the page's language, UTC.
+export const PORTAL_DATE_TIME = Object.freeze({ day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC', timeZoneName: 'short' });
+
+/** A <time> in the page's language (ctx.fmtDate), or "-" for a missing or invalid date. */
+export function portalTime(ctx, value) {
+    const date = value ? new Date(value) : null;
+    if (!date || Number.isNaN(date.getTime())) return '-';
+    return html`<time datetime="${date.toISOString()}">${textOf(ctx).fmtDate(date, PORTAL_DATE_TIME)}</time>`;
+}
 
 /** aria-current="page" when `key` is the active page. */
 export const currentIf = (active) => (key) => (key === active ? raw(' aria-current="page"') : '');
@@ -186,13 +207,15 @@ ${col(t('shell.footer.columns.legal'), html`<li><a href="${href('/about')}"${cur
  * Discord or a Mewvo account) and "Sign up" when Mewvo accounts are on. Logged in (only /me
  * pages know: the session cookie is scoped to /me): the name with a menu, no script needed.
  */
-function memberActions(ctx) {
+function memberActions(ctx, { addShown = false } = {}) {
     if (!ctx.memberPortal) return '';
     const { t } = textOf(ctx);
     const v = ctx.viewer;
     if (!v) {
-        // Phones keep "Log in" (short label); "Sign up" is one tap further, on the log-in page.
-        return html`${topButton('button button-quiet', '/me', t('shell.account.logIn'), t('shell.short.logIn'))}${ctx.accounts ? html`<a class="button topbar-more" href="/me/signup">${t('shell.account.signUp')}</a>` : ''}`;
+        // Phones: with "Add to Discord" shown, that one stays and "Log in" moves out of the bar
+        // (My record in the menu leads to the same log-in page); else "Log in" stays (short label).
+        // "Sign up" is one tap further, on the log-in page.
+        return html`${topButton(`button button-quiet${addShown ? ' topbar-more' : ''}`, '/me', t('shell.account.logIn'), t('shell.short.logIn'))}${ctx.accounts ? html`<a class="button topbar-more" href="/me/signup">${t('shell.account.signUp')}</a>` : ''}`;
     }
     return html`<details class="account-menu"><summary class="account-chip">${LOGO}<span class="account-name">${v.name}</span></summary>
 <div class="account-pop"><a href="/me">${t('shell.links.myRecord')}</a>${v.accountId ? html`<a href="/me/account">${t('shell.account.settings')}</a>` : ''}${ctx.billing ? html`<a href="/me/billing">${t('shell.account.subscription')}</a>` : ''}
@@ -222,7 +245,8 @@ const shortCode = (code) => code.slice(0, 2).toUpperCase();
  * up to which width the menu sits on its own row below the brand: topbar-stack-1000 (one row above
  * 1000px), topbar-stack-1180 (one row above 1180px, where the picker shows its full name) or
  * topbar-stack-all (always two rows: long labels or many buttons). Phones (≤ 760px) always use two
- * rows and keep the picker and one button: the member one, else Add to Discord, else the dashboard
+ * rows and keep the picker and one button: the account chip when logged in, else Add to Discord,
+ * else Log in, else the dashboard
  * (.topbar-more is hidden there). Next to the member buttons the dashboard only fits on wide
  * screens (.topbar-wide); it is in the footer too.
  */
@@ -235,9 +259,9 @@ function topbarParts(ctx, here, navLabels) {
     const dashClass = `button${quiet ? ' button-quiet' : ''}${member ? ' topbar-wide' : add ? ' topbar-more' : ''}`;
     const dashboard = ctx.dashboardEnabled ? topButton(dashClass, DASHBOARD_PATH, t('shell.links.dashboard'), t('shell.short.dashboard')) : '';
     const addLink = add
-        ? topButton(`button${member ? ' topbar-more' : ''}`, ctx.installUrl, t('shell.install.addToDiscord'), t('shell.short.addToDiscord'), ' rel="noopener" data-add-bot')
+        ? topButton(`button${member && ctx.viewer ? ' topbar-more' : ''}`, ctx.installUrl, t('shell.install.addToDiscord'), t('shell.short.addToDiscord'), ' rel="noopener" data-add-bot')
         : '';
-    const actions = html`${languagePicker(ctx, here, 'header')}${addLink}${dashboard}${memberActions(ctx)}`;
+    const actions = html`${languagePicker(ctx, here, 'header')}${addLink}${dashboard}${memberActions(ctx, { addShown: add })}`;
 
     // The one-row estimate (without and with the wide-screen extras).
     const code = ctx.urlLang || textOf(ctx).lang || DEFAULT_LANG;
@@ -271,10 +295,10 @@ export function addButton(ctx, className = 'button') {
 // shell.meta.defaultDescription.
 const DEFAULT_IMAGE = Object.freeze({ path: '/img/og.png', width: 1200, height: 630, large: true });
 
-/** "Features · Mewvo"; the front page's title is the name alone. */
-function fullTitle(ctx, title) {
+/** "Features · Mewvo"; a title that is the name alone, or one marked `complete` (the home page's), is used as it is. */
+function fullTitle(ctx, title, complete = false) {
     const { t } = textOf(ctx);
-    return title === t('common.brand') ? title : t('shell.meta.pageTitle', { title });
+    return complete || title === t('common.brand') ? title : t('shell.meta.pageTitle', { title });
 }
 
 /**
@@ -282,7 +306,7 @@ function fullTitle(ctx, title) {
  * `image` ({ path, width, height, alt, large }) replaces the default share image (og.png);
  * `large: false` asks for the small square Twitter card.
  */
-function shareTags(ctx, { title, description, path, image = null }) {
+function shareTags(ctx, { title, description, path, image = null, titleComplete = false }) {
     if (!ctx.origin || typeof path !== 'string') return '';
     const { t, href } = textOf(ctx);
     // English-only pages (legal) keep their English URL as canonical under any prefix and have no alternates.
@@ -294,7 +318,7 @@ function shareTags(ctx, { title, description, path, image = null }) {
 <link rel="alternate" hreflang="${l.code}" href="${ctx.origin}${localizePath(l.code, path)}">`)}
 <link rel="alternate" hreflang="x-default" href="${ctx.origin}${path}">`
         : '';
-    const full = fullTitle(ctx, title);
+    const full = fullTitle(ctx, title, titleComplete);
     const text = description || t('shell.meta.defaultDescription');
     const img = image && typeof image.path === 'string' && image.path.startsWith('/') ? image : { ...DEFAULT_IMAGE, alt: t('shell.meta.shareImageAlt') };
     const imageUrl = `${ctx.origin}${img.path}`;
@@ -352,9 +376,10 @@ function englishOnlyNote(ctx) {
 /**
  * The page shell. `path` (the page's own path, e.g. "/features") turns on the canonical and
  * share tags when PUBLIC_URL is set. `refresh` (seconds) adds a <meta http-equiv="refresh">:
- * the status page reloads itself without a script. `image` overrides the share image (shareTags).
+ * nothing uses it today (the status page has a Refresh link). `image` overrides the share image (shareTags).
+ * `titleComplete`: the title is the whole <title> (no " · Mewvo" added; the home page).
  */
-export function layout(ctx, { title, active = null, description = '', refresh = 0, path = null, image = null, body }) {
+export function layout(ctx, { title, active = null, description = '', refresh = 0, path = null, image = null, titleComplete = false, body }) {
     const { t, lang, href } = textOf(ctx);
     const brand = t('common.brand');
     const here = typeof path === 'string' ? path : '/';
@@ -362,7 +387,7 @@ export function layout(ctx, { title, active = null, description = '', refresh = 
     const bar = topbarParts(ctx, here, navLabels);
     return html`<!doctype html><html lang="${lang || 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark"><meta name="theme-color" content="#1e1f22">${ctx.publicSite ? '' : html`<meta name="robots" content="${NOINDEX}">`}
-<title>${fullTitle(ctx, title)}</title>${refresh > 0 ? html`<meta http-equiv="refresh" content="${Math.floor(refresh)}">` : ''}${description ? html`<meta name="description" content="${description}">` : ''}${shareTags(ctx, { title, description, path, image })}
+<title>${fullTitle(ctx, title, titleComplete)}</title>${refresh > 0 ? html`<meta http-equiv="refresh" content="${Math.floor(refresh)}">` : ''}${description ? html`<meta name="description" content="${description}">` : ''}${shareTags(ctx, { title, description, path, image, titleComplete })}
 <link rel="icon" href="${FAVICON_PATH}" type="image/png" sizes="64x64"><link rel="stylesheet" href="${CSS_PATH}"><script src="${JS_PATH}" defer></script></head>
 <body><a class="skip" href="#main">${t('shell.header.skip')}</a>
 <header class="topbar ${bar.stack}"><div class="wrap topbar-inner"><a class="brand" href="${href('/')}"${active === 'home' ? raw(' aria-current="page"') : ''}>${LOGO}<span>${brand}</span></a>

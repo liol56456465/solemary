@@ -58,7 +58,7 @@ import { memberAccountsOn, registerMemberPortal } from './services/site/memberPo
 import { premiumSettings, premiumStore } from './services/billing/premiumService.js';
 import { loadPremiumCache, runPremiumCron, setGuildOwnerResolver, setPremiumClient } from './services/billing/premiumEffects.js';
 import { finalErrorHandler } from './utils/finalErrorHandler.js';
-import { isGlobalRateLimitExempt } from './services/dashboard/security.js';
+import { corsOrigins, createCompression, createCors, createRateLimit, createReadyHandler, hsts } from './utils/httpMiddleware.js';
 import { createCanonicalHostRedirect } from './utils/canonicalHost.js';
 import { loadAllSettings, seedFromEnvOnce } from './services/settings/guildSettings.js';
 import { runSafeTask, handleTaskError, ErrorCodes } from './utils/errorHandler.js';
@@ -220,58 +220,17 @@ class Mewvo extends Client {
     // Port retry is a local-dev convenience only.
     const maxPortRetryAttempts = process.env.PORT ? 0 : Number(process.env.PORT_RETRY_ATTEMPTS || 5);
     const host = process.env.WEB_HOST || '0.0.0.0';
-    const corsOrigin = this.config.api?.cors?.origin || '*';
-    
-    app.use((req, res, next) => {
-      const allowedOrigins = Array.isArray(corsOrigin) ? corsOrigin : [corsOrigin];
-      const origin = req.headers.origin;
-      
-      if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-        res.header('Access-Control-Allow-Origin', origin || '*');
-      }
-      res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      
-      if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
-      }
-      next();
-    });
-
-    const requestCounts = new Map();
-    const windowMs = this.config.api?.rateLimit?.windowMs || 60000;
-    const maxRequests = this.config.api?.rateLimit?.max || 100;
-    
-    app.use((req, res, next) => {
-      // The dashboard has its own per-session and per-IP limits (services/dashboard/routes.js).
-      if (isGlobalRateLimitExempt(req)) return next();
-      const ip = req.ip;
-      const now = Date.now();
-      const windowStart = now - windowMs;
-      
-      if (!requestCounts.has(ip)) {
-        requestCounts.set(ip, []);
-      }
-      
-      const times = requestCounts.get(ip).filter(t => t > windowStart);
-      
-      if (times.length >= maxRequests) {
-        return res.status(429).json({ error: 'Too many requests' });
-      }
-      
-      times.push(now);
-      requestCounts.set(ip, times);
-      next();
-    });
-
-    // Drop idle IPs so the map can't grow without bound on an internet-facing port.
-    const requestSweep = setInterval(() => {
-      const windowStart = Date.now() - windowMs;
-      for (const [ip, times] of requestCounts) {
-        if (!times.some((t) => t > windowStart)) requestCounts.delete(ip);
-      }
-    }, windowMs);
-    requestSweep.unref();
+    // HTTPS only (production): 180 days, site-wide. The dashboard and /me send their own (longer) value.
+    app.use(hsts());
+    // gzip/brotli for pages, styles and scripts; already-compressed images are sent as they are.
+    app.use(createCompression());
+    // CORS only for PUBLIC_URL (+ CORS_ORIGIN), never "*"; Vary: Origin on every response.
+    app.use(createCors({ origins: corsOrigins(process.env) }));
+    // Per IP: pages only (static assets, /health, /ready and the dashboard are not counted).
+    app.use(createRateLimit({
+      windowMs: this.config.api?.rateLimit?.windowMs,
+      max: this.config.api?.rateLimit?.max,
+    }));
 
     app.get('/health', (req, res) => {
       const dbStatus = this.db?.getStatus?.() || { isDegraded: 'unknown' };
@@ -288,36 +247,9 @@ class Mewvo extends Client {
       res.status(200).json(status);
     });
 
-    app.get('/ready', (req, res) => {
-      const dbStatus = this.db?.getStatus?.() || { isDegraded: true, connectionType: 'none' };
-      const isReady = this.isReady() && !dbStatus.isDegraded;
-
-      const metrics = {
-        guildCount: this.guilds?.cache?.size ?? 0,
-        commandCount: this.commands?.size ?? 0,
-        database: {
-          mode: dbStatus.connectionType,
-          degraded: dbStatus.isDegraded,
-          degradedReason: dbStatus.degradedReason ?? null,
-        },
-        schemaVersion: EXPECTED_SCHEMA_VERSION,
-        schemaLabel: EXPECTED_SCHEMA_LABEL,
-      };
-
-      if (isReady) {
-        return res.status(200).json({
-          ready: true,
-          message: 'Bot is ready',
-          metrics,
-        });
-      }
-
-      res.status(503).json({
-        ready: false,
-        reason: !this.isReady() ? 'Bot not Ready' : 'Database degraded',
-        metrics,
-      });
-    });
+    // Public: { status: ok|degraded, schemaVersion } (200 / 503). Details only for local requests.
+    // A database outage after boot (PostgreSQL known down) is "degraded" too (httpMiddleware.js).
+    app.get('/ready', createReadyHandler(this, { schemaVersion: EXPECTED_SCHEMA_VERSION, schemaLabel: EXPECTED_SCHEMA_LABEL }));
 
     registerOAuthRoutes(app, this);
     const dashboardEnabled = registerDashboard(app, this);

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Doku",
-    "description": "Kurze Anleitungen zu Mewvo: erste Schritte für das Team, wie Verwarnungen eskalieren, wie Einsprüche funktionieren und wie du das Dashboard nutzt."
+    "description": "Kurze Anleitungen zu Mewvo: Einrichtung, Einstieg fürs Team, wie Verwarnungen eskalieren, wie Einsprüche funktionieren und wie du das Dashboard nutzt."
   },
   "hub": {
     "title": "Anleitungen",
@@ -57,7 +57,7 @@
       "summary": "Wer was nutzen darf, deine erste Moderationsaktion und die Befehle, die du jede Woche brauchst.",
       "access": {
         "title": "Wer was darf",
-        "text": "Alltägliche Befehle (Hilfe, Rang, Bestenliste, Spaß, To-do-Listen, Meldungen usw.) stehen allen Mitgliedern offen. Alles, was moderiert, Einstellungen ändert, als Bot postet, andere Mitglieder betrifft oder Währung bewegt, braucht die Rolle **Administrator**. Die Prüfung läuft bei jeder Nutzung eines Befehls oder Buttons, nicht nur beim ersten Öffnen.",
+        "text": "Alltägliche Befehle (Hilfe, Rang, Bestenliste, Spaß, To-do-Listen, Meldungen und so weiter) stehen allen Mitgliedern offen. Alles, was moderiert, Einstellungen ändert, als Bot postet oder andere Mitglieder betrifft, braucht die Rolle **Administrator**. Die Prüfung läuft bei jeder Nutzung eines Befehls oder Buttons, nicht nur beim ersten Öffnen.",
         "denied": "Mitglieder ohne Administrator, die einen Teambefehl versuchen, bekommen einen Hinweis und werden zu dem Kanal geschickt, in dem sie eine Rolle beantragen können."
       },
       "firstAction": {
@@ -116,7 +116,8 @@
       "summary": "Wo du Einspruch einlegst, was das Formular fragt, wer entscheidet und wann du es erneut versuchen kannst.",
       "where": {
         "title": "Wo du Einspruch einlegst",
-        "text": "Jede Direktnachricht zu einer Strafe enthält den Einspruchslink oder sagt, dass kein Einspruch möglich ist. Das Einspruchs-Panel hat drei Buttons: **Appeal**, **My appeals** und **My record**. Stummgeschaltete oder verwarnte Mitglieder nutzen das Panel auf dem Hauptserver. Gebannte Mitglieder nutzen das auf {support}, das sie auch nach einem Bann noch erreichen."
+        "text": "Jede Direktnachricht zu einer Strafe enthält den Einspruchslink oder sagt, dass kein Einspruch möglich ist. Du legst den Einspruch immer bei dem Server ein, der dich bestraft hat; dessen Team entscheidet, nicht Mewvo. In Discord hat das Einspruchs-Panel drei Buttons: **Appeal**, **My appeals** und **My record**. Stummgeschaltete oder verwarnte Mitglieder nutzen das Panel auf diesem Server. Für Mewvos eigenen Server nutzen gebannte Mitglieder das auf {support}, das sie auch nach einem Bann noch erreichen.",
+        "web": "**Auf der Website:** Melde dich unter [My appeals](/me/appeals) mit Discord an. Dort stehen deine Fälle aus jedem Server, der Mewvo nutzt, gegen die gerade Einspruch möglich ist, auch wenn du keinen Server mehr mit Mewvo teilst. Wähl einen aus, beantworte die Fragen und schick ihn ab. Das Team dieses Servers entscheidet, und die Entscheidung erscheint auf derselben Seite."
       },
       "form": {
         "title": "Das Formular",
@@ -129,9 +130,9 @@
       },
       "after": {
         "title": "Was danach passiert",
-        "banKick": "**Einsprüche gegen Banns und Kicks** öffnen einen Kanal auf dem Support-Server, in dem du dabei bist, damit das Team Fragen stellen kann.",
-        "muteWarn": "**Einsprüche gegen Stummschaltungen und Verwarnungen** prüft das Team auf dem Hauptserver.",
-        "decision": "Die Administratoren entscheiden. Die Entscheidung bekommst du per Direktnachricht. Ein angenommener Einspruch hebt auf, was noch aktiv ist, und bei Banns und Kicks gibt es eine einmalige Einladung zurück."
+        "banKick": "**Einsprüche gegen Banns und Kicks** für Mewvos eigenen Server öffnen einen Kanal auf dem Mewvo-Support-Server, in dem du dabei bist, damit das Team Fragen stellen kann. Andere Server bearbeiten sie in ihren eigenen Teamkanälen.",
+        "muteWarn": "**Einsprüche gegen Stummschaltungen und Verwarnungen** prüft das Team des Servers, der dich bestraft hat.",
+        "decision": "Die Administratoren dieses Servers entscheiden. Die Entscheidung bekommst du per Direktnachricht und, wenn du auf der Website Einspruch eingelegt hast, unter My appeals. Ein angenommener Einspruch hebt auf, was noch aktiv ist, und bei Banns und Kicks gibt es eine einmalige Einladung zurück."
       },
       "limits": {
         "title": "Limits",

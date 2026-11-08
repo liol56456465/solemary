@@ -6,8 +6,8 @@ import { readFileSync } from 'node:fs';
 import { loadCatalogs } from '../src/services/site/i18n.js';
 import * as pages from '../src/services/site/accountPages.js';
 import { bonusText } from '../src/services/site/accountRoutes.js';
-import { appealInfo, buildRecordView, loginPage, recordPage } from '../src/services/site/memberPortal.js';
-import { appealFormPage, appealsPage, buildAppealsView, caseItem } from '../src/services/site/portalAppeals.js';
+import { appealInfo, buildRecordGroups, loginPage, recordPage } from '../src/services/site/memberPortal.js';
+import { appealExpiredPage, appealFormPage, appealsPage, buildAppealsView, caseItem } from '../src/services/site/portalAppeals.js';
 import { enforcementConfig } from '../src/config/enforcement.js';
 import { setSettingsCacheForTests } from '../src/services/settings/guildSettings.js';
 
@@ -26,7 +26,7 @@ const DYNAMIC = {
     'portal.caseType.': ['ban', 'kick', 'mute', 'warn'],
     'portal.appealStatus.': ['pending', 'accepted', 'denied', 'closed'],
     'account.plan.source.': ['bonus', 'purchase', 'key', 'owner'],
-    'portal.record.column.': ['case', 'type', 'reason', 'by', 'date', 'ends', 'status', 'appeal', 'filed', 'decided'],
+    'portal.record.column.': ['case', 'type', 'reason', 'by', 'date', 'ends', 'status', 'appeal', 'filed', 'decided', 'server'],
     // accountErrorText: codes from accountCore validation and AccountError (snake_case → camelCase).
     'account.errorCodes.': ['usernameLength', 'usernameChars', 'usernameNoLetter', 'usernameReserved', 'passwordShort', 'passwordLong', 'birthMissing',
         'birthInvalid', 'tooYoung', 'usernameTaken', 'twoStepOn', 'noDiscordUser', 'missing', 'hasOther', 'linkedElsewhere', 'linkFirst', 'notEligible',
@@ -99,14 +99,14 @@ test('every account and portal page renders from the catalog', () => {
         loginPage(ctx),
         recordPage(ctx, {
             session,
-            view: buildRecordView({
-                standing: { ladder: { level: 0, warns_since_level: 1 }, warns: [], activeBan: { case_code: 'b', expires_at: null }, activeMute: { case_code: 'm', expires_at: new Date(now + 1000) } },
-                cases: [{ case_code: 'w', type: 'warn', status: 'active', created_at: new Date(), reason: 'r' }],
+            record: buildRecordGroups({
+                standings: new Map([['9', { ladder: { level: 0, warns_since_level: 1 }, warns: [], activeBan: { case_code: 'b', expires_at: null }, activeMute: { case_code: 'm', expires_at: new Date(now + 1000) } }]]),
+                cases: [{ case_code: 'w', guild_id: '9', type: 'warn', status: 'active', created_at: new Date(), reason: 'r' }],
                 appeals: [{ case_code: 'w', status: 'pending', type: 'warn', created_at: new Date() }],
                 config: enforcementConfig,
             }),
         }),
-        recordPage({ ...ctx, supportInvite: null }, { session, view: buildRecordView({ standing: { warns: [] }, cases: [], appeals: [], config: enforcementConfig }) }),
+        recordPage({ ...ctx, supportInvite: null }, { session, record: buildRecordGroups({ cases: [], appeals: [], config: enforcementConfig }) }),
         // Web appeals: the list (full and empty), the form, a case that cannot be appealed now.
         appealsPage({ ...ctx, webAppeals: true }, {
             session,
@@ -121,7 +121,9 @@ test('every account and portal page renders from the catalog', () => {
         appealFormPage(ctx, { session, item: caseItem({ case_code: 'b2222', guild_id: '9', type: 'ban', status: 'active', created_at: new Date(), reason: 'r', expires_at: null }, { appealInfo }), error: 'e', field: 'reason' }),
         appealFormPage(ctx, { session, item: caseItem({ case_code: 'b3333', guild_id: '9', type: 'ban', status: 'active', created_at: new Date(), reason: 'r', expires_at: null, unappealable: true }, { appealInfo }) }),
         loginPage(ctx, { next: '/me/appeal/b2222' }),
-        recordPage({ ...ctx, webAppeals: true }, { session, view: buildRecordView({ standing: { warns: [] }, cases: [{ case_code: 'w', type: 'warn', status: 'active', created_at: new Date(), reason: 'r' }], appeals: [], config: enforcementConfig }) }),
+        recordPage({ ...ctx, webAppeals: true }, { session, record: buildRecordGroups({ cases: [{ case_code: 'w', guild_id: '9', type: 'warn', status: 'active', created_at: new Date(), reason: 'r' }], appeals: [], config: enforcementConfig }) }),
+        // The login ran out while typing: the answers come back with a login link (portalAppeals.js).
+        appealExpiredPage(ctx, { code: 'b2222', values: { punished: 'p', reason: 'r', didIt: 'partly' } }),
     ].map(String);
     for (const page of out) {
         assert.ok(!/\{[a-zA-Z]+\}/.test(page), 'no unfilled {param}');

@@ -4,9 +4,24 @@
   },
   "head": {
     "title": "Nouveautés",
-    "lead": "Ce qui a changé dans Mewvo, du plus récent au plus ancien. Un changement apparaît ici une fois terminé. Le bot de ton serveur le reçoit à sa prochaine mise à jour."
+    "lead": "Ce qui a changé dans Mewvo, du plus récent au plus ancien. Un changement est listé quand il est terminé. Mewvo est hébergé pour tous les serveurs, il n’y a donc rien à installer ni à mettre à jour : chaque serveur reçoit un changement au même moment."
   },
   "entries": {
+    "2026-11-08": {
+      "public": "Mewvo est public : n’importe quel serveur peut l’ajouter avec le bouton Ajouter à Discord. Les réglages, dossiers, appels et limites sont propres à chaque serveur.",
+      "perServerDashboard": "Chaque serveur a son propre tableau de bord. Après la connexion, tu choisis le serveur ; seuls ses propres administrateurs peuvent l’ouvrir.",
+      "webAppeals": "Appels sur le site : connecte-toi sur My appeals et fais appel d’une sanction de n’importe quel serveur qui utilise Mewvo, même après un bannissement. L’équipe de ce serveur décide.",
+      "recordAllServers": "Mon dossier affiche tes dossiers de chaque serveur qui utilise Mewvo, regroupés par serveur."
+    },
+    "2026-11-07": {
+      "languages": "Le tableau de bord et les messages du bot aux membres existent dans les mêmes 8 langues que le site. Chaque serveur choisit la langue du bot."
+    },
+    "2026-11-05": {
+      "websiteEditor": "Éditeur du site : le texte du site dans chaque langue et ses images se modifient depuis le tableau de bord, sans nouvelle version du bot."
+    },
+    "2026-11-04": {
+      "languages": "Le site existe en 8 langues : anglais, allemand, français, espagnol, italien, polonais, portugais du Brésil et russe."
+    },
     "2026-11-01": {
       "customAutomodRules": "Règles d’automod personnalisées : ajoute tes propres mots et expressions à bloquer, avec /automod custom ou depuis le tableau de bord. Tu peux modifier les mots d’une règle plus tard. Inclus dans les formules Normal, Pro et Max.",
       "remind": "/remind : crée un rappel pour toi-même. Mewvo te l’envoie en message privé, ou dans le salon si tes messages privés sont fermés.",
@@ -20,7 +35,9 @@
       "shiftNote": "Tableau de bord : une note pour la prochaine équipe de garde sur la page Vue d’ensemble.",
       "weeklySummary": "Un résumé hebdomadaire du serveur dans le journal de modération chaque lundi.",
       "proMaxBranding": "Pro et Max : Mewvo peut utiliser son propre pseudo et son propre avatar sur ton serveur, et l’équipe peut télécharger les dossiers sous forme de tableur.",
-      "dashboardThemes": "Thèmes du tableau de bord : Light, Dark, Dim et High contrast."
+      "dashboardThemes": "Thèmes du tableau de bord : Light, Dark, Dim et High contrast.",
+      "accounts": "Comptes Mewvo : connecte-toi au site avec un nom d’utilisateur et un mot de passe, sans e-mail. Associe ton compte Discord pour voir ton dossier.",
+      "trustPages": "Une carte de confiance sur /trust à côté du rapport de transparence mensuel : délais et résultats des appels et membres en règle sur 90 jours, pour le serveur de Mewvo. Les deux peuvent être désactivés."
     },
     "2026-10-31": {
       "legalPages": "Politique de confidentialité et Conditions générales.",

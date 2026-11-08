@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Documentação",
-    "description": "Guias curtos do Mewvo: primeiros passos para a equipe, como as advertências aumentam, como funcionam as apelações e como usar o painel."
+    "description": "Guias curtos do Mewvo: a configuração, primeiros passos para a equipe, como as advertências escalam, como funcionam as apelações e como usar o painel."
   },
   "hub": {
     "title": "Guias",
@@ -57,7 +57,7 @@
       "summary": "Quem pode usar o quê, a sua primeira punição e os comandos que você vai usar toda semana.",
       "access": {
         "title": "Quem pode fazer o quê",
-        "text": "Comandos do dia a dia (ajuda, nível, classificação, diversão, listas de tarefas, denúncias e assim por diante) estão abertos a todos os membros. Tudo o que modera, altera configurações, publica como o bot, afeta outros membros ou movimenta moedas exige o cargo de **Administrador**. A verificação acontece sempre que um comando ou botão é usado, não só quando ele é aberto pela primeira vez.",
+        "text": "Os comandos do dia a dia (ajuda, rank, ranking, diversão, listas de tarefas, denúncias etc.) estão abertos a todos os membros. Tudo o que modera, muda configurações, publica como o bot ou afeta outros membros exige o cargo de **Administrador**. A verificação acontece toda vez que um comando ou botão é usado, não só na primeira vez que é aberto.",
         "denied": "Membros sem Administrador que tentam um comando da equipe recebem um aviso e são direcionados ao canal onde podem pedir um cargo."
       },
       "firstAction": {
@@ -116,7 +116,8 @@
       "summary": "Onde apelar, o que o formulário pergunta, quem decide e quanto tempo esperar para tentar de novo.",
       "where": {
         "title": "Onde apelar",
-        "text": "Toda mensagem direta de punição traz o link para apelar ou diz que não é possível apelar. O painel de apelações tem três botões: **Appeal** (apelar), **My appeals** (minhas apelações) e **My record** (meu histórico). Membros silenciados ou advertidos usam o painel do servidor principal. Membros banidos usam o de {support}, que continua acessível depois de um banimento."
+        "text": "Toda mensagem direta de punição traz o link para apelar ou diz que não é possível apelar. Você sempre apela ao servidor que puniu você; quem decide é a equipe dele, não o Mewvo. No Discord, o painel de apelações tem três botões: **Appeal** (apelar), **My appeals** (minhas apelações) e **My record** (meu histórico). Membros silenciados ou advertidos usam o painel desse servidor. Para o servidor do próprio Mewvo, membros banidos usam o de {support}, que continua acessível depois de um banimento.",
+        "web": "**No site:** entre com o Discord em [My appeals](/me/appeals). Lá aparecem seus casos de todos os servidores que usam o Mewvo que podem ser apelados agora, mesmo sem você compartilhar mais nenhum servidor com o Mewvo. Escolha um, responda às perguntas e envie. A equipe desse servidor decide, e a decisão aparece na mesma página."
       },
       "form": {
         "title": "O formulário",
@@ -129,9 +130,9 @@
       },
       "after": {
         "title": "O que acontece depois",
-        "banKick": "**Apelações de banimento e expulsão** abrem um canal no servidor de suporte com você dentro, para que a equipe possa fazer perguntas.",
-        "muteWarn": "**Apelações de silenciamento e advertência** são analisadas pela equipe no servidor principal.",
-        "decision": "Os administradores decidem. Você recebe a decisão por mensagem direta. Uma apelação aceita retira o que ainda estiver ativo e, para banimentos e expulsões, vem com um convite de uso único para voltar."
+        "banKick": "**Apelações de banimento e expulsão** do servidor do próprio Mewvo abrem um canal no servidor de suporte do Mewvo com você dentro, para que a equipe possa fazer perguntas. Os outros servidores cuidam delas nos próprios canais da equipe.",
+        "muteWarn": "**Apelações de silenciamento e advertência** são analisadas pela equipe do servidor que puniu você.",
+        "decision": "Os administradores desse servidor decidem. Você recebe a decisão por mensagem direta, e em My appeals se apelou pelo site. Uma apelação aceita retira o que ainda estiver ativo e, para banimentos e expulsões, vem com um convite de uso único para voltar."
       },
       "limits": {
         "title": "Limites",

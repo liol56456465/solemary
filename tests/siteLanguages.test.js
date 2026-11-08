@@ -424,9 +424,9 @@ test('number + noun sentences are plural keys (pricing, trust, portal, account, 
     assert.equal(view(ru).cases[0].appeal.text, 'Срок подачи апелляции (30 дней) истёк');
     assert.equal(view(de).cases[0].appeal.text, 'Die Einspruchsfrist (30 Tage) ist abgelaufen');
     const session = { username: 'ana', csrf: 'c' };
-    assert.match(String(portal.recordPage(de, { session, view: view(de) })), /Es werden deine neuesten 201 Fälle angezeigt\./);
-    assert.match(String(portal.recordPage(ru, { session, view: view(ru) })), /Показаны ваши последние 201 дело\./);
-    assert.match(String(portal.recordPage(en, { session, view: view(en) })), /Showing your newest 201 cases\./);
+    assert.match(String(portal.recordPage(de, { session, record: portal.buildRecordGroups({ cases: Array.from({ length: 201 }, (_, i) => ({ ...old, case_code: `k${i}` })), appeals: [], text: de, config: enforcementConfig }) })), /Es werden deine neuesten 201 Fälle angezeigt\./);
+    assert.match(String(portal.recordPage(ru, { session, record: portal.buildRecordGroups({ cases: Array.from({ length: 201 }, (_, i) => ({ ...old, case_code: `k${i}` })), appeals: [], text: ru, config: enforcementConfig }) })), /Показаны ваши последние 201 дело\./);
+    assert.match(String(portal.recordPage(en, { session, record: portal.buildRecordGroups({ cases: Array.from({ length: 201 }, (_, i) => ({ ...old, case_code: `k${i}` })), appeals: [], text: en, config: enforcementConfig }) })), /Showing your newest 201 cases\./);
     const order = { id: 7, kind: 'gift', plan_id: 'pro', period: 'yearly', amount_cents: 4990, created_at: new Date(Date.now() - 40 * DAY_MS), legal: null };
     const key = { code: 'MEWVO-A', plan_id: 'pro', duration_days: 1, gift_to: null, created_at: new Date(), expires_at: null };
     const receiptRu = String(billingSite.receiptPage(ru, { session, order, key }));

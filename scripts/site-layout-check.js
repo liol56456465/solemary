@@ -71,7 +71,7 @@ const { installUrl } = await import('../src/services/site/shell.js');
 const { GUIDES } = await import('../src/services/site/pages/docs.js');
 const { LANGUAGES, localizePath, translator } = await import('../src/services/site/i18n.js');
 const { loginPage, recordPage } = await import('../src/services/site/memberPortal.js');
-const { appealsPage, appealFormPage } = await import('../src/services/site/portalAppeals.js');
+const { appealExpiredPage, appealsPage, appealFormPage } = await import('../src/services/site/portalAppeals.js');
 const { signupPage, passwordLoginPage, forgotPage, twoStepPage, resetPage, accountSettingsPage } = await import('../src/services/site/accountPages.js');
 const { checkoutPage, billingPage, redeemPage, receiptPage, withdrawListPage, withdrawConfirmPage } = await import('../src/services/site/billing.js');
 const { aggregateReport } = await import('../src/services/enforcement/transparencyService.js');
@@ -165,6 +165,16 @@ const RECORD_VIEW = {
     truncated: false,
     appeals: [{ code: 'p4xw9', type: 'Warn', status: 'Denied', filedAt: ago(18 * DAY), decidedAt: ago(15 * DAY) }],
 };
+// My record across servers (buildRecordGroups' shape): one server with its standing, one with a
+// long name and cases only.
+const RECORD = {
+    groups: [
+        { guildId: '1', server: 'Cozy Corner', summary: true, view: RECORD_VIEW },
+        { guildId: '2', server: 'The Extremely Long Server Name Of A Gaming Community', summary: false, view: { ...RECORD_VIEW, cases: RECORD_VIEW.cases.slice(1) } },
+    ],
+    appeals: RECORD_VIEW.appeals.map((a) => ({ ...a, server: 'Cozy Corner' })),
+    truncated: false, caseCount: 3,
+};
 const ACCOUNT = { username: 'ari_cozy', discord_user_id: SESSION.userId, discord_username: 'ari', created_at: ago(40 * DAY), totp_enabled_at: ago(30 * DAY) };
 const BILLING = {
     subscription: { plan_id: 'pro', expires_at: new Date(NOW + 60 * DAY), source: 'purchase' },
@@ -189,9 +199,10 @@ const MEMBER_PAGES = {
     signup: (ctx) => signupPage({ ...ctx, viewer: null }, { csrf: 'x' }),
     'password-login': (ctx) => passwordLoginPage({ ...ctx, viewer: null }, { csrf: 'x' }),
     forgot: (ctx) => forgotPage({ ...ctx, viewer: null }, { csrf: 'x' }),
-    record: (ctx) => recordPage({ ...ctx, webAppeals: true }, { session: SESSION, view: RECORD_VIEW }),
+    record: (ctx) => recordPage({ ...ctx, webAppeals: true }, { session: SESSION, record: RECORD }),
     appeals: (ctx) => appealsPage({ ...ctx, webAppeals: true }, { session: SESSION, view: APPEALS_VIEW, sent: { code: 'h3rt5', server: 'Night Owls' } }),
     'appeal-form': (ctx) => appealFormPage(ctx, { session: SESSION, item: APPEAL_ITEM, values: { punished: 'I posted links', didIt: 'partly' }, error: 'Explain in at least 20 characters why it should be lifted.', field: 'reason' }),
+    'appeal-expired': (ctx) => appealExpiredPage({ ...ctx, viewer: null }, { code: 'b8nx3k', values: { punished: 'I posted links in the wrong channel', reason: 'It was a mistake and I read the rules again since then.', didIt: 'partly' } }),
     'appeal-blocked': (ctx) => appealFormPage(ctx, { session: SESSION, item: { ...APPEAL_ITEM, appeal: { appealable: false, text: 'Appeal denied; you can appeal again from', from: new Date(NOW + 3 * DAY) } } }),
     account: (ctx) => accountSettingsPage(ctx, { session: SESSION, account: ACCOUNT, recoveryLeft: 8, canClaim: true, plan: { plan_id: 'pro', expires_at: new Date(NOW + 60 * DAY), source: 'purchase' }, now: NOW }),
     checkout: (ctx) => checkoutPage(ctx, { session: SESSION, choice: { planId: 'pro', period: 'monthly', kind: 'personal' } }),

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Dokumentacja",
-    "description": "Krótkie przewodniki po Mewvo: pierwsze kroki dla ekipy, jak rosną kary za ostrzeżenia, jak działają odwołania i jak korzystać z panelu webowego."
+    "description": "Krótkie poradniki o Mewvo: konfiguracja, pierwsze kroki dla ekipy, jak rosną ostrzeżenia, jak działają odwołania i jak korzystać z panelu."
   },
   "hub": {
     "title": "Przewodniki",
@@ -57,7 +57,7 @@
       "summary": "Kto może czego używać, twoja pierwsza akcja i komendy, których będziesz używać co tydzień.",
       "access": {
         "title": "Kto może co robić",
-        "text": "Codzienne komendy (help, rank, leaderboard, zabawa, listy zadań, zgłoszenia itp.) są dostępne dla każdego członka. Wszystko, co moderuje, zmienia ustawienia, publikuje jako bot, dotyczy innych członków albo przenosi walutę, wymaga roli **Administrator**. Sprawdzenie odbywa się za każdym razem, gdy używasz komendy lub przycisku, a nie tylko przy pierwszym otwarciu.",
+        "text": "Codzienne komendy (pomoc, ranga, ranking, zabawa, listy zadań, zgłoszenia i tak dalej) są dostępne dla każdego członka. Wszystko, co moderuje, zmienia ustawienia, publikuje jako bot albo dotyczy innych członków, wymaga roli **Administrator**. Sprawdzenie odbywa się przy każdym użyciu komendy lub przycisku, nie tylko przy pierwszym otwarciu.",
         "denied": "Członkowie bez uprawnienia Administrator, którzy spróbują komendy ekipy, dostają taką informację i wskazanie kanału, na którym mogą poprosić o rolę."
       },
       "firstAction": {
@@ -116,7 +116,8 @@
       "summary": "Gdzie się odwołać, o co pyta formularz, kto decyduje i po jakim czasie można spróbować ponownie.",
       "where": {
         "title": "Gdzie się odwołać",
-        "text": "Każda wiadomość prywatna o karze zawiera link do odwołania albo informację, że nie można się odwołać. Panel odwołań ma trzy przyciski: **Appeal**, **My appeals** i **My record**. Wyciszeni lub ostrzeżeni członkowie korzystają z panelu na głównym serwerze. Zbanowani członkowie korzystają z panelu na {support}, do którego mają dostęp także po banie."
+        "text": "Każda wiadomość prywatna o karze zawiera link do odwołania albo informację, że nie można się odwołać. Odwołujesz się zawsze do serwera, który cię ukarał; decyduje jego ekipa, nie Mewvo. Na Discordzie panel odwołań ma trzy przyciski: **Appeal**, **My appeals** i **My record**. Wyciszeni lub ostrzeżeni członkowie korzystają z panelu na tym serwerze. W przypadku własnego serwera Mewvo zbanowani członkowie korzystają z panelu na {support}, do którego mają dostęp także po banie.",
+        "web": "**Na stronie:** zaloguj się przez Discorda w [My appeals](/me/appeals). Zobaczysz tam swoje sprawy z każdego serwera, który używa Mewvo, od których można się teraz odwołać, nawet jeśli nie masz już wspólnego serwera z Mewvo. Wybierz jedną, odpowiedz na pytania i wyślij. Decyduje ekipa tego serwera, a decyzja pojawi się na tej samej stronie."
       },
       "form": {
         "title": "Formularz",
@@ -129,9 +130,9 @@
       },
       "after": {
         "title": "Co dalej",
-        "banKick": "**Odwołania od bana i wyrzucenia** otwierają kanał na serwerze wsparcia, do którego zostajesz dodany, aby ekipa mogła zadawać pytania.",
-        "muteWarn": "**Odwołania od wyciszenia i ostrzeżenia** sprawdza ekipa na głównym serwerze.",
-        "decision": "Decydują administratorzy. Decyzję dostajesz w wiadomości prywatnej. Przyjęte odwołanie zdejmuje to, co nadal obowiązuje, a przy banach i wyrzuceniach dołączone jest jednorazowe zaproszenie z powrotem."
+        "banKick": "**Odwołania od bana i wyrzucenia** z własnego serwera Mewvo otwierają kanał na serwerze wsparcia Mewvo, do którego zostajesz dodany, aby ekipa mogła zadawać pytania. Inne serwery rozpatrują je na własnych kanałach ekipy.",
+        "muteWarn": "**Odwołania od wyciszenia i ostrzeżenia** sprawdza ekipa serwera, który cię ukarał.",
+        "decision": "Decydują administratorzy tego serwera. Decyzję dostajesz w wiadomości prywatnej, a jeśli odwołałeś się na stronie, także w My appeals. Przyjęte odwołanie zdejmuje to, co nadal obowiązuje, a przy banach i wyrzuceniach dołączone jest jednorazowe zaproszenie z powrotem."
       },
       "limits": {
         "title": "Limity",
