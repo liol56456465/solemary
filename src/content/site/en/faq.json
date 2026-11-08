@@ -52,6 +52,29 @@
       "a": "Yes. Log in with Discord on [My appeals](/me/appeals). You see the cases from every server that uses Mewvo that you can appeal now, and the status of your appeals. It works even when you share no server with Mewvo any more. The staff of the server that punished you decide."
     }
   },
+  "admins": {
+    "title": "For server admins",
+    "whoDecides": {
+      "q": "Who decides appeals in our server?",
+      "a": "Your server’s Administrators. Members appeal to the server that punished them, and your admins press **Accept** or **Deny** on the appeal card or on the dashboard. Mewvo carries out the decision; neither Mewvo nor its owner decides your appeals. [How appeals work for your server](/admins#appeals)."
+    },
+    "otherServers": {
+      "q": "Can other servers see our cases?",
+      "a": "No. Cases, appeals, staff notes and the watchlist belong to your server: other servers’ staff cannot see or search them, and an appeal can only be decided by the server it belongs to. The member can see their own cases, from every server, on My record."
+    },
+    "removeBot": {
+      "q": "What happens if we remove the bot?",
+      "a": "It stops working in your server at once. Settings, cases and levels are kept, so everything is back if you add Mewvo again. The data stays until the server owner asks for it to be deleted: in the dashboard while Mewvo is still in the server, or through the [contact page](/contact) after. See the [privacy page](/privacy)."
+    },
+    "dashboardTeam": {
+      "q": "Who on our team can use the dashboard?",
+      "a": "Members with **Administrator** can do everything. **Manage Server** without Administrator opens the settings pages only, no moderation actions. Members with your **moderator role** (set on the dashboard) see the moderation pages; actions and settings stay with Administrators. Access is checked again with Discord on every page."
+    },
+    "readMessages": {
+      "q": "Does Mewvo read our messages?",
+      "a": "Only to run what you turn on. Where automod is on, each new message is checked against your rules as it arrives. Message text is not stored in Mewvo’s database: when automod acts, its review card in your staff channel on Discord shows a short excerpt, and staff can attach an excerpt to a case as evidence. If you turn on message logs, edited and deleted messages are posted to your log channel on Discord."
+    }
+  },
   "data": {
     "title": "Data and contact",
     "stored": {

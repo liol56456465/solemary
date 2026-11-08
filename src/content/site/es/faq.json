@@ -52,6 +52,29 @@
       "a": "Sí. Inicia sesión con Discord en [My appeals](/me/appeals). Ves los casos de todos los servidores que usan Mewvo que puedes apelar ahora y el estado de tus apelaciones. Funciona aunque ya no compartas ningún servidor con Mewvo. Decide el staff del servidor que te sancionó."
     }
   },
+  "admins": {
+    "title": "Para administradores de servidores",
+    "whoDecides": {
+      "q": "¿Quién decide las apelaciones en nuestro servidor?",
+      "a": "Los administradores de tu servidor. Los miembros apelan ante el servidor que los sancionó, y tus admins pulsan **Accept** o **Deny** en la tarjeta de apelación o en el panel de control. Mewvo aplica la decisión; ni Mewvo ni su propietario deciden tus apelaciones. [Cómo funcionan las apelaciones en tu servidor](/admins#appeals)."
+    },
+    "otherServers": {
+      "q": "¿Pueden otros servidores ver nuestros casos?",
+      "a": "No. Los casos, las apelaciones, las notas del staff y la lista de vigilancia pertenecen a tu servidor: el staff de otros servidores no puede verlos ni buscarlos, y una apelación solo la puede decidir el servidor al que pertenece. El miembro puede ver sus propios casos, de todos los servidores, en Mi historial."
+    },
+    "removeBot": {
+      "q": "¿Qué pasa si quitamos el bot?",
+      "a": "Deja de funcionar en tu servidor al instante. Los ajustes, casos y niveles se guardan, así que todo vuelve si añades Mewvo de nuevo. Los datos se quedan hasta que el propietario del servidor pida que se eliminen: en el panel de control mientras Mewvo siga en el servidor, o en la [página de contacto](/contact) después. Consulta la [página de privacidad](/privacy)."
+    },
+    "dashboardTeam": {
+      "q": "¿Quién de nuestro equipo puede usar el panel de control?",
+      "a": "Los miembros con **Administrador** pueden hacerlo todo. **Gestionar servidor** sin Administrador abre solo las páginas de ajustes, sin acciones de moderación. Los miembros con tu **Rol de moderador** (se define en el panel de control) ven las páginas de moderación; las acciones y los ajustes siguen siendo de los administradores. El acceso se vuelve a comprobar con Discord en cada página."
+    },
+    "readMessages": {
+      "q": "¿Mewvo lee nuestros mensajes?",
+      "a": "Solo para hacer funcionar lo que actives. Donde el automod está activado, cada mensaje nuevo se compara con tus reglas en cuanto llega. El texto de los mensajes no se guarda en la base de datos de Mewvo: cuando el automod actúa, su tarjeta de revisión en tu canal del staff en Discord muestra un fragmento corto, y el staff puede adjuntar un fragmento a un caso como prueba. Si activas los registros de mensajes, los mensajes editados y borrados se publican en tu canal de registros en Discord."
+    }
+  },
   "data": {
     "title": "Datos y contacto",
     "stored": {

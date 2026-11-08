@@ -52,6 +52,29 @@
       "a": "Tak. Zaloguj się przez Discorda w [My appeals](/me/appeals). Zobaczysz sprawy z każdego serwera, który używa Mewvo, od których możesz się teraz odwołać, oraz stan swoich odwołań. Działa to, nawet gdy nie masz już wspólnego serwera z Mewvo. Decyduje ekipa serwera, który cię ukarał."
     }
   },
+  "admins": {
+    "title": "Dla administratorów serwerów",
+    "whoDecides": {
+      "q": "Kto decyduje o odwołaniach na naszym serwerze?",
+      "a": "Administratorzy twojego serwera. Członkowie odwołują się do serwera, który ich ukarał, a twoi administratorzy naciskają **Accept** lub **Deny** na karcie odwołania albo w panelu webowym. Mewvo wykonuje decyzję; ani Mewvo, ani jego właściciel nie decydują o twoich odwołaniach. [Jak działają odwołania na twoim serwerze](/admins#appeals)."
+    },
+    "otherServers": {
+      "q": "Czy inne serwery widzą nasze sprawy?",
+      "a": "Nie. Sprawy, odwołania, notatki ekipy i lista obserwowanych należą do twojego serwera: ekipa innych serwerów nie może ich zobaczyć ani wyszukać, a o odwołaniu może zdecydować tylko serwer, do którego należy. Członek widzi swoje sprawy z każdego serwera w Mojej historii."
+    },
+    "removeBot": {
+      "q": "Co się stanie, jeśli usuniemy bota?",
+      "a": "Od razu przestanie działać na twoim serwerze. Ustawienia, sprawy i poziomy zostają zachowane, więc wszystko wróci, jeśli ponownie dodasz Mewvo. Dane zostają, dopóki właściciel serwera nie poprosi o ich usunięcie: w panelu webowym, gdy Mewvo jest jeszcze na serwerze, albo przez [stronę kontaktu](/contact) później. Zobacz [stronę prywatności](/privacy)."
+    },
+    "dashboardTeam": {
+      "q": "Kto z naszej ekipy może korzystać z panelu webowego?",
+      "a": "Członkowie z uprawnieniem **Administrator** mogą wszystko. **Zarządzanie serwerem** bez uprawnienia Administrator otwiera tylko strony ustawień, bez działań moderacyjnych. Członkowie z twoją **rolą moderatora** (ustawianą w panelu webowym) widzą strony moderacji; działania i ustawienia zostają w rękach administratorów. Dostęp jest ponownie sprawdzany przez Discorda na każdej stronie."
+    },
+    "readMessages": {
+      "q": "Czy Mewvo czyta nasze wiadomości?",
+      "a": "Tylko po to, by robić to, co włączysz. Tam, gdzie automoderacja jest włączona, każda nowa wiadomość jest sprawdzana według twoich reguł, gdy przychodzi. Treść wiadomości nie jest przechowywana w bazie danych Mewvo: gdy automoderacja zadziała, jej karta do sprawdzenia na twoim kanale ekipy na Discordzie pokazuje krótki fragment, a ekipa może dołączyć fragment do sprawy jako dowód. Jeśli włączysz dzienniki wiadomości, edytowane i usunięte wiadomości trafiają na twój kanał dziennika na Discordzie."
+    }
+  },
   "data": {
     "title": "Dane i kontakt",
     "stored": {

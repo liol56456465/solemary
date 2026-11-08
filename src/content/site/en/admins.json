@@ -1,0 +1,112 @@
+{
+  "meta": {
+    "title": "For server admins",
+    "description": "What Mewvo needs in your server and why, the first 10 minutes, what members see, appeals, data and limits per plan."
+  },
+  "head": {
+    "title": "For server admins",
+    "lead": "What to know before and after you add Mewvo to your server.",
+    "justAdded": "Just added Mewvo? [Start here](/added)."
+  },
+  "permissions": {
+    "title": "What Mewvo needs and why",
+    "intro": "Mewvo asks for these permissions when you add it (permissions integer `{bits}`). It never asks for **Administrator**.",
+    "later": "You can take a permission away later; only the feature that needs it stops working, and the dashboard shows what is missing. Mewvo's role must be above the roles it gives or takes, and it never acts on the server owner or on members whose highest role is equal to or above its own.",
+    "items": {
+      "ViewChannel": { "name": "View Channels", "why": "See the channels it moderates, logs to and posts panels in." },
+      "SendMessages": { "name": "Send Messages", "why": "Post logs, panels, review cards and replies." },
+      "SendMessagesInThreads": { "name": "Send Messages in Threads", "why": "Answer in ticket, appeal and staff threads." },
+      "EmbedLinks": { "name": "Embed Links", "why": "Show cases, logs and panels as embeds." },
+      "AttachFiles": { "name": "Attach Files", "why": "Attach transcripts, exports and images." },
+      "ReadMessageHistory": { "name": "Read Message History", "why": "Find its own panels and cards again, and read a message that is reported." },
+      "AddReactions": { "name": "Add Reactions", "why": "Reaction roles, polls and giveaways." },
+      "UseExternalEmojis": { "name": "Use External Emojis", "why": "Emojis from other servers in its messages." },
+      "ManageMessages": { "name": "Manage Messages", "why": "Automod deletes and the purge command." },
+      "ManageThreads": { "name": "Manage Threads", "why": "Close and archive the threads it opens." },
+      "CreatePrivateThreads": { "name": "Create Private Threads", "why": "Private ticket and appeal threads." },
+      "ManageChannels": { "name": "Manage Channels", "why": "The Muted role on every channel, lock and unlock, new ticket and voice channels." },
+      "ManageRoles": { "name": "Manage Roles", "why": "The Muted role, and giving or removing roles (verification, reaction roles, level rewards)." },
+      "ManageGuild": { "name": "Manage Server", "why": "Discord's own AutoMod rules, and pausing invites during a raid." },
+      "ViewAuditLog": { "name": "View Audit Log", "why": "Log who did what, and let the staff guard see who banned or deleted." },
+      "CreateInstantInvite": { "name": "Create Invite", "why": "The one-time invite back after a kick or an accepted appeal." },
+      "KickMembers": { "name": "Kick Members", "why": "Kicks by staff, automod and the join gate." },
+      "BanMembers": { "name": "Ban Members", "why": "Bans, including the warning ladder's, and unbans when they end." },
+      "ModerateMembers": { "name": "Timeout Members", "why": "Timeouts from automod and removing them." },
+      "ManageNicknames": { "name": "Manage Nicknames", "why": "Reset names that break the name rules." },
+      "MoveMembers": { "name": "Move Members", "why": "Join-to-create voice channels and disconnecting muted members." },
+      "Connect": { "name": "Connect", "why": "Needed by Discord to move members between voice channels." }
+    }
+  },
+  "first": {
+    "title": "The first 10 minutes",
+    "intro": "You need **Administrator** in the server (Manage Server is enough for settings). The [setup guide](/docs/setup) has more detail.",
+    "steps": {
+      "setup": "Run `/setup` in your server. It shows what is set up and what is missing, links the dashboard and lists every command. It changes nothing.",
+      "dashboard": "Open the [dashboard]({dashboard}), log in with Discord and pick your server. On the Overview page, **Set up Mewvo step by step** goes through the settings one at a time.",
+      "logging": "Pick a **mod log channel** that only staff can see: every warning, mute, kick and ban is written there. Other logs (joins, role changes, edited and deleted messages) are on the **Logging** page.",
+      "automod": "Automod is **off** in a new server. Turn it on on the **Automod** page and start with **Report only (don't delete)**: staff see what it would have done and nothing happens to anyone. Switch a rule to **On** when you trust it.",
+      "staffGuard": "The **staff guard** is off too. Turn it on with `/automod staffguard`: an admin who mass-bans, mass-kicks or mass-deletes channels or roles loses their staff roles and the server owner is alerted; `/staff restore` gives the roles back. It works while automod is on, and only the server owner can turn it off.",
+      "appeals": "Post the appeal panel with `/setappeal` in a channel every member can see.",
+      "test": "Run `/test` to get the exact DM a member would get. Nothing is done to anyone."
+    }
+  },
+  "members": {
+    "title": "What members see",
+    "list": {
+      "commands": "Commands for everyone, such as `/help`, `/rank` and `/report`. Everything that moderates or changes settings needs Administrator. The [commands page](/commands) lists them.",
+      "dms": "A DM for every warning, mute, kick and ban: the reason, the case code, until when, and how to appeal or that it can't be appealed.",
+      "appeals": "The appeal panel from `/setappeal`, with **Appeal**, **My appeals** and **My record**.",
+      "record": "Their own cases from every server that uses Mewvo on [My record](/me), on this website.",
+      "automod": "When automod acts on them, a DM with the rule and a **Contest this** button. Staff get a review card where they keep, undo or change the action."
+    }
+  },
+  "appeals": {
+    "title": "How appeals work for your server",
+    "who": "Members appeal to the server that punished them, and your **Administrators** decide: **Accept** or **Deny** on the appeal card in your staff channel, or on the dashboard's **Appeals** page. An accepted appeal lifts what is still active; a ban or kick comes with a one-time invite back.",
+    "panel": "**In Discord:** the appeal panel you post with `/setappeal`. Muted and warned members use it in your server.",
+    "web": "**On the website:** members log in with Discord on [My appeals](/me/appeals). It works even after a ban, when they share no server with Mewvo any more.",
+    "home": "You choose where the punishment DM tells members to appeal: on the dashboard, **Enforcement & appeals → Where members appeal**, pick **Mewvo support** (the Mewvo support server) or **Our own server** with an invite to a server you run."
+  },
+  "data": {
+    "title": "Data and deletion",
+    "kept": "Mewvo keeps your server's settings, cases, appeals and levels while it is in your server and after it is removed, so everything is back if you add it again. It is kept until the server owner asks for it to be deleted. The [privacy page](/privacy) lists what is stored and for how long.",
+    "delete": "The server owner can ask for deletion in the dashboard. If Mewvo is already removed, ask through the [contact page](/contact) with the server's ID. Members can delete their own levels and personal data with `/wipedata` at any time; moderation records stay, as the privacy page explains."
+  },
+  "limits": {
+    "title": "Limits per plan",
+    "intro": "Every server gets everything Mewvo does on Free. The plan of the **server's owner** sets these limits:",
+    "caption": "Limits per plan",
+    "limit": "Limit",
+    "more": "Prices and what else each plan adds: [Pricing](/pricing)."
+  },
+  "added": {
+    "description": "Mewvo was added to your server: open the dashboard and take the first steps.",
+    "added": {
+      "title": "Mewvo is in your server",
+      "lead": "Thanks for adding Mewvo. Open the dashboard for your server to set it up, or start with the steps below in Discord."
+    },
+    "unknown": {
+      "title": "Just added Mewvo?",
+      "lead": "Open the dashboard and pick your server, or start with the steps below in Discord."
+    },
+    "cancelled": {
+      "title": "Mewvo was not added",
+      "lead": "Nothing changed in your server. Try again whenever you like, or read what Mewvo needs first."
+    },
+    "openDashboard": "Open the dashboard",
+    "pickServer": "Pick your server",
+    "setupGuide": "Setup guide",
+    "readFirst": "What Mewvo needs",
+    "noDashboard": "The dashboard is not available right now. Run `/setup` in your server: it shows what is set up and what is missing.",
+    "firstSteps": "First steps",
+    "steps": {
+      "setup": "Run `/setup` in your server: it shows what is set up and what is missing.",
+      "logging": "Pick a **mod log channel** that only staff can see.",
+      "automod": "Automod is **off** in a new server: turn it on with **Report only (don't delete)** first.",
+      "staffGuard": "Turn on the **staff guard** with `/automod staffguard` to protect the server from a rogue admin.",
+      "appeals": "Post the appeal panel with `/setappeal`."
+    },
+    "more": "Permissions, appeals, data and limits: [For server admins](/admins).",
+    "accessNote": "The dashboard checks that you can manage this server before it shows anything."
+  }
+}

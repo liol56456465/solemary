@@ -7,6 +7,9 @@
 //   GET /pricing      Free + the planned paid plans from config/site/plans.js (pages/pricing.js)
 //   GET /docs         the guide hub; /docs/<slug> one guide (pages/docs.js)
 //   GET /faq          questions and answers (pages/faq.js)
+//   GET /admins       For server admins: permissions and why, first steps, appeals, data, limits (pages/admins.js)
+//   GET /added        "Mewvo is in your server" after adding the bot (INSTALL_REDIRECT_ENABLED), or a plain
+//                     link; ?guild_id= is only used for the /dashboard/<id> link, nothing is stored (pages/admins.js)
 //   GET /commands     the commands every member may use (EVERYONE_COMMANDS + the loaded descriptions)
 //   GET /about        who runs it
 //   GET /leaderboard  the main server's leveling leaderboard, 50 a page (?page=), with the server cat
@@ -54,7 +57,7 @@ import { createTransparencyReader } from '../enforcement/transparencyService.js'
 import { createTrustCardReader } from '../enforcement/trustCardService.js';
 import { logger } from '../../utils/logger.js';
 import {
-    CSS_VERSION, FAVICON_PATH, JS_VERSION, LOGO_FILE, NOINDEX, SCRIPT, SECURITY_HEADERS, STYLESHEET, assetCacheControl, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
+    ADDED_PATH, CSS_VERSION, FAVICON_PATH, JS_VERSION, LOGO_FILE, NOINDEX, SCRIPT, SECURITY_HEADERS, STYLESHEET, assetCacheControl, inviteOrNull, layout, publicSiteEnabled, siteInstallUrl, siteOrigin,
 } from './shell.js';
 import { homePage } from './pages/home.js';
 import { featuresPage } from './pages/features.js';
@@ -67,6 +70,7 @@ import { trustErrorPage, trustPage } from './pages/trust.js';
 import { changelogPage } from './pages/changelog.js';
 import { LEGAL_UPDATED, contactPage, legalContact, legalNoticePage, privacyPage, termsPage } from './pages/legal.js';
 import { withdrawalPage } from './pages/withdrawal.js';
+import { addedPage, addedState, adminsPage } from './pages/admins.js';
 import {
     DEFAULT_LANG, LANGUAGES, isEnglishOnlyPath, isLanguage, localizePath, textOf, translator,
 } from './i18n.js';
@@ -77,9 +81,10 @@ import { databaseHealthy } from '../../utils/httpMiddleware.js';
 
 export {
     CSS_PATH, DASHBOARD_PATH, FAVICON_PATH, INSTALL_PERMISSIONS, JS_PATH, LOGO, LOGO_PATH, NOINDEX, SCRIPT, SECURITY_HEADERS, STYLESHEET, addButton,
-    installPermissionBits, installUrl, inviteOrNull, layout, publicSiteEnabled, siteOrigin,
+    ADDED_PATH, installPermissionBits, installRedirectUri, installUrl, inviteOrNull, layout, publicSiteEnabled, siteInstallUrl, siteOrigin,
 } from './shell.js';
 export { homePage, featuresPage, pricingPage, faqPage, docsPage, guidePage, rulesPage, changelogPage, GUIDES };
+export { addedPage, addedState, adminsPage };
 export { LEGAL_UPDATED, contactPage, legalContact, legalNoticePage, privacyPage, termsPage };
 
 // Command categories with a label in the catalog (pages.commands.groups.<key>); others show their own name.
@@ -349,7 +354,7 @@ export function notFoundPage(ctx) {
 /** The public pages, for /sitemap.xml (plus /transparency and /trust while they are turned on). */
 export const SITEMAP_PATHS = [
     '/', '/features', '/pricing', '/docs', ...GUIDES.map((g) => `/docs/${g.slug}`), '/faq',
-    '/commands', '/leaderboard', '/rules', '/about', '/changelog', '/status', '/privacy', '/terms', '/legal', '/contact', '/withdrawal',
+    '/admins', '/commands', '/leaderboard', '/rules', '/about', '/changelog', '/status', '/privacy', '/terms', '/legal', '/contact', '/withdrawal',
 ];
 
 export function sitemapXml(origin, { transparency = false, trust = false } = {}) {
@@ -389,7 +394,7 @@ export function createSite({
         accounts: Boolean(memberPortalEnabled && memberAccountsEnabled),
         // Test checkout (PREMIUM_TEST_CHECKOUT): lives inside the member portal, so both must be on.
         billing: Boolean(memberPortalEnabled && billingEnabled),
-        installUrl: installUrl(env.CLIENT_ID),
+        installUrl: siteInstallUrl(env),
         mainInvite: inviteOrNull(env.MAIN_SERVER_INVITE),
         origin: siteOrigin(env),
         legal: { ...legalContact(env), vatRegistered: Boolean(String(env.LEGAL_VAT_NO || '').trim()) },
@@ -437,6 +442,20 @@ export function createSite({
     router.get('/features', page(featuresPage));
     router.get('/pricing', page(pricingPage));
     router.get('/faq', page(faqPage));
+    router.get('/admins', page(adminsPage));
+    // Where Discord sends an admin after adding the bot (INSTALL_REDIRECT_ENABLED; shell.js installUrl).
+    // Nothing is stored or checked: guild_id is only used for a link (pages/admins.js). Discord's
+    // redirect also carries an OAuth code (never exchanged), permissions, state and iss: any query
+    // beyond a valid guild_id is dropped with a 303 to the clean URL, so the code does not stay
+    // in the address bar, the history or a Referer. Not indexed.
+    router.get(ADDED_PATH, (req, res) => {
+        const added = addedState(req.query);
+        res.set({ 'X-Robots-Tag': NOINDEX, 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'no-store' });
+        const clean = added.state === 'added' ? `?guild_id=${added.guildId}` : added.state === 'cancelled' ? '?error=access_denied' : '';
+        const search = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+        if (search !== clean) return res.redirect(303, `${localizePath(req.siteLang || DEFAULT_LANG, ADDED_PATH)}${clean}`);
+        return res.status(200).type('html').send(addedPage(context(req), added));
+    });
     router.get('/docs', page(docsPage));
     router.get('/docs/:slug', (req, res, next) => {
         const guide = GUIDES.find((g) => g.slug === req.params.slug);

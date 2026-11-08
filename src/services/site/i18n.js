@@ -158,7 +158,7 @@ export function previewMarkup(text, key = 'preview') {
 
 /** The translatable public pages (plus /docs/<slug>). */
 export const PAGE_PATHS = Object.freeze([
-    '/', '/features', '/pricing', '/faq', '/docs', '/commands', '/about', '/changelog', '/leaderboard', '/rules', '/status',
+    '/', '/features', '/pricing', '/faq', '/admins', '/added', '/docs', '/commands', '/about', '/changelog', '/leaderboard', '/rules', '/status',
     '/transparency', '/trust', '/privacy', '/terms', '/legal', '/contact', '/withdrawal',
 ]);
 /** Pages that exist in English only (owner decision): /de/privacy shows the English page with a note. */

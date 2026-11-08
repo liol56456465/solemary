@@ -53,7 +53,7 @@ import { createPgSessionStore } from '../dashboard/sessionStore.js';
 import { query } from '../enforcement/db.js';
 import { OPEN_STATUSES, caseStatusCode, caseStatusLabel, listUserAppeals } from '../enforcement/caseService.js';
 import { getMemberStanding, nextWarningSteps } from '../enforcement/standingService.js';
-import { NOINDEX, installUrl, inviteOrNull, layout, legalContact, publicSiteEnabled, siteOrigin } from './site.js';
+import { NOINDEX, inviteOrNull, layout, legalContact, publicSiteEnabled, siteInstallUrl, siteOrigin } from './site.js';
 import { createBillingHandlers } from './billing.js';
 import { premiumSettings, premiumStore } from '../billing/premiumService.js';
 import { ACCOUNT_EXPORT_NOTE, EXPORT_FORMAT, buildDataExport, exportFileName } from '../privacy/dataExport.js';
@@ -849,7 +849,7 @@ export function registerMemberPortal(app, {
     const base = {
         publicSite: publicSiteEnabled(env),
         dashboardEnabled: Boolean(dashboardEnabled),
-        installUrl: installUrl(env.CLIENT_ID),
+        installUrl: siteInstallUrl(env),
         mainInvite: inviteOrNull(env.MAIN_SERVER_INVITE),
         origin: siteOrigin(env),
         // Seller identity + VAT status for the checkout, receipts and DMs (billing.js).

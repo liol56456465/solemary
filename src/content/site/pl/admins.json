@@ -1,0 +1,112 @@
+{
+  "meta": {
+    "title": "Dla administratorów serwerów",
+    "description": "Czego Mewvo potrzebuje na twoim serwerze i dlaczego, pierwsze 10 minut, co widzą członkowie, odwołania, dane i limity w planach."
+  },
+  "head": {
+    "title": "Dla administratorów serwerów",
+    "lead": "Co warto wiedzieć przed dodaniem Mewvo do serwera i po nim.",
+    "justAdded": "Właśnie dodałeś Mewvo? [Zacznij tutaj](/added)."
+  },
+  "permissions": {
+    "title": "Czego Mewvo potrzebuje i dlaczego",
+    "intro": "Przy dodawaniu Mewvo prosi o te uprawnienia (liczba uprawnień `{bits}`). Nigdy nie prosi o uprawnienie **Administrator**.",
+    "later": "Każde uprawnienie możesz później odebrać; przestanie działać tylko funkcja, która go potrzebuje, a panel webowy pokaże, czego brakuje. Rola Mewvo musi być wyżej niż role, które nadaje lub odbiera. Mewvo nigdy nie działa wobec właściciela serwera ani członków, których najwyższa rola jest równa jego roli lub wyższa.",
+    "items": {
+      "ViewChannel": { "name": "Wyświetlanie kanałów", "why": "Widzieć kanały, które moderuje, na których zapisuje dzienniki i publikuje panele." },
+      "SendMessages": { "name": "Wysyłanie wiadomości", "why": "Publikować dzienniki, panele, karty do sprawdzenia i odpowiedzi." },
+      "SendMessagesInThreads": { "name": "Wysyłanie wiadomości w wątkach", "why": "Odpowiadać w wątkach ticketów, odwołań i ekipy." },
+      "EmbedLinks": { "name": "Osadzanie linków", "why": "Pokazywać sprawy, dzienniki i panele jako osadzenia." },
+      "AttachFiles": { "name": "Załączanie plików", "why": "Załączać zapisy rozmów, eksporty i obrazy." },
+      "ReadMessageHistory": { "name": "Czytanie historii wiadomości", "why": "Odnajdywać swoje panele i karty oraz czytać zgłoszoną wiadomość." },
+      "AddReactions": { "name": "Dodawanie reakcji", "why": "Role za reakcje, ankiety i losowania." },
+      "UseExternalEmojis": { "name": "Używanie zewnętrznych emoji", "why": "Emoji z innych serwerów w jego wiadomościach." },
+      "ManageMessages": { "name": "Zarządzanie wiadomościami", "why": "Usuwanie przez automoderację i komenda czyszczenia." },
+      "ManageThreads": { "name": "Zarządzanie wątkami", "why": "Zamykać i archiwizować wątki, które otwiera." },
+      "CreatePrivateThreads": { "name": "Tworzenie wątków prywatnych", "why": "Prywatne wątki ticketów i odwołań." },
+      "ManageChannels": { "name": "Zarządzanie kanałami", "why": "Rola Muted na każdym kanale, blokowanie i odblokowywanie, nowe kanały ticketów i głosowe." },
+      "ManageRoles": { "name": "Zarządzanie rolami", "why": "Rola Muted oraz nadawanie i odbieranie ról (weryfikacja, role za reakcje, nagrody za poziomy)." },
+      "ManageGuild": { "name": "Zarządzanie serwerem", "why": "Własne reguły AutoMod Discorda i wstrzymywanie zaproszeń podczas rajdu." },
+      "ViewAuditLog": { "name": "Wyświetlanie dziennika zdarzeń", "why": "Zapisywać, kto co zrobił, i pozwalać ochronie przed ekipą widzieć, kto banował lub usuwał." },
+      "CreateInstantInvite": { "name": "Tworzenie zaproszeń", "why": "Jednorazowe zaproszenie z powrotem po wyrzuceniu lub przyjętym odwołaniu." },
+      "KickMembers": { "name": "Wyrzucanie członków", "why": "Wyrzucenia przez ekipę, automoderację i bramkę wejścia." },
+      "BanMembers": { "name": "Banowanie członków", "why": "Bany, także z drabinki ostrzeżeń, oraz odbanowanie, gdy się kończą." },
+      "ModerateMembers": { "name": "Wyciszanie członków (przerwa)", "why": "Przerwy (timeout) od automoderacji i ich zdejmowanie." },
+      "ManageNicknames": { "name": "Zarządzanie pseudonimami", "why": "Resetować nazwy, które łamią zasady dotyczące nazw." },
+      "MoveMembers": { "name": "Przenoszenie członków", "why": "Kanały głosowe Join to create i rozłączanie wyciszonych członków." },
+      "Connect": { "name": "Łączenie", "why": "Discord wymaga go do przenoszenia członków między kanałami głosowymi." }
+    }
+  },
+  "first": {
+    "title": "Pierwsze 10 minut",
+    "intro": "Potrzebujesz uprawnienia **Administrator** na serwerze (do ustawień wystarczy „Zarządzanie serwerem”). Więcej szczegółów w [przewodniku konfiguracji](/docs/setup).",
+    "steps": {
+      "setup": "Wpisz `/setup` na swoim serwerze. Komenda pokazuje, co jest skonfigurowane, a czego brakuje, podaje link do panelu webowego i wymienia wszystkie komendy. Niczego nie zmienia.",
+      "dashboard": "Otwórz [panel webowy]({dashboard}), zaloguj się przez Discorda i wybierz swój serwer. Na stronie „Przegląd” przycisk **Skonfiguruj Mewvo krok po kroku** przeprowadzi cię przez ustawienia po kolei.",
+      "logging": "Wybierz **kanał dziennika moderacji**, który widzi tylko ekipa: trafia tam każde ostrzeżenie, wyciszenie, wyrzucenie i ban. Pozostałe dzienniki (wejścia, zmiany ról, edytowane i usunięte wiadomości) są na stronie **Dzienniki**.",
+      "automod": "Na nowym serwerze automoderacja jest **wyłączona**. Włącz ją na stronie **Automoderacja** i zacznij od trybu **Tylko zgłaszaj (nie usuwaj)**: ekipa widzi, co by zrobiła, i nikomu nic się nie dzieje. Przełącz regułę na **Wł.**, gdy zaczniesz jej ufać.",
+      "staffGuard": "**Ochrona przed ekipą** też jest wyłączona. Włącz ją komendą `/automod staffguard`: administrator, który masowo banuje, wyrzuca albo usuwa kanały lub role, traci role ekipy, a właściciel serwera dostaje alert; `/staff restore` przywraca role. Ochrona działa, gdy automoderacja jest włączona, i tylko właściciel serwera może ją wyłączyć.",
+      "appeals": "Opublikuj panel odwołań komendą `/setappeal` na kanale, który widzą wszyscy członkowie.",
+      "test": "Wpisz `/test`, aby dostać dokładnie taką wiadomość prywatną, jaką dostałby członek. Nikomu nic się nie dzieje."
+    }
+  },
+  "members": {
+    "title": "Co widzą członkowie",
+    "list": {
+      "commands": "Komendy dla wszystkich, takie jak `/help`, `/rank` i `/report`. Wszystko, co moderuje lub zmienia ustawienia, wymaga uprawnienia Administrator. Wymienia je [strona komend](/commands).",
+      "dms": "Wiadomość prywatna przy każdym ostrzeżeniu, wyciszeniu, wyrzuceniu i banie: powód, kod sprawy, do kiedy oraz jak się odwołać albo że odwołanie nie jest możliwe.",
+      "appeals": "Panel odwołań z `/setappeal` z przyciskami **Appeal**, **My appeals** i **My record**.",
+      "record": "Swoje sprawy z każdego serwera, który używa Mewvo, w [Mojej historii](/me) na tej stronie.",
+      "automod": "Gdy automoderacja zadziała wobec członka, dostaje on wiadomość prywatną z regułą i przyciskiem **Contest this**. Ekipa dostaje kartę do sprawdzenia, na której zostawia, cofa lub zmienia działanie."
+    }
+  },
+  "appeals": {
+    "title": "Jak działają odwołania na twoim serwerze",
+    "who": "Członkowie odwołują się do serwera, który ich ukarał, a decydują twoi **administratorzy**: **Accept** lub **Deny** na karcie odwołania na kanale ekipy albo na stronie **Odwołania** w panelu webowym. Przyjęte odwołanie zdejmuje to, co nadal obowiązuje; do bana lub wyrzucenia dołączane jest jednorazowe zaproszenie z powrotem.",
+    "panel": "**Na Discordzie:** panel odwołań, który publikujesz komendą `/setappeal`. Wyciszeni i ostrzeżeni członkowie używają go na twoim serwerze.",
+    "web": "**Na stronie:** członkowie logują się przez Discorda w [My appeals](/me/appeals). Działa to także po banie, gdy nie mają już wspólnego serwera z Mewvo.",
+    "home": "Ty wybierasz, gdzie wiadomość o karze kieruje członków z odwołaniem: w panelu webowym, **Kary i odwołania → Gdzie członkowie składają odwołania**, wybierz **Wsparcie Mewvo** (serwer wsparcia Mewvo) albo **Nasz własny serwer** z zaproszeniem na serwer, który prowadzisz."
+  },
+  "data": {
+    "title": "Dane i usuwanie",
+    "kept": "Mewvo przechowuje ustawienia, sprawy, odwołania i poziomy twojego serwera, gdy jest na serwerze, i po usunięciu, żeby wszystko wróciło, jeśli dodasz go ponownie. Dane są przechowywane, dopóki właściciel serwera nie poprosi o ich usunięcie. [Strona prywatności](/privacy) wymienia, co jest przechowywane i jak długo.",
+    "delete": "Właściciel serwera może poprosić o usunięcie w panelu webowym. Jeśli Mewvo jest już usunięty, napisz przez [stronę kontaktu](/contact) i podaj ID serwera. Członkowie mogą w każdej chwili usunąć swoje poziomy i dane osobowe komendą `/wipedata`; rejestr moderacji zostaje, jak wyjaśnia strona prywatności."
+  },
+  "limits": {
+    "title": "Limity w planach",
+    "intro": "Każdy serwer dostaje wszystko, co Mewvo robi w planie Free. Te limity ustala plan **właściciela serwera**:",
+    "caption": "Limity w planach",
+    "limit": "Limit",
+    "more": "Ceny i co jeszcze dodaje każdy plan: [Cennik](/pricing)."
+  },
+  "added": {
+    "description": "Mewvo został dodany do twojego serwera: otwórz panel webowy i zrób pierwsze kroki.",
+    "added": {
+      "title": "Mewvo jest na twoim serwerze",
+      "lead": "Dzięki za dodanie Mewvo. Otwórz panel webowy swojego serwera, aby go skonfigurować, albo zacznij od poniższych kroków na Discordzie."
+    },
+    "unknown": {
+      "title": "Właśnie dodałeś Mewvo?",
+      "lead": "Otwórz panel webowy i wybierz swój serwer albo zacznij od poniższych kroków na Discordzie."
+    },
+    "cancelled": {
+      "title": "Mewvo nie został dodany",
+      "lead": "Na twoim serwerze nic się nie zmieniło. Spróbuj ponownie, kiedy chcesz, albo najpierw przeczytaj, czego Mewvo potrzebuje."
+    },
+    "openDashboard": "Otwórz panel webowy",
+    "pickServer": "Wybierz serwer",
+    "setupGuide": "Przewodnik konfiguracji",
+    "readFirst": "Czego Mewvo potrzebuje",
+    "noDashboard": "Panel webowy jest teraz niedostępny. Wpisz `/setup` na swoim serwerze: komenda pokazuje, co jest skonfigurowane, a czego brakuje.",
+    "firstSteps": "Pierwsze kroki",
+    "steps": {
+      "setup": "Wpisz `/setup` na swoim serwerze: komenda pokazuje, co jest skonfigurowane, a czego brakuje.",
+      "logging": "Wybierz **kanał dziennika moderacji**, który widzi tylko ekipa.",
+      "automod": "Na nowym serwerze automoderacja jest **wyłączona**: najpierw włącz ją w trybie **Tylko zgłaszaj (nie usuwaj)**.",
+      "staffGuard": "Włącz **ochronę przed ekipą** komendą `/automod staffguard`, aby chronić serwer przed nieuczciwym administratorem.",
+      "appeals": "Opublikuj panel odwołań komendą `/setappeal`."
+    },
+    "more": "Uprawnienia, odwołania, dane i limity: [Dla administratorów serwerów](/admins).",
+    "accessNote": "Zanim cokolwiek pokaże, panel webowy sprawdza, czy możesz zarządzać tym serwerem."
+  }
+}

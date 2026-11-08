@@ -52,6 +52,29 @@
       "a": "Sim. Entre com o Discord em [My appeals](/me/appeals). Você vê os casos de todos os servidores que usam o Mewvo que pode apelar agora e a situação das suas apelações. Funciona mesmo sem você compartilhar mais nenhum servidor com o Mewvo. Quem decide é a equipe do servidor que puniu você."
     }
   },
+  "admins": {
+    "title": "Para administradores de servidores",
+    "whoDecides": {
+      "q": "Quem decide as apelações no nosso servidor?",
+      "a": "Os Administradores do seu servidor. Os membros apelam ao servidor que os puniu, e os seus admins clicam em **Accept** (aceitar) ou **Deny** (negar) no cartão da apelação ou no painel. O Mewvo executa a decisão; nem o Mewvo nem o dono dele decidem as suas apelações. [Como as apelações funcionam no seu servidor](/admins#appeals)."
+    },
+    "otherServers": {
+      "q": "Outros servidores podem ver os nossos casos?",
+      "a": "Não. Casos, apelações, notas da equipe e a lista de vigilância pertencem ao seu servidor: a equipe de outros servidores não pode vê-los nem pesquisá-los, e uma apelação só pode ser decidida pelo servidor a que pertence. O membro pode ver os próprios casos, de todos os servidores, em Meu histórico."
+    },
+    "removeBot": {
+      "q": "O que acontece se removermos o bot?",
+      "a": "Ele para de funcionar no seu servidor na hora. Configurações, casos e níveis ficam guardados, para que tudo volte se você adicionar o Mewvo de novo. Os dados ficam até o dono do servidor pedir a exclusão: no painel, enquanto o Mewvo ainda estiver no servidor, ou pela [página de contato](/contact) depois. Veja a [página de privacidade](/privacy)."
+    },
+    "dashboardTeam": {
+      "q": "Quem da nossa equipe pode usar o painel?",
+      "a": "Membros com **Administrador** podem fazer tudo. **Gerenciar servidor** sem Administrador abre só as páginas de configurações, sem ações de moderação. Membros com o seu **cargo de moderador** (definido no painel) veem as páginas de moderação; ações e configurações ficam com os Administradores. O acesso é verificado de novo com o Discord em cada página."
+    },
+    "readMessages": {
+      "q": "O Mewvo lê as nossas mensagens?",
+      "a": "Só para executar o que você ligar. Onde o automod está ligado, cada mensagem nova é verificada com as suas regras assim que chega. O texto das mensagens não é armazenado no banco de dados do Mewvo: quando o automod age, o cartão de revisão no canal da equipe no Discord mostra um trecho curto, e a equipe pode anexar um trecho a um caso como prova. Se você ligar os registros de mensagens, as mensagens editadas e apagadas são publicadas no seu canal de registro no Discord."
+    }
+  },
   "data": {
     "title": "Dados e contato",
     "stored": {
