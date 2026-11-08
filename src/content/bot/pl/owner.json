@@ -53,6 +53,7 @@
             "description": "Tylko właściciel: podgląd całej bazy danych, tylko do odczytu",
             "user": "Wszystko, co zapisano o jednym użytkowniku, na każdym serwerze",
             "userOption": "ID użytkownika lub @wzmianka",
+            "profile": "Profil użytkownika na wszystkich serwerach (w kanale profili usuwany automatycznie)",
             "server": "Ustawienia, stany modułów, liczby wierszy i otwarte odwołania jednego serwera",
             "serverOption": "ID serwera",
             "case": "Jedna sprawa z edycjami, dowodami, notatkami i odwołaniami",

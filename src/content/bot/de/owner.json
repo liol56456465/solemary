@@ -53,6 +53,7 @@
             "description": "Nur Owner: Nachschlagen in der ganzen Datenbank, nur lesend",
             "user": "Alles, was über einen Nutzer gespeichert ist, in jedem Server",
             "userOption": "Nutzer-ID oder @Erwähnung",
+            "profile": "Profil eines Nutzers über alle Server (im Profilkanal automatisch gelöscht)",
             "server": "Einstellungen, Modulzustände, Zeilenzahlen und offene Einsprüche eines Servers",
             "serverOption": "Server-ID",
             "case": "Ein Fall mit Änderungen, Beweisen, Notizen und Einsprüchen",

@@ -28,3 +28,17 @@ export async function logSessionStartLimit(client, { log, warn = log } = {}) {
         return null;
     }
 }
+
+/**
+ * The session_start_limit object from /gateway/bot ({ remaining, total, reset_after,
+ * max_concurrency }), or null when the call fails. For the health report; never throws.
+ */
+export async function fetchSessionStartLimit(client) {
+    try {
+        const body = await client.rest.get(Routes.gatewayBot());
+        const limit = body?.session_start_limit;
+        return limit && Number.isFinite(Number(limit.remaining)) ? limit : null;
+    } catch {
+        return null;
+    }
+}

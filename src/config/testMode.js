@@ -11,6 +11,7 @@
 
 import { logger } from '../utils/logger.js';
 import { getConfiguredSetting, guildIdFor, settingSource } from '../services/settings/guildSettings.js';
+import { homeServerTestModeErrors } from './homeServers.js';
 
 const SNOWFLAKE = /^\d{17,20}$/;
 
@@ -153,6 +154,9 @@ export function validateTestMode() {
             errors.push(`TEST_GUILD_IDS contains the real ${PRODUCTION_GUILD_IDS.get(id)} server (${id}). Use your test servers.`);
         }
     }
+
+    // The database (owner tools) server and the home-server feature ids (config/homeServers.js).
+    errors.push(...homeServerTestModeErrors());
 
     for (const name of ['MAIN_GUILD_ID', 'SUPPORT_GUILD_ID']) {
         const value = (process.env[name] || '').trim();

@@ -48,6 +48,9 @@ import { runHeadsUpChecks } from './services/automod/automodService.js';
 import { pollFeeds, pollTwitchFeeds } from './services/community/feedService.js';
 import { isTwitchConfigured } from './services/community/twitchService.js';
 import { runDueScheduledMessages } from './services/scheduledMessageService.js';
+import { recordCronRun, recordCronSkip } from './utils/cronStats.js';
+import { installHealthMonitors, postHealthReport } from './services/homeServers/healthReport.js';
+import { reconcileRoleMirror } from './services/homeServers/roleMirror.js';
 import { startAdminConsole } from './console/adminConsole.js';
 import { loadCommands, registerCommands as registerSlashCommands } from './handlers/loaders/commandLoader.js';
 import { registerOAuthRoutes } from './services/oauthVerification.js';
@@ -326,14 +329,21 @@ class Mewvo extends Client {
     // slow run (e.g. ending many giveaways) can never overlap and act twice.
     const running = new Set();
     this.cronRunning = running; // shutdown waits for this to empty
+    // Each run's result goes to cronStats (the 5-minute health report shows last runs and failures).
     const exclusive = (name, fn) => runSafeTask(name, async () => {
       if (running.has(name)) {
+        recordCronSkip(name);
         logger.warn(`Cron job ${name} is still running; skipping this tick`);
         return;
       }
       running.add(name);
+      const startedAt = Date.now();
       try {
         await fn();
+        recordCronRun(name, { ok: true, startedAt });
+      } catch (error) {
+        recordCronRun(name, { ok: false, startedAt, error });
+        throw error;
       } finally {
         running.delete(name);
       }
@@ -407,6 +417,12 @@ class Mewvo extends Client {
       await postWeeklyAutomodReport(this);
       await postWeeklyDigest(this);
     }), { timezone: 'UTC' });
+
+    // Home servers (config/homeServers.js): the health message in the database server, edited
+    // every 5 minutes; and the hourly role mirror reconcile (main -> support / database).
+    installHealthMonitors(this);
+    cron.schedule('*/5 * * * *', exclusive('health_report', () => postHealthReport(this)));
+    cron.schedule('25 * * * *', exclusive('role_mirror', () => reconcileRoleMirror(this)));
 
     // Expired per-user command cooldowns are dead weight; sweep them every 10 minutes.
     cron.schedule('*/10 * * * *', runSafeTask('cooldown_sweep', () => {

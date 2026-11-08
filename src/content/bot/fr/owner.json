@@ -53,6 +53,7 @@
             "description": "Propriétaire seulement : recherches en lecture seule dans toute la base de données",
             "user": "Tout ce qui est stocké sur un utilisateur, sur tous les serveurs",
             "userOption": "ID d'utilisateur ou @mention",
+            "profile": "Profil d'un utilisateur sur tous les serveurs (supprimé auto. dans le salon des profils)",
             "server": "Paramètres, états des modules, nombre de lignes et appels ouverts d'un serveur",
             "serverOption": "ID du serveur",
             "case": "Un dossier avec ses modifications, preuves, notes et appels",

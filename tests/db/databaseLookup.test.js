@@ -91,3 +91,17 @@ test('/database server, case, stats and search on the real schema', { skip }, as
     const byName = await lookup.search('dbl_target_100%');
     assert.ok(byName.sections[0].rows.some((r) => r.case_code === code));
 });
+
+test('/database profile on the real schema: every section runs; cases, warns per server and ladder found; no secrets', { skip }, async () => {
+    const result = await lookup.profile(me);
+    const section = (name) => result.sections.find((s) => s.name === name);
+    assert.equal(section('Cases against them').rows[0].case_code, code);
+    assert.equal(section('Warns per server').rows[0].guild_id, guildId);
+    assert.equal(Number(section('Warns per server').rows[0].warns), 1);
+    assert.equal(section('Warn ladder').rows[0].level, 1);
+    assert.equal(section('Mewvo website account').rows[0].account_name, accountName);
+    assert.equal(section('OAuth verification link'), undefined, 'no OAuth record section in the profile');
+    const text = allText(result);
+    assert.ok(!text.includes(PASSWORD_HASH));
+    assert.ok(!text.includes(TOKEN_VALUE));
+});

@@ -478,5 +478,5 @@ test('the command is slash-only, scope owner, every subcommand present', () => {
     assert.equal(databaseCommand.scope, 'owner');
     assert.equal(databaseCommand.slashOnly, true);
     const json = databaseCommand.data.toJSON();
-    assert.deepEqual(json.options.map((o) => o.name), ['user', 'server', 'case', 'stats', 'search']);
+    assert.deepEqual(json.options.map((o) => o.name), ['user', 'profile', 'server', 'case', 'stats', 'search']);
 });

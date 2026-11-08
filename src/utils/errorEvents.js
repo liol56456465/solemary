@@ -120,9 +120,17 @@ async function databaseSink(row) {
 
 const defaultRecorder = createErrorRecorder({ sink: (row) => (sinkOverride || databaseSink)(row) });
 
+let recordedCount = 0;
+
 /** Records one error event (fire and forget; see the top of this file). */
 export function recordErrorEvent(event) {
+    recordedCount += 1;
     return defaultRecorder.record(event);
+}
+
+/** How many error events were reported since the process started (counted before the rate limit; the health report). */
+export function errorEventCount() {
+    return recordedCount;
 }
 
 /** Tests: replace where rows go (null = the database again). */

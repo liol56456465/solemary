@@ -53,6 +53,7 @@
             "description": "Owner only: read-only lookups across the whole database",
             "user": "Everything stored about one user, in every server",
             "userOption": "User ID or @mention",
+            "profile": "A user's profile across all servers (auto-deleted in the profile channel)",
             "server": "Settings, module states, row counts and open appeals of one server",
             "serverOption": "Server ID",
             "case": "One case with its edits, evidence, notes and appeals",

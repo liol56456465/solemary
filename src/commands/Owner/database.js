@@ -7,6 +7,11 @@
 //
 // The queries are in services/owner/databaseLookup.js (fixed parameterized SELECTs, secrets
 // shown as "(hidden)"). Each use is logged (who, subcommand, query), never the results.
+//
+// /database profile in the profile channel (config/homeServers.js, docs/home-servers.md): the
+// reply is a normal visible message, deleted automatically after PROFILE_DELETE_MS (2 minutes).
+// Its pages are edits of that one message (the buttons), so deleting it removes every page.
+// Anywhere else in the owner-tools server it is ephemeral like the other subcommands.
 
 import crypto from 'node:crypto';
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
@@ -18,9 +23,13 @@ import { LookupInputError, createDatabaseLookup, lookupPages, paginate } from '.
 import { lookupDbError, lookupMessage } from '../../handlers/databaseLookupView.js';
 import { textForInteraction } from '../../utils/botText.js';
 import { descriptionLocalizations } from '../../utils/commandLocalizations.js';
+import { homeServers } from '../../config/homeServers.js';
+
+export const PROFILE_DELETE_MS = 2 * 60_000;
 
 const SUBCOMMANDS = {
     user: { option: 'user', run: (lookup, input) => lookup.user(input) },
+    profile: { option: 'user', run: (lookup, input) => lookup.profile(input) },
     server: { option: 'server_id', run: (lookup, input) => lookup.server(input) },
     case: { option: 'code', run: (lookup, input) => lookup.caseByCode(input) },
     stats: { option: null, run: (lookup) => lookup.stats() },
@@ -42,6 +51,38 @@ export function loggedQuery(input) {
     return input == null ? null : String(input).replace(/\s+/g, ' ').slice(0, 100);
 }
 
+/** True when this is /database profile in the database server's profile channel (visible reply, auto-deleted). */
+export function isProfileChannel(interaction, { env = process.env } = {}) {
+    const { guilds, channels } = homeServers(env);
+    return Boolean(channels.profile && guilds.database)
+        && String(interaction.channelId || '') === channels.profile
+        && String(interaction.guildId || '') === guilds.database;
+}
+
+const defaultSchedule = (fn, ms) => {
+    const timer = setTimeout(fn, ms);
+    timer.unref?.();
+    return timer;
+};
+
+/**
+ * Deletes the visible profile reply after `ms`. The interaction token lasts 15 minutes, so
+ * deleteReply works; if it fails, the message is deleted by id. Memory only: a restart within
+ * the 2 minutes leaves the message (docs/home-servers.md).
+ */
+export function scheduleProfileDelete(interaction, messageId, { ms = PROFILE_DELETE_MS, schedule = defaultSchedule, log = logger } = {}) {
+    return schedule(async () => {
+        try {
+            await interaction.deleteReply();
+        } catch (error) {
+            const deleted = messageId && interaction.channel?.messages
+                ? await interaction.channel.messages.delete(messageId).then(() => true, () => false)
+                : false;
+            if (!deleted && error?.code !== 10008) log.warn(`Profile reply not deleted: ${error?.message || error}`);
+        }
+    }, ms);
+}
+
 /**
  * Runs /database. Dependencies are injectable for tests.
  */
@@ -51,6 +92,8 @@ export async function runDatabaseCommand(interaction, {
     log = logger,
     canUse = canUseOwnerTools,
     nonce = newNonce,
+    env = process.env,
+    schedule = defaultSchedule,
 } = {}) {
     const userId = interaction.user?.id;
     if (interaction._isPrefixCommand || !canUse({ guildId: interaction.guildId, userId })) {
@@ -61,12 +104,14 @@ export async function runDatabaseCommand(interaction, {
         return;
     }
 
-    const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+    const subcommand = interaction.options.getSubcommand();
+    // /database profile in the profile channel: a visible reply, deleted after 2 minutes.
+    const visible = subcommand === 'profile' && isProfileChannel(interaction, { env });
+    const deferred = await InteractionHelper.safeDefer(interaction, visible ? {} : { flags: MessageFlags.Ephemeral });
     if (!deferred) return;
 
-    // Every reply is ephemeral: the owner's Discord language. Table/column names and values stay as stored.
+    // The owner's Discord language. Table/column names and values stay as stored.
     const { lang } = textForInteraction(interaction);
-    const subcommand = interaction.options.getSubcommand();
     const spec = SUBCOMMANDS[subcommand];
     if (!spec) {
         await InteractionHelper.safeEditReply(interaction, { content: textForInteraction(interaction).t('owner.database.unknownSubcommand'), allowedMentions: { parse: [] } });
@@ -75,26 +120,34 @@ export async function runDatabaseCommand(interaction, {
     const input = spec.option ? interaction.options.getString(spec.option, true) : null;
     log.info(`Owner /database ${subcommand} by ${userId}`, {
         event: 'owner.database.lookup', userId, username: interaction.user?.username, guildId: interaction.guildId,
-        subcommand, query: loggedQuery(input),
+        subcommand, query: loggedQuery(input), visible,
     });
+
+    // A visible reply (even an error) goes away after 2 minutes too.
+    // The message id (from fetchReply) lets the delete fall back to the bot's own token.
+    const autoDelete = async (edited) => {
+        if (!visible || !edited) return;
+        const message = await Promise.resolve().then(() => interaction.fetchReply?.()).catch(() => null);
+        scheduleProfileDelete(interaction, message?.id ?? null, { schedule, log });
+    };
 
     let result;
     try {
         result = await spec.run(lookup, input);
     } catch (error) {
         if (error instanceof LookupInputError) {
-            await InteractionHelper.safeEditReply(interaction, { content: error.textIn(lang), allowedMentions: { parse: [] } });
+            await autoDelete(await InteractionHelper.safeEditReply(interaction, { content: error.textIn(lang), allowedMentions: { parse: [] } }));
             return;
         }
         log.error(`Owner /database ${subcommand} failed: ${error?.message}`, { event: 'owner.database.error', userId, subcommand, code: error?.code });
-        await InteractionHelper.safeEditReply(interaction, { content: lookupDbError({ lang }), embeds: [], components: [], allowedMentions: { parse: [] } });
+        await autoDelete(await InteractionHelper.safeEditReply(interaction, { content: lookupDbError({ lang }), embeds: [], components: [], allowedMentions: { parse: [] } }));
         return;
     }
 
     const { title, pages } = paginate(result, { lang });
     const id = nonce();
     store.put(id, { ownerId: userId, title, pages });
-    await InteractionHelper.safeEditReply(interaction, lookupMessage({ title, pages }, 0, { ownerId: userId, nonce: id, lang }));
+    await autoDelete(await InteractionHelper.safeEditReply(interaction, lookupMessage({ title, pages }, 0, { ownerId: userId, nonce: id, lang })));
 }
 
 export default {
@@ -109,6 +162,11 @@ export default {
             .setName('user')
             .setDescription('Everything stored about one user, in every server')
             .setDescriptionLocalizations(descriptionLocalizations('owner.database.cmd.user'))
+            .addStringOption((option) => option.setName('user').setDescription('User ID or @mention').setDescriptionLocalizations(descriptionLocalizations('owner.database.cmd.userOption')).setRequired(true).setMaxLength(30)))
+        .addSubcommand((sub) => sub
+            .setName('profile')
+            .setDescription('A user\'s profile across all servers (auto-deleted in the profile channel)')
+            .setDescriptionLocalizations(descriptionLocalizations('owner.database.cmd.profile'))
             .addStringOption((option) => option.setName('user').setDescription('User ID or @mention').setDescriptionLocalizations(descriptionLocalizations('owner.database.cmd.userOption')).setRequired(true).setMaxLength(30)))
         .addSubcommand((sub) => sub
             .setName('server')

@@ -11,6 +11,7 @@ import { getGuildBirthdays, deleteBirthday } from '../utils/database.js';
 import { keepTempRolesOnLeave } from '../services/members/tempRoleService.js';
 import { logger } from '../utils/logger.js';
 import { recordMemberEvent } from '../services/members/memberInsightsService.js';
+import { handleMemberRemove as mirrorRolesOnLeave } from '../services/homeServers/roleMirror.js';
 
 /**
  * A leaver that was not cached arrives as a partial member (Partials.GuildMember): only user,
@@ -59,6 +60,8 @@ export default {
         const { guild, user } = member;
         if (!guild || !user) return;
         const leaver = describeLeaver(member);
+        // Leaving the main server takes the mirrored roles away in support/database (never throws).
+        void mirrorRolesOnLeave(member);
         
         const welcomeConfig = await getWelcomeConfig(member.client, guild.id);
         

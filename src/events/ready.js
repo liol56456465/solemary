@@ -13,6 +13,7 @@ import { applyStoredBotState } from "../services/owner/botStateService.js";
 import { warnDisabledFeatures } from "../config/intents.js";
 import { logSessionStartLimit } from "../utils/sessionStartLimit.js";
 import { markInteractionsWarm } from "../utils/ackSafetyNet.js";
+import { logUnsetRulesOnce } from "../services/homeServers/roleMirror.js";
 
 export default {
   name: Events.ClientReady,
@@ -41,6 +42,8 @@ export default {
       startupLog(`Loaded ${client.commands.size} commands`);
       // Privileged intents switched off from env (config/intents.js): one warning per disabled feature.
       warnDisabledFeatures((line) => logger.warn(line));
+      // Home-server role mirror rules without a valid target role (config/homeServers.js): one line each.
+      logUnsetRulesOnce();
       // Gateway session starts left today (1,000 per 24 h); in the background, never blocks or fails the boot.
       void logSessionStartLimit(client, { log: startupLog, warn: (line) => logger.warn(line) });
       startupLog(`Automod: ${await describeAutomodReadiness(client).catch((error) => `check failed: ${error.message}`)}`);
