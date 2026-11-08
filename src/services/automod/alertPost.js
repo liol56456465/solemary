@@ -49,9 +49,13 @@ export async function postAlert(client, kind, {
     });
 }
 
-/** "Show diff" for a nuke alert: compares the last snapshot before `at` with the server now. */
-export function showDiffRow(at = Date.now()) {
+/**
+ * "Show diff" for a nuke alert: compares the last snapshot before `at` of the server the nuke
+ * happened in (`guildId`; the alert itself may be posted in another home server) with it now.
+ */
+export function showDiffRow(at = Date.now(), guildId = null) {
+    const id = guildId ? `nukediff:${Math.floor(at / 1000)}:${guildId}` : `nukediff:${Math.floor(at / 1000)}`;
     return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`nukediff:${Math.floor(at / 1000)}`).setLabel('Show what changed').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(id).setLabel('Show what changed').setStyle(ButtonStyle.Secondary),
     );
 }

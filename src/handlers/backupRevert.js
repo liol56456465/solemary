@@ -1,7 +1,9 @@
 // backupRevert.js — "undo the nuke" buttons.
-//   nukediff:<epochSeconds>          "Show diff" on a staff-guard alert: the last snapshot taken
-//                                     before the alert vs the server now. Admins and owners;
-//                                     owners also get the Revert / Cancel buttons.
+//   nukediff:<epochSeconds>[:<guildId>]  "Show diff" on a staff-guard alert: the last snapshot of
+//                                     the server the nuke happened in (guildId; old buttons
+//                                     without it: the main server) taken before the alert vs that
+//                                     server now. Admins and owners; owners also get the Revert /
+//                                     Cancel buttons (main server only: revert works there only).
 //   backuprevert:<confirm|cancel>:<snapshotId>   the confirm step of /backup revert. Owners only.
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
@@ -36,10 +38,18 @@ export function diffPayload(snapshot, diff, { withButtons = false } = {}) {
     return { embeds: [embed], components };
 }
 
+/** The server a nuke diff button is about: its guildId part, else (older buttons) the main server. */
+export function nukeDiffGuildId(args) {
+    const id = String(args?.[1] || '');
+    return /^\d{17,20}$/.test(id) ? id : enforcementConfig.mainGuildId;
+}
+
 export async function handleNukeDiff(interaction, client, args) {
     const seconds = Number(args[0]);
-    // Snapshots exist only for Mewvo's own servers: a click anywhere else is refused, owners included.
-    if (!isMewvoServer(interaction.guildId)) {
+    const sourceId = nukeDiffGuildId(args);
+    // Snapshots exist only for Mewvo's own servers: a click anywhere else is refused, owners included,
+    // and so is a button naming any other server.
+    if (!isMewvoServer(interaction.guildId) || !isMewvoServer(sourceId)) {
         return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Server backups are only kept for Mewvo\'s own servers.' });
     }
     const owner = isBackupOwner(client, interaction.user.id);
@@ -47,15 +57,18 @@ export async function handleNukeDiff(interaction, client, args) {
         return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Only administrators can see the diff.' });
     }
     await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
-    const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
-    if (!guild) return InteractionHelper.safeEditReply(interaction, { content: 'I cannot reach the main server.' });
+    const guild = client.guilds.cache.get(sourceId);
+    if (!guild) return InteractionHelper.safeEditReply(interaction, { content: 'I cannot reach the server this alert is about.' });
     const before = Number.isFinite(seconds) && seconds > 0 ? new Date(seconds * 1000) : new Date();
     const snapshot = await getSnapshotBefore(guild.id, before);
     if (!snapshot) {
         return InteractionHelper.safeEditReply(interaction, { content: 'There is no snapshot from before this alert, so there is nothing to compare with.' });
     }
-    const payload = diffPayload(snapshot, diffAgainstLive(guild, snapshot), { withButtons: owner });
-    if (!owner) payload.embeds[0].setFooter({ text: 'Only the owner can revert (/backup revert).' });
+    // Revert works on the main server only (revertToSnapshot), so only its diff gets the buttons.
+    const revertable = guild.id === enforcementConfig.mainGuildId;
+    const payload = diffPayload(snapshot, diffAgainstLive(guild, snapshot), { withButtons: owner && revertable });
+    if (!revertable) payload.embeds[0].setFooter({ text: `${guild.name}: revert is only available for the main server; fix it by hand from this list.`.slice(0, 2048) });
+    else if (!owner) payload.embeds[0].setFooter({ text: 'Only the owner can revert (/backup revert).' });
     return InteractionHelper.safeEditReply(interaction, payload);
 }
 
