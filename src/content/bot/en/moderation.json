@@ -1,0 +1,63 @@
+{
+    "lock": {
+        "cmd": {
+            "description": "Locks the current channel (prevents @everyone from sending messages)."
+        },
+        "already": "{channel} is already locked.",
+        "title": "Channel locked",
+        "done": "{channel} is locked. Members can't send messages here until it's unlocked.",
+        "failed": "An unexpected error occurred while trying to lock the channel. Check my permissions (I need 'Manage Channels')."
+    },
+    "unlock": {
+        "cmd": {
+            "description": "Unlocks the current channel (allows @everyone to send messages again)."
+        },
+        "notLocked": "{channel} is not explicitly locked (everyone can already send messages).",
+        "title": "Channel unlocked",
+        "done": "{channel} is unlocked. Members can talk here again.",
+        "failed": "An unexpected error occurred while trying to unlock the channel. Check my permissions (I need 'Manage Channels')."
+    },
+    "purge": {
+        "cmd": {
+            "description": "Delete a specific amount of messages",
+            "amount": "Number of messages (1-100)"
+        },
+        "range": "Please specify a number between 1 and 100.",
+        "title": "Messages Purged",
+        "done": {
+            "one": "Deleted {count} message in {channel}.",
+            "other": "Deleted {count} messages in {channel}."
+        },
+        "failed": "An unexpected error occurred during message deletion. Note: Messages older than 14 days cannot be bulk deleted."
+    },
+    "rules": {
+        "cmd": {
+            "description": "Post, update or preview the server rules message",
+            "post": "Post the rules with the design saved on the dashboard",
+            "postChannel": "Where to post them (default: the channel saved on the dashboard)",
+            "update": "Change the posted rules message to the current rules and design",
+            "preview": "Show the rules post only to you, without posting it"
+        },
+        "mainOnly": "The rules can only be posted from the main server.",
+        "notLoaded": "The saved settings are not loaded (database not responding). Nothing was changed.",
+        "noChannel": "No rules channel is saved. Pick one with the channel option, or save one on the dashboard Rules page.",
+        "cannotSee": "I cannot see that channel. Pick another one.",
+        "channelGone": "The saved rules channel no longer exists. Pick one with the channel option, or save another on the dashboard Rules page.",
+        "discordSaid": "{refusal} Discord said: {error}",
+        "saveFailed": "Could not save the post (database not responding). {undone}",
+        "postRefused": "Discord refused the post. Nothing was posted.",
+        "postUndone": "The post was removed again. Nothing was changed.",
+        "updateRefused": "Discord refused the update. Some messages may already show the new rules. Try /rules update again.",
+        "updateUndone": "New extra messages were removed again and the saved post was not changed. Run /rules update again.",
+        "notPosted": "The rules have not been posted yet. Use /rules post first.",
+        "posted": "The rules were posted in <#{channelId}> ({messages}).",
+        "earlierPost": "The earlier post in <#{channelId}> stays where it is. Next time, use /rules update to change the post instead.",
+        "updated": "The posted rules in <#{channelId}> were updated ({messages}).",
+        "noChannelSaved": "no channel saved yet",
+        "previewHead": "Preview of the rules post ({messages}, saved channel: {where}). Only you can see this. Nothing was posted.",
+        "messages": {
+            "one": "{count} message",
+            "other": "{count} messages"
+        }
+    }
+}

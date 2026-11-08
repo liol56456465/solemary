@@ -6,12 +6,15 @@ import { getColor } from '../../config/bot.js';
 
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
+import { textForInteraction } from '../../utils/botText.js';
+import { descriptionLocalizations } from '../../utils/commandLocalizations.js';
 export default {
     data: new SlashCommandBuilder()
     .setName("lock")
     .setDescription(
       "Locks the current channel (prevents @everyone from sending messages).",
     )
+    .setDescriptionLocalizations(descriptionLocalizations('moderation.lock.cmd.description'))
 .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
   category: "moderation",
 
@@ -26,13 +29,16 @@ export default {
       return;
     }
 
+    // Errors: the moderator's language; the lock notice is posted in the channel: the server's language.
+    const tr = textForInteraction(interaction);
+    const pub = textForInteraction(interaction, { purpose: 'public' });
     const channel = interaction.channel;
     const everyoneRole = interaction.guild.roles.everyone;
 
     try {
       const currentPermissions = channel.permissionsFor(everyoneRole);
       if (currentPermissions.has(PermissionFlagsBits.SendMessages) === false) {
-        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `${channel} is already locked.` });
+        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('moderation.lock.already', { channel: String(channel) }) });
       }
 
       await channel.permissionOverwrites.edit(
@@ -59,14 +65,14 @@ export default {
       await InteractionHelper.safeEditReply(interaction, {
         embeds: [
           successEmbed(
-            'Channel locked',
-            `${channel} is locked. Members can't send messages here until it's unlocked.`,
+            pub.t('moderation.lock.title'),
+            pub.t('moderation.lock.done', { channel: String(channel) }),
           ),
         ],
       });
     } catch (error) {
       logger.error('Lock command error:', error);
-      await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'An unexpected error occurred while trying to lock the channel. Check my permissions (I need \'Manage Channels\').' });
+      await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('moderation.lock.failed') });
     }
   }
 };

@@ -34,6 +34,8 @@ import { postModLog } from '../enforcement/enforcementService.js';
 import { getAutomodSettings, getLockdown, isLegacyAutomodGuild, setLockdown } from './automodSettings.js';
 import { describePanic, pauseInvitesAndDms, resumeInvitesAndDms } from './incidentActions.js';
 import { postAlert } from './alertPost.js';
+import { staffGuildId } from './channelRouting.js';
+import { botText, textForGuild } from '../../utils/botText.js';
 import { buildIncidentReport, casesAgainst, recordIncident, releaseRow } from './raidIncidentService.js';
 import { recordEvent } from './reviewRegistry.js';
 import { addTimelineEvent, closeTimeline, linkTimelineReport, openTimeline } from './incidentTimeline.js';
@@ -155,19 +157,42 @@ export async function noteIncidentEvent(guildId, event) {
     }
 }
 
-async function announceLockdown(guild, { joinerCount, raised, panic, startedBy = null }) {
+/** The mod-log post of a lockdown that started, in `lang` (the staff server's). Pure, for tests. */
+export function lockdownAnnouncement({ joinerCount, raised, panic, startedBy = null }, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     const summary = startedBy
-        ? `Started by ${startedBy.username} (${startedBy.id}) from a nuke alert.`
-        : `${joinerCount} accounts joined within ${automodConfig.raidWindowMs / 1000} seconds.`;
-    await postModLog(guild.client, 'raid', [
-        { name: 'What happened', value: summary },
-        { name: 'Verification level', value: raised ? 'Raised to High' : 'Not changed (already High, or missing Manage Server)' },
-        { name: 'Invites and DMs', value: describePanic(panic) },
-        { name: 'Raid joiners', value: 'Kicked automatically if they break any rule while the lockdown lasts.' },
-        { name: 'End it', value: '`/automod lockdown-end`' },
-    ], { guildId: guild.id, title: startedBy ? 'Lockdown started' : 'Join raid: lockdown started' });
-    const extras = [raised ? 'the verification level is now High' : null, panic?.applied ? 'invites and DMs are paused' : null].filter(Boolean);
-    await alertOwner(guild, `**${startedBy ? 'Lockdown' : 'Join raid'} in ${guild.name}.** ${summary} The server is in lockdown${extras.length ? ` and ${extras.join(' and ')}` : ''}. End it with \`/automod lockdown-end\` when it is over.`);
+        ? tr.t('automod.raid.lockdown.startedBy', { name: startedBy.username, id: startedBy.id })
+        : tr.t('automod.raid.lockdown.joined', { count: joinerCount, seconds: automodConfig.raidWindowMs / 1000 });
+    return {
+        summary,
+        title: startedBy ? tr.t('automod.raid.lockdown.titleManual') : tr.t('automod.raid.lockdown.titleRaid'),
+        fields: [
+            { name: tr.t('automod.raid.lockdown.whatHappened'), value: summary },
+            { name: tr.t('automod.raid.lockdown.verification'), value: raised ? tr.t('automod.raid.lockdown.raised') : tr.t('automod.raid.lockdown.notRaised') },
+            { name: tr.t('automod.raid.lockdown.invites'), value: describePanic(panic, { lang }) },
+            { name: tr.t('automod.raid.lockdown.joiners'), value: tr.t('automod.raid.lockdown.joinersValue') },
+            { name: tr.t('automod.raid.lockdown.endIt'), value: '`/automod lockdown-end`' },
+        ],
+    };
+}
+
+/** The owner's DM about a lockdown, in `lang` (the server's). Pure, for tests. */
+export function lockdownOwnerText({ raised, panic, startedBy = null }, guildName, summary, { lang = 'en' } = {}) {
+    const tr = botText(lang);
+    const extras = [raised ? tr.t('automod.raid.owner.raised') : null, panic?.applied ? tr.t('automod.raid.owner.paused') : null].filter(Boolean);
+    const what = extras.length ? tr.t('automod.raid.owner.lockdownAnd', { extras: extras.join(tr.t('automod.raid.owner.and')) }) : tr.t('automod.raid.owner.lockdown');
+    return tr.t(startedBy ? 'automod.raid.owner.manual' : 'automod.raid.owner.raid', { server: guildName, summary, what });
+}
+
+async function announceLockdown(guild, { joinerCount, raised, panic, startedBy = null }) {
+    // The mod log sits in the staff server (the main server for a home server): its language.
+    const staff = textForGuild(staffGuildId(guild.id), { purpose: 'public' });
+    const post = lockdownAnnouncement({ joinerCount, raised, panic, startedBy }, { lang: staff.lang });
+    await postModLog(guild.client, 'raid', post.fields, { guildId: guild.id, title: post.title });
+    // The owner's DM: the language of the server it is about.
+    const own = textForGuild(guild.id, { userId: guild.ownerId, purpose: 'dm' });
+    const summary = own.lang === staff.lang ? post.summary : lockdownAnnouncement({ joinerCount, raised, panic, startedBy }, { lang: own.lang }).summary;
+    await alertOwner(guild, lockdownOwnerText({ raised, panic, startedBy }, guild.name, summary, { lang: own.lang }));
 }
 
 /**
@@ -316,16 +341,18 @@ async function postIncidentReport(guild, admin, { state, resumed }) {
         logger.warn(`Raid report: could not read cases of raid joiners: ${error.message}`);
         return [];
     });
+    // Posted in the staff server's alerts channel: its language.
+    const { lang } = textForGuild(staffGuildId(guild.id), { purpose: 'public' });
     const report = buildIncidentReport(
         incident || { started_at: state.startedAt, ended_at: new Date(), joiner_ids: joinerIds, actions },
         cases,
-        { endedByLabel: `${admin.username} (\`${admin.id}\`)` },
+        { endedByLabel: `${admin.username} (\`${admin.id}\`)`, lang },
     );
     await postAlert(guild.client, 'raid', {
         guildId: guild.id,
         ...report,
         color: 'success',
-        components: incident && joinerIds.length ? [releaseRow(incident.id)] : [],
+        components: incident && joinerIds.length ? [releaseRow(incident.id, false, { lang })] : [],
     });
     return incident;
 }

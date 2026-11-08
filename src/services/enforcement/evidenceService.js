@@ -16,6 +16,7 @@ import { query, T } from './db.js';
 import { isHomeGuild, resolveSetting } from '../settings/guildSettings.js';
 import { staffGuildId } from '../automod/channelRouting.js';
 import { dateStamp, fitWholeLines, truncate } from './format.js';
+import { botText } from '../../utils/botText.js';
 
 export const EXCERPT_MAX = 500;
 export const NOTE_MAX = 300;
@@ -27,8 +28,11 @@ const KINDS = new Set(['link', 'image']);
 const URL_RE = /https?:\/\/[^\s<>"'`]+/gi;
 const MESSAGE_LINK_RE = /^https?:\/\/(?:(?:ptb|canary)\.)?discord(?:app)?\.com\/channels\/(\d{17,20}|@me)\/(\d{17,20})\/(\d{17,20})(?:[/?#].*)?$/i;
 
-function userError(message) {
-    return createError(message, ErrorTypes.VALIDATION, message, { expected: true });
+// `i18n` ({ code, params }): /case shows the error in the reader's language (commands/Enforcement/case.js).
+function userError(message, i18n = null) {
+    const error = createError(message, ErrorTypes.VALIDATION, message, { expected: true });
+    if (i18n) error.i18n = i18n;
+    return error;
 }
 
 // ── Pure helpers ───────────────────────────────────────────────────────────
@@ -85,7 +89,9 @@ function quote(text, max) {
  * Display lines for evidence rows. `freshUrls` maps row id → a current attachment
  * URL for images (see resolveImageUrls); without one the stored message is linked.
  */
-export function evidenceLines(rows, freshUrls = new Map(), { excerptMax = 160, guildIdOf = () => null, caseGuildId = null } = {}) {
+export function evidenceLines(rows, freshUrls = new Map(), { excerptMax = 160, guildIdOf = () => null, caseGuildId = null, lang = 'en' } = {}) {
+    // `lang`: the bot's words (English default, unchanged for the dashboard and the appeal dossier).
+    const tr = lang === 'en' ? null : botText(lang);
     return rows.map((row) => {
         // The stored copy is in the evidence channel of the case's staff server (staffGuildId);
         // the channel's own guild wins when it is cached. Neither known: no link (never the main server).
@@ -98,6 +104,10 @@ export function evidenceLines(rows, freshUrls = new Map(), { excerptMax = 160, g
         if (row.kind === 'image') {
             const fresh = freshUrls.get(String(row.id));
             const stored = row.store_channel_id && row.store_message_id ? jumpLink(row.store_channel_id, row.store_message_id, storeGuildOf(row.store_channel_id)) : null;
+            if (tr) {
+                const links = [fresh ? `[${tr.t('staff.case.evidence.imageLink')}](${fresh})` : null, stored ? `[${tr.t('staff.case.evidence.storedLink')}](${stored})` : null].filter(Boolean);
+                return `**#${row.id}** ${tr.t('staff.case.evidence.image', { links: links.join(' · ') || tr.t('staff.case.evidence.storedMissing') })}${note} · ${meta}`;
+            }
             const links = [fresh ? `[image](${fresh})` : null, stored ? `[stored](${stored})` : null].filter(Boolean);
             return `**#${row.id}** Image: ${links.join(' · ') || 'image (stored message missing)'}${note} · ${meta}`;
         }
@@ -143,10 +153,10 @@ export async function addEvidence(caseCode, {
             ]
         ));
     } catch (error) {
-        if (error?.code === '23503') throw userError(`No case with code \`${caseCode}\`.`);
+        if (error?.code === '23503') throw userError(`No case with code \`${caseCode}\`.`, { code: 'noCaseAnywhere', params: { code: caseCode } });
         throw error;
     }
-    if (!rows[0]) throw userError(`Case \`${caseCode}\` already has ${MAX_EVIDENCE_PER_CASE} pieces of evidence. Remove one first.`);
+    if (!rows[0]) throw userError(`Case \`${caseCode}\` already has ${MAX_EVIDENCE_PER_CASE} pieces of evidence. Remove one first.`, { code: 'evidenceFull', params: { code: caseCode, max: MAX_EVIDENCE_PER_CASE } });
     return rows[0];
 }
 
@@ -217,14 +227,14 @@ async function evidenceChannel(client, caseGuildId) {
  */
 export async function addImageEvidence(client, caseCode, attachment, { note = null, addedBy, guildId }) {
     if (!String(attachment?.contentType || '').startsWith('image/')) {
-        throw userError('The attachment must be an image (PNG, JPG, GIF, WebP).');
+        throw userError('The attachment must be an image (PNG, JPG, GIF, WebP).', { code: 'notImage', params: {} });
     }
     if (!guildId) throw new TypeError('addImageEvidence needs the guildId of the case');
     const channel = await evidenceChannel(client, guildId);
     if (!channel) {
-        throw userError(isHomeGuild(guildId)
-            ? 'No evidence channel is set up (EVIDENCE_CHANNEL_ID or MOD_LOG_CHANNEL_ID), so the image cannot be stored.'
-            : 'Evidence images are not set up in this server: set an evidence or mod log channel in the dashboard first, then add the image again.');
+        throw isHomeGuild(guildId)
+            ? userError('No evidence channel is set up (EVIDENCE_CHANNEL_ID or MOD_LOG_CHANNEL_ID), so the image cannot be stored.', { code: 'noEvidenceChannelHome', params: {} })
+            : userError('Evidence images are not set up in this server: set an evidence or mod log channel in the dashboard first, then add the image again.', { code: 'noEvidenceChannel', params: {} });
     }
 
     let stored;
@@ -276,14 +286,15 @@ export async function resolveImageUrls(client, rows) {
  * Evidence for a case as one embed field plus the first image's fresh URL (for
  * embed.image). Returns { field: null } when the case has no evidence.
  */
-export async function evidenceDisplay(client, caseCode, { max = 1024, excerptMax = 160 } = {}) {
+export async function evidenceDisplay(client, caseCode, { max = 1024, excerptMax = 160, lang = 'en' } = {}) {
     const rows = await listEvidence(caseCode);
     if (rows.length === 0) return { field: null, imageUrl: null, rows };
     const fresh = await resolveImageUrls(client, rows);
     const firstImage = rows.find((row) => row.kind === 'image' && fresh.has(String(row.id)));
     return {
-        field: { name: `Evidence (${rows.length})`, value: fitLines(evidenceLines(rows, fresh, {
+        field: { name: lang === 'en' ? `Evidence (${rows.length})` : botText(lang).t('staff.case.evidence.fieldName', { count: rows.length }), value: fitLines(evidenceLines(rows, fresh, {
             excerptMax,
+            lang,
             // The stored image's link names the server its channel is in (another server's case is re-hosted there).
             guildIdOf: (channelId) => client?.channels?.cache?.get?.(channelId)?.guildId || null,
         }), max) },

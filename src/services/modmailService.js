@@ -30,6 +30,7 @@ import { GUILD_SQL, guildIdsFromSql } from './scheduling/guildScan.js';
 import { generateTranscript } from './ticket.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
 import { logger } from '../utils/logger.js';
+import { botText, textForGuild } from '../utils/botText.js';
 import { linkModmailChannel, linkedChannelId, linkedChannelsForUser, linkedUserId, unlinkModmailChannel } from './modmailLinks.js';
 import { withOpenChannelSlot } from './openChannelCap.js';
 import { isHomeGuild, resolveSetting } from './settings/guildSettings.js';
@@ -180,11 +181,15 @@ function promptRow(messageId, guildId) {
     );
 }
 
-function closeRow() {
+/** The Close button on the staff channel header (the server's language). */
+function closeRow(lang = 'en') {
     return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(MODMAIL_BUTTONS.close).setLabel('Close').setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId(MODMAIL_BUTTONS.close).setLabel(botText(lang).t('staff.modmail.closeButton')).setStyle(ButtonStyle.Danger),
     );
 }
+
+/** Text for a post in a modmail staff channel or the transcript channel: the server's language. */
+const staffChannelText = (guildId) => textForGuild(guildId, { purpose: 'public' });
 
 const NOT_A_MEMBER_MAIN = 'Modmail is for members of the Mewvo server. If you were banned, use the appeal panel in the support server.';
 export const NO_MODMAIL_SERVER = 'None of the servers you share with this bot takes modmail (or you are not a member there any more). '
@@ -465,21 +470,22 @@ export async function openModmail(client, user, dmChannel, messageId, guildId = 
         if (slot.refused) return slot.refused;
         const { channel } = slot;
 
+        const tr = staffChannelText(guild.id);
         const header = new EmbedBuilder()
-            .setTitle('Modmail')
+            .setTitle(tr.t('staff.modmail.header.title'))
             .setColor(0x5865f2)
             .setDescription([
-                `**Member:** ${member} (${user.tag}, \`${user.id}\`)`,
-                `**Account created:** <t:${Math.floor(user.createdTimestamp / 1000)}:R>`,
-                `**Joined:** ${member.joinedTimestamp ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` : 'unknown'}`,
+                tr.t('staff.modmail.header.member', { member: String(member), tag: user.tag, id: user.id }),
+                tr.t('staff.modmail.header.created', { created: `<t:${Math.floor(user.createdTimestamp / 1000)}:R>` }),
+                tr.t('staff.modmail.header.joined', { joined: member.joinedTimestamp ? `<t:${Math.floor(member.joinedTimestamp / 1000)}:R>` : tr.t('staff.modmail.header.unknown') }),
                 '',
-                'Everything you type here is sent to the member by DM.',
-                'Start a message with `//` for an internal note (bot commands aren\'t sent either).',
+                tr.t('staff.modmail.header.relay'),
+                tr.t('staff.modmail.header.notes'),
             ].join('\n'));
         await channel.send({
-            content: staffRoleId ? `<@&${staffRoleId}> new modmail` : 'New modmail',
+            content: staffRoleId ? `<@&${staffRoleId}> ${tr.t('staff.modmail.newPing')}` : tr.t('staff.modmail.new'),
             embeds: [header],
-            components: [closeRow()],
+            components: [closeRow(tr.lang)],
             allowedMentions: { roles: staffRoleId ? [staffRoleId] : [] },
         });
         await relay(channel, `**${user.username}:**`, original);
@@ -519,7 +525,7 @@ export async function handleModmailStaffMessage(message, prefix = getCommandPref
         logger.warn(`Modmail DM to ${userId} failed: ${error.message}`);
         await message.react('❌').catch(() => {});
         await message.reply({
-            content: 'Could not DM the member (they left the server or closed their DMs).',
+            content: staffChannelText(message.guildId).t('staff.modmail.dmFailed'),
             allowedMentions: NO_MENTIONS,
         }).catch(() => {});
     }
@@ -551,8 +557,9 @@ export async function closeModmail(channel, closer, reason = '') {
             : null;
         const transcript = isOwnTranscriptChannel(transcriptChannel, channel.guild.id) ? await generateTranscript(channel) : null;
         if (transcript) {
+            const tr = staffChannelText(channel.guild.id);
             await transcriptChannel.send({
-                content: `Modmail with <@${userId}> (\`${userId}\`) closed by ${closer}.${note}`,
+                content: `${tr.t('staff.modmail.transcript', { userId, closer: String(closer) })}${reason ? `\n${tr.t('staff.modmail.transcriptReason', { reason })}` : ''}`,
                 files: [new AttachmentBuilder(transcript.buffer, { name: `modmail-${userId}.html` })],
                 allowedMentions: NO_MENTIONS,
             });

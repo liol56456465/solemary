@@ -2,10 +2,12 @@
 // on nuke alerts, "Release
 // non-offenders" on raid reports). Same routing and look as postModLog
 // (channelRouting.js), which has no components option.
+// Button labels take `{ lang }` (the staff server's language; English by default).
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
+import { botText } from '../../utils/botText.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { channelPurposeFor, fetchStaffChannel, resolveChannelId, staffGuildId } from './channelRouting.js';
 import { isSettingsUnavailable } from '../settings/guildScoped.js';
@@ -54,10 +56,10 @@ export async function postAlert(client, kind, {
  * "Show diff" for a nuke alert: compares the last snapshot before `at` of the server the nuke
  * happened in (`guildId`; the alert itself may be posted in another home server) with it now.
  */
-export function showDiffRow(at = Date.now(), guildId = null) {
+export function showDiffRow(at = Date.now(), guildId = null, { lang = 'en' } = {}) {
     const id = guildId ? `nukediff:${Math.floor(at / 1000)}:${guildId}` : `nukediff:${Math.floor(at / 1000)}`;
     return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(id).setLabel('Show what changed').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(id).setLabel(botText(lang).t('automod.alert.showDiff')).setStyle(ButtonStyle.Secondary),
     );
 }
 
@@ -72,12 +74,13 @@ const idOrZero = (id) => (/^\d{17,20}$/.test(String(id || '')) ? String(id) : '0
  * a minute (a snapshot taken at the alert itself, snapshotIfStale, must not hide the damage).
  * `offenderId`: the member the guard acted on, refused by every button.
  */
-export function nukeAlertRow(at, guildId, offenderId) {
+export function nukeAlertRow(at, guildId, offenderId, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     const seconds = Math.floor((at - 60_000) / 1000);
     const offender = idOrZero(offenderId);
     return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`nukediff:${seconds}:${guildId}:${offender}`).setLabel('Show what changed').setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder().setCustomId(`nukerevert:ask:${seconds}:${guildId}:${offender}`).setLabel('Revert…').setStyle(ButtonStyle.Danger),
-        new ButtonBuilder().setCustomId(`nukepanic:${guildId}:${offender}`).setLabel('Lock down (panic)').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`nukediff:${seconds}:${guildId}:${offender}`).setLabel(tr.t('automod.alert.showDiff')).setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`nukerevert:ask:${seconds}:${guildId}:${offender}`).setLabel(tr.t('automod.alert.revert')).setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId(`nukepanic:${guildId}:${offender}`).setLabel(tr.t('automod.alert.panic')).setStyle(ButtonStyle.Secondary),
     );
 }

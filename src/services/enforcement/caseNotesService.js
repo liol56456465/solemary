@@ -6,14 +6,16 @@
 
 import { query as defaultQuery, T } from './db.js';
 import { pgConfig } from '../../config/database/postgres.js';
+import { botText } from '../../utils/botText.js';
 
 export const MAX_TAGS = 10;
 export const TAG_MAX = 20;
 export const NOTE_MAX = 1000;
 export const NOTES_SHOWN = 15;
 
+/** A staff-facing error; `i18n` ({ code, params }) lets /case show it in the reader's language. */
 export class CaseNoteError extends Error {
-    constructor(message) { super(message); this.userMessage = message; }
+    constructor(message, i18n = null) { super(message); this.userMessage = message; this.i18n = i18n; }
 }
 
 /** "Scam, alt ,raid" → ['alt', 'raid', 'scam']; "none" or "" → []. Throws on bad tags. */
@@ -23,24 +25,24 @@ export function normalizeTags(input) {
     const tags = [...new Set(text.split(/[,\s]+/).map((t) => t.replace(/^#/, '')).filter(Boolean))];
     for (const tag of tags) {
         if (!/^[a-z0-9][a-z0-9-]*$/.test(tag) || tag.length > TAG_MAX) {
-            throw new CaseNoteError(`"${tag.slice(0, 30)}" is not a valid tag. Use letters, numbers and dashes, up to ${TAG_MAX} characters.`);
+            throw new CaseNoteError(`"${tag.slice(0, 30)}" is not a valid tag. Use letters, numbers and dashes, up to ${TAG_MAX} characters.`, { code: 'badTag', params: { tag: tag.slice(0, 30), max: TAG_MAX } });
         }
     }
-    if (tags.length > MAX_TAGS) throw new CaseNoteError(`A case can have at most ${MAX_TAGS} tags.`);
+    if (tags.length > MAX_TAGS) throw new CaseNoteError(`A case can have at most ${MAX_TAGS} tags.`, { code: 'tooManyTags', params: { max: MAX_TAGS } });
     return tags.sort();
 }
 
 export function createCaseNotes({ query = defaultQuery, notesTable = pgConfig.tables.mod_case_notes } = {}) {
     async function caseInGuild(guildId, caseCode) {
         const { rows: [row] } = await query(`SELECT case_code, guild_id, tags FROM ${T.cases} WHERE case_code = $1`, [caseCode]);
-        if (!row || row.guild_id !== guildId) throw new CaseNoteError(`No case with code \`${caseCode}\` in this server.`);
+        if (!row || row.guild_id !== guildId) throw new CaseNoteError(`No case with code \`${caseCode}\` in this server.`, { code: 'noCase', params: { code: caseCode } });
         return row;
     }
     return {
         async addNote(guildId, caseCode, author, text) {
             const clean = String(text ?? '').trim();
-            if (!clean) throw new CaseNoteError('The note is empty.');
-            if (clean.length > NOTE_MAX) throw new CaseNoteError(`Keep notes under ${NOTE_MAX} characters.`);
+            if (!clean) throw new CaseNoteError('The note is empty.', { code: 'noteEmpty', params: {} });
+            if (clean.length > NOTE_MAX) throw new CaseNoteError(`Keep notes under ${NOTE_MAX} characters.`, { code: 'noteTooLong', params: { max: NOTE_MAX } });
             await caseInGuild(guildId, caseCode);
             const { rows: [row] } = await query(
                 `INSERT INTO ${notesTable} (case_code, author_id, author_username, text) VALUES ($1, $2, $3, $4) RETURNING *`,
@@ -76,7 +78,8 @@ export function createCaseNotes({ query = defaultQuery, notesTable = pgConfig.ta
 
 export const caseNotes = createCaseNotes();
 
-/** "#alt #scam" or "none". */
-export function tagsText(tags) {
-    return tags?.length ? tags.map((t) => `#${t}`).join(' ') : 'none';
+/** "#alt #scam" or "none" (`lang`: the bot's word for none). */
+export function tagsText(tags, { lang = 'en' } = {}) {
+    if (tags?.length) return tags.map((t) => `#${t}`).join(' ');
+    return lang === 'en' ? 'none' : botText(lang).t('staff.case.tags.none');
 }

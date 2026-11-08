@@ -1,0 +1,67 @@
+{
+    "lock": {
+        "cmd": {
+            "description": "Blokuje bieżący kanał (@everyone nie może wysyłać wiadomości)."
+        },
+        "already": "{channel} jest już zablokowany.",
+        "title": "Kanał zablokowany",
+        "done": "{channel} jest zablokowany. Członkowie nie mogą tu pisać, dopóki nie zostanie odblokowany.",
+        "failed": "Podczas blokowania kanału wystąpił nieoczekiwany błąd. Sprawdź moje uprawnienia (potrzebuję „Zarządzanie kanałami”)."
+    },
+    "unlock": {
+        "cmd": {
+            "description": "Odblokowuje bieżący kanał (@everyone znów może wysyłać wiadomości)."
+        },
+        "notLocked": "{channel} nie jest wprost zablokowany (wszyscy już mogą pisać).",
+        "title": "Kanał odblokowany",
+        "done": "{channel} jest odblokowany. Członkowie znów mogą tu pisać.",
+        "failed": "Podczas odblokowywania kanału wystąpił nieoczekiwany błąd. Sprawdź moje uprawnienia (potrzebuję „Zarządzanie kanałami”)."
+    },
+    "purge": {
+        "cmd": {
+            "description": "Usuń określoną liczbę wiadomości",
+            "amount": "Liczba wiadomości (1-100)"
+        },
+        "range": "Podaj liczbę od 1 do 100.",
+        "title": "Wiadomości usunięte",
+        "done": {
+            "one": "Usunięto {count} wiadomość na {channel}.",
+            "few": "Usunięto {count} wiadomości na {channel}.",
+            "many": "Usunięto {count} wiadomości na {channel}.",
+            "other": "Usunięto {count} wiadomości na {channel}."
+        },
+        "failed": "Podczas usuwania wiadomości wystąpił nieoczekiwany błąd. Uwaga: wiadomości starszych niż 14 dni nie da się usunąć zbiorczo."
+    },
+    "rules": {
+        "cmd": {
+            "description": "Opublikuj, zaktualizuj lub podejrzyj wiadomość z zasadami serwera",
+            "post": "Opublikuj zasady z wyglądem zapisanym w panelu",
+            "postChannel": "Gdzie je opublikować (domyślnie: kanał zapisany w panelu)",
+            "update": "Zmień opublikowaną wiadomość z zasadami na aktualne zasady i wygląd",
+            "preview": "Pokaż post z zasadami tylko tobie, bez publikowania"
+        },
+        "mainOnly": "Zasady można publikować tylko z głównego serwera.",
+        "notLoaded": "Zapisane ustawienia nie są wczytane (baza danych nie odpowiada). Nic nie zostało zmienione.",
+        "noChannel": "Nie zapisano kanału zasad. Wybierz go opcją channel albo zapisz na stronie Zasady w panelu.",
+        "cannotSee": "Nie widzę tego kanału. Wybierz inny.",
+        "channelGone": "Zapisany kanał zasad już nie istnieje. Wybierz kanał opcją channel albo zapisz inny na stronie Zasady w panelu.",
+        "discordSaid": "{refusal} Odpowiedź Discorda: {error}",
+        "saveFailed": "Nie udało się zapisać posta (baza danych nie odpowiada). {undone}",
+        "postRefused": "Discord odrzucił post. Nic nie zostało opublikowane.",
+        "postUndone": "Post został z powrotem usunięty. Nic nie zostało zmienione.",
+        "updateRefused": "Discord odrzucił aktualizację. Niektóre wiadomości mogą już pokazywać nowe zasady. Spróbuj ponownie /rules update.",
+        "updateUndone": "Nowe dodatkowe wiadomości zostały usunięte, a zapisany post się nie zmienił. Uruchom ponownie /rules update.",
+        "notPosted": "Zasady nie zostały jeszcze opublikowane. Najpierw użyj /rules post.",
+        "posted": "Zasady zostały opublikowane na <#{channelId}> ({messages}).",
+        "earlierPost": "Wcześniejszy post na <#{channelId}> zostaje na miejscu. Następnym razem użyj /rules update, aby zmienić post.",
+        "updated": "Opublikowane zasady na <#{channelId}> zostały zaktualizowane ({messages}).",
+        "noChannelSaved": "jeszcze nie zapisano kanału",
+        "previewHead": "Podgląd posta z zasadami ({messages}, zapisany kanał: {where}). Widzisz to tylko ty. Nic nie zostało opublikowane.",
+        "messages": {
+            "one": "{count} wiadomość",
+            "few": "{count} wiadomości",
+            "many": "{count} wiadomości",
+            "other": "{count} wiadomości"
+        }
+    }
+}

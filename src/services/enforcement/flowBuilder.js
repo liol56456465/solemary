@@ -18,8 +18,10 @@ import { assertBotPermissions, assertCanTarget, getLadder, getTargetState, previ
 import { isNameTaken, nextDefaultName } from './caseService.js';
 import { addEvidence, captureLinks, MAX_LINKS_PER_FORM, parseEvidenceUrls } from './evidenceService.js';
 import { formatDuration, parseDuration, truncate } from './format.js';
-import { memberLadderHint, precedentHint, PRECEDENT_UNAVAILABLE } from './precedentService.js';
+import { memberLadderHint, precedentHint, precedentUnavailable } from './precedentService.js';
+import { durationIn } from './dmTemplates.js';
 import { ruleHintFor } from '../rules/serverRules.js';
+import { botText } from '../../utils/botText.js';
 
 export const ACTION_LABELS = {
     ban: 'Ban',
@@ -31,6 +33,25 @@ export const ACTION_LABELS = {
     removewarn: 'Remove warn',
 };
 export const ACTION_TYPES = Object.keys(ACTION_LABELS);
+
+/**
+ * An action's label ("Ban", "Remove warn") in a language (bot panel). English is ACTION_LABELS;
+ * an unknown type keeps its English label (or the type itself).
+ */
+export function actionLabelIn(type, { lang = 'en' } = {}) {
+    if (lang === 'en') return ACTION_LABELS[type] ?? type;
+    const tr = botText(lang);
+    switch (type) {
+        case 'ban': return tr.t('staff.panel.action.ban');
+        case 'kick': return tr.t('staff.panel.action.kick');
+        case 'mute': return tr.t('staff.panel.action.mute');
+        case 'warn': return tr.t('staff.panel.action.warn');
+        case 'unban': return tr.t('staff.panel.action.unban');
+        case 'unmute': return tr.t('staff.panel.action.unmute');
+        case 'removewarn': return tr.t('staff.panel.action.removewarn');
+        default: return ACTION_LABELS[type] ?? type;
+    }
+}
 /** Actions that create a case (reason select, details form, evidence). */
 export const RECORD_ACTIONS = new Set(['ban', 'kick', 'mute', 'warn']);
 /** Actions that lift something (optional reason only). */
@@ -89,21 +110,22 @@ export function liftReasonPatch(flow, reason, via = '/enforcements') {
  * Returns { patch, error }: on an error, `patch` holds what was parsed so far (the
  * panel keeps it for "Try again"). Pure.
  */
-export function parseFlowInput(flow, input = {}) {
+export function parseFlowInput(flow, input = {}, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     const patch = {};
     if (flow.reasonKey === CUSTOM_REASON_KEY) {
         patch.customReason = String(input.customReason || '').trim();
         patch.reason = patch.customReason;
-        if (!patch.reason) return { patch, error: 'A custom reason is required.' };
+        if (!patch.reason) return { patch, error: tr.t('staff.panel.input.customReasonRequired') };
     }
 
     if (flow.type === 'ban' || flow.type === 'mute') {
         const raw = String(input.durationInput || '').trim();
         patch.durationInput = raw;
-        if (!raw && flow.type === 'mute') return { patch, error: 'A mute needs a duration, e.g. 30m, 24h, 7d or 1mo.' };
+        if (!raw && flow.type === 'mute') return { patch, error: tr.t('staff.panel.input.muteNeedsDuration') };
         patch.durationMs = raw ? parseDuration(raw) : null;
         if (raw && patch.durationMs == null) {
-            return { patch, error: `"${truncate(raw, 20)}" is not a valid duration. Use formats like 30m, 24h, 7d or 1mo.` };
+            return { patch, error: tr.t('staff.panel.input.badDuration', { value: truncate(raw, 20) }) };
         }
     }
 
@@ -115,10 +137,10 @@ export function parseFlowInput(flow, input = {}) {
     patch.evidenceInput = evidenceRaw;
     const evidenceEntries = parseEvidenceUrls(evidenceRaw);
     if (evidenceRaw && evidenceEntries.length === 0) {
-        return { patch, error: 'Evidence must be links (e.g. a Discord message link: right-click a message → Copy Message Link).' };
+        return { patch, error: tr.t('staff.panel.input.evidenceLinks') };
     }
     if (evidenceEntries.length > MAX_LINKS_PER_FORM) {
-        return { patch, error: `At most ${MAX_LINKS_PER_FORM} evidence links here; add more afterwards with /case evidence add.` };
+        return { patch, error: tr.t('staff.panel.input.evidenceMax', { max: MAX_LINKS_PER_FORM }) };
     }
     patch.evidenceEntries = evidenceEntries;
     return { patch, error: null };
@@ -138,7 +160,7 @@ export const defaultFlowDeps = {
  *   error — the moderator can fix it (a name already used); keep the flow
  *   fatal — the action cannot run (hierarchy, missing permissions); drop the flow
  */
-export async function completeFlowDetails({ guild, moderator, targetUser, flow, patch: parsed, customName = '', deps: depsIn = defaultFlowDeps }) {
+export async function completeFlowDetails({ guild, moderator, targetUser, flow, patch: parsed, customName = '', deps: depsIn = defaultFlowDeps, lang = 'en' }) {
     const deps = { ...defaultFlowDeps, ...depsIn };
     const { evidenceEntries = [], ...patch } = parsed;
     const name = String(customName || '').trim();
@@ -148,7 +170,7 @@ export async function completeFlowDetails({ guild, moderator, targetUser, flow, 
         if (await deps.isNameTaken(guild.id, name)) {
             return {
                 patch: { ...patch, name: undefined, nameIsDefault: true },
-                error: `A record named **${truncate(name, 100)}** already exists in this server. Pick another name.`,
+                error: botText(lang).t('staff.panel.input.nameTaken', { name: truncate(name, 100) }),
                 fatal: null,
             };
         }
@@ -173,16 +195,23 @@ export async function completeFlowDetails({ guild, moderator, targetUser, flow, 
     // problem; the .catch guards a replaced dependency that throws anyway.
     [patch.evidence, patch.precedent, patch.memberHint] = await Promise.all([
         deps.captureLinks(guild, evidenceEntries, { prefetched: flow.prefetchedExcerpts }),
-        Promise.resolve().then(() => deps.precedentHint(guild.id, flow.reasonKey, getReason(flow.reasonKey)?.label || flow.reasonKey))
-            .catch(() => PRECEDENT_UNAVAILABLE),
-        memberLadderHint(guild.id, targetUser.id, { ladder: patch.ladder, getLadder: deps.getLadder }),
+        Promise.resolve().then(() => deps.precedentHint(guild.id, flow.reasonKey, getReason(flow.reasonKey)?.label || flow.reasonKey, ...(lang === 'en' ? [] : [{ lang }])))
+            .catch(() => precedentUnavailable(lang)),
+        memberLadderHint(guild.id, targetUser.id, { ladder: patch.ladder, getLadder: deps.getLadder, lang }),
     ]);
     return { patch, error: null, fatal: null };
 }
 
 /** What a warn does at this ladder state, as one sentence (confirm steps). */
-export function warnEffectText(ladder) {
+export function warnEffectText(ladder, { lang = 'en' } = {}) {
     const step = previewWarn(ladder);
+    if (lang !== 'en') {
+        const tr = botText(lang);
+        if (!step.escalates) return tr.t('staff.panel.effect.warn', { n: step.warnNumber, max: step.threshold });
+        return step.banDurationMs
+            ? tr.t('staff.panel.effect.escalates', { length: durationIn(step.banDurationMs, lang), stage: step.nextLevel })
+            : tr.t('staff.panel.effect.escalatesPermanent', { stage: step.nextLevel });
+    }
     return step.escalates
         ? `reaches the warning limit → automatic ${step.banDurationMs ? formatDuration(step.banDurationMs) : 'permanent'} ban (warning stage ${step.nextLevel} of 3).`
         : `warning ${step.warnNumber} of ${step.threshold}.`;
@@ -193,29 +222,31 @@ export function warnEffectText(ladder) {
  * the dashboard (HTML) render: { rows: [{ label, value, code }], evidence: [{ url,
  * excerpt, unreadable }], effect, notes: [text], precedent, memberHint }. Pure.
  */
-export function flowSummary(flow, { guildId = null } = {}) {
-    const rows = [{ label: 'User', value: flow.targetUsername, id: flow.targetId }];
+export function flowSummary(flow, { guildId = null, lang = 'en' } = {}) {
+    const tr = botText(lang);
+    const duration = (ms) => (lang === 'en' ? formatDuration(ms) : durationIn(ms, lang));
+    const rows = [{ label: tr.t('staff.panel.summary.user'), value: flow.targetUsername, id: flow.targetId }];
     const notes = [];
     let evidence = [];
     let effect = null;
     if (RECORD_ACTIONS.has(flow.type)) {
-        rows.push({ label: 'Reason', value: flow.reason });
+        rows.push({ label: tr.t('staff.panel.summary.reason'), value: flow.reason });
         if (flow.type === 'ban') {
-            rows.push({ label: 'Duration', value: flow.durationMs ? formatDuration(flow.durationMs) : 'Permanent' });
-            rows.push({ label: 'Can they appeal?', value: flow.unappealable ? 'No' : 'Yes' });
+            rows.push({ label: tr.t('staff.panel.summary.duration'), value: flow.durationMs ? duration(flow.durationMs) : tr.t('enforcement.duration.permanent') });
+            rows.push({ label: tr.t('staff.panel.summary.canAppeal'), value: flow.unappealable ? tr.t('staff.panel.summary.no') : tr.t('staff.panel.summary.yes') });
         }
-        if (flow.type === 'mute') rows.push({ label: 'Duration', value: formatDuration(flow.durationMs) });
-        rows.push({ label: 'Name', value: flow.nameIsDefault ? `${flow.name} (default)` : flow.name });
+        if (flow.type === 'mute') rows.push({ label: tr.t('staff.panel.summary.duration'), value: duration(flow.durationMs) });
+        rows.push({ label: tr.t('staff.panel.summary.name'), value: flow.nameIsDefault ? tr.t('staff.panel.summary.nameDefault', { name: flow.name }) : flow.name });
         evidence = (flow.evidence || []).map((item) => ({
             url: item.url,
             excerpt: item.excerpt || null,
             unreadable: !item.excerpt && Boolean(item.sourceMessageUrl),
         }));
-        if (flow.type === 'warn' && flow.ladder) effect = warnEffectText(flow.ladder);
-        if (flow.type === 'ban' || flow.type === 'kick') notes.push('The user is DMed before the action runs.');
+        if (flow.type === 'warn' && flow.ladder) effect = warnEffectText(flow.ladder, { lang });
+        if (flow.type === 'ban' || flow.type === 'kick') notes.push(tr.t('staff.panel.summary.dmFirst'));
     } else {
-        if (flow.type === 'removewarn') rows.push({ label: 'Warning', value: flow.warnCode, code: true });
-        rows.push({ label: 'Reason', value: flow.reason });
+        if (flow.type === 'removewarn') rows.push({ label: tr.t('staff.panel.summary.warning'), value: flow.warnCode, code: true });
+        rows.push({ label: tr.t('staff.panel.summary.reason'), value: flow.reason });
     }
     const record = RECORD_ACTIONS.has(flow.type);
     return {
@@ -232,7 +263,8 @@ export function flowSummary(flow, { guildId = null } = {}) {
  * Stores the links captured in the details form on the new case. Never throws: the
  * action already ran, so a failure only becomes a note for the moderator.
  */
-export async function attachFlowEvidence(flow, record, moderatorUser, { add = addEvidence } = {}) {
+export async function attachFlowEvidence(flow, record, moderatorUser, { add = addEvidence, lang = 'en' } = {}) {
+    const tr = botText(lang);
     if (!record || !flow.evidence?.length) return [];
     const addedBy = { id: moderatorUser.id, username: moderatorUser.username };
     let saved = 0;
@@ -243,14 +275,20 @@ export async function attachFlowEvidence(flow, record, moderatorUser, { add = ad
             saved += 1;
         } catch (error) {
             if (!error?.context?.expected) logger.error('Could not attach evidence', { caseCode: record.case_code, error });
-            notes.push(`Evidence ${item.url} was not saved: ${error.userMessage || error.message}`);
+            notes.push(tr.t('staff.panel.evidence.notSaved', { url: item.url, error: error.userMessage || error.message }));
         }
     }
-    if (saved) notes.unshift(`Evidence attached: ${saved} link${saved === 1 ? '' : 's'}.`);
+    if (saved) notes.unshift(tr.tp('staff.panel.evidence.attached', saved));
     return notes;
 }
 
 /** Counted-warns limit text for summaries: "2 of 3" or "1 (next warn bans)". */
-export function countedWarnsText(ladder) {
+export function countedWarnsText(ladder, { lang = 'en' } = {}) {
+    if (lang !== 'en') {
+        const tr = botText(lang);
+        return ladder.level === 0
+            ? tr.t('staff.panel.warns.of', { n: ladder.warns_since_level, max: enforcementConfig.warnsPerLevel })
+            : tr.t('staff.panel.warns.nextBans', { n: ladder.warns_since_level });
+    }
     return `${ladder.warns_since_level}${ladder.level === 0 ? ` of ${enforcementConfig.warnsPerLevel}` : ' (next warn bans)'}`;
 }

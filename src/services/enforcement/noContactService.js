@@ -16,6 +16,7 @@ import { query, T, isUniqueViolation, isEnforcementDbAvailable } from './db.js';
 import { postModLog, sendDm } from './enforcementService.js';
 import { noContactEndedDm, noContactStartedDm } from './dmTemplates.js';
 import { truncate } from './format.js';
+import { botText } from '../../utils/botText.js';
 
 export const NO_CONTACT_MAX_DAYS = 365;
 const NOTICE_DELETE_MS = 8000;
@@ -251,8 +252,9 @@ export async function listActiveNoContactOrders(guildId, limit = 25) {
 }
 
 /** "No-contact: with <@id> until … (#3)" lines for the panel and /background; pure. */
-export function noContactLines(orders) {
-    return orders.map((order) => `with <@${order.otherId}> until <t:${Math.floor(order.until / 1000)}:f> (order #${order.id})`);
+export function noContactLines(orders, { lang = 'en' } = {}) {
+    const tr = botText(lang);
+    return orders.map((order) => tr.t('staff.panel.keepApartLine', { otherId: order.otherId, until: `<t:${Math.floor(order.until / 1000)}:f>`, id: order.id }));
 }
 
 /** For tests: replace the in-memory index. */

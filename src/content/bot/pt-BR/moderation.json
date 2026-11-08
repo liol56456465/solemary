@@ -1,0 +1,65 @@
+{
+    "lock": {
+        "cmd": {
+            "description": "Tranca o canal atual (@everyone não pode enviar mensagens)."
+        },
+        "already": "{channel} já está trancado.",
+        "title": "Canal trancado",
+        "done": "{channel} está trancado. Os membros não podem escrever aqui até ele ser destrancado.",
+        "failed": "Ocorreu um erro inesperado ao trancar o canal. Confira minhas permissões (preciso de \"Gerenciar canais\")."
+    },
+    "unlock": {
+        "cmd": {
+            "description": "Destranca o canal atual (@everyone pode enviar mensagens de novo)."
+        },
+        "notLocked": "{channel} não está trancado explicitamente (todos já podem escrever).",
+        "title": "Canal destrancado",
+        "done": "{channel} está destrancado. Os membros podem escrever aqui de novo.",
+        "failed": "Ocorreu um erro inesperado ao destrancar o canal. Confira minhas permissões (preciso de \"Gerenciar canais\")."
+    },
+    "purge": {
+        "cmd": {
+            "description": "Apagar uma quantidade específica de mensagens",
+            "amount": "Número de mensagens (1-100)"
+        },
+        "range": "Informe um número entre 1 e 100.",
+        "title": "Mensagens apagadas",
+        "done": {
+            "one": "{count} mensagem apagada em {channel}.",
+            "many": "{count} mensagens apagadas em {channel}.",
+            "other": "{count} mensagens apagadas em {channel}."
+        },
+        "failed": "Ocorreu um erro inesperado ao apagar as mensagens. Observação: mensagens com mais de 14 dias não podem ser apagadas em massa."
+    },
+    "rules": {
+        "cmd": {
+            "description": "Publicar, atualizar ou pré-visualizar a mensagem de regras do servidor",
+            "post": "Publicar as regras com o design salvo no painel",
+            "postChannel": "Onde publicar (padrão: o canal salvo no painel)",
+            "update": "Atualizar a mensagem de regras publicada com as regras e o design atuais",
+            "preview": "Mostrar a publicação de regras só para você, sem publicar"
+        },
+        "mainOnly": "As regras só podem ser publicadas a partir do servidor principal.",
+        "notLoaded": "As configurações salvas não estão carregadas (o banco de dados não responde). Nada foi alterado.",
+        "noChannel": "Nenhum canal de regras salvo. Escolha um com a opção channel ou salve um na página Regras do painel.",
+        "cannotSee": "Não consigo ver esse canal. Escolha outro.",
+        "channelGone": "O canal de regras salvo não existe mais. Escolha um com a opção channel ou salve outro na página Regras do painel.",
+        "discordSaid": "{refusal} O Discord respondeu: {error}",
+        "saveFailed": "Não foi possível salvar a publicação (o banco de dados não responde). {undone}",
+        "postRefused": "O Discord recusou a publicação. Nada foi publicado.",
+        "postUndone": "A publicação foi removida de novo. Nada foi alterado.",
+        "updateRefused": "O Discord recusou a atualização. Algumas mensagens podem já mostrar as novas regras. Tente /rules update de novo.",
+        "updateUndone": "As novas mensagens extras foram removidas e a publicação salva não mudou. Rode /rules update de novo.",
+        "notPosted": "As regras ainda não foram publicadas. Use /rules post primeiro.",
+        "posted": "As regras foram publicadas em <#{channelId}> ({messages}).",
+        "earlierPost": "A publicação anterior em <#{channelId}> continua onde está. Na próxima vez, use /rules update para mudar a publicação.",
+        "updated": "As regras publicadas em <#{channelId}> foram atualizadas ({messages}).",
+        "noChannelSaved": "nenhum canal salvo ainda",
+        "previewHead": "Prévia da publicação de regras ({messages}, canal salvo: {where}). Só você vê isto. Nada foi publicado.",
+        "messages": {
+            "one": "{count} mensagem",
+            "many": "{count} mensagens",
+            "other": "{count} mensagens"
+        }
+    }
+}

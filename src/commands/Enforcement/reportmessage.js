@@ -4,6 +4,7 @@ import { successEmbed } from '../../utils/embeds.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
 import { reportMessage } from '../../services/automod/memberChecks.js';
 import { BoundedMap } from '../../utils/boundedMap.js';
+import { textForInteraction } from '../../utils/botText.js';
 
 export const REPORT_COOLDOWN_MS = 30 * 1000;
 const recentReports = new BoundedMap(5000); // guildId:reporterId → at (bounded: the bot is public)
@@ -20,17 +21,18 @@ export default {
         .setType(ApplicationCommandType.Message),
 
     async execute(interaction) {
+        const tr = textForInteraction(interaction); // ephemeral: the reporter's language
         if (!interaction.guildId || !interaction.guild) {
-            throw new TitanBotError('Report outside a server', ErrorTypes.PERMISSION, 'Reports only work in a server.', { expected: true });
+            throw new TitanBotError('Report outside a server', ErrorTypes.PERMISSION, tr.t('staff.reportmessage.serverOnly'), { expected: true });
         }
         const message = interaction.targetMessage;
         if (message.author.bot || message.author.id === interaction.user.id) {
-            throw new TitanBotError('Invalid report', ErrorTypes.USER_INPUT, 'You can only report messages from other members.', { expected: true });
+            throw new TitanBotError('Invalid report', ErrorTypes.USER_INPUT, tr.t('staff.reportmessage.ownMessage'), { expected: true });
         }
         const cooldownKey = `${interaction.guildId}:${interaction.user.id}`;
         const last = recentReports.get(cooldownKey) || 0;
         if (Date.now() - last < REPORT_COOLDOWN_MS) {
-            throw new TitanBotError('Report cooldown', ErrorTypes.RATE_LIMIT, 'Please wait a little before reporting another message.', { expected: true });
+            throw new TitanBotError('Report cooldown', ErrorTypes.RATE_LIMIT, tr.t('staff.reportmessage.cooldown'), { expected: true });
         }
         recentReports.set(cooldownKey, Date.now());
 
@@ -40,10 +42,10 @@ export default {
         if (!card) {
             // No review channel (or mod log) set in this server, or the post failed: say so, never "sent".
             throw new TitanBotError('Report not delivered', ErrorTypes.USER_INPUT,
-                'Your report could not be delivered: this server has no staff channel for reports set up. Tell a moderator directly.', { expected: true });
+                tr.t('staff.reportmessage.notDelivered'), { expected: true });
         }
         await InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed('Report sent', 'Thanks. The moderators will look at it.')],
+            embeds: [successEmbed(tr.t('staff.reportmessage.sentTitle'), tr.t('staff.reportmessage.sent'))],
         });
     },
 };

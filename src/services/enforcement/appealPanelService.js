@@ -2,14 +2,22 @@
 // the support server's #appeals (bans, kicks, staff reports). Shared by /setappeal
 // and the web dashboard. Re-posting replaces the earlier panels the bot posted in
 // the same channel, so they never stack.
+//
+// Language (utils/botText.js): a panel is a public post, so it is in the language of the server
+// it is posted in, whoever posts it (/setappeal or the dashboard). The setup errors go to the
+// admin who posts: `lang` (the slash command passes the admin's; the dashboard keeps English).
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionFlagsBits } from 'discord.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
 import { enforcementConfig } from '../../config/enforcement.js';
+import { botText, resolveBotLanguage } from '../../utils/botText.js';
 import { getAppealsCategory } from './appealService.js';
 import { getFromDb, setInDb } from '../../utils/database.js';
+
+/** A panel's language: the server it is posted in. */
+const panelLanguage = (guildId) => resolveBotLanguage({ guildId, purpose: 'public' });
 
 export const SUPPORT_PANEL_CHANNEL = 'appeals';
 
@@ -25,63 +33,72 @@ function configError(message) {
     return new TitanBotError(message, ErrorTypes.CONFIGURATION, message, { expected: true });
 }
 
-function appealButton() {
-    return new ButtonBuilder().setCustomId('appeal:open').setLabel('Appeal').setStyle(ButtonStyle.Primary);
+function appealButton(tr) {
+    return new ButtonBuilder().setCustomId('appeal:open').setLabel(tr.t('staff.setappeal.panel.appealButton')).setStyle(ButtonStyle.Primary);
 }
 
 // Shows the member their own appeals and decisions, privately.
-function myAppealsButton() {
-    return new ButtonBuilder().setCustomId('appeal:status').setLabel('My appeals').setStyle(ButtonStyle.Secondary);
+function myAppealsButton(tr) {
+    return new ButtonBuilder().setCustomId('appeal:status').setLabel(tr.t('staff.setappeal.panel.myAppealsButton')).setStyle(ButtonStyle.Secondary);
 }
 
 // Shows the member their own warnings, ladder level and next step, privately.
-function myStandingButton() {
-    return new ButtonBuilder().setCustomId('appeal:standing').setLabel('My record').setStyle(ButtonStyle.Secondary);
+function myStandingButton(tr) {
+    return new ButtonBuilder().setCustomId('appeal:standing').setLabel(tr.t('staff.setappeal.panel.myRecordButton')).setStyle(ButtonStyle.Secondary);
 }
 
-export function mainAppealPanel() {
+function reportButton(tr) {
+    return new ButtonBuilder().setCustomId('appeal:report').setLabel(tr.t('staff.setappeal.panel.reportButton')).setStyle(ButtonStyle.Danger);
+}
+
+/** The three form steps and the "how it works" line every panel shares. */
+function formSteps(tr) {
+    return [
+        tr.t('staff.setappeal.panel.step1'),
+        tr.t('staff.setappeal.panel.step2'),
+        tr.t('staff.setappeal.panel.step3'),
+        '',
+        tr.t('staff.setappeal.panel.howItWorks'),
+    ];
+}
+
+export function mainAppealPanel({ lang = 'en' } = {}) {
+    const tr = botText(lang);
     return {
         embeds: [createEmbed({
-            title: `${enforcementConfig.serverName} appeals`,
+            title: tr.t('staff.setappeal.panel.title', { server: enforcementConfig.serverName }),
             description: [
-                '**Muted or warned?** Press **Appeal** and fill in:',
-                '1. Why it should be lifted',
-                '2. Your case code, from the DM you got',
-                '3. More info, if you want to add anything',
+                tr.t('staff.setappeal.panel.mainIntro'),
+                ...formSteps(tr),
                 '',
-                'The administrators review your appeal and you get the decision by DM. Press **My appeals** any time to check where yours stand, or **My record** to see your warnings and what a next warning would do.',
-                '',
-                '-# Banned? Appeal in the Mewvo Support server instead. The link is in your ban DM.',
+                tr.t('staff.setappeal.panel.mainBanned'),
             ].join('\n'),
             color: 'primary',
         })],
-        components: [new ActionRowBuilder().addComponents(appealButton(), myAppealsButton(), myStandingButton())],
+        components: [new ActionRowBuilder().addComponents(appealButton(tr), myAppealsButton(tr), myStandingButton(tr))],
     };
 }
 
-export function supportAppealPanel() {
+export function supportAppealPanel({ lang = 'en' } = {}) {
+    const tr = botText(lang);
     return {
         embeds: [createEmbed({
-            title: `${enforcementConfig.serverName} appeals`,
+            title: tr.t('staff.setappeal.panel.title', { server: enforcementConfig.serverName }),
             description: [
-                '**Appeal**: banned, kicked, muted or warned in Mewvo? Press **Appeal** and fill in:',
-                '1. Why it should be lifted',
-                '2. Your case code, from the DM you got',
-                '3. More info, if you want to add anything',
+                tr.t('staff.setappeal.panel.supportIntro'),
+                ...formSteps(tr),
                 '',
-                'The administrators review your appeal and you get the decision by DM. Press **My appeals** any time to check where yours stand, or **My record** to see your warnings and what a next warning would do.',
+                tr.t('staff.setappeal.panel.reportLine'),
                 '',
-                '**Report staff**: report a staff member who broke the rules. Only administrators can see reports.',
-                '',
-                '-# Bans and mutes can be appealed while active; warnings and kicks within 30 days.',
+                tr.t('staff.setappeal.panel.supportWindows'),
             ].join('\n'),
             color: 'primary',
         })],
         components: [new ActionRowBuilder().addComponents(
-            appealButton(),
-            myAppealsButton(),
-            myStandingButton(),
-            new ButtonBuilder().setCustomId('appeal:report').setLabel('Report staff').setStyle(ButtonStyle.Danger),
+            appealButton(tr),
+            myAppealsButton(tr),
+            myStandingButton(tr),
+            reportButton(tr),
         )],
     };
 }
@@ -90,27 +107,24 @@ export function supportAppealPanel() {
  * The one panel of a server that is not Mewvo's (multi-server B1): appeals for its own mutes,
  * warns and kicks, My appeals, My record and Report staff, all handled in that server.
  */
-export function serverAppealPanel(guildName) {
+export function serverAppealPanel(guildName, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     return {
         embeds: [createEmbed({
-            title: `${String(guildName || 'Server').slice(0, 200)} appeals`,
+            title: tr.t('staff.setappeal.panel.title', { server: String(guildName || tr.t('staff.setappeal.panel.serverFallback')).slice(0, 200) }),
             description: [
-                '**Appeal**: muted, warned or kicked here? Press **Appeal** and fill in:',
-                '1. Why it should be lifted',
-                '2. Your case code, from the DM you got',
-                '3. More info, if you want to add anything',
+                tr.t('staff.setappeal.panel.serverIntro'),
+                ...formSteps(tr),
                 '',
-                'The administrators review your appeal and you get the decision by DM. Press **My appeals** any time to check where yours stand, or **My record** to see your warnings and what a next warning would do.',
-                '',
-                '**Report staff**: report a staff member who broke the rules. Only administrators can see reports.',
+                tr.t('staff.setappeal.panel.reportLine'),
             ].join('\n'),
             color: 'primary',
         })],
         components: [new ActionRowBuilder().addComponents(
-            appealButton(),
-            myAppealsButton(),
-            myStandingButton(),
-            new ButtonBuilder().setCustomId('appeal:report').setLabel('Report staff').setStyle(ButtonStyle.Danger),
+            appealButton(tr),
+            myAppealsButton(tr),
+            myStandingButton(tr),
+            reportButton(tr),
         )],
     };
 }
@@ -121,21 +135,22 @@ export function serverAppealPanel(guildName) {
  * bot can open channels in, and the bot able to post in the channel. Never touches the Support
  * server. Resolves { channel, category }.
  */
-export async function postServerAppealPanel(guild, channel, { reason = '/setappeal' } = {}) {
+export async function postServerAppealPanel(guild, channel, { reason = '/setappeal', lang = 'en' } = {}) {
+    const tr = botText(lang);
     const category = await getAppealsCategory(guild);
     if (!category) {
-        throw configError('There is no category to open appeals and reports in. Set a ticket category first (/ticket), then run /setappeal again.');
+        throw configError(tr.t('staff.setappeal.error.noServerCategory'));
     }
     const botPermissions = category.permissionsFor(guild.members.me);
     if (!botPermissions?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ManageChannels])) {
-        throw configError(`I need View Channel and Manage Channels in the **${category.name}** category to open appeal channels there.`);
+        throw configError(tr.t('staff.setappeal.error.categoryPermissions', { category: category.name }));
     }
     const here = typeof channel?.permissionsFor === 'function' ? channel.permissionsFor(guild.members.me) : null;
     if (!here?.has?.([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks])) {
-        throw configError(`I need View Channel, Send Messages and Embed Links in <#${channel?.id}> to post the appeal panel.`);
+        throw configError(tr.t('staff.setappeal.error.channelPermissions', { channelId: channel?.id }));
     }
     await removeOldAppealPanels(channel);
-    await channel.send(serverAppealPanel(guild.name));
+    await channel.send(serverAppealPanel(guild.name, { lang: panelLanguage(guild.id) }));
     await setInDb(appealPanelKey(guild.id), { at: new Date().toISOString(), mainChannelId: channel.id, supportChannelId: null, reason })
         .catch((error) => logger.warn(`Could not remember the appeal panel posting: ${error.message}`));
     return { channel, category };
@@ -178,31 +193,33 @@ export async function removeOldAppealPanels(channel) {
  * open channels in, the support server present, and the bot able to post in the main
  * channel. Resolves { mainChannel, supportChannel, created, category }.
  */
-export async function postAppealPanels(client, mainGuild, mainChannel, { reason = '/setappeal' } = {}) {
+export async function postAppealPanels(client, mainGuild, mainChannel, { reason = '/setappeal', lang = 'en' } = {}) {
+    const tr = botText(lang);
     const appealsCategory = await getAppealsCategory(mainGuild);
     if (!appealsCategory) {
-        throw configError('There is no category to open appeals in. Set the appeals category in the dashboard (Enforcement & appeals), or a ticket category.');
+        throw configError(tr.t('staff.setappeal.error.noMainCategory'));
     }
     const botPermissions = appealsCategory.permissionsFor(mainGuild.members.me);
     if (!botPermissions?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ManageChannels])) {
-        throw configError(`I need View Channel and Manage Channels in the **${appealsCategory.name}** category to open appeal channels there.`);
+        throw configError(tr.t('staff.setappeal.error.categoryPermissions', { category: appealsCategory.name }));
     }
 
     const supportGuild = client.guilds.cache.get(enforcementConfig.supportGuildId);
     if (!supportGuild) {
-        throw configError('I am not in the support server (SUPPORT_GUILD_ID), so the ban appeal panel cannot be posted.');
+        throw configError(tr.t('staff.setappeal.error.noSupportServer'));
     }
     const inMain = typeof mainChannel?.permissionsFor === 'function' ? mainChannel.permissionsFor(mainGuild.members.me) : null;
     if (!inMain?.has?.([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks])) {
-        throw configError(`I need View Channel, Send Messages and Embed Links in <#${mainChannel?.id}> to post the appeal panel.`);
+        throw configError(tr.t('staff.setappeal.error.channelPermissions', { channelId: mainChannel?.id }));
     }
 
     const { channel: supportChannel, created } = await ensureSupportPanelChannel(supportGuild, reason);
 
+    // Each panel in the language of the server it is posted in.
     await removeOldAppealPanels(mainChannel);
-    await mainChannel.send(mainAppealPanel());
+    await mainChannel.send(mainAppealPanel({ lang: panelLanguage(mainGuild.id) }));
     await removeOldAppealPanels(supportChannel);
-    await supportChannel.send(supportAppealPanel());
+    await supportChannel.send(supportAppealPanel({ lang: panelLanguage(supportGuild.id) }));
     // Remembered for the dashboard checklist only: a failed write must not undo the posting.
     await setInDb(appealPanelKey(mainGuild.id), { at: new Date().toISOString(), mainChannelId: mainChannel.id, supportChannelId: supportChannel.id })
         .catch((error) => logger.warn(`Could not remember the appeal panel posting: ${error.message}`));

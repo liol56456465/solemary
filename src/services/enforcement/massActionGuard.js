@@ -16,17 +16,24 @@ import { hasOwnerPower, isMewvoServer } from '../../utils/ownerPower.js';
 import { db } from '../../utils/database/wrapper.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
+import { botText, textForGuild } from '../../utils/botText.js';
 import { query, T } from './db.js';
 import { resolveSetting } from '../settings/guildSettings.js';
 
 
 const blockKey = (guildId, moderatorId) => `enforcement:massguard:${guildId}:${moderatorId}`;
 
-function blockedError(block, guildId) {
+/**
+ * The refusal the blocked moderator sees. `lang`: theirs when the caller knows it (the panel);
+ * else English (the web dashboard shows bot errors in English).
+ */
+function blockedError(block, guildId, lang = 'en') {
+    const tr = botText(lang || 'en');
     const until = Math.floor(new Date(block.until).getTime() / 1000);
-    const alerted = isMewvoServer(guildId) ? 'The bot owners were alerted.' : 'The server owner was alerted.';
+    const alerted = isMewvoServer(guildId) ? tr.t('staff.staff.massGuard.alertedOwners') : tr.t('staff.staff.massGuard.alertedOwner');
+    const params = { until, count: block.count, alerted };
     return createError(`Moderator blocked by the mass-action guard until ${block.until}`, ErrorTypes.PERMISSION,
-        `Safety limit: you are blocked from the enforcement panel until <t:${until}:t> (<t:${until}:R>) after ${block.count} ${block.attempted === 'mute' ? 'mutes' : 'bans/kicks'} in a short time. ${alerted}`,
+        block.attempted === 'mute' ? tr.t('staff.staff.massGuard.blockedMutes', params) : tr.t('staff.staff.massGuard.blockedBans', params),
         { expected: true });
 }
 
@@ -128,28 +135,39 @@ async function blockModerator(guild, moderator, count, attempted) {
         }))
         .catch((error) => logger.warn(`Raid timeline: mass-action event failed: ${error.message}`));
 
+    // The mod log (a staff channel) and the owners' DM: the server's language.
+    const tr = textForGuild(guild.id, { purpose: 'public' });
+    const mutes = attempted === 'mute';
+    const name = moderator.user?.username ?? moderator.id;
+    const summaryParams = { name, id: moderator.id, count, minutes: windowMinutes };
+    const localSummary = mutes
+        ? tr.t('staff.staff.massGuard.summaryMutes', summaryParams)
+        : (attempted === 'kick' ? tr.t('staff.staff.massGuard.summaryKick', summaryParams) : tr.t('staff.staff.massGuard.summaryBan', summaryParams));
+    const untilStamp = Math.floor(Date.parse(until) / 1000);
     // Imported lazily: enforcementService imports this module.
     const { postModLog } = await import('./enforcementService.js');
     await postModLog(guild.client, 'massguard', [
-        { name: 'Moderator', value: `<@${moderator.id}> (${moderator.id})` },
-        { name: 'What happened', value: summary },
-        { name: 'Blocked until', value: `<t:${Math.floor(Date.parse(until) / 1000)}:f>` },
-        { name: 'Lift early', value: '`/staff restore`' },
-    ], { title: `Safety limit: too many ${what} in ${windowMinutes} minutes, moderator blocked`, guildId: guild.id });
-    await alertOwners(guild.client, massAlertRecipients(guild, moderator.id), `**Safety limit (too many ${what} in ${windowMinutes} minutes) in ${guild.name}.** ${summary} Their panel access is blocked until <t:${Math.floor(Date.parse(until) / 1000)}:f>. Lift it early with \`/staff restore\`.`);
+        { name: tr.t('staff.staff.massGuard.moderator'), value: `<@${moderator.id}> (${moderator.id})` },
+        { name: tr.t('staff.staff.massGuard.whatHappened'), value: localSummary },
+        { name: tr.t('staff.staff.massGuard.blockedUntil'), value: `<t:${untilStamp}:f>` },
+        { name: tr.t('staff.staff.massGuard.liftEarly'), value: '`/staff restore`' },
+    ], { title: tr.t(mutes ? 'staff.staff.massGuard.titleMutes' : 'staff.staff.massGuard.titleBans', { minutes: windowMinutes }), guildId: guild.id });
+    const dmParams = { minutes: windowMinutes, server: guild.name, summary: localSummary, until: untilStamp };
+    await alertOwners(guild.client, massAlertRecipients(guild, moderator.id), mutes ? tr.t('staff.staff.massGuard.dmMutes', dmParams) : tr.t('staff.staff.massGuard.dmBans', dmParams));
     return block;
 }
 
 /**
  * Call before every panel action. Throws while the moderator is blocked; for a
  * ban/kick over the limit it blocks them, alerts the owners and throws. A warn that
- * will trigger a ladder ban is passed in as 'ban' (see executeAction).
+ * will trigger a ladder ban is passed in as 'ban' (see executeAction). `lang`: the
+ * moderator's language for the refusal when the caller has it (else English, e.g. the dashboard).
  */
-export async function enforceMassActionGuard(guild, moderator, actionType) {
+export async function enforceMassActionGuard(guild, moderator, actionType, { lang = 'en' } = {}) {
     // OWNER_IDS are exempt in Mewvo's own servers only.
     if (hasOwnerPower(moderator.id, guild.id)) return;
     const existing = await getMassActionBlock(guild.id, moderator.id);
-    if (existing) throw blockedError(existing, guild.id);
+    if (existing) throw blockedError(existing, guild.id, lang);
     let count;
     let limit;
     if (actionType === 'ban' || actionType === 'kick') {
@@ -162,6 +180,6 @@ export async function enforceMassActionGuard(guild, moderator, actionType) {
         return;
     }
     if (count >= limit) {
-        throw blockedError(await blockModerator(guild, moderator, count, actionType), guild.id);
+        throw blockedError(await blockModerator(guild, moderator, count, actionType), guild.id, lang);
     }
 }

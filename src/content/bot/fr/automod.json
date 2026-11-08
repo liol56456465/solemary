@@ -1,0 +1,758 @@
+{
+    "review": {
+        "status": {
+            "kept": "Maintenu",
+            "applied": "Appliqué",
+            "changed": "Modifié",
+            "deleted": "Message supprimé",
+            "approved": "Approuvé",
+            "undone": "Annulé",
+            "dismissed": "Classé",
+            "denied": "Refusé",
+            "failed": "Échec",
+            "reviewed": "Examiné"
+        },
+        "action": {
+            "warn": "Avertir",
+            "mute1h": "Rendre muet 1 heure",
+            "mute1d": "Rendre muet 1 jour",
+            "ban7d": "Bannir 7 jours",
+            "ban30d": "Bannir 30 jours",
+            "permban": "Bannissement définitif"
+        },
+        "rule": {
+            "scam": "Lien d'arnaque ou de phishing",
+            "nsfw": "Contenu NSFW",
+            "sexual": "Harcèlement ou allusions sexuelles",
+            "harassment": "Harcèlement",
+            "privacy": "Partage d'infos personnelles",
+            "advertising": "Publicité non autorisée",
+            "impersonation": "Usurpation d'identité ou tromperie",
+            "language": "Langage inapproprié",
+            "disrespect": "Manque de respect ou drama",
+            "mentions": "Mentions de masse",
+            "spam": "Spam",
+            "caps": "Majuscules excessives",
+            "characters": "Caractères non anglais ou polices fantaisie",
+            "english": "Anglais uniquement"
+        },
+        "step": {
+            "warn": "Avertir",
+            "kick": "Expulser",
+            "mute": "Rendre muet {duration}",
+            "ban": "Bannir {duration}",
+            "permanentBan": "Bannissement définitif"
+        },
+        "verb": {
+            "act": "agir",
+            "warn": "avertir",
+            "kick": "expulser",
+            "mute": "rendre muet {duration}",
+            "ban": "bannir {duration}",
+            "permanentBan": "bannir définitivement"
+        },
+        "outcome": {
+            "warn": "Averti",
+            "kick": "Expulsé",
+            "mute": "Rendu muet {duration}",
+            "ban": "Banni {duration}",
+            "permanentBan": "Banni définitivement"
+        },
+        "outcomeShort": {
+            "warn": "averti",
+            "kick": "expulsé",
+            "mute": "rendu muet {duration}",
+            "ban": "banni {duration}",
+            "permanentBan": "banni définitivement"
+        },
+        "memberReport": "Signalement d'un membre",
+        "unknownUser": "inconnu",
+        "title": {
+            "monitor": "Signaler seulement (ne pas supprimer) : aurait dû {action} · {rule}",
+            "deleteTheMessage": "supprimer le message",
+            "automod": "Automod · {rule}",
+            "failed": "Impossible de {action} · {rule}",
+            "raid": "Expulsé (arrivé pendant un raid) · {rule}"
+        },
+        "card": {
+            "brokeRule": "a enfreint une règle",
+            "inChannel": " dans {channel}",
+            "probation": "en période de surveillance après un bannissement (revenu, jusqu'au {date})",
+            "probationLadder": "En période de surveillance après un bannissement (revenu, jusqu'au {date}) : l'échelle commence un cran plus haut pour ce membre.",
+            "offence": "{ordinal} infraction « {rule} » en 30 jours.",
+            "reportRemoved": "Le message a été retiré par les signalements des membres.",
+            "reportPunish": "Sanctionne l'auteur ci-dessous ou classe le signalement.",
+            "monitorNothing": "Rien n'a été fait (mode « signaler seulement (ne pas supprimer) »). Choisis une sanction ci-dessous pour l'appliquer.",
+            "raidKicked": "Ce membre est arrivé pendant un confinement anti-raid, il a donc été expulsé au lieu de la sanction habituelle.",
+            "notApplied": "Non appliqué : {error}",
+            "limitBan": "Cet avertissement a atteint la limite : bannissement automatique `{code}`.",
+            "earlier": "Plus tôt dans cette rafale : {list}.",
+            "olderCases": "Les boutons couvrent les {max} cas les plus récents ; utilise `/case` pour les plus anciens.",
+            "burst": "{messages} en {minutes} ; le dernier est affiché ci-dessous.",
+            "burstMessages": {
+                "one": "**{count} message**",
+                "many": "**{count} messages**",
+                "other": "**{count} messages**"
+            },
+            "burstMinutes": {
+                "one": "{count} minute",
+                "many": "{count} minutes",
+                "other": "{count} minutes"
+            }
+        },
+        "field": {
+            "message": "Message",
+            "messageDeleted": "Message (supprimé)",
+            "noText": "(pas de texte)",
+            "case": "Cas",
+            "cases": "Cas",
+            "messageLink": "Lien du message",
+            "jump": "[Aller au message]({url})",
+            "reportedBy": "Signalé par",
+            "disputes": "Le membre conteste",
+            "disputesCase": "Le membre conteste · cas {code}",
+            "noReason": "(aucune raison donnée)"
+        },
+        "compact": {
+            "note": "Note",
+            "flagged": "signalé",
+            "cases": {
+                "one": "cas {codes}",
+                "many": "cas {codes}",
+                "other": "cas {codes}"
+            },
+            "messages": {
+                "one": "{count} message",
+                "many": "{count} messages",
+                "other": "{count} messages"
+            }
+        },
+        "button": {
+            "suggested": "Proposé par l'échelle de la règle",
+            "dismiss": "Classer",
+            "undo": "Annuler",
+            "undoAll": "Tout annuler",
+            "keep": "Maintenir",
+            "keepAll": "Tout maintenir",
+            "deleteMessage": "Supprimer le message",
+            "punishAuthor": "Sanctionner l'auteur…",
+            "applyPunishment": "Appliquer une sanction…",
+            "changeTo": "Remplacer par…",
+            "undoAllChangeTo": "Tout annuler et remplacer par…"
+        },
+        "close": {
+            "by": "{verb} par {name}",
+            "field": "Examen",
+            "aModerator": "un modérateur"
+        },
+        "note": {
+            "alreadyLifted": "`{code}` était déjà levé.",
+            "kickInvite": "Une expulsion ne peut pas être annulée ; l'utilisateur a reçu une invitation pour revenir."
+        },
+        "dm": {
+            "reviewed": "**Un modérateur a examiné une action automatique contre toi sur {server}** (cas {code}).",
+            "changed": "Elle a été remplacée par : {action}.",
+            "reversed": "Elle a été annulée."
+        },
+        "dmStatus": {
+            "delivered": "remis",
+            "notDelivered": "non remis",
+            "some": "{delivered} sur {total} remis"
+        },
+        "outcome2": {
+            "dismissedBy": "Classé par {name}",
+            "confirmedBy": "Confirmé par {name} : {codes}",
+            "secondConfirmed": "Second avis : confirmé par {name}.",
+            "reversedSecond": "{codes} annulé par {name} après un second avis. {notes} MP : {dm}.",
+            "tuneSwitched": "{text} Basculé par {name} ; annule avec `/automod rule`.",
+            "deletedBy": "Message supprimé par {name}",
+            "alreadyGone": "Le message avait déjà disparu ({name})",
+            "keptBy": "Maintenu par {name} : {codes}",
+            "reversedBy": "{codes} annulé par {name}. {notes} MP : {dm}.",
+            "changeFailed": "Annulé par {name}, mais « {action} » a échoué : {error}",
+            "changedToCase": "Remplacé par {action} (cas `{code}`) par {name}. {notes}",
+            "changedTo": "Remplacé par {action} par {name}. {notes}",
+            "appliedCase": "{action} (cas `{code}`) appliqué par {name}",
+            "applied": "{action} appliqué par {name}"
+        },
+        "verb2": {
+            "confirmed": "Confirmé",
+            "undoneSecond": "Annulé après un second avis",
+            "switched": "Basculé en « signaler seulement (ne pas supprimer) »",
+            "closed": "Fermé",
+            "changeFailed": "Annulé, « {action} » a échoué,",
+            "changedTo": "Remplacé par {action}",
+            "applied": "{action} appliqué"
+        },
+        "reply": {
+            "noAdmin": "Seuls les administrateurs de ce serveur peuvent examiner les décisions de l'automod.",
+            "saved": "Examen enregistré",
+            "dismissed": "Classé.",
+            "confirmed": "{codes} confirmé.",
+            "reversed": "{codes} annulé. {notes}",
+            "deleted": "Message supprimé.",
+            "alreadyGone": "Le message avait déjà disparu.",
+            "kept": "{codes} maintenu.",
+            "changedToCase": "Remplacé par {action}, cas `{code}`.",
+            "changedTo": "Remplacé par {action}.",
+            "appliedCase": "{action} appliqué, cas `{code}`.",
+            "applied": "{action} appliqué."
+        },
+        "error": {
+            "caseGone": "Le cas `{codes}` n'existe plus.",
+            "otherServer": "Cette carte appartient à un autre serveur.",
+            "notInServer": "Je ne suis plus sur le serveur concerné par cette carte.",
+            "needAdmin": "Tu as besoin de la permission Administrateur sur {server} pour agir sur ses membres.",
+            "secondOwn": "C'est toi qui as maintenu cette décision ; un autre administrateur doit donner le second avis.",
+            "unknownSecond": "Action de second avis inconnue.",
+            "pickPunishment": "Choisis une sanction dans la liste.",
+            "userGone": "Cet utilisateur n'existe plus.",
+            "unknownAction": "Action d'examen inconnue."
+        },
+        "second": {
+            "title": "Second avis ?",
+            "kept": "Maintenu par {user}. Un second admin peut confirmer ou annuler.",
+            "cases": {
+                "one": "Cas : {codes}",
+                "many": "Cas : {codes}",
+                "other": "Cas : {codes}"
+            },
+            "omitted": " (+{omitted} plus anciens, utilise `/case`)",
+            "open": "[Ouvrir la carte]({url})",
+            "footer": "Contrôle aléatoire ({percent} % des cartes maintenues)",
+            "confirm": "Confirmer"
+        },
+        "queue": {
+            "empty": "Rien n'attend d'examen.",
+            "reviewCard": "Carte d'examen",
+            "more": {
+                "one": "…et {count} de plus.",
+                "many": "…et {count} de plus.",
+                "other": "…et {count} de plus."
+            }
+        }
+    },
+    "guard": {
+        "why": {
+            "banKick": {
+                "one": "{count} bannissement/expulsion en {window}",
+                "many": "{count} bannissements/expulsions en {window}",
+                "other": "{count} bannissements/expulsions en {window}"
+            },
+            "deletes": {
+                "one": "{count} suppression de salon/rôle en {window}",
+                "many": "{count} suppressions de salons/rôles en {window}",
+                "other": "{count} suppressions de salons/rôles en {window}"
+            },
+            "webhooks": {
+                "one": "{count} webhook créé en {window}",
+                "many": "{count} webhooks créés en {window}",
+                "other": "{count} webhooks créés en {window}"
+            },
+            "permission": "a donné {permissions} à {role}",
+            "staffWarnings": {
+                "one": "{count} avertissement d'équipe actif",
+                "many": "{count} avertissements d'équipe actifs",
+                "other": "{count} avertissements d'équipe actifs"
+            }
+        },
+        "none": "aucun",
+        "noneRestored": "Aucun n'a pu être restauré",
+        "ofLimit": "{active} sur {limit}",
+        "restoreNuke": "`/staff restore` · dégâts : **{showDiff}**, puis **{revert}** · **{panic}** met en pause les invitations et les MP",
+        "summary": {
+            "staffMember": "**Membre de l'équipe :** {name} (`{id}`)",
+            "why": "**Pourquoi :** {why}",
+            "removed": "**Rôles retirés :** {roles}",
+            "couldNot": "**Impossible à retirer (au-dessus de mon rôle) :** {roles}",
+            "restore": "Restaure avec `/staff restore`.",
+            "nukeUndo": "Répare les dégâts : **{showDiff}**, puis **{revert}** sur l'alerte."
+        },
+        "field": {
+            "staffMember": "Membre de l'équipe",
+            "why": "Pourquoi",
+            "removedRoles": "Rôles retirés",
+            "couldNot": "Impossible à retirer (au-dessus de mon rôle)",
+            "restore": "Restaurer",
+            "restoredBy": "Restauré par",
+            "roles": "Rôles",
+            "bot": "Bot",
+            "addedBy": "Ajouté par",
+            "result": "Résultat",
+            "createdBy": "Créé par",
+            "webhooksDeleted": "Webhooks supprimés",
+            "role": "Rôle",
+            "granted": "Accordé",
+            "by": "Par",
+            "givenBy": "Donné par",
+            "reason": "Raison",
+            "activeWarnings": "Avertissements d'équipe actifs",
+            "expires": "Expire"
+        },
+        "title": {
+            "removed": "Rôles d'équipe retirés",
+            "restored": "Rôles d'équipe restaurés",
+            "botRemoved": "Bot non approuvé retiré",
+            "webhookSpam": "Spam de webhooks stoppé",
+            "permissionReverted": "Permission dangereuse annulée",
+            "staffWarning": "Avertissement d'équipe"
+        },
+        "result": {
+            "kicked": "Expulsé. Le propriétaire peut le rajouter s'il est voulu.",
+            "kickFailed": "Impossible de l'expulser (il est peut-être au-dessus de mon rôle). Retire-le à la main.",
+            "reverted": "Annulé.",
+            "revertFailed": "Impossible d'annuler (le rôle est peut-être au-dessus du mien). Corrige-le à la main."
+        },
+        "dm": {
+            "header": "**Garde de l'équipe sur {server}**",
+            "nukeHeader": "**{title} sur {server}**"
+        },
+        "warnDm": {
+            "header": "**Avertissement d'équipe sur {server}** ({active} sur {limit})",
+            "expires": "Il expire {date}. À {limit} avertissements actifs, tu perds ton rôle d'équipe."
+        }
+    },
+    "revert": {
+        "footer": "Instantané pris le {time} UTC · {summary}",
+        "diffTitle": "Instantané n°{id} comparé au serveur actuel",
+        "olderHint": "Si cet instantané a été pris après les dégâts, choisis-en un plus ancien dans `/backup snapshots`.",
+        "tooOld": "Cet instantané date de plus de 24 heures avant l'alerte, seul le propriétaire du serveur peut donc restaurer depuis celui-ci.",
+        "nothingTitle": "Rien à rétablir",
+        "confirmTitle": "Rétablir {server} à l'instantané n°{id} ?",
+        "button": {
+            "revertTo": "Rétablir cet instantané",
+            "confirm": "Confirmer le rétablissement",
+            "cancel": "Annuler"
+        },
+        "access": {
+            "broken": "Ce bouton est cassé. Utilise l'alerte la plus récente.",
+            "otherServer": "Ce bouton appartient à un autre serveur.",
+            "offender": "La garde de l'équipe a agi contre toi sur ce serveur, tu ne peux donc pas utiliser ces boutons. Demande au propriétaire du serveur.",
+            "adminsOnly": "Seuls les administrateurs peuvent utiliser ceci."
+        },
+        "unreachable": "Je n'arrive pas à joindre le serveur concerné par cette alerte.",
+        "noSnapshot": "Il n'y a aucun instantané d'avant cette alerte, donc rien à comparer.",
+        "ownerOrAdmin": "Seul le propriétaire du serveur ou un administrateur peut rétablir.",
+        "cancelled": "Rétablissement annulé",
+        "nothingChanged": "Rien n'a été modifié.",
+        "notStarted": "Rétablissement non lancé",
+        "gone": "Cet instantané (ou le serveur) n'existe plus.",
+        "goneMain": "Cet instantané (ou le serveur principal) n'existe plus.",
+        "alreadyMatches": "Le serveur correspond déjà à l'instantané.",
+        "needsOwner": "Ce qui reste nécessite le propriétaire du serveur.",
+        "running": "Rétablissement en cours",
+        "runningText": "Restauration de {server} depuis l'instantané n°{id} ({date}). Ce message se met à jour au fur et à mesure, et tu recevras un MP à la fin. Rien n'est supprimé.",
+        "runningMain": "Restauration du serveur principal depuis l'instantané n°{id} ({date}). Ce message se met à jour au fur et à mesure, et tu recevras un MP à la fin.",
+        "finished": "Rétablissement terminé",
+        "stopped": "Rétablissement interrompu",
+        "dmFinished": "**Rétablissement de {server} terminé :** {summary}",
+        "dmStopped": "**Rétablissement de {server} interrompu :** {error}",
+        "backupOwnerOnly": "Seul le propriétaire du serveur peut rétablir la structure du serveur.",
+        "log": {
+            "title": "Structure du serveur rétablie",
+            "snapshot": "Instantané",
+            "snapshotValue": "n°{id} ({date})",
+            "by": "Par",
+            "adminNote": " · administrateur : restauration des permissions laissée au propriétaire",
+            "result": "Résultat"
+        },
+        "panic": {
+            "already": "{server} est déjà en confinement. Termine-le là-bas avec `/automod lockdown-end`.",
+            "started": "Confinement lancé",
+            "verification": "**Niveau de vérification :** {value}",
+            "raised": "relevé à Élevé",
+            "notChanged": "inchangé (déjà Élevé, ou il me manque Gérer le serveur)",
+            "invites": "**Invitations et MP :** {value}",
+            "end": "Termine-le avec `/automod lockdown-end`.",
+            "endIn": "Termine-le avec `/automod lockdown-end` sur {server}."
+        }
+    },
+    "cmd": {
+        "serverOnly": "Utilise cette commande dans un serveur.",
+        "noAdmin": "Tu as besoin de la permission Administrateur pour gérer l'automod.",
+        "updated": "Automod mis à jour",
+        "staffGuardOwnerOnly": "Seul le propriétaire du serveur peut désactiver la protection du staff (ou désactiver l'automod tant qu'elle est active).",
+        "word": {
+            "on": "activé",
+            "off": "désactivé",
+            "none": "aucun"
+        },
+        "modeLabel": {
+            "on": "activé",
+            "monitor": "signaler seulement (ne pas supprimer)",
+            "off": "désactivé"
+        },
+        "rules": {
+            "scam": "Lien d'arnaque ou de phishing",
+            "nsfw": "Contenu NSFW",
+            "sexual": "Harcèlement ou allusions sexuelles",
+            "harassment": "Harcèlement",
+            "privacy": "Partage d'informations personnelles",
+            "advertising": "Publicité non autorisée",
+            "impersonation": "Usurpation d'identité ou tromperie",
+            "language": "Langage inapproprié",
+            "disrespect": "Manque de respect ou drama",
+            "mentions": "Mentions de masse",
+            "spam": "Spam",
+            "caps": "Majuscules excessives",
+            "characters": "Caractères non anglais ou polices fantaisie",
+            "english": "Anglais uniquement"
+        },
+        "status": {
+            "title": "Automod",
+            "status": "**État :** {value}",
+            "mode": "**Mode :** {value}",
+            "modeMonitor": "signaler seulement (ne pas supprimer) : cartes de revue uniquement, rien n'est fait",
+            "modeEnforce": "appliquer (agit, puis publie une carte de revue)",
+            "lockdown": "**Confinement :** {value}",
+            "lockdownActive": "actif depuis {since}, {count} arrivant(s) du raid",
+            "exempt": "**Salons exemptés :** {value}",
+            "channelExceptions": "**Exceptions par salon :** {value}",
+            "trusted": "**Membres de confiance** (ignorent {rules}) : {value}",
+            "friendly": "**Avis amical pour une première petite infraction** (un avis, pas d'avertissement) : {value}",
+            "mood": "**Alertes d'ambiance** (message d'apaisement + mode lent dans les salons tendus) : {value}",
+            "joinGate": "**Contrôle d'arrivée** (nouveaux membres) : {value}",
+            "panic": "**Mode panique raid** (le confinement met aussi en pause les invitations et les MP) : {value}",
+            "panicOn": "activé, pour {hours} h",
+            "invites": "**Invitations autorisées** (en plus de celles de ce serveur) : {value}",
+            "staffGuard": "**Protection du staff** (anti-nuke : le staff qui bannit, supprime en masse ou ajoute des bots perd ses rôles) : {value}",
+            "guardAlways": "toujours active sur ce serveur",
+            "guardWhileOn": "activée, mais seulement quand l'automod est actif",
+            "punishments": "**Sanctions** (1re → 2e → 3e+ infraction en 30 jours). Un mode en **gras** est défini pour cette règle avec `/automod rule` ; les autres suivent le mode global :"
+        },
+        "trusted": {
+            "level": "niveau {level}+",
+            "or": " ou ",
+            "notSet": "non défini",
+            "giveOne": "Indique un rôle, un niveau minimum ou clear: true.",
+            "none": "Aucun membre de confiance : tout le monde est soumis à toutes les règles.",
+            "set": "De confiance : {who}. Ils ignorent {rules}."
+        },
+        "invites": {
+            "server": "`{id}` (serveur)",
+            "more": ", …et {count} de plus",
+            "note": "Invitations autorisées (en plus de celles de ce serveur) : {list}"
+        },
+        "policy": {
+            "ignore": "ignorer",
+            "log": "consigner (une ligne dans le salon de revue)",
+            "warn": "avertir (un avertissement et une carte de revue)"
+        },
+        "native": {
+            "default": " (par défaut)",
+            "disabled": "désactivée",
+            "noBlock": "ne bloque pas les messages, donc le bot ne la voit jamais",
+            "timeout": "a une exclusion native ; le bot rend muet avec le rôle Muted, pense à la retirer",
+            "policyLine": "→ {policy}{stored}, au plus une fois toutes les {minutes} min par membre",
+            "listTitle": "Règles AutoMod natives : {count}",
+            "none": "Ce serveur n'a aucune règle AutoMod native.",
+            "footer": "Modifie-en une avec /automod native set. Le bot a besoin de Gérer le serveur pour recevoir ces événements.",
+            "pick": "Choisis une règle AutoMod native dans la liste.",
+            "gone": "Cette règle AutoMod native n'existe plus.",
+            "updated": "Règle AutoMod native mise à jour"
+        },
+        "stats": {
+            "title": "Automod, {days} dernier(s) jour(s) : {total} action(s)",
+            "perRule": "Par règle",
+            "offenders": "Le plus d'actions contre"
+        },
+        "queue": {
+            "title": "File de revue : {count} ouverte(s)",
+            "footer": "Cartes publiées depuis le démarrage du bot, plus les 50 derniers messages du salon de revue qui ont encore des boutons. Les lignes de faible gravité ne sont pas listées."
+        },
+        "extrawatch": {
+            "endedEarly": "La surveillance renforcée de <@{userId}> a pris fin plus tôt (elle courait jusqu'au {until}).",
+            "wasNot": "<@{userId}> n'était pas sous surveillance renforcée.",
+            "active": "<@{userId}> est sous surveillance renforcée après un bannissement jusqu'au {until}{ban}. L'automod applique pour lui l'étape suivante de l'échelle. Termine-la avec `end: true`.",
+            "ban": " (bannissement `{code}` {how})",
+            "ended": "terminé",
+            "isNot": "<@{userId}> n'est pas sous surveillance renforcée.",
+            "endedTitle": "Surveillance renforcée terminée",
+            "title": "Surveillance renforcée après un bannissement"
+        },
+        "note": {
+            "enabled": "L'automod est maintenant **{state}**.",
+            "modeMonitor": "Mode « signaler seulement (ne pas supprimer) » : l'automod publie seulement des cartes de revue ; rien n'est supprimé ni sanctionné tant que tu ne l'appliques pas. Les règles avec leur propre mode (`/automod rule`) le gardent.",
+            "modeEnforce": "Mode « appliquer » : l'automod supprime et sanctionne automatiquement et publie une carte de revue pour chaque décision. Les règles avec leur propre mode (`/automod rule`) le gardent.",
+            "ruleDefault": "**{label}** suit de nouveau le mode global.",
+            "ruleSet": "**{label}** est maintenant **{mode}**.",
+            "ruleMonitor": "**{label}** est maintenant **{mode}** : cartes seulement, rien n'est fait tant que tu ne l'appliques pas.",
+            "ruleOff": "**{label}** est maintenant **{mode}** : l'automod l'ignore.",
+            "channelDefault": "**{label}** dans <#{channelId}> suit de nouveau le mode normal de la règle.",
+            "channelSet": "**{label}** est **{mode}** dans <#{channelId}> (fils inclus).",
+            "categorySet": "**{label}** est **{mode}** dans <#{channelId}> et ses salons (fils inclus).",
+            "friendlyOn": "L'avis amical pour une première petite infraction est **activé** : la première infraction d'un membre en 30 jours (majuscules, caractères, anglais uniquement ou langage léger, sans insultes) reçoit un court avis au lieu d'un avertissement.",
+            "friendlyOff": "L'avis amical pour une première petite infraction est **désactivé** : chaque infraction reçoit la sanction habituelle.",
+            "moodOn": "Les alertes d'ambiance sont **activées** : quand les insultes ou les majuscules de 3+ membres s'accumulent dans un salon, le bot publie un message d'apaisement, active le mode lent quelques minutes et prévient le salon des alertes.",
+            "moodOff": "Les alertes d'ambiance sont **désactivées**.",
+            "panicOn": "Le mode panique raid est **activé** : quand un raid déclenche un confinement, les invitations et les MP sont mis en pause pendant **{hours} h** (levé avec `/automod lockdown-end`).",
+            "panicNoPerm": "Je n'ai pas **Gérer le serveur**, donc la pause échouera tant que je ne l'ai pas.",
+            "panicOff": "Le mode panique raid est **désactivé** : un confinement relève seulement le niveau de vérification.",
+            "guardAlways": "La protection du staff est toujours active sur ce serveur.",
+            "guardOn": "La protection du staff est **activée**{notYet} : un admin qui bannit, expulse ou supprime des salons ou des rôles en masse perd ses rôles de staff, et un bot ajouté par quelqu'un d'autre que le propriétaire est expulsé. Le propriétaire du serveur n'est jamais touché. Je garde une copie quotidienne des salons et des rôles, pour qu'une alerte nuke puisse montrer ce qui a changé et l'annuler.",
+            "guardNotYet": " (elle fonctionne dès que l'automod est actif : `/automod enable`)",
+            "guardNoPerm": "J'ai besoin de **Gérer les rôles** et **Voir les logs du serveur** pour qu'elle fonctionne.",
+            "guardOff": "La protection du staff est **désactivée**.",
+            "exemptOn": "L'automod ignore maintenant <#{channelId}>.",
+            "exemptOff": "L'automod vérifie de nouveau <#{channelId}>.",
+            "noLockdown": "Il n'y a pas de confinement en ce moment.",
+            "lockdownEnded": "Confinement terminé. Le niveau de vérification est revenu à ce qu'il était, et les invitations et MP en pause reprennent."
+        },
+        "joingate": {
+            "ageNote": "Comptes de moins de **{days} jour(s)**. « Vérifier avec Discord » retient déjà les comptes de moins de {defaultDays} jours pour approbation ; les membres vérifiés ainsi ne sont jamais contrôlés.",
+            "note": "Contrôle d'arrivée : **{check}** → **{action}**.{age}\n{gate}"
+        },
+        "custom": {
+            "title": "Règles automod personnalisées",
+            "noneYet": "Pas encore de règle personnalisée. Ajoutes-en une avec `/automod custom add`. Le plan {plan} en permet {limit}.",
+            "nonePlan": "Pas de règle personnalisée. Elles viennent avec les plans Normal, Pro et Max, sur le plan du propriétaire du serveur.",
+            "overLimitState": "au-delà de la limite du plan, inactive",
+            "ruleLine": "**{name}** : {action}, {state}",
+            "header": {
+                "one": "{count} règle, jusqu'à {limit} actives avec le plan {plan}.",
+                "many": "{count} règles, jusqu'à {limit} actives avec le plan {plan}.",
+                "other": "{count} règles, jusqu'à {limit} actives avec le plan {plan}."
+            },
+            "choiceOff": ", désactivée",
+            "actionMute": "Rendre muet {duration}",
+            "actionWarn": "Avertir",
+            "actionDelete": "Supprimer",
+            "added": "Règle personnalisée **{name}** ajoutée ({action}).",
+            "giveChange": "Indique de nouveaux mots, une nouvelle action ou une nouvelle durée de mute.",
+            "changed": {
+                "one": "Règle personnalisée **{name}** modifiée : {action}, {count} mot ou expression.",
+                "many": "Règle personnalisée **{name}** modifiée : {action}, {count} mots ou expressions.",
+                "other": "Règle personnalisée **{name}** modifiée : {action}, {count} mots ou expressions."
+            },
+            "toggled": "Règle personnalisée **{name}** : {state}.",
+            "toggledAlready": "Règle personnalisée **{name}** : déjà {state}.",
+            "removed": "Règle personnalisée **{name}** supprimée.",
+            "unknown": "Option inconnue.",
+            "overLimit": {
+                "one": "{count} règle activée dépasse la limite de {limit} du plan {plan} et ne s'applique pas.",
+                "many": "{count} règles activées dépassent la limite de {limit} du plan {plan} et ne s'appliquent pas.",
+                "other": "{count} règles activées dépassent la limite de {limit} du plan {plan} et ne s'appliquent pas."
+            }
+        },
+        "slash": {
+            "description": "Modération automatique : état, modes par règle et salon, file de revue, confinement raid",
+            "status": "Afficher les réglages et sanctions de l'automod",
+            "enable": "Activer ou désactiver l'automod",
+            "onOff": "Activé ou désactivé",
+            "mode": "Mode global : appliquer (agir automatiquement) ou signaler seulement (ne pas supprimer)",
+            "modeOption": "Mode",
+            "choiceEnforce": "appliquer",
+            "choiceMonitor": "signaler seulement (ne pas supprimer)",
+            "rule": "Régler une règle : activée, signaler seulement ou désactivée (défaut : mode global)",
+            "ruleOption": "Règle",
+            "ruleModeOption": "Mode pour cette règle",
+            "choiceRuleOn": "activée (agir et publier une carte)",
+            "choiceRuleMonitor": "signaler seulement (ne pas supprimer) : carte seulement",
+            "choiceRuleOff": "désactivée (ignorer cette règle)",
+            "choiceRuleDefault": "défaut (suivre le mode global)",
+            "channel": "Désactiver une règle ou la passer en signalement dans un salon ou une catégorie",
+            "channelOption": "Salon ou catégorie",
+            "channelModeOption": "Mode dans ce salon",
+            "choiceChannelOff": "désactivée (ignorer cette règle ici)",
+            "choiceChannelMonitor": "signaler seulement (ne pas supprimer) : carte seulement ici",
+            "choiceChannelDefault": "défaut (retirer l'exception)",
+            "trusted": "Les membres avec ce rôle ou ce niveau ignorent les règles légères (majuscules, caractères, anglais)",
+            "trustedRole": "Rôle de confiance",
+            "trustedLevel": "Ou au moins ce niveau (0 = pas de critère de niveau)",
+            "trustedClear": "Retirer le rôle et le niveau de confiance",
+            "friendly": "Avis amical au lieu d'un avertissement pour une première petite infraction en 30 jours",
+            "mood": "Message d'apaisement et bref mode lent quand un salon s'échauffe",
+            "extrawatch": "Voir ou terminer la surveillance renforcée d'un membre après un ban (il est revenu)",
+            "member": "Membre",
+            "extrawatchEnd": "Terminer la surveillance renforcée maintenant",
+            "exempt": "Ajouter ou retirer un salon que l'automod ignore complètement (toutes les règles)",
+            "stats": "Actions de l'automod, annulations et principaux contrevenants",
+            "statsDays": "Sur combien de jours (défaut 7)",
+            "queue": "Cartes de revue en attente d'une décision, les plus récentes d'abord",
+            "joingate": "Contrôles des nouveaux membres : les signaler au staff ou les expulser (avec un MP)",
+            "gateCheck": "Quel contrôle",
+            "gateAction": "Que faire quand il se déclenche",
+            "choiceGateFlag": "signaler (une ligne dans le salon de revue)",
+            "choiceGateKick": "expulser (avec un MP expliquant comment revenir)",
+            "gateDays": "Contrôle nouveau compte : moins de ce nombre de jours (défaut {days})",
+            "panic": "Mode panique : un confinement met aussi en pause invitations et MP (actions d'incident Discord)",
+            "panicHours": "Durée de la pause (défaut 2, max 24)",
+            "invites": "Invitations autorisées en plus de celles de ce serveur (codes, liens ou ID de serveur)",
+            "invitesAction": "Que faire",
+            "choiceList": "lister",
+            "choiceAdd": "ajouter",
+            "choiceRemove": "retirer",
+            "choiceClear": "vider",
+            "invite": "Lien d'invitation, code d'invitation ou ID de serveur",
+            "staffguard": "Anti-nuke : le staff qui bannit, supprime salons/rôles en masse ou ajoute des bots perd ses rôles",
+            "lockdownEnd": "Terminer un confinement raid : rétablir la vérification, reprendre invitations et MP",
+            "native": "Règles AutoMod de Discord : ce que fait le bot quand l'une bloque un message",
+            "nativeList": "Lister les règles AutoMod natives du serveur et leur politique",
+            "nativeSet": "Ignorer, consigner ou avertir quand une règle AutoMod native bloque un message",
+            "nativeRule": "Règle AutoMod native",
+            "nativePolicy": "Ce que fait le bot",
+            "nativeDedupe": "Au plus une action par membre et par règle sur ce nombre de minutes (défaut 10)",
+            "custom": "Tes propres filtres de mots (plans payants)",
+            "customList": "Lister les règles personnalisées",
+            "customAdd": "Ajouter une règle personnalisée",
+            "customName": "Nom court",
+            "customWords": "Mots, séparés par des virgules",
+            "customAction": "Ce qui se passe",
+            "choiceDelete": "supprimer",
+            "choiceDeleteWarn": "supprimer + avertir",
+            "choiceDeleteMute": "supprimer + rendre muet",
+            "customMuteFor": "Durée du mute, par ex. 1h",
+            "customEdit": "Modifier les mots ou l'action d'une règle",
+            "customRule": "La règle",
+            "customNewWords": "Nouveaux mots, séparés par des virgules (remplacent)",
+            "customNewAction": "Nouvelle action",
+            "customToggle": "Activer ou désactiver une règle",
+            "customRemove": "Supprimer une règle"
+        }
+    },
+    "joinGate": {
+        "check": {
+            "avatar": "Pas de photo de profil",
+            "links": "Lien ou invitation dans le nom",
+            "botname": "Nom d'utilisateur qui semble généré",
+            "age": "Nouveau compte"
+        },
+        "comeBack": {
+            "avatar": "après avoir mis une photo de profil",
+            "links": "après avoir retiré le lien de ton nom d'utilisateur et de ton nom d'affichage",
+            "botname": "avec un nom d'utilisateur qui ne semble pas généré automatiquement",
+            "age": "quand ton compte sera plus ancien"
+        },
+        "action": {
+            "off": "désactivé",
+            "flag": "signaler",
+            "kick": "expulser"
+        },
+        "reason": {
+            "avatar": "pas de photo de profil",
+            "links": "lien dans le nom (« {name} »)",
+            "botname": "nom d'utilisateur qui semble généré (« {name} »)",
+            "age": {
+                "one": "le compte a {age} (minimum {count} jour)",
+                "many": "le compte a {age} (minimum {count} jours)",
+                "other": "le compte a {age} (minimum {count} jours)"
+            }
+        },
+        "youngerThan": {
+            "one": " (moins de {count} jour)",
+            "many": " (moins de {count} jours)",
+            "other": " (moins de {count} jours)"
+        },
+        "dm": {
+            "removed": "Tu as été retiré de **{server}** par un contrôle d'arrivée automatique : {reasons}.",
+            "notBan": "Ce n'est pas un bannissement et rien n'a été enregistré contre toi.",
+            "welcomeBack": "Tu peux revenir {ways}.",
+            "waysJoin": ", et "
+        },
+        "lineTitle": "**Contrôle d'arrivée**",
+        "outcome": {
+            "kicked": "expulsé",
+            "flagged": "signalé",
+            "kickFailed": "signalé (expulsion échouée)",
+            "dismissedBy": "classé par {name}",
+            "left": "a quitté le serveur",
+            "kickedBy": "expulsé par {name}",
+            "released": "libéré par {name} (arrivant du raid, aucune infraction)"
+        },
+        "button": {
+            "kick": "Expulser",
+            "dismiss": "Classer"
+        },
+        "reply": {
+            "adminOnly": "Seuls les administrateurs de ce serveur peuvent traiter les signalements du contrôle d'arrivée.",
+            "cannotAct": "Tu ne peux pas traiter ce signalement.",
+            "dismissedTitle": "Signalement classé",
+            "dismissed": "<@{userId}> reste sur le serveur.",
+            "goneTitle": "Déjà parti",
+            "gone": "Ce membre n'est plus sur le serveur.",
+            "kickFailed": "Je n'ai pas pu l'expulser (son rôle est peut-être au-dessus du mien, ou il me manque Expulser des membres).",
+            "kickedTitle": "Expulsé",
+            "kicked": "{name} a été expulsé de {server} et a reçu la raison en MP."
+        }
+    },
+    "raid": {
+        "caseType": {
+            "ban": "bannissement",
+            "kick": "expulsion",
+            "mute": "mute",
+            "warn": "avertissement",
+            "unban": "débannissement",
+            "unmute": "fin de mute"
+        },
+        "report": {
+            "noCases": "Aucun",
+            "andMore": " et {count} de plus",
+            "resumed": " → repris",
+            "notResumed": " → impossible de les reprendre : lève la pause dans Paramètres du serveur → Configuration de la sécurité",
+            "verification": "**Niveau de vérification :** {value}",
+            "raisedRestored": "relevé à Élevé → rétabli",
+            "notChanged": "inchangé",
+            "invites": "**Invitations et MP :** {value}",
+            "gateKicks": "**Expulsions par le contrôle d'arrivée :** {count}",
+            "cases": "**Cas contre les arrivants du raid :** {value}",
+            "title": "Raid d'arrivées : rapport d'incident",
+            "triggered": "**Déclenché :** {start} · **terminé :** {end} par {by} ({duration})",
+            "anAdmin": "un administrateur",
+            "joiners": "**Arrivants du raid :** {count}",
+            "didTitle": "Ce que le bot a fait"
+        },
+        "releaseButton": "Libérer les non-fautifs",
+        "release": {
+            "clean": "**{clean}** arrivant(s) du raid n'ont enfreint aucune règle.",
+            "cleanWithOffenders": "**{clean}** arrivant(s) du raid n'ont enfreint aucune règle ; **{offenders}** avec un cas restent tels quels.",
+            "counts": "Surveillances renforcées terminées : {probation} · signalements du contrôle d'arrivée fermés : {flags}",
+            "notInServer": " · plus sur le serveur : {count}",
+            "nothingElse": "Rien d'autre n'était retenu contre eux.",
+            "releasedBy": "Libérés par",
+            "result": "Résultat",
+            "title": "Arrivants du raid libérés"
+        },
+        "panic": {
+            "off": "Pas en pause (mode panique désactivé : `/automod panic`)",
+            "paused": "Invitations et MP en pause jusqu'à {time}",
+            "noManageServer": "Pas en pause : j'ai besoin de la permission **Gérer le serveur**",
+            "failed": "Pas en pause : {reason}",
+            "refused": "Discord a refusé"
+        },
+        "lockdown": {
+            "startedBy": "Lancé par {name} ({id}) depuis une alerte nuke.",
+            "joined": "{count} comptes sont arrivés en {seconds} secondes.",
+            "titleManual": "Confinement lancé",
+            "titleRaid": "Raid d'arrivées : confinement lancé",
+            "whatHappened": "Ce qui s'est passé",
+            "verification": "Niveau de vérification",
+            "raised": "Relevé à Élevé",
+            "notRaised": "Inchangé (déjà Élevé, ou Gérer le serveur manquant)",
+            "invites": "Invitations et MP",
+            "joiners": "Arrivants du raid",
+            "joinersValue": "Expulsés automatiquement s'ils enfreignent une règle pendant le confinement.",
+            "endIt": "Y mettre fin"
+        },
+        "owner": {
+            "raid": "**Raid d'arrivées sur {server}.** {summary} {what}. Termine-le avec `/automod lockdown-end` quand c'est fini.",
+            "manual": "**Confinement sur {server}.** {summary} {what}. Termine-le avec `/automod lockdown-end` quand c'est fini.",
+            "lockdown": "Le serveur est en confinement",
+            "lockdownAnd": "Le serveur est en confinement, et {extras}",
+            "and": " et ",
+            "raised": "le niveau de vérification est maintenant Élevé",
+            "paused": "les invitations et les MP sont en pause"
+        },
+        "reply": {
+            "adminOnly": "Seuls les administrateurs de ce serveur peuvent libérer les arrivants du raid.",
+            "gone": "Cet incident n'est plus enregistré.",
+            "otherServer": "Cet incident appartient à un autre serveur.",
+            "already": "Déjà libérés.",
+            "alreadyBy": "Déjà libérés par <@{userId}>."
+        }
+    },
+    "alert": {
+        "showDiff": "Voir les changements",
+        "revert": "Annuler…",
+        "panic": "Confiner (panique)"
+    }
+}

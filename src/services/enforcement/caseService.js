@@ -4,6 +4,7 @@ import { query, T, isUniqueViolation } from './db.js';
 import { generateCaseCode } from './format.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { enforcementConfig } from '../../config/enforcement.js';
+import { botText } from '../../utils/botText.js';
 
 const MAX_CODE_ATTEMPTS = 8;
 export const OPEN_STATUSES = ['active', 'appeal_pending'];
@@ -298,8 +299,25 @@ const CASE_STATUS_WORDS = Object.freeze({
     appealPending: 'appeal pending', activeAppealDenied: 'active, appeal denied',
 });
 
-/** A short status for history lists: lifted by appeal, appeal pending, expired, … (English). */
-export function caseStatusLabel(row, appealStatus = null) {
+// The bot's words for each status (staff.caseStatus.*), literal keys for the catalog test.
+const CASE_STATUS_TEXT = Object.freeze({
+    voided: (tr) => tr.t('staff.caseStatus.voided'),
+    liftedByAppeal: (tr) => tr.t('staff.caseStatus.liftedByAppeal'),
+    reversed: (tr) => tr.t('staff.caseStatus.reversed'),
+    lifted: (tr) => tr.t('staff.caseStatus.lifted'),
+    appealPending: (tr) => tr.t('staff.caseStatus.appealPending'),
+    activeAppealDenied: (tr) => tr.t('staff.caseStatus.activeAppealDenied'),
+    expired: (tr) => tr.t('staff.caseStatus.expired'),
+    active: (tr) => tr.t('staff.caseStatus.active'),
+    ended: (tr) => tr.t('staff.caseStatus.ended'),
+});
+
+/**
+ * A short status for history lists: lifted by appeal, appeal pending, expired, … English by default
+ * (the dashboard and website translate caseStatusCode themselves); `lang` gives the bot's words.
+ */
+export function caseStatusLabel(row, appealStatus = null, { lang = 'en' } = {}) {
     const code = caseStatusCode(row, appealStatus);
+    if (lang !== 'en' && Object.hasOwn(CASE_STATUS_TEXT, code)) return CASE_STATUS_TEXT[code](botText(lang));
     return Object.hasOwn(CASE_STATUS_WORDS, code) ? CASE_STATUS_WORDS[code] : code;
 }

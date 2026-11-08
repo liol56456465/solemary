@@ -20,6 +20,7 @@ import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { query, T, isUniqueViolation, isEnforcementDbAvailable } from './db.js';
 import { postModLog } from './enforcementService.js';
 import { fitWholeLines, truncate } from './format.js';
+import { botText, textForGuild } from '../../utils/botText.js';
 
 export const WATCH_MAX_DAYS = 365;
 export const WATCH_REASON_MAX = 500;
@@ -31,8 +32,11 @@ let loaded = false;
 let changeSeq = 0; // bumped by every local change; a reload that saw an older value is dropped
 const lastAlerted = new Map(); // guildId:userId:kind → ms
 
-function userError(message) {
-    return createError(message, ErrorTypes.USER_INPUT, message, { expected: true });
+// `i18n` ({ code, params }): /case shows the error in the reader's language (commands/Enforcement/case.js).
+function userError(message, i18n = null) {
+    const error = createError(message, ErrorTypes.USER_INPUT, message, { expected: true });
+    if (i18n) error.i18n = i18n;
+    return error;
 }
 
 const unix = (ms) => Math.floor(ms / 1000);
@@ -117,25 +121,37 @@ export async function getActiveWatchChecked(guildId, userId, now = Date.now()) {
  * Throws a user error for: a bot, the invoker themselves, days out of range, no reason.
  */
 export function validateWatchInput({ userId, createdById, isBot = false, days = null, reason }) {
-    if (isBot) throw userError('Bots cannot be put on the watchlist.');
-    if (userId && createdById && userId === createdById) throw userError('You cannot put yourself on the watchlist.');
+    if (isBot) throw userError('Bots cannot be put on the watchlist.', { code: 'watchBot', params: {} });
+    if (userId && createdById && userId === createdById) throw userError('You cannot put yourself on the watchlist.', { code: 'watchSelf', params: {} });
     if (days != null && (!Number.isInteger(days) || days < 1 || days > WATCH_MAX_DAYS)) {
-        throw userError(`days must be between 1 and ${WATCH_MAX_DAYS} (leave it empty for no end date).`);
+        throw userError(`days must be between 1 and ${WATCH_MAX_DAYS} (leave it empty for no end date).`, { code: 'watchDays', params: { max: WATCH_MAX_DAYS } });
     }
     const text = String(reason || '').trim();
-    if (!text) throw userError('A reason is required.');
+    if (!text) throw userError('A reason is required.', { code: 'reasonRequired', params: {} });
     return { days: days ?? null, reason: text.slice(0, WATCH_REASON_MAX) };
 }
 
 /** "since <t:…:R> · until <t:…:f>" (or "no end date"); pure. */
-function periodText(entry) {
+function periodText(entry, lang = 'en') {
     const created = new Date(entry.createdAt ?? entry.created_at).getTime();
     const until = entry.until == null ? null : new Date(entry.until).getTime();
+    if (lang !== 'en') {
+        const tr = botText(lang);
+        const since = tr.t('staff.case.watch.since', { since: `<t:${unix(created)}:R>` });
+        return `${since} · ${until == null ? tr.t('staff.case.watch.noEnd') : tr.t('staff.case.watch.until', { until: `<t:${unix(until)}:f>` })}`;
+    }
     return `since <t:${unix(created)}:R> · ${until == null ? 'no end date' : `until <t:${unix(until)}:f>`}`;
 }
 
-/** "On watchlist since <t:…:R> — reason" for /background; pure. `entry` from getActiveWatch. */
-export function watchlistLine(entry) {
+/** "On watchlist since <t:…:R> — reason" for /background; pure. `entry` from getActiveWatch. `lang`: the bot's words. */
+export function watchlistLine(entry, { lang = 'en' } = {}) {
+    if (lang !== 'en') {
+        const tr = botText(lang);
+        const params = { since: `<t:${unix(entry.createdAt)}:R>`, reason: entry.reason, id: entry.id };
+        return entry.until == null
+            ? tr.t('staff.background.watchLine', params)
+            : tr.t('staff.background.watchLineUntil', { ...params, until: `<t:${unix(entry.until)}:f>` });
+    }
     return `On watchlist since <t:${unix(entry.createdAt)}:R> — ${entry.reason}${entry.until == null ? '' : ` (until <t:${unix(entry.until)}:f>)`} (entry #${entry.id})`;
 }
 
@@ -163,7 +179,7 @@ export async function addWatch(client, { guildId, userId, username = null, isBot
                 `SELECT id FROM ${T.watchlist} WHERE guild_id = $1 AND user_id = $2 AND ended_at IS NULL`,
                 [guildId, userId]
             );
-            throw userError(`This member is already on the watchlist (#${open?.id ?? '?'}). End that entry first to change it.`);
+            throw userError(`This member is already on the watchlist (#${open?.id ?? '?'}). End that entry first to change it.`, { code: 'watchExists', params: { id: open?.id ?? '?' } });
         }
         throw error;
     }
@@ -228,8 +244,9 @@ export async function listActiveWatches(guildId, limit = 25) {
 }
 
 /** "#3 <@id> · since … · until … · by <@mod> · reason" for /case watch list; pure. */
-export function watchListLine(row) {
-    return `**#${row.id}** <@${row.user_id}> · ${periodText(row)} · by <@${row.created_by}> · ${truncate(row.reason, 120)}`;
+export function watchListLine(row, { lang = 'en' } = {}) {
+    const by = lang === 'en' ? `by <@${row.created_by}>` : botText(lang).t('staff.case.watch.by', { mod: `<@${row.created_by}>` });
+    return `**#${row.id}** <@${row.user_id}> · ${periodText(row, lang)} · ${by} · ${truncate(row.reason, 120)}`;
 }
 
 /**
@@ -237,9 +254,9 @@ export function watchListLine(row) {
  * "…and N more" when they do not all fit (25 long lines would pass 4096 and get cut mid-line,
  * hiding entries and breaking a mention). Pure.
  */
-export function watchListDescription(rows, max = 4096) {
-    if (!rows.length) return 'Nobody. Add someone with `/case watch add`.';
-    return fitWholeLines(rows.map(watchListLine), max);
+export function watchListDescription(rows, max = 4096, { lang = 'en' } = {}) {
+    if (!rows.length) return lang === 'en' ? 'Nobody. Add someone with `/case watch add`.' : botText(lang).t('staff.case.watch.listEmpty');
+    return fitWholeLines(rows.map((row) => watchListLine(row, { lang })), max);
 }
 
 /** True (and records the time) when this member may get an alert of this kind now; at most one per minute per kind. */
@@ -264,11 +281,15 @@ export async function alertWatched(client, { guildId, userId, username = null, e
         const entry = getActiveWatch(guildId, userId, now);
         if (!entry) return false;
         if (!takeAlertSlot(guildId, userId, now, kind)) return false;
+        // A mod log line in the server's language. 'User' and 'Note' are format keys of
+        // formatModLogLine (automod/channelRouting.js), not shown; the other names are the line's labels.
+        // `event` is written by the caller.
+        const tr = textForGuild(guildId, { userId, purpose: 'public' });
         await post(client, 'watch', [
             { name: 'User', value: `${username ? `${username} ` : ''}<@${userId}> (${userId})` },
             { name: 'Note', value: event },
-            { name: 'Watched for', value: truncate(entry.reason, 300) },
-            { name: 'Entry', value: `#${entry.id}` },
+            { name: tr.t('staff.case.watch.alert.watchedFor'), value: truncate(entry.reason, 300) },
+            { name: tr.t('staff.case.watch.alert.entry'), value: `#${entry.id}` },
         ], { guildId });
         return true;
     } catch (error) {

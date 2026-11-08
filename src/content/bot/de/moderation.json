@@ -1,0 +1,63 @@
+{
+    "lock": {
+        "cmd": {
+            "description": "Sperrt den aktuellen Kanal (@everyone kann keine Nachrichten mehr senden)."
+        },
+        "already": "{channel} ist bereits gesperrt.",
+        "title": "Kanal gesperrt",
+        "done": "{channel} ist gesperrt. Mitglieder können hier keine Nachrichten senden, bis er entsperrt wird.",
+        "failed": "Beim Sperren des Kanals ist ein unerwarteter Fehler aufgetreten. Prüfe meine Berechtigungen (ich brauche „Kanäle verwalten“)."
+    },
+    "unlock": {
+        "cmd": {
+            "description": "Entsperrt den aktuellen Kanal (@everyone kann wieder Nachrichten senden)."
+        },
+        "notLocked": "{channel} ist nicht ausdrücklich gesperrt (alle können bereits Nachrichten senden).",
+        "title": "Kanal entsperrt",
+        "done": "{channel} ist entsperrt. Mitglieder können hier wieder schreiben.",
+        "failed": "Beim Entsperren des Kanals ist ein unerwarteter Fehler aufgetreten. Prüfe meine Berechtigungen (ich brauche „Kanäle verwalten“)."
+    },
+    "purge": {
+        "cmd": {
+            "description": "Eine bestimmte Anzahl Nachrichten löschen",
+            "amount": "Anzahl der Nachrichten (1-100)"
+        },
+        "range": "Gib eine Zahl zwischen 1 und 100 an.",
+        "title": "Nachrichten gelöscht",
+        "done": {
+            "one": "{count} Nachricht in {channel} gelöscht.",
+            "other": "{count} Nachrichten in {channel} gelöscht."
+        },
+        "failed": "Beim Löschen der Nachrichten ist ein unerwarteter Fehler aufgetreten. Hinweis: Nachrichten, die älter als 14 Tage sind, können nicht gesammelt gelöscht werden."
+    },
+    "rules": {
+        "cmd": {
+            "description": "Die Regel-Nachricht des Servers posten, aktualisieren oder als Vorschau zeigen",
+            "post": "Die Regeln mit dem im Dashboard gespeicherten Design posten",
+            "postChannel": "Wo sie gepostet werden (Standard: der im Dashboard gespeicherte Kanal)",
+            "update": "Die gepostete Regel-Nachricht auf die aktuellen Regeln und das Design ändern",
+            "preview": "Den Regel-Post nur dir zeigen, ohne ihn zu posten"
+        },
+        "mainOnly": "Die Regeln können nur vom Hauptserver aus gepostet werden.",
+        "notLoaded": "Die gespeicherten Einstellungen sind nicht geladen (Datenbank antwortet nicht). Es wurde nichts geändert.",
+        "noChannel": "Es ist kein Regelkanal gespeichert. Wähle einen mit der Option channel oder speichere einen auf der Dashboard-Seite Regeln.",
+        "cannotSee": "Ich kann diesen Kanal nicht sehen. Wähle einen anderen.",
+        "channelGone": "Der gespeicherte Regelkanal existiert nicht mehr. Wähle einen mit der Option channel oder speichere einen anderen auf der Dashboard-Seite Regeln.",
+        "discordSaid": "{refusal} Discord meldete: {error}",
+        "saveFailed": "Der Post konnte nicht gespeichert werden (Datenbank antwortet nicht). {undone}",
+        "postRefused": "Discord hat den Post abgelehnt. Es wurde nichts gepostet.",
+        "postUndone": "Der Post wurde wieder entfernt. Es wurde nichts geändert.",
+        "updateRefused": "Discord hat die Aktualisierung abgelehnt. Einige Nachrichten zeigen eventuell schon die neuen Regeln. Versuche /rules update erneut.",
+        "updateUndone": "Neue zusätzliche Nachrichten wurden wieder entfernt und der gespeicherte Post wurde nicht geändert. Führe /rules update erneut aus.",
+        "notPosted": "Die Regeln wurden noch nicht gepostet. Nutze zuerst /rules post.",
+        "posted": "Die Regeln wurden in <#{channelId}> gepostet ({messages}).",
+        "earlierPost": "Der frühere Post in <#{channelId}> bleibt, wo er ist. Nutze nächstes Mal /rules update, um den Post zu ändern.",
+        "updated": "Die geposteten Regeln in <#{channelId}> wurden aktualisiert ({messages}).",
+        "noChannelSaved": "noch kein Kanal gespeichert",
+        "previewHead": "Vorschau des Regel-Posts ({messages}, gespeicherter Kanal: {where}). Nur du siehst das. Es wurde nichts gepostet.",
+        "messages": {
+            "one": "{count} Nachricht",
+            "other": "{count} Nachrichten"
+        }
+    }
+}

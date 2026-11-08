@@ -6,6 +6,7 @@
 
 import { PermissionFlagsBits } from 'discord.js';
 import { logger } from '../../utils/logger.js';
+import { botText } from '../../utils/botText.js';
 
 const HOUR = 60 * 60 * 1000;
 export const MAX_PANIC_HOURS = 24;
@@ -53,9 +54,11 @@ export async function resumeInvitesAndDms(guild) {
 }
 
 /** The alert line for a lockdown's incident actions. `result` is the stored state (or null when panic mode is off). */
-export function describePanic(result) {
-    if (!result) return 'Not paused (panic mode is off: `/automod panic`)';
-    if (result.applied) return `Invites and DMs paused until <t:${Math.floor(new Date(result.until).getTime() / 1000)}:t>`;
-    if (result.reason === 'missing Manage Server') return 'Not paused: I need the **Manage Server** permission';
-    return `Not paused: ${String(result.reason || 'Discord refused').slice(0, 200)}`;
+export function describePanic(result, { lang = 'en' } = {}) {
+    const tr = botText(lang);
+    if (!result) return tr.t('automod.raid.panic.off');
+    if (result.applied) return tr.t('automod.raid.panic.paused', { time: `<t:${Math.floor(new Date(result.until).getTime() / 1000)}:t>` });
+    if (result.reason === 'missing Manage Server') return tr.t('automod.raid.panic.noManageServer');
+    // Discord's own error text stays as Discord sent it.
+    return tr.t('automod.raid.panic.failed', { reason: String(result.reason || tr.t('automod.raid.panic.refused')).slice(0, 200) });
 }

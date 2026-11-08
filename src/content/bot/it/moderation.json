@@ -1,0 +1,65 @@
+{
+    "lock": {
+        "cmd": {
+            "description": "Blocca il canale attuale (@everyone non può più inviare messaggi)."
+        },
+        "already": "{channel} è già bloccato.",
+        "title": "Canale bloccato",
+        "done": "{channel} è bloccato. I membri non possono scrivere qui finché non viene sbloccato.",
+        "failed": "Si è verificato un errore imprevisto durante il blocco del canale. Controlla i miei permessi (mi serve «Gestire i canali»)."
+    },
+    "unlock": {
+        "cmd": {
+            "description": "Sblocca il canale attuale (@everyone può di nuovo inviare messaggi)."
+        },
+        "notLocked": "{channel} non è bloccato esplicitamente (tutti possono già scrivere).",
+        "title": "Canale sbloccato",
+        "done": "{channel} è sbloccato. I membri possono di nuovo scrivere qui.",
+        "failed": "Si è verificato un errore imprevisto durante lo sblocco del canale. Controlla i miei permessi (mi serve «Gestire i canali»)."
+    },
+    "purge": {
+        "cmd": {
+            "description": "Elimina un numero preciso di messaggi",
+            "amount": "Numero di messaggi (1-100)"
+        },
+        "range": "Indica un numero tra 1 e 100.",
+        "title": "Messaggi eliminati",
+        "done": {
+            "one": "Eliminato {count} messaggio in {channel}.",
+            "many": "Eliminati {count} messaggi in {channel}.",
+            "other": "Eliminati {count} messaggi in {channel}."
+        },
+        "failed": "Si è verificato un errore imprevisto durante l'eliminazione. Nota: i messaggi più vecchi di 14 giorni non si possono eliminare in blocco."
+    },
+    "rules": {
+        "cmd": {
+            "description": "Pubblica, aggiorna o mostra un'anteprima del messaggio delle regole",
+            "post": "Pubblica le regole con il design salvato nella dashboard",
+            "postChannel": "Dove pubblicarle (predefinito: il canale salvato nella dashboard)",
+            "update": "Aggiorna il messaggio delle regole pubblicato con le regole e il design attuali",
+            "preview": "Mostra il post delle regole solo a te, senza pubblicarlo"
+        },
+        "mainOnly": "Le regole si possono pubblicare solo dal server principale.",
+        "notLoaded": "Le impostazioni salvate non sono caricate (il database non risponde). Non è stato cambiato nulla.",
+        "noChannel": "Nessun canale delle regole salvato. Scegline uno con l'opzione channel o salvalo nella pagina Regole della dashboard.",
+        "cannotSee": "Non vedo quel canale. Scegline un altro.",
+        "channelGone": "Il canale delle regole salvato non esiste più. Scegline uno con l'opzione channel o salvane un altro nella pagina Regole della dashboard.",
+        "discordSaid": "{refusal} Discord ha risposto: {error}",
+        "saveFailed": "Impossibile salvare il post (il database non risponde). {undone}",
+        "postRefused": "Discord ha rifiutato il post. Non è stato pubblicato nulla.",
+        "postUndone": "Il post è stato rimosso. Non è stato cambiato nulla.",
+        "updateRefused": "Discord ha rifiutato l'aggiornamento. Alcuni messaggi potrebbero già mostrare le nuove regole. Riprova /rules update.",
+        "updateUndone": "I nuovi messaggi in più sono stati rimossi e il post salvato non è cambiato. Esegui di nuovo /rules update.",
+        "notPosted": "Le regole non sono ancora state pubblicate. Usa prima /rules post.",
+        "posted": "Le regole sono state pubblicate in <#{channelId}> ({messages}).",
+        "earlierPost": "Il post precedente in <#{channelId}> resta dov'è. La prossima volta usa /rules update per modificare il post.",
+        "updated": "Le regole pubblicate in <#{channelId}> sono state aggiornate ({messages}).",
+        "noChannelSaved": "nessun canale salvato per ora",
+        "previewHead": "Anteprima del post delle regole ({messages}, canale salvato: {where}). Lo vedi solo tu. Non è stato pubblicato nulla.",
+        "messages": {
+            "one": "{count} messaggio",
+            "many": "{count} messaggi",
+            "other": "{count} messaggi"
+        }
+    }
+}

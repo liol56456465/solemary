@@ -1,6 +1,8 @@
 import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
+import { textForInteraction } from '../../utils/botText.js';
+import { descriptionLocalizations } from '../../utils/commandLocalizations.js';
 import { isAdministrator } from '../../services/enforcement/enforcementService.js';
 import { getCaseByName, searchCaseNames } from '../../services/enforcement/caseService.js';
 import { query, T, isEnforcementDbAvailable } from '../../services/enforcement/db.js';
@@ -11,29 +13,35 @@ export default {
     data: new SlashCommandBuilder()
         .setName('background')
         .setDescription("Show a user's enforcement records and staff notes")
+        .setDescriptionLocalizations(descriptionLocalizations('staff.background.cmd.description'))
         .addUserOption((option) => option
             .setName('user')
-            .setDescription('The user to look up'))
+            .setDescription('The user to look up')
+            .setDescriptionLocalizations(descriptionLocalizations('staff.background.cmd.user')))
         .addStringOption((option) => option
             .setName('user_id')
             .setDescription('User ID, for people no longer in the server')
+            .setDescriptionLocalizations(descriptionLocalizations('staff.background.cmd.userId'))
             .setMinLength(17)
             .setMaxLength(20))
         .addStringOption((option) => option
             .setName('name')
             .setDescription('Open one record by name')
+            .setDescriptionLocalizations(descriptionLocalizations('staff.background.cmd.name'))
             .setAutocomplete(true)
             .setMaxLength(100)),
 
     async execute(interaction, config, client) {
+        // An ephemeral answer to the administrator: their Discord language (utils/botText.js).
+        const tr = textForInteraction(interaction);
         // Any server: only this server's records (every query below is scoped by interaction.guildId).
         if (!interaction.guildId) {
             throw new TitanBotError('/background outside a server', ErrorTypes.PERMISSION,
-                'This command only works in a server.', { expected: true });
+                tr.t('staff.background.serverOnly'), { expected: true });
         }
         if (!isAdministrator(interaction.member)) {
             throw new TitanBotError('Not an administrator', ErrorTypes.PERMISSION,
-                'You need the Administrator permission to view records.', { expected: true });
+                tr.t('staff.background.noAdmin'), { expected: true });
         }
 
         const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
@@ -46,15 +54,18 @@ export default {
             const record = await getCaseByName(interaction.guildId, name);
             const targetUser = hasUser ? await resolveTargetUser(interaction, client) : null;
             if (!record || (targetUser && record.target_user_id !== targetUser.id)) {
+                const shown = truncate(name, 100);
                 throw new TitanBotError('Record not found', ErrorTypes.USER_INPUT,
-                    `No record named **${truncate(name, 100)}**${targetUser ? ` for ${targetUser.username}` : ''}.`, { expected: true });
+                    targetUser
+                        ? tr.t('staff.background.notFoundFor', { name: shown, user: targetUser.username })
+                        : tr.t('staff.background.notFound', { name: shown }), { expected: true });
             }
-            await InteractionHelper.safeEditReply(interaction, { embeds: [await buildRecordEmbed(record, { client })] });
+            await InteractionHelper.safeEditReply(interaction, { embeds: [await buildRecordEmbed(record, { client, lang: tr.lang })] });
             return;
         }
 
         const targetUser = await resolveTargetUser(interaction, client);
-        await InteractionHelper.safeEditReply(interaction, await buildRecordList(interaction.guildId, interaction.user.id, targetUser, 0));
+        await InteractionHelper.safeEditReply(interaction, await buildRecordList(interaction.guildId, interaction.user.id, targetUser, 0, { lang: tr.lang }));
     },
 
     async autocomplete(interaction) {
@@ -78,6 +89,7 @@ export default {
             ));
         }
 
+        // Autocomplete labels: record name, type (as stored) and case code; no fixed words to translate.
         await interaction.respond(rows.map((row) => ({
             name: truncate(`${row.name} (${row.type}, ${row.case_code})`, 100),
             value: truncate(row.name, 100),

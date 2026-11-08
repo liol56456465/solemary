@@ -23,7 +23,8 @@ import { isEnforcementDbAvailable } from '../../services/enforcement/db.js';
 import { insertCase, setDmDelivered } from '../../services/enforcement/caseService.js';
 import { appealAcceptedDm, appealDeniedDm, banDm, kickDm, muteDm, warnDm } from '../../services/enforcement/dmTemplates.js';
 import { addMonths, parseDuration } from '../../services/enforcement/format.js';
-import { resolveBotLanguage } from '../../utils/botText.js';
+import { botText, resolveBotLanguage, textForInteraction } from '../../utils/botText.js';
+import { descriptionLocalizations } from '../../utils/commandLocalizations.js';
 import { isMewvoServer } from '../../utils/ownerPower.js';
 
 function userError(message) {
@@ -65,7 +66,7 @@ export function prebuiltReasonFields(reason) {
 }
 
 /** The warn DM, or — when this warn would hit the ladder limit — the automatic ban DM that replaces it. */
-async function warnPreview({ guild, invoker, target, reason, ladder, lang }) {
+async function warnPreview({ guild, invoker, target, reason, ladder, lang, tr }) {
     const step = previewWarn(ladder);
     const dm = { guildId: guild.id, serverName: guild.name, lang };
     const warn = await saveTestCase({
@@ -73,7 +74,7 @@ async function warnPreview({ guild, invoker, target, reason, ladder, lang }) {
         moderator: invoker, target, type: 'warn', reason, ladderLevel: step.nextLevel, extra: prebuiltReasonFields(reason),
     });
     if (!step.escalates) {
-        return { content: warnDm(warn, step.warnNumber, dm), record: warn, note: `warn ${step.warnNumber} of ${step.threshold}` };
+        return { content: warnDm(warn, step.warnNumber, dm), record: warn, note: tr.t('owner.test.noteWarn', { number: step.warnNumber, threshold: step.threshold }) };
     }
     const ban = await saveTestCase({
         guildId: guild.id,
@@ -91,14 +92,18 @@ async function warnPreview({ guild, invoker, target, reason, ladder, lang }) {
     return {
         content: banDm(ban, dm),
         record: ban,
-        note: `this warn reaches the limit, so they'd get the automatic ladder-level-${step.nextLevel} ban DM instead (warn \`${warn.case_code}\` was saved too)`,
+        note: tr.t('owner.test.noteLadder', { level: step.nextLevel, code: warn.case_code }),
     };
 }
 
-/** The DM preview for `action`, as `guild` would send it (its name, invite, language, ladder). Saves a test case; executes nothing. */
-export async function buildPreview({ action, guild, invoker, target, reason, durationMs, unappealable, lang = 'en' }) {
+/**
+ * The DM preview for `action`, as `guild` would send it (its name, invite, language, ladder). Saves a test case; executes nothing.
+ * `lang`: the DM's language (the server's); `replyLang`: refusals and the note for the person running /test (their own).
+ */
+export async function buildPreview({ action, guild, invoker, target, reason, durationMs, unappealable, lang = 'en', replyLang = 'en' }) {
+    const tr = botText(replyLang);
     if (!action.startsWith('appeal-') && !isEnforcementDbAvailable()) {
-        throw userError('The database is unavailable, so no test case can be saved. Try again later.');
+        throw userError(tr.t('owner.test.noDatabase'));
     }
     const ladder = isEnforcementDbAvailable()
         ? await getLadder(guild.id, target.id)
@@ -120,12 +125,12 @@ export async function buildPreview({ action, guild, invoker, target, reason, dur
             return { content: kickDm(record, invite, dm), record, invite };
         }
         case 'mute': {
-            if (!durationMs) throw userError('A mute needs a duration, e.g. `duration:1h`.');
+            if (!durationMs) throw userError(tr.t('owner.test.muteNeedsDuration'));
             const record = await save('mute', { durationMs });
             return { content: muteDm(record, dm), record };
         }
         case 'warn':
-            return warnPreview({ guild, invoker, target, reason, ladder, lang });
+            return warnPreview({ guild, invoker, target, reason, ladder, lang, tr });
         case 'appeal-accepted': {
             const invite = await createRejoinInvite(guild, 'Appeal accepted (/test)');
             return { content: appealAcceptedDm(invoker.username, invite, dm), invite };
@@ -133,7 +138,7 @@ export async function buildPreview({ action, guild, invoker, target, reason, dur
         case 'appeal-denied':
             return { content: appealDeniedDm({ guildId: guild.id, lang }) };
         default:
-            throw userError(`Unknown action: ${action}`);
+            throw userError(tr.t('owner.test.unknownAction', { action }));
     }
 }
 
@@ -142,42 +147,50 @@ export default {
     data: new SlashCommandBuilder()
         .setName('test')
         .setDescription('Send yourself the DM an action would send and save a test case. Nothing is executed')
+        .setDescriptionLocalizations(descriptionLocalizations('owner.test.cmd.description'))
         .addStringOption((option) => option
             .setName('action')
             .setDescription('Which DM to preview')
+            .setDescriptionLocalizations(descriptionLocalizations('owner.test.cmd.action'))
             .setRequired(true)
             .addChoices(
-                { name: 'ban', value: 'ban' },
-                { name: 'kick', value: 'kick' },
-                { name: 'mute', value: 'mute' },
-                { name: 'warn', value: 'warn' },
-                { name: 'appeal accepted', value: 'appeal-accepted' },
-                { name: 'appeal denied', value: 'appeal-denied' },
+                { name: 'ban', name_localizations: descriptionLocalizations('owner.test.cmd.choiceBan'), value: 'ban' },
+                { name: 'kick', name_localizations: descriptionLocalizations('owner.test.cmd.choiceKick'), value: 'kick' },
+                { name: 'mute', name_localizations: descriptionLocalizations('owner.test.cmd.choiceMute'), value: 'mute' },
+                { name: 'warn', name_localizations: descriptionLocalizations('owner.test.cmd.choiceWarn'), value: 'warn' },
+                { name: 'appeal accepted', name_localizations: descriptionLocalizations('owner.test.cmd.choiceAppealAccepted'), value: 'appeal-accepted' },
+                { name: 'appeal denied', name_localizations: descriptionLocalizations('owner.test.cmd.choiceAppealDenied'), value: 'appeal-denied' },
             ))
         .addUserOption((option) => option
             .setName('user')
             .setDescription('Who the DM would be for (they receive nothing)')
+            .setDescriptionLocalizations(descriptionLocalizations('owner.test.cmd.user'))
             .setRequired(true))
         .addStringOption((option) => option
             .setName('reason')
             .setDescription('Reason shown in the DM')
+            .setDescriptionLocalizations(descriptionLocalizations('owner.test.cmd.reason'))
             .setMaxLength(500))
         .addStringOption((option) => option
             .setName('duration')
             .setDescription('Ban/mute length, e.g. 30m, 12h, 7d, 1mo (ban: empty = permanent)')
+            .setDescriptionLocalizations(descriptionLocalizations('owner.test.cmd.duration'))
             .setMaxLength(20))
         .addBooleanOption((option) => option
             .setName('no_appeal')
-            .setDescription('Ban only: preview a ban they cannot appeal')),
+            .setDescription('Ban only: preview a ban they cannot appeal')
+            .setDescriptionLocalizations(descriptionLocalizations('owner.test.cmd.noAppeal'))),
 
     async execute(interaction) {
+        // Replies to the person running /test: their Discord language. The DM preview: the server's (below).
+        const tr = textForInteraction(interaction);
         if (!interaction.guildId || !interaction.guild) {
             throw new TitanBotError('/test outside a server', ErrorTypes.PERMISSION,
-                'This command only works in a server.', { expected: true });
+                tr.t('owner.test.serverOnly'), { expected: true });
         }
         if (!isAdministrator(interaction.member)) {
             throw new TitanBotError('Not an administrator', ErrorTypes.PERMISSION,
-                'You need the Administrator permission to use /test.', { expected: true });
+                tr.t('owner.test.noAdmin'), { expected: true });
         }
 
         const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
@@ -188,7 +201,7 @@ export default {
         const rawDuration = interaction.options.getString('duration')?.trim() || '';
         const durationMs = rawDuration ? parseDuration(rawDuration) : null;
         if (rawDuration && durationMs == null) {
-            throw userError('That duration is not valid. Use e.g. `30m`, `12h`, `7d`, `2w` or `1mo` (at least 1 minute).');
+            throw userError(tr.t('owner.test.badDuration'));
         }
 
         const { content, note, invite, record } = await buildPreview({
@@ -196,32 +209,33 @@ export default {
             guild: interaction.guild,
             invoker: interaction.user,
             target,
-            reason: interaction.options.getString('reason')?.trim() || 'No reason given',
+            reason: interaction.options.getString('reason')?.trim() || 'No reason given', // stored on the test case: English like real cases
             durationMs,
             unappealable: interaction.options.getBoolean('no_appeal') ?? false,
             // The language the member would get: the server's (a DM), not the invoker's.
             lang: resolveBotLanguage({ guildId: interaction.guildId, userId: target.id, purpose: 'dm' }),
+            replyLang: tr.lang,
         });
 
         const delivered = await sendDm(interaction.user, content);
         if (record) await setDmDelivered(record.id, delivered);
         logger.info(`/test preview of ${action} DM for ${target.id} sent to ${interaction.user.id}: ${delivered ? 'delivered' : 'not delivered'}`);
         if (!delivered) {
-            throw userError('I could not DM you. Allow direct messages from server members in this server and try again.');
+            throw userError(tr.t('owner.test.dmFailed'));
         }
 
         await InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed('Preview DM sent to you.', [
-                `The exact **${action}** DM ${target.username} would get.${note ? ` Note: ${note}.` : ''}`,
-                'Nothing was executed.',
+            embeds: [successEmbed(tr.t('owner.test.sentTitle'), [
+                tr.t('owner.test.exact', { action, name: target.username }) + (note ? ` ${tr.t('owner.test.note', { note })}` : ''),
+                tr.t('owner.test.nothingExecuted'),
                 record
-                    ? `Test case \`${record.case_code}\` was saved, so it can be appealed and decided with /appeals like a real one. `
+                    ? `${tr.t('owner.test.caseSaved', { code: record.case_code })} `
                         + (target.id === interaction.user.id
-                            ? (isMewvoServer(interaction.guildId) ? 'Appeal it from the support server with that code.' : 'Appeal it with that code (the DM says where).')
-                            : `Only ${target.username} can appeal it; run /test on yourself to try the appeal flow.`)
+                            ? (isMewvoServer(interaction.guildId) ? tr.t('owner.test.appealSupport') : tr.t('owner.test.appealWithCode'))
+                            : tr.t('owner.test.onlyTarget', { name: target.username }))
                     : null,
-                invite ? 'The invite in it is a real one-time invite to this server.' : null,
-            ].filter(Boolean).join('\n'))],
+                invite ? tr.t('owner.test.realInvite') : null,
+            ].filter(Boolean).join('\n').slice(0, 4096))],
         });
     },
 };

@@ -8,6 +8,9 @@ import {
   StringSelectMenuOptionBuilder,
 } from 'discord.js';
 import { EVENT_TYPES } from '../../services/loggingService.js';
+import { botText } from '../botText.js';
+
+// Every label takes { lang } (the /logging panel is ephemeral: the admin's Discord language); default English.
 
 const EVENT_TYPES_BY_CATEGORY = Object.values(EVENT_TYPES).reduce((accumulator, eventType) => {
   const [category] = eventType.split('.');
@@ -34,6 +37,7 @@ export const DASHBOARD_CATEGORIES = [
 ];
 
 
+// English labels (kept for callers that want them); the panel uses categoryLabel() in its language.
 export const DASHBOARD_CATEGORY_LABELS = {
   moderation: 'Moderation',
   message: 'Messages',
@@ -49,14 +53,34 @@ export const DASHBOARD_CATEGORY_LABELS = {
   server: 'Emoji, events, webhooks, invites, AutoMod',
 };
 
-function createBackButton() {
+/** One category's label in a language (literal keys, so the key test sees each one). */
+export function categoryLabel(category, { lang = 'en' } = {}) {
+  const tr = botText(lang);
+  const labels = {
+    moderation: () => tr.t('logging.category.moderation'),
+    message: () => tr.t('logging.category.message'),
+    role: () => tr.t('logging.category.role'),
+    member: () => tr.t('logging.category.member'),
+    leveling: () => tr.t('logging.category.leveling'),
+    reactionrole: () => tr.t('logging.category.reactionrole'),
+    giveaway: () => tr.t('logging.category.giveaway'),
+    counter: () => tr.t('logging.category.counter'),
+    application: () => tr.t('logging.category.application'),
+    report: () => tr.t('logging.category.report'),
+    channel: () => tr.t('logging.category.channel'),
+    server: () => tr.t('logging.category.server'),
+  };
+  return labels[category] ? labels[category]() : category;
+}
+
+function createBackButton(tr) {
   return new ButtonBuilder()
     .setCustomId('log_dash_back')
-    .setLabel('Back')
+    .setLabel(tr.t('logging.ui.back'))
     .setStyle(ButtonStyle.Secondary);
 }
 
-function createCategoryToggleButtons(enabledEvents = {}, loggingEnabled = false) {
+function createCategoryToggleButtons(enabledEvents = {}, loggingEnabled = false, lang = 'en') {
   const buttons = DASHBOARD_CATEGORIES.map((category) => {
     const wildcardDisabled = enabledEvents[`${category}.*`] === false;
     const categoryEvents = EVENT_TYPES_BY_CATEGORY[category] || [];
@@ -64,7 +88,7 @@ function createCategoryToggleButtons(enabledEvents = {}, loggingEnabled = false)
       ? true
       : categoryEvents.every((t) => enabledEvents[t] !== false);
     const isEnabled = loggingEnabled && !wildcardDisabled && allEnabled;
-    const label = DASHBOARD_CATEGORY_LABELS[category] || category;
+    const label = categoryLabel(category, { lang });
 
     return new ButtonBuilder()
       .setCustomId(`log_dash_toggle:${category}.*`)
@@ -79,102 +103,106 @@ function createCategoryToggleButtons(enabledEvents = {}, loggingEnabled = false)
   return rows;
 }
 
-export function createLoggingMainMenuSelect() {
+export function createLoggingMainMenuSelect({ lang = 'en' } = {}) {
+  const tr = botText(lang);
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId('log_dash_menu')
-      .setPlaceholder('Pick a setting to change')
+      .setPlaceholder(tr.t('logging.ui.menuPlaceholder'))
       .addOptions(
         new StringSelectMenuOptionBuilder()
-          .setLabel('Set audit log channel')
-          .setDescription('Moderation, messages, members, roles, etc.')
+          .setLabel(tr.t('logging.ui.setAudit'))
+          .setDescription(tr.t('logging.ui.setAuditHint'))
           .setValue('set:audit'),
         new StringSelectMenuOptionBuilder()
-          .setLabel('Set applications channel')
-          .setDescription('New applications and review updates')
+          .setLabel(tr.t('logging.ui.setApplications'))
+          .setDescription(tr.t('logging.ui.setApplicationsHint'))
           .setValue('set:applications'),
         new StringSelectMenuOptionBuilder()
-          .setLabel('Set reports channel')
-          .setDescription('Reports sent with /report')
+          .setLabel(tr.t('logging.ui.setReports'))
+          .setDescription(tr.t('logging.ui.setReportsHint'))
           .setValue('set:reports'),
         new StringSelectMenuOptionBuilder()
-          .setLabel('Clear audit channel')
+          .setLabel(tr.t('logging.ui.clearAudit'))
           .setValue('clear:audit'),
         new StringSelectMenuOptionBuilder()
-          .setLabel('Clear applications channel')
+          .setLabel(tr.t('logging.ui.clearApplications'))
           .setValue('clear:applications'),
         new StringSelectMenuOptionBuilder()
-          .setLabel('Clear reports channel')
+          .setLabel(tr.t('logging.ui.clearReports'))
           .setValue('clear:reports'),
         new StringSelectMenuOptionBuilder()
-          .setLabel('Event categories')
-          .setDescription('Pick which kinds of logs are sent')
+          .setLabel(tr.t('logging.ui.categories'))
+          .setDescription(tr.t('logging.ui.categoriesHint'))
           .setValue('view:categories'),
         new StringSelectMenuOptionBuilder()
-          .setLabel('Ignore filters')
-          .setDescription('Skip logs from specific users, channels or roles')
+          .setLabel(tr.t('logging.ui.filters'))
+          .setDescription(tr.t('logging.ui.filtersHint'))
           .setValue('view:filters'),
       ),
   );
 }
 
-export function createLoggingMainActionRow(loggingEnabled = false) {
+export function createLoggingMainActionRow(loggingEnabled = false, { lang = 'en' } = {}) {
+  const tr = botText(lang);
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('log_dash_toggle:audit_enabled')
-      .setLabel('Audit logging')
+      .setLabel(tr.t('logging.ui.auditLogging'))
       .setStyle(loggingEnabled ? ButtonStyle.Success : ButtonStyle.Danger),
     new ButtonBuilder()
       .setCustomId('log_dash_refresh')
-      .setLabel('Refresh')
+      .setLabel(tr.t('logging.ui.refresh'))
       .setStyle(ButtonStyle.Primary),
   );
 }
 
-export function createLoggingDashboardComponents(_enabledEvents, loggingEnabled = false) {
+export function createLoggingDashboardComponents(_enabledEvents, loggingEnabled = false, { lang = 'en' } = {}) {
   return [
-    createLoggingMainMenuSelect(),
-    createLoggingMainActionRow(loggingEnabled),
+    createLoggingMainMenuSelect({ lang }),
+    createLoggingMainActionRow(loggingEnabled, { lang }),
   ];
 }
 
-export function createLoggingCategoryViewComponents(enabledEvents, loggingEnabled = false) {
-  const categoryRows = createCategoryToggleButtons(enabledEvents, loggingEnabled);
+export function createLoggingCategoryViewComponents(enabledEvents, loggingEnabled = false, { lang = 'en' } = {}) {
+  const tr = botText(lang);
+  const categoryRows = createCategoryToggleButtons(enabledEvents, loggingEnabled, lang);
 
   const actionRow = new ActionRowBuilder().addComponents(
-    createBackButton(),
+    createBackButton(tr),
     new ButtonBuilder()
       .setCustomId('log_dash_toggle:all')
-      .setLabel('Toggle all categories')
+      .setLabel(tr.t('logging.ui.toggleAll'))
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('log_dash_refresh')
-      .setLabel('Refresh')
+      .setLabel(tr.t('logging.ui.refresh'))
       .setStyle(ButtonStyle.Primary),
   );
 
   return [...categoryRows, actionRow];
 }
 
-export function createLoggingFilterComponents() {
+export function createLoggingFilterComponents({ lang = 'en' } = {}) {
+  const tr = botText(lang);
   return [
     new ActionRowBuilder().addComponents(
-      createBackButton(),
+      createBackButton(tr),
       new ButtonBuilder()
         .setCustomId('log_dash_add_filter:user')
-        .setLabel('Ignore a user')
+        .setLabel(tr.t('logging.ui.ignoreUser'))
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId('log_dash_add_filter:channel')
-        .setLabel('Ignore a channel')
+        .setLabel(tr.t('logging.ui.ignoreChannel'))
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId('log_dash_add_filter:role')
-        .setLabel('Ignore a role')
+        .setLabel(tr.t('logging.ui.ignoreRole'))
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId('log_dash_remove_filter')
-        .setLabel('Remove one')
+        .setLabel(tr.t('logging.ui.removeOne'))
         .setStyle(ButtonStyle.Danger),
     ),
   ];

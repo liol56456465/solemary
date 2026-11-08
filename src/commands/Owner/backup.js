@@ -10,6 +10,11 @@ import {
 } from '../../services/structureBackupService.js';
 import { diffPayload } from '../../handlers/backupRevert.js';
 import { dateStamp } from '../../services/enforcement/format.js';
+import { textForInteraction } from '../../utils/botText.js';
+import { descriptionLocalizations } from '../../utils/commandLocalizations.js';
+
+// Every reply is ephemeral and the DMs go to the owner who ran it: that person's Discord language.
+// Progress lines from the backup services and their refusals stay as those services write them (English).
 
 function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
@@ -22,23 +27,23 @@ function isOwner(interaction) {
     return isBackupOwner(interaction.client, interaction.user.id);
 }
 
-async function handleStructure(interaction, client, sub) {
+async function handleStructure(interaction, client, sub, tr) {
     const mainId = enforcementConfig.mainGuildId;
     if (sub === 'snapshot') {
         const main = client.guilds.cache.get(mainId);
-        if (!main) throw userError('I cannot reach the main server.');
+        if (!main) throw userError(tr.t('owner.backup.noMain'));
         const row = await takeSnapshot(main);
-        return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed('Snapshot saved', `#${row.id}: ${row.summary}`)] });
+        return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed(tr.t('owner.backup.snapshotSavedTitle'), `#${row.id}: ${row.summary}`)] });
     }
     if (sub === 'changes' || sub === 'revert') {
         // Undo the nuke: compare a snapshot with the live main server; revert asks to confirm first.
         const main = client.guilds.cache.get(mainId);
-        if (!main) throw userError('I cannot reach the main server.');
+        if (!main) throw userError(tr.t('owner.backup.noMain'));
         const snapshot = await getSnapshot(mainId, interaction.options.getInteger('snapshot'));
-        if (!snapshot) throw userError('No such snapshot. See `/backup snapshots`.');
-        const payload = diffPayload(snapshot, diffAgainstLive(main, snapshot), { withButtons: sub === 'revert' });
+        if (!snapshot) throw userError(tr.t('owner.backup.noSnapshot'));
+        const payload = diffPayload(snapshot, diffAgainstLive(main, snapshot), { withButtons: sub === 'revert', lang: tr.lang });
         if (sub === 'revert' && payload.components.length) {
-            payload.content = '**Revert the main server to this snapshot?** Deleted roles and channels are recreated with their permissions, and changed permissions are put back. Nothing created since is deleted.';
+            payload.content = tr.t('owner.backup.revertConfirm');
         }
         return InteractionHelper.safeEditReply(interaction, payload);
     }
@@ -46,10 +51,10 @@ async function handleStructure(interaction, client, sub) {
         const rows = await listSnapshots(mainId);
         return InteractionHelper.safeEditReply(interaction, {
             embeds: [createEmbed({
-                title: 'Server snapshots',
+                title: tr.t('owner.backup.snapshotsTitle'),
                 description: rows.length
-                    ? `${rows.map((row) => `**#${row.id}** · ${dateStamp(row.created_at)} · ${row.summary}`).join('\n')}\n\nCompare with the server now: \`/backup changes snapshot:<number>\` · undo a nuke: \`/backup revert\` · rebuild elsewhere: \`/backup rebuild server_id:<id> snapshot:<number>\`.`
-                    : 'No snapshots yet. One is taken every day, or now with `/backup snapshot`.',
+                    ? `${rows.map((row) => `**#${row.id}** · ${dateStamp(row.created_at)} · ${row.summary}`).join('\n')}\n\n${tr.t('owner.backup.snapshotsHelp')}`.slice(0, 4096)
+                    : tr.t('owner.backup.noSnapshots'),
                 color: 'primary',
             })],
         });
@@ -57,27 +62,27 @@ async function handleStructure(interaction, client, sub) {
 
     const serverId = interaction.options.getString('server_id').trim();
     const target = client.guilds.cache.get(serverId);
-    if (!target) throw userError('I am not in that server. Invite the bot there first, with Administrator.');
-    if (serverId === mainId) throw userError('Rebuild creates the main server\'s structure in a *different* server.');
+    if (!target) throw userError(tr.t('owner.backup.notInServerAdmin'));
+    if (serverId === mainId) throw userError(tr.t('owner.backup.rebuildDifferent'));
     if (!target.members.me?.permissions.has(PermissionFlagsBits.Administrator)) {
-        throw userError(`Give me **Administrator** in ${target.name} first, so I can create roles and channels with their permissions.`);
+        throw userError(tr.t('owner.backup.needAdmin', { server: target.name }));
     }
     const snapshot = await getSnapshot(mainId, interaction.options.getInteger('snapshot'));
-    if (!snapshot) throw userError('No such snapshot. See `/backup snapshots`.');
+    if (!snapshot) throw userError(tr.t('owner.backup.noSnapshot'));
 
     await InteractionHelper.safeEditReply(interaction, {
-        embeds: [successEmbed('Rebuild started', `Creating ${snapshot.summary} from snapshot #${snapshot.id} in **${target.name}**. Existing roles and channels there are left alone.`)],
+        embeds: [successEmbed(tr.t('owner.backup.rebuildStartedTitle'), tr.t('owner.backup.rebuildStarted', { summary: snapshot.summary, id: snapshot.id, server: target.name }))],
     });
     const owner = interaction.user;
-    rebuildFromSnapshot(target, snapshot, (text) => interaction.editReply({ embeds: [successEmbed('Rebuild running', text)] }))
+    rebuildFromSnapshot(target, snapshot, (text) => interaction.editReply({ embeds: [successEmbed(tr.t('owner.backup.rebuildRunningTitle'), text)] }))
         .then(async (counts) => {
-            const summary = `**Rebuild of ${target.name} finished:** ${counts.roles} roles and ${counts.channels} channels created, ${counts.failed} failed. Next: \`/backup restore server_id:${target.id}\` to bring the members.`;
-            await interaction.editReply({ embeds: [successEmbed('Rebuild finished', summary)] }).catch(() => {});
+            const summary = tr.t('owner.backup.rebuildFinished', { server: target.name, roles: counts.roles, channels: counts.channels, failed: counts.failed, serverId: target.id });
+            await interaction.editReply({ embeds: [successEmbed(tr.t('owner.backup.rebuildFinishedTitle'), summary)] }).catch(() => {});
             await owner.send({ content: summary, allowedMentions: { parse: [] } }).catch(() => {});
         })
         .catch(async (error) => {
             logger.error(`Rebuild into ${target.id} stopped: ${error.message}`);
-            await owner.send({ content: `**Rebuild of ${target.name} stopped:** ${error.message}`, allowedMentions: { parse: [] } }).catch(() => {});
+            await owner.send({ content: tr.t('owner.backup.rebuildStopped', { server: target.name, error: error.message }).slice(0, 2000), allowedMentions: { parse: [] } }).catch(() => {});
         });
 }
 
@@ -86,29 +91,31 @@ export default {
     data: new SlashCommandBuilder()
         .setName('backup')
         .setDescription('Owner only: member and server-structure backups for recovering from a lost server')
-        .addSubcommand((sub) => sub.setName('status').setDescription('How many members can be restored'))
-        .addSubcommand((sub) => sub.setName('restore').setDescription('Add every restorable member to a server the bot is in')
-            .addStringOption((option) => option.setName('server_id').setDescription('ID of the server to add them to').setRequired(true).setMinLength(17).setMaxLength(20)))
-        .addSubcommand((sub) => sub.setName('snapshot').setDescription('Save the main server\'s roles and channels now (also done daily)'))
-        .addSubcommand((sub) => sub.setName('snapshots').setDescription('List saved snapshots of the main server'))
-        .addSubcommand((sub) => sub.setName('changes').setDescription('What changed in the main server since a snapshot (deleted roles/channels, permissions)')
-            .addIntegerOption((option) => option.setName('snapshot').setDescription('Snapshot number (default: latest)').setMinValue(1)))
-        .addSubcommand((sub) => sub.setName('revert').setDescription('Undo a nuke: restore deleted roles/channels and permissions from a snapshot')
-            .addIntegerOption((option) => option.setName('snapshot').setDescription('Snapshot number (default: latest)').setMinValue(1)))
-        .addSubcommand((sub) => sub.setName('rebuild').setDescription('Recreate the main server\'s roles and channels in another server')
-            .addStringOption((option) => option.setName('server_id').setDescription('ID of the new server').setRequired(true).setMinLength(17).setMaxLength(20))
-            .addIntegerOption((option) => option.setName('snapshot').setDescription('Snapshot number (default: latest)').setMinValue(1))),
+        .setDescriptionLocalizations(descriptionLocalizations('owner.backup.cmd.description'))
+        .addSubcommand((sub) => sub.setName('status').setDescription('How many members can be restored').setDescriptionLocalizations(descriptionLocalizations('owner.backup.cmd.status')))
+        .addSubcommand((sub) => sub.setName('restore').setDescription('Add every restorable member to a server the bot is in').setDescriptionLocalizations(descriptionLocalizations('owner.backup.cmd.restore'))
+            .addStringOption((option) => option.setName('server_id').setDescription('ID of the server to add them to').setDescriptionLocalizations(descriptionLocalizations('owner.backup.cmd.restoreServer')).setRequired(true).setMinLength(17).setMaxLength(20)))
+        .addSubcommand((sub) => sub.setName('snapshot').setDescription('Save the main server\'s roles and channels now (also done daily)').setDescriptionLocalizations(descriptionLocalizations('owner.backup.cmd.snapshot')))
+        .addSubcommand((sub) => sub.setName('snapshots').setDescription('List saved snapshots of the main server').setDescriptionLocalizations(descriptionLocalizations('owner.backup.cmd.snapshots')))
+        .addSubcommand((sub) => sub.setName('changes').setDescription('What changed in the main server since a snapshot (deleted roles/channels, permissions)').setDescriptionLocalizations(descriptionLocalizations('owner.backup.cmd.changes'))
+            .addIntegerOption((option) => option.setName('snapshot').setDescription('Snapshot number (default: latest)').setDescriptionLocalizations(descriptionLocalizations('owner.backup.cmd.snapshotNumber')).setMinValue(1)))
+        .addSubcommand((sub) => sub.setName('revert').setDescription('Undo a nuke: restore deleted roles/channels and permissions from a snapshot').setDescriptionLocalizations(descriptionLocalizations('owner.backup.cmd.revert'))
+            .addIntegerOption((option) => option.setName('snapshot').setDescription('Snapshot number (default: latest)').setDescriptionLocalizations(descriptionLocalizations('owner.backup.cmd.snapshotNumber')).setMinValue(1)))
+        .addSubcommand((sub) => sub.setName('rebuild').setDescription('Recreate the main server\'s roles and channels in another server').setDescriptionLocalizations(descriptionLocalizations('owner.backup.cmd.rebuild'))
+            .addStringOption((option) => option.setName('server_id').setDescription('ID of the new server').setDescriptionLocalizations(descriptionLocalizations('owner.backup.cmd.rebuildServer')).setRequired(true).setMinLength(17).setMaxLength(20))
+            .addIntegerOption((option) => option.setName('snapshot').setDescription('Snapshot number (default: latest)').setDescriptionLocalizations(descriptionLocalizations('owner.backup.cmd.snapshotNumber')).setMinValue(1))),
 
     async execute(interaction, config, client) {
+        const tr = textForInteraction(interaction);
         if (!isOwner(interaction)) {
-            throw new TitanBotError('Not the owner', ErrorTypes.PERMISSION, 'Only the server owner can use /backup.', { expected: true });
+            throw new TitanBotError('Not the owner', ErrorTypes.PERMISSION, tr.t('owner.backup.ownerOnly'), { expected: true });
         }
         const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
         if (!deferred) return;
 
         const sub = interaction.options.getSubcommand();
         if (['snapshot', 'snapshots', 'rebuild', 'changes', 'revert'].includes(sub)) {
-            return handleStructure(interaction, client, sub);
+            return handleStructure(interaction, client, sub, tr);
         }
 
         if (sub === 'status') {
@@ -117,13 +124,13 @@ export default {
             const state = getRestoreState();
             return InteractionHelper.safeEditReply(interaction, {
                 embeds: [createEmbed({
-                    title: 'Member backup',
+                    title: tr.t('owner.backup.statusTitle'),
                     description: [
-                        `**Restorable into Mewvo's own servers:** ${stored} (verified there with "Verify with Discord")`,
-                        main ? `**Of them in the main server now:** ${inGuild}` : '**Main server:** not reachable',
-                        state ? `**Restore running:** ${state.done}/${state.total} into \`${state.guildId}\`` : null,
+                        tr.t('owner.backup.statusStored', { stored }),
+                        main ? tr.t('owner.backup.statusInMain', { inGuild }) : tr.t('owner.backup.statusNoMain'),
+                        state ? tr.t('owner.backup.statusRunning', { done: state.done, total: state.total, guildId: state.guildId }) : null,
                         '',
-                        'Restore with `/backup restore server_id:<id>`. Only the main server, the support server or one in MEMBER_RESTORE_GUILD_IDS, and only members who verified in Mewvo\'s own servers (a verification in another server never counts). The bot must be in that server with **Create Invite**. Members with an active ban are skipped.',
+                        tr.t('owner.backup.statusHelp'),
                     ].filter((line) => line !== null).join('\n'),
                     color: 'primary',
                 })],
@@ -134,32 +141,32 @@ export default {
         const refusal = restoreRefusal(serverId);
         if (refusal) throw userError(refusal);
         const target = client.guilds.cache.get(serverId);
-        if (!target) throw userError('I am not in that server. Invite the bot there first.');
+        if (!target) throw userError(tr.t('owner.backup.notInServer'));
         if (!target.members.me?.permissions.has(PermissionFlagsBits.CreateInstantInvite)) {
-            throw userError(`I need the **Create Invite** permission in ${target.name} to add members.`);
+            throw userError(tr.t('owner.backup.needInvite', { server: target.name }));
         }
-        if (getRestoreState()) throw userError('A restore is already running. Check `/backup status`.');
+        if (getRestoreState()) throw userError(tr.t('owner.backup.restoreRunning'));
 
         const { stored } = await backupSummary(target);
         await InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed('Restore started', `Adding up to **${stored}** members who verified for **${target.name}**. This message updates as it goes, and you get a DM when it is done.`)],
+            embeds: [successEmbed(tr.t('owner.backup.restoreStartedTitle'), tr.t('owner.backup.restoreStarted', { stored, server: target.name }))],
         });
 
         const owner = interaction.user;
         // Runs after the command returns; the reply can only be edited for 15 minutes, so the DM is the final word.
-        restoreMembers(client, target, (text) => interaction.editReply({ embeds: [successEmbed('Restore running', text)] }))
+        restoreMembers(client, target, (text) => interaction.editReply({ embeds: [successEmbed(tr.t('owner.backup.restoreRunningTitle'), text)] }))
             .then(async (counts) => {
                 const summary = [
-                    `**Member restore into ${target.name} finished.**`,
-                    `Added: ${counts.added} · Already there: ${counts.already} · Skipped (active ban): ${counts.skippedBanned}`,
-                    `No usable authorization: ${counts.noToken} · Failed: ${counts.failed} · Total: ${counts.total}`,
+                    tr.t('owner.backup.restoreFinishedHead', { server: target.name }),
+                    tr.t('owner.backup.restoreFinishedCounts', { added: counts.added, already: counts.already, skipped: counts.skippedBanned }),
+                    tr.t('owner.backup.restoreFinishedMore', { noToken: counts.noToken, failed: counts.failed, total: counts.total }),
                 ].join('\n');
-                await interaction.editReply({ embeds: [successEmbed('Restore finished', summary)] }).catch(() => {});
+                await interaction.editReply({ embeds: [successEmbed(tr.t('owner.backup.restoreFinishedTitle'), summary)] }).catch(() => {});
                 await owner.send({ content: summary, allowedMentions: { parse: [] } }).catch(() => {});
             })
             .catch(async (error) => {
                 logger.error(`Member restore into ${target.id} stopped: ${error.message}`);
-                await owner.send({ content: `**Member restore into ${target.name} stopped:** ${error.message}`, allowedMentions: { parse: [] } }).catch(() => {});
+                await owner.send({ content: tr.t('owner.backup.restoreStopped', { server: target.name, error: error.message }).slice(0, 2000), allowedMentions: { parse: [] } }).catch(() => {});
             });
     },
 };

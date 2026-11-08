@@ -11,28 +11,32 @@ import { logger } from '../../utils/logger.js';
 import { query, withTransaction, T } from './db.js';
 import { getCaseByCode, setEndDmDelivered, OPEN_STATUSES } from './caseService.js';
 import { createRejoinInvite, lockFor, postModLog, sendDm } from './enforcementService.js';
-import { liftCase } from './appealService.js';
+import { liftCase, liftNoteText } from './appealService.js';
 import { liftExpired } from './expiryService.js';
 import { syncWarnRolesQuietly } from './warnRoleService.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
-import { caseVoidedDm } from './dmTemplates.js';
-import { resolveBotLanguage } from '../../utils/botText.js';
+import { caseVoidedDm, durationIn } from './dmTemplates.js';
+import { botText, resolveBotLanguage, textForGuild } from '../../utils/botText.js';
 import { dateStamp, formatDuration, parseDuration, truncate } from './format.js';
 
-function userError(message) {
-    return createError(message, ErrorTypes.VALIDATION, message, { expected: true });
+// `i18n` ({ code, params }): /case shows the error in the reader's language (commands/Enforcement/case.js).
+function userError(message, i18n = null) {
+    const error = createError(message, ErrorTypes.VALIDATION, message, { expected: true });
+    if (i18n) error.i18n = i18n;
+    return error;
 }
 
 async function loadCase(guildId, caseCode) {
     const record = await getCaseByCode(caseCode, guildId);
     if (!record || record.guild_id !== guildId) {
-        throw userError(`No case with code \`${caseCode}\` in this server.`);
+        throw userError(`No case with code \`${caseCode}\` in this server.`, { code: 'noCase', params: { code: caseCode } });
     }
     return record;
 }
 
-/** Display text for a stored duration value (ms as text, or null = permanent). */
-export function describeDuration(value) {
+/** Display text for a stored duration value (ms as text, or null = permanent); `lang` for the bot's words. */
+export function describeDuration(value, { lang = 'en' } = {}) {
+    if (lang !== 'en') return durationIn(value == null ? null : Number(value), lang);
     return value == null ? 'Permanent' : formatDuration(Number(value));
 }
 
@@ -46,7 +50,7 @@ export function parseEditDuration(input) {
     if (!raw) return undefined;
     if (/^(perm|permanent|forever)$/i.test(raw)) return null;
     const ms = parseDuration(raw);
-    if (ms == null) throw userError('Duration must look like 30m, 24h, 7d, 2w, 1mo (or "permanent" for a ban).');
+    if (ms == null) throw userError('Duration must look like 30m, 24h, 7d, 2w, 1mo (or "permanent" for a ban).', { code: 'badDuration', params: {} });
     return ms;
 }
 
@@ -86,8 +90,8 @@ export async function editCase(client, { guildId, caseCode, editor, reason, dura
 
     const result = await lockFor(guildId, found.target_user_id, () => withTransaction(async (db) => {
         const { rows: [row] } = await db.query(`SELECT * FROM ${T.cases} WHERE id = $1 FOR UPDATE`, [found.id]);
-        if (!row) throw userError(`No case with code \`${caseCode}\` in this server.`);
-        if (row.voided_at) throw userError(`\`${caseCode}\` was removed (a mistake) and can no longer be edited.`);
+        if (!row) throw userError(`No case with code \`${caseCode}\` in this server.`, { code: 'noCase', params: { code: caseCode } });
+        if (row.voided_at) throw userError(`\`${caseCode}\` was removed (a mistake) and can no longer be edited.`, { code: 'editVoided', params: { code: caseCode } });
 
         const changes = [];
         let newReason = row.reason;
@@ -101,19 +105,19 @@ export async function editCase(client, { guildId, caseCode, editor, reason, dura
 
         if (durationMs !== undefined) {
             if (row.type !== 'ban' && row.type !== 'mute') {
-                throw userError(`Only bans and mutes have a duration; \`${caseCode}\` is a ${row.type}.`);
+                throw userError(`Only bans and mutes have a duration; \`${caseCode}\` is a ${row.type}.`, { code: 'noDurationType', params: { code: caseCode, type: row.type } });
             }
             if (row.is_auto) {
-                throw userError('Automatic warn-ladder bans keep their ladder duration. Remove the case (if it was a mistake) or unban instead.');
+                throw userError('Automatic warn-ladder bans keep their ladder duration. Remove the case (if it was a mistake) or unban instead.', { code: 'ladderDuration', params: {} });
             }
             if (row.is_imported) {
-                throw userError('Imported cases cannot change duration.');
+                throw userError('Imported cases cannot change duration.', { code: 'importedDuration', params: {} });
             }
             if (!OPEN_STATUSES.includes(row.status)) {
-                throw userError(`\`${caseCode}\` has already ended (${row.status}); only open bans and mutes can change duration.`);
+                throw userError(`\`${caseCode}\` has already ended (${row.status}); only open bans and mutes can change duration.`, { code: 'endedDuration', params: { code: caseCode, status: row.status } });
             }
             if (durationMs === null && row.type === 'mute') {
-                throw userError('A mute needs a duration (e.g. 30m, 24h, 7d).');
+                throw userError('A mute needs a duration (e.g. 30m, 24h, 7d).', { code: 'muteNeedsDuration', params: {} });
             }
             const oldMs = row.duration_ms == null ? null : Number(row.duration_ms);
             if (durationMs !== oldMs) {
@@ -128,7 +132,7 @@ export async function editCase(client, { guildId, caseCode, editor, reason, dura
         }
 
         if (changes.length === 0) {
-            throw userError('Nothing to change: give a new reason or duration that differs from the current one.');
+            throw userError('Nothing to change: give a new reason or duration that differs from the current one.', { code: 'nothingToChange', params: {} });
         }
 
         const { rows: [after] } = await db.query(
@@ -146,17 +150,20 @@ export async function editCase(client, { guildId, caseCode, editor, reason, dura
     }));
 
     if (!result.after.is_test && client) {
+        // A staff-channel post: the server's language (utils/botText.js mixed rule).
+        const tr = textForGuild(result.after.guild_id, { userId: result.after.target_user_id, purpose: 'public' });
+        const lang = tr.lang;
         await postModLog(client, 'caseedit', [
-            { name: 'Case', value: `\`${result.after.case_code}\` · ${truncate(result.after.name, 200)} (${result.after.type})` },
-            { name: 'User', value: `${result.after.target_username} (${result.after.target_user_id})` },
-            { name: 'Edited by', value: `${editor.username} (${editor.id})` },
+            { name: tr.t('staff.case.log.case'), value: `\`${result.after.case_code}\` · ${truncate(result.after.name, 200)} (${result.after.type})` },
+            { name: tr.t('staff.case.log.user'), value: `${result.after.target_username} (${result.after.target_user_id})` },
+            { name: tr.t('staff.case.log.editedBy'), value: `${editor.username} (${editor.id})` },
             ...result.changes.map((change) => ({
-                name: change.field === 'reason' ? 'Reason' : 'Duration',
+                name: change.field === 'reason' ? tr.t('staff.case.log.reason') : tr.t('staff.case.log.duration'),
                 value: truncate(change.field === 'reason'
                     ? `${change.oldValue} → ${change.newValue}`
-                    : `${describeDuration(change.oldValue)} → ${describeDuration(change.newValue)}${result.after.expires_at ? ` (ends ${dateStamp(result.after.expires_at)})` : ''}`, 1024),
+                    : `${describeDuration(change.oldValue, { lang })} → ${describeDuration(change.newValue, { lang })}${result.after.expires_at ? tr.t('staff.case.log.endsSuffix', { date: dateStamp(result.after.expires_at) }) : ''}`, 1024),
             })),
-        ], { guildId: result.after.guild_id, title: 'Case edited' });
+        ], { guildId: result.after.guild_id, title: tr.t('staff.case.log.editedTitle') });
     }
     return result;
 }
@@ -171,13 +178,13 @@ async function isBanned(guild, userId) {
  * Cases that already ended are only marked (an old ladder step is not rewound).
  * Returns { record, notes, dmDelivered }.
  */
-export async function voidCase(client, { guildId, caseCode, admin, reason }) {
+export async function voidCase(client, { guildId, caseCode, admin, reason, lang = 'en' }) {
     const found = await loadCase(guildId, caseCode);
     const mainGuild = client.guilds.cache.get(guildId) || null;
 
     return lockFor(guildId, found.target_user_id, async () => {
         let record = await loadCase(guildId, caseCode);
-        if (record.voided_at) throw userError(`\`${caseCode}\` is already removed.`);
+        if (record.voided_at) throw userError(`\`${caseCode}\` is already removed.`, { code: 'alreadyRemoved', params: { code: caseCode } });
 
         // A ban/mute past its end that the expiry job has not reached yet: lift it the
         // normal way first, or the voided row would leave the user banned/muted.
@@ -190,16 +197,25 @@ export async function voidCase(client, { guildId, caseCode, admin, reason }) {
         const wasOpen = OPEN_STATUSES.includes(record.status);
         const bannedBefore = !record.is_test && await isBanned(mainGuild, record.target_user_id);
         const notes = [];
+        // This service's own notes: `notes` (returned) in the caller's language, the mod log in the server's.
+        const logTr = textForGuild(record.guild_id, { userId: record.target_user_id, purpose: 'public' });
+        const replyTr = botText(lang);
+        const logNotes = [];
 
         if (wasOpen) {
-            notes.push(...await liftCase(client, record, admin, {
+            const lifted = await liftCase(client, record, admin, {
                 reason: `Removed (a mistake) by ${admin.username}: ${reason}`,
                 via: 'case remove',
-            }));
+                entries: true,
+            });
+            notes.push(...lifted.map((entry) => liftNoteText(entry, replyTr.lang)));
+            logNotes.push(...lifted.map((entry) => liftNoteText(entry, logTr.lang)));
         } else if (record.status === 'expired') {
-            notes.push('It had already ended, so nothing was lifted.');
+            notes.push(replyTr.t('staff.case.remove.alreadyEnded'));
+            logNotes.push(logTr.t('staff.case.remove.alreadyEnded'));
         } else {
-            notes.push('It had already been lifted.');
+            notes.push(replyTr.t('staff.case.remove.alreadyLifted'));
+            logNotes.push(logTr.t('staff.case.remove.alreadyLifted'));
         }
 
         const { rows: [voided] } = await query(
@@ -211,7 +227,7 @@ export async function voidCase(client, { guildId, caseCode, admin, reason }) {
              RETURNING *`,
             [record.id, admin.id, reason, `Removed (a mistake) by ${admin.username}: ${reason}`]
         );
-        if (!voided) throw userError(`\`${caseCode}\` is already removed.`);
+        if (!voided) throw userError(`\`${caseCode}\` is already removed.`, { code: 'alreadyRemoved', params: { code: caseCode } });
 
         if (!record.is_test && mainGuild) {
             await syncWarnRolesQuietly(mainGuild, record.target_user_id);
@@ -234,13 +250,13 @@ export async function voidCase(client, { guildId, caseCode, admin, reason }) {
 
         if (!record.is_test) {
             await postModLog(client, 'casevoid', [
-                { name: 'Case', value: `\`${record.case_code}\` · ${truncate(record.name, 200)} (${record.type})` },
-                { name: 'User', value: `${record.target_username} (${record.target_user_id})` },
-                { name: 'Removed by', value: `${admin.username} (${admin.id})` },
-                { name: 'Reason', value: truncate(reason, 1024) },
-                ...(notes.length ? [{ name: 'Effect', value: truncate(notes.join('\n'), 1024) }] : []),
-                { name: 'DM', value: dmDelivered ? 'Delivered' : 'Not delivered' },
-            ], { guildId: record.guild_id, title: 'Case removed (a mistake, it no longer counts)' });
+                { name: logTr.t('staff.case.log.case'), value: `\`${record.case_code}\` · ${truncate(record.name, 200)} (${record.type})` },
+                { name: logTr.t('staff.case.log.user'), value: `${record.target_username} (${record.target_user_id})` },
+                { name: logTr.t('staff.case.log.removedBy'), value: `${admin.username} (${admin.id})` },
+                { name: logTr.t('staff.case.log.reason'), value: truncate(reason, 1024) },
+                ...(logNotes.length ? [{ name: logTr.t('staff.case.log.effect'), value: truncate(logNotes.join('\n'), 1024) }] : []),
+                { name: logTr.t('staff.case.log.dm'), value: dmDelivered ? logTr.t('staff.case.log.delivered') : logTr.t('staff.case.log.notDelivered') },
+            ], { guildId: record.guild_id, title: logTr.t('staff.case.log.removedTitle') });
         }
         return { record: voided, notes, dmDelivered };
     });

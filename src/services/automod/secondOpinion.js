@@ -8,6 +8,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { automodConfig } from '../../config/automod.js';
 import { createEmbed } from '../../utils/embeds.js';
+import { botText } from '../../utils/botText.js';
 
 const CUSTOM_ID_MAX = 100;
 
@@ -33,27 +34,29 @@ export function fitCodes(codes, prefix) {
     return kept.join(',');
 }
 
-export function secondOpinionPayload(keeperId, codes, cardUrl = null) {
+/** The request, posted in the review channel: `lang` is the server's language (default English). */
+export function secondOpinionPayload(keeperId, codes, cardUrl = null, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     const confirmPrefix = `amreview:2nd:confirm:${keeperId}:`;
     const undoPrefix = `amreview:2nd:undo:${keeperId}:`;
     const buttonCodes = fitCodes(codes, confirmPrefix); // the longer prefix: fits both
     const shown = buttonCodes.split(',').filter(Boolean);
     const omitted = codes.length - shown.length;
     const embed = createEmbed({
-        title: 'Second opinion?',
+        title: tr.t('automod.review.second.title'),
         description: [
-            `Kept by <@${keeperId}>. A second admin can confirm or undo.`,
-            `Case${shown.length > 1 ? 's' : ''}: ${shown.map((c) => `\`${c}\``).join(' ')}${omitted > 0 ? ` (+${omitted} older, use \`/case\`)` : ''}`,
-            cardUrl ? `[Open the card](${cardUrl})` : null,
+            tr.t('automod.review.second.kept', { user: `<@${keeperId}>` }),
+            `${tr.tp('automod.review.second.cases', shown.length, { codes: shown.map((c) => `\`${c}\``).join(' ') })}${omitted > 0 ? tr.t('automod.review.second.omitted', { omitted }) : ''}`,
+            cardUrl ? tr.t('automod.review.second.open', { url: cardUrl }) : null,
         ].filter(Boolean).join('\n'),
         color: 'info',
-        footer: { text: `Random spot check (${Math.round(automodConfig.secondOpinionRate * 100)}% of kept cards)` },
+        footer: { text: tr.t('automod.review.second.footer', { percent: Math.round(automodConfig.secondOpinionRate * 100) }) },
     });
     return {
         embeds: [embed],
         components: [new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId(`${confirmPrefix}${buttonCodes}`).setLabel('Confirm').setStyle(ButtonStyle.Success),
-            new ButtonBuilder().setCustomId(`${undoPrefix}${buttonCodes}`).setLabel('Undo').setStyle(ButtonStyle.Danger),
+            new ButtonBuilder().setCustomId(`${confirmPrefix}${buttonCodes}`).setLabel(tr.t('automod.review.second.confirm')).setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId(`${undoPrefix}${buttonCodes}`).setLabel(tr.t('automod.review.button.undo')).setStyle(ButtonStyle.Danger),
         )],
     };
 }
