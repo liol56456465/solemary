@@ -31,7 +31,9 @@ import { getAutomodSettings, isLegacyAutomodGuild } from './automodSettings.js';
 import { db, getFromDb, setInDb, deleteFromDb } from '../../utils/database.js';
 import { query, T } from '../enforcement/db.js';
 import { postModLog } from '../enforcement/enforcementService.js';
-import { dateStamp } from '../enforcement/format.js';
+import { dateStamp, truncate } from '../enforcement/format.js';
+import { durationIn } from '../enforcement/dmTemplates.js';
+import { botText, textForGuild } from '../../utils/botText.js';
 import { nukeAlertRow, postAlert } from './alertPost.js';
 import { snapshotIfStale } from '../structureBackupService.js';
 
@@ -114,9 +116,33 @@ function isStaffRole(role) {
         && STAFF_ROLE_PERMISSIONS.some((flag) => role.permissions.has(flag));
 }
 
-async function alertOwner(guild, text) {
+// Language (docs/bot-i18n.md): staff-channel posts and the owner's DM are in the server's language
+// (the same setting today; the DM asks with purpose 'dm' so a later member preference applies).
+// What is stored (the saved-roles reason, Discord audit log reasons) stays English.
+const postText = (guild) => textForGuild(guild.id, { purpose: 'public' });
+
+/** `build(tr)` → the DM text in the owner's language (cut to Discord's 2000). */
+async function alertOwner(guild, build) {
     const owner = await guild.fetchOwner().catch(() => null);
-    await owner?.send({ content: text, allowedMentions: { parse: [] } }).catch(() => {});
+    if (!owner) return;
+    const tr = textForGuild(guild.id, { member: owner, userId: owner.id, purpose: 'dm' });
+    await owner.send({ content: truncate(build(tr), 2000), allowedMentions: { parse: [] } }).catch(() => {});
+}
+
+/**
+ * Why the guard acted, as { en, text(tr) }: `en` is stored with the saved roles and in the audit
+ * log; text(tr) is shown. kind: banKick | deletes | webhooks | permission | staffWarnings.
+ */
+export function guardWhy(kind, { count = 0, permissions = '', role = '' } = {}) {
+    const text = (tr) => {
+        const window = durationIn(automodConfig.guardWindowMs, tr.lang);
+        if (kind === 'banKick') return tr.tp('automod.guard.why.banKick', count, { window });
+        if (kind === 'deletes') return tr.tp('automod.guard.why.deletes', count, { window });
+        if (kind === 'webhooks') return tr.tp('automod.guard.why.webhooks', count, { window });
+        if (kind === 'permission') return tr.t('automod.guard.why.permission', { permissions, role });
+        return tr.tp('automod.guard.why.staffWarnings', count);
+    };
+    return { en: text(botText('en')), text };
 }
 
 /**
@@ -155,11 +181,12 @@ export async function restoreStaffRoles(guild, userId, restoredBy) {
     const roles = backup.roleIds.map((id) => guild.roles.cache.get(id)).filter((role) => role?.editable);
     if (roles.length) await member.roles.add(roles, `Staff roles restored by ${restoredBy.username}`);
     await deleteFromDb(backupKey(guild.id, userId));
+    const tr = postText(guild);
     await postModLog(guild.client, 'staff', [
-        { name: 'Staff member', value: `<@${userId}> ${member.user.username} (\`${userId}\`)` },
-        { name: 'Restored by', value: `${restoredBy.username} (${restoredBy.id})` },
-        { name: 'Roles', value: roles.map((role) => role.name).join(', ') || 'None could be restored' },
-    ], { guildId: guild.id, title: 'Staff roles restored' });
+        { name: tr.t('automod.guard.field.staffMember'), value: `<@${userId}> ${member.user.username} (\`${userId}\`)` },
+        { name: tr.t('automod.guard.field.restoredBy'), value: `${restoredBy.username} (${restoredBy.id})` },
+        { name: tr.t('automod.guard.field.roles'), value: roles.map((role) => role.name).join(', ') || tr.t('automod.guard.noneRestored') },
+    ], { guildId: guild.id, title: tr.t('automod.guard.title.restored') });
     return roles;
 }
 
@@ -192,33 +219,87 @@ function onNukeDetected(guild, offenderId) {
     return at;
 }
 
-/** `nuke`: the alert gets the nuke buttons (nukeAlertRow); `at` from onNukeDetected. */
-async function demote(guild, member, why, { nuke = false, at = Date.now() } = {}) {
-    const { removed, kept } = await stripStaffRoles(member, `Staff guard: ${why}`);
+/** `nuke`: the alert gets the nuke buttons (nukeAlertRow); `at` from onNukeDetected. `why`: guardWhy(). */
+/**
+ * The "Staff roles removed" post and the owner's DM text, in one language (pure, for tests):
+ * { title, fields, summary }. `member`: { id, user: { username } }; `why`: guardWhy(); role names.
+ */
+export function staffRemovedContent({ member, why, removedNames = '', keptNames = '', nuke = false }, { lang = 'en' } = {}) {
+    const tr = botText(lang);
+    // The nuke alert's button labels (alertPost.js nukeAlertRow), so the text names them as shown.
+    const buttons = { showDiff: tr.t('automod.alert.showDiff'), revert: tr.t('automod.alert.revert'), panic: tr.t('automod.alert.panic') };
     const summary = [
-        `**Staff member:** ${member.user.username} (\`${member.id}\`)`,
-        `**Why:** ${why}`,
-        `**Removed roles:** ${removed.map((role) => role.name).join(', ') || 'none'}`,
-        kept.length ? `**Could not remove (above my role):** ${kept.map((role) => role.name).join(', ')}` : null,
-        'Restore with `/staff restore`.',
-        nuke ? 'Undo the damage: **Show what changed**, then **Revert…** on the alert.' : null,
+        tr.t('automod.guard.summary.staffMember', { name: member.user.username, id: member.id }),
+        tr.t('automod.guard.summary.why', { why: why.text(tr) }),
+        tr.t('automod.guard.summary.removed', { roles: removedNames || tr.t('automod.guard.none') }),
+        keptNames ? tr.t('automod.guard.summary.couldNot', { roles: keptNames }) : null,
+        tr.t('automod.guard.summary.restore'),
+        nuke ? tr.t('automod.guard.summary.nukeUndo', buttons) : null,
     ].filter(Boolean).join('\n');
     const fields = [
-        { name: 'Staff member', value: `<@${member.id}> ${member.user.username} (\`${member.id}\`)` },
-        { name: 'Why', value: why },
-        { name: 'Removed roles', value: removed.map((role) => role.name).join(', ') || 'none' },
-        ...(kept.length ? [{ name: 'Could not remove (above my role)', value: kept.map((role) => role.name).join(', ') }] : []),
-        { name: 'Restore', value: nuke ? '`/staff restore` · damage: **Show what changed**, then **Revert…** · **Lock down (panic)** pauses invites and DMs' : '`/staff restore`' },
+        { name: tr.t('automod.guard.field.staffMember'), value: `<@${member.id}> ${member.user.username} (\`${member.id}\`)` },
+        { name: tr.t('automod.guard.field.why'), value: why.text(tr) },
+        { name: tr.t('automod.guard.field.removedRoles'), value: removedNames || tr.t('automod.guard.none') },
+        ...(keptNames ? [{ name: tr.t('automod.guard.field.couldNot'), value: keptNames }] : []),
+        { name: tr.t('automod.guard.field.restore'), value: nuke ? tr.t('automod.guard.restoreNuke', buttons) : '`/staff restore`' },
     ];
-    if (nuke) await postAlert(guild.client, 'staff', { guildId: guild.id, title: 'Staff roles removed', fields, components: [nukeAlertRow(at, guild.id, member.id)] });
-    else await postModLog(guild.client, 'staff', fields, { guildId: guild.id, title: 'Staff roles removed' });
-    await alertOwner(guild, `**Staff guard in ${guild.name}**\n${summary}`);
-    logger.warn(`Staff guard removed roles from ${member.id}: ${why}`);
+    return { title: tr.t('automod.guard.title.removed'), fields, summary };
 }
 
-async function alertNuke(guild, title, fields, { offenderId, at }) {
+async function demote(guild, member, why, { nuke = false, at = Date.now() } = {}) {
+    const { removed, kept } = await stripStaffRoles(member, `Staff guard: ${why.en}`);
+    const names = { removedNames: removed.map((role) => role.name).join(', '), keptNames: kept.map((role) => role.name).join(', ') };
+    const { title, fields } = staffRemovedContent({ member, why, nuke, ...names }, { lang: postText(guild).lang });
+    if (nuke) await postAlert(guild.client, 'staff', { guildId: guild.id, title, fields, components: [nukeAlertRow(at, guild.id, member.id)] });
+    else await postModLog(guild.client, 'staff', fields, { guildId: guild.id, title });
+    await alertOwner(guild, (dmTr) => `${dmTr.t('automod.guard.dm.header', { server: guild.name })}\n${staffRemovedContent({ member, why, nuke, ...names }, { lang: dmTr.lang }).summary}`);
+    logger.warn(`Staff guard removed roles from ${member.id}: ${why.en}`);
+}
+
+/**
+ * A nuke alert's { title, fields } in one language (pure, for tests). kind: botAdded
+ * { botId, executor, kicked } | webhooks { executor, deleted } | permission { roleText, names, executor, ok }.
+ */
+export function nukeAlertContent(kind, d, { lang = 'en' } = {}) {
+    const tr = botText(lang);
+    if (kind === 'botAdded') {
+        return {
+            title: tr.t('automod.guard.title.botRemoved'),
+            fields: [
+                { name: tr.t('automod.guard.field.bot'), value: `<@${d.botId}> (\`${d.botId}\`)` },
+                { name: tr.t('automod.guard.field.addedBy'), value: d.executor },
+                { name: tr.t('automod.guard.field.result'), value: d.kicked ? tr.t('automod.guard.result.kicked') : tr.t('automod.guard.result.kickFailed') },
+            ],
+        };
+    }
+    if (kind === 'webhooks') {
+        return {
+            title: tr.t('automod.guard.title.webhookSpam'),
+            fields: [
+                { name: tr.t('automod.guard.field.createdBy'), value: d.executor },
+                { name: tr.t('automod.guard.field.webhooksDeleted'), value: String(d.deleted) },
+            ],
+        };
+    }
+    return {
+        title: tr.t('automod.guard.title.permissionReverted'),
+        fields: [
+            { name: tr.t('automod.guard.field.role'), value: d.roleText },
+            { name: tr.t('automod.guard.field.granted'), value: d.names },
+            { name: tr.t('automod.guard.field.by'), value: d.executor },
+            { name: tr.t('automod.guard.field.result'), value: d.ok ? tr.t('automod.guard.result.reverted') : tr.t('automod.guard.result.revertFailed') },
+        ],
+    };
+}
+
+/** `build(tr)` → { title, fields } in a language: the alert (server's) and the owner's DM. */
+async function alertNuke(guild, build, { offenderId, at }) {
+    const { title, fields } = build(postText(guild));
     await postAlert(guild.client, 'staff', { guildId: guild.id, title, fields, components: [nukeAlertRow(at, guild.id, offenderId)] });
-    await alertOwner(guild, `**${title} in ${guild.name}**\n${fields.map((f) => `**${f.name}:** ${f.value}`).join('\n')}`);
+    await alertOwner(guild, (tr) => {
+        const dm = build(tr);
+        return `${tr.t('automod.guard.dm.nukeHeader', { title: dm.title, server: guild.name })}\n${dm.fields.map((f) => `**${f.name}:** ${f.value}`).join('\n')}`;
+    });
 }
 
 function grantedBits(entry) {
@@ -243,11 +324,7 @@ async function handleNukeEntry(entry, guild) {
         const botId = entry.targetId;
         const at = onNukeDetected(guild, executorId);
         const kicked = await guild.members.kick(botId, 'Anti-nuke: bot added without the owner').then(() => true).catch(() => false);
-        await alertNuke(guild, 'Unapproved bot removed', [
-            { name: 'Bot', value: `<@${botId}> (\`${botId}\`)` },
-            { name: 'Added by', value: executor },
-            { name: 'Result', value: kicked ? 'Kicked. The owner can add it again if it is wanted.' : 'Could not kick it (it may be above my role). Remove it by hand.' },
-        ], { offenderId: executorId, at });
+        await alertNuke(guild, (tr) => nukeAlertContent('botAdded', { botId, executor, kicked }, { lang: tr.lang }), { offenderId: executorId, at });
         return true;
     }
 
@@ -264,11 +341,8 @@ async function handleNukeEntry(entry, guild) {
         const webhooks = await guild.fetchWebhooks().catch(() => null);
         const theirs = webhooks ? [...webhooks.values()].filter((hook) => hook.owner?.id === executorId) : [];
         for (const hook of theirs) await hook.delete('Anti-nuke: webhook spam').catch(() => {});
-        await alertNuke(guild, 'Webhook spam stopped', [
-            { name: 'Created by', value: executor },
-            { name: 'Webhooks deleted', value: String(theirs.length) },
-        ], { offenderId: executorId, at });
-        await demoteExecutor(guild, executorId, `${times.length} webhooks created within ${automodConfig.guardWindowMs / 60000} minutes`, at);
+        await alertNuke(guild, (tr) => nukeAlertContent('webhooks', { executor, deleted: theirs.length }, { lang: tr.lang }), { offenderId: executorId, at });
+        await demoteExecutor(guild, executorId, guardWhy('webhooks', { count: times.length }), at);
         return true;
     }
 
@@ -286,13 +360,9 @@ async function handleNukeEntry(entry, guild) {
         const reverted = flagged.reduce((bits, flag) => bits & ~flag, role.permissions.bitfield);
         const ok = await role.setPermissions(reverted, 'Anti-nuke: dangerous permission granted without the owner').then(() => true).catch(() => false);
         const names = flagged.map((flag) => Object.entries(PermissionFlagsBits).find(([, bit]) => bit === flag)?.[0]).join(', ');
-        await alertNuke(guild, 'Dangerous permission reverted', [
-            { name: 'Role', value: isEveryone ? '@everyone' : `${role.name} (\`${role.id}\`)` },
-            { name: 'Granted', value: names },
-            { name: 'By', value: executor },
-            { name: 'Result', value: ok ? 'Reverted.' : 'Could not revert (the role may be above mine). Fix it by hand.' },
-        ], { offenderId: executorId, at });
-        await demoteExecutor(guild, executorId, `gave ${names} to ${isEveryone ? '@everyone' : role.name}`, at);
+        const roleText = isEveryone ? '@everyone' : `${role.name} (\`${role.id}\`)`;
+        await alertNuke(guild, (tr) => nukeAlertContent('permission', { roleText, names, executor, ok }, { lang: tr.lang }), { offenderId: executorId, at });
+        await demoteExecutor(guild, executorId, guardWhy('permission', { permissions: names, role: isEveryone ? '@everyone' : role.name }), at);
         return true;
     }
     return false;
@@ -323,10 +393,7 @@ export async function handleAuditLogEntry(entry, guild) {
     const at = kind === 'delete' ? onNukeDetected(guild, executorId) : Date.now();
     const member = await guild.members.fetch(executorId).catch(() => null);
     if (!member) return;
-    const minutes = automodConfig.guardWindowMs / 60000;
-    const why = kind === 'banKick'
-        ? `${times.length} bans/kicks within ${minutes} minutes`
-        : `${times.length} channel/role deletions within ${minutes} minutes`;
+    const why = guardWhy(kind === 'banKick' ? 'banKick' : 'deletes', { count: times.length });
     await demote(guild, member, why, { nuke: kind === 'delete', at }).catch((error) => logger.error(`Staff guard could not demote ${executorId}: ${error.message}`));
 }
 
@@ -356,25 +423,29 @@ export async function giveStaffWarning(guild, member, giver, reason) {
     );
     const active = await countActiveStaffWarnings(guild.id, member.id);
 
+    const limit = automodConfig.staffWarnLimit;
+    const tr = postText(guild);
     await postModLog(guild.client, 'staff', [
-        { name: 'Staff member', value: `<@${member.id}> ${member.user.username} (\`${member.id}\`)` },
-        { name: 'Given by', value: `${giver.username} (${giver.id})` },
-        { name: 'Reason', value: reason },
-        { name: 'Active staff warnings', value: `${active} of ${automodConfig.staffWarnLimit}`, inline: true },
-        { name: 'Expires', value: dateStamp(expiresAt), inline: true },
-    ], { guildId: guild.id, title: 'Staff warning' });
+        { name: tr.t('automod.guard.field.staffMember'), value: `<@${member.id}> ${member.user.username} (\`${member.id}\`)` },
+        { name: tr.t('automod.guard.field.givenBy'), value: `${giver.username} (${giver.id})` },
+        { name: tr.t('automod.guard.field.reason'), value: reason },
+        { name: tr.t('automod.guard.field.activeWarnings'), value: tr.t('automod.guard.ofLimit', { active, limit }), inline: true },
+        { name: tr.t('automod.guard.field.expires'), value: dateStamp(expiresAt), inline: true },
+    ], { guildId: guild.id, title: tr.t('automod.guard.title.staffWarning') });
+    // DM to the staff member: the server's language.
+    const dmTr = textForGuild(guild.id, { member, userId: member.id, purpose: 'dm' });
     await member.send({
-        content: [
-            `**Staff warning in ${guild.name}** (${active} of ${automodConfig.staffWarnLimit})`,
-            `Reason: ${reason}`,
-            `It expires ${dateStamp(expiresAt)}. At ${automodConfig.staffWarnLimit} active warnings you lose your staff role.`,
-        ].join('\n'),
+        content: truncate([
+            dmTr.t('automod.guard.warnDm.header', { server: guild.name, active, limit }),
+            dmTr.t('enforcement.dm.reason', { reason }),
+            dmTr.t('automod.guard.warnDm.expires', { date: dateStamp(expiresAt), limit }),
+        ].join('\n'), 2000),
         allowedMentions: { parse: [] },
     }).catch(() => {});
 
     let demoted = false;
     if (active >= automodConfig.staffWarnLimit) {
-        await demote(guild, member, `${active} active staff warnings`);
+        await demote(guild, member, guardWhy('staffWarnings', { count: active }));
         demoted = true;
     }
     return { active, demoted };

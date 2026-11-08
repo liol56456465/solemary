@@ -1,0 +1,743 @@
+{
+    "review": {
+        "status": {
+            "kept": "Kept",
+            "applied": "Applied",
+            "changed": "Changed",
+            "deleted": "Message deleted",
+            "approved": "Approved",
+            "undone": "Undone",
+            "dismissed": "Dismissed",
+            "denied": "Denied",
+            "failed": "Failed",
+            "reviewed": "Reviewed"
+        },
+        "action": {
+            "warn": "Warn",
+            "mute1h": "Mute 1 hour",
+            "mute1d": "Mute 1 day",
+            "ban7d": "Ban 7 days",
+            "ban30d": "Ban 30 days",
+            "permban": "Permanent ban"
+        },
+        "rule": {
+            "scam": "Scam or phishing link",
+            "nsfw": "NSFW content",
+            "sexual": "Sexual harassment or references",
+            "harassment": "Harassment",
+            "privacy": "Sharing personal info",
+            "advertising": "Unauthorized advertising",
+            "impersonation": "Impersonation or deception",
+            "language": "Inappropriate language",
+            "disrespect": "Disrespect or drama",
+            "mentions": "Mass mentions",
+            "spam": "Spam",
+            "caps": "Excessive caps",
+            "characters": "Non-English characters or fancy fonts",
+            "english": "English only"
+        },
+        "step": {
+            "warn": "Warn",
+            "kick": "Kick",
+            "mute": "Mute {duration}",
+            "ban": "Ban {duration}",
+            "permanentBan": "Permanent ban"
+        },
+        "verb": {
+            "act": "act",
+            "warn": "warn",
+            "kick": "kick",
+            "mute": "mute {duration}",
+            "ban": "ban {duration}",
+            "permanentBan": "ban permanently"
+        },
+        "outcome": {
+            "warn": "Warned",
+            "kick": "Kicked",
+            "mute": "Muted {duration}",
+            "ban": "Banned {duration}",
+            "permanentBan": "Permanently banned"
+        },
+        "outcomeShort": {
+            "warn": "warned",
+            "kick": "kicked",
+            "mute": "muted {duration}",
+            "ban": "banned {duration}",
+            "permanentBan": "permanently banned"
+        },
+        "memberReport": "Member report",
+        "unknownUser": "unknown",
+        "title": {
+            "monitor": "Report only (don't delete): would {action} · {rule}",
+            "deleteTheMessage": "delete the message",
+            "automod": "Automod · {rule}",
+            "failed": "Failed to {action} · {rule}",
+            "raid": "Kicked (raid joiner) · {rule}"
+        },
+        "card": {
+            "brokeRule": "broke a rule",
+            "inChannel": " in {channel}",
+            "probation": "in an extra-watch period after a ban (rejoined, until {date})",
+            "probationLadder": "In an extra-watch period after a ban (rejoined, until {date}): the ladder starts one step higher for them.",
+            "offence": "{ordinal} {rule} offence in 30 days.",
+            "reportRemoved": "The message was removed by member reports.",
+            "reportPunish": "Punish the author below, or dismiss the report.",
+            "monitorNothing": "Nothing was done (report only (don't delete) mode). Pick a punishment below to apply it.",
+            "raidKicked": "They joined during a raid lockdown, so they were kicked instead of the usual punishment.",
+            "notApplied": "Not applied: {error}",
+            "limitBan": "This warn reached the warning limit: automatic ban `{code}`.",
+            "earlier": "Earlier in this burst: {list}.",
+            "olderCases": "The buttons cover the newest {max} cases; use `/case` for older ones.",
+            "burst": "{messages} in {minutes}; the latest is shown below.",
+            "burstMessages": {
+                "one": "**{count} message**",
+                "other": "**{count} messages**"
+            },
+            "burstMinutes": {
+                "one": "{count} minute",
+                "other": "{count} minutes"
+            }
+        },
+        "field": {
+            "message": "Message",
+            "messageDeleted": "Message (deleted)",
+            "noText": "(no text)",
+            "case": "Case",
+            "cases": "Cases",
+            "messageLink": "Message link",
+            "jump": "[Jump to message]({url})",
+            "reportedBy": "Reported by",
+            "disputes": "Member disputes",
+            "disputesCase": "Member disputes · case {code}",
+            "noReason": "(no reason given)"
+        },
+        "compact": {
+            "note": "Note",
+            "flagged": "flagged",
+            "cases": {
+                "one": "case {codes}",
+                "other": "cases {codes}"
+            },
+            "messages": {
+                "one": "{count} message",
+                "other": "{count} messages"
+            }
+        },
+        "button": {
+            "suggested": "Suggested by the rule ladder",
+            "dismiss": "Dismiss",
+            "undo": "Undo",
+            "undoAll": "Undo all",
+            "keep": "Keep",
+            "keepAll": "Keep all",
+            "deleteMessage": "Delete message",
+            "punishAuthor": "Punish the author…",
+            "applyPunishment": "Apply a punishment…",
+            "changeTo": "Change to…",
+            "undoAllChangeTo": "Undo all and change to…"
+        },
+        "close": {
+            "by": "{verb} by {name}",
+            "field": "Review",
+            "aModerator": "a moderator"
+        },
+        "note": {
+            "alreadyLifted": "`{code}` was already lifted.",
+            "kickInvite": "A kick cannot be undone; the user was sent an invite back."
+        },
+        "dm": {
+            "reviewed": "**A moderator reviewed an automatic action against you in {server}** (case {code}).",
+            "changed": "It was changed to: {action}.",
+            "reversed": "It was reversed."
+        },
+        "dmStatus": {
+            "delivered": "delivered",
+            "notDelivered": "not delivered",
+            "some": "{delivered} of {total} delivered"
+        },
+        "outcome2": {
+            "dismissedBy": "Dismissed by {name}",
+            "confirmedBy": "Confirmed by {name}: {codes}",
+            "secondConfirmed": "Second opinion: confirmed by {name}.",
+            "reversedSecond": "Reversed {codes} by {name} on a second opinion. {notes} DM: {dm}.",
+            "tuneSwitched": "{text} Switched by {name}; undo with `/automod rule`.",
+            "deletedBy": "Message deleted by {name}",
+            "alreadyGone": "The message was already gone ({name})",
+            "keptBy": "Kept by {name}: {codes}",
+            "reversedBy": "Reversed {codes} by {name}. {notes} DM: {dm}.",
+            "changeFailed": "Reversed by {name}, but \"{action}\" failed: {error}",
+            "changedToCase": "Changed to {action} (case `{code}`) by {name}. {notes}",
+            "changedTo": "Changed to {action} by {name}. {notes}",
+            "appliedCase": "{action} (case `{code}`) applied by {name}",
+            "applied": "{action} applied by {name}"
+        },
+        "verb2": {
+            "confirmed": "Confirmed",
+            "undoneSecond": "Undone on second opinion",
+            "switched": "Switched to report only (don't delete)",
+            "closed": "Closed",
+            "changeFailed": "Reversed, \"{action}\" failed,",
+            "changedTo": "Changed to {action}",
+            "applied": "{action} applied"
+        },
+        "reply": {
+            "noAdmin": "Only administrators of this server can review automod decisions.",
+            "saved": "Review saved",
+            "dismissed": "Dismissed.",
+            "confirmed": "Confirmed {codes}.",
+            "reversed": "Reversed {codes}. {notes}",
+            "deleted": "Message deleted.",
+            "alreadyGone": "The message was already gone.",
+            "kept": "Kept {codes}.",
+            "changedToCase": "Changed to {action}, case `{code}`.",
+            "changedTo": "Changed to {action}.",
+            "appliedCase": "{action} applied, case `{code}`.",
+            "applied": "{action} applied."
+        },
+        "error": {
+            "caseGone": "Case `{codes}` no longer exists.",
+            "otherServer": "This card belongs to another server.",
+            "notInServer": "I am no longer in the server this card is about.",
+            "needAdmin": "You need the Administrator permission in {server} to act on its members.",
+            "secondOwn": "You kept this one; a different administrator has to give the second opinion.",
+            "unknownSecond": "Unknown second-opinion action.",
+            "pickPunishment": "Pick a punishment from the list.",
+            "userGone": "That user no longer exists.",
+            "unknownAction": "Unknown review action."
+        },
+        "second": {
+            "title": "Second opinion?",
+            "kept": "Kept by {user}. A second admin can confirm or undo.",
+            "cases": {
+                "one": "Case: {codes}",
+                "other": "Cases: {codes}"
+            },
+            "omitted": " (+{omitted} older, use `/case`)",
+            "open": "[Open the card]({url})",
+            "footer": "Random spot check ({percent}% of kept cards)",
+            "confirm": "Confirm"
+        },
+        "queue": {
+            "empty": "Nothing is waiting for review.",
+            "reviewCard": "Review card",
+            "more": {
+                "one": "…and {count} more.",
+                "other": "…and {count} more."
+            }
+        }
+    },
+    "guard": {
+        "why": {
+            "banKick": {
+                "one": "{count} ban/kick within {window}",
+                "other": "{count} bans/kicks within {window}"
+            },
+            "deletes": {
+                "one": "{count} channel/role deletion within {window}",
+                "other": "{count} channel/role deletions within {window}"
+            },
+            "webhooks": {
+                "one": "{count} webhook created within {window}",
+                "other": "{count} webhooks created within {window}"
+            },
+            "permission": "gave {permissions} to {role}",
+            "staffWarnings": {
+                "one": "{count} active staff warning",
+                "other": "{count} active staff warnings"
+            }
+        },
+        "none": "none",
+        "noneRestored": "None could be restored",
+        "ofLimit": "{active} of {limit}",
+        "restoreNuke": "`/staff restore` · damage: **{showDiff}**, then **{revert}** · **{panic}** pauses invites and DMs",
+        "summary": {
+            "staffMember": "**Staff member:** {name} (`{id}`)",
+            "why": "**Why:** {why}",
+            "removed": "**Removed roles:** {roles}",
+            "couldNot": "**Could not remove (above my role):** {roles}",
+            "restore": "Restore with `/staff restore`.",
+            "nukeUndo": "Undo the damage: **{showDiff}**, then **{revert}** on the alert."
+        },
+        "field": {
+            "staffMember": "Staff member",
+            "why": "Why",
+            "removedRoles": "Removed roles",
+            "couldNot": "Could not remove (above my role)",
+            "restore": "Restore",
+            "restoredBy": "Restored by",
+            "roles": "Roles",
+            "bot": "Bot",
+            "addedBy": "Added by",
+            "result": "Result",
+            "createdBy": "Created by",
+            "webhooksDeleted": "Webhooks deleted",
+            "role": "Role",
+            "granted": "Granted",
+            "by": "By",
+            "givenBy": "Given by",
+            "reason": "Reason",
+            "activeWarnings": "Active staff warnings",
+            "expires": "Expires"
+        },
+        "title": {
+            "removed": "Staff roles removed",
+            "restored": "Staff roles restored",
+            "botRemoved": "Unapproved bot removed",
+            "webhookSpam": "Webhook spam stopped",
+            "permissionReverted": "Dangerous permission reverted",
+            "staffWarning": "Staff warning"
+        },
+        "result": {
+            "kicked": "Kicked. The owner can add it again if it is wanted.",
+            "kickFailed": "Could not kick it (it may be above my role). Remove it by hand.",
+            "reverted": "Reverted.",
+            "revertFailed": "Could not revert (the role may be above mine). Fix it by hand."
+        },
+        "dm": {
+            "header": "**Staff guard in {server}**",
+            "nukeHeader": "**{title} in {server}**"
+        },
+        "warnDm": {
+            "header": "**Staff warning in {server}** ({active} of {limit})",
+            "expires": "It expires {date}. At {limit} active warnings you lose your staff role."
+        }
+    },
+    "revert": {
+        "footer": "Snapshot taken {time} UTC · {summary}",
+        "diffTitle": "Snapshot #{id} vs the server now",
+        "olderHint": "If this snapshot was taken after the damage, pick an older one from `/backup snapshots`.",
+        "tooOld": "This snapshot is more than 24 hours older than the alert, so only the server owner can revert from it.",
+        "nothingTitle": "Nothing to revert",
+        "confirmTitle": "Revert {server} to snapshot #{id}?",
+        "button": {
+            "revertTo": "Revert to this snapshot",
+            "confirm": "Confirm revert",
+            "cancel": "Cancel"
+        },
+        "access": {
+            "broken": "This button is broken. Use the newest alert.",
+            "otherServer": "This button belongs to another server.",
+            "offender": "The staff guard acted on you in this server, so you cannot use these buttons. Ask the server owner.",
+            "adminsOnly": "Only administrators can use this."
+        },
+        "unreachable": "I cannot reach the server this alert is about.",
+        "noSnapshot": "There is no snapshot from before this alert, so there is nothing to compare with.",
+        "ownerOrAdmin": "Only the server owner or an administrator can revert.",
+        "cancelled": "Revert cancelled",
+        "nothingChanged": "Nothing was changed.",
+        "notStarted": "Revert not started",
+        "gone": "That snapshot (or the server) is gone.",
+        "goneMain": "That snapshot (or the main server) is gone.",
+        "alreadyMatches": "The server already matches the snapshot.",
+        "needsOwner": "What is left needs the server owner.",
+        "running": "Revert running",
+        "runningText": "Restoring {server} from snapshot #{id} ({date}). This message updates as it goes, and you get a DM when it is done. Nothing is deleted.",
+        "runningMain": "Restoring the main server from snapshot #{id} ({date}). This message updates as it goes, and you get a DM when it is done.",
+        "finished": "Revert finished",
+        "stopped": "Revert stopped",
+        "dmFinished": "**Revert of {server} finished:** {summary}",
+        "dmStopped": "**Revert of {server} stopped:** {error}",
+        "backupOwnerOnly": "Only the server owner can revert the server structure.",
+        "log": {
+            "title": "Server structure reverted",
+            "snapshot": "Snapshot",
+            "snapshotValue": "#{id} ({date})",
+            "by": "By",
+            "adminNote": " · administrator: permission restores left to the owner",
+            "result": "Result"
+        },
+        "panic": {
+            "already": "{server} is already in lockdown. End it with `/automod lockdown-end` there.",
+            "started": "Lockdown started",
+            "verification": "**Verification level:** {value}",
+            "raised": "raised to High",
+            "notChanged": "not changed (already High, or I lack Manage Server)",
+            "invites": "**Invites and DMs:** {value}",
+            "end": "End it with `/automod lockdown-end`.",
+            "endIn": "End it with `/automod lockdown-end` in {server}."
+        }
+    },
+    "cmd": {
+        "serverOnly": "Use this command in a server.",
+        "noAdmin": "You need the Administrator permission to manage automod.",
+        "updated": "Automod updated",
+        "staffGuardOwnerOnly": "Only the server owner can turn the staff guard off (or turn automod off while the staff guard is on).",
+        "word": {
+            "on": "on",
+            "off": "off",
+            "none": "none"
+        },
+        "modeLabel": {
+            "on": "on",
+            "monitor": "report only (don't delete)",
+            "off": "off"
+        },
+        "rules": {
+            "scam": "Scam or phishing link",
+            "nsfw": "NSFW content",
+            "sexual": "Sexual harassment or references",
+            "harassment": "Harassment",
+            "privacy": "Sharing personal info",
+            "advertising": "Unauthorized advertising",
+            "impersonation": "Impersonation or deception",
+            "language": "Inappropriate language",
+            "disrespect": "Disrespect or drama",
+            "mentions": "Mass mentions",
+            "spam": "Spam",
+            "caps": "Excessive caps",
+            "characters": "Non-English characters or fancy fonts",
+            "english": "English only"
+        },
+        "status": {
+            "title": "Automod",
+            "status": "**Status:** {value}",
+            "mode": "**Mode:** {value}",
+            "modeMonitor": "report only (don't delete): review cards only, nothing is done",
+            "modeEnforce": "enforce (acts, then posts a review card)",
+            "lockdown": "**Lockdown:** {value}",
+            "lockdownActive": "active since {since}, {count} raid joiner(s)",
+            "exempt": "**Exempt channels:** {value}",
+            "channelExceptions": "**Channel exceptions:** {value}",
+            "trusted": "**Trusted members** (skip {rules}): {value}",
+            "friendly": "**Friendly notice for a first small offence** (a notice, no warning): {value}",
+            "mood": "**Mood alerts** (calm-down note + slowmode in heated channels): {value}",
+            "joinGate": "**Join gate** (new members): {value}",
+            "panic": "**Raid panic mode** (lockdown also pauses invites and DMs): {value}",
+            "panicOn": "on, for {hours} h",
+            "invites": "**Allowed invites** (besides this server's own): {value}",
+            "staffGuard": "**Staff guard** (anti-nuke: staff who mass-ban, mass-delete or add bots lose their staff roles): {value}",
+            "guardAlways": "always on in this server",
+            "guardWhileOn": "on, but only while automod is on",
+            "punishments": "**Punishments** (1st → 2nd → 3rd+ offence within 30 days). A mode in **bold** is set for that rule with `/automod rule`; the others follow the global mode:"
+        },
+        "trusted": {
+            "level": "level {level}+",
+            "or": " or ",
+            "notSet": "not set",
+            "giveOne": "Give a role, a minimum level, or clear: true.",
+            "none": "No trusted members: everyone is held to every rule.",
+            "set": "Trusted: {who}. They skip {rules}."
+        },
+        "invites": {
+            "server": "`{id}` (server)",
+            "more": ", …and {count} more",
+            "note": "Allowed invites (besides this server's own): {list}"
+        },
+        "policy": {
+            "ignore": "ignore",
+            "log": "log (a line in the review channel)",
+            "warn": "warn (a warning and a review card)"
+        },
+        "native": {
+            "default": " (default)",
+            "disabled": "disabled",
+            "noBlock": "does not block messages, so the bot never sees it",
+            "timeout": "has a native timeout; the bot mutes with the Muted role, consider removing it",
+            "policyLine": "→ {policy}{stored}, once per {minutes} min per member",
+            "listTitle": "Native AutoMod rules: {count}",
+            "none": "This server has no native AutoMod rules.",
+            "footer": "Change one with /automod native set. The bot needs Manage Server to receive these events.",
+            "pick": "Pick a native AutoMod rule from the list.",
+            "gone": "That native AutoMod rule no longer exists.",
+            "updated": "Native AutoMod rule updated"
+        },
+        "stats": {
+            "title": "Automod, last {days} day(s): {total} action(s)",
+            "perRule": "Per rule",
+            "offenders": "Most actions against"
+        },
+        "queue": {
+            "title": "Review queue: {count} open",
+            "footer": "Cards posted since the bot started, plus the review channel's last 50 messages that still have buttons. Low-severity lines are not listed."
+        },
+        "extrawatch": {
+            "endedEarly": "The extra-watch period for <@{userId}> ended early (it ran until {until}).",
+            "wasNot": "<@{userId}> was not in an extra-watch period.",
+            "active": "<@{userId}> is in an extra-watch period after a ban until {until}{ban}. Automod uses the next step of the ladder for them. End it with `end: true`.",
+            "ban": " (ban `{code}` {how})",
+            "ended": "ended",
+            "isNot": "<@{userId}> is not in an extra-watch period.",
+            "endedTitle": "Extra-watch period ended",
+            "title": "Extra-watch period after a ban"
+        },
+        "note": {
+            "enabled": "Automod is now **{state}**.",
+            "modeMonitor": "Report only (don't delete) mode: automod only posts review cards; nothing is deleted or punished until you apply it. Rules with their own mode (`/automod rule`) keep it.",
+            "modeEnforce": "Enforce mode: automod deletes and punishes automatically and posts a review card for every decision. Rules with their own mode (`/automod rule`) keep it.",
+            "ruleDefault": "**{label}** follows the global mode again.",
+            "ruleSet": "**{label}** is now **{mode}**.",
+            "ruleMonitor": "**{label}** is now **{mode}**: cards only, nothing is done until you apply it.",
+            "ruleOff": "**{label}** is now **{mode}**: automod ignores it.",
+            "channelDefault": "**{label}** in <#{channelId}> follows the rule's normal mode again.",
+            "channelSet": "**{label}** is **{mode}** in <#{channelId}> (threads included).",
+            "categorySet": "**{label}** is **{mode}** in <#{channelId}> and the channels in it (threads included).",
+            "friendlyOn": "Friendly notice for a first small offence is **on**: a member's first offence in 30 days on caps, characters, English only or mild language (no slurs) gets a short notice instead of a warning.",
+            "friendlyOff": "Friendly notice for a first small offence is **off**: every offence gets the usual punishment.",
+            "moodOn": "Mood alerts are **on**: when insults or caps floods from 3+ members pile up in a channel, the bot posts one calm-down note, turns on slowmode for a few minutes and tells the alerts channel.",
+            "moodOff": "Mood alerts are **off**.",
+            "panicOn": "Raid panic mode is **on**: when a join raid starts a lockdown, invites and DMs are paused for **{hours} h** (lifted again by `/automod lockdown-end`).",
+            "panicNoPerm": "I don't have **Manage Server**, so the pause will fail until I get it.",
+            "panicOff": "Raid panic mode is **off**: a lockdown only raises the verification level.",
+            "guardAlways": "The staff guard is always on in this server.",
+            "guardOn": "Staff guard is **on**{notYet}: an admin who mass-bans, mass-kicks or mass-deletes channels or roles loses their staff roles, and a bot added by a non-owner is kicked. The server owner is never affected. I keep a daily snapshot of the channels and roles, so a nuke alert can show what changed and revert it.",
+            "guardNotYet": " (it starts working once automod is on: `/automod enable`)",
+            "guardNoPerm": "I need **Manage Roles** and **View Audit Log** for it to work.",
+            "guardOff": "Staff guard is **off**.",
+            "exemptOn": "Automod now ignores <#{channelId}>.",
+            "exemptOff": "Automod checks <#{channelId}> again.",
+            "noLockdown": "There is no lockdown right now.",
+            "lockdownEnded": "Lockdown ended. The verification level is back to what it was, and paused invites and DMs are resumed."
+        },
+        "joingate": {
+            "ageNote": "Accounts younger than **{days} day(s)**. \"Verify with Discord\" already holds accounts younger than {defaultDays} days for approval; members who verified that way are never gated.",
+            "note": "Join gate: **{check}** → **{action}**.{age}\n{gate}"
+        },
+        "custom": {
+            "title": "Custom automod rules",
+            "noneYet": "No custom rules yet. Add one with `/automod custom add`. The {plan} plan allows {limit}.",
+            "nonePlan": "No custom rules. They come with the Normal, Pro and Max plans, on the server owner's plan.",
+            "overLimitState": "over the plan limit, not running",
+            "ruleLine": "**{name}**: {action}, {state}",
+            "header": {
+                "one": "{count} rule, up to {limit} run on the {plan} plan.",
+                "other": "{count} rules, up to {limit} run on the {plan} plan."
+            },
+            "choiceOff": ", off",
+            "actionMute": "Mute {duration}",
+            "actionWarn": "Warn",
+            "actionDelete": "Delete",
+            "added": "Custom rule **{name}** added ({action}).",
+            "giveChange": "Give new words, a new action, or a new mute time.",
+            "changed": {
+                "one": "Custom rule **{name}** changed: {action}, {count} word or phrase.",
+                "other": "Custom rule **{name}** changed: {action}, {count} words or phrases."
+            },
+            "toggled": "Custom rule **{name}** is {state}.",
+            "toggledAlready": "Custom rule **{name}** is {state} already.",
+            "removed": "Custom rule **{name}** removed.",
+            "unknown": "Unknown option.",
+            "overLimit": {
+                "one": "{count} turned-on rule is over the {plan} plan limit of {limit} and does not run.",
+                "other": "{count} turned-on rules are over the {plan} plan limit of {limit} and do not run."
+            }
+        },
+        "slash": {
+            "description": "Automatic moderation: status, modes per rule and channel, review queue, raid lockdown",
+            "status": "Show the automod settings and punishments",
+            "enable": "Turn automod on or off",
+            "onOff": "On or off",
+            "mode": "Global mode: enforce (act automatically) or report only (don't delete): review cards only",
+            "modeOption": "Mode",
+            "choiceEnforce": "enforce",
+            "choiceMonitor": "report only (don't delete)",
+            "rule": "Set one rule to on, report only (don't delete) or off (default: follow the global mode)",
+            "ruleOption": "Rule",
+            "ruleModeOption": "Mode for this rule",
+            "choiceRuleOn": "on (act and post a card)",
+            "choiceRuleMonitor": "report only (don't delete): review card only",
+            "choiceRuleOff": "off (ignore this rule)",
+            "choiceRuleDefault": "default (follow the global mode)",
+            "channel": "Set one rule to off or report only (don't delete) in one channel or category",
+            "channelOption": "Channel or category",
+            "channelModeOption": "Mode in this channel",
+            "choiceChannelOff": "off (ignore this rule here)",
+            "choiceChannelMonitor": "report only (don't delete): review card only here",
+            "choiceChannelDefault": "default (remove the exception)",
+            "trusted": "Members with this role or level skip the low-severity rules (caps, characters, English only)",
+            "trustedRole": "Trusted role",
+            "trustedLevel": "Or at least this leveling level (0 = no level criterion)",
+            "trustedClear": "Remove the trusted role and level",
+            "friendly": "Friendly notice for a first small offence in 30 days, instead of a warning",
+            "mood": "Calm-down note and brief slowmode when a channel heats up",
+            "extrawatch": "Show or end a member's extra-watch period after a ban (they rejoined)",
+            "member": "Member",
+            "extrawatchEnd": "End the extra-watch period now",
+            "exempt": "Add or remove a channel automod ignores completely (all rules)",
+            "stats": "Automod actions, undos and top offenders",
+            "statsDays": "How far back (default 7)",
+            "queue": "Review cards still waiting for a decision, newest first",
+            "joingate": "Checks on new members: flag them for staff or kick them (with a DM)",
+            "gateCheck": "Which check",
+            "gateAction": "What to do when it hits",
+            "choiceGateFlag": "flag (a line in the review channel)",
+            "choiceGateKick": "kick (with a DM saying how to come back)",
+            "gateDays": "New account check: younger than this many days (default {days})",
+            "panic": "Raid panic mode: a lockdown also pauses invites and DMs (Discord incident actions)",
+            "panicHours": "How long the pause lasts (default 2, max 24)",
+            "invites": "Invites automod allows besides this server's own (codes, invite links or server ids)",
+            "invitesAction": "What to do",
+            "choiceList": "list",
+            "choiceAdd": "add",
+            "choiceRemove": "remove",
+            "choiceClear": "clear",
+            "invite": "Invite link, invite code or server id",
+            "staffguard": "Anti-nuke: staff who mass-ban, mass-delete channels or roles, or add bots lose their staff roles",
+            "lockdownEnd": "End a join-raid lockdown: restore the verification level, resume invites and DMs",
+            "native": "Discord's own AutoMod rules: what the bot does when one blocks a message",
+            "nativeList": "List the server's native AutoMod rules and their policy",
+            "nativeSet": "Ignore, log or warn when a native AutoMod rule blocks a message",
+            "nativeRule": "Native AutoMod rule",
+            "nativePolicy": "What the bot does",
+            "nativeDedupe": "At most one action per member and rule in this many minutes (default 10)",
+            "custom": "Your own word filters (paid plans)",
+            "customList": "List the custom rules",
+            "customAdd": "Add a custom rule",
+            "customName": "Short name",
+            "customWords": "Words, comma separated",
+            "customAction": "What happens",
+            "choiceDelete": "delete",
+            "choiceDeleteWarn": "delete + warn",
+            "choiceDeleteMute": "delete + mute",
+            "customMuteFor": "Mute time, like 1h",
+            "customEdit": "Change a rule's words or action",
+            "customRule": "The rule",
+            "customNewWords": "New words, comma separated (replaces)",
+            "customNewAction": "New action",
+            "customToggle": "Turn a rule on or off",
+            "customRemove": "Remove a rule"
+        }
+    },
+    "joinGate": {
+        "check": {
+            "avatar": "No profile picture",
+            "links": "Link or invite in their name",
+            "botname": "Generated-looking username",
+            "age": "New account"
+        },
+        "comeBack": {
+            "avatar": "after setting a profile picture",
+            "links": "after removing the link from your username and display name",
+            "botname": "with a username that does not look automatically generated",
+            "age": "once your account is older"
+        },
+        "action": {
+            "off": "off",
+            "flag": "flag",
+            "kick": "kick"
+        },
+        "reason": {
+            "avatar": "no profile picture",
+            "links": "link in their name (\"{name}\")",
+            "botname": "generated-looking username (\"{name}\")",
+            "age": {
+                "one": "account is {age} old (minimum {count} day)",
+                "other": "account is {age} old (minimum {count} days)"
+            }
+        },
+        "youngerThan": {
+            "one": " (younger than {count} day)",
+            "other": " (younger than {count} days)"
+        },
+        "dm": {
+            "removed": "You were removed from **{server}** by an automatic join check: {reasons}.",
+            "notBan": "This is not a ban and nothing was recorded against you.",
+            "welcomeBack": "You are welcome to join again {ways}.",
+            "waysJoin": ", and "
+        },
+        "lineTitle": "**Join gate**",
+        "outcome": {
+            "kicked": "kicked",
+            "flagged": "flagged",
+            "kickFailed": "flagged (kick failed)",
+            "dismissedBy": "dismissed by {name}",
+            "left": "left the server",
+            "kickedBy": "kicked by {name}",
+            "released": "released by {name} (raid joiner, no offence)"
+        },
+        "button": {
+            "kick": "Kick",
+            "dismiss": "Dismiss"
+        },
+        "reply": {
+            "adminOnly": "Only administrators of this server can act on join gate flags.",
+            "cannotAct": "You cannot act on this flag.",
+            "dismissedTitle": "Flag dismissed",
+            "dismissed": "<@{userId}> stays in the server.",
+            "goneTitle": "Already gone",
+            "gone": "They are no longer in the server.",
+            "kickFailed": "I could not kick them (their role may be above mine, or I lack Kick Members).",
+            "kickedTitle": "Kicked",
+            "kicked": "{name} was kicked from {server} and told why by DM."
+        }
+    },
+    "raid": {
+        "caseType": {
+            "ban": "ban",
+            "kick": "kick",
+            "mute": "mute",
+            "warn": "warn",
+            "unban": "unban",
+            "unmute": "unmute"
+        },
+        "report": {
+            "noCases": "None",
+            "andMore": " and {count} more",
+            "resumed": " → resumed",
+            "notResumed": " → could not resume them: lift the pause in Server Settings → Safety Setup",
+            "verification": "**Verification level:** {value}",
+            "raisedRestored": "raised to High → restored",
+            "notChanged": "not changed",
+            "invites": "**Invites and DMs:** {value}",
+            "gateKicks": "**Join gate kicks:** {count}",
+            "cases": "**Cases against raid joiners:** {value}",
+            "title": "Join raid: incident report",
+            "triggered": "**Triggered:** {start} · **ended:** {end} by {by} ({duration})",
+            "anAdmin": "an administrator",
+            "joiners": "**Raid joiners:** {count}",
+            "didTitle": "What the bot did"
+        },
+        "releaseButton": "Release non-offenders",
+        "release": {
+            "clean": "**{clean}** raid joiner(s) broke no rule.",
+            "cleanWithOffenders": "**{clean}** raid joiner(s) broke no rule; **{offenders}** with a case stay as they are.",
+            "counts": "Extra-watch periods ended: {probation} · join-gate flags closed: {flags}",
+            "notInServer": " · no longer in the server: {count}",
+            "nothingElse": "Nothing else was held against them.",
+            "releasedBy": "Released by",
+            "result": "Result",
+            "title": "Raid joiners released"
+        },
+        "panic": {
+            "off": "Not paused (panic mode is off: `/automod panic`)",
+            "paused": "Invites and DMs paused until {time}",
+            "noManageServer": "Not paused: I need the **Manage Server** permission",
+            "failed": "Not paused: {reason}",
+            "refused": "Discord refused"
+        },
+        "lockdown": {
+            "startedBy": "Started by {name} ({id}) from a nuke alert.",
+            "joined": "{count} accounts joined within {seconds} seconds.",
+            "titleManual": "Lockdown started",
+            "titleRaid": "Join raid: lockdown started",
+            "whatHappened": "What happened",
+            "verification": "Verification level",
+            "raised": "Raised to High",
+            "notRaised": "Not changed (already High, or missing Manage Server)",
+            "invites": "Invites and DMs",
+            "joiners": "Raid joiners",
+            "joinersValue": "Kicked automatically if they break any rule while the lockdown lasts.",
+            "endIt": "End it"
+        },
+        "owner": {
+            "raid": "**Join raid in {server}.** {summary} {what}. End it with `/automod lockdown-end` when it is over.",
+            "manual": "**Lockdown in {server}.** {summary} {what}. End it with `/automod lockdown-end` when it is over.",
+            "lockdown": "The server is in lockdown",
+            "lockdownAnd": "The server is in lockdown and {extras}",
+            "and": " and ",
+            "raised": "the verification level is now High",
+            "paused": "invites and DMs are paused"
+        },
+        "reply": {
+            "adminOnly": "Only administrators of this server can release raid joiners.",
+            "gone": "That incident is not stored any more.",
+            "otherServer": "That incident belongs to another server.",
+            "already": "Already released.",
+            "alreadyBy": "Already released by <@{userId}>."
+        }
+    },
+    "alert": {
+        "showDiff": "Show what changed",
+        "revert": "Revert…",
+        "panic": "Lock down (panic)"
+    }
+}

@@ -14,7 +14,9 @@
 import { logger } from '../../utils/logger.js';
 import { query, T } from './db.js';
 import { CUSTOM_REASON_KEY, enforcementConfig } from '../../config/enforcement.js';
-import { formatDuration, ladderStage } from './format.js';
+import { LADDER_STAGE_BANS, formatDuration, ladderStage, ladderStageShort } from './format.js';
+import { durationIn } from './dmTemplates.js';
+import { botText } from '../../utils/botText.js';
 
 export const PRECEDENT_DAYS = 180;
 export const PRECEDENT_MAX_CASES = 200;
@@ -63,28 +65,83 @@ export async function loadPrecedent(guildId, reasonKey, { days = PRECEDENT_DAYS,
 }
 
 /** The usual length of the most common mute/ban, e.g. "1 hour" or "permanent"; else null. */
-function usualLength(rows, type) {
+function usualLength(rows, type, lang = 'en') {
     if (type !== 'mute' && type !== 'ban') return null;
     const top = rows.filter((row) => row.type === type)
         .sort((a, b) => b.count - a.count || (a.duration_ms ?? Infinity) - (b.duration_ms ?? Infinity))[0];
     if (!top) return null;
-    return top.duration_ms == null ? 'permanent' : formatDuration(top.duration_ms);
+    if (lang === 'en') return top.duration_ms == null ? 'permanent' : formatDuration(top.duration_ms);
+    return top.duration_ms == null ? botText(lang).t('staff.panel.precedent.permanent') : durationIn(top.duration_ms, lang);
+}
+
+/** "3 warns", "1 ban" in a language (keys literal for the usage test). */
+function typeCount(tr, type, n) {
+    switch (type) {
+        case 'warn': return tr.tp('staff.panel.precedent.count.warn', n);
+        case 'mute': return tr.tp('staff.panel.precedent.count.mute', n);
+        case 'kick': return tr.tp('staff.panel.precedent.count.kick', n);
+        case 'ban': return tr.tp('staff.panel.precedent.count.ban', n);
+        default: return `${n} ${type}`;
+    }
+}
+
+/** "warn", "ban" (the most common action) in a language. */
+function typeWord(tr, type) {
+    switch (type) {
+        case 'warn': return tr.t('staff.panel.type.warn');
+        case 'mute': return tr.t('staff.panel.type.mute');
+        case 'kick': return tr.t('staff.panel.type.kick');
+        case 'ban': return tr.t('staff.panel.type.ban');
+        default: return type;
+    }
+}
+
+/**
+ * "1 of 3 (7-day ban)" (format.js ladderStageShort) in a language; English is ladderStageShort itself.
+ */
+export function ladderStageShortIn(level, { lang = 'en', bans = LADDER_STAGE_BANS } = {}) {
+    if (lang === 'en') return ladderStageShort(level, bans);
+    const tr = botText(lang);
+    const n = Math.max(0, Math.min(3, Number(level) || 0));
+    if (n === 0) return tr.t('staff.panel.stage.none');
+    const ms = bans[n];
+    if (ms == null) return tr.t('staff.panel.stage.permanent', { n });
+    return tr.tp('staff.panel.stage.days', Math.round(ms / (24 * 60 * 60 * 1000)), { n });
+}
+
+/** "warning stage 1 of 3 (7-day ban)" (format.js ladderStage) in a language. */
+export function ladderStageIn(level, { lang = 'en' } = {}) {
+    if (lang === 'en') return ladderStage(level);
+    return botText(lang).t('staff.panel.stage.long', { stage: ladderStageShortIn(level, { lang }) });
 }
 
 /** The "similar cases" line from aggregate rows; pure. */
-export function formatPrecedent(reasonLabel, rows, { days = PRECEDENT_DAYS, limit = PRECEDENT_MAX_CASES } = {}) {
+export function formatPrecedent(reasonLabel, rows, { days = PRECEDENT_DAYS, limit = PRECEDENT_MAX_CASES, lang = 'en' } = {}) {
     const byType = new Map(TYPES.map((type) => [type, 0]));
     for (const row of rows) byType.set(row.type, (byType.get(row.type) || 0) + row.count);
     const total = [...byType.values()].reduce((sum, n) => sum + n, 0);
+    const counts = [...byType].filter(([, n]) => n > 0);
+    // Ties go to the lighter action (TYPES order; Map keeps it, sort is stable).
+    const topType = total ? [...counts].sort((a, b) => b[1] - a[1])[0][0] : null;
+    const overturned = rows.reduce((sum, row) => sum + row.overturned, 0);
+    if (lang !== 'en') {
+        const tr = botText(lang);
+        const scope = tr.t('staff.panel.precedent.scope', { reason: reasonLabel, days });
+        if (!total) return tr.t('staff.panel.precedent.none', { scope });
+        const length = usualLength(rows, topType, lang);
+        return tr.t('staff.panel.precedent.line', {
+            scope,
+            cases: total >= limit ? tr.t('staff.panel.precedent.newest', { limit }) : tr.tp('staff.panel.precedent.cases', total),
+            parts: counts.map(([type, n]) => typeCount(tr, type, n)).join(' · '),
+            top: typeWord(tr, topType),
+            usual: length ? tr.t('staff.panel.precedent.usually', { length }) : '',
+        }) + (overturned ? tr.tp('staff.panel.precedent.overturned', overturned) : '');
+    }
     const scope = `reason "${reasonLabel}", last ${days} days`;
     if (!total) return `Similar cases (${scope}): No similar cases yet.`;
 
-    const counts = [...byType].filter(([, n]) => n > 0);
     const parts = counts.map(([type, n]) => `${n} ${n === 1 ? type : (PLURAL[type] || `${type}s`)}`);
-    // Ties go to the lighter action (TYPES order; Map keeps it, sort is stable).
-    const [topType] = [...counts].sort((a, b) => b[1] - a[1])[0];
     const length = usualLength(rows, topType);
-    const overturned = rows.reduce((sum, row) => sum + row.overturned, 0);
     const casesText = total >= limit ? `newest ${limit} cases` : `${total} case${total === 1 ? '' : 's'}`;
     return `Similar cases (${scope}, ${casesText}): ${parts.join(' · ')}. `
         + `Most common: ${topType}${length ? `, usually ${length}` : ''}.`
@@ -120,16 +177,21 @@ export async function withTimeout(promise, ms) {
  * CUSTOM_REASON_HINT for a custom reason, PRECEDENT_UNAVAILABLE on a slow database or
  * an error. Never throws and never waits longer than timeoutMs. `load` is for tests.
  */
-export async function precedentHint(guildId, reasonKey, reasonLabel, { timeoutMs = PRECEDENT_TIMEOUT_MS, load = cached } = {}) {
+export async function precedentHint(guildId, reasonKey, reasonLabel, { timeoutMs = PRECEDENT_TIMEOUT_MS, load = cached, lang = 'en' } = {}) {
     if (!reasonKey) return null;
-    if (reasonKey === CUSTOM_REASON_KEY) return CUSTOM_REASON_HINT;
+    if (reasonKey === CUSTOM_REASON_KEY) return lang === 'en' ? CUSTOM_REASON_HINT : botText(lang).t('staff.panel.precedent.custom');
     try {
         const rows = await withTimeout(Promise.resolve().then(() => load(guildId, reasonKey)), timeoutMs);
-        return formatPrecedent(reasonLabel, rows);
+        return formatPrecedent(reasonLabel, rows, { lang });
     } catch (error) {
         logger.warn(`Precedent hint failed for ${reasonKey}: ${error.message}`);
-        return PRECEDENT_UNAVAILABLE;
+        return precedentUnavailable(lang);
     }
+}
+
+/** PRECEDENT_UNAVAILABLE in a language. */
+export function precedentUnavailable(lang = 'en') {
+    return lang === 'en' ? PRECEDENT_UNAVAILABLE : botText(lang).t('staff.panel.precedent.unavailable');
 }
 
 /** Starts (or reuses) the cached query without waiting, so the confirm step finds it ready. */
@@ -143,9 +205,16 @@ export function warmPrecedent(guildId, reasonKey) {
 }
 
 /** "This member: 1 of 3 counted warnings, warning stage 0 of 3 (…)." from a ladder row; pure. */
-export function memberLadderLine(ladder) {
+export function memberLadderLine(ladder, { lang = 'en' } = {}) {
     const level = Number(ladder?.level) || 0;
     const warns = Number(ladder?.warns_since_level) || 0;
+    if (lang !== 'en') {
+        const tr = botText(lang);
+        const stage = ladderStageIn(level, { lang });
+        return level === 0
+            ? tr.tp('staff.panel.member.level0', enforcementConfig.warnsPerLevel, { warns, stage })
+            : tr.tp('staff.panel.member.levelN', warns, { stage });
+    }
     if (level === 0) {
         return `This member: ${warns} of ${enforcementConfig.warnsPerLevel} counted warning${enforcementConfig.warnsPerLevel === 1 ? '' : 's'}, ${ladderStage(0)}.`;
     }
@@ -156,13 +225,13 @@ export function memberLadderLine(ladder) {
  * The target's ladder line. Uses `ladder` when the caller already has it; otherwise
  * loads it with getLadder, waiting at most timeoutMs. Never throws.
  */
-export async function memberLadderHint(guildId, userId, { ladder = null, getLadder, timeoutMs = PRECEDENT_TIMEOUT_MS } = {}) {
-    if (ladder) return memberLadderLine(ladder);
+export async function memberLadderHint(guildId, userId, { ladder = null, getLadder, timeoutMs = PRECEDENT_TIMEOUT_MS, lang = 'en' } = {}) {
+    if (ladder) return memberLadderLine(ladder, { lang });
     try {
-        return memberLadderLine(await withTimeout(Promise.resolve().then(() => getLadder(guildId, userId)), timeoutMs));
+        return memberLadderLine(await withTimeout(Promise.resolve().then(() => getLadder(guildId, userId)), timeoutMs), { lang });
     } catch (error) {
         logger.warn(`Member ladder hint failed: ${error.message}`);
-        return MEMBER_UNAVAILABLE;
+        return lang === 'en' ? MEMBER_UNAVAILABLE : botText(lang).t('staff.panel.member.unavailable');
     }
 }
 

@@ -12,6 +12,8 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { logger } from '../../utils/logger.js';
 import { query, T, isEnforcementDbAvailable } from '../enforcement/db.js';
 import { formatDuration } from '../enforcement/format.js';
+import { durationIn } from '../enforcement/dmTemplates.js';
+import { botText } from '../../utils/botText.js';
 import { describePanic } from './incidentActions.js';
 
 export const MAX_LISTED_JOINERS = 25;
@@ -69,58 +71,78 @@ export function splitOffenders(joinerIds, cases) {
     return { offenders, clean: joinerIds.filter((id) => !offenders.has(id)) };
 }
 
+// Case types as words (English: the stored type as is). Literal keys for tests/botI18nUsage.test.js.
+const CASE_TYPE_TEXT = {
+    ban: (tr) => tr.t('automod.raid.caseType.ban'),
+    kick: (tr) => tr.t('automod.raid.caseType.kick'),
+    mute: (tr) => tr.t('automod.raid.caseType.mute'),
+    warn: (tr) => tr.t('automod.raid.caseType.warn'),
+    unban: (tr) => tr.t('automod.raid.caseType.unban'),
+    unmute: (tr) => tr.t('automod.raid.caseType.unmute'),
+};
+const caseTypeWord = (type, tr) => (tr.lang === 'en' || !CASE_TYPE_TEXT[type] ? type : CASE_TYPE_TEXT[type](tr));
+
 /** "2 kick, 1 ban: `abc1234` kick alice, …" */
-export function summarizeCases(cases) {
-    if (!cases.length) return 'None';
+export function summarizeCases(cases, { lang = 'en' } = {}) {
+    const tr = botText(lang);
+    if (!cases.length) return tr.t('automod.raid.report.noCases');
     const counts = {};
     for (const row of cases) counts[row.type] = (counts[row.type] || 0) + 1;
-    const head = Object.entries(counts).map(([type, n]) => `${n} ${type}`).join(', ');
-    const listed = cases.slice(0, MAX_LISTED_CASES).map((row) => `\`${row.case_code}\` ${row.type} ${row.target_username}`).join(', ');
-    const more = cases.length > MAX_LISTED_CASES ? ` and ${cases.length - MAX_LISTED_CASES} more` : '';
+    const head = Object.entries(counts).map(([type, n]) => `${n} ${caseTypeWord(type, tr)}`).join(', ');
+    const listed = cases.slice(0, MAX_LISTED_CASES).map((row) => `\`${row.case_code}\` ${caseTypeWord(row.type, tr)} ${row.target_username}`).join(', ');
+    const more = cases.length > MAX_LISTED_CASES ? tr.t('automod.raid.report.andMore', { count: cases.length - MAX_LISTED_CASES }) : '';
     return `${head}: ${listed}${more}`;
 }
 
 /** The report's embed parts. incident: { started_at, ended_at, joiner_ids, actions }, endedBy label. */
-export function buildIncidentReport(incident, cases, { endedByLabel = 'an administrator' } = {}) {
+export function buildIncidentReport(incident, cases, { endedByLabel = null, lang = 'en' } = {}) {
+    const tr = botText(lang);
     const joiners = incident.joiner_ids || [];
     const actions = incident.actions || {};
     const started = new Date(incident.started_at);
     const ended = new Date(incident.ended_at || Date.now());
     const listed = joiners.slice(0, MAX_LISTED_JOINERS).map((id) => `<@${id}>`).join(' ');
-    const more = joiners.length > MAX_LISTED_JOINERS ? ` and ${joiners.length - MAX_LISTED_JOINERS} more` : '';
+    const more = joiners.length > MAX_LISTED_JOINERS ? tr.t('automod.raid.report.andMore', { count: joiners.length - MAX_LISTED_JOINERS }) : '';
     const panicLine = actions.incidentActions
-        ? `${describePanic(actions.incidentActions)}${actions.incidentActions.applied ? (actions.resumed ? ' → resumed' : ' → could not resume them: lift the pause in Server Settings → Safety Setup') : ''}`
-        : describePanic(null);
+        ? `${describePanic(actions.incidentActions, { lang })}${actions.incidentActions.applied ? (actions.resumed ? tr.t('automod.raid.report.resumed') : tr.t('automod.raid.report.notResumed')) : ''}`
+        : describePanic(null, { lang });
     const did = [
-        `**Verification level:** ${actions.raisedVerification ? 'raised to High → restored' : 'not changed'}`,
-        `**Invites and DMs:** ${panicLine}`,
-        `**Join gate kicks:** ${actions.gateKicks?.length || 0}`,
-        `**Cases against raid joiners:** ${summarizeCases(cases)}`,
+        tr.t('automod.raid.report.verification', { value: actions.raisedVerification ? tr.t('automod.raid.report.raisedRestored') : tr.t('automod.raid.report.notChanged') }),
+        tr.t('automod.raid.report.invites', { value: panicLine }),
+        tr.t('automod.raid.report.gateKicks', { count: actions.gateKicks?.length || 0 }),
+        tr.t('automod.raid.report.cases', { value: summarizeCases(cases, { lang }) }),
     ].join('\n');
+    const duration = Math.max(ended - started, 60 * 1000);
     return {
-        title: 'Join raid: incident report',
+        title: tr.t('automod.raid.report.title'),
         description: [
-            `**Triggered:** ${ts(started)} · **ended:** ${ts(ended)} by ${endedByLabel} (${formatDuration(Math.max(ended - started, 60 * 1000))})`,
-            `**Raid joiners:** ${joiners.length}${joiners.length ? `\n${listed}${more}` : ''}`,
-        ].join('\n'),
-        fields: [{ name: 'What the bot did', value: did.slice(0, 1024) }],
+            tr.t('automod.raid.report.triggered', {
+                start: ts(started), end: ts(ended), by: endedByLabel ?? tr.t('automod.raid.report.anAdmin'),
+                duration: lang === 'en' ? formatDuration(duration) : durationIn(duration, lang),
+            }),
+            `${tr.t('automod.raid.report.joiners', { count: joiners.length })}${joiners.length ? `\n${listed}${more}` : ''}`,
+        ].join('\n').slice(0, 4096),
+        fields: [{ name: tr.t('automod.raid.report.didTitle'), value: did.slice(0, 1024) }],
     };
 }
 
-export function releaseRow(incidentId, disabled = false) {
+export function releaseRow(incidentId, disabled = false, { lang = 'en' } = {}) {
     return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`raidrelease:${incidentId}`).setLabel('Release non-offenders')
+        new ButtonBuilder().setCustomId(`raidrelease:${incidentId}`).setLabel(botText(lang).t('automod.raid.releaseButton'))
             .setStyle(ButtonStyle.Success).setDisabled(disabled),
     );
 }
 
 /** The result line of a release. */
-export function formatReleaseResult(result) {
+export function formatReleaseResult(result, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     return [
-        `**${result.clean}** raid joiner(s) broke no rule${result.offenders ? `; **${result.offenders}** with a case stay as they are` : ''}.`,
-        `Extra-watch periods ended: ${result.probationEnded} · join-gate flags closed: ${result.flagsCleared}`
-            + `${result.notInServer ? ` · no longer in the server: ${result.notInServer}` : ''}`,
-        result.probationEnded || result.flagsCleared ? null : 'Nothing else was held against them.',
+        result.offenders
+            ? tr.t('automod.raid.release.cleanWithOffenders', { clean: result.clean, offenders: result.offenders })
+            : tr.t('automod.raid.release.clean', { clean: result.clean }),
+        tr.t('automod.raid.release.counts', { probation: result.probationEnded, flags: result.flagsCleared })
+            + (result.notInServer ? tr.t('automod.raid.release.notInServer', { count: result.notInServer }) : ''),
+        result.probationEnded || result.flagsCleared ? null : tr.t('automod.raid.release.nothingElse'),
     ].filter(Boolean).join('\n');
 }
 

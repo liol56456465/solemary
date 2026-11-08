@@ -19,6 +19,8 @@ import {
     postAndSaveRules, postRulesMessages, rulesMessagesFor, rulesPostDesign, serializedRules, updateAndSaveRules, updateRulesMessages,
 } from '../../services/rules/rulesPost.js';
 import { resolveWelcomeImageUrl } from '../../utils/welcomeImageStore.js';
+import { textForInteraction } from '../../utils/botText.js';
+import { descriptionLocalizations } from '../../utils/commandLocalizations.js';
 
 const NO_MENTIONS = Object.freeze({ parse: [] });
 
@@ -33,25 +35,24 @@ const clip = (value, max = 200) => {
     const t = String(value ?? '').replace(/\s+/g, ' ').trim();
     return t.length > max ? `${t.slice(0, max - 1)}…` : t;
 };
-const plural = (n) => `${n} ${n === 1 ? 'message' : 'messages'}`;
 
 /** A Discord-side call; an unexpected Discord error becomes a readable refusal (like the dashboard). */
-async function discordCall(task, refusal) {
+async function discordCall(tr, task, refusal) {
     try {
         return await task();
     } catch (error) {
         if (isReadable(error)) throw error;
         logger.warn(`/rules: ${error.message}`);
-        throw userError(`${refusal} Discord said: ${clip(error.message)}`, ErrorTypes.DISCORD_API);
+        throw userError(tr.t('moderation.rules.discordSaid', { refusal, error: clip(error.message) }), ErrorTypes.DISCORD_API);
     }
 }
 
 /** The main server's saved rules and design; refuses outside the main server or before settings loaded. */
-function readState(interaction) {
+function readState(interaction, tr) {
     const mainId = rulesCommandDeps.guildIdFor('main');
-    if (!mainId || interaction.guildId !== mainId) throw userError('The rules can only be posted from the main server.');
+    if (!mainId || interaction.guildId !== mainId) throw userError(tr.t('moderation.rules.mainOnly'));
     // Settings not read from the database yet: never post the defaults instead of the saved design.
-    if (!rulesCommandDeps.isSettingsLoaded()) throw userError('The saved settings are not loaded (database not responding). Nothing was changed.', ErrorTypes.DATABASE);
+    if (!rulesCommandDeps.isSettingsLoaded()) throw userError(tr.t('moderation.rules.notLoaded'), ErrorTypes.DATABASE);
     const { rules } = numberedRules(rulesCommandDeps.resolveSetting(mainId, 'serverRules'));
     const design = rulesPostDesign(rulesCommandDeps.resolveSetting(mainId, 'rulesPost'));
     return { mainId, rules, design };
@@ -62,7 +63,7 @@ function messagesFor(client, { mainId, rules, design }) {
 }
 
 /** Saves the new posted ids; a database error says what was undone (`undone`). */
-function saver(interaction, mainId, design, undone) {
+function saver(interaction, tr, mainId, design, undone) {
     return async (posted) => {
         try {
             await rulesCommandDeps.updateSettings(mainId, { rulesPost: { ...design, posted } },
@@ -70,51 +71,52 @@ function saver(interaction, mainId, design, undone) {
         } catch (error) {
             if (isReadable(error)) throw error;
             logger.warn(`/rules: saving the posted ids failed: ${error.message}`);
-            throw userError(`Could not save the post (database not responding). ${undone}`, ErrorTypes.DATABASE);
+            throw userError(tr.t('moderation.rules.saveFailed', { undone }), ErrorTypes.DATABASE);
         }
     };
 }
 
-async function post(interaction, client) {
-    const state = readState(interaction);
+async function post(interaction, client, tr) {
+    const state = readState(interaction, tr);
     const { design } = state;
     const picked = interaction.options.getChannel('channel');
     const channelId = picked?.id || design.channelId;
-    if (!channelId) throw userError('No rules channel is saved. Pick one with the channel option, or save one on the dashboard Rules page.');
+    if (!channelId) throw userError(tr.t('moderation.rules.noChannel'));
     const channel = interaction.guild.channels.cache.get(channelId);
     if (!channel) {
-        throw userError(picked ? 'I cannot see that channel. Pick another one.' : 'The saved rules channel no longer exists. Pick one with the channel option, or save another on the dashboard Rules page.');
+        throw userError(picked ? tr.t('moderation.rules.cannotSee') : tr.t('moderation.rules.channelGone'));
     }
     const messages = await messagesFor(client, state);
     const { posted } = await postAndSaveRules({
         guild: interaction.guild, channel, messages,
-        post: (guild, ch, msgs) => discordCall(() => rulesCommandDeps.postRulesMessages(guild, ch, msgs), 'Discord refused the post. Nothing was posted.'),
-        save: saver(interaction, state.mainId, design, 'The post was removed again. Nothing was changed.'),
+        post: (guild, ch, msgs) => discordCall(tr, () => rulesCommandDeps.postRulesMessages(guild, ch, msgs), tr.t('moderation.rules.postRefused')),
+        save: saver(interaction, tr, state.mainId, design, tr.t('moderation.rules.postUndone')),
     });
-    const earlier = design.posted ? ` The earlier post in <#${design.posted.channelId}> stays where it is. Next time, use /rules update to change the post instead.` : '';
-    return `The rules were posted in <#${channel.id}> (${plural(posted.messageIds.length)}).${earlier}`;
+    const messageCount = tr.tp('moderation.rules.messages', posted.messageIds.length);
+    const done = tr.t('moderation.rules.posted', { channelId: channel.id, messages: messageCount });
+    return design.posted ? `${done} ${tr.t('moderation.rules.earlierPost', { channelId: design.posted.channelId })}` : done;
 }
 
-async function update(interaction, client) {
-    const state = readState(interaction);
+async function update(interaction, client, tr) {
+    const state = readState(interaction, tr);
     const { design } = state;
-    if (!design.posted) throw userError('The rules have not been posted yet. Use /rules post first.');
+    if (!design.posted) throw userError(tr.t('moderation.rules.notPosted'));
     const messages = await messagesFor(client, state);
     const { posted } = await updateAndSaveRules({
         guild: interaction.guild, current: design.posted, messages,
-        update: (guild, current, msgs) => discordCall(() => rulesCommandDeps.updateRulesMessages(guild, current, msgs),
-            'Discord refused the update. Some messages may already show the new rules. Try /rules update again.'),
-        save: saver(interaction, state.mainId, design, 'New extra messages were removed again and the saved post was not changed. Run /rules update again.'),
+        update: (guild, current, msgs) => discordCall(tr, () => rulesCommandDeps.updateRulesMessages(guild, current, msgs),
+            tr.t('moderation.rules.updateRefused')),
+        save: saver(interaction, tr, state.mainId, design, tr.t('moderation.rules.updateUndone')),
     });
-    return `The posted rules in <#${posted.channelId}> were updated (${plural(posted.messageIds.length)}).`;
+    return tr.t('moderation.rules.updated', { channelId: posted.channelId, messages: tr.tp('moderation.rules.messages', posted.messageIds.length) });
 }
 
 /** Every message of the post as ephemeral replies: nothing is posted or saved. */
-async function preview(interaction, client) {
-    const state = readState(interaction);
+async function preview(interaction, client, tr) {
+    const state = readState(interaction, tr);
     const messages = await messagesFor(client, state);
-    const where = state.design.channelId ? `<#${state.design.channelId}>` : 'no channel saved yet';
-    const head = `Preview of the rules post (${plural(messages.length)}, saved channel: ${where}). Only you can see this. Nothing was posted.`;
+    const where = state.design.channelId ? `<#${state.design.channelId}>` : tr.t('moderation.rules.noChannelSaved');
+    const head = tr.t('moderation.rules.previewHead', { messages: tr.tp('moderation.rules.messages', messages.length), where });
     await InteractionHelper.safeEditReply(interaction, { content: head, embeds: messages[0].embeds, files: messages[0].files, allowedMentions: NO_MENTIONS });
     for (const message of messages.slice(1)) {
         await interaction.followUp({ embeds: message.embeds, files: message.files, flags: MessageFlags.Ephemeral, allowedMentions: NO_MENTIONS });
@@ -125,16 +127,21 @@ export default {
     data: new SlashCommandBuilder()
         .setName('rules')
         .setDescription('Post, update or preview the server rules message')
+        .setDescriptionLocalizations(descriptionLocalizations('moderation.rules.cmd.description'))
         .addSubcommand((sub) => sub.setName('post')
             .setDescription('Post the rules with the design saved on the dashboard')
+            .setDescriptionLocalizations(descriptionLocalizations('moderation.rules.cmd.post'))
             .addChannelOption((option) => option.setName('channel')
                 .setDescription('Where to post them (default: the channel saved on the dashboard)')
+                .setDescriptionLocalizations(descriptionLocalizations('moderation.rules.cmd.postChannel'))
                 .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                 .setRequired(false)))
         .addSubcommand((sub) => sub.setName('update')
-            .setDescription('Change the posted rules message to the current rules and design'))
+            .setDescription('Change the posted rules message to the current rules and design')
+            .setDescriptionLocalizations(descriptionLocalizations('moderation.rules.cmd.update')))
         .addSubcommand((sub) => sub.setName('preview')
-            .setDescription('Show the rules post only to you, without posting it'))
+            .setDescription('Show the rules post only to you, without posting it')
+            .setDescriptionLocalizations(descriptionLocalizations('moderation.rules.cmd.preview')))
         .setDMPermission(false),
 
     async execute(interaction, config, client) {
@@ -144,14 +151,15 @@ export default {
             return;
         }
         const bot = client ?? interaction.client;
+        const tr = textForInteraction(interaction); // every /rules reply is ephemeral: the admin's language
         const sub = interaction.options.getSubcommand();
         if (sub === 'preview') {
             // Reads only: no need to wait for a post or edit in progress.
-            await preview(interaction, bot);
+            await preview(interaction, bot, tr);
             return;
         }
         // Post and update wait for any other rules change (dashboard or /rules) to finish.
-        const content = await serializedRules(() => (sub === 'update' ? update(interaction, bot) : post(interaction, bot)));
+        const content = await serializedRules(() => (sub === 'update' ? update(interaction, bot, tr) : post(interaction, bot, tr)));
         await InteractionHelper.safeEditReply(interaction, { content, allowedMentions: NO_MENTIONS });
     },
 };

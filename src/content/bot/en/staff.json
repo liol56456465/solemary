@@ -1,0 +1,1039 @@
+{
+    "panel": {
+        "title": "Enforcements: {name}",
+        "expiredTitle": "Panel expired",
+        "expired": "This panel expired, run /enforcements again.",
+        "action": {
+            "ban": "Ban",
+            "kick": "Kick",
+            "mute": "Mute",
+            "warn": "Warn",
+            "unban": "Unban",
+            "unmute": "Unmute",
+            "removewarn": "Remove warn"
+        },
+        "type": {
+            "ban": "ban",
+            "kick": "kick",
+            "mute": "mute",
+            "warn": "warn"
+        },
+        "status": {
+            "voided": "removed (a mistake)",
+            "liftedByAppeal": "lifted by appeal",
+            "reversed": "reversed by a moderator",
+            "lifted": "lifted early",
+            "appealPending": "appeal pending",
+            "activeAppealDenied": "active, appeal denied",
+            "expired": "expired",
+            "active": "active"
+        },
+        "info": {
+            "user": "**User:** {username} (<@{id}>) · `{id}`",
+            "accountCreated": "**Account created:** {date} ({relative})",
+            "inServerYes": "**In server:** yes, joined {joined} · {roles}",
+            "joinedAt": "{date} ({relative})",
+            "joinedUnknown": "at an unknown time",
+            "roles": {
+                "one": "{count} role",
+                "other": "{count} roles"
+            },
+            "inServerNo": "**In server:** no",
+            "warns": "**Counted warns:** {warns} · **Warning stage:** {stage}",
+            "activeBanEnds": "ban `{code}` · ends {date}",
+            "activeBanPermanent": "ban `{code}` · permanent",
+            "bannedNoRecord": "banned outside the panel (no record)",
+            "activeMute": "mute `{code}` · ends {date}",
+            "mutedNoRecord": "has the muted role (no record)",
+            "active": "**Active punishment:** {list}",
+            "activeNone": "none",
+            "pendingAppeal": "**Pending appeal:** {codes} (decide in the appeal channel or with /appeals)",
+            "keepApart": "**Keep apart:** {list}"
+        },
+        "keepApartLine": "with <@{otherId}> until {until} (order #{id})",
+        "warns": {
+            "of": "{n} of {max}",
+            "nextBans": "{n} (next warn bans)"
+        },
+        "stage": {
+            "none": "0 of 3 (no warning ban yet)",
+            "permanent": "{n} of 3 (permanent ban)",
+            "days": {
+                "one": "{n} of 3 ({count}-day ban)",
+                "other": "{n} of 3 ({count}-day ban)"
+            },
+            "long": "warning stage {stage}"
+        },
+        "recent": {
+            "title": "Last cases",
+            "titleCount": "Last cases ({shown} of {total})",
+            "none": "None",
+            "line": "`{code}` **{type}**{test} · {name} · {date} · {status}{imported}",
+            "test": " (test)",
+            "imported": " · imported",
+            "older": {
+                "one": "-# {count} older: see /background",
+                "other": "-# {count} older: see /background"
+            }
+        },
+        "templatePlaceholder": "Or use a template",
+        "template": {
+            "mute": "{duration} mute",
+            "ban": "{duration} ban",
+            "permanentBan": "permanent ban"
+        },
+        "templateGoneTitle": "Template not available",
+        "templateGone": "That template was changed or does not fit this member any more. Run /enforcements again.",
+        "reason": {
+            "severe": "Severe: by default they cannot appeal the ban",
+            "custom": "Custom…",
+            "customHint": "Type your own reason",
+            "placeholder": "Choose a reason"
+        },
+        "button": {
+            "cancel": "Cancel",
+            "confirm": "Confirm",
+            "editDetails": "Edit details",
+            "tryAgain": "Try again"
+        },
+        "stepTitle": "{action}: {name}",
+        "modal": {
+            "customReason": "Custom reason",
+            "duration": "Duration",
+            "durationBan": "e.g. 30m, 24h, 7d, 1mo. Leave blank for a permanent ban.",
+            "durationMute": "Required. e.g. 30m, 24h, 7d, 1mo.",
+            "name": "Name (optional)",
+            "nameDefault": "Default: {name}",
+            "evidence": "Evidence (message links, optional)",
+            "evidenceHint": "Up to {max} links, one per line. Add images later with /case evidence add.",
+            "unappealable": "They cannot appeal this ban",
+            "unappealableHint": "Can they appeal? Ticked: No. Not ticked: Yes.",
+            "reasonOptional": "Reason (optional)"
+        },
+        "summary": {
+            "user": "User",
+            "reason": "Reason",
+            "duration": "Duration",
+            "canAppeal": "Can they appeal?",
+            "yes": "Yes",
+            "no": "No",
+            "name": "Name",
+            "nameDefault": "{name} (default)",
+            "warning": "Warning",
+            "dmFirst": "The user is DMed before the action runs."
+        },
+        "effect": {
+            "warn": "warning {n} of {max}.",
+            "escalates": "reaches the warning limit → automatic {length} ban (warning stage {stage} of 3).",
+            "escalatesPermanent": "reaches the warning limit → automatic permanent ban (warning stage {stage} of 3)."
+        },
+        "input": {
+            "customReasonRequired": "A custom reason is required.",
+            "muteNeedsDuration": "A mute needs a duration, e.g. 30m, 24h, 7d or 1mo.",
+            "badDuration": "\"{value}\" is not a valid duration. Use formats like 30m, 24h, 7d or 1mo.",
+            "evidenceLinks": "Evidence must be links (e.g. a Discord message link: right-click a message → Copy Message Link).",
+            "evidenceMax": "At most {max} evidence links here; add more afterwards with /case evidence add.",
+            "nameTaken": "A record named **{name}** already exists in this server. Pick another name."
+        },
+        "evidence": {
+            "notSaved": "Evidence {url} was not saved: {error}",
+            "attached": {
+                "one": "Evidence attached: {count} link.",
+                "other": "Evidence attached: {count} links."
+            }
+        },
+        "precedent": {
+            "custom": "Custom reason: no comparison.",
+            "unavailable": "Similar cases: unavailable right now.",
+            "scope": "reason \"{reason}\", last {days} days",
+            "none": "Similar cases ({scope}): No similar cases yet.",
+            "line": "Similar cases ({scope}, {cases}): {parts}. Most common: {top}{usual}.",
+            "newest": "newest {limit} cases",
+            "cases": {
+                "one": "{count} case",
+                "other": "{count} cases"
+            },
+            "count": {
+                "warn": {
+                    "one": "{count} warn",
+                    "other": "{count} warns"
+                },
+                "mute": {
+                    "one": "{count} mute",
+                    "other": "{count} mutes"
+                },
+                "kick": {
+                    "one": "{count} kick",
+                    "other": "{count} kicks"
+                },
+                "ban": {
+                    "one": "{count} ban",
+                    "other": "{count} bans"
+                }
+            },
+            "usually": ", usually {length}",
+            "permanent": "permanent",
+            "overturned": {
+                "one": " {count} overturned on appeal.",
+                "other": " {count} overturned on appeal."
+            }
+        },
+        "member": {
+            "level0": {
+                "one": "This member: {warns} of {count} counted warning, {stage}.",
+                "other": "This member: {warns} of {count} counted warnings, {stage}."
+            },
+            "levelN": {
+                "one": "This member: {count} counted warning, {stage}; the next warning bans.",
+                "other": "This member: {count} counted warnings, {stage}; the next warning bans."
+            },
+            "unavailable": "This member: ladder unavailable right now."
+        },
+        "confirm": {
+            "title": "Confirm: {action}",
+            "evidence": "**Evidence:** {list}",
+            "unreadable": " (message not readable, link only)",
+            "template": "**Template:** {name}",
+            "effect": "**Effect:** {effect}"
+        },
+        "result": {
+            "caseCode": "**Case code:** `{code}`",
+            "name": "**Name:** {name}",
+            "ends": "**Ends:** {date}",
+            "dmFailed": "**The DM could not be delivered** (DMs closed or no shared server). The action still ran.",
+            "dmDelivered": "DM delivered.",
+            "title": "{action} done: {name}",
+            "done": "Done."
+        },
+        "step": {
+            "reason": "Step 1: choose a reason.",
+            "reasonWithMessage": "**Message:** {url} (attached as evidence)\nStep 1: choose a reason."
+        },
+        "removeWarn": {
+            "none": "This user has no counted warnings to remove.",
+            "placeholder": "Choose the warning to remove",
+            "which": "Which warning should be removed?"
+        },
+        "cancelledTitle": "Cancelled",
+        "cancelled": "Nothing was changed. Run /enforcements to start again.",
+        "failedTitle": "{action} failed",
+        "failedGeneric": "Something went wrong; nothing may have changed. Check /background before retrying."
+    },
+    "enforcements": {
+        "cmd": {
+            "description": "Open the enforcement panel for a user (ban, kick, mute, warn and more)",
+            "user": "The user to act on",
+            "userId": "User ID, for people no longer in the server"
+        },
+        "serverOnly": "This command only works in a server.",
+        "noAdmin": "You need the Administrator permission to use this panel."
+    },
+    "moderateuser": {
+        "serverOnly": "This only works in a server.",
+        "readOnly": "{reason} The panel is read-only."
+    },
+    "warnmessage": {
+        "otherServer": "This only works on messages in this server.",
+        "noAdmin": "You need the Administrator permission to warn members.",
+        "botMessage": "Bot, webhook and system messages cannot be warned for.",
+        "self": "You cannot warn yourself.",
+        "notInServer": "**{name}** is no longer in the server, so a warning can't reach them."
+    },
+    "reportmessage": {
+        "serverOnly": "Reports only work in a server.",
+        "ownMessage": "You can only report messages from other members.",
+        "cooldown": "Please wait a little before reporting another message.",
+        "notDelivered": "Your report could not be delivered: this server has no staff channel for reports set up. Tell a moderator directly.",
+        "sentTitle": "Report sent",
+        "sent": "Thanks. The moderators will look at it."
+    },
+    "appeal": {
+        "cmd": {
+            "description": "Your appeals",
+            "status": "Where your appeals stand"
+        },
+        "title": "My appeals",
+        "dbDown": "The database is not responding. Try again in a few minutes."
+    },
+    "caseStatus": {
+        "voided": "removed (a mistake)",
+        "liftedByAppeal": "lifted by appeal",
+        "reversed": "reversed by a moderator",
+        "lifted": "lifted early",
+        "appealPending": "appeal pending",
+        "activeAppealDenied": "active, appeal denied",
+        "expired": "expired",
+        "active": "active",
+        "ended": "ended"
+    },
+    "background": {
+        "cmd": {
+            "description": "Show a user's enforcement records and staff notes",
+            "user": "The user to look up",
+            "userId": "User ID, for people no longer in the server",
+            "name": "Open one record by name"
+        },
+        "serverOnly": "This command only works in a server.",
+        "noAdmin": "You need the Administrator permission to view records.",
+        "notFound": "No record named **{name}**.",
+        "notFoundFor": "No record named **{name}** for {user}.",
+        "notYours": "Run /background yourself to browse records.",
+        "notesAdminOnly": "Only administrators can edit staff notes.",
+        "noteEmpty": "The note is empty.",
+        "noNoteNumber": "There is no note number {number}.",
+        "target": {
+            "both": "Use either the user picker or user_id, not both.",
+            "none": "Pick a user or enter a user_id.",
+            "badId": "user_id must be a Discord user ID (17–20 digits).",
+            "unknown": "No Discord user with ID `{id}` exists."
+        },
+        "stage": {
+            "none": "0 of 3 (no warning ban yet)",
+            "days": "{n} of 3 ({days}-day ban)",
+            "permanent": "{n} of 3 (permanent ban)"
+        },
+        "noteType": {
+            "warning": "Warning",
+            "positive": "Positive",
+            "neutral": "Note",
+            "alert": "Alert"
+        },
+        "reasonKind": {
+            "prebuilt": "prebuilt",
+            "custom": "custom"
+        },
+        "appealStatus": {
+            "pending": "pending",
+            "accepted": "accepted",
+            "denied": "denied"
+        },
+        "notes": {
+            "title": "Staff notes",
+            "titleCount": {
+                "one": "Staff notes ({count})",
+                "other": "Staff notes ({count})"
+            },
+            "none": "None. Use **Add note** to write one.",
+            "line": "**{number}.** {type}: {content} · {author}, {when}",
+            "unknownAuthor": "unknown",
+            "older": {
+                "one": "…and {count} older",
+                "other": "…and {count} older"
+            }
+        },
+        "record": {
+            "code": "**Case code:** `{code}`",
+            "type": "**Type:** {type}{auto}{imported}",
+            "auto": " (automatic, warn ladder)",
+            "imported": " (imported, not counted)",
+            "user": "**User:** {name} (`{id}`)",
+            "by": "**By:** {name} (`{id}`)",
+            "when": "**When:** {date}",
+            "reason": "**Reason:** {reason} ({kind})",
+            "duration": "**Duration:** {duration}, ends {end}",
+            "durationPermanent": "**Duration:** Permanent",
+            "canAppeal": "**Can they appeal?** {answer}",
+            "yes": "Yes",
+            "no": "No",
+            "yesUntil": "Yes, until {date}",
+            "stageAfter": "**Warning stage after:** {stage}",
+            "dmDelivered": "**DM delivered:** {answer}",
+            "endDmDelivered": "**\"Ended\" DM delivered:** {answer}",
+            "edited": {
+                "one": "**Edited:** {count} change(s): `/case history code:{code}`",
+                "other": "**Edited:** {count} change(s): `/case history code:{code}`"
+            },
+            "status": "**Status:** {status}",
+            "removed": "**Removed (a mistake):** {date}{by}{reason} (no longer counts)",
+            "liftedEarly": "**Lifted early:** {date}{by}{reason}",
+            "byId": " by `{id}`",
+            "byName": " by {name}",
+            "appealLine": "{date}: **{status}**{by}{note}",
+            "noAppeals": "None",
+            "appealHistory": "Appeal history"
+        },
+        "list": {
+            "title": "Background: {name}",
+            "count": {
+                "one": "{count} record(s), newest first. Use `name:` to open one in full.",
+                "other": "{count} record(s), newest first. Use `name:` to open one in full."
+            },
+            "empty": "No records for this user.",
+            "page": "Page {page} of {pages}",
+            "test": " (test)",
+            "imported": " · imported",
+            "reason": "Reason: {reason}",
+            "ends": "Ends {date}",
+            "keepApart": "Keep apart (active)",
+            "watchlist": "Watchlist"
+        },
+        "watchLine": "On watchlist since {since} — {reason} (entry #{id})",
+        "watchLineUntil": "On watchlist since {since} — {reason} (until {until}) (entry #{id})",
+        "button": {
+            "addNote": "Add note",
+            "removeNote": "Remove note",
+            "newer": "Newer",
+            "older": "Older"
+        },
+        "modal": {
+            "addTitle": "Add a staff note",
+            "removeTitle": "Remove a staff note",
+            "noteLabel": "Note (only staff can see it)",
+            "numberLabel": "Number of the note to remove",
+            "numberPlaceholder": "e.g. 3"
+        }
+    },
+    "caseSearch": {
+        "filters": "**Filters:** {filters}",
+        "filter": {
+            "member": "member {user}",
+            "moderator": "moderator {user}",
+            "type": "type **{type}**",
+            "reason": "reason **{reason}**",
+            "status": "status **{status}**",
+            "date": "date **{from} → {to}** (UTC)",
+            "text": "text “{text}”",
+            "tag": "tag **#{tag}**",
+            "none": "none (all cases)"
+        },
+        "test": " (test)",
+        "by": "by {name}",
+        "pageEmpty": "No cases on this page any more. Use **Newer**.",
+        "noMatch": "No cases match these filters.",
+        "title": {
+            "one": "Case search: {count} result",
+            "other": "Case search: {count} results"
+        },
+        "footer": "Page {page} of {pages} · newest first",
+        "openPlaceholder": "Open a record in full",
+        "newer": "Newer",
+        "older": "Older",
+        "notYours": "Run /case search yourself to browse cases.",
+        "unreadable": "This search can no longer be read. Run /case search again.",
+        "notFoundTitle": "Not found",
+        "notFound": "That case no longer exists."
+    },
+    "case": {
+        "cmd": {
+            "description": "Search, edit and remove cases, evidence and history, keep-apart orders and the watchlist",
+            "code": "Case code",
+            "statusChoice": {
+                "active": "active",
+                "ended": "ended",
+                "revoked": "revoked",
+                "voided": "voided"
+            },
+            "search": {
+                "description": "Find cases by member, moderator, type, reason, status, date or text",
+                "member": "Cases given to this member",
+                "moderator": "Cases given by this moderator",
+                "type": "Case type",
+                "reasonKey": "Prebuilt reason (or custom)",
+                "status": "active, ended, revoked (lifted early) or voided (removed as a mistake)",
+                "from": "Given on or after (YYYY-MM-DD, UTC)",
+                "to": "Given on or before (YYYY-MM-DD, UTC)",
+                "tag": "Cases with this tag",
+                "text": "Text in the case name or reason"
+            },
+            "edit": {
+                "description": "Change a case's reason or duration (history is kept)",
+                "reason": "New reason",
+                "duration": "New total duration from when it was given, e.g. 7d, 1mo, permanent (open bans/mutes only)"
+            },
+            "remove": {
+                "description": "Mark a case as a mistake: lift it and stop it counting",
+                "reason": "Why it is removed as a mistake (shown to the user)"
+            },
+            "history": {
+                "description": "Show a case's edit history and evidence"
+            },
+            "tags": {
+                "description": "Set the tags on a case, like scam, alt or raid",
+                "tags": "Comma-separated; \"none\" clears them"
+            },
+            "note": {
+                "description": "Private staff notes on a case",
+                "add": "Add a note only staff can see",
+                "text": "The note",
+                "list": "Show the notes on a case"
+            },
+            "evidence": {
+                "description": "Evidence attached to a case",
+                "add": "Attach a message link and/or an image to a case",
+                "link": "A link, e.g. a Discord message link (its text is saved)",
+                "image": "A screenshot; re-hosted in the evidence channel",
+                "note": "Short note about this evidence",
+                "list": "List a case's evidence",
+                "remove": "Remove one piece of evidence from a case",
+                "id": "Evidence number (#) from /case evidence list"
+            },
+            "keepapart": {
+                "description": "Keep apart: two members may not mention or reply to each other",
+                "add": "Keep two members apart: start an order (both are DMed)",
+                "userA": "First member",
+                "userB": "Second member",
+                "days": "How many days it lasts",
+                "reason": "Why (shown to both members)",
+                "list": "List active keep-apart orders",
+                "end": "End a keep-apart order early (both are DMed)",
+                "id": "Order number (#) from /case keepapart list"
+            },
+            "watch": {
+                "description": "Staff watchlist: joins, new cases and automod hits go to the mod log",
+                "add": "Put a member on the watchlist (they are not told)",
+                "member": "The member to watch",
+                "reason": "Why (staff only)",
+                "days": "How many days (empty = no end date)",
+                "list": "List members on the watchlist",
+                "end": "Take a member off the watchlist",
+                "id": "Entry number (#) from /case watch list"
+            }
+        },
+        "type": {
+            "ban": "ban",
+            "kick": "kick",
+            "mute": "mute",
+            "warn": "warn"
+        },
+        "serverOnly": "This command only works in a server.",
+        "noAdmin": "You need the Administrator permission to change cases.",
+        "notACode": "`{value}` is not a case code (5–7 letters and digits).",
+        "reasonEmpty": "The reason cannot be empty.",
+        "footer": "{type} on {user} by {moderator}",
+        "error": {
+            "noCase": "No case with code `{code}` in this server.",
+            "noCaseAnywhere": "No case with code `{code}`.",
+            "editVoided": "`{code}` was removed (a mistake) and can no longer be edited.",
+            "noDurationType": "Only bans and mutes have a duration; `{code}` is a {type}.",
+            "ladderDuration": "Automatic warn-ladder bans keep their ladder duration. Remove the case (if it was a mistake) or unban instead.",
+            "importedDuration": "Imported cases cannot change duration.",
+            "endedDuration": "`{code}` has already ended ({status}); only open bans and mutes can change duration.",
+            "muteNeedsDuration": "A mute needs a duration (e.g. 30m, 24h, 7d).",
+            "nothingToChange": "Nothing to change: give a new reason or duration that differs from the current one.",
+            "badDuration": "Duration must look like 30m, 24h, 7d, 2w, 1mo (or \"permanent\" for a ban).",
+            "alreadyRemoved": "`{code}` is already removed.",
+            "badTag": "\"{tag}\" is not a valid tag. Use letters, numbers and dashes, up to {max} characters.",
+            "tooManyTags": "A case can have at most {max} tags.",
+            "noteEmpty": "The note is empty.",
+            "noteTooLong": "Keep notes under {max} characters.",
+            "badDate": "`{value}` is not a valid date. Use YYYY-MM-DD, e.g. 2026-10-27.",
+            "badFromDate": "`{value}` is not a valid from date. Use YYYY-MM-DD, e.g. 2026-10-27.",
+            "badToDate": "`{value}` is not a valid to date. Use YYYY-MM-DD, e.g. 2026-10-27.",
+            "badMember": "member must be a Discord user.",
+            "badModerator": "moderator must be a Discord user.",
+            "badType": "type must be one of {list}.",
+            "badReasonKey": "Pick a reason key from the list.",
+            "badStatus": "status must be one of {list}.",
+            "fromAfterTo": "The from date is after the to date.",
+            "badSearchTag": "A tag is letters, numbers and dashes, up to 20 characters.",
+            "watchBot": "Bots cannot be put on the watchlist.",
+            "watchSelf": "You cannot put yourself on the watchlist.",
+            "watchDays": "days must be between 1 and {max} (leave it empty for no end date).",
+            "reasonRequired": "A reason is required.",
+            "watchExists": "This member is already on the watchlist (#{id}). End that entry first to change it.",
+            "evidenceFull": "Case `{code}` already has {max} pieces of evidence. Remove one first.",
+            "notImage": "The attachment must be an image (PNG, JPG, GIF, WebP).",
+            "noEvidenceChannelHome": "No evidence channel is set up (EVIDENCE_CHANNEL_ID or MOD_LOG_CHANNEL_ID), so the image cannot be stored.",
+            "noEvidenceChannel": "Evidence images are not set up in this server: set an evidence or mod log channel in the dashboard first, then add the image again."
+        },
+        "tags": {
+            "title": "Tags on `{code}`",
+            "none": "none"
+        },
+        "note": {
+            "addedTitle": "Note added to `{code}`",
+            "added": "Only staff can see it. `/case note list` shows all notes on this case.",
+            "listTitle": "Staff notes on {code}",
+            "line": "{date} · **{author}**: {text}",
+            "none": "No notes yet. Add one with `/case note add`."
+        },
+        "evidence": {
+            "needSomething": "Give a `link`, an `image`, or both.",
+            "oneLink": "`link` must be one http(s) link, e.g. a Discord message link.",
+            "unreadable": "-# The message could not be read (other server, no access, or deleted), so only the link is saved.",
+            "addedTitle": "Evidence added to `{code}`",
+            "listTitle": "Evidence: {code} ({name})",
+            "none": "No evidence yet. Add some with `/case evidence add`.",
+            "noSuch": "Case `{code}` has no evidence #{id}. See `/case evidence list`.",
+            "removedImage": "Image (its copy in the evidence channel is kept).",
+            "removedTitle": "Evidence #{id} removed from `{code}`",
+            "fieldName": "Evidence ({count})",
+            "image": "Image: {links}",
+            "imageLink": "image",
+            "storedLink": "stored",
+            "storedMissing": "image (stored message missing)"
+        },
+        "keepapart": {
+            "noBots": "Keep-apart orders are between members, not bots.",
+            "startedTitle": "Keep-apart order #{id} started",
+            "started": "**{a}** and **{b}** may not mention or reply to each other until {until} ({relative}).",
+            "breaking": "Breaking messages are deleted and logged in the mod log.",
+            "dmBoth": "Both members were DMed.",
+            "dmNotFirst": "DM not delivered to the first member.",
+            "dmNotSecond": "DM not delivered to the second member.",
+            "dmNeither": "DM not delivered to the first member or the second member.",
+            "listLine": "**#{id}** {a} ↔ {b} · until {until} · by {by} · {reason}",
+            "listTitle": "Keep apart: active orders ({count})",
+            "none": "None. Start one with `/case keepapart add`.",
+            "noSuch": "There is no active keep-apart order #{id}. See `/case keepapart list`.",
+            "endedTitle": "Keep-apart order #{id} ended",
+            "ended": "{a} and {b} may contact each other again."
+        },
+        "watch": {
+            "addedTitle": "Watchlist entry #{id} added",
+            "addedUntil": "**{name}** is on the watchlist until {until} ({relative}).",
+            "addedNoEnd": "**{name}** is on the watchlist with no end date.",
+            "notTold": "They are not told. Their joins, new cases and automod hits are posted in the mod log (at most once a minute).",
+            "listTitle": "Watchlist ({count})",
+            "listEmpty": "Nobody. Add someone with `/case watch add`.",
+            "noSuch": "There is no active watchlist entry #{id}. See `/case watch list`.",
+            "endedTitle": "Watchlist entry #{id} ended",
+            "ended": "{user} is no longer watched.",
+            "since": "since {since}",
+            "until": "until {until}",
+            "noEnd": "no end date",
+            "by": "by {mod}",
+            "alert": {
+                "watchedFor": "Watched for",
+                "entry": "Entry"
+            }
+        },
+        "edit": {
+            "needSomething": "Give a new `reason`, a new `duration`, or both.",
+            "reasonLine": "**Reason:** {old} → {new}",
+            "durationLine": "**Duration:** {old} → {new}",
+            "nowPermanent": "It is now permanent.",
+            "alreadyPast": "The new end is already past: it will be lifted within a minute.",
+            "nowEnds": "Now ends {date}.",
+            "title": "Case `{code}` edited"
+        },
+        "remove": {
+            "title": "Case `{code}` removed (it no longer counts)",
+            "noLongerCounts": "{type} on **{user}** no longer counts.",
+            "dmDelivered": "DM to user: delivered.",
+            "dmNotDelivered": "DM to user: not delivered.",
+            "alreadyEnded": "It had already ended, so nothing was lifted.",
+            "alreadyLifted": "It had already been lifted."
+        },
+        "history": {
+            "durationChange": "duration {old} → {new}",
+            "reasonChange": "reason \"{old}\" → \"{new}\"",
+            "line": "{date} · **{name}**: {what}",
+            "removed": "**Removed (a mistake)** {date} by `{by}`: {reason}",
+            "tags": "Tags",
+            "notes": "Staff notes",
+            "title": "Case history: {code} ({name})",
+            "never": "This case was never edited."
+        },
+        "log": {
+            "case": "Case",
+            "user": "User",
+            "editedBy": "Edited by",
+            "reason": "Reason",
+            "duration": "Duration",
+            "endsSuffix": " (ends {date})",
+            "editedTitle": "Case edited",
+            "removedBy": "Removed by",
+            "effect": "Effect",
+            "dm": "DM",
+            "delivered": "Delivered",
+            "notDelivered": "Not delivered",
+            "removedTitle": "Case removed (a mistake, it no longer counts)"
+        },
+        "autocomplete": {
+            "reasonCount": {
+                "one": "{label} ({key}): {count} case",
+                "other": "{label} ({key}): {count} cases"
+            },
+            "removed": " · removed"
+        }
+    },
+    "appeals": {
+        "cmd": {
+            "description": "List pending appeals, see a case in full, or accept/deny an appeal",
+            "code": "Case code. Leave empty to list pending appeals",
+            "decision": "Accept lifts the punishment; deny keeps it. Leave empty to only view the case",
+            "choiceAccept": "accept",
+            "choiceDeny": "deny",
+            "note": "Optional note, shown in the appeal channel and the log"
+        },
+        "mainServerOnly": "Decide Mewvo appeals in the main server.",
+        "serverOnly": "This command only works in a server.",
+        "noAdmin": "You need the Administrator permission to review appeals.",
+        "invalidCode": "That is not a valid case code (5–7 letters and digits).",
+        "decisionWithoutCode": "Give the case code of the appeal you want to decide.",
+        "unknownCase": "No case with code `{code}` in this server.",
+        "otherServer": "That case belongs to another server.",
+        "noPending": "There is no pending appeal for `{code}`.",
+        "secondReviewer": "You issued this punishment, so another staff member has to decide this appeal.",
+        "pending": {
+            "title": "Pending appeals ({count})",
+            "line": "`{code}` **{type}**{test} {username} (`{userId}`), filed {date}{where}",
+            "test": " (test)",
+            "inChannel": " in <#{channelId}>",
+            "hint": "See a case with `/appeals code:<code>`, decide with `decision:accept|deny`.",
+            "none": "There are no pending appeals."
+        },
+        "result": {
+            "accepted": "Appeal accepted",
+            "denied": "Appeal denied",
+            "dmDelivered": "DM to the user: delivered.",
+            "dmNotDelivered": "DM to the user: **not delivered**.",
+            "ownerOverride": "You issued this punishment: decided as a bot owner, logged as an owner override."
+        },
+        "claim": {
+            "noneTitle": "Nothing to take",
+            "none": "There is no open appeal for `{code}` any more.",
+            "alreadyTitle": "Already taken",
+            "already": "{name} is already looking at this appeal.",
+            "looking": "{name} is looking at this appeal.",
+            "tookTitle": "You took this appeal",
+            "tookDelivered": "The member was told someone is looking at it. DM delivered.",
+            "tookNotDelivered": "The member was told someone is looking at it. DM **not delivered** (their DMs are closed)."
+        },
+        "button": {
+            "mainAdminsOnly": "Only administrators in the main server can decide appeals.",
+            "serverAdminsOnly": "Only administrators of this server can decide its appeals.",
+            "outdated": "This button is out of date. Use `/appeals` to decide the appeal."
+        }
+    },
+    "dossier": {
+        "testCase": "**Test case** created with /test. Nothing was executed, and accepting it changes nothing.",
+        "caseCode": "**Case code:** `{code}`",
+        "type": "**Type:** {type}",
+        "typeAuto": "**Type:** {type} (automatic, warn ladder)",
+        "status": "**Status:** {status}",
+        "name": "**Name:** {name}",
+        "user": "**User:** <@{userId}> {username} (`{userId}`)",
+        "by": "**By:** <@{moderatorId}> {moderator}",
+        "when": "**When:** {when}",
+        "reason": "**Reason:** {reason}",
+        "duration": "**Duration:** {duration}, ends {end}",
+        "durationPermanent": "**Duration:** Permanent",
+        "appealDeadline": "**Appeal deadline:** {date}",
+        "cannotAppeal": "**Can they appeal?** No",
+        "liftedEarly": "**Lifted early:** {date}",
+        "liftedEarlyReason": "**Lifted early:** {date}, {reason}",
+        "dmYes": "**DM delivered:** yes",
+        "dmNo": "**DM delivered:** no",
+        "stageAfter": "**Warning stage after:** {stage}",
+        "stage": {
+            "none": "0 of 3 (no warning ban yet)",
+            "level": "{level} of 3 ({ban})",
+            "permanentBan": "permanent ban",
+            "dayBan": "{days}-day ban",
+            "full": "warning stage {stage}"
+        },
+        "caseType": {
+            "ban": "ban",
+            "kick": "kick",
+            "mute": "mute",
+            "warn": "warn"
+        },
+        "caseStatus": {
+            "active": "Active",
+            "appealPending": "Active, appeal pending",
+            "expired": "Ended",
+            "revoked": "Lifted early"
+        },
+        "appealStatus": {
+            "pending": "pending",
+            "accepted": "accepted",
+            "denied": "denied",
+            "closed": "closed"
+        },
+        "answer": {
+            "punished": "Why did you get punished?",
+            "reason": "Why should it be lifted?",
+            "didIt": "Did you do it?",
+            "moreInfo": "More info"
+        },
+        "didIt": {
+            "yes": "Yes, I did it",
+            "partly": "Partly",
+            "no": "No, I didn't do it"
+        },
+        "title": {
+            "case": "Case {code}: {name}",
+            "test": "Test case {code}: {name}",
+            "fallback": "Appeal: {name}"
+        },
+        "independent": {
+            "name": "Independent review",
+            "value": "Issued by {moderator}, so it needs a second reviewer"
+        },
+        "appeal": {
+            "title": "Appeal ({status})",
+            "filedBy": "Filed by {name} {when}",
+            "filedByIn": "Filed by {name} {when} in <#{channelId}>"
+        },
+        "appealLine": {
+            "filed": "Filed {date}{decided}{note}",
+            "decided": ", {status} by {name} {date}",
+            "status": ", {status}",
+            "note": " (note: {note})",
+            "unknown": "unknown"
+        },
+        "otherLine": "`{code}` **{type}**{test} {date}, {status}{appeal}: {reason}",
+        "otherLineAppeal": ", appeal {status}",
+        "testSuffix": " (test)",
+        "history": {
+            "title": "History",
+            "earlier": "Earlier appeals on this case",
+            "others": "Other enforcements ({count})",
+            "more": "…and {count} more",
+            "none": "None",
+            "appealsTotal": "Appeals filed in total",
+            "ladder": "Warn ladder",
+            "ladderValue": "Level {level}, {warns} warn(s) since"
+        },
+        "button": {
+            "accept": "Accept",
+            "deny": "Deny",
+            "claim": "I'm looking at it"
+        },
+        "newAppeal": "New appeal from {username} for `{code}`. Decide with the buttons below or `/appeals`.",
+        "newAppealSupport": " To talk with the appellant: <#{channelId}> in the support server (they see only their own summary there).",
+        "storeOnly": "No appeal channel: this server has no appeals category (or ticket category) set. The appeal is saved; decide it in the dashboard (Appeals), or set an appeals category so new appeals get a channel.",
+        "log": {
+            "submitted": "Appeal submitted",
+            "user": "User",
+            "channel": "Channel",
+            "supportConversation": " (conversation in the support server: <#{channelId}>)",
+            "decidedBy": "Decided by",
+            "note": "Note"
+        },
+        "report": {
+            "title": "Staff report",
+            "reportedBy": "**Reported by:** {username} (`{userId}`)",
+            "staffMember": "**Staff member:** {name}",
+            "filed": "**Filed:** {date}",
+            "whatHappened": "What happened",
+            "proof": "Proof links",
+            "proofNone": "None given",
+            "footer": "Report #{id}. Ask the reporter for screenshot proof in DMs if needed.",
+            "logValue": "#{id} about {name}",
+            "reporter": "Reporter"
+        },
+        "decision": {
+            "accepted": "Appeal accepted",
+            "denied": "Appeal denied",
+            "testTitle": "{title} (test case)",
+            "by": "**By:** {name}",
+            "note": "**Note:** {note}",
+            "dmDelivered": "**DM to user:** delivered",
+            "dmNotDelivered": "**DM to user:** not delivered",
+            "stage3": "This stage-3 warning ban can no longer be appealed.",
+            "deleted": "-# This channel is deleted in {seconds} seconds.",
+            "deletedStays": "-# This channel is deleted in {seconds} seconds. The appeal stays in /appeals code:{code}."
+        },
+        "lift": {
+            "unbanned": "The user was unbanned.",
+            "unmuted": "The user was unmuted.",
+            "warnRemoved": "The warning was removed.",
+            "triggerRemoved": "The warning that triggered this automatic ban (`{code}`) was removed too.",
+            "ladderBanLifted": "This warning was part of the automatic ban `{code}`, so the user was unbanned and the warning level stepped back.",
+            "liftedCases": "Lifted cases",
+            "warning": "Warning",
+            "countedNow": "Counted warns now",
+            "triggerReason": "{reason} (it triggered the automatic ban `{code}`)",
+            "ladderLiftedCase": "`{code}` (automatic ban from the warning limit)"
+        },
+        "stale": {
+            "reportClosed": "Staff report from <@{userId}> (`{userId}`) closed automatically: {why}.",
+            "appealClosed": "Appeal `{code}` from <@{userId}> (`{userId}`) closed automatically: {why}.",
+            "noMessages": {
+                "one": "no messages for {count} day",
+                "other": "no messages for {count} days"
+            },
+            "decided": "appeal already {status}",
+            "reminder": {
+                "one": "This appeal (`{code}`) has had no activity for {count} day and is still waiting for a decision. Use the Accept / Deny buttons above.",
+                "other": "This appeal (`{code}`) has had no activity for {count} days and is still waiting for a decision. Use the Accept / Deny buttons above."
+            },
+            "reminderHome": {
+                "one": "This appeal (`{code}`) has had no activity for {count} day and is still waiting for a decision. Use the Accept / Deny buttons above or `/appeals`.",
+                "other": "This appeal (`{code}`) has had no activity for {count} days and is still waiting for a decision. Use the Accept / Deny buttons above or `/appeals`."
+            }
+        }
+    },
+    "setappeal": {
+        "cmd": {
+            "description": "Post the appeal and report panel in this server (or the channel you pick)",
+            "channel": "Where to post the panel (default: this channel)"
+        },
+        "supportServer": "This server's appeal panel is posted by /setappeal in the main server.",
+        "noAdmin": "You need the Administrator permission to set up appeals.",
+        "posted": {
+            "serverTitle": "Appeal panel posted",
+            "serverPanel": "**Panel:** <#{channelId}>, for appeals of this server's punishments and staff reports.",
+            "category": "Every appeal and report opens in **{category}**, visible to administrators only.",
+            "serverDecide": "Decide appeals with the Accept / Deny buttons on each appeal.",
+            "homeTitle": "Appeal panels posted",
+            "main": "**Main server:** <#{channelId}>, for mutes and warns.",
+            "support": "**Support server:** #{channel}, for bans and kicks, plus staff reports.",
+            "supportCreated": "**Support server:** #{channel} (created), for bans and kicks, plus staff reports.",
+            "homeDecide": "Review and decide them with **/appeals**."
+        },
+        "error": {
+            "noServerCategory": "There is no category to open appeals and reports in. Set a ticket category first (/ticket), then run /setappeal again.",
+            "noMainCategory": "There is no category to open appeals in. Set the appeals category in the dashboard (Enforcement & appeals), or a ticket category.",
+            "categoryPermissions": "I need View Channel and Manage Channels in the **{category}** category to open appeal channels there.",
+            "channelPermissions": "I need View Channel, Send Messages and Embed Links in <#{channelId}> to post the appeal panel.",
+            "noSupportServer": "I am not in the support server (SUPPORT_GUILD_ID), so the ban appeal panel cannot be posted."
+        },
+        "panel": {
+            "title": "{server} appeals",
+            "serverFallback": "Server",
+            "appealButton": "Appeal",
+            "myAppealsButton": "My appeals",
+            "myRecordButton": "My record",
+            "reportButton": "Report staff",
+            "mainIntro": "**Muted or warned?** Press **Appeal** and fill in:",
+            "supportIntro": "**Appeal**: banned, kicked, muted or warned in Mewvo? Press **Appeal** and fill in:",
+            "serverIntro": "**Appeal**: muted, warned or kicked here? Press **Appeal** and fill in:",
+            "step1": "1. Why it should be lifted",
+            "step2": "2. Your case code, from the DM you got",
+            "step3": "3. More info, if you want to add anything",
+            "howItWorks": "The administrators review your appeal and you get the decision by DM. Press **My appeals** any time to check where yours stand, or **My record** to see your warnings and what a next warning would do.",
+            "mainBanned": "-# Banned? Appeal in the Mewvo Support server instead. The link is in your ban DM.",
+            "reportLine": "**Report staff**: report a staff member who broke the rules. Only administrators can see reports.",
+            "supportWindows": "-# Bans and mutes can be appealed while active; warnings and kicks within 30 days."
+        }
+    },
+    "staff": {
+        "cmd": {
+            "description": "Staff warnings, activity, stats, coverage and restoring roles (owner only; some subcommands: admins)",
+            "warn": "Give a staff member a warning (3 active remove their staff roles)",
+            "staffMember": "Staff member",
+            "reason": "Which admin rule they broke",
+            "warnings": "Show a staff member's warnings",
+            "activity": "What each staff member did this week or last week",
+            "week": "Which week",
+            "thisWeek": "this week",
+            "lastWeek": "last week",
+            "stats": "Admins: moderation stats per moderator (actions, appeals, removed cases)",
+            "moderator": "Only this moderator",
+            "statsPeriod": "Time period (default: 30 days)",
+            "coverage": "Admins: when incidents happen vs when staff are active (weekday × hour)",
+            "coveragePeriod": "Time period (default: 7 days)",
+            "restore": "Give back removed staff roles and lift a safety limit block (too many bans/kicks)"
+        },
+        "period": {
+            "days7": "last 7 days",
+            "days30": "last 30 days",
+            "days90": "last 90 days",
+            "all": "all time"
+        },
+        "serverOnly": "This command only works in a server.",
+        "ownerOnly": "Only the server owner can use /staff.",
+        "noAdminStats": "You need the Administrator permission to see staff stats.",
+        "noAdminCoverage": "You need the Administrator permission to see staff coverage.",
+        "stats": {
+            "title": "Moderation stats, {period}",
+            "titleFor": "Moderation stats, {name}, {period}",
+            "empty": "No moderation cases in this period.",
+            "emptyFor": "{name} has no moderation cases in this period.",
+            "footnote": "-# Cases they created (test and automatic cases left out; removed cases are not in the totals). Appeals: decided in this period on their cases."
+        },
+        "coverage": {
+            "title": "Staff coverage, last {days} days ({timeZone})",
+            "incidentsHeading": "**Incidents** (cases created, automatic included): {count}",
+            "staffHeading": "**Staff activity** (proxy, see below): {count}",
+            "legend": "Legend: `·` none · `░▒▓█` quarter steps up to the busiest hour (incidents max {maxIncidents}, staff max {maxStaff}). Columns are hours 0–23.",
+            "gapsTitle": "Most under-covered slots",
+            "gap": "{n}. **{slot}**: {incidents}, {staff}",
+            "incidents": {
+                "one": "{count} incident",
+                "other": "{count} incidents"
+            },
+            "staffActions": {
+                "one": "{count} staff action",
+                "other": "{count} staff actions"
+            },
+            "noIncidents": "No incidents in this period.",
+            "footer": "Staff activity = cases created by human moderators + appeals decided (staff_activity only has weekly totals, so no hours). Time zone: /birthday setchannel timezone."
+        },
+        "activity": {
+            "title": "Staff activity, week of {start}",
+            "footnote": "-# (inactive) = no moderation work and under 20 messages. Actions are cases they created; reviews are automod and verification cards.",
+            "cached": "-# Based on cached members: the full member list could not be loaded right now, so some staff may be missing.",
+            "none": "No staff found."
+        },
+        "warn": {
+            "ownerOrBot": "You cannot warn the owner or a bot.",
+            "notInServer": "{name} is not in the server.",
+            "title": "Staff warning given",
+            "count": "{name} now has **{active} of {limit}** active staff warnings.",
+            "demoted": "That reached the limit: their staff roles were removed. Use `/staff restore` to give them back."
+        },
+        "warnings": {
+            "title": "Staff warnings: {name}",
+            "line": "{state} · {date} by {by}: {reason}",
+            "active": "**active**",
+            "expired": "expired",
+            "none": "None."
+        },
+        "restore": {
+            "ownerOnly": "Only the server owner can use /staff restore here.",
+            "noAdmin": "You need the Administrator permission to use /staff restore.",
+            "notYourself": "You cannot restore yourself. Ask the server owner or another administrator.",
+            "tooHigh": "Some saved roles are at or above your highest role ({roles}). Ask the server owner to restore them.",
+            "nothing": "No removed staff roles are saved for {name} (or they are not in the server), and they are not blocked from the panel.",
+            "roles": "Roles: {roles}",
+            "noRoles": "None of the saved roles could be given back (deleted or above my role).",
+            "blockLifted": "Their enforcement panel block was lifted.",
+            "title": "Staff access restored"
+        },
+        "massGuard": {
+            "blockedBans": "Safety limit: you are blocked from the enforcement panel until <t:{until}:t> (<t:{until}:R>) after {count} bans/kicks in a short time. {alerted}",
+            "blockedMutes": "Safety limit: you are blocked from the enforcement panel until <t:{until}:t> (<t:{until}:R>) after {count} mutes in a short time. {alerted}",
+            "alertedOwners": "The bot owners were alerted.",
+            "alertedOwner": "The server owner was alerted.",
+            "summaryBan": "{name} ({id}) made {count} bans/kicks within {minutes} minutes and tried another ban.",
+            "summaryKick": "{name} ({id}) made {count} bans/kicks within {minutes} minutes and tried another kick.",
+            "summaryMutes": "{name} ({id}) made {count} mutes within {minutes} minutes and tried another mute.",
+            "moderator": "Moderator",
+            "whatHappened": "What happened",
+            "blockedUntil": "Blocked until",
+            "liftEarly": "Lift early",
+            "titleBans": "Safety limit: too many bans/kicks in {minutes} minutes, moderator blocked",
+            "titleMutes": "Safety limit: too many mutes in {minutes} minutes, moderator blocked",
+            "dmBans": "**Safety limit (too many bans/kicks in {minutes} minutes) in {server}.** {summary} Their panel access is blocked until <t:{until}:f>. Lift it early with `/staff restore`.",
+            "dmMutes": "**Safety limit (too many mutes in {minutes} minutes) in {server}.** {summary} Their panel access is blocked until <t:{until}:f>. Lift it early with `/staff restore`."
+        }
+    },
+    "modmail": {
+        "cmd": {
+            "description": "Manage modmail conversations (members DM the bot to reach staff)",
+            "close": "Close this modmail conversation",
+            "reason": "Sent to the member",
+            "block": "Stop a member from using modmail",
+            "blockUser": "Member to block",
+            "unblock": "Let a blocked member use modmail again",
+            "unblockUser": "Member to unblock"
+        },
+        "notConversationChannel": "Use this inside a modmail conversation channel.",
+        "notOpen": "This is not an open modmail conversation.",
+        "staffOnly": "Only staff can close modmail conversations.",
+        "closing": "Closing this conversation…",
+        "blocked": "{user} can no longer use modmail.",
+        "blockedOpen": " Their open conversation {channel} stays until you close it.",
+        "unblocked": "{user} can use modmail again.",
+        "closeButton": "Close",
+        "new": "New modmail",
+        "newPing": "new modmail",
+        "header": {
+            "title": "Modmail",
+            "member": "**Member:** {member} ({tag}, `{id}`)",
+            "created": "**Account created:** {created}",
+            "joined": "**Joined:** {joined}",
+            "unknown": "unknown",
+            "relay": "Everything you type here is sent to the member by DM.",
+            "notes": "Start a message with `//` for an internal note (bot commands aren't sent either)."
+        },
+        "dmFailed": "Could not DM the member (they left the server or closed their DMs).",
+        "transcript": "Modmail with <@{userId}> (`{userId}`) closed by {closer}.",
+        "transcriptReason": "Reason: {reason}"
+    }
+}

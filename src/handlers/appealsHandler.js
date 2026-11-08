@@ -20,10 +20,11 @@ import { enforcementConfig } from '../config/enforcement.js';
 import { createEmbed, successEmbed } from '../utils/embeds.js';
 import { ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
-import { normalizeCaseCode } from '../services/enforcement/format.js';
+import { textForInteraction } from '../utils/botText.js';
+import { normalizeCaseCode, truncate } from '../services/enforcement/format.js';
 import { getCaseByCode, listUserAppeals } from '../services/enforcement/caseService.js';
 import {
-    OTHER_SERVER_CASE, appealStaffGuildId, decideAppeal, isCaseOfCallerServer, submitAppeal, submitStaffReport,
+    appealStaffGuildId, decideAppeal, isCaseOfCallerServer, submitAppeal, submitStaffReport,
 } from '../services/enforcement/appealService.js';
 import { isHomeGuild } from '../services/settings/guildSettings.js';
 import { claimAppeal } from '../services/enforcement/appealStatusService.js';
@@ -250,24 +251,45 @@ export async function canDecideAppeals(interaction, client, record = null) {
     return Boolean(record) && appealStaffGuildId(record) === interaction.guildId && isAdministrator(interaction.member);
 }
 
+
+/**
+ * The result of a decision for the deciding admin (Accept / Deny buttons and /appeals), in their
+ * language (`tr`; the notes come translated from decideAppeal({ lang })). Pure (tests).
+ */
+export function decisionResultEmbed({ caseCode, result, decision }, tr) {
+    return successEmbed(
+        tr.t(decision === 'accept' ? 'staff.appeals.result.accepted' : 'staff.appeals.result.denied'),
+        truncate([
+            `\`${caseCode}\` · ${result.record.name}`,
+            tr.t(result.dmDelivered ? 'staff.appeals.result.dmDelivered' : 'staff.appeals.result.dmNotDelivered'),
+            ...result.notes,
+            ...(result.ownerOverride ? [tr.t('staff.appeals.result.ownerOverride')] : []),
+        ].join('\n'), 4096)
+    );
+}
+
 /** "I'm looking at it": records the reviewer once, DMs the member, tells the staff channel. */
-async function handleClaim(interaction, client, caseCode) {
+async function handleClaim(interaction, client, caseCode, tr) {
     const result = await claimAppeal({ client, admin: interaction.user, caseCode });
     if (result.status === 'none') {
-        return InteractionHelper.safeEditReply(interaction, { embeds: [createEmbed({ title: 'Nothing to take', description: `There is no open appeal for \`${caseCode}\` any more.`, color: 'warning' })] });
+        return InteractionHelper.safeEditReply(interaction, { embeds: [createEmbed({ title: tr.t('staff.appeals.claim.noneTitle'), description: tr.t('staff.appeals.claim.none', { code: caseCode }), color: 'warning' })] });
     }
     if (result.status === 'already') {
-        return InteractionHelper.safeEditReply(interaction, { embeds: [createEmbed({ title: 'Already taken', description: `${result.by} is already looking at this appeal.`, color: 'warning' })] });
+        return InteractionHelper.safeEditReply(interaction, { embeds: [createEmbed({ title: tr.t('staff.appeals.claim.alreadyTitle'), description: tr.t('staff.appeals.claim.already', { name: result.by }), color: 'warning' })] });
     }
-    await interaction.channel?.send?.({ content: `${interaction.user.username} is looking at this appeal.`, allowedMentions: { parse: [] } }).catch(() => {});
+    // Posted in the staff channel: the server's language.
+    const channelTr = textForInteraction(interaction, { purpose: 'public' });
+    await interaction.channel?.send?.({ content: channelTr.t('staff.appeals.claim.looking', { name: interaction.user.username }), allowedMentions: { parse: [] } }).catch(() => {});
     return InteractionHelper.safeEditReply(interaction, {
-        embeds: [successEmbed('You took this appeal', `The member was told someone is looking at it. DM ${result.dmDelivered ? 'delivered' : '**not delivered** (their DMs are closed)'}.`)],
+        embeds: [successEmbed(tr.t('staff.appeals.claim.tookTitle'), tr.t(result.dmDelivered ? 'staff.appeals.claim.tookDelivered' : 'staff.appeals.claim.tookNotDelivered'))],
     });
 }
 
 export async function handleAppealDecisionButton(interaction, client, args) {
     // Deferred first: the support-server check fetches the main-server member.
     await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+    // Ephemeral answers to the admin: their Discord language.
+    const tr = textForInteraction(interaction);
     const [decision, rawCode] = args;
     const caseCode = normalizeCaseCode(rawCode || '');
     // The case decides which server's staff may act on it (also for Claim).
@@ -275,31 +297,23 @@ export async function handleAppealDecisionButton(interaction, client, args) {
     const record = caseCode && interaction.guildId ? await getCaseByCode(caseCode, interaction.guildId) : null;
     const refuse = (message) => replyUserError(interaction, { type: ErrorTypes.PERMISSION, message });
     if (caseCode && !record) {
-        return replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: `No case with code \`${caseCode}\` in this server.` });
+        return replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: tr.t('staff.appeals.unknownCase', { code: caseCode }) });
     }
-    if (record && !isCaseOfCallerServer(record, interaction.guildId)) return refuse(OTHER_SERVER_CASE);
+    if (record && !isCaseOfCallerServer(record, interaction.guildId)) return refuse(tr.t('staff.appeals.otherServer'));
     if (!(await canDecideAppeals(interaction, client, record))) {
         return refuse(isHomeGuild(interaction.guildId)
-            ? 'Only administrators in the main server can decide appeals.'
-            : 'Only administrators of this server can decide its appeals.');
+            ? tr.t('staff.appeals.button.mainAdminsOnly')
+            : tr.t('staff.appeals.button.serverAdminsOnly'));
     }
-    if (decision === 'claim' && caseCode) return handleClaim(interaction, client, caseCode);
+    if (decision === 'claim' && caseCode) return handleClaim(interaction, client, caseCode, tr);
     if (!DECISIONS.has(decision) || !caseCode) {
-        return replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'This button is out of date. Use `/appeals` to decide the appeal.' });
+        return replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: tr.t('staff.appeals.button.outdated') });
     }
 
     const result = await decideAppeal({
-        client, admin: interaction.user, caseCode, decision, note: null, via: 'button', callerGuildId: interaction.guildId,
+        client, admin: interaction.user, caseCode, decision, note: null, via: 'button', callerGuildId: interaction.guildId, lang: tr.lang,
     });
     return InteractionHelper.safeEditReply(interaction, {
-        embeds: [successEmbed(
-            `Appeal ${result.label}`,
-            [
-                `\`${caseCode}\` · ${result.record.name}`,
-                `DM to the user: ${result.dmDelivered ? 'delivered' : '**not delivered**'}.`,
-                ...result.notes,
-                ...(result.ownerOverride ? ['You issued this punishment: decided as a bot owner, logged as an owner override.'] : []),
-            ].join('\n')
-        )],
+        embeds: [decisionResultEmbed({ caseCode, result, decision }, tr)],
     });
 }

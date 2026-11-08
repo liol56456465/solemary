@@ -23,11 +23,11 @@ import { syncWarnRolesQuietly } from './warnRoleService.js';
 import { generateTranscript } from '../ticket.js';
 import { removeMutedRole } from './muteService.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
-import { appealAcceptedDm, appealDeniedDm } from './dmTemplates.js';
-import { resolveBotLanguage } from '../../utils/botText.js';
-import { dateStamp, formatDuration, ladderStage, ladderStageShort, stamp, truncate } from './format.js';
+import { appealAcceptedDm, appealDeniedDm, durationIn } from './dmTemplates.js';
+import { botText, resolveBotLanguage, textForGuild } from '../../utils/botText.js';
+import { LADDER_STAGE_BANS, dateStamp, ladderStage, ladderStageShort, stamp, truncate } from './format.js';
 import { evidenceDisplay } from './evidenceService.js';
-import { checkAppealReviewer, needsSecondReviewer } from './appealReviewer.js';
+import { SECOND_REVIEWER_MESSAGE, checkAppealReviewer, needsSecondReviewer } from './appealReviewer.js';
 import { recordOwnerOverride } from '../ownerOverride.js';
 import { homeSettingsGuild, isHomeGuild, resolveSetting } from '../settings/guildSettings.js';
 
@@ -215,53 +215,105 @@ const DID_IT_LABELS = {
     no: "No, I didn't do it",
 };
 
-const CASE_STATUS_LABELS = {
-    active: 'Active',
-    appeal_pending: 'Active, appeal pending',
-    expired: 'Ended',
-    revoked: 'Lifted early',
-};
+/**
+ * The staff-facing labels in one language (src/content/bot/<lang>/staff.json → dossier). Literal
+ * keys on purpose: tests/botI18nUsage.test.js checks every key used here exists.
+ */
+function staffLabels(tr) {
+    return {
+        answer: {
+            punished: tr.t('staff.dossier.answer.punished'),
+            reason: tr.t('staff.dossier.answer.reason'),
+            didIt: tr.t('staff.dossier.answer.didIt'),
+            moreInfo: tr.t('staff.dossier.answer.moreInfo'),
+        },
+        didIt: {
+            yes: tr.t('staff.dossier.didIt.yes'),
+            partly: tr.t('staff.dossier.didIt.partly'),
+            no: tr.t('staff.dossier.didIt.no'),
+        },
+        caseStatus: {
+            active: tr.t('staff.dossier.caseStatus.active'),
+            appeal_pending: tr.t('staff.dossier.caseStatus.appealPending'),
+            expired: tr.t('staff.dossier.caseStatus.expired'),
+            revoked: tr.t('staff.dossier.caseStatus.revoked'),
+        },
+        appealStatus: {
+            pending: tr.t('staff.dossier.appealStatus.pending'),
+            accepted: tr.t('staff.dossier.appealStatus.accepted'),
+            denied: tr.t('staff.dossier.appealStatus.denied'),
+            closed: tr.t('staff.dossier.appealStatus.closed'),
+        },
+        type: {
+            ban: tr.t('staff.dossier.caseType.ban'),
+            kick: tr.t('staff.dossier.caseType.kick'),
+            mute: tr.t('staff.dossier.caseType.mute'),
+            warn: tr.t('staff.dossier.caseType.warn'),
+        },
+    };
+}
 
-const APPEAL_STATUS_LABELS = {
-    pending: 'pending',
-    accepted: 'accepted',
-    denied: 'denied',
-    closed: 'closed',
-};
+/** The case type (ban, kick, mute, warn) in a language; anything else as stored. */
+export function caseTypeIn(type, { lang = 'en' } = {}) {
+    return staffLabels(botText(lang)).type[type] || type;
+}
+
+/** "1 of 3 (7-day ban)" in a language (English: format.js ladderStageShort, unchanged). */
+export function ladderStageShortIn(level, { lang = 'en' } = {}) {
+    if (lang === 'en') return ladderStageShort(level);
+    const tr = botText(lang);
+    const n = Math.max(0, Math.min(3, Number(level) || 0));
+    if (n === 0) return tr.t('staff.dossier.stage.none');
+    const ms = LADDER_STAGE_BANS[n];
+    const ban = ms == null ? tr.t('staff.dossier.stage.permanentBan') : tr.t('staff.dossier.stage.dayBan', { days: Math.round(ms / (24 * 60 * 60 * 1000)) });
+    return tr.t('staff.dossier.stage.level', { level: n, ban });
+}
+
+/** "warning stage 1 of 3 (7-day ban)" in a language (English: format.js ladderStage). */
+function ladderStageIn(level, lang = 'en') {
+    if (lang === 'en') return ladderStage(level);
+    return botText(lang).t('staff.dossier.stage.full', { stage: ladderStageShortIn(level, { lang }) });
+}
 
 function parseBody(body) {
     if (!body) return {};
     return typeof body === 'string' ? JSON.parse(body) : body;
 }
 
-function caseDetailsLines(record) {
+function caseDetailsLines(record, lang = 'en') {
+    const tr = botText(lang);
+    const labels = staffLabels(tr);
     const lines = [
-        ...(record.is_test ? ['**Test case** created with /test. Nothing was executed, and accepting it changes nothing.'] : []),
-        `**Case code:** \`${record.case_code}\``,
-        `**Type:** ${record.type}${record.is_auto ? ' (automatic, warn ladder)' : ''}`,
-        `**Status:** ${CASE_STATUS_LABELS[record.status] || record.status}`,
-        `**Name:** ${record.name}`,
-        `**User:** <@${record.target_user_id}> ${record.target_username} (\`${record.target_user_id}\`)`,
-        `**By:** <@${record.moderator_id}> ${record.moderator_username}`,
-        `**When:** ${stamp(record.created_at)}`,
-        `**Reason:** ${truncate(record.reason, 500)}`,
+        ...(record.is_test ? [tr.t('staff.dossier.testCase')] : []),
+        tr.t('staff.dossier.caseCode', { code: record.case_code }),
+        record.is_auto
+            ? tr.t('staff.dossier.typeAuto', { type: labels.type[record.type] || record.type })
+            : tr.t('staff.dossier.type', { type: labels.type[record.type] || record.type }),
+        tr.t('staff.dossier.status', { status: labels.caseStatus[record.status] || record.status }),
+        tr.t('staff.dossier.name', { name: record.name }),
+        tr.t('staff.dossier.user', { userId: record.target_user_id, username: record.target_username }),
+        tr.t('staff.dossier.by', { moderatorId: record.moderator_id, moderator: record.moderator_username }),
+        tr.t('staff.dossier.when', { when: stamp(record.created_at) }),
+        tr.t('staff.dossier.reason', { reason: truncate(record.reason, 500) }),
     ];
     if (record.type === 'ban' || record.type === 'mute') {
         lines.push(record.expires_at
-            ? `**Duration:** ${formatDuration(Number(record.duration_ms))}, ends ${stamp(record.expires_at)}`
-            : '**Duration:** Permanent');
+            ? tr.t('staff.dossier.duration', { duration: durationIn(Number(record.duration_ms), tr.lang), end: stamp(record.expires_at) })
+            : tr.t('staff.dossier.durationPermanent'));
     }
     if (record.appeal_deadline) {
-        lines.push(`**Appeal deadline:** ${dateStamp(record.appeal_deadline)}`);
+        lines.push(tr.t('staff.dossier.appealDeadline', { date: dateStamp(record.appeal_deadline) }));
     }
     if (record.unappealable) {
-        lines.push('**Can they appeal?** No');
+        lines.push(tr.t('staff.dossier.cannotAppeal'));
     }
     if (record.status === 'revoked' && record.revoked_at) {
-        lines.push(`**Lifted early:** ${dateStamp(record.revoked_at)}${record.revoke_reason ? `, ${record.revoke_reason}` : ''}`);
+        lines.push(record.revoke_reason
+            ? tr.t('staff.dossier.liftedEarlyReason', { date: dateStamp(record.revoked_at), reason: record.revoke_reason })
+            : tr.t('staff.dossier.liftedEarly', { date: dateStamp(record.revoked_at) }));
     }
-    lines.push(`**DM delivered:** ${record.dm_delivered ? 'yes' : 'no'}`);
-    lines.push(`**Warning stage after:** ${ladderStageShort(record.ladder_level_after)}`);
+    lines.push(tr.t(record.dm_delivered ? 'staff.dossier.dmYes' : 'staff.dossier.dmNo'));
+    lines.push(tr.t('staff.dossier.stageAfter', { stage: ladderStageShortIn(record.ladder_level_after, { lang: tr.lang }) }));
     return lines;
 }
 
@@ -275,25 +327,35 @@ export function appealAnswers(body) {
         }));
 }
 
-function answerFields(body) {
-    return appealAnswers(body).map(({ label, value }) => ({ name: label, value: truncate(value, 1024) }));
+/** The answers as embed fields: labels in `lang`, the answers as the member wrote them. */
+function answerFields(body, lang = 'en') {
+    const labels = staffLabels(botText(lang));
+    return Object.entries(parseBody(body))
+        .filter(([, value]) => value)
+        .map(([key, value]) => ({
+            name: labels.answer[key] || key,
+            value: truncate(String(key === 'didIt' ? (labels.didIt[value] || value) : value), 1024),
+        }));
 }
 
-function appealLine(appeal) {
-    const status = APPEAL_STATUS_LABELS[appeal.status] || appeal.status;
+function appealLine(appeal, tr) {
+    const status = staffLabels(tr).appealStatus[appeal.status] || appeal.status;
     const decided = appeal.decided_at
-        ? `, ${status} by ${appeal.decided_by_username || 'unknown'} ${dateStamp(appeal.decided_at)}`
-        : `, ${status}`;
-    const note = appeal.note ? ` (note: ${truncate(appeal.note, 120)})` : '';
-    return `Filed ${dateStamp(appeal.created_at)}${decided}${note}`;
+        ? tr.t('staff.dossier.appealLine.decided', { status, name: appeal.decided_by_username || tr.t('staff.dossier.appealLine.unknown'), date: dateStamp(appeal.decided_at) })
+        : tr.t('staff.dossier.appealLine.status', { status });
+    const note = appeal.note ? tr.t('staff.dossier.appealLine.note', { note: truncate(appeal.note, 120) }) : '';
+    return tr.t('staff.dossier.appealLine.filed', { date: dateStamp(appeal.created_at), decided, note });
 }
 
 /**
  * Embeds describing a case for administrators: the case itself, the appeal being
  * looked at (if any), earlier appeals on this case, and the user's other cases.
- * Used in the appeal channel and by /appeals.
+ * Used in the appeal channel (the server's language) and by /appeals (the admin's):
+ * `lang`, default English (the web dashboard does not use it).
  */
-export async function buildCaseDossier(record, { appeal = null, client = null } = {}) {
+export async function buildCaseDossier(record, { appeal = null, client = null, lang = 'en' } = {}) {
+    const tr = botText(lang);
+    const labels = staffLabels(tr);
     // The member's appeals in this case's server only (an appeal row's guild_id is its staff
     // server): appeals they filed in other servers are never counted or shown here.
     const staffGuildId = appealStaffGuildId(record);
@@ -314,17 +376,17 @@ export async function buildCaseDossier(record, { appeal = null, client = null } 
         listCasesForUser(record.guild_id, record.target_user_id, { limit: 16 }),
         getLadder(record.guild_id, record.target_user_id).catch(() => null),
         // Appeal channels are staff-only, so excerpts and images can be shown.
-        evidenceDisplay(client, record.case_code).catch(() => ({ field: null, imageUrl: null })),
+        evidenceDisplay(client, record.case_code, { lang: tr.lang }).catch(() => ({ field: null, imageUrl: null })),
     ]);
 
     const current = appeal || caseAppeals.find((row) => row.status === 'pending') || null;
     const embeds = [createEmbed({
-        title: truncate(`${record.is_test ? 'Test case' : 'Case'} ${record.case_code}: ${record.name}`, 256),
-        description: truncate(caseDetailsLines(record).join('\n'), 4096),
+        title: truncate(tr.t(record.is_test ? 'staff.dossier.title.test' : 'staff.dossier.title.case', { code: record.case_code, name: record.name }), 256),
+        description: truncate(caseDetailsLines(record, tr.lang).join('\n'), 4096),
         fields: [
             ...(needsSecondReviewer(record, { botUserId: client?.user?.id || null }) ? [{
-                name: 'Independent review',
-                value: truncate(`Issued by ${record.moderator_username}, so it needs a second reviewer`, 1024),
+                name: tr.t('staff.dossier.independent.name'),
+                value: truncate(tr.t('staff.dossier.independent.value', { moderator: record.moderator_username }), 1024),
             }] : []),
             ...(evidence.field ? [evidence.field] : []),
         ],
@@ -334,9 +396,11 @@ export async function buildCaseDossier(record, { appeal = null, client = null } 
 
     if (current) {
         embeds.push(createEmbed({
-            title: `Appeal (${APPEAL_STATUS_LABELS[current.status] || current.status})`,
-            description: `Filed by ${current.username} ${stamp(current.created_at)}${current.channel_id ? ` in <#${current.channel_id}>` : ''}`,
-            fields: answerFields(current.body),
+            title: truncate(tr.t('staff.dossier.appeal.title', { status: labels.appealStatus[current.status] || current.status }), 256),
+            description: current.channel_id
+                ? tr.t('staff.dossier.appeal.filedByIn', { name: current.username, when: stamp(current.created_at), channelId: current.channel_id })
+                : tr.t('staff.dossier.appeal.filedBy', { name: current.username, when: stamp(current.created_at) }),
+            fields: answerFields(current.body, tr.lang),
             color: 'secondary',
         }));
     }
@@ -346,31 +410,37 @@ export async function buildCaseDossier(record, { appeal = null, client = null } 
     const others = otherCases.filter((row) => row.case_code !== record.case_code).slice(0, 15);
     const otherLines = others.map((row) => {
         const appealStatus = latestAppealByCase.get(row.case_code);
-        return `\`${row.case_code}\` **${row.type}**${row.is_test ? ' (test)' : ''} ${dateStamp(row.created_at)}, ${CASE_STATUS_LABELS[row.status] || row.status}`
-            + `${appealStatus ? `, appeal ${APPEAL_STATUS_LABELS[appealStatus] || appealStatus}` : ''}`
-            + `: ${truncate(row.reason, 80)}`;
+        return tr.t('staff.dossier.otherLine', {
+            code: row.case_code,
+            type: labels.type[row.type] || row.type,
+            test: row.is_test ? tr.t('staff.dossier.testSuffix') : '',
+            date: dateStamp(row.created_at),
+            status: labels.caseStatus[row.status] || row.status,
+            appeal: appealStatus ? tr.t('staff.dossier.otherLineAppeal', { status: labels.appealStatus[appealStatus] || appealStatus }) : '',
+            reason: truncate(row.reason, 80),
+        });
     });
     const moreCount = Math.max(0, total - 1 - others.length);
 
     embeds.push(createEmbed({
-        title: 'History',
+        title: tr.t('staff.dossier.history.title'),
         fields: [
             {
-                name: 'Earlier appeals on this case',
-                value: truncate(earlier.length ? earlier.map(appealLine).join('\n') : 'None', 700),
+                name: tr.t('staff.dossier.history.earlier'),
+                value: truncate(earlier.length ? earlier.map((row) => appealLine(row, tr)).join('\n') : tr.t('staff.dossier.history.none'), 700),
             },
             {
-                name: `Other enforcements (${Math.max(0, total - 1)})`,
+                name: tr.t('staff.dossier.history.others', { count: Math.max(0, total - 1) }),
                 value: truncate(otherLines.length
-                    ? otherLines.join('\n') + (moreCount ? `\n…and ${moreCount} more` : '')
-                    : 'None', 700),
+                    ? otherLines.join('\n') + (moreCount ? `\n${tr.t('staff.dossier.history.more', { count: moreCount })}` : '')
+                    : tr.t('staff.dossier.history.none'), 700),
             },
             {
-                name: 'Appeals filed in total',
+                name: tr.t('staff.dossier.history.appealsTotal'),
                 value: String(appealCount?.count ?? 0),
                 inline: true,
             },
-            ...(ladder ? [{ name: 'Warn ladder', value: `Level ${ladder.level}, ${ladder.warns_since_level} warn(s) since`, inline: true }] : []),
+            ...(ladder ? [{ name: tr.t('staff.dossier.history.ladder'), value: tr.t('staff.dossier.history.ladderValue', { level: ladder.level, warns: ladder.warns_since_level }), inline: true }] : []),
         ],
         color: 'secondary',
     }));
@@ -381,26 +451,27 @@ export async function buildCaseDossier(record, { appeal = null, client = null } 
 const DECISION_BUTTON_ID = 'appealdecide';
 
 /** Accept / Deny under an appeal (each decides it straight away), plus "I'm looking at it" (appealStatusService). */
-export function appealDecisionRow(caseCode, { disabled = false } = {}) {
+export function appealDecisionRow(caseCode, { disabled = false, lang = 'en' } = {}) {
+    const tr = botText(lang);
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId(`${DECISION_BUTTON_ID}:accept:${caseCode}`)
-            .setLabel('Accept').setStyle(ButtonStyle.Success).setDisabled(disabled),
+            .setLabel(tr.t('staff.dossier.button.accept')).setStyle(ButtonStyle.Success).setDisabled(disabled),
         new ButtonBuilder().setCustomId(`${DECISION_BUTTON_ID}:deny:${caseCode}`)
-            .setLabel('Deny').setStyle(ButtonStyle.Danger).setDisabled(disabled),
+            .setLabel(tr.t('staff.dossier.button.deny')).setStyle(ButtonStyle.Danger).setDisabled(disabled),
         new ButtonBuilder().setCustomId(`${DECISION_BUTTON_ID}:claim:${caseCode}`)
-            .setLabel('I\'m looking at it').setStyle(ButtonStyle.Secondary).setDisabled(disabled),
+            .setLabel(tr.t('staff.dossier.button.claim')).setStyle(ButtonStyle.Secondary).setDisabled(disabled),
     );
 }
 
 /** Disables the Accept / Deny buttons on the bot's messages in an appeal channel. */
-async function disableDecisionButtons(channel, caseCode) {
+async function disableDecisionButtons(channel, caseCode, lang = 'en') {
     const messages = await channel.messages?.fetch({ limit: 20 }).catch(() => null);
     if (!messages) return;
     for (const message of messages.values()) {
         const hasButtons = message.author?.id === channel.client.user.id
             && message.components.some((row) => row.components?.some((c) => c.customId?.startsWith(`${DECISION_BUTTON_ID}:`)));
         if (hasButtons) {
-            await message.edit({ components: [appealDecisionRow(caseCode, { disabled: true })] })
+            await message.edit({ components: [appealDecisionRow(caseCode, { disabled: true, lang })] })
                 .catch((error) => logger.warn(`Could not disable appeal buttons in ${channel.id}: ${error.message}`));
         }
     }
@@ -546,6 +617,8 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
             throw error;
         }
 
+        // Staff posts and the log: the staff server's language (purpose 'public').
+        const staffTr = textForGuild(staffGuildId, { userId: user.id, purpose: 'public' });
         if (storeOnly) {
             const where = guild ? 'it has no appeals category or ticket category' : 'the bot is not in that server';
             logger.warn(`Appeal ${record.case_code} of guild ${record.guild_id} stored without a channel: ${where}`);
@@ -556,9 +629,9 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
                 data: {
                     userId: user.id,
                     fields: [
-                        { name: 'Appeal submitted', value: `\`${record.case_code}\` · ${record.name}` },
-                        { name: 'User', value: `${user.username} (${user.id})` },
-                        { name: 'Channel', value: STORE_ONLY_NOTE },
+                        { name: staffTr.t('staff.dossier.log.submitted'), value: `\`${record.case_code}\` · ${record.name}` },
+                        { name: staffTr.t('staff.dossier.log.user'), value: `${user.username} (${user.id})` },
+                        { name: staffTr.t('staff.dossier.log.channel'), value: staffTr.t('staff.dossier.storeOnly') },
                     ],
                 },
             }).catch(() => {});
@@ -601,22 +674,22 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
         }
 
         const pendingRecord = { ...record, status: record.status === 'active' ? 'appeal_pending' : record.status };
-        const embeds = await buildCaseDossier(pendingRecord, { appeal: { ...appeal, channel_id: channel.id }, client })
+        const embeds = await buildCaseDossier(pendingRecord, { appeal: { ...appeal, channel_id: channel.id }, client, lang: staffTr.lang })
             .catch((error) => {
                 logger.warn(`Could not build the case summary for appeal ${record.case_code}: ${error.message}`);
                 return [createEmbed({
-                    title: truncate(`Appeal: ${record.name}`, 256),
-                    description: truncate(caseDetailsLines(pendingRecord).join('\n'), 4096),
-                    fields: answerFields(answers),
+                    title: truncate(staffTr.t('staff.dossier.title.fallback', { name: record.name }), 256),
+                    description: truncate(caseDetailsLines(pendingRecord, staffTr.lang).join('\n'), 4096),
+                    fields: answerFields(answers, staffTr.lang),
                     color: 'primary',
                 })];
             });
         await staffChannel.send({
             // /appeals works in every server (B2 global commands), each for its own cases.
-            content: `New appeal from ${user.username} for \`${record.case_code}\`. Decide with the buttons below or \`/appeals\`.`
-                + (inSupport ? ` To talk with the appellant: <#${channel.id}> in the support server (they see only their own summary there).` : ''),
+            content: staffTr.t('staff.dossier.newAppeal', { username: user.username, code: record.case_code })
+                + (inSupport ? staffTr.t('staff.dossier.newAppealSupport', { channelId: channel.id }) : ''),
             embeds,
-            components: [appealDecisionRow(record.case_code)],
+            components: [appealDecisionRow(record.case_code, { lang: staffTr.lang })],
             allowedMentions: { parse: [] },
         });
 
@@ -627,9 +700,9 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
             data: {
                 userId: user.id,
                 fields: [
-                    { name: 'Appeal submitted', value: `\`${record.case_code}\` · ${record.name}` },
-                    { name: 'User', value: `${user.username} (${user.id})` },
-                    { name: 'Channel', value: `<#${staffChannel.id}>${inSupport ? ` (conversation in the support server: <#${channel.id}>)` : ''}` },
+                    { name: staffTr.t('staff.dossier.log.submitted'), value: `\`${record.case_code}\` · ${record.name}` },
+                    { name: staffTr.t('staff.dossier.log.user'), value: `${user.username} (${user.id})` },
+                    { name: staffTr.t('staff.dossier.log.channel'), value: `<#${staffChannel.id}>${inSupport ? staffTr.t('staff.dossier.log.supportConversation', { channelId: channel.id }) : ''}` },
                 ],
             },
         }).catch(() => {});
@@ -707,19 +780,21 @@ async function openStaffReport({ client, guild, user, staffMember, details, proo
     if (slot.refused) throw userError(slot.refused);
     const { report, channel } = slot;
 
+    // The admin-only report channel and the log: the server's language.
+    const tr = textForGuild(guild.id, { userId: user.id, purpose: 'public' });
     await channel.send({
         embeds: [createEmbed({
-            title: 'Staff report',
+            title: tr.t('staff.dossier.report.title'),
             description: truncate([
-                `**Reported by:** ${user.username} (\`${user.id}\`)`,
-                `**Staff member:** ${staffMember}`,
-                `**Filed:** ${dateStamp(new Date())}`,
+                tr.t('staff.dossier.report.reportedBy', { username: user.username, userId: user.id }),
+                tr.t('staff.dossier.report.staffMember', { name: staffMember }),
+                tr.t('staff.dossier.report.filed', { date: dateStamp(new Date()) }),
             ].join('\n'), 4096),
             fields: [
-                { name: 'What happened', value: truncate(details, 1024) },
-                { name: 'Proof links', value: truncate(proof || 'None given', 1024) },
+                { name: tr.t('staff.dossier.report.whatHappened'), value: truncate(details, 1024) },
+                { name: tr.t('staff.dossier.report.proof'), value: truncate(proof || tr.t('staff.dossier.report.proofNone'), 1024) },
             ],
-            footer: { text: `Report #${report.id}. Ask the reporter for screenshot proof in DMs if needed.` },
+            footer: { text: tr.t('staff.dossier.report.footer', { id: report.id }) },
             color: 'error',
         })],
         allowedMentions: { parse: [] },
@@ -732,9 +807,9 @@ async function openStaffReport({ client, guild, user, staffMember, details, proo
         data: {
             userId: user.id,
             fields: [
-                { name: 'Staff report', value: `#${report.id} about ${truncate(staffMember, 200)}` },
-                { name: 'Reporter', value: `${user.username} (${user.id})` },
-                { name: 'Channel', value: `<#${channel.id}>` },
+                { name: tr.t('staff.dossier.report.title'), value: tr.t('staff.dossier.report.logValue', { id: report.id, name: truncate(staffMember, 200) }) },
+                { name: tr.t('staff.dossier.report.reporter'), value: `${user.username} (${user.id})` },
+                { name: tr.t('staff.dossier.log.channel'), value: `<#${channel.id}>` },
             ],
         },
     }).catch(() => {});
@@ -748,11 +823,34 @@ async function openStaffReport({ client, guild, user, staffMember, details, proo
  * Lifts a case and logs it like the matching manual action (unban, unmute, warning
  * removed): used for accepted appeals and for automod decisions a moderator reverses.
  * `reason` is stored as the revoke reason; `via` is shown next to the moderator in
- * the logs. Returns notes for the decision message.
+ * the logs. Returns notes for the decision message, in `lang` (default English); with
+ * `entries: true` the notes come back as [{ key, params }] for liftNoteText (one decision can
+ * show them in two languages: the staff channel's and the deciding admin's). The mod-log
+ * entries are in the server's language.
  */
-export async function liftCase(client, record, admin, { reason, via }) {
+export async function liftCase(client, record, admin, { reason, via, lang = 'en', entries = false }) {
+    const found = await liftCaseEntries(client, record, admin, { reason, via });
+    return entries ? found : found.map((entry) => liftNoteText(entry, lang));
+}
+
+/** One note from liftCase({ entries: true }) as text in `lang`. */
+export function liftNoteText({ key, params }, lang = 'en') {
+    const tr = botText(lang);
+    const notes = {
+        unbanned: () => tr.t('staff.dossier.lift.unbanned'),
+        unmuted: () => tr.t('staff.dossier.lift.unmuted'),
+        warnRemoved: () => tr.t('staff.dossier.lift.warnRemoved'),
+        triggerRemoved: () => tr.t('staff.dossier.lift.triggerRemoved', params),
+        ladderBanLifted: () => tr.t('staff.dossier.lift.ladderBanLifted', params),
+    };
+    return notes[key]();
+}
+
+async function liftCaseEntries(client, record, admin, { reason, via }) {
     const mainGuild = client.guilds.cache.get(record.guild_id);
     const notes = [];
+    // The mod-log entries below: the server's language.
+    const logTr = textForGuild(record.guild_id, { userId: record.target_user_id, purpose: 'public' });
 
     if (record.is_test) {
         // A /test case was never executed: only the record is closed.
@@ -827,43 +925,46 @@ export async function liftCase(client, record, admin, { reason, via }) {
     if (record.type === 'ban') await syncBannedRoleQuietly(client, record.target_user_id);
     if ((record.type === 'warn' || triggerWarn) && mainGuild) await syncWarnRolesQuietly(mainGuild, record.target_user_id);
 
+    // 'Reason' stays the English field name: formatModLogLine (channelRouting.js) picks it by name and
+    // shows it as “…” on the one-line mod log entry.
     const extra = [{ name: 'Reason', value: reason }];
+    const liftedName = logTr.t('staff.dossier.lift.liftedCases');
     if (liftedBan) {
-        await logEnforcement(client, record.guild_id, 'unban', { target, moderatorLabel, extra: [...extra, { name: 'Lifted cases', value: `\`${record.case_code}\`` }] });
-        notes.push('The user was unbanned.');
+        await logEnforcement(client, record.guild_id, 'unban', { target, moderatorLabel, extra: [...extra, { name: liftedName, value: `\`${record.case_code}\`` }] });
+        notes.push({ key: 'unbanned' });
     }
     if (liftedMute) {
-        await logEnforcement(client, record.guild_id, 'unmute', { target, moderatorLabel, extra: [...extra, { name: 'Lifted cases', value: `\`${record.case_code}\`` }] });
-        notes.push('The user was unmuted.');
+        await logEnforcement(client, record.guild_id, 'unmute', { target, moderatorLabel, extra: [...extra, { name: liftedName, value: `\`${record.case_code}\`` }] });
+        notes.push({ key: 'unmuted' });
     }
     if (record.type === 'warn') {
         const ladder = await getLadder(record.guild_id, record.target_user_id).catch(() => null);
         await logEnforcement(client, record.guild_id, 'removewarn', {
             target, moderatorLabel,
             extra: [
-                { name: 'Warning', value: `\`${record.case_code}\` · ${record.name}` },
+                { name: logTr.t('staff.dossier.lift.warning'), value: `\`${record.case_code}\` · ${record.name}` },
                 ...extra,
-                ...(ladder ? [{ name: 'Counted warns now', value: `${ladder.warns_since_level} (${ladderStage(ladder.level)})` }] : []),
+                ...(ladder ? [{ name: logTr.t('staff.dossier.lift.countedNow'), value: `${ladder.warns_since_level} (${ladderStageIn(ladder.level, logTr.lang)})` }] : []),
             ],
         });
-        notes.push('The warning was removed.');
+        notes.push({ key: 'warnRemoved' });
     }
     if (triggerWarn) {
         await logEnforcement(client, record.guild_id, 'removewarn', {
             target, moderatorLabel,
             extra: [
-                { name: 'Warning', value: `\`${triggerWarn.case_code}\` · ${triggerWarn.name}` },
-                { name: 'Reason', value: `${reason} (it triggered the automatic ban \`${record.case_code}\`)` },
+                { name: logTr.t('staff.dossier.lift.warning'), value: `\`${triggerWarn.case_code}\` · ${triggerWarn.name}` },
+                { name: 'Reason', value: logTr.t('staff.dossier.lift.triggerReason', { reason, code: record.case_code }) },
             ],
         });
-        notes.push(`The warning that triggered this automatic ban (\`${triggerWarn.case_code}\`) was removed too.`);
+        notes.push({ key: 'triggerRemoved', params: { code: triggerWarn.case_code } });
     }
     if (ladderBan) {
         await logEnforcement(client, record.guild_id, 'unban', {
             target, moderatorLabel,
-            extra: [...extra, { name: 'Lifted cases', value: `\`${ladderBan.case_code}\` (automatic ban from the warning limit)` }],
+            extra: [...extra, { name: liftedName, value: logTr.t('staff.dossier.lift.ladderLiftedCase', { code: ladderBan.case_code }) }],
         });
-        notes.push(`This warning was part of the automatic ban \`${ladderBan.case_code}\`, so the user was unbanned and the warning level stepped back.`);
+        notes.push({ key: 'ladderBanLifted', params: { code: ladderBan.case_code } });
     }
     return notes;
 }
@@ -894,19 +995,25 @@ export function assertAppealReviewer(record, deciderId, { client = null, ...opti
  * `callerGuildId` (required): the server the decision is made from (the slash command's or
  * button's guild, the dashboard's server). Another server's case is refused before anything is
  * read or changed, so no server can lift a punishment of another one.
+ * `lang`: the deciding admin's language for the refusals and the returned notes (the slash
+ * command and the buttons pass it; the dashboard keeps English). Staff-channel posts use the
+ * server's language.
  */
-export async function decideAppeal({ client, admin, caseCode, decision, note, via = 'unknown', callerGuildId }) {
+export async function decideAppeal({ client, admin, caseCode, decision, note, via = 'unknown', callerGuildId, lang = 'en' }) {
     if (!callerGuildId) throw new Error('decideAppeal: callerGuildId is required');
+    const tr = botText(lang);
     // Another server's case reads as unknown (nothing about it is shown or changed).
     const record = await getCaseByCode(caseCode, callerGuildId);
     if (!record) {
-        throw userError(`No case with code \`${caseCode}\` in this server.`);
+        throw userError(tr.t('staff.appeals.unknownCase', { code: caseCode }));
     }
-    assertCaseOfCallerServer(record, callerGuildId);
+    if (!isCaseOfCallerServer(record, callerGuildId)) throw userError(tr.t('staff.appeals.otherServer'));
     // Before anything changes: the issuing moderator may not decide (when the setting is on).
-    const { ownerOverride } = assertAppealReviewer(record, admin.id, { client });
+    const check = checkAppealReviewer(record, admin.id, { botUserId: client?.user?.id || null });
+    if (!check.allowed) throw userError(check.message === SECOND_REVIEWER_MESSAGE ? tr.t('staff.appeals.secondReviewer') : check.message);
+    const ownerOverride = Boolean(check.ownerOverride);
 
-    const result = await decideAppealLocked({ client, admin, caseCode, decision, note, record });
+    const result = await decideAppealLocked({ client, admin, caseCode, decision, note, record, lang: tr.lang });
     if (ownerOverride) {
         await recordOwnerOverride({
             client, guildId: record.guild_id, userId: admin.id, username: admin.username,
@@ -917,7 +1024,7 @@ export async function decideAppeal({ client, admin, caseCode, decision, note, vi
     return { ...result, ownerOverride };
 }
 
-async function decideAppealLocked({ client, admin, caseCode, decision, note, record }) {
+async function decideAppealLocked({ client, admin, caseCode, decision, note, record, lang = 'en' }) {
     return Mutex.runExclusive(`enforcement:${record.guild_id}:${record.target_user_id}`, async () => {
         const { rows } = await query(
             `SELECT * FROM ${T.appeals} WHERE case_code = $1 AND kind = 'appeal' AND status = 'pending'
@@ -926,18 +1033,19 @@ async function decideAppealLocked({ client, admin, caseCode, decision, note, rec
         );
         const appeal = rows[0];
         if (!appeal) {
-            throw userError(`There is no pending appeal for \`${caseCode}\`.`);
+            throw userError(botText(lang).t('staff.appeals.noPending', { code: caseCode }));
         }
 
         const mainGuild = client.guilds.cache.get(record.guild_id);
         const appellant = await client.users.fetch(record.target_user_id).catch(() => null);
         let dmDelivered = false;
-        let notes = [];
+        let noteEntries = [];
 
         if (decision === 'accept') {
-            notes = await liftCase(client, record, admin, {
+            noteEntries = await liftCase(client, record, admin, {
                 reason: `Appeal accepted by ${admin.username}`,
                 via: `appeal \`${record.case_code}\``,
+                entries: true,
             });
             const invite = mainGuild ? await createRejoinInvite(mainGuild, `Appeal accepted for ${caseCode}`) : null;
             // Another server's DM names that server and the case; without an invite it never points to Mewvo Support.
@@ -989,32 +1097,38 @@ async function decideAppealLocked({ client, admin, caseCode, decision, note, rec
                 allowedMentions: { parse: [] },
             }).catch(() => {});
         }
+        // The staff channel and the logs: the staff server's language.
+        const staffTr = textForGuild(appealStaffGuildId(record), { userId: record.target_user_id, purpose: 'public' });
+        const decidedTitle = staffTr.t(decision === 'accept' ? 'staff.dossier.decision.accepted' : 'staff.dossier.decision.denied');
+        const seconds = APPEAL_CHANNEL_DELETE_DELAY_MS / 1000;
         await staffChannel?.send({
             embeds: [createEmbed({
-                title: `Appeal ${label}`,
+                title: decidedTitle,
                 description: truncate([
-                    `**By:** ${admin.username}`,
-                    note ? `**Note:** ${note}` : null,
-                    `**DM to user:** ${dmDelivered ? 'delivered' : 'not delivered'}`,
-                    decision === 'deny' && record.is_auto && record.ladder_level_after === 3 ? 'This stage-3 warning ban can no longer be appealed.' : null,
-                    ...notes,
+                    staffTr.t('staff.dossier.decision.by', { name: admin.username }),
+                    note ? staffTr.t('staff.dossier.decision.note', { note }) : null,
+                    staffTr.t(dmDelivered ? 'staff.dossier.decision.dmDelivered' : 'staff.dossier.decision.dmNotDelivered'),
+                    decision === 'deny' && record.is_auto && record.ladder_level_after === 3 ? staffTr.t('staff.dossier.decision.stage3') : null,
+                    ...noteEntries.map((entry) => liftNoteText(entry, staffTr.lang)),
                     '',
-                    `-# This channel is deleted in ${APPEAL_CHANNEL_DELETE_DELAY_MS / 1000} seconds.${isHomeGuild(record.guild_id) ? ` The appeal stays in /appeals code:${record.case_code}.` : ''}`,
+                    isHomeGuild(record.guild_id)
+                        ? staffTr.t('staff.dossier.decision.deletedStays', { seconds, code: record.case_code })
+                        : staffTr.t('staff.dossier.decision.deleted', { seconds }),
                 ].filter((line) => line !== null).join('\n'), 4096),
                 color: decision === 'accept' ? 'success' : 'error',
             })],
             allowedMentions: { parse: [] },
         }).catch(() => {});
-        if (staffChannel) await disableDecisionButtons(staffChannel, caseCode);
+        if (staffChannel) await disableDecisionButtons(staffChannel, caseCode, staffTr.lang);
 
         // The channels are deleted shortly; keep what was said in them.
         const transcript = channel ? await generateTranscript(channel).catch(() => null) : null;
         const staffTranscript = separateStaff && staffChannel ? await generateTranscript(staffChannel).catch(() => null) : null;
         const logFields = [
-            { name: `Appeal ${label}`, value: `\`${record.case_code}\` · ${record.name}` },
-            { name: 'User', value: `${record.target_username} (${record.target_user_id})` },
-            { name: 'Decided by', value: `${admin.username} (${admin.id})` },
-            ...(note ? [{ name: 'Note', value: note }] : []),
+            { name: decidedTitle, value: `\`${record.case_code}\` · ${record.name}` },
+            { name: staffTr.t('staff.dossier.log.user'), value: `${record.target_username} (${record.target_user_id})` },
+            { name: staffTr.t('staff.dossier.log.decidedBy'), value: `${admin.username} (${admin.id})` },
+            ...(note ? [{ name: staffTr.t('staff.dossier.log.note'), value: truncate(note, 1024) }] : []),
         ];
         await logEvent({
             client,
@@ -1024,7 +1138,7 @@ async function decideAppealLocked({ client, admin, caseCode, decision, note, rec
         }).catch(() => {});
         if (!record.is_test || transcript) {
             await postModLog(client, 'appeal', logFields, {
-                title: `Appeal ${label}${record.is_test ? ' (test case)' : ''}`,
+                title: record.is_test ? staffTr.t('staff.dossier.decision.testTitle', { title: decidedTitle }) : decidedTitle,
                 // The main server for home cases (as before), the case's own server otherwise.
                 guildId: appealStaffGuildId(record),
                 files: [
@@ -1036,6 +1150,6 @@ async function decideAppealLocked({ client, admin, caseCode, decision, note, rec
 
         if (channel) scheduleAppealChannelDelete(channel, label);
         if (separateStaff && staffChannel) scheduleAppealChannelDelete(staffChannel, label);
-        return { record, dmDelivered, label, notes };
+        return { record, dmDelivered, label, notes: noteEntries.map((entry) => liftNoteText(entry, lang)) };
     });
 }

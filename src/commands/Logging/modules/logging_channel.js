@@ -6,18 +6,25 @@ import { logger } from '../../../utils/logger.js';
 
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { hasAdminAccess } from '../../../utils/commandGate.js';
-const DESTINATION_LABELS = {
-  audit: 'Audit Log',
-  applications: 'Applications',
-  reports: 'Reports',
-};
+import { textForInteraction } from '../../../utils/botText.js';
+
+// Ephemeral replies: the admin's Discord language.
+function destinationLabel(tr, destination) {
+  const labels = {
+    audit: () => tr.t('logging.channel.destination.audit'),
+    applications: () => tr.t('logging.channel.destination.applications'),
+    reports: () => tr.t('logging.channel.destination.reports'),
+  };
+  return labels[destination] ? labels[destination]() : String(destination);
+}
 
 export default {
   prefixOnly: false,
   async execute(interaction, config, client) {
+    const tr = textForInteraction(interaction);
     try {
       if (!hasAdminAccess(interaction)) {
-        return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the **Administrator** permission to configure logging channels.' });
+        return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('logging.channel.noAdmin') });
       }
 
       await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
@@ -28,39 +35,39 @@ export default {
 
       if (disable) {
         if (!(await setLogChannel(client, interaction.guildId, destination, null))) {
-          return await replyUserError(interaction, { type: ErrorTypes.DATABASE, message: 'Couldn\'t clear the log channel. Try again.' });
+          return await replyUserError(interaction, { type: ErrorTypes.DATABASE, message: tr.t('logging.channel.clearFailed') });
         }
         return InteractionHelper.safeEditReply(interaction, {
           embeds: [successEmbed(
-            'Channel cleared',
-            `The **${DESTINATION_LABELS[destination]}** channel has been removed.`,
+            tr.t('logging.channel.clearedTitle'),
+            tr.t('logging.channel.cleared', { destination: destinationLabel(tr, destination) }),
           )],
         });
       }
 
       // Announcement channels work too: the bot posts there like in a text channel.
       if (!channel || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
-        return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Pick a text or announcement channel.' });
+        return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: tr.t('logging.channel.pickText') });
       }
 
       const botPerms = channel.permissionsFor(interaction.guild.members.me);
       if (!botPerms?.has(['ViewChannel', 'SendMessages', 'EmbedLinks'])) {
-        return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: `I need **View Channel**, **Send Messages**, and **Embed Links** in ${channel}.` });
+        return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('logging.channel.needPerms', { channel: String(channel) }) });
       }
 
       if (!(await setLogChannel(client, interaction.guildId, destination, channel.id))) {
-        return await replyUserError(interaction, { type: ErrorTypes.DATABASE, message: 'Couldn\'t save the log channel. Try again.' });
+        return await replyUserError(interaction, { type: ErrorTypes.DATABASE, message: tr.t('logging.channel.saveFailed') });
       }
 
       return InteractionHelper.safeEditReply(interaction, {
         embeds: [successEmbed(
-          'Channel updated',
-          `**${DESTINATION_LABELS[destination]}** logs will be sent to ${channel}.\nUse \`/logging dashboard\` to toggle event categories.`,
+          tr.t('logging.channel.updatedTitle'),
+          tr.t('logging.channel.updated', { destination: destinationLabel(tr, destination), channel: String(channel) }),
         )],
       });
     } catch (error) {
       logger.error('logging_channel error:', error);
-      await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Failed to update the log channel.' });
+      await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('logging.channel.failed') });
     }
   },
 };

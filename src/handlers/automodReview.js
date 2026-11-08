@@ -10,16 +10,18 @@ import { InteractionHelper } from '../utils/interactionHelper.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
 import { handleReviewAction } from '../services/automod/reviewCards.js';
 import { noteStaffReview } from '../services/staffActivityService.js';
+import { textForInteraction } from '../utils/botText.js';
 
 export async function handleAutomodReview(interaction, client, args) {
+    const tr = textForInteraction(interaction); // ephemeral: the clicker's Discord language
     if (!interaction.guildId || !isAdministrator(interaction.member)) {
         return replyUserError(interaction, {
             type: ErrorTypes.PERMISSION,
-            message: 'Only administrators of this server can review automod decisions.',
+            message: tr.t('automod.review.reply.noAdmin'),
         });
     }
     await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
     const outcome = await handleReviewAction(interaction, args);
     await noteStaffReview(interaction.guildId, interaction.user.id);
-    return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed('Review saved', outcome)] });
+    return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed(tr.t('automod.review.reply.saved'), outcome)] });
 }

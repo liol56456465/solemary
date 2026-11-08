@@ -24,11 +24,12 @@ import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { truncate } from '../enforcement/format.js';
 import { getCaseByCode, isSameCaseServer } from '../enforcement/caseService.js';
 import { createRejoinInvite, executeAction, isAdministrator, sendDm } from '../enforcement/enforcementService.js';
-import { liftCase } from '../enforcement/appealService.js';
+import { liftCase, liftNoteText } from '../enforcement/appealService.js';
 import { dmServerName } from '../enforcement/dmTemplates.js';
+import { botText, textForGuild, textForInteraction } from '../../utils/botText.js';
 import { fetchStaffChannel } from './channelRouting.js';
 import {
-    CLOSE_STATUS, REPORT_RULE, buildCardPayload, cardTier, closedTitle, describeStep, stripLeadingEmoji,
+    CLOSE_STATUS, REPORT_RULE, buildCardPayload, cardTier, closedTitle, describeStep, reviewActionLabel, statusVerb, stripLeadingEmoji,
 } from './reviewFormat.js';
 import { burstKey, findOpenBurst, getCard, markClosed, recordHit, registerCard } from './reviewRegistry.js';
 import { switchRuleToMonitor } from './automodTuning.js';
@@ -214,23 +215,27 @@ export async function noteRepeatHit(p) {
  * key of CLOSE_STATUS (kept, undone, changed, applied, dismissed, deleted, approved,
  * denied, failed). Without a status only the field is added.
  */
-export async function closeCard(message, outcome, { status = null, by = null, verb = null } = {}) {
+export async function closeCard(message, outcome, { status = null, by = null, verb = null, lang = null } = {}) {
     markClosed(message.id, status || 'closed');
+    // The card is a staff-channel post: the server's language (docs/bot-i18n.md).
+    const code = lang || textForGuild(message.guildId || message.guild?.id || null, { purpose: 'public' }).lang;
+    const tr = botText(code);
     if (!message.embeds?.length) {
         // A compact line: strike it through and say who handled it.
-        const [defaultVerb] = CLOSE_STATUS[status] || ['Reviewed'];
+        const shownVerb = verb || statusVerb(CLOSE_STATUS[status] ? status : null, { lang: code });
+        const head = by ? tr.t('automod.review.close.by', { verb: shownVerb, name: by }) : shownVerb;
         const line = stripLeadingEmoji(message.content || '');
-        const content = truncate(`${verb || defaultVerb}${by ? ` by ${by}` : ''} · ~~${line}~~\n-# ${outcome}`, 2000);
+        const content = truncate(`${head} · ~~${line}~~\n-# ${outcome}`, 2000);
         await message.edit({ content, components: [], allowedMentions: { parse: [] } }).catch((error) =>
             logger.warn(`Could not update review line ${message.id}: ${error.message}`));
         return;
     }
     const [embed] = message.embeds;
     const data = embed?.toJSON?.() || {};
-    const fields = [...(data.fields || []), { name: 'Review', value: truncate(outcome, 1024) }];
+    const fields = [...(data.fields || []), { name: tr.t('automod.review.close.field'), value: truncate(outcome, 1024) }];
     const update = { ...data, fields };
     if (status && CLOSE_STATUS[status]) {
-        update.title = closedTitle(data.title, status, by || 'a moderator', verb);
+        update.title = closedTitle(data.title, status, by || tr.t('automod.review.close.aModerator'), verb, { lang: code });
         update.color = CLOSE_STATUS[status][1];
     }
     await message.edit({ embeds: [update], components: [] }).catch((error) =>
@@ -250,29 +255,43 @@ function flowFor(step, { reason, reasonKey, targetUser }) {
     };
 }
 
+// Notes about a reversal are shown on the card (server language) and in the moderator's private
+// reply (their language): each note is a string (liftCase, contest restore: English as written) or
+// a function of a translator.
+const noteText = (notes, tr) => notes.map((note) => (typeof note === 'function' ? note(tr) : note)).join(' ');
+
 async function reverse(client, record, admin, verb) {
-    if (record.status === 'revoked') return { notes: [`\`${record.case_code}\` was already lifted.`] };
+    if (record.status === 'revoked') return { notes: [(tr) => tr.t('automod.review.note.alreadyLifted', { code: record.case_code })] };
     if (record.type === 'kick') {
         const guild = client.guilds.cache.get(record.guild_id);
         const invite = guild ? await createRejoinInvite(guild, `Automod kick ${record.case_code} ${verb}`) : null;
-        return { notes: ['A kick cannot be undone; the user was sent an invite back.'], invite };
+        return { notes: [(tr) => tr.t('automod.review.note.kickInvite')], invite };
     }
-    const notes = await liftCase(client, record, admin, {
+    // Stored reasons and invite audit reasons stay English (case data, Discord audit log).
+    const entries = await liftCase(client, record, admin, {
         reason: `Automod decision ${verb} by ${admin.username}`,
         via: 'automod review',
+        entries: true,
     });
+    // Each note is shown in the card's and the clicker's language (noteText).
+    const notes = entries.map((entry) => (tr) => liftNoteText(entry, tr.lang));
     const guild = client.guilds.cache.get(record.guild_id);
     const invite = record.type === 'ban' && guild ? await createRejoinInvite(guild, `Automod ban ${record.case_code} ${verb}`) : null;
     return { notes, invite };
 }
 
-async function dmReversal(client, record, invite, replacement = null) {
+/** DM to the member: the language of the server that acted. `replacementKey`: a REVIEW_ACTIONS key. */
+async function dmReversal(client, record, invite, replacementKey = null) {
     const user = await client.users.fetch(record.target_user_id).catch(() => null);
     if (!user) return false;
+    const tr = textForGuild(record.guild_id, { userId: record.target_user_id, purpose: 'dm' });
     const lines = [
-        `**A moderator reviewed an automatic action against you in ${dmServerName(record.guild_id, client.guilds?.cache?.get?.(record.guild_id)?.name)}** (case ${record.case_code}).`,
-        replacement ? `It was changed to: ${replacement}.` : 'It was reversed.',
-        invite ? `Rejoin: ${invite}` : null,
+        tr.t('automod.review.dm.reviewed', {
+            server: dmServerName(record.guild_id, client.guilds?.cache?.get?.(record.guild_id)?.name),
+            code: record.case_code,
+        }),
+        replacementKey ? tr.t('automod.review.dm.changed', { action: reviewActionLabel(replacementKey, { lang: tr.lang }) }) : tr.t('automod.review.dm.reversed'),
+        invite ? tr.t('enforcement.dm.rejoin', { invite }) : null,
     ].filter(Boolean);
     return sendDm(user, lines.join('\n'));
 }
@@ -281,21 +300,21 @@ async function dmReversal(client, record, invite, replacement = null) {
 /**
  * The cases a card names. Only cases of the card's server (`guildId`; main + support count as
  * one, getCaseByCode): a code of another server counts as gone, so a card can never reach
- * another server's case. `lookup`: test hook.
+ * another server's case. `lookup`: test hook. `lang`: the language of the error (the clicker's).
  */
-export async function recordsFor(codesArg, guildId, lookup = getCaseByCode) {
+export async function recordsFor(codesArg, guildId, lookup = getCaseByCode, { lang = 'en' } = {}) {
     const codes = String(codesArg || '').split(',').map((code) => code.trim()).filter(Boolean);
     const records = [];
     for (const code of codes) {
         const record = guildId ? await lookup(code, guildId) : null;
         if (record) records.push(record);
     }
-    if (!records.length) throw userError(`Case \`${codes.join(', ') || '?'}\` no longer exists.`);
+    if (!records.length) throw userError(botText(lang).t('automod.review.error.caseGone', { codes: codes.join(', ') || '?' }));
     return records;
 }
 
-/** Reverses automod cases and DMs the members: { notes, dm } (dm: "delivered", "2 of 3 delivered"…). */
-async function undoRecords(client, records, admin) {
+/** Reverses automod cases and DMs the members: { notes, dm } (dm: in the card's language). */
+async function undoRecords(client, records, admin, cardTr) {
     const notes = [];
     let delivered = 0;
     for (const record of records) {
@@ -305,7 +324,9 @@ async function undoRecords(client, records, admin) {
         if (restored) notes.push(restored);
         if (await dmReversal(client, record, result.invite)) delivered += 1;
     }
-    const dm = records.length === 1 ? (delivered ? 'delivered' : 'not delivered') : `${delivered} of ${records.length} delivered`;
+    const dm = records.length === 1
+        ? (delivered ? cardTr.t('automod.review.dmStatus.delivered') : cardTr.t('automod.review.dmStatus.notDelivered'))
+        : cardTr.t('automod.review.dmStatus.some', { delivered, total: records.length });
     return { notes, dm };
 }
 
@@ -314,10 +335,10 @@ async function undoRecords(client, records, admin) {
  * asking a different admin to confirm or undo. Mentions nobody (the keeper is shown
  * but not pinged); the buttons refuse the admin who kept it.
  */
-async function maybeAskSecondOpinion(message, keeper, records) {
+async function maybeAskSecondOpinion(message, keeper, records, lang) {
     if (!message.embeds?.length || !shouldAskSecondOpinion()) return null;
     const codes = records.map((record) => record.case_code);
-    const payload = secondOpinionPayload(keeper.id, codes, message.url);
+    const payload = secondOpinionPayload(keeper.id, codes, message.url, { lang });
     return message.reply({ ...payload, allowedMentions: { parse: [], repliedUser: false } }).catch((error) => {
         logger.warn(`Second-opinion request failed: ${error.message}`);
         return null;
@@ -332,18 +353,20 @@ const codeList = (records) => records.map((record) => `\`${record.case_code}\``)
  * every action that touches a member runs in the case's or message's own server (`guildId`),
  * never simply in the server of the click. Another server than the click's (only the other home
  * server can pass isSameCaseServer) needs the moderator to be an Administrator there too: role
- * hierarchy and the mass-action guard are checked in that server. Throws a user error otherwise.
+ * hierarchy and the mass-action guard are checked in that server. Throws a user error otherwise
+ * (in the clicker's Discord language).
  */
 export async function actingGuild(interaction, guildId) {
     const clickGuildId = interaction.guild?.id || interaction.guildId;
     const targetId = guildId || clickGuildId;
     if (targetId === clickGuildId && interaction.guild) return { guild: interaction.guild, moderator: interaction.member };
-    if (!targetId || !isSameCaseServer(targetId, clickGuildId)) throw userError('This card belongs to another server.');
+    const tr = textForInteraction(interaction);
+    if (!targetId || !isSameCaseServer(targetId, clickGuildId)) throw userError(tr.t('automod.review.error.otherServer'));
     const guild = interaction.client?.guilds?.cache?.get(targetId);
-    if (!guild) throw userError('I am no longer in the server this card is about.');
+    if (!guild) throw userError(tr.t('automod.review.error.notInServer'));
     const moderator = await guild.members.fetch(interaction.user.id).catch(() => null);
     if (!moderator || !isAdministrator(moderator)) {
-        throw userError(`You need the Administrator permission in ${guild.name} to act on its members.`);
+        throw userError(tr.t('automod.review.error.needAdmin', { server: guild.name }));
     }
     return { guild, moderator };
 }
@@ -354,7 +377,8 @@ function cardGuildId(message) {
 }
 
 /**
- * Handles a review card component. Returns the confirmation text for the moderator.
+ * Handles a review card component. Returns the confirmation text for the moderator (in their
+ * Discord language); the card itself is edited in the server's language.
  * `interaction.member` must be an administrator of the clicking server (checked by the caller);
  * actions that touch a member run in the case's own server (actingGuild).
  */
@@ -364,43 +388,51 @@ export async function handleReviewAction(interaction, args) {
     const admin = interaction.user;
     const by = admin.username;
     const message = interaction.message;
+    const tr = textForInteraction(interaction); // the moderator's reply
+    const cardTr = textForGuild(message?.guildId || guild?.id || interaction.guildId, { purpose: 'public' }); // the card
+    const close = (target, outcome, opts = {}) => closeCard(target, outcome, { ...opts, lang: cardTr.lang });
+    const lookupOpts = { lang: tr.lang };
 
     if (action === 'dismiss') {
-        await closeCard(message, `Dismissed by ${by}`, { status: 'dismissed', by });
-        return 'Dismissed.';
+        await close(message, cardTr.t('automod.review.outcome2.dismissedBy', { name: by }), { status: 'dismissed', by });
+        return tr.t('automod.review.reply.dismissed');
     }
 
     if (action === '2nd') {
         // Second opinion on a kept card: [confirm|undo, keeperId, codes].
         const [choice, keeperId, codes] = rest;
         if (!canGiveSecondOpinion(admin.id, keeperId)) {
-            throw userError('You kept this one; a different administrator has to give the second opinion.');
+            throw userError(tr.t('automod.review.error.secondOwn'));
         }
-        const records = await recordsFor(codes, guild?.id || interaction.guildId);
+        const records = await recordsFor(codes, guild?.id || interaction.guildId, getCaseByCode, lookupOpts);
         const original = message.reference?.messageId
             ? await message.channel.messages.fetch(message.reference.messageId).catch(() => null)
             : null;
         if (choice === 'confirm') {
-            await closeCard(message, `Confirmed by ${by}: ${codeList(records)}`, { status: 'kept', by, verb: 'Confirmed' });
-            if (original) await closeCard(original, `Second opinion: confirmed by ${by}.`);
-            return `Confirmed ${codeList(records)}.`;
+            await close(message, cardTr.t('automod.review.outcome2.confirmedBy', { name: by, codes: codeList(records) }), { status: 'kept', by, verb: cardTr.t('automod.review.verb2.confirmed') });
+            if (original) await close(original, cardTr.t('automod.review.outcome2.secondConfirmed', { name: by }));
+            return tr.t('automod.review.reply.confirmed', { codes: codeList(records) });
         }
         if (choice === 'undo') {
-            const { notes, dm } = await undoRecords(client, records, admin);
-            const outcome = `Reversed ${codeList(records)} by ${by} on a second opinion. ${notes.join(' ')} DM: ${dm}.`;
-            await closeCard(message, outcome, { status: 'undone', by, verb: 'Undone on second opinion' });
-            if (original) await closeCard(original, outcome, { status: 'undone', by, verb: 'Undone on second opinion' });
-            return `Reversed ${codeList(records)}. ${notes.join(' ')}`;
+            const { notes, dm } = await undoRecords(client, records, admin, cardTr);
+            const outcome = cardTr.t('automod.review.outcome2.reversedSecond', { codes: codeList(records), name: by, notes: noteText(notes, cardTr), dm });
+            const verb = cardTr.t('automod.review.verb2.undoneSecond');
+            await close(message, outcome, { status: 'undone', by, verb });
+            if (original) await close(original, outcome, { status: 'undone', by, verb });
+            return tr.t('automod.review.reply.reversed', { codes: codeList(records), notes: noteText(notes, tr) });
         }
-        throw userError('Unknown second-opinion action.');
+        throw userError(tr.t('automod.review.error.unknownSecond'));
     }
 
     if (action === 'tune') {
         // Self-tuning suggestion (automodTuning.js); the caller re-checked admin rights on click.
+        // result.text is automodTuning's own sentence (English).
         const [rule] = rest;
         const result = await switchRuleToMonitor(guild.id, rule);
-        await closeCard(message, result.changed ? `${result.text} Switched by ${by}; undo with \`/automod rule\`.` : result.text,
-            result.changed ? { status: 'applied', by, verb: "Switched to report only (don't delete)" } : { status: 'dismissed', by, verb: 'Closed' });
+        await close(message, result.changed ? cardTr.t('automod.review.outcome2.tuneSwitched', { text: result.text, name: by }) : result.text,
+            result.changed
+                ? { status: 'applied', by, verb: cardTr.t('automod.review.verb2.switched') }
+                : { status: 'dismissed', by, verb: cardTr.t('automod.review.verb2.closed') });
         return result.text;
     }
 
@@ -411,27 +443,31 @@ export async function handleReviewAction(interaction, args) {
         const channel = messageGuild.channels.cache.get(channelId) || await messageGuild.channels.fetch(channelId).catch(() => null);
         const target = channel?.isTextBased?.() ? await channel.messages.fetch(messageId).catch(() => null) : null;
         if (target) await target.delete().catch(() => {});
-        await closeCard(message, target ? `Message deleted by ${by}` : `The message was already gone (${by})`, { status: 'deleted', by });
-        return target ? 'Message deleted.' : 'The message was already gone.';
+        await close(message, target
+            ? cardTr.t('automod.review.outcome2.deletedBy', { name: by })
+            : cardTr.t('automod.review.outcome2.alreadyGone', { name: by }), { status: 'deleted', by });
+        return target ? tr.t('automod.review.reply.deleted') : tr.t('automod.review.reply.alreadyGone');
     }
 
     if (action === 'keep' || action === 'undo' || action === 'change') {
-        const records = await recordsFor(rest[0], guild?.id || interaction.guildId);
+        const records = await recordsFor(rest[0], guild?.id || interaction.guildId, getCaseByCode, lookupOpts);
 
         if (action === 'keep') {
-            await closeCard(message, `Kept by ${by}: ${codeList(records)}`, { status: 'kept', by });
-            await maybeAskSecondOpinion(message, admin, records);
-            return `Kept ${codeList(records)}.`;
+            await close(message, cardTr.t('automod.review.outcome2.keptBy', { name: by, codes: codeList(records) }), { status: 'kept', by });
+            await maybeAskSecondOpinion(message, admin, records, cardTr.lang);
+            return tr.t('automod.review.reply.kept', { codes: codeList(records) });
         }
 
         if (action === 'undo') {
-            const { notes, dm } = await undoRecords(client, records, admin);
-            await closeCard(message, `Reversed ${codeList(records)} by ${by}. ${notes.join(' ')} DM: ${dm}.`, { status: 'undone', by });
-            return `Reversed ${codeList(records)}. ${notes.join(' ')}`;
+            const { notes, dm } = await undoRecords(client, records, admin, cardTr);
+            await close(message, cardTr.t('automod.review.outcome2.reversedBy', { codes: codeList(records), name: by, notes: noteText(notes, cardTr), dm }), { status: 'undone', by });
+            return tr.t('automod.review.reply.reversed', { codes: codeList(records), notes: noteText(notes, tr) });
         }
 
-        const choice = REVIEW_ACTIONS[interaction.values?.[0]];
-        if (!choice) throw userError('Pick a punishment from the list.');
+        const choiceKey = interaction.values?.[0];
+        const choice = REVIEW_ACTIONS[choiceKey];
+        if (!choice) throw userError(tr.t('automod.review.error.pickPunishment'));
+        const cardLabel = reviewActionLabel(choiceKey, { lang: cardTr.lang });
         const latest = records[records.length - 1];
         // The new punishment goes to the case's own server; checked before anything is reversed.
         const acting = await actingGuild(interaction, latest.guild_id);
@@ -451,24 +487,31 @@ export async function handleReviewAction(interaction, args) {
                 }),
             });
         } catch (error) {
-            await closeCard(message, `Reversed by ${by}, but "${choice.label}" failed: ${error.userMessage || error.message}`,
-                { status: 'failed', by, verb: `Reversed, "${choice.label}" failed,` });
+            await close(message, cardTr.t('automod.review.outcome2.changeFailed', { name: by, action: cardLabel, error: error.userMessage || error.message }),
+                { status: 'failed', by, verb: cardTr.t('automod.review.verb2.changeFailed', { action: cardLabel }) });
             throw error;
         }
-        await dmReversal(client, latest, null, choice.label);
+        await dmReversal(client, latest, null, choiceKey);
         const code = result.record?.case_code;
-        await closeCard(message, `Changed to ${choice.label}${code ? ` (case \`${code}\`)` : ''} by ${by}. ${notes.join(' ')}`,
-            { status: 'changed', by, verb: `Changed to ${choice.label}` });
-        return `Changed to ${choice.label}${code ? `, case \`${code}\`` : ''}.`;
+        const changedNotes = noteText(notes, cardTr);
+        await close(message, code
+            ? cardTr.t('automod.review.outcome2.changedToCase', { action: cardLabel, code, name: by, notes: changedNotes })
+            : cardTr.t('automod.review.outcome2.changedTo', { action: cardLabel, name: by, notes: changedNotes }),
+        { status: 'changed', by, verb: cardTr.t('automod.review.verb2.changedTo', { action: cardLabel }) });
+        const replyLabel = reviewActionLabel(choiceKey, { lang: tr.lang });
+        return code
+            ? tr.t('automod.review.reply.changedToCase', { action: replyLabel, code })
+            : tr.t('automod.review.reply.changedTo', { action: replyLabel });
     }
 
     if (action === 'apply') {
         const [rule, userId] = rest;
-        const choice = REVIEW_ACTIONS[interaction.values?.[0]];
-        if (!choice) throw userError('Pick a punishment from the list.');
+        const choiceKey = interaction.values?.[0];
+        const choice = REVIEW_ACTIONS[choiceKey];
+        if (!choice) throw userError(tr.t('automod.review.error.pickPunishment'));
         const acting = await actingGuild(interaction, rest[2] || cardGuildId(message));
         const targetUser = await client.users.fetch(userId).catch(() => null);
-        if (!targetUser) throw userError('That user no longer exists.');
+        if (!targetUser) throw userError(tr.t('automod.review.error.userGone'));
         const definition = ruleDefinition(rule, null, acting.guild.id);
         const label = definition?.label;
         const result = await executeAction({
@@ -482,10 +525,16 @@ export async function handleReviewAction(interaction, args) {
             }),
         });
         const code = result.record?.case_code;
-        await closeCard(message, `${choice.label}${code ? ` (case \`${code}\`)` : ''} applied by ${by}`,
-            { status: 'applied', by, verb: `${choice.label} applied` });
-        return `${choice.label} applied${code ? `, case \`${code}\`` : ''}.`;
+        const cardLabel = reviewActionLabel(choiceKey, { lang: cardTr.lang });
+        await close(message, code
+            ? cardTr.t('automod.review.outcome2.appliedCase', { action: cardLabel, code, name: by })
+            : cardTr.t('automod.review.outcome2.applied', { action: cardLabel, name: by }),
+        { status: 'applied', by, verb: cardTr.t('automod.review.verb2.applied', { action: cardLabel }) });
+        const replyLabel = reviewActionLabel(choiceKey, { lang: tr.lang });
+        return code
+            ? tr.t('automod.review.reply.appliedCase', { action: replyLabel, code })
+            : tr.t('automod.review.reply.applied', { action: replyLabel });
     }
 
-    throw userError('Unknown review action.');
+    throw userError(tr.t('automod.review.error.unknownAction'));
 }

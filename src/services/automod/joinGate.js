@@ -24,6 +24,8 @@ import { deleteFromDb, getFromDb, setInDb } from '../../utils/database.js';
 import { MIN_ACCOUNT_AGE_MS } from '../verificationGuard.js';
 import { hasVerifiedIn } from '../oauthVerification.js';
 import { formatDuration } from '../enforcement/format.js';
+import { durationIn } from '../enforcement/dmTemplates.js';
+import { botText, textForGuild } from '../../utils/botText.js';
 import { getAutomodSettings } from './automodSettings.js';
 import { reviewChannel } from './reviewCards.js';
 import { STATUS_COLORS } from './reviewFormat.js';
@@ -39,6 +41,46 @@ export const JOIN_GATE_CHECKS = {
     botname: { label: 'Generated-looking username', comeBack: 'with a username that does not look automatically generated' },
     age: { label: 'New account', comeBack: 'once your account is older' },
 };
+
+// The check names, come-back hints and actions in a language (literal keys: tests/botI18nUsage.test.js).
+const CHECK_TEXT = {
+    avatar: (tr) => ({ label: tr.t('automod.joinGate.check.avatar'), comeBack: tr.t('automod.joinGate.comeBack.avatar') }),
+    links: (tr) => ({ label: tr.t('automod.joinGate.check.links'), comeBack: tr.t('automod.joinGate.comeBack.links') }),
+    botname: (tr) => ({ label: tr.t('automod.joinGate.check.botname'), comeBack: tr.t('automod.joinGate.comeBack.botname') }),
+    age: (tr) => ({ label: tr.t('automod.joinGate.check.age'), comeBack: tr.t('automod.joinGate.comeBack.age') }),
+};
+const ACTION_TEXT = {
+    off: (tr) => tr.t('automod.joinGate.action.off'),
+    flag: (tr) => tr.t('automod.joinGate.action.flag'),
+    kick: (tr) => tr.t('automod.joinGate.action.kick'),
+};
+
+/** A check's { label, comeBack } in a language (English: JOIN_GATE_CHECKS as is). */
+export function joinGateCheckText(check, { lang = 'en' } = {}) {
+    if (lang === 'en' || !CHECK_TEXT[check]) return JOIN_GATE_CHECKS[check];
+    return CHECK_TEXT[check](botText(lang));
+}
+
+/** A join gate action word (off / flag / kick) in a language. */
+export function joinGateActionText(action, { lang = 'en' } = {}) {
+    if (lang === 'en' || !ACTION_TEXT[action]) return action;
+    return ACTION_TEXT[action](botText(lang));
+}
+
+/**
+ * One hit's reason in a language. English (and hits stored before `detail` existed): the stored
+ * English reason as is. Member text (a name) goes in as a parameter, never re-read.
+ */
+export function hitReason(hit, { lang = 'en' } = {}) {
+    const detail = hit?.detail;
+    if (lang === 'en' || !detail) return hit.reason;
+    const tr = botText(lang);
+    if (hit.check === 'avatar') return tr.t('automod.joinGate.reason.avatar');
+    if (hit.check === 'links') return tr.t('automod.joinGate.reason.links', { name: String(detail.name ?? '') });
+    if (hit.check === 'botname') return tr.t('automod.joinGate.reason.botname', { name: String(detail.name ?? '') });
+    if (hit.check === 'age') return tr.tp('automod.joinGate.reason.age', detail.days, { age: durationIn(detail.ageMs, lang) });
+    return hit.reason;
+}
 
 export const DEFAULT_JOIN_GATE = Object.freeze({ avatar: 'off', links: 'off', botname: 'off', age: 'off', ageDays: DEFAULT_GATE_DAYS });
 
@@ -94,29 +136,32 @@ const STRENGTH = { off: 0, flag: 1, kick: 2 };
 export function evaluateJoinGate(user, gate, now = Date.now()) {
     const settings = normalizeJoinGate(gate);
     const hits = [];
-    const add = (check, reason) => {
-        if (settings[check] !== 'off') hits.push({ check, action: settings[check], reason });
+    // reason: English (audit log, stored flag, timeline); detail: the parts for a translated reason (hitReason).
+    const add = (check, reason, detail = {}) => {
+        if (settings[check] !== 'off') hits.push({ check, action: settings[check], reason, detail });
     };
     if (!user.avatar) add('avatar', 'no profile picture');
     const linked = [user.username, user.globalName].find((name) => nameHasLink(name));
-    if (linked) add('links', `link in their name ("${String(linked).slice(0, 40)}")`);
-    if (looksGenerated(user.username)) add('botname', `generated-looking username ("${user.username}")`);
+    if (linked) add('links', `link in their name ("${String(linked).slice(0, 40)}")`, { name: String(linked).slice(0, 40) });
+    if (looksGenerated(user.username)) add('botname', `generated-looking username ("${user.username}")`, { name: String(user.username) });
     const ageMs = now - SnowflakeUtil.timestampFrom(user.id);
     if (ageMs < settings.ageDays * DAY) {
-        add('age', `account is ${formatDuration(Math.max(ageMs, 60 * 1000))} old (minimum ${settings.ageDays} day${settings.ageDays === 1 ? '' : 's'})`);
+        const shownAge = Math.max(ageMs, 60 * 1000);
+        add('age', `account is ${formatDuration(shownAge)} old (minimum ${settings.ageDays} day${settings.ageDays === 1 ? '' : 's'})`, { ageMs: shownAge, days: settings.ageDays });
     }
     const action = hits.reduce((best, hit) => (STRENGTH[hit.action] > STRENGTH[best] ? hit.action : best), 'off');
     return { action, hits };
 }
 
-/** The DM a kicked member gets. */
-export function kickNotice(guildName, hits) {
+/** The DM a kicked member gets (in `lang`: the server's language). */
+export function kickNotice(guildName, hits, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     const kicked = hits.filter((hit) => hit.action === 'kick');
-    const ways = [...new Set(kicked.map((hit) => JOIN_GATE_CHECKS[hit.check].comeBack))];
+    const ways = [...new Set(kicked.map((hit) => joinGateCheckText(hit.check, { lang }).comeBack))];
     return [
-        `You were removed from **${guildName}** by an automatic join check: ${kicked.map((hit) => hit.reason).join('; ')}.`,
-        'This is not a ban and nothing was recorded against you.',
-        `You are welcome to join again ${ways.join(', and ')}.`,
+        tr.t('automod.joinGate.dm.removed', { server: guildName, reasons: kicked.map((hit) => hitReason(hit, { lang })).join('; ') }),
+        tr.t('automod.joinGate.dm.notBan'),
+        tr.t('automod.joinGate.dm.welcomeBack', { ways: ways.join(tr.t('automod.joinGate.dm.waysJoin')) }),
     ].join('\n');
 }
 
@@ -130,8 +175,16 @@ export async function clearGateFlag(guildId, userId) {
     await deleteFromDb(flagKey(guildId, userId));
 }
 
-function gateLine(member, hits, outcome) {
-    return `**Join gate** · <@${member.id}> ${member.user.username} (\`${member.id}\`) · ${outcome} · ${hits.map((hit) => hit.reason).join('; ')}`;
+// Outcome words of a flag line (the third " · " part; closeGateLine replaces it).
+const OUTCOME_TEXT = {
+    kicked: (tr) => tr.t('automod.joinGate.outcome.kicked'),
+    flagged: (tr) => tr.t('automod.joinGate.outcome.flagged'),
+    kickFailed: (tr) => tr.t('automod.joinGate.outcome.kickFailed'),
+};
+
+function gateLine(member, hits, outcome, lang = 'en') {
+    const tr = botText(lang);
+    return `${tr.t('automod.joinGate.lineTitle')} · <@${member.id}> ${member.user.username} (\`${member.id}\`) · ${outcome} · ${hits.map((hit) => hitReason(hit, { lang })).join('; ')}`;
 }
 
 /**
@@ -139,12 +192,20 @@ function gateLine(member, hits, outcome) {
  * joiner's server, which can differ from the server the line is posted in (a support joiner's line
  * is in the main server's review channel); the button acts there (reviewCards.actingGuild).
  */
-export function gateButtons(userId, guildId) {
+export function gateButtons(userId, guildId, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     const suffix = guildId ? `:${guildId}` : '';
     return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`joingate:kick:${userId}${suffix}`).setLabel('Kick').setStyle(ButtonStyle.Danger),
-        new ButtonBuilder().setCustomId(`joingate:dismiss:${userId}${suffix}`).setLabel('Dismiss').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`joingate:kick:${userId}${suffix}`).setLabel(tr.t('automod.joinGate.button.kick')).setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId(`joingate:dismiss:${userId}${suffix}`).setLabel(tr.t('automod.joinGate.button.dismiss')).setStyle(ButtonStyle.Secondary),
     );
+}
+
+/** The flag line's embed parts in a language (exported for tests). outcome: kicked | flagged | kickFailed. */
+export function gateLinePayload(member, hits, outcome, { lang = 'en', withButtons = false } = {}) {
+    const tr = botText(lang);
+    const text = gateLine(member, hits, OUTCOME_TEXT[outcome](tr), lang).slice(0, 4096);
+    return { description: text, components: withButtons ? [gateButtons(member.id, member.guild.id, { lang })] : [] };
 }
 
 async function postGateLine(member, hits, outcome, color, withButtons) {
@@ -153,9 +214,12 @@ async function postGateLine(member, hits, outcome, color, withButtons) {
         logger.warn(`Join gate ${outcome} ${member.id}, but there is no review channel`);
         return null;
     }
+    // A staff-channel post: the language of the server the review channel is in.
+    const { lang } = textForGuild(channel.guildId ?? channel.guild?.id ?? member.guild.id, { member, purpose: 'public' });
+    const { description, components } = gateLinePayload(member, hits, outcome, { lang, withButtons });
     return channel.send({
-        embeds: [createEmbed({ description: gateLine(member, hits, outcome), color })],
-        components: withButtons ? [gateButtons(member.id, member.guild.id)] : [],
+        embeds: [createEmbed({ description, color })],
+        components,
         allowedMentions: { parse: [] },
     }).catch((error) => {
         logger.warn(`Join gate line failed: ${error.message}`);
@@ -165,7 +229,8 @@ async function postGateLine(member, hits, outcome, color, withButtons) {
 
 /** Kicks a member with the join-gate DM. Resolves true when kicked. */
 export async function kickWithNotice(member, hits, reason) {
-    await member.send({ content: kickNotice(member.guild.name, hits), allowedMentions: { parse: [] } }).catch(() => {});
+    const { lang } = textForGuild(member.guild.id, { member, purpose: 'dm' });
+    await member.send({ content: kickNotice(member.guild.name, hits, { lang }), allowedMentions: { parse: [] } }).catch(() => {});
     return member.kick(reason.slice(0, 512)).then(() => true).catch((error) => {
         logger.warn(`Join gate could not kick ${member.id}: ${error.message}`);
         return false;
@@ -209,10 +274,10 @@ export async function checkJoinGate(member, { onKick = null, onFlag = null } = {
             }
             // Could not kick (role hierarchy, permissions): fall back to a flag for staff.
         }
-        const message = await postGateLine(member, hits, action === 'kick' ? 'flagged (kick failed)' : 'flagged', STATUS_COLORS.waiting, true);
+        const message = await postGateLine(member, hits, action === 'kick' ? 'kickFailed' : 'flagged', STATUS_COLORS.waiting, true);
         if (message) {
             await setInDb(flagKey(guild.id, user.id), {
-                channelId: message.channelId, messageId: message.id, hits: hits.map(({ check, reason }) => ({ check, reason })), at: Date.now(),
+                channelId: message.channelId, messageId: message.id, hits: hits.map(({ check, reason, detail }) => ({ check, reason, detail })), at: Date.now(),
             }, FLAG_TTL_SECONDS).catch((error) => logger.warn(`Could not store join gate flag for ${user.id}: ${error.message}`));
         }
         await onFlag?.(member.id, hits);
@@ -223,22 +288,37 @@ export async function checkJoinGate(member, { onKick = null, onFlag = null } = {
     }
 }
 
-/** Closes a flag line: no buttons, grey or green, with who closed it and how. */
-export async function closeGateLine(message, outcome) {
+/**
+ * A flag line with its outcome (the third " · " part) replaced. Works for a line in any language:
+ * the title and outcome never contain " · ", and a username cannot. Pure, for tests.
+ */
+export function closedGateText(text, outcome, { lang = 'en' } = {}) {
+    if (!text) return botText(lang).t('automod.joinGate.lineTitle');
+    const parts = text.split(' · ');
+    if (parts.length < 3) return `${text} · ${outcome}`;
+    return [...parts.slice(0, 2), outcome, ...parts.slice(3)].join(' · ').slice(0, 4096);
+}
+
+/**
+ * Closes a flag line: no buttons, grey or green, with who closed it and how. `outcome` is already
+ * in the line's language (the callers build it); `kicked` picks the colour.
+ */
+export async function closeGateLine(message, outcome, { kicked = outcome.startsWith('kicked'), lang = 'en' } = {}) {
     const embed = message.embeds?.[0];
-    const text = embed?.description || '**Join gate**';
-    const closed = text.replace(/ · flagged(?: \(kick failed\))?/, ` · ${outcome}`);
+    const closed = closedGateText(embed?.description, outcome, { lang });
     await message.edit({
-        embeds: [createEmbed({ description: closed, color: outcome.startsWith('kicked') ? STATUS_COLORS.kept : STATUS_COLORS.undone })],
+        embeds: [createEmbed({ description: closed, color: kicked ? STATUS_COLORS.kept : STATUS_COLORS.undone })],
         components: [],
     }).catch((error) => logger.warn(`Could not close join gate line ${message.id}: ${error.message}`));
 }
 
 /** Gate settings as text for /automod joingate and /automod status. */
-export function describeJoinGate(gate) {
+export function describeJoinGate(gate, { lang = 'en' } = {}) {
     const settings = normalizeJoinGate(gate);
-    return Object.entries(JOIN_GATE_CHECKS).map(([check, { label }]) => {
-        const extra = check === 'age' ? ` (younger than ${settings.ageDays} day${settings.ageDays === 1 ? '' : 's'})` : '';
-        return `${label}${extra}: **${settings[check]}**`;
+    const tr = botText(lang);
+    return Object.keys(JOIN_GATE_CHECKS).map((check) => {
+        const { label } = joinGateCheckText(check, { lang });
+        const extra = check === 'age' ? tr.tp('automod.joinGate.youngerThan', settings.ageDays) : '';
+        return `${label}${extra}: **${joinGateActionText(settings[check], { lang })}**`;
     }).join(' · ');
 }

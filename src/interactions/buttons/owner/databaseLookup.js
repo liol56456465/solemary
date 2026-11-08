@@ -7,7 +7,8 @@ import { MessageFlags } from 'discord.js';
 import { logger } from '../../../utils/logger.js';
 import { canUseOwnerTools, OWNER_TOOLS_REFUSAL } from '../../../utils/commandGate.js';
 import { lookupPages } from '../../../services/owner/databaseLookup.js';
-import { LOOKUP_BUTTON_ID, LOOKUP_EXPIRED, lookupMessage, parseLookupArgs } from '../../../handlers/databaseLookupView.js';
+import { LOOKUP_BUTTON_ID, lookupExpired, lookupMessage, parseLookupArgs } from '../../../handlers/databaseLookupView.js';
+import { textForInteraction } from '../../../utils/botText.js';
 
 const ephemeral = (content) => ({ content, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
 
@@ -21,12 +22,13 @@ export async function handleLookupButton(interaction, args, { store = lookupPage
     }
     const entry = store.get(parsed.nonce);
     if (!entry || entry.ownerId !== userId) {
-        await interaction.reply(ephemeral(LOOKUP_EXPIRED)).catch(() => {});
+        await interaction.reply(ephemeral(lookupExpired({ lang: textForInteraction(interaction).lang }))).catch(() => {});
         return;
     }
     await interaction.deferUpdate();
     log.info(`Owner /database page ${parsed.page + 1} by ${userId}`, { event: 'owner.database.page', userId, page: parsed.page + 1 });
-    await interaction.editReply(lookupMessage(entry, parsed.page, { ownerId: userId, nonce: parsed.nonce }));
+    // The pages were rendered in the language of the /database run; the buttons follow the clicker (the same owner).
+    await interaction.editReply(lookupMessage(entry, parsed.page, { ownerId: userId, nonce: parsed.nonce, lang: textForInteraction(interaction).lang }));
 }
 
 export default {

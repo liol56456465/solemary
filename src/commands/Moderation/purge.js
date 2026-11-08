@@ -6,14 +6,18 @@ import { getColor } from '../../config/bot.js';
 
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
+import { textForInteraction } from '../../utils/botText.js';
+import { descriptionLocalizations } from '../../utils/commandLocalizations.js';
 export default {
     data: new SlashCommandBuilder()
     .setName("purge")
     .setDescription("Delete a specific amount of messages")
+    .setDescriptionLocalizations(descriptionLocalizations('moderation.purge.cmd.description'))
     .addIntegerOption((option) =>
       option
         .setName("amount")
         .setDescription("Number of messages (1-100)")
+        .setDescriptionLocalizations(descriptionLocalizations('moderation.purge.cmd.amount'))
         .setRequired(true),
     )
 .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
@@ -33,11 +37,12 @@ export default {
       return;
     }
 
+    const tr = textForInteraction(interaction); // ephemeral: the moderator's language
     const amount = interaction.options.getInteger("amount");
     const channel = interaction.channel;
 
     if (amount < 1 || amount > 100)
-      return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Please specify a number between 1 and 100.' });
+      return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: tr.t('moderation.purge.range') });
 
     try {
       const fetched = await channel.messages.fetch({ limit: amount });
@@ -64,8 +69,8 @@ export default {
       await InteractionHelper.safeEditReply(interaction, {
         embeds: [
           successEmbed(
-            "Messages Purged",
-            `Deleted ${deletedCount} messages in ${channel}.`,
+            tr.t('moderation.purge.title'),
+            tr.tp('moderation.purge.done', deletedCount, { channel: String(channel) }),
           ),
         ],
         flags: MessageFlags.Ephemeral,
@@ -78,7 +83,7 @@ export default {
       }, 3000);
     } catch (error) {
       logger.error('Purge command error:', error);
-      await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An unexpected error occurred during message deletion. Note: Messages older than 14 days cannot be bulk deleted.' });
+      await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('moderation.purge.failed') });
     }
   }
 };

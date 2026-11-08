@@ -1,0 +1,1039 @@
+{
+    "panel": {
+        "title": "Maßnahmen: {name}",
+        "expiredTitle": "Panel abgelaufen",
+        "expired": "Dieses Panel ist abgelaufen, führe /enforcements erneut aus.",
+        "action": {
+            "ban": "Bannen",
+            "kick": "Kicken",
+            "mute": "Stummschalten",
+            "warn": "Verwarnen",
+            "unban": "Entbannen",
+            "unmute": "Stummschaltung aufheben",
+            "removewarn": "Verwarnung entfernen"
+        },
+        "type": {
+            "ban": "Bann",
+            "kick": "Kick",
+            "mute": "Stummschaltung",
+            "warn": "Verwarnung"
+        },
+        "status": {
+            "voided": "entfernt (ein Fehler)",
+            "liftedByAppeal": "durch Einspruch aufgehoben",
+            "reversed": "von einem Moderator rückgängig gemacht",
+            "lifted": "vorzeitig aufgehoben",
+            "appealPending": "Einspruch offen",
+            "activeAppealDenied": "aktiv, Einspruch abgelehnt",
+            "expired": "abgelaufen",
+            "active": "aktiv"
+        },
+        "info": {
+            "user": "**Nutzer:** {username} (<@{id}>) · `{id}`",
+            "accountCreated": "**Konto erstellt:** {date} ({relative})",
+            "inServerYes": "**Auf dem Server:** ja, beigetreten {joined} · {roles}",
+            "joinedAt": "{date} ({relative})",
+            "joinedUnknown": "zu unbekannter Zeit",
+            "roles": {
+                "one": "{count} Rolle",
+                "other": "{count} Rollen"
+            },
+            "inServerNo": "**Auf dem Server:** nein",
+            "warns": "**Gezählte Verwarnungen:** {warns} · **Verwarnungsstufe:** {stage}",
+            "activeBanEnds": "Bann `{code}` · endet {date}",
+            "activeBanPermanent": "Bann `{code}` · dauerhaft",
+            "bannedNoRecord": "außerhalb des Panels gebannt (kein Eintrag)",
+            "activeMute": "Stummschaltung `{code}` · endet {date}",
+            "mutedNoRecord": "hat die Stumm-Rolle (kein Eintrag)",
+            "active": "**Aktive Strafe:** {list}",
+            "activeNone": "keine",
+            "pendingAppeal": "**Offener Einspruch:** {codes} (entscheide im Einspruchskanal oder mit /appeals)",
+            "keepApart": "**Kontaktverbot:** {list}"
+        },
+        "keepApartLine": "mit <@{otherId}> bis {until} (Anordnung #{id})",
+        "warns": {
+            "of": "{n} von {max}",
+            "nextBans": "{n} (nächste Verwarnung bannt)"
+        },
+        "stage": {
+            "none": "0 von 3 (noch kein Verwarnungsbann)",
+            "permanent": "{n} von 3 (dauerhafter Bann)",
+            "days": {
+                "one": "{n} von 3 (Bann für {count} Tag)",
+                "other": "{n} von 3 (Bann für {count} Tage)"
+            },
+            "long": "Verwarnungsstufe {stage}"
+        },
+        "recent": {
+            "title": "Letzte Fälle",
+            "titleCount": "Letzte Fälle ({shown} von {total})",
+            "none": "Keine",
+            "line": "`{code}` **{type}**{test} · {name} · {date} · {status}{imported}",
+            "test": " (Test)",
+            "imported": " · importiert",
+            "older": {
+                "one": "-# {count} älterer: siehe /background",
+                "other": "-# {count} ältere: siehe /background"
+            }
+        },
+        "templatePlaceholder": "Oder eine Vorlage verwenden",
+        "template": {
+            "mute": "Stummschaltung {duration}",
+            "ban": "Bann {duration}",
+            "permanentBan": "dauerhafter Bann"
+        },
+        "templateGoneTitle": "Vorlage nicht verfügbar",
+        "templateGone": "Diese Vorlage wurde geändert oder passt nicht mehr zu diesem Mitglied. Führe /enforcements erneut aus.",
+        "reason": {
+            "severe": "Schwer: standardmäßig kein Einspruch gegen den Bann möglich",
+            "custom": "Eigener…",
+            "customHint": "Schreib deinen eigenen Grund",
+            "placeholder": "Wähle einen Grund"
+        },
+        "button": {
+            "cancel": "Abbrechen",
+            "confirm": "Bestätigen",
+            "editDetails": "Details bearbeiten",
+            "tryAgain": "Erneut versuchen"
+        },
+        "stepTitle": "{action}: {name}",
+        "modal": {
+            "customReason": "Eigener Grund",
+            "duration": "Dauer",
+            "durationBan": "z. B. 30m, 24h, 7d, 1mo. Leer lassen für einen dauerhaften Bann.",
+            "durationMute": "Pflichtfeld. z. B. 30m, 24h, 7d, 1mo.",
+            "name": "Name (optional)",
+            "nameDefault": "Standard: {name}",
+            "evidence": "Beweise (Nachrichtenlinks, optional)",
+            "evidenceHint": "Bis zu {max} Links, einer pro Zeile. Bilder später mit /case evidence add.",
+            "unappealable": "Kein Einspruch gegen diesen Bann",
+            "unappealableHint": "Einspruch möglich? Angehakt: Nein. Nicht angehakt: Ja.",
+            "reasonOptional": "Grund (optional)"
+        },
+        "summary": {
+            "user": "Nutzer",
+            "reason": "Grund",
+            "duration": "Dauer",
+            "canAppeal": "Einspruch möglich?",
+            "yes": "Ja",
+            "no": "Nein",
+            "name": "Name",
+            "nameDefault": "{name} (Standard)",
+            "warning": "Verwarnung",
+            "dmFirst": "Der Nutzer bekommt eine DM, bevor die Maßnahme ausgeführt wird."
+        },
+        "effect": {
+            "warn": "Verwarnung {n} von {max}.",
+            "escalates": "erreicht das Verwarnungslimit → automatischer Bann für {length} (Verwarnungsstufe {stage} von 3).",
+            "escalatesPermanent": "erreicht das Verwarnungslimit → automatischer dauerhafter Bann (Verwarnungsstufe {stage} von 3)."
+        },
+        "input": {
+            "customReasonRequired": "Ein eigener Grund ist erforderlich.",
+            "muteNeedsDuration": "Eine Stummschaltung braucht eine Dauer, z. B. 30m, 24h, 7d oder 1mo.",
+            "badDuration": "„{value}“ ist keine gültige Dauer. Nutze Formate wie 30m, 24h, 7d oder 1mo.",
+            "evidenceLinks": "Beweise müssen Links sein (z. B. ein Discord-Nachrichtenlink: Rechtsklick auf eine Nachricht → Nachrichtenlink kopieren).",
+            "evidenceMax": "Hier höchstens {max} Beweislinks; weitere danach mit /case evidence add.",
+            "nameTaken": "Ein Eintrag namens **{name}** existiert auf diesem Server bereits. Wähle einen anderen Namen."
+        },
+        "evidence": {
+            "notSaved": "Beweis {url} wurde nicht gespeichert: {error}",
+            "attached": {
+                "one": "Beweis angehängt: {count} Link.",
+                "other": "Beweise angehängt: {count} Links."
+            }
+        },
+        "precedent": {
+            "custom": "Eigener Grund: kein Vergleich.",
+            "unavailable": "Ähnliche Fälle: gerade nicht verfügbar.",
+            "scope": "Grund „{reason}“, letzte {days} Tage",
+            "none": "Ähnliche Fälle ({scope}): Noch keine ähnlichen Fälle.",
+            "line": "Ähnliche Fälle ({scope}, {cases}): {parts}. Am häufigsten: {top}{usual}.",
+            "newest": "neueste {limit} Fälle",
+            "cases": {
+                "one": "{count} Fall",
+                "other": "{count} Fälle"
+            },
+            "count": {
+                "warn": {
+                    "one": "{count} Verwarnung",
+                    "other": "{count} Verwarnungen"
+                },
+                "mute": {
+                    "one": "{count} Stummschaltung",
+                    "other": "{count} Stummschaltungen"
+                },
+                "kick": {
+                    "one": "{count} Kick",
+                    "other": "{count} Kicks"
+                },
+                "ban": {
+                    "one": "{count} Bann",
+                    "other": "{count} Banns"
+                }
+            },
+            "usually": ", meist {length}",
+            "permanent": "dauerhaft",
+            "overturned": {
+                "one": " {count} durch Einspruch aufgehoben.",
+                "other": " {count} durch Einspruch aufgehoben."
+            }
+        },
+        "member": {
+            "level0": {
+                "one": "Dieses Mitglied: {warns} von {count} gezählten Verwarnung, {stage}.",
+                "other": "Dieses Mitglied: {warns} von {count} gezählten Verwarnungen, {stage}."
+            },
+            "levelN": {
+                "one": "Dieses Mitglied: {count} gezählte Verwarnung, {stage}; die nächste Verwarnung bannt.",
+                "other": "Dieses Mitglied: {count} gezählte Verwarnungen, {stage}; die nächste Verwarnung bannt."
+            },
+            "unavailable": "Dieses Mitglied: Verwarnungsstufe gerade nicht verfügbar."
+        },
+        "confirm": {
+            "title": "Bestätigen: {action}",
+            "evidence": "**Beweise:** {list}",
+            "unreadable": " (Nachricht nicht lesbar, nur Link)",
+            "template": "**Vorlage:** {name}",
+            "effect": "**Wirkung:** {effect}"
+        },
+        "result": {
+            "caseCode": "**Fallcode:** `{code}`",
+            "name": "**Name:** {name}",
+            "ends": "**Endet:** {date}",
+            "dmFailed": "**Die DM konnte nicht zugestellt werden** (DMs geschlossen oder kein gemeinsamer Server). Die Maßnahme wurde trotzdem ausgeführt.",
+            "dmDelivered": "DM zugestellt.",
+            "title": "{action} erledigt: {name}",
+            "done": "Erledigt."
+        },
+        "step": {
+            "reason": "Schritt 1: Wähle einen Grund.",
+            "reasonWithMessage": "**Nachricht:** {url} (als Beweis angehängt)\nSchritt 1: Wähle einen Grund."
+        },
+        "removeWarn": {
+            "none": "Dieser Nutzer hat keine gezählten Verwarnungen, die entfernt werden können.",
+            "placeholder": "Wähle die zu entfernende Verwarnung",
+            "which": "Welche Verwarnung soll entfernt werden?"
+        },
+        "cancelledTitle": "Abgebrochen",
+        "cancelled": "Nichts wurde geändert. Führe /enforcements aus, um neu zu beginnen.",
+        "failedTitle": "{action} fehlgeschlagen",
+        "failedGeneric": "Etwas ist schiefgelaufen; möglicherweise wurde nichts geändert. Prüfe /background, bevor du es erneut versuchst."
+    },
+    "enforcements": {
+        "cmd": {
+            "description": "Öffnet das Maßnahmen-Panel für einen Nutzer (Bann, Kick, Stummschaltung, Verwarnung und mehr)",
+            "user": "Der Nutzer, gegen den du vorgehst",
+            "userId": "Nutzer-ID, für Leute, die nicht mehr auf dem Server sind"
+        },
+        "serverOnly": "Dieser Befehl funktioniert nur auf einem Server.",
+        "noAdmin": "Du brauchst die Administrator-Berechtigung, um dieses Panel zu nutzen."
+    },
+    "moderateuser": {
+        "serverOnly": "Das funktioniert nur auf einem Server.",
+        "readOnly": "{reason} Das Panel ist schreibgeschützt."
+    },
+    "warnmessage": {
+        "otherServer": "Das funktioniert nur bei Nachrichten auf diesem Server.",
+        "noAdmin": "Du brauchst die Administrator-Berechtigung, um Mitglieder zu verwarnen.",
+        "botMessage": "Für Bot-, Webhook- und Systemnachrichten kann nicht verwarnt werden.",
+        "self": "Du kannst dich nicht selbst verwarnen.",
+        "notInServer": "**{name}** ist nicht mehr auf dem Server, eine Verwarnung erreicht diese Person nicht."
+    },
+    "reportmessage": {
+        "serverOnly": "Meldungen funktionieren nur auf einem Server.",
+        "ownMessage": "Du kannst nur Nachrichten anderer Mitglieder melden.",
+        "cooldown": "Bitte warte kurz, bevor du eine weitere Nachricht meldest.",
+        "notDelivered": "Deine Meldung konnte nicht zugestellt werden: Auf diesem Server ist kein Team-Kanal für Meldungen eingerichtet. Sag es direkt einem Moderator.",
+        "sentTitle": "Meldung gesendet",
+        "sent": "Danke. Die Moderatoren sehen sich das an."
+    },
+    "appeal": {
+        "cmd": {
+            "description": "Deine Einsprüche",
+            "status": "Wo deine Einsprüche stehen"
+        },
+        "title": "Meine Einsprüche",
+        "dbDown": "Die Datenbank antwortet nicht. Versuch es in ein paar Minuten erneut."
+    },
+    "caseStatus": {
+        "voided": "entfernt (ein Fehler)",
+        "liftedByAppeal": "per Einspruch aufgehoben",
+        "reversed": "von einem Moderator rückgängig gemacht",
+        "lifted": "vorzeitig aufgehoben",
+        "appealPending": "Einspruch ausstehend",
+        "activeAppealDenied": "aktiv, Einspruch abgelehnt",
+        "expired": "abgelaufen",
+        "active": "aktiv",
+        "ended": "beendet"
+    },
+    "background": {
+        "cmd": {
+            "description": "Zeigt die Fälle und Team-Notizen eines Nutzers",
+            "user": "Der Nutzer, den du nachschlagen willst",
+            "userId": "Nutzer-ID, für Leute, die nicht mehr auf dem Server sind",
+            "name": "Einen Fall über seinen Namen öffnen"
+        },
+        "serverOnly": "Dieser Befehl funktioniert nur auf einem Server.",
+        "noAdmin": "Du brauchst die Administrator-Berechtigung, um Fälle anzusehen.",
+        "notFound": "Kein Fall mit dem Namen **{name}**.",
+        "notFoundFor": "Kein Fall mit dem Namen **{name}** für {user}.",
+        "notYours": "Führe /background selbst aus, um Fälle durchzusehen.",
+        "notesAdminOnly": "Nur Administratoren können Team-Notizen bearbeiten.",
+        "noteEmpty": "Die Notiz ist leer.",
+        "noNoteNumber": "Es gibt keine Notiz Nummer {number}.",
+        "target": {
+            "both": "Nutze entweder die Nutzerauswahl oder user_id, nicht beides.",
+            "none": "Wähle einen Nutzer oder gib eine user_id ein.",
+            "badId": "user_id muss eine Discord-Nutzer-ID sein (17–20 Ziffern).",
+            "unknown": "Es gibt keinen Discord-Nutzer mit der ID `{id}`."
+        },
+        "stage": {
+            "none": "0 von 3 (noch kein Verwarnungs-Bann)",
+            "days": "{n} von 3 ({days}-Tage-Bann)",
+            "permanent": "{n} von 3 (dauerhafter Bann)"
+        },
+        "noteType": {
+            "warning": "Warnung",
+            "positive": "Positiv",
+            "neutral": "Notiz",
+            "alert": "Alarm"
+        },
+        "reasonKind": {
+            "prebuilt": "vorgefertigt",
+            "custom": "eigener"
+        },
+        "appealStatus": {
+            "pending": "ausstehend",
+            "accepted": "angenommen",
+            "denied": "abgelehnt"
+        },
+        "notes": {
+            "title": "Team-Notizen",
+            "titleCount": {
+                "one": "Team-Notizen ({count})",
+                "other": "Team-Notizen ({count})"
+            },
+            "none": "Keine. Schreibe eine mit **Notiz hinzufügen**.",
+            "line": "**{number}.** {type}: {content} · {author}, {when}",
+            "unknownAuthor": "unbekannt",
+            "older": {
+                "one": "…und {count} ältere",
+                "other": "…und {count} ältere"
+            }
+        },
+        "record": {
+            "code": "**Fallcode:** `{code}`",
+            "type": "**Typ:** {type}{auto}{imported}",
+            "auto": " (automatisch, Verwarnungsstufen)",
+            "imported": " (importiert, zählt nicht)",
+            "user": "**Nutzer:** {name} (`{id}`)",
+            "by": "**Von:** {name} (`{id}`)",
+            "when": "**Wann:** {date}",
+            "reason": "**Grund:** {reason} ({kind})",
+            "duration": "**Dauer:** {duration}, endet {end}",
+            "durationPermanent": "**Dauer:** Dauerhaft",
+            "canAppeal": "**Einspruch möglich?** {answer}",
+            "yes": "Ja",
+            "no": "Nein",
+            "yesUntil": "Ja, bis {date}",
+            "stageAfter": "**Verwarnungsstufe danach:** {stage}",
+            "dmDelivered": "**DM zugestellt:** {answer}",
+            "endDmDelivered": "**„Beendet“-DM zugestellt:** {answer}",
+            "edited": {
+                "one": "**Bearbeitet:** {count} Änderung: `/case history code:{code}`",
+                "other": "**Bearbeitet:** {count} Änderungen: `/case history code:{code}`"
+            },
+            "status": "**Status:** {status}",
+            "removed": "**Entfernt (ein Fehler):** {date}{by}{reason} (zählt nicht mehr)",
+            "liftedEarly": "**Vorzeitig aufgehoben:** {date}{by}{reason}",
+            "byId": " von `{id}`",
+            "byName": " von {name}",
+            "appealLine": "{date}: **{status}**{by}{note}",
+            "noAppeals": "Keine",
+            "appealHistory": "Einspruchsverlauf"
+        },
+        "list": {
+            "title": "Verlauf: {name}",
+            "count": {
+                "one": "{count} Fall, neueste zuerst. Mit `name:` öffnest du einen vollständig.",
+                "other": "{count} Fälle, neueste zuerst. Mit `name:` öffnest du einen vollständig."
+            },
+            "empty": "Keine Fälle für diesen Nutzer.",
+            "page": "Seite {page} von {pages}",
+            "test": " (Test)",
+            "imported": " · importiert",
+            "reason": "Grund: {reason}",
+            "ends": "Endet {date}",
+            "keepApart": "Auseinanderhalten (aktiv)",
+            "watchlist": "Beobachtungsliste"
+        },
+        "watchLine": "Auf der Beobachtungsliste seit {since} — {reason} (Eintrag #{id})",
+        "watchLineUntil": "Auf der Beobachtungsliste seit {since} — {reason} (bis {until}) (Eintrag #{id})",
+        "button": {
+            "addNote": "Notiz hinzufügen",
+            "removeNote": "Notiz entfernen",
+            "newer": "Neuer",
+            "older": "Älter"
+        },
+        "modal": {
+            "addTitle": "Team-Notiz hinzufügen",
+            "removeTitle": "Team-Notiz entfernen",
+            "noteLabel": "Notiz (nur das Team sieht sie)",
+            "numberLabel": "Nummer der Notiz, die weg soll",
+            "numberPlaceholder": "z. B. 3"
+        }
+    },
+    "caseSearch": {
+        "filters": "**Filter:** {filters}",
+        "filter": {
+            "member": "Mitglied {user}",
+            "moderator": "Moderator {user}",
+            "type": "Typ **{type}**",
+            "reason": "Grund **{reason}**",
+            "status": "Status **{status}**",
+            "date": "Datum **{from} → {to}** (UTC)",
+            "text": "Text „{text}“",
+            "tag": "Tag **#{tag}**",
+            "none": "keine (alle Fälle)"
+        },
+        "test": " (Test)",
+        "by": "von {name}",
+        "pageEmpty": "Auf dieser Seite sind keine Fälle mehr. Nutze **Neuer**.",
+        "noMatch": "Keine Fälle passen zu diesen Filtern.",
+        "title": {
+            "one": "Fallsuche: {count} Treffer",
+            "other": "Fallsuche: {count} Treffer"
+        },
+        "footer": "Seite {page} von {pages} · neueste zuerst",
+        "openPlaceholder": "Einen Fall vollständig öffnen",
+        "newer": "Neuer",
+        "older": "Älter",
+        "notYours": "Führe /case search selbst aus, um Fälle durchzusehen.",
+        "unreadable": "Diese Suche kann nicht mehr gelesen werden. Führe /case search erneut aus.",
+        "notFoundTitle": "Nicht gefunden",
+        "notFound": "Diesen Fall gibt es nicht mehr."
+    },
+    "case": {
+        "cmd": {
+            "description": "Fälle suchen, bearbeiten und entfernen, Beweise, Verlauf, Auseinanderhalten, Beobachtungsliste",
+            "code": "Fallcode",
+            "statusChoice": {
+                "active": "aktiv",
+                "ended": "beendet",
+                "revoked": "aufgehoben",
+                "voided": "entfernt"
+            },
+            "search": {
+                "description": "Fälle nach Mitglied, Moderator, Typ, Grund, Status, Datum oder Text finden",
+                "member": "Fälle, die dieses Mitglied bekommen hat",
+                "moderator": "Fälle, die dieser Moderator vergeben hat",
+                "type": "Falltyp",
+                "reasonKey": "Vorgefertigter Grund (oder eigener)",
+                "status": "aktiv, beendet, aufgehoben (vorzeitig) oder entfernt (als Fehler)",
+                "from": "Vergeben am oder nach (JJJJ-MM-TT, UTC)",
+                "to": "Vergeben am oder vor (JJJJ-MM-TT, UTC)",
+                "tag": "Fälle mit diesem Tag",
+                "text": "Text im Fallnamen oder Grund"
+            },
+            "edit": {
+                "description": "Grund oder Dauer eines Falls ändern (der Verlauf bleibt erhalten)",
+                "reason": "Neuer Grund",
+                "duration": "Neue Gesamtdauer ab Vergabe, z. B. 7d, 1mo, permanent (nur offene Banns/Stummschaltungen)"
+            },
+            "remove": {
+                "description": "Einen Fall als Fehler markieren: aufheben und nicht mehr zählen",
+                "reason": "Warum er als Fehler entfernt wird (der Nutzer sieht das)"
+            },
+            "history": {
+                "description": "Bearbeitungsverlauf und Beweise eines Falls zeigen"
+            },
+            "tags": {
+                "description": "Tags eines Falls setzen, z. B. scam, alt oder raid",
+                "tags": "Durch Kommas getrennt; \"none\" löscht sie"
+            },
+            "note": {
+                "description": "Private Team-Notizen zu einem Fall",
+                "add": "Eine Notiz hinzufügen, die nur das Team sieht",
+                "text": "Die Notiz",
+                "list": "Die Notizen zu einem Fall zeigen"
+            },
+            "evidence": {
+                "description": "Beweise zu einem Fall",
+                "add": "Einen Nachrichtenlink und/oder ein Bild an einen Fall hängen",
+                "link": "Ein Link, z. B. ein Discord-Nachrichtenlink (sein Text wird gespeichert)",
+                "image": "Ein Screenshot; wird im Beweiskanal neu hochgeladen",
+                "note": "Kurze Notiz zu diesem Beweis",
+                "list": "Die Beweise eines Falls auflisten",
+                "remove": "Einen Beweis von einem Fall entfernen",
+                "id": "Beweisnummer (#) aus /case evidence list"
+            },
+            "keepapart": {
+                "description": "Auseinanderhalten: zwei Mitglieder dürfen sich nicht erwähnen oder antworten",
+                "add": "Zwei Mitglieder auseinanderhalten: Anordnung starten (beide bekommen eine DM)",
+                "userA": "Erstes Mitglied",
+                "userB": "Zweites Mitglied",
+                "days": "Wie viele Tage sie gilt",
+                "reason": "Warum (beide Mitglieder sehen das)",
+                "list": "Aktive Anordnungen zum Auseinanderhalten auflisten",
+                "end": "Eine Anordnung vorzeitig beenden (beide bekommen eine DM)",
+                "id": "Anordnungsnummer (#) aus /case keepapart list"
+            },
+            "watch": {
+                "description": "Beobachtungsliste: Beitritte, neue Fälle und Automod-Treffer gehen ins Mod-Log",
+                "add": "Ein Mitglied auf die Beobachtungsliste setzen (es erfährt es nicht)",
+                "member": "Das Mitglied, das beobachtet werden soll",
+                "reason": "Warum (nur für das Team)",
+                "days": "Wie viele Tage (leer = kein Enddatum)",
+                "list": "Mitglieder auf der Beobachtungsliste auflisten",
+                "end": "Ein Mitglied von der Beobachtungsliste nehmen",
+                "id": "Eintragsnummer (#) aus /case watch list"
+            }
+        },
+        "type": {
+            "ban": "Bann",
+            "kick": "Kick",
+            "mute": "Stummschaltung",
+            "warn": "Verwarnung"
+        },
+        "serverOnly": "Dieser Befehl funktioniert nur auf einem Server.",
+        "noAdmin": "Du brauchst die Administrator-Berechtigung, um Fälle zu ändern.",
+        "notACode": "`{value}` ist kein Fallcode (5–7 Buchstaben und Ziffern).",
+        "reasonEmpty": "Der Grund darf nicht leer sein.",
+        "footer": "{type} gegen {user} von {moderator}",
+        "error": {
+            "noCase": "Kein Fall mit dem Code `{code}` auf diesem Server.",
+            "noCaseAnywhere": "Kein Fall mit dem Code `{code}`.",
+            "editVoided": "`{code}` wurde entfernt (ein Fehler) und kann nicht mehr bearbeitet werden.",
+            "noDurationType": "Nur Banns und Stummschaltungen haben eine Dauer; `{code}` ist vom Typ {type}.",
+            "ladderDuration": "Automatische Banns der Verwarnungsstufen behalten ihre Dauer. Entferne den Fall (falls er ein Fehler war) oder heb den Bann auf.",
+            "importedDuration": "Bei importierten Fällen lässt sich die Dauer nicht ändern.",
+            "endedDuration": "`{code}` ist schon beendet ({status}); nur offene Banns und Stummschaltungen können ihre Dauer ändern.",
+            "muteNeedsDuration": "Eine Stummschaltung braucht eine Dauer (z. B. 30m, 24h, 7d).",
+            "nothingToChange": "Nichts zu ändern: gib einen neuen Grund oder eine neue Dauer an, die sich vom aktuellen Wert unterscheidet.",
+            "badDuration": "Die Dauer muss so aussehen: 30m, 24h, 7d, 2w, 1mo (oder \"permanent\" für einen Bann).",
+            "alreadyRemoved": "`{code}` ist schon entfernt.",
+            "badTag": "„{tag}“ ist kein gültiger Tag. Nutze Buchstaben, Ziffern und Bindestriche, bis zu {max} Zeichen.",
+            "tooManyTags": "Ein Fall kann höchstens {max} Tags haben.",
+            "noteEmpty": "Die Notiz ist leer.",
+            "noteTooLong": "Notizen müssen unter {max} Zeichen bleiben.",
+            "badDate": "`{value}` ist kein gültiges Datum. Nutze JJJJ-MM-TT, z. B. 2026-10-27.",
+            "badFromDate": "`{value}` ist kein gültiges Von-Datum. Nutze JJJJ-MM-TT, z. B. 2026-10-27.",
+            "badToDate": "`{value}` ist kein gültiges Bis-Datum. Nutze JJJJ-MM-TT, z. B. 2026-10-27.",
+            "badMember": "member muss ein Discord-Nutzer sein.",
+            "badModerator": "moderator muss ein Discord-Nutzer sein.",
+            "badType": "type muss einer von diesen sein: {list}.",
+            "badReasonKey": "Wähle einen Grund-Schlüssel aus der Liste.",
+            "badStatus": "status muss einer von diesen sein: {list}.",
+            "fromAfterTo": "Das Von-Datum liegt nach dem Bis-Datum.",
+            "badSearchTag": "Ein Tag besteht aus Buchstaben, Ziffern und Bindestrichen, bis zu 20 Zeichen.",
+            "watchBot": "Bots können nicht auf die Beobachtungsliste gesetzt werden.",
+            "watchSelf": "Du kannst dich nicht selbst auf die Beobachtungsliste setzen.",
+            "watchDays": "days muss zwischen 1 und {max} liegen (leer lassen für kein Enddatum).",
+            "reasonRequired": "Ein Grund ist nötig.",
+            "watchExists": "Dieses Mitglied ist schon auf der Beobachtungsliste (#{id}). Beende zuerst diesen Eintrag, um ihn zu ändern.",
+            "evidenceFull": "Fall `{code}` hat schon {max} Beweise. Entferne zuerst einen.",
+            "notImage": "Der Anhang muss ein Bild sein (PNG, JPG, GIF, WebP).",
+            "noEvidenceChannelHome": "Es ist kein Beweiskanal eingerichtet (EVIDENCE_CHANNEL_ID oder MOD_LOG_CHANNEL_ID), deshalb kann das Bild nicht gespeichert werden.",
+            "noEvidenceChannel": "Beweisbilder sind auf diesem Server nicht eingerichtet: wähle zuerst im Dashboard einen Beweis- oder Mod-Log-Kanal und füge das Bild dann erneut hinzu."
+        },
+        "tags": {
+            "title": "Tags von `{code}`",
+            "none": "keine"
+        },
+        "note": {
+            "addedTitle": "Notiz zu `{code}` hinzugefügt",
+            "added": "Nur das Team sieht sie. `/case note list` zeigt alle Notizen zu diesem Fall.",
+            "listTitle": "Team-Notizen zu {code}",
+            "line": "{date} · **{author}**: {text}",
+            "none": "Noch keine Notizen. Füge eine mit `/case note add` hinzu."
+        },
+        "evidence": {
+            "needSomething": "Gib einen `link`, ein `image` oder beides an.",
+            "oneLink": "`link` muss genau ein http(s)-Link sein, z. B. ein Discord-Nachrichtenlink.",
+            "unreadable": "-# Die Nachricht konnte nicht gelesen werden (anderer Server, kein Zugriff oder gelöscht), daher ist nur der Link gespeichert.",
+            "addedTitle": "Beweis zu `{code}` hinzugefügt",
+            "listTitle": "Beweise: {code} ({name})",
+            "none": "Noch keine Beweise. Füge welche mit `/case evidence add` hinzu.",
+            "noSuch": "Fall `{code}` hat keinen Beweis #{id}. Siehe `/case evidence list`.",
+            "removedImage": "Bild (seine Kopie im Beweiskanal bleibt erhalten).",
+            "removedTitle": "Beweis #{id} von `{code}` entfernt",
+            "fieldName": "Beweise ({count})",
+            "image": "Bild: {links}",
+            "imageLink": "Bild",
+            "storedLink": "gespeichert",
+            "storedMissing": "Bild (gespeicherte Nachricht fehlt)"
+        },
+        "keepapart": {
+            "noBots": "Anordnungen zum Auseinanderhalten gelten zwischen Mitgliedern, nicht Bots.",
+            "startedTitle": "Anordnung #{id} zum Auseinanderhalten gestartet",
+            "started": "**{a}** und **{b}** dürfen sich bis {until} ({relative}) nicht erwähnen oder einander antworten.",
+            "breaking": "Nachrichten, die dagegen verstoßen, werden gelöscht und im Mod-Log festgehalten.",
+            "dmBoth": "Beide Mitglieder haben eine DM bekommen.",
+            "dmNotFirst": "DM an das erste Mitglied nicht zugestellt.",
+            "dmNotSecond": "DM an das zweite Mitglied nicht zugestellt.",
+            "dmNeither": "DM an das erste oder das zweite Mitglied nicht zugestellt.",
+            "listLine": "**#{id}** {a} ↔ {b} · bis {until} · von {by} · {reason}",
+            "listTitle": "Auseinanderhalten: aktive Anordnungen ({count})",
+            "none": "Keine. Starte eine mit `/case keepapart add`.",
+            "noSuch": "Es gibt keine aktive Anordnung #{id}. Siehe `/case keepapart list`.",
+            "endedTitle": "Anordnung #{id} zum Auseinanderhalten beendet",
+            "ended": "{a} und {b} dürfen wieder miteinander Kontakt haben."
+        },
+        "watch": {
+            "addedTitle": "Beobachtungslisten-Eintrag #{id} hinzugefügt",
+            "addedUntil": "**{name}** ist bis {until} ({relative}) auf der Beobachtungsliste.",
+            "addedNoEnd": "**{name}** ist ohne Enddatum auf der Beobachtungsliste.",
+            "notTold": "Das Mitglied erfährt es nicht. Seine Beitritte, neuen Fälle und Automod-Treffer werden im Mod-Log gepostet (höchstens einmal pro Minute).",
+            "listTitle": "Beobachtungsliste ({count})",
+            "listEmpty": "Niemand. Füge jemanden mit `/case watch add` hinzu.",
+            "noSuch": "Es gibt keinen aktiven Beobachtungslisten-Eintrag #{id}. Siehe `/case watch list`.",
+            "endedTitle": "Beobachtungslisten-Eintrag #{id} beendet",
+            "ended": "{user} wird nicht mehr beobachtet.",
+            "since": "seit {since}",
+            "until": "bis {until}",
+            "noEnd": "kein Enddatum",
+            "by": "von {mod}",
+            "alert": {
+                "watchedFor": "Beobachtet wegen",
+                "entry": "Eintrag"
+            }
+        },
+        "edit": {
+            "needSomething": "Gib einen neuen `reason`, eine neue `duration` oder beides an.",
+            "reasonLine": "**Grund:** {old} → {new}",
+            "durationLine": "**Dauer:** {old} → {new}",
+            "nowPermanent": "Er ist jetzt dauerhaft.",
+            "alreadyPast": "Das neue Ende ist schon vorbei: er wird innerhalb einer Minute aufgehoben.",
+            "nowEnds": "Endet jetzt {date}.",
+            "title": "Fall `{code}` bearbeitet"
+        },
+        "remove": {
+            "title": "Fall `{code}` entfernt (er zählt nicht mehr)",
+            "noLongerCounts": "{type} gegen **{user}** zählt nicht mehr.",
+            "dmDelivered": "DM an den Nutzer: zugestellt.",
+            "dmNotDelivered": "DM an den Nutzer: nicht zugestellt.",
+            "alreadyEnded": "Er war schon beendet, daher wurde nichts aufgehoben.",
+            "alreadyLifted": "Er war schon aufgehoben."
+        },
+        "history": {
+            "durationChange": "Dauer {old} → {new}",
+            "reasonChange": "Grund „{old}“ → „{new}“",
+            "line": "{date} · **{name}**: {what}",
+            "removed": "**Entfernt (ein Fehler)** {date} von `{by}`: {reason}",
+            "tags": "Tags",
+            "notes": "Team-Notizen",
+            "title": "Fallverlauf: {code} ({name})",
+            "never": "Dieser Fall wurde nie bearbeitet."
+        },
+        "log": {
+            "case": "Fall",
+            "user": "Nutzer",
+            "editedBy": "Bearbeitet von",
+            "reason": "Grund",
+            "duration": "Dauer",
+            "endsSuffix": " (endet {date})",
+            "editedTitle": "Fall bearbeitet",
+            "removedBy": "Entfernt von",
+            "effect": "Wirkung",
+            "dm": "DM",
+            "delivered": "Zugestellt",
+            "notDelivered": "Nicht zugestellt",
+            "removedTitle": "Fall entfernt (ein Fehler, er zählt nicht mehr)"
+        },
+        "autocomplete": {
+            "reasonCount": {
+                "one": "{label} ({key}): {count} Fall",
+                "other": "{label} ({key}): {count} Fälle"
+            },
+            "removed": " · entfernt"
+        }
+    },
+    "appeals": {
+        "cmd": {
+            "description": "Offene Einsprüche ansehen, einen Fall ganz anzeigen oder einen Einspruch annehmen/ablehnen",
+            "code": "Fallcode. Leer lassen, um offene Einsprüche zu sehen",
+            "decision": "Annehmen hebt die Strafe auf, Ablehnen lässt sie. Leer lassen, um nur den Fall zu sehen",
+            "choiceAccept": "annehmen",
+            "choiceDeny": "ablehnen",
+            "note": "Optionale Notiz, sichtbar im Einspruchskanal und im Log"
+        },
+        "mainServerOnly": "Über Mewvo-Einsprüche wird im Hauptserver entschieden.",
+        "serverOnly": "Dieser Befehl funktioniert nur in einem Server.",
+        "noAdmin": "Du brauchst die Administrator-Berechtigung, um Einsprüche zu prüfen.",
+        "invalidCode": "Das ist kein gültiger Fallcode (5–7 Buchstaben und Ziffern).",
+        "decisionWithoutCode": "Gib den Fallcode des Einspruchs an, über den du entscheiden willst.",
+        "unknownCase": "Kein Fall mit dem Code `{code}` in diesem Server.",
+        "otherServer": "Dieser Fall gehört zu einem anderen Server.",
+        "noPending": "Es gibt keinen offenen Einspruch für `{code}`.",
+        "secondReviewer": "Du hast diese Strafe verhängt, also muss ein anderes Teammitglied über diesen Einspruch entscheiden.",
+        "pending": {
+            "title": "Offene Einsprüche ({count})",
+            "line": "`{code}` **{type}**{test} {username} (`{userId}`), eingereicht {date}{where}",
+            "test": " (Test)",
+            "inChannel": " in <#{channelId}>",
+            "hint": "Einen Fall ansehen mit `/appeals code:<code>`, entscheiden mit `decision:accept|deny`.",
+            "none": "Es gibt keine offenen Einsprüche."
+        },
+        "result": {
+            "accepted": "Einspruch angenommen",
+            "denied": "Einspruch abgelehnt",
+            "dmDelivered": "DM an das Mitglied: zugestellt.",
+            "dmNotDelivered": "DM an das Mitglied: **nicht zugestellt**.",
+            "ownerOverride": "Du hast diese Strafe verhängt: als Bot-Owner entschieden, als Owner-Override protokolliert."
+        },
+        "claim": {
+            "noneTitle": "Nichts zu übernehmen",
+            "none": "Es gibt keinen offenen Einspruch für `{code}` mehr.",
+            "alreadyTitle": "Schon übernommen",
+            "already": "{name} sieht sich diesen Einspruch schon an.",
+            "looking": "{name} sieht sich diesen Einspruch an.",
+            "tookTitle": "Du hast diesen Einspruch übernommen",
+            "tookDelivered": "Das Mitglied weiß jetzt, dass sich jemand darum kümmert. DM zugestellt.",
+            "tookNotDelivered": "Das Mitglied weiß jetzt, dass sich jemand darum kümmert. DM **nicht zugestellt** (seine DMs sind geschlossen)."
+        },
+        "button": {
+            "mainAdminsOnly": "Nur Administratoren im Hauptserver können über Einsprüche entscheiden.",
+            "serverAdminsOnly": "Nur Administratoren dieses Servers können über seine Einsprüche entscheiden.",
+            "outdated": "Dieser Button ist veraltet. Entscheide den Einspruch mit `/appeals`."
+        }
+    },
+    "dossier": {
+        "testCase": "**Testfall**, erstellt mit /test. Nichts wurde ausgeführt, und Annehmen ändert nichts.",
+        "caseCode": "**Fallcode:** `{code}`",
+        "type": "**Art:** {type}",
+        "typeAuto": "**Art:** {type} (automatisch, Verwarnungsstufen)",
+        "status": "**Status:** {status}",
+        "name": "**Name:** {name}",
+        "user": "**Mitglied:** <@{userId}> {username} (`{userId}`)",
+        "by": "**Von:** <@{moderatorId}> {moderator}",
+        "when": "**Wann:** {when}",
+        "reason": "**Grund:** {reason}",
+        "duration": "**Dauer:** {duration}, endet {end}",
+        "durationPermanent": "**Dauer:** dauerhaft",
+        "appealDeadline": "**Einspruchsfrist:** {date}",
+        "cannotAppeal": "**Einspruch möglich?** Nein",
+        "liftedEarly": "**Früher aufgehoben:** {date}",
+        "liftedEarlyReason": "**Früher aufgehoben:** {date}, {reason}",
+        "dmYes": "**DM zugestellt:** ja",
+        "dmNo": "**DM zugestellt:** nein",
+        "stageAfter": "**Verwarnungsstufe danach:** {stage}",
+        "stage": {
+            "none": "0 von 3 (noch kein Verwarnungsbann)",
+            "level": "{level} von 3 ({ban})",
+            "permanentBan": "dauerhafter Bann",
+            "dayBan": "{days}-Tage-Bann",
+            "full": "Verwarnungsstufe {stage}"
+        },
+        "caseType": {
+            "ban": "Bann",
+            "kick": "Kick",
+            "mute": "Stummschaltung",
+            "warn": "Verwarnung"
+        },
+        "caseStatus": {
+            "active": "Aktiv",
+            "appealPending": "Aktiv, Einspruch offen",
+            "expired": "Beendet",
+            "revoked": "Früher aufgehoben"
+        },
+        "appealStatus": {
+            "pending": "offen",
+            "accepted": "angenommen",
+            "denied": "abgelehnt",
+            "closed": "geschlossen"
+        },
+        "answer": {
+            "punished": "Warum wurdest du bestraft?",
+            "reason": "Warum sollte die Strafe aufgehoben werden?",
+            "didIt": "Hast du es getan?",
+            "moreInfo": "Weitere Infos"
+        },
+        "didIt": {
+            "yes": "Ja, ich habe es getan",
+            "partly": "Teilweise",
+            "no": "Nein, ich habe es nicht getan"
+        },
+        "title": {
+            "case": "Fall {code}: {name}",
+            "test": "Testfall {code}: {name}",
+            "fallback": "Einspruch: {name}"
+        },
+        "independent": {
+            "name": "Unabhängige Prüfung",
+            "value": "Verhängt von {moderator}, deshalb muss jemand anderes entscheiden"
+        },
+        "appeal": {
+            "title": "Einspruch ({status})",
+            "filedBy": "Eingereicht von {name} {when}",
+            "filedByIn": "Eingereicht von {name} {when} in <#{channelId}>"
+        },
+        "appealLine": {
+            "filed": "Eingereicht {date}{decided}{note}",
+            "decided": ", {status} von {name} {date}",
+            "status": ", {status}",
+            "note": " (Notiz: {note})",
+            "unknown": "unbekannt"
+        },
+        "otherLine": "`{code}` **{type}**{test} {date}, {status}{appeal}: {reason}",
+        "otherLineAppeal": ", Einspruch {status}",
+        "testSuffix": " (Test)",
+        "history": {
+            "title": "Verlauf",
+            "earlier": "Frühere Einsprüche zu diesem Fall",
+            "others": "Weitere Maßnahmen ({count})",
+            "more": "…und {count} weitere",
+            "none": "Keine",
+            "appealsTotal": "Einsprüche insgesamt",
+            "ladder": "Verwarnungsstufen",
+            "ladderValue": "Stufe {level}, seitdem {warns} Verwarnung(en)"
+        },
+        "button": {
+            "accept": "Annehmen",
+            "deny": "Ablehnen",
+            "claim": "Ich kümmere mich"
+        },
+        "newAppeal": "Neuer Einspruch von {username} zu `{code}`. Entscheide mit den Buttons unten oder `/appeals`.",
+        "newAppealSupport": " Zum Gespräch mit dem Mitglied: <#{channelId}> im Support-Server (dort sieht es nur seine eigene Zusammenfassung).",
+        "storeOnly": "Kein Einspruchskanal: Dieser Server hat keine Einspruchskategorie (oder Ticketkategorie). Der Einspruch ist gespeichert; entscheide ihn im Dashboard (Einsprüche) oder lege eine Einspruchskategorie fest, damit neue Einsprüche einen Kanal bekommen.",
+        "log": {
+            "submitted": "Einspruch eingereicht",
+            "user": "Mitglied",
+            "channel": "Kanal",
+            "supportConversation": " (Gespräch im Support-Server: <#{channelId}>)",
+            "decidedBy": "Entschieden von",
+            "note": "Notiz"
+        },
+        "report": {
+            "title": "Meldung über ein Teammitglied",
+            "reportedBy": "**Gemeldet von:** {username} (`{userId}`)",
+            "staffMember": "**Teammitglied:** {name}",
+            "filed": "**Eingereicht:** {date}",
+            "whatHappened": "Was passiert ist",
+            "proof": "Beweis-Links",
+            "proofNone": "Keine angegeben",
+            "footer": "Meldung #{id}. Bitte die meldende Person bei Bedarf per DM um Screenshots.",
+            "logValue": "#{id} über {name}",
+            "reporter": "Gemeldet von"
+        },
+        "decision": {
+            "accepted": "Einspruch angenommen",
+            "denied": "Einspruch abgelehnt",
+            "testTitle": "{title} (Testfall)",
+            "by": "**Von:** {name}",
+            "note": "**Notiz:** {note}",
+            "dmDelivered": "**DM an das Mitglied:** zugestellt",
+            "dmNotDelivered": "**DM an das Mitglied:** nicht zugestellt",
+            "stage3": "Gegen diesen Bann der Verwarnungsstufe 3 ist kein Einspruch mehr möglich.",
+            "deleted": "-# Dieser Kanal wird in {seconds} Sekunden gelöscht.",
+            "deletedStays": "-# Dieser Kanal wird in {seconds} Sekunden gelöscht. Der Einspruch bleibt unter /appeals code:{code}."
+        },
+        "lift": {
+            "unbanned": "Der Bann wurde aufgehoben.",
+            "unmuted": "Die Stummschaltung wurde aufgehoben.",
+            "warnRemoved": "Die Verwarnung wurde entfernt.",
+            "triggerRemoved": "Die Verwarnung, die diesen automatischen Bann ausgelöst hat (`{code}`), wurde auch entfernt.",
+            "ladderBanLifted": "Diese Verwarnung gehörte zum automatischen Bann `{code}`, also wurde der Bann aufgehoben und die Verwarnungsstufe zurückgesetzt.",
+            "liftedCases": "Aufgehobene Fälle",
+            "warning": "Verwarnung",
+            "countedNow": "Gezählte Verwarnungen jetzt",
+            "triggerReason": "{reason} (sie hat den automatischen Bann `{code}` ausgelöst)",
+            "ladderLiftedCase": "`{code}` (automatischer Bann wegen des Verwarnungslimits)"
+        },
+        "stale": {
+            "reportClosed": "Meldung über ein Teammitglied von <@{userId}> (`{userId}`) automatisch geschlossen: {why}.",
+            "appealClosed": "Einspruch `{code}` von <@{userId}> (`{userId}`) automatisch geschlossen: {why}.",
+            "noMessages": {
+                "one": "seit {count} Tag keine Nachrichten",
+                "other": "seit {count} Tagen keine Nachrichten"
+            },
+            "decided": "Einspruch schon {status}",
+            "reminder": {
+                "one": "Bei diesem Einspruch (`{code}`) ist seit {count} Tag nichts passiert, und er wartet noch auf eine Entscheidung. Nutze die Buttons Annehmen / Ablehnen oben.",
+                "other": "Bei diesem Einspruch (`{code}`) ist seit {count} Tagen nichts passiert, und er wartet noch auf eine Entscheidung. Nutze die Buttons Annehmen / Ablehnen oben."
+            },
+            "reminderHome": {
+                "one": "Bei diesem Einspruch (`{code}`) ist seit {count} Tag nichts passiert, und er wartet noch auf eine Entscheidung. Nutze die Buttons Annehmen / Ablehnen oben oder `/appeals`.",
+                "other": "Bei diesem Einspruch (`{code}`) ist seit {count} Tagen nichts passiert, und er wartet noch auf eine Entscheidung. Nutze die Buttons Annehmen / Ablehnen oben oder `/appeals`."
+            }
+        }
+    },
+    "setappeal": {
+        "cmd": {
+            "description": "Das Einspruchs- und Meldepanel in diesem Server posten (oder im gewählten Kanal)",
+            "channel": "Wo das Panel gepostet wird (Standard: dieser Kanal)"
+        },
+        "supportServer": "Das Einspruchspanel dieses Servers wird mit /setappeal im Hauptserver gepostet.",
+        "noAdmin": "Du brauchst die Administrator-Berechtigung, um Einsprüche einzurichten.",
+        "posted": {
+            "serverTitle": "Einspruchspanel gepostet",
+            "serverPanel": "**Panel:** <#{channelId}>, für Einsprüche gegen Strafen dieses Servers und Meldungen über Teammitglieder.",
+            "category": "Jeder Einspruch und jede Meldung öffnet sich in **{category}**, nur für Administratoren sichtbar.",
+            "serverDecide": "Entscheide Einsprüche mit den Buttons Annehmen / Ablehnen an jedem Einspruch.",
+            "homeTitle": "Einspruchspanels gepostet",
+            "main": "**Hauptserver:** <#{channelId}>, für Stummschaltungen und Verwarnungen.",
+            "support": "**Support-Server:** #{channel}, für Banns und Kicks sowie Meldungen über Teammitglieder.",
+            "supportCreated": "**Support-Server:** #{channel} (erstellt), für Banns und Kicks sowie Meldungen über Teammitglieder.",
+            "homeDecide": "Prüfe und entscheide sie mit **/appeals**."
+        },
+        "error": {
+            "noServerCategory": "Es gibt keine Kategorie, in der Einsprüche und Meldungen geöffnet werden können. Lege zuerst eine Ticketkategorie fest (/ticket) und führe dann /setappeal noch einmal aus.",
+            "noMainCategory": "Es gibt keine Kategorie, in der Einsprüche geöffnet werden können. Lege die Einspruchskategorie im Dashboard fest (Durchsetzung & Einsprüche) oder eine Ticketkategorie.",
+            "categoryPermissions": "Ich brauche „Kanal ansehen“ und „Kanäle verwalten“ in der Kategorie **{category}**, um dort Einspruchskanäle zu öffnen.",
+            "channelPermissions": "Ich brauche „Kanal ansehen“, „Nachrichten senden“ und „Links einbetten“ in <#{channelId}>, um das Einspruchspanel zu posten.",
+            "noSupportServer": "Ich bin nicht im Support-Server (SUPPORT_GUILD_ID), deshalb kann das Panel für Bann-Einsprüche nicht gepostet werden."
+        },
+        "panel": {
+            "title": "Einsprüche: {server}",
+            "serverFallback": "Server",
+            "appealButton": "Einspruch",
+            "myAppealsButton": "Meine Einsprüche",
+            "myRecordButton": "Meine Akte",
+            "reportButton": "Teammitglied melden",
+            "mainIntro": "**Stummgeschaltet oder verwarnt?** Drück auf **Einspruch** und gib an:",
+            "supportIntro": "**Einspruch**: In Mewvo gebannt, gekickt, stummgeschaltet oder verwarnt? Drück auf **Einspruch** und gib an:",
+            "serverIntro": "**Einspruch**: Hier stummgeschaltet, verwarnt oder gekickt? Drück auf **Einspruch** und gib an:",
+            "step1": "1. Warum die Strafe aufgehoben werden sollte",
+            "step2": "2. Deinen Fallcode aus der DM, die du bekommen hast",
+            "step3": "3. Weitere Infos, wenn du etwas ergänzen willst",
+            "howItWorks": "Die Administratoren prüfen deinen Einspruch, und du bekommst die Entscheidung per DM. Drück jederzeit auf **Meine Einsprüche**, um den Stand zu sehen, oder auf **Meine Akte**, um deine Verwarnungen zu sehen und was eine nächste Verwarnung bewirken würde.",
+            "mainBanned": "-# Gebannt? Leg stattdessen im Mewvo-Support-Server Einspruch ein. Der Link steht in deiner Bann-DM.",
+            "reportLine": "**Teammitglied melden**: Melde ein Teammitglied, das gegen die Regeln verstoßen hat. Nur Administratoren sehen Meldungen.",
+            "supportWindows": "-# Gegen Banns und Stummschaltungen ist Einspruch möglich, solange sie aktiv sind; gegen Verwarnungen und Kicks innerhalb von 30 Tagen."
+        }
+    },
+    "staff": {
+        "cmd": {
+            "description": "Team-Verwarnungen, Aktivität, Statistik, Abdeckung, Rollen zurückgeben (Owner; teils Admins)",
+            "warn": "Ein Teammitglied verwarnen (3 aktive entfernen seine Teamrollen)",
+            "staffMember": "Teammitglied",
+            "reason": "Welche Admin-Regel verletzt wurde",
+            "warnings": "Die Verwarnungen eines Teammitglieds anzeigen",
+            "activity": "Was jedes Teammitglied diese oder letzte Woche gemacht hat",
+            "week": "Welche Woche",
+            "thisWeek": "diese Woche",
+            "lastWeek": "letzte Woche",
+            "stats": "Admins: Moderationsstatistik pro Moderator (Aktionen, Einsprüche, entfernte Fälle)",
+            "moderator": "Nur dieser Moderator",
+            "statsPeriod": "Zeitraum (Standard: 30 Tage)",
+            "coverage": "Admins: wann Vorfälle passieren und wann das Team aktiv ist (Wochentag × Stunde)",
+            "coveragePeriod": "Zeitraum (Standard: 7 Tage)",
+            "restore": "Entfernte Teamrollen zurückgeben und eine Sperre des Sicherheitslimits aufheben"
+        },
+        "period": {
+            "days7": "letzte 7 Tage",
+            "days30": "letzte 30 Tage",
+            "days90": "letzte 90 Tage",
+            "all": "gesamte Zeit"
+        },
+        "serverOnly": "Dieser Befehl funktioniert nur in einem Server.",
+        "ownerOnly": "Nur der Server-Owner kann /staff nutzen.",
+        "noAdminStats": "Du brauchst die Administrator-Berechtigung, um die Team-Statistik zu sehen.",
+        "noAdminCoverage": "Du brauchst die Administrator-Berechtigung, um die Team-Abdeckung zu sehen.",
+        "stats": {
+            "title": "Moderationsstatistik, {period}",
+            "titleFor": "Moderationsstatistik, {name}, {period}",
+            "empty": "Keine Moderationsfälle in diesem Zeitraum.",
+            "emptyFor": "{name} hat keine Moderationsfälle in diesem Zeitraum.",
+            "footnote": "-# Fälle, die sie erstellt haben (Test- und automatische Fälle ausgenommen; entfernte Fälle zählen nicht mit). Einsprüche: in diesem Zeitraum zu ihren Fällen entschieden."
+        },
+        "coverage": {
+            "title": "Team-Abdeckung, letzte {days} Tage ({timeZone})",
+            "incidentsHeading": "**Vorfälle** (erstellte Fälle, automatische eingeschlossen): {count}",
+            "staffHeading": "**Team-Aktivität** (Näherung, siehe unten): {count}",
+            "legend": "Legende: `·` keine · `░▒▓█` Viertelschritte bis zur vollsten Stunde (Vorfälle max. {maxIncidents}, Team max. {maxStaff}). Spalten sind die Stunden 0–23.",
+            "gapsTitle": "Am schlechtesten abgedeckte Zeiten",
+            "gap": "{n}. **{slot}**: {incidents}, {staff}",
+            "incidents": {
+                "one": "{count} Vorfall",
+                "other": "{count} Vorfälle"
+            },
+            "staffActions": {
+                "one": "{count} Team-Aktion",
+                "other": "{count} Team-Aktionen"
+            },
+            "noIncidents": "Keine Vorfälle in diesem Zeitraum.",
+            "footer": "Team-Aktivität = von Menschen erstellte Fälle + entschiedene Einsprüche (staff_activity hat nur Wochensummen, also keine Stunden). Zeitzone: /birthday setchannel timezone."
+        },
+        "activity": {
+            "title": "Team-Aktivität, Woche ab {start}",
+            "footnote": "-# (inaktiv) = keine Moderationsarbeit und unter 20 Nachrichten. Aktionen sind erstellte Fälle; Prüfungen sind Automod- und Verifizierungskarten.",
+            "cached": "-# Auf Basis der zwischengespeicherten Mitglieder: Die ganze Mitgliederliste konnte gerade nicht geladen werden, daher fehlen vielleicht Teammitglieder.",
+            "none": "Kein Team gefunden."
+        },
+        "warn": {
+            "ownerOrBot": "Du kannst den Owner oder einen Bot nicht verwarnen.",
+            "notInServer": "{name} ist nicht im Server.",
+            "title": "Team-Verwarnung erteilt",
+            "count": "{name} hat jetzt **{active} von {limit}** aktiven Team-Verwarnungen.",
+            "demoted": "Damit ist das Limit erreicht: Die Teamrollen wurden entfernt. Gib sie mit `/staff restore` zurück."
+        },
+        "warnings": {
+            "title": "Team-Verwarnungen: {name}",
+            "line": "{state} · {date} von {by}: {reason}",
+            "active": "**aktiv**",
+            "expired": "abgelaufen",
+            "none": "Keine."
+        },
+        "restore": {
+            "ownerOnly": "Nur der Server-Owner kann /staff restore hier nutzen.",
+            "noAdmin": "Du brauchst die Administrator-Berechtigung, um /staff restore zu nutzen.",
+            "notYourself": "Du kannst dich nicht selbst wiederherstellen. Frag den Server-Owner oder einen anderen Administrator.",
+            "tooHigh": "Einige gespeicherte Rollen sind gleich hoch oder höher als deine höchste Rolle ({roles}). Bitte den Server-Owner, sie zurückzugeben.",
+            "nothing": "Für {name} sind keine entfernten Teamrollen gespeichert (oder die Person ist nicht im Server), und sie ist nicht vom Panel gesperrt.",
+            "roles": "Rollen: {roles}",
+            "noRoles": "Keine der gespeicherten Rollen konnte zurückgegeben werden (gelöscht oder über meiner Rolle).",
+            "blockLifted": "Die Sperre für das Durchsetzungspanel wurde aufgehoben.",
+            "title": "Teamzugang wiederhergestellt"
+        },
+        "massGuard": {
+            "blockedBans": "Sicherheitslimit: Du bist bis <t:{until}:t> (<t:{until}:R>) vom Durchsetzungspanel gesperrt, nach {count} Banns/Kicks in kurzer Zeit. {alerted}",
+            "blockedMutes": "Sicherheitslimit: Du bist bis <t:{until}:t> (<t:{until}:R>) vom Durchsetzungspanel gesperrt, nach {count} Stummschaltungen in kurzer Zeit. {alerted}",
+            "alertedOwners": "Die Bot-Owner wurden benachrichtigt.",
+            "alertedOwner": "Der Server-Owner wurde benachrichtigt.",
+            "summaryBan": "{name} ({id}) hat {count} Banns/Kicks in {minutes} Minuten ausgeführt und einen weiteren Bann versucht.",
+            "summaryKick": "{name} ({id}) hat {count} Banns/Kicks in {minutes} Minuten ausgeführt und einen weiteren Kick versucht.",
+            "summaryMutes": "{name} ({id}) hat {count} Stummschaltungen in {minutes} Minuten ausgeführt und eine weitere versucht.",
+            "moderator": "Moderator",
+            "whatHappened": "Was passiert ist",
+            "blockedUntil": "Gesperrt bis",
+            "liftEarly": "Früher aufheben",
+            "titleBans": "Sicherheitslimit: zu viele Banns/Kicks in {minutes} Minuten, Moderator gesperrt",
+            "titleMutes": "Sicherheitslimit: zu viele Stummschaltungen in {minutes} Minuten, Moderator gesperrt",
+            "dmBans": "**Sicherheitslimit (zu viele Banns/Kicks in {minutes} Minuten) in {server}.** {summary} Der Panelzugang ist bis <t:{until}:f> gesperrt. Früher aufheben mit `/staff restore`.",
+            "dmMutes": "**Sicherheitslimit (zu viele Stummschaltungen in {minutes} Minuten) in {server}.** {summary} Der Panelzugang ist bis <t:{until}:f> gesperrt. Früher aufheben mit `/staff restore`."
+        }
+    },
+    "modmail": {
+        "cmd": {
+            "description": "Modmail-Gespräche verwalten (Mitglieder schreiben dem Bot per DM, um das Team zu erreichen)",
+            "close": "Dieses Modmail-Gespräch schließen",
+            "reason": "Wird an das Mitglied geschickt",
+            "block": "Ein Mitglied für Modmail sperren",
+            "blockUser": "Zu sperrendes Mitglied",
+            "unblock": "Ein gesperrtes Mitglied wieder Modmail nutzen lassen",
+            "unblockUser": "Zu entsperrendes Mitglied"
+        },
+        "notConversationChannel": "Nutze das in einem Modmail-Gesprächskanal.",
+        "notOpen": "Das ist kein offenes Modmail-Gespräch.",
+        "staffOnly": "Nur das Team kann Modmail-Gespräche schließen.",
+        "closing": "Dieses Gespräch wird geschlossen…",
+        "blocked": "{user} kann Modmail nicht mehr nutzen.",
+        "blockedOpen": " Das offene Gespräch {channel} bleibt, bis du es schließt.",
+        "unblocked": "{user} kann Modmail wieder nutzen.",
+        "closeButton": "Schließen",
+        "new": "Neue Modmail",
+        "newPing": "neue Modmail",
+        "header": {
+            "title": "Modmail",
+            "member": "**Mitglied:** {member} ({tag}, `{id}`)",
+            "created": "**Konto erstellt:** {created}",
+            "joined": "**Beigetreten:** {joined}",
+            "unknown": "unbekannt",
+            "relay": "Alles, was du hier schreibst, geht per DM an das Mitglied.",
+            "notes": "Beginne eine Nachricht mit `//` für eine interne Notiz (Bot-Befehle werden auch nicht gesendet)."
+        },
+        "dmFailed": "Die DM an das Mitglied ging nicht raus (es hat den Server verlassen oder seine DMs geschlossen).",
+        "transcript": "Modmail mit <@{userId}> (`{userId}`) geschlossen von {closer}.",
+        "transcriptReason": "Grund: {reason}"
+    }
+}

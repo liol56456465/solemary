@@ -13,6 +13,7 @@ import { AttachmentBuilder, SnowflakeUtil } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { db } from '../../utils/database/wrapper.js';
 import { logger } from '../../utils/logger.js';
+import { botText, textForGuild } from '../../utils/botText.js';
 import { getGuildConfig } from '../config/guildConfig.js';
 import { generateTranscript } from '../ticket.js';
 import { isEnforcementDbAvailable, query, T } from './db.js';
@@ -28,15 +29,35 @@ function lastActivity(channel) {
         : channel.createdTimestamp;
 }
 
-async function closeWithTranscript(client, guild, channel, row, why) {
+/**
+ * Why a channel was closed, in a language: { days } (a report with no messages) or { status } (a
+ * decided appeal). English is also what is stored and written to the audit log.
+ */
+function closeReason(why, lang = 'en') {
+    const tr = botText(lang);
+    if (why.days !== undefined) return tr.tp('staff.dossier.stale.noMessages', why.days);
+    const status = {
+        accepted: () => tr.t('staff.dossier.appealStatus.accepted'),
+        denied: () => tr.t('staff.dossier.appealStatus.denied'),
+        closed: () => tr.t('staff.dossier.appealStatus.closed'),
+        pending: () => tr.t('staff.dossier.appealStatus.pending'),
+    }[why.status]?.() ?? why.status;
+    return tr.t('staff.dossier.stale.decided', { status });
+}
+
+async function closeWithTranscript(client, guild, channel, row, reason) {
+    const why = closeReason(reason);
     const config = await getGuildConfig(client, guild.id);
     const transcriptChannel = config.ticketTranscriptChannelId
         ? await client.channels.fetch(config.ticketTranscriptChannelId).catch(() => null)
         : null;
     const transcript = transcriptChannel?.isSendable() ? await generateTranscript(channel) : null;
     if (transcript) {
+        // A staff channel: the server's language.
+        const tr = textForGuild(guild.id, { userId: row.user_id, purpose: 'public' });
+        const params = { userId: row.user_id, code: row.case_code, why: closeReason(reason, tr.lang) };
         await transcriptChannel.send({
-            content: `${row.kind === 'report' ? 'Staff report' : `Appeal \`${row.case_code}\``} from <@${row.user_id}> (\`${row.user_id}\`) closed automatically: ${why}.`,
+            content: row.kind === 'report' ? tr.t('staff.dossier.stale.reportClosed', params) : tr.t('staff.dossier.stale.appealClosed', params),
             files: [new AttachmentBuilder(transcript.buffer, { name: `${row.kind}-${row.id}.html` })],
             allowedMentions: { parse: [] },
         });
@@ -59,9 +80,11 @@ async function remindStaff(client, guild, channel, row, reminderMs) {
     const config = await getGuildConfig(client, guild.id);
     const staffRoleId = config.ticketStaffRoleId;
     const days = Math.round(reminderMs / 86400000);
+    const tr = textForGuild(guild.id, { userId: row.user_id, purpose: 'public' });
+    const reminder = tr.tp(isHomeGuild(guild.id) ? 'staff.dossier.stale.reminderHome' : 'staff.dossier.stale.reminder', days, { code: row.case_code });
     await channel.send({
         // /appeals exists in the main server only; another server decides with the buttons.
-        content: `${staffRoleId ? `<@&${staffRoleId}> ` : ''}This appeal (\`${row.case_code}\`) has had no activity for ${days} days and is still waiting for a decision. ${isHomeGuild(guild.id) ? 'Use the Accept / Deny buttons above or `/appeals`.' : 'Use the Accept / Deny buttons above.'}`,
+        content: `${staffRoleId ? `<@&${staffRoleId}> ` : ''}${reminder}`,
         allowedMentions: { roles: staffRoleId ? [staffRoleId] : [] },
     });
     await db.set(reminderKey(row.id), { at: new Date().toISOString() });
@@ -94,15 +117,15 @@ export async function tidyStaleAppealChannels(client) {
             if (row.kind === 'report') {
                 const staleReportMs = resolveSetting(settingsGuildId, 'staleReportMs');
                 if (idleMs >= staleReportMs) {
-                    await closeWithTranscript(client, guild, channel, row, `no messages for ${Math.round(staleReportMs / 86400000)} days`);
+                    await closeWithTranscript(client, guild, channel, row, { days: Math.round(staleReportMs / 86400000) });
                 }
             } else if (row.status === 'pending') {
                 const reminderMs = resolveSetting(settingsGuildId, 'staleAppealReminderMs');
                 if (idleMs >= reminderMs) await remindStaff(client, guild, channel, row, reminderMs);
             } else if (row.decided_at && now - new Date(row.decided_at).getTime() >= DECIDED_GRACE_MS) {
-                await closeWithTranscript(client, guild, channel, row, `appeal already ${row.status}`);
+                await closeWithTranscript(client, guild, channel, row, { status: row.status });
                 const staffChannel = row.staff_channel_id ? guild.channels.cache.get(row.staff_channel_id) : null;
-                if (staffChannel) await closeWithTranscript(client, guild, staffChannel, row, `appeal already ${row.status}`);
+                if (staffChannel) await closeWithTranscript(client, guild, staffChannel, row, { status: row.status });
             }
         } catch (error) {
             if (error instanceof SettingsUnavailableError) {

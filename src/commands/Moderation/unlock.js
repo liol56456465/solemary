@@ -6,12 +6,15 @@ import { getColor } from '../../config/bot.js';
 
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
+import { textForInteraction } from '../../utils/botText.js';
+import { descriptionLocalizations } from '../../utils/commandLocalizations.js';
 export default {
     data: new SlashCommandBuilder()
         .setName("unlock")
         .setDescription(
             "Unlocks the current channel (allows @everyone to send messages again).",
         )
+        .setDescriptionLocalizations(descriptionLocalizations('moderation.unlock.cmd.description'))
 .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
     category: "moderation",
 
@@ -26,6 +29,9 @@ export default {
             return;
         }
 
+        // Errors: the moderator's language; the unlock notice is posted in the channel: the server's language.
+        const tr = textForInteraction(interaction);
+        const pub = textForInteraction(interaction, { purpose: 'public' });
         const channel = interaction.channel;
         const everyoneRole = interaction.guild.roles.everyone;
 
@@ -37,7 +43,7 @@ export default {
                 currentPermissions.has(PermissionFlagsBits.SendMessages) ===
                     null
             ) {
-                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `${channel} is not explicitly locked (everyone can already send messages).` });
+                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('moderation.unlock.notLocked', { channel: String(channel) }) });
             }
 
             // Clear the deny instead of allowing: the channel goes back to inheriting from
@@ -68,14 +74,14 @@ export default {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     successEmbed(
-                        'Channel unlocked',
-                        `${channel} is unlocked. Members can talk here again.`,
+                        pub.t('moderation.unlock.title'),
+                        pub.t('moderation.unlock.done', { channel: String(channel) }),
                     ),
                 ],
             });
         } catch (error) {
             logger.error('Unlock command error:', error);
-            await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'An unexpected error occurred while trying to unlock the channel. Check my permissions (I need \'Manage Channels\').' });
+            await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('moderation.unlock.failed') });
         }
     }
 };

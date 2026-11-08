@@ -9,6 +9,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { getReason } from '../../config/enforcement.js';
 import { parseDuration } from './format.js';
+import { botText } from '../../utils/botText.js';
 
 export const TEMPLATE_ACTIONS = ['warn', 'mute', 'kick', 'ban'];
 export const MAX_TEMPLATES = 10;
@@ -77,7 +78,15 @@ export function cleanTemplates(list) {
 }
 
 /** "Spam: 1h mute", "Raiding: permanent ban", "Rude: warn". */
-export function templateLabel(t) {
+export function templateLabel(t, { lang = 'en' } = {}) {
+    if (lang !== 'en') {
+        const tr = botText(lang);
+        if (t.action === 'mute') return tr.t('staff.panel.template.mute', { duration: t.duration });
+        if (t.action === 'ban') return t.duration ? tr.t('staff.panel.template.ban', { duration: t.duration }) : tr.t('staff.panel.template.permanentBan');
+        if (t.action === 'warn') return tr.t('staff.panel.type.warn');
+        if (t.action === 'kick') return tr.t('staff.panel.type.kick');
+        return t.action;
+    }
     if (t.action === 'mute') return `${t.duration} mute`;
     if (t.action === 'ban') return t.duration ? `${t.duration} ban` : 'permanent ban';
     return t.action;

@@ -34,6 +34,7 @@ import { staffGuildId } from '../services/automod/channelRouting.js';
 import { isRecentOffender } from '../services/automod/staffGuardService.js';
 import { describePanic } from '../services/automod/incidentActions.js';
 import { startManualLockdown } from '../services/automod/raidService.js';
+import { botText, textForGuild, textForInteraction } from '../utils/botText.js';
 import {
     diffAgainstLive, diffHasChanges, formatDiff, formatRevertPlan, formatRevertSummary, getSnapshot, getSnapshotBefore,
     isBackupOwner, revertPlan, revertToSnapshot,
@@ -41,20 +42,32 @@ import {
 
 const SNOWFLAKE = /^\d{17,20}$/;
 
-/** The diff embed, with Revert / Cancel buttons when `withButtons` and there is something to revert. */
-export function diffPayload(snapshot, diff, { withButtons = false } = {}) {
+// Language (docs/bot-i18n.md): every answer here is ephemeral (the clicker's Discord language), and
+// so is the DM about the revert the clicker started; the mod log entry is the server's language.
+// The diff, plan and summary text (structureBackupService.js) and describePanic stay English.
+const snapshotFooter = (tr, snapshot) => tr.t('automod.revert.footer', {
+    time: new Date(snapshot.created_at).toISOString().slice(0, 16).replace('T', ' '),
+    summary: snapshot.summary,
+});
+
+/**
+ * The diff embed, with Revert / Cancel buttons when `withButtons` and there is something to revert.
+ * `lang`: the reader's language (default English).
+ */
+export function diffPayload(snapshot, diff, { withButtons = false, lang = 'en' } = {}) {
+    const tr = botText(lang);
     const changes = diffHasChanges(diff);
     const embed = createEmbed({
-        title: `Snapshot #${snapshot.id} vs the server now`,
+        title: tr.t('automod.revert.diffTitle', { id: snapshot.id }),
         description: changes
             ? formatDiff(diff)
-            : `${formatDiff(diff)}\nIf this snapshot was taken after the damage, pick an older one from \`/backup snapshots\`.`,
-        footer: { text: `Snapshot taken ${new Date(snapshot.created_at).toISOString().slice(0, 16).replace('T', ' ')} UTC · ${snapshot.summary}` },
+            : `${formatDiff(diff)}\n${tr.t('automod.revert.olderHint')}`,
+        footer: { text: snapshotFooter(tr, snapshot) },
         color: changes ? 'warning' : 'success',
     });
     const components = withButtons && changes ? [new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`backuprevert:confirm:${snapshot.id}`).setLabel('Revert to this snapshot').setStyle(ButtonStyle.Danger),
-        new ButtonBuilder().setCustomId(`backuprevert:cancel:${snapshot.id}`).setLabel('Cancel').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`backuprevert:confirm:${snapshot.id}`).setLabel(tr.t('automod.revert.button.revertTo')).setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId(`backuprevert:cancel:${snapshot.id}`).setLabel(tr.t('automod.revert.button.cancel')).setStyle(ButtonStyle.Secondary),
     )] : [];
     return { embeds: [embed], components };
 }
@@ -75,7 +88,7 @@ export function snapshotTooOldForAdmin(snapshot, seconds) {
     return alertMs - new Date(snapshot.created_at).getTime() > ADMIN_MAX_SNAPSHOT_AGE_MS;
 }
 
-const TOO_OLD = 'This snapshot is more than 24 hours older than the alert, so only the server owner can revert from it.';
+const tooOld = (tr) => tr.t('automod.revert.tooOld');
 
 const offenderOf = (value) => (SNOWFLAKE.test(String(value || '')) ? String(value) : null);
 
@@ -89,19 +102,20 @@ const offenderOf = (value) => (SNOWFLAKE.test(String(value || '')) ? String(valu
  *   - an Administrator of the staff guild may see the diff, revert and lock down.
  */
 export function nukeAccess(interaction, client, targetGuildId, offenderId = null) {
-    if (!SNOWFLAKE.test(String(targetGuildId || ''))) return { ok: false, message: 'This button is broken. Use the newest alert.' };
+    const tr = textForInteraction(interaction);
+    if (!SNOWFLAKE.test(String(targetGuildId || ''))) return { ok: false, message: tr.t('automod.revert.access.broken') };
     if (interaction.guildId !== staffGuildId(targetGuildId)) {
-        return { ok: false, message: 'This button belongs to another server.' };
+        return { ok: false, message: tr.t('automod.revert.access.otherServer') };
     }
     const userId = interaction.user.id;
     if ((offenderId && offenderId === userId) || isRecentOffender(targetGuildId, userId)) {
-        return { ok: false, message: 'The staff guard acted on you in this server, so you cannot use these buttons. Ask the server owner.' };
+        return { ok: false, message: tr.t('automod.revert.access.offender') };
     }
     const target = client.guilds.cache.get(targetGuildId);
     const owner = target?.ownerId === userId || (isMewvoServer(targetGuildId) && isBackupOwner(client, userId));
     if (owner) return { ok: true, canRevert: true, owner: true, scope: 'owner' };
     if (isAdministrator(interaction.member)) return { ok: true, canRevert: true, owner: false, scope: 'admin' };
-    return { ok: false, message: 'Only administrators can use this.' };
+    return { ok: false, message: tr.t('automod.revert.access.adminsOnly') };
 }
 
 function refuse(interaction, message) {
@@ -111,36 +125,38 @@ function refuse(interaction, message) {
 /**
  * The nuke diff as a confirm step for `scope`: what the revert would do (and what needs the
  * owner), with Confirm / Cancel when something can run. `seconds`: the alert time, carried to
- * the confirm (the 24 h limit is checked again there).
+ * the confirm (the 24 h limit is checked again there). `lang`: the clicker's language (default English).
  */
-export function revertConfirmPayload(guild, snapshot, diff, offenderId, { scope = 'owner', seconds = null } = {}) {
+export function revertConfirmPayload(guild, snapshot, diff, offenderId, { scope = 'owner', seconds = null, lang = 'en' } = {}) {
+    const tr = botText(lang);
     const plan = revertPlan(diff, { scope });
     const embed = createEmbed({
-        title: plan.empty ? 'Nothing to revert' : `Revert ${guild.name} to snapshot #${snapshot.id}?`.slice(0, 256),
+        title: plan.empty ? tr.t('automod.revert.nothingTitle') : tr.t('automod.revert.confirmTitle', { server: guild.name, id: snapshot.id }).slice(0, 256),
         description: `${formatRevertPlan(plan)}\n\n${formatDiff(diff, { max: 8 })}`.slice(0, 4000),
-        footer: { text: `Snapshot taken ${new Date(snapshot.created_at).toISOString().slice(0, 16).replace('T', ' ')} UTC · ${snapshot.summary}`.slice(0, 2048) },
+        footer: { text: snapshotFooter(tr, snapshot).slice(0, 2048) },
         color: plan.empty ? 'success' : 'warning',
     });
     const alertSeconds = Number.isFinite(Number(seconds)) && Number(seconds) > 0 ? Math.floor(Number(seconds)) : 0;
     const tail = `${guild.id}:${snapshot.id}:${offenderId || '0'}:${alertSeconds}`;
     const components = !plan.runnable ? [] : [new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`nukerevert:confirm:${tail}`).setLabel('Confirm revert').setStyle(ButtonStyle.Danger),
-        new ButtonBuilder().setCustomId(`nukerevert:cancel:${tail}`).setLabel('Cancel').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`nukerevert:confirm:${tail}`).setLabel(tr.t('automod.revert.button.confirm')).setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId(`nukerevert:cancel:${tail}`).setLabel(tr.t('automod.revert.button.cancel')).setStyle(ButtonStyle.Secondary),
     )];
     return { embeds: [embed], components };
 }
 
 /** Looks up the target server and the last snapshot before `seconds`; replies itself when one is missing. */
 async function loadNukeContext(interaction, client, targetGuildId, seconds) {
+    const tr = textForInteraction(interaction);
     const guild = client.guilds.cache.get(targetGuildId);
     if (!guild) {
-        await InteractionHelper.safeEditReply(interaction, { content: 'I cannot reach the server this alert is about.' });
+        await InteractionHelper.safeEditReply(interaction, { content: tr.t('automod.revert.unreachable') });
         return null;
     }
     const before = Number.isFinite(seconds) && seconds > 0 ? new Date(seconds * 1000) : new Date();
     const snapshot = await getSnapshotBefore(guild.id, before);
     if (!snapshot) {
-        await InteractionHelper.safeEditReply(interaction, { content: 'There is no snapshot from before this alert, so there is nothing to compare with.' });
+        await InteractionHelper.safeEditReply(interaction, { content: tr.t('automod.revert.noSnapshot') });
         return null;
     }
     return { guild, snapshot, diff: diffAgainstLive(guild, snapshot) };
@@ -153,64 +169,66 @@ export async function handleNukeDiff(interaction, client, args) {
     const access = nukeAccess(interaction, client, targetGuildId, offenderId);
     if (!access.ok) return refuse(interaction, access.message);
     await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+    const tr = textForInteraction(interaction);
     const context = await loadNukeContext(interaction, client, targetGuildId, seconds);
     if (!context) return;
     const { guild, snapshot, diff } = context;
-    const tooOld = !access.owner && snapshotTooOldForAdmin(snapshot, seconds);
-    if (access.canRevert && !tooOld && diffHasChanges(diff)) {
-        return InteractionHelper.safeEditReply(interaction, revertConfirmPayload(guild, snapshot, diff, offenderId, { scope: access.scope, seconds }));
+    const isTooOld = !access.owner && snapshotTooOldForAdmin(snapshot, seconds);
+    if (access.canRevert && !isTooOld && diffHasChanges(diff)) {
+        return InteractionHelper.safeEditReply(interaction, revertConfirmPayload(guild, snapshot, diff, offenderId, { scope: access.scope, seconds, lang: tr.lang }));
     }
-    const payload = diffPayload(snapshot, diff);
-    if (tooOld) payload.embeds[0].setFooter({ text: TOO_OLD });
-    else if (!access.canRevert) payload.embeds[0].setFooter({ text: 'Only the server owner or an administrator can revert.' });
+    const payload = diffPayload(snapshot, diff, { lang: tr.lang });
+    if (isTooOld) payload.embeds[0].setFooter({ text: tooOld(tr) });
+    else if (!access.canRevert) payload.embeds[0].setFooter({ text: tr.t('automod.revert.ownerOrAdmin') });
     return InteractionHelper.safeEditReply(interaction, payload);
 }
 
 export async function handleNukeRevert(interaction, client, args) {
     const [step] = args;
+    const tr = textForInteraction(interaction);
     if (step === 'ask') {
         const [, secondsText, targetGuildId, offenderText] = args;
         const offenderId = offenderOf(offenderText);
         const access = nukeAccess(interaction, client, targetGuildId, offenderId);
         if (!access.ok) return refuse(interaction, access.message);
-        if (!access.canRevert) return refuse(interaction, 'Only the server owner or an administrator can revert.');
+        if (!access.canRevert) return refuse(interaction, tr.t('automod.revert.ownerOrAdmin'));
         await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
         const seconds = Number(secondsText);
         const context = await loadNukeContext(interaction, client, targetGuildId, seconds);
         if (!context) return;
         if (!access.owner && snapshotTooOldForAdmin(context.snapshot, seconds)) {
-            return InteractionHelper.safeEditReply(interaction, { content: TOO_OLD });
+            return InteractionHelper.safeEditReply(interaction, { content: tooOld(tr) });
         }
-        return InteractionHelper.safeEditReply(interaction, revertConfirmPayload(context.guild, context.snapshot, context.diff, offenderId, { scope: access.scope, seconds }));
+        return InteractionHelper.safeEditReply(interaction, revertConfirmPayload(context.guild, context.snapshot, context.diff, offenderId, { scope: access.scope, seconds, lang: tr.lang }));
     }
 
     const [, targetGuildId, snapshotIdText, offenderText, alertSecondsText] = args;
     if (step === 'cancel') {
-        return interaction.update({ embeds: [createEmbed({ title: 'Revert cancelled', description: 'Nothing was changed.', color: 'secondary' })], components: [] });
+        return interaction.update({ embeds: [createEmbed({ title: tr.t('automod.revert.cancelled'), description: tr.t('automod.revert.nothingChanged'), color: 'secondary' })], components: [] });
     }
     if (step !== 'confirm' || !/^\d{1,18}$/.test(snapshotIdText || '')) return;
     const access = nukeAccess(interaction, client, targetGuildId, offenderOf(offenderText));
     if (!access.ok) return refuse(interaction, access.message);
-    if (!access.canRevert) return refuse(interaction, 'Only the server owner or an administrator can revert.');
+    if (!access.canRevert) return refuse(interaction, tr.t('automod.revert.ownerOrAdmin'));
 
     await interaction.deferUpdate();
     const guild = client.guilds.cache.get(targetGuildId);
     // Read by (guild, id): a snapshot id of another server finds nothing.
     const snapshot = guild ? await getSnapshot(guild.id, snapshotIdText) : null;
     if (!snapshot) {
-        return interaction.editReply({ embeds: [createEmbed({ title: 'Revert not started', description: 'That snapshot (or the server) is gone.', color: 'error' })], components: [] });
+        return interaction.editReply({ embeds: [createEmbed({ title: tr.t('automod.revert.notStarted'), description: tr.t('automod.revert.gone'), color: 'error' })], components: [] });
     }
     if (!access.owner && snapshotTooOldForAdmin(snapshot, alertSecondsText)) {
-        return interaction.editReply({ embeds: [createEmbed({ title: 'Revert not started', description: TOO_OLD, color: 'error' })], components: [] });
+        return interaction.editReply({ embeds: [createEmbed({ title: tr.t('automod.revert.notStarted'), description: tooOld(tr), color: 'error' })], components: [] });
     }
     // Re-planned now, for this clicker: an admin's confirm never runs the owner-only steps.
     const plan = revertPlan(diffAgainstLive(guild, snapshot), { scope: access.scope });
     if (!plan.runnable) {
-        const text = plan.empty ? 'The server already matches the snapshot.' : 'What is left needs the server owner.';
-        return interaction.editReply({ embeds: [successEmbed('Nothing to revert', text)], components: [] });
+        const text = plan.empty ? tr.t('automod.revert.alreadyMatches') : tr.t('automod.revert.needsOwner');
+        return interaction.editReply({ embeds: [successEmbed(tr.t('automod.revert.nothingTitle'), text)], components: [] });
     }
     await interaction.editReply({
-        embeds: [successEmbed('Revert running', `Restoring ${guild.name} from snapshot #${snapshot.id} (${dateStamp(snapshot.created_at)}). This message updates as it goes, and you get a DM when it is done. Nothing is deleted.`)],
+        embeds: [successEmbed(tr.t('automod.revert.running'), tr.t('automod.revert.runningText', { server: guild.name, id: snapshot.id, date: dateStamp(snapshot.created_at) }))],
         components: [],
     });
     runRevert(interaction, client, guild, snapshot, access.scope);
@@ -219,21 +237,23 @@ export async function handleNukeRevert(interaction, client, args) {
 /** Runs the revert in the background (it can take minutes): progress edits, DM and mod log at the end. */
 function runRevert(interaction, client, guild, snapshot, scope = 'owner') {
     const by = interaction.user;
-    revertToSnapshot(guild, snapshot, (text) => interaction.editReply({ embeds: [successEmbed('Revert running', text)] }), { scope })
+    const tr = textForInteraction(interaction); // the progress message and the clicker's DM
+    revertToSnapshot(guild, snapshot, (text) => interaction.editReply({ embeds: [successEmbed(tr.t('automod.revert.running'), text)] }), { scope })
         .then(async (counts) => {
             const summary = formatRevertSummary(counts);
-            await interaction.editReply({ embeds: [successEmbed('Revert finished', summary.slice(0, 4000))] }).catch(() => {});
-            await by.send({ content: `**Revert of ${guild.name} finished:** ${summary}`.slice(0, 2000), allowedMentions: { parse: [] } }).catch(() => {});
+            await interaction.editReply({ embeds: [successEmbed(tr.t('automod.revert.finished'), summary.slice(0, 4000))] }).catch(() => {});
+            await by.send({ content: tr.t('automod.revert.dmFinished', { server: guild.name, summary }).slice(0, 2000), allowedMentions: { parse: [] } }).catch(() => {});
+            const logTr = textForGuild(guild.id, { purpose: 'public' }); // the mod log
             await postModLog(client, 'revert', [
-                { name: 'Snapshot', value: `#${snapshot.id} (${dateStamp(snapshot.created_at)})` },
-                { name: 'By', value: `${by.username} (${by.id})${scope === 'admin' ? ' · administrator: permission restores left to the owner' : ''}` },
-                { name: 'Result', value: summary.slice(0, 1024) },
-            ], { guildId: guild.id });
+                { name: logTr.t('automod.revert.log.snapshot'), value: logTr.t('automod.revert.log.snapshotValue', { id: snapshot.id, date: dateStamp(snapshot.created_at) }) },
+                { name: logTr.t('automod.revert.log.by'), value: `${by.username} (${by.id})${scope === 'admin' ? logTr.t('automod.revert.log.adminNote') : ''}` },
+                { name: logTr.t('automod.revert.log.result'), value: summary.slice(0, 1024) },
+            ], { guildId: guild.id, title: logTr.t('automod.revert.log.title') });
         })
         .catch(async (error) => {
             logger.error(`Revert of ${guild.id} stopped: ${error.message}`);
-            await interaction.editReply({ embeds: [createEmbed({ title: 'Revert stopped', description: error.message.slice(0, 4000), color: 'error' })] }).catch(() => {});
-            await by.send({ content: `**Revert of ${guild.name} stopped:** ${error.message}`.slice(0, 2000), allowedMentions: { parse: [] } }).catch(() => {});
+            await interaction.editReply({ embeds: [createEmbed({ title: tr.t('automod.revert.stopped'), description: error.message.slice(0, 4000), color: 'error' })] }).catch(() => {});
+            await by.send({ content: tr.t('automod.revert.dmStopped', { server: guild.name, error: error.message }).slice(0, 2000), allowedMentions: { parse: [] } }).catch(() => {});
         });
 }
 
@@ -242,17 +262,18 @@ export async function handleNukePanic(interaction, client, args) {
     const access = nukeAccess(interaction, client, targetGuildId, offenderOf(offenderText));
     if (!access.ok) return refuse(interaction, access.message);
     await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+    const tr = textForInteraction(interaction);
     const guild = client.guilds.cache.get(targetGuildId);
-    if (!guild) return InteractionHelper.safeEditReply(interaction, { content: 'I cannot reach the server this alert is about.' });
+    if (!guild) return InteractionHelper.safeEditReply(interaction, { content: tr.t('automod.revert.unreachable') });
     const lockdown = await startManualLockdown(guild, interaction.user);
     if (!lockdown) {
-        return InteractionHelper.safeEditReply(interaction, { content: `${guild.name} is already in lockdown. End it with \`/automod lockdown-end\` there.`, allowedMentions: { parse: [] } });
+        return InteractionHelper.safeEditReply(interaction, { content: tr.t('automod.revert.panic.already', { server: guild.name }), allowedMentions: { parse: [] } });
     }
     return InteractionHelper.safeEditReply(interaction, {
-        embeds: [successEmbed('Lockdown started', [
-            `**Verification level:** ${lockdown.raised ? 'raised to High' : 'not changed (already High, or I lack Manage Server)'}`,
-            `**Invites and DMs:** ${describePanic(lockdown.panic)}`,
-            `End it with \`/automod lockdown-end\`${guild.id === interaction.guildId ? '' : ` in ${guild.name}`}.`,
+        embeds: [successEmbed(tr.t('automod.revert.panic.started'), [
+            tr.t('automod.revert.panic.verification', { value: lockdown.raised ? tr.t('automod.revert.panic.raised') : tr.t('automod.revert.panic.notChanged') }),
+            tr.t('automod.revert.panic.invites', { value: describePanic(lockdown.panic) }),
+            guild.id === interaction.guildId ? tr.t('automod.revert.panic.end') : tr.t('automod.revert.panic.endIn', { server: guild.name }),
         ].join('\n'))],
         allowedMentions: { parse: [] },
     });
@@ -260,21 +281,22 @@ export async function handleNukePanic(interaction, client, args) {
 
 export async function handleBackupRevert(interaction, client, args) {
     const [decision, idText] = args;
+    const tr = textForInteraction(interaction);
     if (!isBackupOwner(client, interaction.user.id)) {
-        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Only the server owner can revert the server structure.' });
+        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('automod.revert.backupOwnerOnly') });
     }
     if (decision === 'cancel') {
-        return interaction.update({ embeds: [createEmbed({ title: 'Revert cancelled', description: 'Nothing was changed.', color: 'secondary' })], components: [] });
+        return interaction.update({ embeds: [createEmbed({ title: tr.t('automod.revert.cancelled'), description: tr.t('automod.revert.nothingChanged'), color: 'secondary' })], components: [] });
     }
     if (decision !== 'confirm' || !/^\d+$/.test(idText || '')) return;
 
     const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
     const snapshot = guild ? await getSnapshot(guild.id, idText) : null;
     if (!snapshot) {
-        return interaction.update({ embeds: [createEmbed({ title: 'Revert not started', description: 'That snapshot (or the main server) is gone.', color: 'error' })], components: [] });
+        return interaction.update({ embeds: [createEmbed({ title: tr.t('automod.revert.notStarted'), description: tr.t('automod.revert.goneMain'), color: 'error' })], components: [] });
     }
     await interaction.update({
-        embeds: [successEmbed('Revert running', `Restoring the main server from snapshot #${snapshot.id} (${dateStamp(snapshot.created_at)}). This message updates as it goes, and you get a DM when it is done.`)],
+        embeds: [successEmbed(tr.t('automod.revert.running'), tr.t('automod.revert.runningMain', { id: snapshot.id, date: dateStamp(snapshot.created_at) }))],
         components: [],
     });
     runRevert(interaction, client, guild, snapshot);

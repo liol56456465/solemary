@@ -1,5 +1,6 @@
 import { MessageFlags } from 'discord.js';
 import { logger } from '../utils/logger.js';
+import { textForInteraction } from '../utils/botText.js';
 import { getGuildConfig } from '../services/config/guildConfig.js';
 import {
     MODMAIL_BUTTONS, MODMAIL_PICK, closeModmail, isModmailStaff, modmailUserId, openModmail,
@@ -62,16 +63,18 @@ export const cancelModmailHandler = {
 export const closeModmailHandler = {
     name: MODMAIL_BUTTONS.close,
     async execute(interaction, client) {
+        // Refusals are ephemeral (the clicker's language); "Closing…" is posted in the channel (the server's).
+        const tr = textForInteraction(interaction);
         if (!interaction.guildId || !(await modmailUserId(interaction.channel))) {
-            await interaction.reply({ content: 'This is not an open modmail conversation.', flags: MessageFlags.Ephemeral });
+            await interaction.reply({ content: tr.t('staff.modmail.notOpen'), flags: MessageFlags.Ephemeral });
             return;
         }
         const config = await getGuildConfig(client, interaction.guild.id);
         if (!isModmailStaff(interaction.member, config)) {
-            await interaction.reply({ content: 'Only staff can close modmail conversations.', flags: MessageFlags.Ephemeral });
+            await interaction.reply({ content: tr.t('staff.modmail.staffOnly'), flags: MessageFlags.Ephemeral });
             return;
         }
-        await interaction.reply({ content: 'Closing this conversation…' });
+        await interaction.reply({ content: textForInteraction(interaction, { purpose: 'public' }).t('staff.modmail.closing') });
         await closeModmail(interaction.channel, interaction.user);
     },
 };

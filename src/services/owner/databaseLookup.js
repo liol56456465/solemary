@@ -16,6 +16,7 @@
 
 import { escapeMarkdown } from 'discord.js';
 import { pgConfig } from '../../config/database/postgres.js';
+import { botText } from '../../utils/botText.js';
 
 export const HIDDEN = '(hidden)';
 export const RECENT_ROWS = 5;
@@ -94,10 +95,18 @@ export function parseCaseCode(input) {
     return CASE_CODE.test(code) ? code : null;
 }
 
+/** A refusal of the typed input. `key` + `params`: the same text in the bot catalog (owner.database.input.*). */
 export class LookupInputError extends Error {
-    constructor(message) {
+    constructor(message, key = null, params = {}) {
         super(message);
         this.name = 'LookupInputError';
+        this.key = key;
+        this.params = params;
+    }
+
+    /** The message in a language (English = message). */
+    textIn(lang = 'en') {
+        return this.key ? botText(lang).t(this.key, this.params) : this.message;
     }
 }
 
@@ -205,7 +214,7 @@ export function createDatabaseLookup({ query, tables = pgConfig.tables, migratio
 
     async function user(input) {
         const userId = parseUserId(input);
-        if (!userId) throw new LookupInputError('That is not a user ID or @mention.');
+        if (!userId) throw new LookupInputError('That is not a user ID or @mention.', 'owner.database.input.notUser');
         const sections = [];
         for (const [name, sql] of USER_SECTIONS) {
             sections.push(section(name, await run(sql(t), [userId, RECENT_ROWS])));
@@ -215,7 +224,7 @@ export function createDatabaseLookup({ query, tables = pgConfig.tables, migratio
 
     async function server(input) {
         const guildId = String(input || '').trim();
-        if (!ID.test(guildId)) throw new LookupInputError('That is not a server ID.');
+        if (!ID.test(guildId)) throw new LookupInputError('That is not a server ID.', 'owner.database.input.notServer');
         const sections = [];
         const guildRow = await run(`SELECT created_at, updated_at,
             (SELECT array_agg(f ORDER BY f) FROM jsonb_object_keys(CASE WHEN jsonb_typeof(config) = 'object' THEN config ELSE '{}'::jsonb END) AS f) AS config_fields,
@@ -254,7 +263,7 @@ export function createDatabaseLookup({ query, tables = pgConfig.tables, migratio
 
     async function caseByCode(input) {
         const code = parseCaseCode(input);
-        if (!code) throw new LookupInputError('That is not a case code (5 to 7 letters and digits).');
+        if (!code) throw new LookupInputError('That is not a case code (5 to 7 letters and digits).', 'owner.database.input.notCase');
         const rows = await run(`SELECT * FROM ${t.mod_cases} WHERE case_code = $1`, [code]);
         if (!rows.length) return { kind: 'case', title: `Case ${code}`, subject: code, sections: [], notFound: true };
         const sections = [section('Case', rows, { count: 1 })];
@@ -298,7 +307,7 @@ export function createDatabaseLookup({ query, tables = pgConfig.tables, migratio
     async function search(input) {
         const text = String(input || '').trim();
         if (text.length < SEARCH_MIN || text.length > SEARCH_MAX) {
-            throw new LookupInputError(`Search for ${SEARCH_MIN} to ${SEARCH_MAX} characters.`);
+            throw new LookupInputError(`Search for ${SEARCH_MIN} to ${SEARCH_MAX} characters.`, 'owner.database.input.searchLength', { min: SEARCH_MIN, max: SEARCH_MAX });
         }
         const p = likePattern(text);
         const sections = [];
@@ -348,26 +357,110 @@ export function formatRow(row) {
     return cut(`• ${parts.join(' · ')}`, LINE_MAX);
 }
 
+// Section names and notes in the owner's language: English text → catalog key id (owner.database.section.* /
+// owner.database.note.*). Table and column names in the rows stay as they are (technical terms).
+export const SECTION_KEYS = Object.freeze({
+    'Known username': 'knownUsername',
+    'Cases against them': 'casesAgainst',
+    'Cases they gave (as moderator)': 'casesGiven',
+    'Warn ladder': 'warnLadder',
+    Appeals: 'appeals',
+    'Staff reports they filed': 'staffReports',
+    Watchlist: 'watchlist',
+    'Keep-apart orders': 'keepApart',
+    'Levels / XP': 'levels',
+    Economy: 'economy',
+    'Modmail channels': 'modmailChannels',
+    'Modmail blocked in': 'modmailBlocked',
+    'Verification log': 'verificationLog',
+    'Verification IPs seen': 'verificationIps',
+    'Verification IPs seen, per server (v12)': 'verificationIpsPerServer',
+    'OAuth verified in': 'oauthVerified',
+    'OAuth verification link': 'oauthLink',
+    'Tickets opened': 'tickets',
+    Birthdays: 'birthdays',
+    'Mewvo website account': 'websiteAccount',
+    'Website logins (My record)': 'websiteLogins',
+    'Dashboard logins': 'dashboardLogins',
+    'Early-account bonus': 'earlyBonus',
+    'Premium plan': 'premiumPlan',
+    'Premium orders': 'premiumOrders',
+    'Premium codes (made or redeemed)': 'premiumCodes',
+    'Bot blacklist': 'blacklist',
+    'Staff warnings': 'staffWarnings',
+    'Temporary roles': 'tempRoles',
+    'Joins and leaves': 'joinsLeaves',
+    Suggestions: 'suggestions',
+    Reminders: 'reminders',
+    AFK: 'afk',
+    'Guild config row': 'guildConfig',
+    'Settings that are set (guild_settings)': 'settings',
+    'Module states': 'modules',
+    'Rows per table (non-empty)': 'rowsNonEmpty',
+    'Open appeals and reports': 'openAppeals',
+    Case: 'case',
+    Edits: 'edits',
+    Evidence: 'evidence',
+    'Staff notes': 'staffNotes',
+    'Rows per table': 'rows',
+    'Schema version': 'schema',
+    'Database size': 'size',
+    'Oldest and newest rows': 'oldestNewest',
+    'Cases (code, reason, member or moderator name)': 'searchCases',
+    'Known usernames': 'searchUsernames',
+    'Appeals and reports (username)': 'searchAppeals',
+    'Website accounts (name or Discord name)': 'searchAccounts',
+    'Premium plans (username)': 'searchPremium',
+    'Staff warnings (username)': 'searchStaffWarnings',
+});
+export const NOTE_KEYS = Object.freeze({
+    'empty = never set (the default applies)': 'neverSet',
+    'not recorded (no migrations table)': 'noMigrations',
+});
+
+function translated(tr, group, keys, english) {
+    const id = keys[english];
+    const key = id ? `owner.database.${group}.${id}` : null;
+    return key && tr.has(key) ? tr.t(key) : english;
+}
+
+/** The result's title in a language (English: result.title). */
+export function resultTitle(result, { lang = 'en' } = {}) {
+    if (lang === 'en') return result.title;
+    const tr = botText(lang);
+    const titles = {
+        user: () => tr.t('owner.database.title.user', { id: result.subject }),
+        server: () => tr.t('owner.database.title.server', { id: result.subject }),
+        case: () => tr.t('owner.database.title.case', { code: result.subject }),
+        stats: () => tr.t('owner.database.title.stats'),
+        search: () => tr.t('owner.database.title.search'),
+    };
+    return titles[result.kind] ? titles[result.kind]() : result.title;
+}
+
 /** The result as text lines: per section a header with its count, then its rows. */
-export function resultLines(result) {
-    if (result.notFound) return ['Nothing found.'];
+export function resultLines(result, { lang = 'en' } = {}) {
+    const tr = botText(lang);
+    if (result.notFound) return [tr.t('owner.database.nothingFound')];
     const lines = [];
     for (const s of result.sections) {
-        const showing = s.rows.length < s.count ? ` (showing ${s.rows.length})` : '';
-        lines.push(`**${escapeMarkdown(s.name)}**: ${s.count}${showing}${s.note ? ` _${escapeMarkdown(s.note)}_` : ''}`);
+        const showing = s.rows.length < s.count ? ` ${tr.t('owner.database.showing', { shown: s.rows.length })}` : '';
+        const name = translated(tr, 'section', SECTION_KEYS, s.name);
+        const note = s.note ? translated(tr, 'note', NOTE_KEYS, s.note) : null;
+        lines.push(`**${escapeMarkdown(name)}**: ${s.count}${showing}${note ? ` _${escapeMarkdown(note)}_` : ''}`);
         for (const row of s.rows) lines.push(formatRow(row));
     }
-    return lines.length ? lines : ['Nothing found.'];
+    return lines.length ? lines : [tr.t('owner.database.nothingFound')];
 }
 
 /**
  * Pages of at most PAGE_TEXT_MAX characters each (and at most MAX_PAGES): { title, pages: [text] }.
  * An embed with this description, the title and a short footer stays under 6000 in total.
  */
-export function paginate(result) {
+export function paginate(result, { lang = 'en' } = {}) {
     const pages = [];
     let current = '';
-    for (const line of resultLines(result)) {
+    for (const line of resultLines(result, { lang })) {
         const next = current ? `${current}\n${line}` : line;
         if (next.length > PAGE_TEXT_MAX && current) {
             pages.push(current);
@@ -379,8 +472,8 @@ export function paginate(result) {
     if (current) pages.push(current);
     const truncated = pages.length > MAX_PAGES;
     const kept = pages.slice(0, MAX_PAGES);
-    if (truncated) kept[kept.length - 1] = `${cut(kept.at(-1), PAGE_TEXT_MAX - 60)}\n_…more pages left out; narrow the lookup._`;
-    return { title: cut(result.title, 200), pages: kept };
+    if (truncated) kept[kept.length - 1] = `${cut(kept.at(-1), PAGE_TEXT_MAX - 60)}\n${botText(lang).t('owner.database.morePages')}`;
+    return { title: cut(resultTitle(result, { lang }), 200), pages: kept };
 }
 
 // ── Pages kept for the buttons ───────────────────────────────────────────

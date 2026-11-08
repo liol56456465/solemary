@@ -288,7 +288,7 @@ async function isBanned(guild, userId) {
  * Administrator may run flow.type when it is in `actions` and they hold `roleId` right now.
  * Returns { record, dmDelivered, notes[] } for the moderator's confirmation message.
  */
-export async function executeAction({ guild, moderator, targetUser, flow, staffRole = null }) {
+export async function executeAction({ guild, moderator, targetUser, flow, staffRole = null, lang = 'en' }) {
     assertBotPermissions(guild);
     const asModerator = Boolean(staffRole?.roleId && Array.isArray(staffRole.actions) && staffRole.actions.includes(flow?.type)
         && moderator?.roles?.cache?.has?.(staffRole.roleId));
@@ -306,7 +306,7 @@ export async function executeAction({ guild, moderator, targetUser, flow, staffR
             if (guardType === 'ban' && !isAdministrator(moderator) && !staffRole?.actions?.includes?.('ban')) {
                 throw userError(`This warning would automatically ban ${targetUser.username} (warn ladder), so it needs an Administrator.`, ErrorTypes.PERMISSION);
             }
-            await enforceMassActionGuard(guild, moderator, guardType);
+            await enforceMassActionGuard(guild, moderator, guardType, { lang }); // the refusal: the panel user's language
         };
         return runAction({ guild, moderator, targetUser, flow, guard });
     });

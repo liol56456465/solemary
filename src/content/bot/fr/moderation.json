@@ -1,0 +1,65 @@
+{
+    "lock": {
+        "cmd": {
+            "description": "Verrouille le salon actuel (@everyone ne peut plus envoyer de messages)."
+        },
+        "already": "{channel} est déjà verrouillé.",
+        "title": "Salon verrouillé",
+        "done": "{channel} est verrouillé. Les membres ne peuvent plus écrire ici tant qu'il n'est pas déverrouillé.",
+        "failed": "Une erreur inattendue s'est produite en verrouillant le salon. Vérifie mes permissions (il me faut « Gérer les salons »)."
+    },
+    "unlock": {
+        "cmd": {
+            "description": "Déverrouille le salon actuel (@everyone peut de nouveau envoyer des messages)."
+        },
+        "notLocked": "{channel} n'est pas explicitement verrouillé (tout le monde peut déjà écrire).",
+        "title": "Salon déverrouillé",
+        "done": "{channel} est déverrouillé. Les membres peuvent de nouveau écrire ici.",
+        "failed": "Une erreur inattendue s'est produite en déverrouillant le salon. Vérifie mes permissions (il me faut « Gérer les salons »)."
+    },
+    "purge": {
+        "cmd": {
+            "description": "Supprimer un nombre précis de messages",
+            "amount": "Nombre de messages (1-100)"
+        },
+        "range": "Indique un nombre entre 1 et 100.",
+        "title": "Messages supprimés",
+        "done": {
+            "one": "{count} message supprimé dans {channel}.",
+            "many": "{count} messages supprimés dans {channel}.",
+            "other": "{count} messages supprimés dans {channel}."
+        },
+        "failed": "Une erreur inattendue s'est produite pendant la suppression. Remarque : les messages de plus de 14 jours ne peuvent pas être supprimés en masse."
+    },
+    "rules": {
+        "cmd": {
+            "description": "Publier, mettre à jour ou prévisualiser le message des règles du serveur",
+            "post": "Publier les règles avec le design enregistré sur le tableau de bord",
+            "postChannel": "Où les publier (par défaut : le salon enregistré sur le tableau de bord)",
+            "update": "Mettre le message des règles publié à jour avec les règles et le design actuels",
+            "preview": "Te montrer le message des règles, sans le publier"
+        },
+        "mainOnly": "Les règles ne peuvent être publiées que depuis le serveur principal.",
+        "notLoaded": "Les paramètres enregistrés ne sont pas chargés (la base de données ne répond pas). Rien n'a été modifié.",
+        "noChannel": "Aucun salon de règles n'est enregistré. Choisis-en un avec l'option channel ou enregistre-le sur la page Règles du tableau de bord.",
+        "cannotSee": "Je ne vois pas ce salon. Choisis-en un autre.",
+        "channelGone": "Le salon de règles enregistré n'existe plus. Choisis-en un avec l'option channel ou enregistre-en un autre sur la page Règles du tableau de bord.",
+        "discordSaid": "{refusal} Réponse de Discord : {error}",
+        "saveFailed": "Impossible d'enregistrer la publication (la base de données ne répond pas). {undone}",
+        "postRefused": "Discord a refusé la publication. Rien n'a été publié.",
+        "postUndone": "La publication a été retirée. Rien n'a été modifié.",
+        "updateRefused": "Discord a refusé la mise à jour. Certains messages affichent peut-être déjà les nouvelles règles. Réessaie /rules update.",
+        "updateUndone": "Les nouveaux messages en plus ont été retirés et la publication enregistrée n'a pas changé. Relance /rules update.",
+        "notPosted": "Les règles n'ont pas encore été publiées. Utilise d'abord /rules post.",
+        "posted": "Les règles ont été publiées dans <#{channelId}> ({messages}).",
+        "earlierPost": "L'ancienne publication dans <#{channelId}> reste en place. La prochaine fois, utilise /rules update pour modifier la publication.",
+        "updated": "Les règles publiées dans <#{channelId}> ont été mises à jour ({messages}).",
+        "noChannelSaved": "aucun salon enregistré pour l'instant",
+        "previewHead": "Aperçu du message des règles ({messages}, salon enregistré : {where}). Toi seul le vois. Rien n'a été publié.",
+        "messages": {
+            "one": "{count} message",
+            "many": "{count} messages",
+            "other": "{count} messages"
+        }
+    }
+}

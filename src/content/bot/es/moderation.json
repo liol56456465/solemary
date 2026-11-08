@@ -1,0 +1,65 @@
+{
+    "lock": {
+        "cmd": {
+            "description": "Bloquea el canal actual (@everyone no puede enviar mensajes)."
+        },
+        "already": "{channel} ya está bloqueado.",
+        "title": "Canal bloqueado",
+        "done": "{channel} está bloqueado. Los miembros no pueden escribir aquí hasta que se desbloquee.",
+        "failed": "Ocurrió un error inesperado al bloquear el canal. Revisa mis permisos (necesito «Gestionar canales»)."
+    },
+    "unlock": {
+        "cmd": {
+            "description": "Desbloquea el canal actual (@everyone puede volver a enviar mensajes)."
+        },
+        "notLocked": "{channel} no está bloqueado explícitamente (todos ya pueden escribir).",
+        "title": "Canal desbloqueado",
+        "done": "{channel} está desbloqueado. Los miembros pueden volver a escribir aquí.",
+        "failed": "Ocurrió un error inesperado al desbloquear el canal. Revisa mis permisos (necesito «Gestionar canales»)."
+    },
+    "purge": {
+        "cmd": {
+            "description": "Borrar una cantidad concreta de mensajes",
+            "amount": "Número de mensajes (1-100)"
+        },
+        "range": "Indica un número entre 1 y 100.",
+        "title": "Mensajes borrados",
+        "done": {
+            "one": "Se borró {count} mensaje en {channel}.",
+            "many": "Se borraron {count} mensajes en {channel}.",
+            "other": "Se borraron {count} mensajes en {channel}."
+        },
+        "failed": "Ocurrió un error inesperado al borrar los mensajes. Nota: los mensajes con más de 14 días no se pueden borrar en bloque."
+    },
+    "rules": {
+        "cmd": {
+            "description": "Publicar, actualizar o previsualizar el mensaje de reglas del servidor",
+            "post": "Publicar las reglas con el diseño guardado en el panel",
+            "postChannel": "Dónde publicarlas (por defecto: el canal guardado en el panel)",
+            "update": "Actualizar el mensaje de reglas publicado con las reglas y el diseño actuales",
+            "preview": "Mostrarte solo a ti la publicación de reglas, sin publicarla"
+        },
+        "mainOnly": "Las reglas solo se pueden publicar desde el servidor principal.",
+        "notLoaded": "La configuración guardada no está cargada (la base de datos no responde). No se cambió nada.",
+        "noChannel": "No hay un canal de reglas guardado. Elige uno con la opción channel o guárdalo en la página Reglas del panel.",
+        "cannotSee": "No puedo ver ese canal. Elige otro.",
+        "channelGone": "El canal de reglas guardado ya no existe. Elige uno con la opción channel o guarda otro en la página Reglas del panel.",
+        "discordSaid": "{refusal} Discord respondió: {error}",
+        "saveFailed": "No se pudo guardar la publicación (la base de datos no responde). {undone}",
+        "postRefused": "Discord rechazó la publicación. No se publicó nada.",
+        "postUndone": "La publicación se volvió a quitar. No se cambió nada.",
+        "updateRefused": "Discord rechazó la actualización. Puede que algunos mensajes ya muestren las nuevas reglas. Vuelve a probar /rules update.",
+        "updateUndone": "Los mensajes nuevos de más se quitaron y la publicación guardada no cambió. Ejecuta /rules update otra vez.",
+        "notPosted": "Las reglas aún no se han publicado. Usa primero /rules post.",
+        "posted": "Las reglas se publicaron en <#{channelId}> ({messages}).",
+        "earlierPost": "La publicación anterior en <#{channelId}> sigue donde está. La próxima vez usa /rules update para cambiar la publicación.",
+        "updated": "Las reglas publicadas en <#{channelId}> se actualizaron ({messages}).",
+        "noChannelSaved": "aún no hay canal guardado",
+        "previewHead": "Vista previa de la publicación de reglas ({messages}, canal guardado: {where}). Solo tú puedes verla. No se publicó nada.",
+        "messages": {
+            "one": "{count} mensaje",
+            "many": "{count} mensajes",
+            "other": "{count} mensajes"
+        }
+    }
+}

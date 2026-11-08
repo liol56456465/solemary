@@ -18,17 +18,20 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const SNOWFLAKE = /^\d{17,20}$/;
 const REASON_KEY = /^[a-z0-9_]{1,50}$/;
 
-function userError(message) {
-    return createError(message, ErrorTypes.USER_INPUT, message, { expected: true });
+// `i18n` ({ code, params }): /case shows the error in the reader's language (commands/Enforcement/case.js).
+function userError(message, i18n = null) {
+    const error = createError(message, ErrorTypes.USER_INPUT, message, { expected: true });
+    if (i18n) error.i18n = i18n;
+    return error;
 }
 
 /** "2026-10-27" → Date at 00:00 UTC; throws a user error on anything else. */
-export function parseSearchDate(input, label = 'date') {
+export function parseSearchDate(input, label = 'date', which = 'date') {
     const text = String(input || '').trim();
     const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
     const date = match ? new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))) : null;
     if (!date || date.toISOString().slice(0, 10) !== text) {
-        throw userError(`\`${text.slice(0, 20)}\` is not a valid ${label}. Use YYYY-MM-DD, e.g. 2026-10-27.`);
+        throw userError(`\`${text.slice(0, 20)}\` is not a valid ${label}. Use YYYY-MM-DD, e.g. 2026-10-27.`, { code: which === 'from' ? 'badFromDate' : which === 'to' ? 'badToDate' : 'badDate', params: { value: text.slice(0, 20) } });
     }
     return date;
 }
@@ -40,36 +43,36 @@ export function parseSearchDate(input, label = 'date') {
 export function normalizeSearchFilters(raw = {}) {
     const filters = {};
     if (raw.memberId) {
-        if (!SNOWFLAKE.test(raw.memberId)) throw userError('member must be a Discord user.');
+        if (!SNOWFLAKE.test(raw.memberId)) throw userError('member must be a Discord user.', { code: 'badMember', params: {} });
         filters.memberId = raw.memberId;
     }
     if (raw.moderatorId) {
-        if (!SNOWFLAKE.test(raw.moderatorId)) throw userError('moderator must be a Discord user.');
+        if (!SNOWFLAKE.test(raw.moderatorId)) throw userError('moderator must be a Discord user.', { code: 'badModerator', params: {} });
         filters.moderatorId = raw.moderatorId;
     }
     if (raw.type) {
-        if (!SEARCH_TYPES.includes(raw.type)) throw userError(`type must be one of ${SEARCH_TYPES.join(', ')}.`);
+        if (!SEARCH_TYPES.includes(raw.type)) throw userError(`type must be one of ${SEARCH_TYPES.join(', ')}.`, { code: 'badType', params: { list: SEARCH_TYPES.join(', ') } });
         filters.type = raw.type;
     }
     if (raw.reasonKey) {
         const key = String(raw.reasonKey).trim().toLowerCase();
-        if (!REASON_KEY.test(key)) throw userError('Pick a reason key from the list.');
+        if (!REASON_KEY.test(key)) throw userError('Pick a reason key from the list.', { code: 'badReasonKey', params: {} });
         filters.reasonKey = key;
     }
     if (raw.status) {
-        if (!SEARCH_STATUSES.includes(raw.status)) throw userError(`status must be one of ${SEARCH_STATUSES.join(', ')}.`);
+        if (!SEARCH_STATUSES.includes(raw.status)) throw userError(`status must be one of ${SEARCH_STATUSES.join(', ')}.`, { code: 'badStatus', params: { list: SEARCH_STATUSES.join(', ') } });
         filters.status = raw.status;
     }
-    if (raw.from) filters.from = parseSearchDate(raw.from, 'from date').toISOString().slice(0, 10);
-    if (raw.to) filters.to = parseSearchDate(raw.to, 'to date').toISOString().slice(0, 10);
+    if (raw.from) filters.from = parseSearchDate(raw.from, 'from date', 'from').toISOString().slice(0, 10);
+    if (raw.to) filters.to = parseSearchDate(raw.to, 'to date', 'to').toISOString().slice(0, 10);
     if (filters.from && filters.to && filters.from > filters.to) {
-        throw userError('The from date is after the to date.');
+        throw userError('The from date is after the to date.', { code: 'fromAfterTo', params: {} });
     }
     const text = String(raw.text || '').trim();
     if (text) filters.text = text.slice(0, SEARCH_TEXT_MAX);
     const tag = String(raw.tag || '').trim().toLowerCase().replace(/^#/, '');
     if (tag) {
-        if (!/^[a-z0-9][a-z0-9-]{0,19}$/.test(tag)) throw userError('A tag is letters, numbers and dashes, up to 20 characters.');
+        if (!/^[a-z0-9][a-z0-9-]{0,19}$/.test(tag)) throw userError('A tag is letters, numbers and dashes, up to 20 characters.', { code: 'badSearchTag', params: {} });
         filters.tag = tag;
     }
     return filters;
