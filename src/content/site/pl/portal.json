@@ -50,7 +50,8 @@
     "withDiscord": "Zaloguj się przez Discorda",
     "withAccount": "Zaloguj się kontem Mewvo",
     "note": "Mewvo pyta Discorda tylko o to, kim jesteś (uprawnienie identify): bez e-maila, bez serwerów, nic więcej. Widzisz zawsze tylko własną historię. Logowanie trwa godzinę.",
-    "signup": "Nie masz jeszcze konta Mewvo? [Załóż je]({href}), aby logować się nazwą użytkownika i hasłem."
+    "signup": "Nie masz jeszcze konta Mewvo? [Załóż je]({href}), aby logować się nazwą użytkownika i hasłem.",
+    "appealLead": "Zaloguj się przez Discord, aby odwołać się od kary z dowolnego serwera, który używa Mewvo. Widzisz tylko własne sprawy."
   },
   "record": {
     "title": "Moja historia",
@@ -93,7 +94,9 @@
     "noCases": "Nie masz żadnych spraw na {server}.",
     "noAppeals": "Nie złożyłeś żadnych odwołań.",
     "appealHintInvite": "Odwołaj się z panelu odwołań na Discordzie: [dołącz do serwera wsparcia]({invite}) i naciśnij **Appeal**, podając kod sprawy. Z tej strony nie da się złożyć odwołania.",
-    "appealHint": "Odwołaj się z panelu odwołań na Discordzie, podając kod sprawy. Z tej strony nie da się złożyć odwołania."
+    "appealHint": "Odwołaj się z panelu odwołań na Discordzie, podając kod sprawy. Z tej strony nie da się złożyć odwołania.",
+    "myAppeals": "Moje odwołania",
+    "appealHintWeb": "Odwołaj się od sprawy z dowolnego serwera na stronie [Moje odwołania]({href}). Możesz też odwołać się z panelu odwołań w Discordzie, podając kod sprawy."
   },
   "message": {
     "logInAgain": "Zaloguj się ponownie",
@@ -155,6 +158,18 @@
     "tryLater": {
       "title": "Spróbuj później",
       "message": "Nie udało się wczytać tej strony, bo baza danych nie odpowiada. Nic nie zostało zmienione."
+    },
+    "caseNotFound": {
+      "title": "Nie znaleziono sprawy",
+      "message": "Nie znaleziono tego kodu sprawy dla twojego konta. Sprawdź kod w swojej wiadomości DM."
+    },
+    "appealNotAllowed": {
+      "title": "Niedozwolone",
+      "message": "Odwołanie nie pochodzi z tej strony. Otwórz ponownie stronę odwołania i wyślij je stamtąd."
+    },
+    "appealsUnavailable": {
+      "title": "Odwołania niedostępne",
+      "message": "Nie udało się wczytać twoich odwołań, bo baza danych nie odpowiada. Nic nie zostało zmienione: spróbuj ponownie za kilka minut."
     }
   },
   "viewer": {
@@ -198,5 +213,65 @@
       "other": "{count} minuty"
     },
     "lessThanMinute": "mniej niż minuta"
+  },
+  "appeals": {
+    "title": "Moje odwołania",
+    "lead": "Twoje sprawy na wszystkich serwerach używających Mewvo, zalogowano jako **{username}**. Widzisz to tylko ty.",
+    "backToRecord": "Moja kartoteka",
+    "whoDecides": "O odwołaniu decyduje tylko ekipa serwera, który nadał ci sprawę. Mewvo nie decyduje o odwołaniach innych serwerów.",
+    "appealable": "Sprawy, od których możesz się odwołać",
+    "noneAppealable": "Obecnie nie masz spraw, od których można się odwołać.",
+    "history": "Twoje odwołania",
+    "noAppeals": "Nie złożono jeszcze żadnych odwołań.",
+    "appealButton": "Odwołaj się",
+    "claimed": "Oczekuje: ktoś z ekipy się temu przygląda",
+    "unknownServer": "Nieznany serwer",
+    "sent": "Twoje odwołanie w sprawie {code} trafiło do ekipy serwera {server}. Decyzja pojawi się tutaj.",
+    "dmNote": "Gdy ekipa zdecyduje, Mewvo powiadomi cię też w DM, jeśli Discord na to pozwoli. Decyzja zawsze jest widoczna na tej stronie.",
+    "column": {
+      "server": "Serwer",
+      "case": "Sprawa",
+      "reason": "Powód",
+      "type": "Rodzaj",
+      "date": "Data",
+      "until": "Odwołanie do",
+      "action": "Odwołanie",
+      "status": "Status",
+      "filed": "Złożono",
+      "decided": "Rozstrzygnięto"
+    }
+  },
+  "appealForm": {
+    "title": "Odwołanie {code}",
+    "lead": "Twoje odwołanie trafia do ekipy serwera **{server}**. To ona decyduje, nie Mewvo.",
+    "facts": {
+      "server": "Serwer",
+      "case": "Kod sprawy",
+      "type": "Rodzaj",
+      "reason": "Powód",
+      "date": "Data",
+      "ends": "Koniec"
+    },
+    "punished": "Za co dostałeś karę?",
+    "punishedHint": "Własnymi słowami, do {max} znaków.",
+    "reason": "Dlaczego kara powinna zostać zdjęta?",
+    "reasonHint": "Od {min} do {max} znaków.",
+    "didItLabel": "Czy to zrobiłeś?",
+    "didIt": {
+      "yes": "Tak, zrobiłem to",
+      "partly": "Częściowo",
+      "no": "Nie, nie zrobiłem tego"
+    },
+    "note": "Ekipa widzi twoje odpowiedzi, twoją nazwę na Discordzie i tę sprawę. Jedno odwołanie na sprawę naraz; po odrzuconym odwołaniu musisz odczekać, zanim odwołasz się ponownie.",
+    "submit": "Wyślij odwołanie",
+    "back": "Wróć do moich odwołań",
+    "notAppealable": "Od tej sprawy nie można się teraz odwołać:",
+    "errors": {
+      "punished": "Napisz ekipie, za co dostałeś karę.",
+      "reason": "Wyjaśnij w co najmniej {min} znakach, dlaczego kara powinna zostać zdjęta.",
+      "didIt": "Wybierz, czy to zrobiłeś.",
+      "refused": "Twoje odwołanie nie zostało wysłane: od tej sprawy nie można się teraz odwołać. Może już czeka na nią odwołanie, trwa okres oczekiwania po odrzuceniu albo kara się skończyła.",
+      "tooMany": "Wysłano zbyt wiele odwołań. Spróbuj ponownie za godzinę."
+    }
   }
 }

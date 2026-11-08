@@ -11,6 +11,8 @@
         "caseCode": "Code du dossier : {code}",
         "rejoin": "Revenir : {invite}",
         "record": "Ton dossier complet : <{url}>",
+        "appealWeb": "**Faire appel en ligne :** <{url}>",
+        "appealDeniedWeb": "Tu pourras refaire appel en ligne après le délai d'attente : <{url}>",
         "privacy": "-# Confidentialité : <{url}>",
         "thisServer": "ce serveur",
         "ban": {

@@ -11,6 +11,8 @@
         "caseCode": "Kod sprawy: {code}",
         "rejoin": "Dołącz ponownie: {invite}",
         "record": "Cała twoja historia: <{url}>",
+        "appealWeb": "**Odwołaj się online:** <{url}>",
+        "appealDeniedWeb": "Po okresie oczekiwania możesz odwołać się ponownie online: <{url}>",
         "privacy": "-# Prywatność: <{url}>",
         "thisServer": "tym serwerze",
         "ban": {

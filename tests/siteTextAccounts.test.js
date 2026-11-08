@@ -6,10 +6,15 @@ import { readFileSync } from 'node:fs';
 import { loadCatalogs } from '../src/services/site/i18n.js';
 import * as pages from '../src/services/site/accountPages.js';
 import { bonusText } from '../src/services/site/accountRoutes.js';
-import { buildRecordView, loginPage, recordPage } from '../src/services/site/memberPortal.js';
+import { appealInfo, buildRecordView, loginPage, recordPage } from '../src/services/site/memberPortal.js';
+import { appealFormPage, appealsPage, buildAppealsView, caseItem } from '../src/services/site/portalAppeals.js';
 import { enforcementConfig } from '../src/config/enforcement.js';
+import { setSettingsCacheForTests } from '../src/services/settings/guildSettings.js';
 
-const FILES = ['accountPages.js', 'accountRoutes.js', 'memberPortal.js'].map((f) => readFileSync(new URL(`../src/services/site/${f}`, import.meta.url), 'utf8'));
+// The web appeal fixtures' server ('9'): an empty settings row, so its appeal settings are the defaults.
+setSettingsCacheForTests('9', {});
+
+const FILES = ['accountPages.js', 'accountRoutes.js', 'memberPortal.js', 'portalAppeals.js'].map((f) => readFileSync(new URL(`../src/services/site/${f}`, import.meta.url), 'utf8'));
 const SOURCE = FILES.join('\n');
 const english = loadCatalogs().get('en');
 const ours = [...english.keys()].filter((k) => k.startsWith('account.') || k.startsWith('portal.'));
@@ -29,6 +34,10 @@ const DYNAMIC = {
     // caseStatusCode (caseService.js) shown as portal.status.case.<code>.
     'portal.status.case.': ['liftedByAppeal', 'reversed', 'lifted', 'appealPending', 'expired', 'activeAppealDenied', 'active'],
     'portal.duration.': ['month', 'day', 'hour', 'minute', 'lessThanMinute'],
+    // Web appeals (portalAppeals.js).
+    'portal.appeals.column.': ['server', 'case', 'reason', 'type', 'date', 'until', 'action', 'status', 'filed', 'decided'],
+    'portal.appealForm.facts.': ['server', 'case', 'type', 'reason', 'date', 'ends'],
+    'portal.appealForm.didIt.': ['yes', 'partly', 'no'],
 };
 const PLURAL_FORMS = ['zero', 'one', 'two', 'few', 'many', 'other'];
 
@@ -98,6 +107,21 @@ test('every account and portal page renders from the catalog', () => {
             }),
         }),
         recordPage({ ...ctx, supportInvite: null }, { session, view: buildRecordView({ standing: { warns: [] }, cases: [], appeals: [], config: enforcementConfig }) }),
+        // Web appeals: the list (full and empty), the form, a case that cannot be appealed now.
+        appealsPage({ ...ctx, webAppeals: true }, {
+            session,
+            sent: { code: 'w2222', server: 'S' },
+            view: buildAppealsView({
+                userId: '2', appealInfo,
+                cases: [{ case_code: 'w2222', guild_id: '9', target_user_id: '2', type: 'warn', status: 'active', created_at: new Date(), reason: 'r' }],
+                appeals: [{ case_code: 'w2222', status: 'pending', claimed_at: new Date(), type: 'warn', created_at: new Date() }],
+            }),
+        }),
+        appealsPage(ctx, { session, view: { appealable: [], appeals: [] } }),
+        appealFormPage(ctx, { session, item: caseItem({ case_code: 'b2222', guild_id: '9', type: 'ban', status: 'active', created_at: new Date(), reason: 'r', expires_at: null }, { appealInfo }), error: 'e', field: 'reason' }),
+        appealFormPage(ctx, { session, item: caseItem({ case_code: 'b3333', guild_id: '9', type: 'ban', status: 'active', created_at: new Date(), reason: 'r', expires_at: null, unappealable: true }, { appealInfo }) }),
+        loginPage(ctx, { next: '/me/appeal/b2222' }),
+        recordPage({ ...ctx, webAppeals: true }, { session, view: buildRecordView({ standing: { warns: [] }, cases: [{ case_code: 'w', type: 'warn', status: 'active', created_at: new Date(), reason: 'r' }], appeals: [], config: enforcementConfig }) }),
     ].map(String);
     for (const page of out) {
         assert.ok(!/\{[a-zA-Z]+\}/.test(page), 'no unfilled {param}');

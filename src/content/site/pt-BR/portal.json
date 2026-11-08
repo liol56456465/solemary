@@ -50,7 +50,8 @@
     "withDiscord": "Entrar com o Discord",
     "withAccount": "Entrar com uma conta Mewvo",
     "note": "O Mewvo pede ao Discord apenas quem você é (a permissão identify): nenhum e-mail, nenhum servidor, nada mais. Você só vê o seu próprio histórico. O login dura uma hora.",
-    "signup": "Ainda não tem uma conta Mewvo? [Crie uma]({href}) para entrar com nome de usuário e senha."
+    "signup": "Ainda não tem uma conta Mewvo? [Crie uma]({href}) para entrar com nome de usuário e senha.",
+    "appealLead": "Entre com o Discord para recorrer de uma punição de qualquer servidor que usa o Mewvo. Você só vê os seus próprios casos."
   },
   "record": {
     "title": "Meu histórico",
@@ -93,7 +94,9 @@
     "noCases": "Você não tem casos em {server}.",
     "noAppeals": "Você não enviou nenhuma apelação.",
     "appealHintInvite": "Apele pelo painel de apelações no Discord: [entre no servidor de suporte]({invite}) e clique em **Appeal** (Apelar) com o código do caso. Não é possível apelar por esta página.",
-    "appealHint": "Apele pelo painel de apelações no Discord com o código do caso. Não é possível apelar por esta página."
+    "appealHint": "Apele pelo painel de apelações no Discord com o código do caso. Não é possível apelar por esta página.",
+    "myAppeals": "Meus recursos",
+    "appealHintWeb": "Recorra de um caso de qualquer servidor em [Meus recursos]({href}). Você também pode recorrer pelo painel de recursos no Discord com o código do caso."
   },
   "message": {
     "logInAgain": "Entrar de novo",
@@ -155,6 +158,18 @@
     "tryLater": {
       "title": "Tente mais tarde",
       "message": "Não foi possível carregar esta página porque o banco de dados não está respondendo. Nada foi alterado."
+    },
+    "caseNotFound": {
+      "title": "Caso não encontrado",
+      "message": "Esse código de caso não foi encontrado na sua conta. Confira o código na sua DM."
+    },
+    "appealNotAllowed": {
+      "title": "Não permitido",
+      "message": "O recurso não veio desta página. Abra a página de recurso de novo e envie por lá."
+    },
+    "appealsUnavailable": {
+      "title": "Recursos indisponíveis",
+      "message": "Não foi possível carregar seus recursos porque o banco de dados não está respondendo. Nada foi alterado: tente de novo em alguns minutos."
     }
   },
   "viewer": {
@@ -198,5 +213,65 @@
       "other": "{count} minutos"
     },
     "lessThanMinute": "menos de um minuto"
+  },
+  "appeals": {
+    "title": "Meus recursos",
+    "lead": "Seus casos em todos os servidores que usam o Mewvo, conectado como **{username}**. Só você pode ver isto.",
+    "backToRecord": "Meu histórico",
+    "whoDecides": "Só a equipe do servidor que te deu um caso decide o recurso dele. O Mewvo não decide recursos de outros servidores.",
+    "appealable": "Casos dos quais você pode recorrer",
+    "noneAppealable": "No momento você não tem casos dos quais possa recorrer.",
+    "history": "Seus recursos",
+    "noAppeals": "Você ainda não enviou nenhum recurso.",
+    "appealButton": "Recorrer",
+    "claimed": "Pendente: alguém da equipe está analisando",
+    "unknownServer": "Servidor desconhecido",
+    "sent": "Seu recurso para {code} foi enviado à equipe de {server}. A decisão vai aparecer aqui.",
+    "dmNote": "Quando a equipe decidir, o Mewvo também te avisa por DM se o Discord permitir. A decisão sempre aparece nesta página.",
+    "column": {
+      "server": "Servidor",
+      "case": "Caso",
+      "reason": "Motivo",
+      "type": "Tipo",
+      "date": "Data",
+      "until": "Recurso até",
+      "action": "Recurso",
+      "status": "Status",
+      "filed": "Enviado",
+      "decided": "Decidido"
+    }
+  },
+  "appealForm": {
+    "title": "Recurso {code}",
+    "lead": "Seu recurso vai para a equipe de **{server}**. Quem decide é a equipe, não o Mewvo.",
+    "facts": {
+      "server": "Servidor",
+      "case": "Código do caso",
+      "type": "Tipo",
+      "reason": "Motivo",
+      "date": "Data",
+      "ends": "Termina"
+    },
+    "punished": "Por que você foi punido?",
+    "punishedHint": "Com suas próprias palavras, até {max} caracteres.",
+    "reason": "Por que a punição deveria ser retirada?",
+    "reasonHint": "No mínimo {min} e no máximo {max} caracteres.",
+    "didItLabel": "Você fez isso?",
+    "didIt": {
+      "yes": "Sim, eu fiz",
+      "partly": "Em parte",
+      "no": "Não, eu não fiz"
+    },
+    "note": "A equipe vê suas respostas, seu nome no Discord e este caso. Um recurso por caso de cada vez; depois de um recurso negado, você precisa esperar antes de recorrer de novo.",
+    "submit": "Enviar recurso",
+    "back": "Voltar aos meus recursos",
+    "notAppealable": "No momento não é possível recorrer deste caso:",
+    "errors": {
+      "punished": "Conte à equipe por que você foi punido.",
+      "reason": "Explique em pelo menos {min} caracteres por que a punição deveria ser retirada.",
+      "didIt": "Escolha se você fez isso.",
+      "refused": "Seu recurso não foi enviado: no momento não é possível recorrer deste caso. Talvez já exista um recurso pendente, o tempo de espera depois de uma negativa ainda não acabou, ou a punição já terminou.",
+      "tooMany": "Você enviou recursos demais. Tente de novo daqui a uma hora."
+    }
   }
 }

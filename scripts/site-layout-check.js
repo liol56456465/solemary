@@ -71,6 +71,7 @@ const { installUrl } = await import('../src/services/site/shell.js');
 const { GUIDES } = await import('../src/services/site/pages/docs.js');
 const { LANGUAGES, localizePath, translator } = await import('../src/services/site/i18n.js');
 const { loginPage, recordPage } = await import('../src/services/site/memberPortal.js');
+const { appealsPage, appealFormPage } = await import('../src/services/site/portalAppeals.js');
 const { signupPage, passwordLoginPage, forgotPage, twoStepPage, resetPage, accountSettingsPage } = await import('../src/services/site/accountPages.js');
 const { checkoutPage, billingPage, redeemPage, receiptPage, withdrawListPage, withdrawConfirmPage } = await import('../src/services/site/billing.js');
 const { aggregateReport } = await import('../src/services/enforcement/transparencyService.js');
@@ -171,12 +172,27 @@ const BILLING = {
     gifts: [{ code: 'MEWVO-AB12-CD34-EF56', gift_to: 'Mika', plan_id: 'normal', duration_days: 30, created_at: ago(2 * DAY), redeemed_at: null }],
 };
 const GIFT_ORDER = { id: 42, created_at: ago(DAY), plan_id: 'normal', period: 'yearly', kind: 'gift', amount_cents: 2990, test: true, legal: null };
+// Web appeals (portalAppeals.js): server names of other servers, one long.
+const APPEALS_VIEW = {
+    appealable: [
+        { code: 'k7m2q', server: 'Cozy Corner', type: 'Mute', reason: 'Spamming the same message in several channels', createdAt: ago(DAY), endsAt: new Date(NOW + 2 * DAY), appeal: { appealable: true, until: new Date(NOW + 2 * DAY) } },
+        { code: 'b8nx3k', server: 'The Extremely Long Server Name Of A Gaming Community', type: 'Ban', reason: 'Raiding', createdAt: ago(3 * DAY), endsAt: null, permanent: true, appeal: { appealable: true, until: null } },
+    ],
+    appeals: [
+        { code: 'p4xw9', server: 'Cozy Corner', type: 'Warn', status: 'Denied', filedAt: ago(18 * DAY), decidedAt: ago(15 * DAY) },
+        { code: 'h3rt5', server: 'Night Owls', type: 'Kick', status: 'Pending: a staff member is looking at it', filedAt: ago(DAY), decidedAt: null },
+    ],
+};
+const APPEAL_ITEM = { code: 'b8nx3k', server: 'The Extremely Long Server Name Of A Gaming Community', type: 'Ban', reason: 'Raiding the voice channels with soundboard spam', createdAt: ago(3 * DAY), endsAt: new Date(NOW + 4 * DAY), permanent: false, appeal: { appealable: true, until: new Date(NOW + 4 * DAY) } };
 const MEMBER_PAGES = {
     login: (ctx) => loginPage({ ...ctx, viewer: null }),
     signup: (ctx) => signupPage({ ...ctx, viewer: null }, { csrf: 'x' }),
     'password-login': (ctx) => passwordLoginPage({ ...ctx, viewer: null }, { csrf: 'x' }),
     forgot: (ctx) => forgotPage({ ...ctx, viewer: null }, { csrf: 'x' }),
-    record: (ctx) => recordPage(ctx, { session: SESSION, view: RECORD_VIEW }),
+    record: (ctx) => recordPage({ ...ctx, webAppeals: true }, { session: SESSION, view: RECORD_VIEW }),
+    appeals: (ctx) => appealsPage({ ...ctx, webAppeals: true }, { session: SESSION, view: APPEALS_VIEW, sent: { code: 'h3rt5', server: 'Night Owls' } }),
+    'appeal-form': (ctx) => appealFormPage(ctx, { session: SESSION, item: APPEAL_ITEM, values: { punished: 'I posted links', didIt: 'partly' }, error: 'Explain in at least 20 characters why it should be lifted.', field: 'reason' }),
+    'appeal-blocked': (ctx) => appealFormPage(ctx, { session: SESSION, item: { ...APPEAL_ITEM, appeal: { appealable: false, text: 'Appeal denied; you can appeal again from', from: new Date(NOW + 3 * DAY) } } }),
     account: (ctx) => accountSettingsPage(ctx, { session: SESSION, account: ACCOUNT, recoveryLeft: 8, canClaim: true, plan: { plan_id: 'pro', expires_at: new Date(NOW + 60 * DAY), source: 'purchase' }, now: NOW }),
     checkout: (ctx) => checkoutPage(ctx, { session: SESSION, choice: { planId: 'pro', period: 'monthly', kind: 'personal' } }),
     'checkout-gift': (ctx) => checkoutPage(ctx, { session: SESSION, choice: { planId: 'normal', period: 'yearly', kind: 'gift' } }),

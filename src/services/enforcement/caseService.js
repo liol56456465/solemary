@@ -154,6 +154,23 @@ export async function listCasesForUser(guildId, userId, { limit = 10, offset = 0
     return { rows, total: rows.length ? Number(rows[0].total_count) : 0 };
 }
 
+/**
+ * One member's cases in EVERY server, newest first (the member portal's "My appeals" page: a
+ * member appeals their own cases wherever they were issued). Only ever called with the user id
+ * of the logged-in member; staff views must use listCasesForUser (one server).
+ */
+export async function listCasesForUserAllServers(userId, { limit = 200 } = {}) {
+    if (!userId) throw new TypeError('listCasesForUserAllServers needs the member\'s user id');
+    const { rows } = await query(
+        `SELECT * FROM ${T.cases}
+         WHERE target_user_id = $1 AND is_test = FALSE
+         ORDER BY created_at DESC, id DESC
+         LIMIT $2`,
+        [userId, limit]
+    );
+    return rows;
+}
+
 export async function searchCaseNames(guildId, userId, prefix, limit = 25) {
     const { rows } = await query(
         `SELECT name, type, case_code FROM ${T.cases}
@@ -221,7 +238,7 @@ export async function getAppealHistory(caseCode) {
 export async function listUserAppeals(userId, limit = 10, { guildId = null } = {}) {
     const scoped = guildId != null;
     const { rows } = await query(
-        `SELECT a.case_code, a.status, a.created_at, a.decided_at, a.claimed_at, c.type, c.name
+        `SELECT a.case_code, a.status, a.created_at, a.decided_at, a.claimed_at, c.type, c.name, c.guild_id
          FROM ${T.appeals} a JOIN ${T.cases} c ON c.case_code = a.case_code
          WHERE a.user_id = $1 AND a.kind = 'appeal' AND NOT c.is_test${scoped ? ' AND c.guild_id = ANY($3::varchar[])' : ''}
          ORDER BY a.created_at DESC LIMIT $2`,

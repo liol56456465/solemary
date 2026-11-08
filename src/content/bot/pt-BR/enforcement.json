@@ -11,6 +11,8 @@
         "caseCode": "Código do caso: {code}",
         "rejoin": "Voltar: {invite}",
         "record": "Seu histórico completo: <{url}>",
+        "appealWeb": "**Recorra on-line:** <{url}>",
+        "appealDeniedWeb": "Depois do tempo de espera, você pode recorrer de novo on-line: <{url}>",
         "privacy": "-# Privacidade: <{url}>",
         "thisServer": "servidor",
         "ban": {

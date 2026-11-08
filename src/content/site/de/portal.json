@@ -48,7 +48,8 @@
     "withDiscord": "Mit Discord anmelden",
     "withAccount": "Mit einem Mewvo-Konto anmelden",
     "note": "Mewvo fragt bei Discord nur, wer du bist (die Berechtigung identify): keine E-Mail, keine Server, sonst nichts. Du siehst immer nur deine eigene Akte. Die Anmeldung gilt eine Stunde.",
-    "signup": "Noch kein Mewvo-Konto? [Erstelle eins]({href}), um dich mit Benutzername und Passwort anzumelden."
+    "signup": "Noch kein Mewvo-Konto? [Erstelle eins]({href}), um dich mit Benutzername und Passwort anzumelden.",
+    "appealLead": "Melde dich mit Discord an, um gegen eine Strafe aus einem beliebigen Server mit Mewvo Einspruch einzulegen. Du siehst immer nur deine eigenen Fälle."
   },
   "record": {
     "title": "Meine Akte",
@@ -89,7 +90,9 @@
     "noCases": "Du hast keine Fälle auf {server}.",
     "noAppeals": "Du hast keine Einsprüche eingereicht.",
     "appealHintInvite": "Einspruch legst du über das Einspruchs-Panel in Discord ein: [Tritt dem Support-Server bei]({invite}) und drück **Appeal** mit dem Fallcode. Auf dieser Seite ist kein Einspruch möglich.",
-    "appealHint": "Einspruch legst du mit dem Fallcode über das Einspruchs-Panel in Discord ein. Auf dieser Seite ist kein Einspruch möglich."
+    "appealHint": "Einspruch legst du mit dem Fallcode über das Einspruchs-Panel in Discord ein. Auf dieser Seite ist kein Einspruch möglich.",
+    "myAppeals": "Meine Einsprüche",
+    "appealHintWeb": "Lege unter [Meine Einsprüche]({href}) Einspruch gegen einen Fall aus jedem Server ein. Du kannst auch über das Einspruchs-Panel in Discord mit dem Fallcode Einspruch einlegen."
   },
   "message": {
     "logInAgain": "Erneut anmelden",
@@ -151,6 +154,18 @@
     "tryLater": {
       "title": "Später erneut versuchen",
       "message": "Diese Seite konnte nicht geladen werden, weil die Datenbank nicht antwortet. Es wurde nichts geändert."
+    },
+    "caseNotFound": {
+      "title": "Fall nicht gefunden",
+      "message": "Dieser Fallcode wurde für dein Konto nicht gefunden. Prüfe den Code in deiner DM."
+    },
+    "appealNotAllowed": {
+      "title": "Nicht erlaubt",
+      "message": "Der Einspruch kam nicht von dieser Seite. Öffne die Einspruchsseite erneut und sende ihn von dort."
+    },
+    "appealsUnavailable": {
+      "title": "Einsprüche nicht verfügbar",
+      "message": "Deine Einsprüche konnten nicht geladen werden, weil die Datenbank nicht antwortet. Nichts wurde geändert: versuche es in ein paar Minuten erneut."
     }
   },
   "viewer": {
@@ -184,5 +199,65 @@
       "other": "{count} Minuten"
     },
     "lessThanMinute": "weniger als eine Minute"
+  },
+  "appeals": {
+    "title": "Meine Einsprüche",
+    "lead": "Deine Fälle in allen Servern, die Mewvo nutzen, angemeldet als **{username}**. Nur du kannst das sehen.",
+    "backToRecord": "Meine Akte",
+    "whoDecides": "Über einen Einspruch entscheidet nur das Team des Servers, der dir den Fall gegeben hat. Mewvo entscheidet nicht über Einsprüche anderer Server.",
+    "appealable": "Fälle, gegen die du Einspruch einlegen kannst",
+    "noneAppealable": "Du hast gerade keine Fälle, gegen die du Einspruch einlegen kannst.",
+    "history": "Deine Einsprüche",
+    "noAppeals": "Du hast noch keine Einsprüche eingelegt.",
+    "appealButton": "Einspruch",
+    "claimed": "Offen: jemand aus dem Team sieht es sich an",
+    "unknownServer": "Unbekannter Server",
+    "sent": "Dein Einspruch zu {code} wurde an das Team von {server} gesendet. Die Entscheidung erscheint hier.",
+    "dmNote": "Wenn das Team entscheidet, sagt Mewvo es dir auch per DM, wenn Discord es erlaubt. Die Entscheidung steht immer auf dieser Seite.",
+    "column": {
+      "server": "Server",
+      "case": "Fall",
+      "reason": "Grund",
+      "type": "Art",
+      "date": "Datum",
+      "until": "Einspruch bis",
+      "action": "Einspruch",
+      "status": "Status",
+      "filed": "Eingereicht",
+      "decided": "Entschieden"
+    }
+  },
+  "appealForm": {
+    "title": "Einspruch {code}",
+    "lead": "Dein Einspruch geht an das Team von **{server}**. Es entscheidet darüber, nicht Mewvo.",
+    "facts": {
+      "server": "Server",
+      "case": "Fallcode",
+      "type": "Art",
+      "reason": "Grund",
+      "date": "Datum",
+      "ends": "Endet"
+    },
+    "punished": "Warum wurdest du bestraft?",
+    "punishedHint": "In deinen eigenen Worten, bis zu {max} Zeichen.",
+    "reason": "Warum sollte die Strafe aufgehoben werden?",
+    "reasonHint": "Mindestens {min} und höchstens {max} Zeichen.",
+    "didItLabel": "Hast du es getan?",
+    "didIt": {
+      "yes": "Ja, ich habe es getan",
+      "partly": "Teilweise",
+      "no": "Nein, ich habe es nicht getan"
+    },
+    "note": "Das Team sieht deine Antworten, deinen Discord-Namen und diesen Fall. Pro Fall ein Einspruch gleichzeitig; nach einem abgelehnten Einspruch musst du warten, bevor du erneut Einspruch einlegen kannst.",
+    "submit": "Einspruch senden",
+    "back": "Zurück zu meinen Einsprüchen",
+    "notAppealable": "Gegen diesen Fall kann gerade kein Einspruch eingelegt werden:",
+    "errors": {
+      "punished": "Sag dem Team, warum du bestraft wurdest.",
+      "reason": "Erkläre in mindestens {min} Zeichen, warum die Strafe aufgehoben werden sollte.",
+      "didIt": "Wähle, ob du es getan hast.",
+      "refused": "Dein Einspruch wurde nicht gesendet: gegen diesen Fall kann gerade kein Einspruch eingelegt werden. Vielleicht gibt es schon einen offenen Einspruch, die Wartezeit nach einer Ablehnung läuft noch, oder die Strafe ist vorbei.",
+      "tooMany": "Du hast zu viele Einsprüche gesendet. Versuche es in einer Stunde erneut."
+    }
   }
 }

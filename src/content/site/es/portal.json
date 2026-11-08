@@ -49,7 +49,8 @@
     "withDiscord": "Iniciar sesión con Discord",
     "withAccount": "Iniciar sesión con una cuenta de Mewvo",
     "note": "Mewvo solo le pregunta a Discord quién eres (el permiso identify): sin correo electrónico, sin servidores, nada más. Solo ves tu propio historial. La sesión dura una hora.",
-    "signup": "¿Aún no tienes una cuenta de Mewvo? [Crea una]({href}) para iniciar sesión con nombre de usuario y contraseña."
+    "signup": "¿Aún no tienes una cuenta de Mewvo? [Crea una]({href}) para iniciar sesión con nombre de usuario y contraseña.",
+    "appealLead": "Inicia sesión con Discord para apelar una sanción de cualquier servidor que use Mewvo. Solo ves tus propios casos."
   },
   "record": {
     "title": "Mi historial",
@@ -91,7 +92,9 @@
     "noCases": "No tienes casos en {server}.",
     "noAppeals": "No has presentado ninguna apelación.",
     "appealHintInvite": "Apela desde el panel de apelaciones de Discord: [únete al servidor de soporte]({invite}) y pulsa **Appeal** con el código de caso. Desde esta página no se puede apelar.",
-    "appealHint": "Apela desde el panel de apelaciones de Discord con el código de caso. Desde esta página no se puede apelar."
+    "appealHint": "Apela desde el panel de apelaciones de Discord con el código de caso. Desde esta página no se puede apelar.",
+    "myAppeals": "Mis apelaciones",
+    "appealHintWeb": "Apela un caso de cualquier servidor en [Mis apelaciones]({href}). También puedes apelar desde el panel de apelaciones en Discord con el código del caso."
   },
   "message": {
     "logInAgain": "Volver a iniciar sesión",
@@ -153,6 +156,18 @@
     "tryLater": {
       "title": "Vuelve a intentarlo más tarde",
       "message": "No se pudo cargar esta página porque la base de datos no responde. No se ha cambiado nada."
+    },
+    "caseNotFound": {
+      "title": "Caso no encontrado",
+      "message": "Ese código de caso no se encontró para tu cuenta. Revisa el código en tu DM."
+    },
+    "appealNotAllowed": {
+      "title": "No permitido",
+      "message": "La apelación no vino de esta página. Abre de nuevo la página de apelación y envíala desde allí."
+    },
+    "appealsUnavailable": {
+      "title": "Apelaciones no disponibles",
+      "message": "No se pudieron cargar tus apelaciones porque la base de datos no responde. No se cambió nada: inténtalo de nuevo en unos minutos."
     }
   },
   "viewer": {
@@ -191,5 +206,65 @@
       "other": "{count} minutos"
     },
     "lessThanMinute": "menos de un minuto"
+  },
+  "appeals": {
+    "title": "Mis apelaciones",
+    "lead": "Tus casos en todos los servidores que usan Mewvo, con la sesión de **{username}**. Solo tú puedes ver esto.",
+    "backToRecord": "Mi historial",
+    "whoDecides": "Solo el equipo del servidor que te dio un caso decide su apelación. Mewvo no decide apelaciones de otros servidores.",
+    "appealable": "Casos que puedes apelar",
+    "noneAppealable": "Ahora mismo no tienes casos que se puedan apelar.",
+    "history": "Tus apelaciones",
+    "noAppeals": "No has presentado ninguna apelación.",
+    "appealButton": "Apelar",
+    "claimed": "Pendiente: alguien del equipo la está revisando",
+    "unknownServer": "Servidor desconocido",
+    "sent": "Tu apelación de {code} se envió al equipo de {server}. La decisión aparecerá aquí.",
+    "dmNote": "Cuando el equipo decida, Mewvo también te avisará por DM si Discord lo permite. La decisión siempre aparece en esta página.",
+    "column": {
+      "server": "Servidor",
+      "case": "Caso",
+      "reason": "Motivo",
+      "type": "Tipo",
+      "date": "Fecha",
+      "until": "Apelar hasta",
+      "action": "Apelación",
+      "status": "Estado",
+      "filed": "Presentada",
+      "decided": "Decidida"
+    }
+  },
+  "appealForm": {
+    "title": "Apelación {code}",
+    "lead": "Tu apelación va al equipo de **{server}**. Lo decide ese equipo, no Mewvo.",
+    "facts": {
+      "server": "Servidor",
+      "case": "Código del caso",
+      "type": "Tipo",
+      "reason": "Motivo",
+      "date": "Fecha",
+      "ends": "Termina"
+    },
+    "punished": "¿Por qué te sancionaron?",
+    "punishedHint": "Con tus propias palabras, hasta {max} caracteres.",
+    "reason": "¿Por qué debería retirarse la sanción?",
+    "reasonHint": "Entre {min} y {max} caracteres.",
+    "didItLabel": "¿Lo hiciste?",
+    "didIt": {
+      "yes": "Sí, lo hice",
+      "partly": "En parte",
+      "no": "No, no lo hice"
+    },
+    "note": "El equipo ve tus respuestas, tu nombre de Discord y este caso. Una apelación por caso a la vez; tras una apelación rechazada tienes que esperar antes de volver a apelar.",
+    "submit": "Enviar apelación",
+    "back": "Volver a mis apelaciones",
+    "notAppealable": "Ahora mismo no se puede apelar este caso:",
+    "errors": {
+      "punished": "Cuéntale al equipo por qué te sancionaron.",
+      "reason": "Explica en al menos {min} caracteres por qué debería retirarse la sanción.",
+      "didIt": "Elige si lo hiciste.",
+      "refused": "Tu apelación no se envió: ahora mismo no se puede apelar este caso. Puede que ya tenga una apelación pendiente, que siga el tiempo de espera tras un rechazo o que la sanción haya terminado.",
+      "tooMany": "Has enviado demasiadas apelaciones. Vuelve a intentarlo dentro de una hora."
+    }
   }
 }

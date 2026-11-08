@@ -121,10 +121,36 @@ export function withPrivacyLine(text, env = process.env, { lang = 'en' } = {}) {
  * (MEMBER_PORTAL_ENABLED + an http(s) PUBLIC_URL); otherwise nothing. Optional like the rule line.
  */
 export function recordLine(env = process.env, { lang = 'en' } = {}) {
+    const origin = portalOrigin(env);
+    return origin ? textOf(lang).t('enforcement.dm.record', { url: `${origin}/me` }) : null;
+}
+
+/** The website's origin when the member portal is on (MEMBER_PORTAL_ENABLED + an http(s) PUBLIC_URL), else null. */
+function portalOrigin(env = process.env) {
     if (!/^(1|true|yes|on)$/i.test(String(env.MEMBER_PORTAL_ENABLED || '').trim())) return null;
     const origin = String(env.PUBLIC_URL || '').trim().replace(/\/+$/, '');
-    if (!/^https?:\/\/[^\s<>]+$/.test(origin)) return null;
-    return textOf(lang).t('enforcement.dm.record', { url: `${origin}/me` });
+    return /^https?:\/\/[^\s<>]+$/.test(origin) ? origin : null;
+}
+
+/**
+ * The member portal's web appeal page for a case of another (non-home) server: /me/appeal/<code>,
+ * or /me/appeals without a code (multi-server B4a). A member punished there often shares no server
+ * with the bot, so the Discord panel cannot reach them; the website always can. Mewvo's own
+ * servers (and a caller that names no server) keep their DMs exactly as before: null. Null too
+ * while the portal is off.
+ */
+export function webAppealUrl(guildId, caseCode = null, env = process.env) {
+    if (!guildId || isHomeGuild(guildId, env)) return null;
+    const origin = portalOrigin(env);
+    if (!origin) return null;
+    return caseCode && /^[a-z0-9]{5,7}$/.test(caseCode) ? `${origin}/me/appeal/${caseCode}` : `${origin}/me/appeals`;
+}
+
+/** "Appeal online: <…/me/appeal/code>" for an appealable case of another server, else null. */
+function webAppealLine(rec, tr, guildId) {
+    if (!rec || rec.unappealable) return null;
+    const url = webAppealUrl(guildOf(rec, guildId), rec.case_code);
+    return url ? tr.t('enforcement.dm.appealWeb', { url }) : null;
 }
 
 function common(record, tr) {
@@ -153,19 +179,22 @@ function banDmText(rec, { lang, guildId, serverName: name } = {}) {
         ? tr.t('enforcement.dm.duration', { duration: durationIn(Number(rec.duration_ms), tr.lang), end: stamp(rec.expires_at) })
         : tr.t('enforcement.dm.durationPermanent');
     const inviteUrl = appealInvite(guildOf(rec, guildId));
+    const web = webAppealLine(rec, tr, guildId);
     const lines = [
         appealLine(rec, tr, inviteUrl),
+        web,
         tr.t('enforcement.dm.ban.title', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
         ...common(rec, tr),
         duration,
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
         record(tr),
     ];
-    // The appeal notes only when the DM says where to appeal (a server with no invite: neither).
-    if (rec.is_auto && !rec.unappealable && inviteUrl) {
+    // The appeal notes only when the DM says where to appeal (no invite and no web appeal: neither).
+    const where = inviteUrl || web;
+    if (rec.is_auto && !rec.unappealable && where) {
         lines.push(tr.t('enforcement.dm.ban.autoNote'));
     }
-    if (rec.ladder_level_after === 3 && rec.is_auto && rec.appeal_deadline && !rec.unappealable && inviteUrl) {
+    if (rec.ladder_level_after === 3 && rec.is_auto && rec.appeal_deadline && !rec.unappealable && where) {
         lines.push(tr.t('enforcement.dm.ban.appealUntil', { date: dateStamp(rec.appeal_deadline) }));
     }
     return finish(lines, tr);
@@ -175,6 +204,7 @@ function kickDmText(rec, inviteUrl, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
     return finish([
         appealHere(tr, appealInvite(guildOf(rec, guildId))),
+        webAppealLine(rec, tr, guildId),
         tr.t('enforcement.dm.kick.title', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
         ...common(rec, tr),
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
@@ -187,6 +217,7 @@ function muteDmText(rec, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
     return finish([
         appealHere(tr, appealInvite(guildOf(rec, guildId))),
+        webAppealLine(rec, tr, guildId),
         tr.t('enforcement.dm.mute.title', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
         ...common(rec, tr),
         tr.t('enforcement.dm.duration', { duration: durationIn(Number(rec.duration_ms), tr.lang), end: stamp(rec.expires_at) }),
@@ -200,6 +231,7 @@ function warnDmText(rec, warnNumber, { lang, guildId, serverName: name } = {}) {
     const limit = enforcementConfig.warnsPerLevel;
     return finish([
         appealHere(tr, appealInvite(guildOf(rec, guildId))),
+        webAppealLine(rec, tr, guildId),
         tr.t('enforcement.dm.warn.title', { number: warnNumber, limit, server: serverFor(rec, { guildId, serverName: name }, tr) }),
         ...common(rec, tr),
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
@@ -247,7 +279,10 @@ function appealAcceptedDmText(adminUsername, inviteUrl, { lang, rec = null, guil
 function appealDeniedDmText({ lang, guildId } = {}) {
     const tr = textOf(lang);
     const inviteUrl = appealInvite(guildId);
-    const text = inviteUrl ? tr.t('enforcement.dm.appealDenied', { invite: inviteUrl }) : tr.t('enforcement.dm.appealDeniedNoInvite');
+    const base = inviteUrl ? tr.t('enforcement.dm.appealDenied', { invite: inviteUrl }) : tr.t('enforcement.dm.appealDeniedNoInvite');
+    // Another server's case: also the web appeal page (multi-server B4a); home servers unchanged.
+    const web = webAppealUrl(guildId);
+    const text = web ? `${base}\n${tr.t('enforcement.dm.appealDeniedWeb', { url: web })}` : base;
     return withPrivacyLine(text, process.env, { lang: tr.lang });
 }
 

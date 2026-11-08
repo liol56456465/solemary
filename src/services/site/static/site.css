@@ -447,6 +447,8 @@ button.button { cursor: pointer; }
 .record-table th, .record-table td { text-align: left; vertical-align: top; padding: 10px 12px; border-top: 1px solid var(--border); }
 .record-table thead th { border-top: 0; color: var(--text-muted); font-weight: 600; white-space: nowrap; background: var(--bg-alt); }
 .record-table td:nth-child(3) { min-width: 200px; overflow-wrap: anywhere; }
+/* Web appeals: a case code never breaks inside (it is typed or compared as a whole). */
+.appeal-table code { white-space: nowrap; }
 .record .note { margin-top: 24px; }
 
 /* ── Subscriptions (test checkout, billing.js): pricing buttons, checkout, receipt, redeem ── */
@@ -585,6 +587,14 @@ button.button { cursor: pointer; }
 .form-field input { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--border-control); border-radius: 8px; background: var(--bg-alt); color: var(--text); font: 15px/1.5 var(--sans); }
 .form-field input:hover { border-color: var(--border-strong); }
 .form-field input:focus-visible, .form-check input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.form-field textarea { width: 100%; min-height: 96px; padding: 8px 12px; border: 1px solid var(--border-control); border-radius: 8px; background: var(--bg-alt); color: var(--text); font: 16px/1.5 var(--sans); resize: vertical; }
+.form-field textarea:hover { border-color: var(--border-strong); }
+.form-field textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* A radio group (web appeal "Did you do it?"): the legend reads like a field label. */
+.form-choice { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.form-choice legend { padding: 0; margin-bottom: 6px; font-size: 14px; font-weight: 700; color: var(--text); }
+.form-choice .form-check { min-height: 44px; align-items: center; }
+.form-choice .form-check input { margin: 0; }
 .form-hint { margin: 0; font-size: 13px; line-height: 1.45; color: var(--text-muted); }
 .form-check { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
 .form-check input { flex: none; width: 16px; height: 16px; margin: 4px 0 0; accent-color: var(--brand); }

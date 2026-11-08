@@ -1,5 +1,6 @@
 // memberPortal.js — "My record" on the website: any member logs in with Discord and sees
-// their OWN moderation record in the main server. Read-only (appeals stay in Discord).
+// their OWN moderation record in the main server. Appeals for every server: portalAppeals.js
+// (/me/appeals, /me/appeal/:code; on when the bot client is passed to registerMemberPortal).
 //
 //   GET  /me           the record when logged in, else a page with "Log in with Discord"
 //   GET  /me/login     starts Discord OAuth2 (scope identify only), state cookie + nonce
@@ -59,6 +60,9 @@ import { createAccountHandlers, memberAccountSettings } from './accountRoutes.js
 import { DEFAULT_LANG, LANG_CODES, hasKey, textOf, translator } from './i18n.js';
 import { languageCookie, requestLanguage } from './language.js';
 import { accountStore as defaultAccountStore } from '../accounts/accountStore.js';
+import { APPEALS_PATH, APPEAL_SUBMIT_LIMIT, appealPath, createAppealHandlers } from './portalAppeals.js';
+import { getCaseByCodeAnyServer, listCasesForUserAllServers } from '../enforcement/caseService.js';
+import { submitAppeal as submitAppealService } from '../enforcement/appealService.js';
 
 export const MEMBER_BASE = '/me';
 export const MEMBER_SESSION_COOKIE = 'mewvo_me';
@@ -87,6 +91,8 @@ export const MEMBER_LIMITS = {
     redeem: { limit: 10, windowMs: 60 * 1000 },
     // "Download my data": a heavier read across every table, so a few a minute is plenty.
     dataExport: { limit: 5, windowMs: 60 * 1000 },
+    // Web appeals, per member (user id): portalAppeals.js.
+    appealSubmit: APPEAL_SUBMIT_LIMIT,
 };
 
 /**
@@ -309,24 +315,32 @@ function when(value) {
     return date && !Number.isNaN(date.getTime()) ? html`<time datetime="${date.toISOString()}">${formatDate(date)}</time>` : '-';
 }
 
-function appealCell({ t, ti }, appeal) {
-    if (appeal.appealable) return appeal.until ? ti('portal.appeal.until', { date: when(appeal.until) }) : t('portal.appeal.yes');
+function appealCell({ t, ti }, appeal, code = null) {
+    if (appeal.appealable) {
+        const text = appeal.until ? ti('portal.appeal.until', { date: when(appeal.until) }) : t('portal.appeal.yes');
+        // Web appeals on: the cell links to the form (portalAppeals.js).
+        return code ? html`${text} <a href="${appealPath(code)}">${t('portal.appeals.appealButton')}</a>` : text;
+    }
     return appeal.from ? html`${appeal.text} ${when(appeal.from)}` : appeal.text;
 }
 
 function appealHint({ ti }, ctx) {
+    if (ctx.webAppeals) return html`<p class="note">${ti('portal.record.appealHintWeb', { href: APPEALS_PATH })}</p>`;
     return ctx.supportInvite
         ? html`<p class="note">${ti('portal.record.appealHintInvite', { invite: ctx.supportInvite })}</p>`
         : html`<p class="note">${ti('portal.record.appealHint')}</p>`;
 }
 
-export function loginPage(ctx) {
+/** `next`: a /me page to return to after the Discord login (the appeal form from a DM link). */
+export function loginPage(ctx, { next = null } = {}) {
     const { t, ti } = textOf(ctx);
+    const back = next ? safeNextPath(next) : MEMBER_BASE;
+    const discordLogin = back !== MEMBER_BASE ? `${MEMBER_BASE}/login?next=${encodeURIComponent(back)}` : `${MEMBER_BASE}/login`;
     return layout(ctx, {
         title: t('portal.record.title'), active: 'me',
         body: html`<div class="wrap page prose"><h1>${t('portal.record.title')}</h1>
-<p class="lead">${t('portal.login.lead', { server: enforcementConfig.serverName })}</p>
-<p><a class="button" href="${MEMBER_BASE}/login">${t('portal.login.withDiscord')}</a>${ctx.accounts ? html` <a class="button button-quiet" href="${MEMBER_BASE}/login-password">${t('portal.login.withAccount')}</a>` : ''}</p>
+<p class="lead">${back.startsWith(APPEALS_PATH) || back.startsWith('/me/appeal/') ? t('portal.login.appealLead') : t('portal.login.lead', { server: enforcementConfig.serverName })}</p>
+<p><a class="button" href="${discordLogin}">${t('portal.login.withDiscord')}</a>${ctx.accounts ? html` <a class="button button-quiet" href="${MEMBER_BASE}/login-password">${t('portal.login.withAccount')}</a>` : ''}</p>
 <p class="note">${t('portal.login.note')}</p>
 ${ctx.accounts ? html`<p class="note">${ti('portal.login.signup', { href: `${MEMBER_BASE}/signup` })}</p>` : ''}</div>`,
     });
@@ -348,7 +362,7 @@ export function recordPage(ctx, { session, view }) {
         title: t('portal.record.title'), active: 'me',
         body: html`<div class="wrap page record"><div class="record-head"><div><h1>${t('portal.record.title')}</h1>
 <p class="lead">${ti('portal.record.lead', { server: enforcementConfig.serverName, username: session.username })}</p></div>
-<div class="record-links">${session.accountId ? html`<a class="button button-quiet" href="${MEMBER_BASE}/account">${t('portal.record.accountSettings')}</a> ` : ''}<a class="button button-quiet" href="${MEMBER_BASE}/data" download>${t('portal.record.download')}</a> ${ctx.billing ? html`<a class="button button-quiet" href="${MEMBER_BASE}/billing">${t('portal.record.subscription')}</a> ` : ''}<form method="post" action="${MEMBER_BASE}/logout"><input type="hidden" name="csrf" value="${session.csrf}"><button class="button button-quiet" type="submit">${t('portal.record.logOut')}</button></form></div></div>
+<div class="record-links">${session.accountId ? html`<a class="button button-quiet" href="${MEMBER_BASE}/account">${t('portal.record.accountSettings')}</a> ` : ''}${ctx.webAppeals ? html`<a class="button button-quiet" href="${APPEALS_PATH}">${t('portal.record.myAppeals')}</a> ` : ''}<a class="button button-quiet" href="${MEMBER_BASE}/data" download>${t('portal.record.download')}</a> ${ctx.billing ? html`<a class="button button-quiet" href="${MEMBER_BASE}/billing">${t('portal.record.subscription')}</a> ` : ''}<form method="post" action="${MEMBER_BASE}/logout"><input type="hidden" name="csrf" value="${session.csrf}"><button class="button button-quiet" type="submit">${t('portal.record.logOut')}</button></form></div></div>
 <ul class="record-summary">
 <li class="feature"><h2>${t('portal.record.warnings')}</h2><p class="record-big">${t('portal.record.warningsCount', { count: warn.count, threshold: warn.threshold })}</p><p>${t('portal.record.warningsNote')}</p></li>
 <li class="feature"><h2>${t('portal.record.ladder')}</h2><p class="record-big">${t('portal.record.ladderLevel', { level: view.ladder.level, max: 3 })}</p><p>${view.ladder.next}</p></li>
@@ -356,7 +370,7 @@ export function recordPage(ctx, { session, view }) {
 </ul>
 <h2 id="cases-title">${t('portal.record.cases')}</h2>
 ${view.cases.length ? html`<div class="table-wrap" role="region" aria-labelledby="cases-title" tabindex="0"><table class="record-table"><thead><tr>${col('case')}${col('type')}${col('reason')}${col('by')}${col('date')}${col('ends')}${col('status')}${col('appeal')}</tr></thead>
-<tbody>${view.cases.map((c) => html`<tr><td><code>${c.code}</code></td><td>${c.type}</td><td>${c.reason}</td><td>${c.by}</td><td>${when(c.createdAt)}</td><td>${c.permanent ? t('portal.record.permanent') : when(c.endsAt)}</td><td>${c.status}</td><td>${appealCell(text, c.appeal)}</td></tr>`)}</tbody></table></div>
+<tbody>${view.cases.map((c) => html`<tr><td><code>${c.code}</code></td><td>${c.type}</td><td>${c.reason}</td><td>${c.by}</td><td>${when(c.createdAt)}</td><td>${c.permanent ? t('portal.record.permanent') : when(c.endsAt)}</td><td>${c.status}</td><td>${appealCell(text, c.appeal, ctx.webAppeals ? c.code : null)}</td></tr>`)}</tbody></table></div>
 ${view.truncated ? html`<p class="note">${text.tp('portal.record.truncated', view.cases.length)}</p>` : ''}`
         : html`<p>${t('portal.record.noCases', { server: enforcementConfig.serverName })}</p>`}
 <h2 id="appeals-title">${t('portal.record.appeals')}</h2>
@@ -405,7 +419,7 @@ const clientIp = (req) => String(req.ip || req.socket?.remoteAddress || 'unknown
  */
 export function createMemberPortal({
     settings, sessions, data = defaultData, fetchImpl = globalThis.fetch, states = createStateStore(),
-    limits = MEMBER_LIMITS, context = () => ({}), premium = null, accounts = null,
+    limits = MEMBER_LIMITS, context = () => ({}), premium = null, accounts = null, appeals = null,
 }) {
     const key = settings.signingKey;
     // Its own key for the return-path cookie, so it can never stand in for a session cookie.
@@ -416,6 +430,7 @@ export function createMemberPortal({
     const pageLimiter = createRateLimiter(limits.page);
     const redeemLimiter = createRateLimiter(limits.redeem || MEMBER_LIMITS.redeem);
     const exportLimiter = createRateLimiter(limits.dataExport || MEMBER_LIMITS.dataExport);
+    const appealLimiter = createRateLimiter(limits.appealSubmit || MEMBER_LIMITS.appealSubmit);
     const linkKey = hmac('mewvo member link v1', key);
     const forgotKey = hmac('mewvo member forgot v1', key);
     // Who is logged in, for the top bar of every /me page (set per request by `viewer` below).
@@ -426,7 +441,7 @@ export function createMemberPortal({
     const ctx = () => {
         const here = requests.getStore() || { lang: DEFAULT_LANG, path: MEMBER_BASE };
         return {
-            ...context(), ...translator(here.lang), memberPortal: true, billing: Boolean(premium), accounts: Boolean(accounts), viewer: viewers.getStore() || null,
+            ...context(), ...translator(here.lang), memberPortal: true, billing: Boolean(premium), accounts: Boolean(accounts), webAppeals: Boolean(appeals), viewer: viewers.getStore() || null,
             // The picker on /me pages reloads the same /me page with ?setlang=<code> (handled in `language` below).
             languageLink: (code) => `${here.path}?setlang=${encodeURIComponent(code)}`,
         };
@@ -634,6 +649,11 @@ export function createMemberPortal({
         ...(accounts.after ? { after: accounts.after } : {}),
     }) : null;
 
+    // Web appeals (portalAppeals.js): only with the appeal data (the bot client) passed in.
+    const appealHandlers = appeals ? createAppealHandlers({
+        readSession, ctx, send, fail, data: appeals, settings, limiter: appealLimiter, appealInfo, loginPage,
+    }) : null;
+
     /** Linking Discord is required: an account session without a Discord id only reaches the link step. */
     async function forceLink(req, res, next) {
         if (LINK_STEP_OPEN.has(`${req.method} ${req.path}`)) return next();
@@ -701,6 +721,12 @@ export function createMemberPortal({
         r.get('/callback', limitBy(loginLimiter), safe(callback));
         r.get('/data', limitBy(exportLimiter), safe(dataExport));
         r.post('/logout', limitBy(pageLimiter), express.urlencoded({ extended: false, limit: '2kb' }), safe(logout));
+        if (appealHandlers) {
+            r.get('/appeals', limitBy(pageLimiter), safe(appealHandlers.list));
+            r.get('/appeal/:code', limitBy(pageLimiter), safe(appealHandlers.form));
+            // Two answers of up to 1000 characters each, percent-encoded (non-Latin text is up to 9 bytes a character).
+            r.post('/appeal/:code', limitBy(pageLimiter), express.urlencoded({ extended: false, limit: '24kb' }), safe(appealHandlers.submit));
+        }
         if (accountHandlers) {
             const a = accountHandlers;
             const form = express.urlencoded({ extended: false, limit: '4kb' });
@@ -739,7 +765,21 @@ export function createMemberPortal({
         return r;
     }
 
-    return { headers, login, callback, index, dataExport, logout, notFound, router, sessions, states, billing, accounts: accountHandlers };
+    return { headers, login, callback, index, dataExport, logout, notFound, router, sessions, states, billing, accounts: accountHandlers, appeals: appealHandlers };
+}
+
+/**
+ * The web appeals' data (portalAppeals.js) on top of the bot client: the member's cases in every
+ * server, the case by code, the server name from the client's cache, and the normal appeal flow.
+ */
+export function portalAppealData(client) {
+    return {
+        listCases: (userId, options) => listCasesForUserAllServers(userId, options),
+        listUserAppeals: (userId, limit) => listUserAppeals(userId, limit),
+        getCase: (code) => getCaseByCodeAnyServer(code),
+        guildName: (guildId) => client.guilds?.cache?.get(guildId)?.name || null,
+        submitAppeal: ({ user, caseCode, answers }) => submitAppealService({ client, user, caseCode, answers }),
+    };
 }
 
 /**
@@ -748,7 +788,7 @@ export function createMemberPortal({
  */
 export function registerMemberPortal(app, {
     env = process.env, dashboardEnabled = false, supportInvite = () => null, sessions = null, data, fetchImpl, limits, premium,
-    accountStore = null, accountLimits = null, hashParams = null, accountAfter = null,
+    accountStore = null, accountLimits = null, hashParams = null, accountAfter = null, client = null, appeals = null,
 } = {}) {
     const settings = memberPortalSettings(env);
     if (!settings.requested) return false;
@@ -783,6 +823,8 @@ export function registerMemberPortal(app, {
     const portal = createMemberPortal({
         settings,
         accounts,
+        // Web appeals need the bot (submitAppeal opens the staff channel, server names): on with a client.
+        appeals: appeals || (client ? portalAppealData(client) : null),
         sessions: sessions || createPgSessionStore({ query, table: pgConfig.tables.member_sessions, ttlMs: MEMBER_SESSION_TTL_MS, accounts: true }),
         context,
         ...(data ? { data } : {}),
@@ -792,6 +834,6 @@ export function registerMemberPortal(app, {
         premium: premiumSettings(env).testCheckout ? (premium || premiumStore) : null,
     });
     app.use(MEMBER_BASE, portal.router());
-    logger.info(`Member portal enabled at ${MEMBER_BASE} (OAuth redirect ${settings.redirectUri})${portal.billing ? '; subscriptions in TEST CHECKOUT mode (no payments)' : ''}${portal.accounts ? '; Mewvo accounts on' : ''}`);
+    logger.info(`Member portal enabled at ${MEMBER_BASE} (OAuth redirect ${settings.redirectUri})${portal.billing ? '; subscriptions in TEST CHECKOUT mode (no payments)' : ''}${portal.accounts ? '; Mewvo accounts on' : ''}${portal.appeals ? '; web appeals on' : ''}`);
     return true;
 }

@@ -49,7 +49,8 @@
     "withDiscord": "Accedi con Discord",
     "withAccount": "Accedi con un account Mewvo",
     "note": "Mewvo chiede a Discord solo chi sei (il permesso identify): niente email, niente server, nient'altro. Vedi sempre e solo il tuo storico. L'accesso dura un'ora.",
-    "signup": "Non hai ancora un account Mewvo? [Creane uno]({href}) per accedere con nome utente e password."
+    "signup": "Non hai ancora un account Mewvo? [Creane uno]({href}) per accedere con nome utente e password.",
+    "appealLead": "Accedi con Discord per fare ricorso contro una sanzione di qualsiasi server che usa Mewvo. Vedi sempre e solo i tuoi casi."
   },
   "record": {
     "title": "Il mio storico",
@@ -91,7 +92,9 @@
     "noCases": "Non hai casi in {server}.",
     "noAppeals": "Non hai presentato nessun ricorso.",
     "appealHintInvite": "Fai ricorso dal pannello dei ricorsi su Discord: [entra nel server di supporto]({invite}) e premi **Appeal** con il codice caso. Da questa pagina non puoi fare ricorso.",
-    "appealHint": "Fai ricorso dal pannello dei ricorsi su Discord con il codice caso. Da questa pagina non puoi fare ricorso."
+    "appealHint": "Fai ricorso dal pannello dei ricorsi su Discord con il codice caso. Da questa pagina non puoi fare ricorso.",
+    "myAppeals": "I miei ricorsi",
+    "appealHintWeb": "Fai ricorso contro un caso di qualsiasi server su [I miei ricorsi]({href}). Puoi anche fare ricorso dal pannello ricorsi in Discord con il codice del caso."
   },
   "message": {
     "logInAgain": "Accedi di nuovo",
@@ -153,6 +156,18 @@
     "tryLater": {
       "title": "Riprova più tardi",
       "message": "Non è stato possibile caricare questa pagina perché il database non risponde. Non è stato modificato nulla."
+    },
+    "caseNotFound": {
+      "title": "Caso non trovato",
+      "message": "Questo codice non è stato trovato per il tuo account. Controlla il codice nel tuo DM."
+    },
+    "appealNotAllowed": {
+      "title": "Non consentito",
+      "message": "Il ricorso non proviene da questa pagina. Riapri la pagina del ricorso e invialo da lì."
+    },
+    "appealsUnavailable": {
+      "title": "Ricorsi non disponibili",
+      "message": "Non è stato possibile caricare i tuoi ricorsi perché il database non risponde. Non è stato modificato nulla: riprova tra qualche minuto."
     }
   },
   "viewer": {
@@ -191,5 +206,65 @@
       "other": "{count} minuti"
     },
     "lessThanMinute": "meno di un minuto"
+  },
+  "appeals": {
+    "title": "I miei ricorsi",
+    "lead": "I tuoi casi in tutti i server che usano Mewvo, con l'accesso di **{username}**. Solo tu puoi vedere questa pagina.",
+    "backToRecord": "Il mio registro",
+    "whoDecides": "Solo lo staff del server che ti ha dato un caso decide sul ricorso. Mewvo non decide sui ricorsi degli altri server.",
+    "appealable": "Casi contro cui puoi fare ricorso",
+    "noneAppealable": "Al momento non hai casi contro cui fare ricorso.",
+    "history": "I tuoi ricorsi",
+    "noAppeals": "Non hai presentato nessun ricorso.",
+    "appealButton": "Fai ricorso",
+    "claimed": "In attesa: un membro dello staff lo sta esaminando",
+    "unknownServer": "Server sconosciuto",
+    "sent": "Il tuo ricorso per {code} è stato inviato allo staff di {server}. La decisione comparirà qui.",
+    "dmNote": "Quando lo staff decide, Mewvo te lo comunica anche in DM se Discord lo consente. La decisione è sempre visibile in questa pagina.",
+    "column": {
+      "server": "Server",
+      "case": "Caso",
+      "reason": "Motivo",
+      "type": "Tipo",
+      "date": "Data",
+      "until": "Ricorso fino al",
+      "action": "Ricorso",
+      "status": "Stato",
+      "filed": "Presentato",
+      "decided": "Deciso"
+    }
+  },
+  "appealForm": {
+    "title": "Ricorso {code}",
+    "lead": "Il tuo ricorso va allo staff di **{server}**. Decide lo staff, non Mewvo.",
+    "facts": {
+      "server": "Server",
+      "case": "Codice del caso",
+      "type": "Tipo",
+      "reason": "Motivo",
+      "date": "Data",
+      "ends": "Termina"
+    },
+    "punished": "Perché sei stato sanzionato?",
+    "punishedHint": "Con parole tue, fino a {max} caratteri.",
+    "reason": "Perché la sanzione dovrebbe essere revocata?",
+    "reasonHint": "Almeno {min} e al massimo {max} caratteri.",
+    "didItLabel": "L'hai fatto?",
+    "didIt": {
+      "yes": "Sì, l'ho fatto",
+      "partly": "In parte",
+      "no": "No, non l'ho fatto"
+    },
+    "note": "Lo staff vede le tue risposte, il tuo nome Discord e questo caso. Un solo ricorso per caso alla volta; dopo un ricorso respinto devi aspettare prima di poterne fare un altro.",
+    "submit": "Invia ricorso",
+    "back": "Torna ai miei ricorsi",
+    "notAppealable": "Al momento non è possibile fare ricorso contro questo caso:",
+    "errors": {
+      "punished": "Spiega allo staff perché sei stato sanzionato.",
+      "reason": "Spiega in almeno {min} caratteri perché la sanzione dovrebbe essere revocata.",
+      "didIt": "Scegli se l'hai fatto.",
+      "refused": "Il tuo ricorso non è stato inviato: al momento non è possibile fare ricorso contro questo caso. Forse c'è già un ricorso in attesa, è in corso l'attesa dopo un rifiuto, oppure la sanzione è terminata.",
+      "tooMany": "Hai inviato troppi ricorsi. Riprova tra un'ora."
+    }
   }
 }
