@@ -21,7 +21,7 @@ import { guildPlan } from '../../services/billing/premiumEffects.js';
 import { planName } from '../../services/billing/premiumService.js';
 import { updateSettings } from '../../services/settings/guildSettings.js';
 import { hasRuleOverride, isRelaxableRule, ruleMode } from '../../services/automod/policy.js';
-import { snapshotIfStale } from '../../services/structureBackupService.js';
+import { snapshotOnGuardEnabled } from '../../services/structureBackupService.js';
 
 const RULE_CHOICES = Object.entries(AUTOMOD_RULES)
     .sort(([, a], [, b]) => b.severity - a.severity)
@@ -456,10 +456,11 @@ export default {
             if (isLegacyAutomodGuild(guildId)) throw userError('The staff guard is always on in this server.');
             // A rogue admin must not be able to switch off the guard that limits them (anti-nuke).
             if (!enabled && interaction.user.id !== interaction.guild.ownerId) throw userError(STAFF_GUARD_OWNER_ONLY);
+            const before = await getAutomodSettings(guildId);
             const saved = await setStaffGuard(guildId, enabled);
-            // A first structure snapshot right away (when none is under an hour old), so "Show what
-            // changed" / "Revert…" on a nuke alert work before the daily job reaches this server.
-            if (enabled && saved.enabled) snapshotIfStale(interaction.guild).catch(() => {});
+            // A first structure snapshot when the guard goes from off to on and none is from the
+            // last 24 h, so "Show what changed" / "Revert…" work before the daily job reaches it.
+            snapshotOnGuardEnabled(interaction.guild, before, saved)?.catch(() => {});
             const me = interaction.guild.members.me;
             const canAct = me?.permissions.has([PermissionFlagsBits.ManageRoles, PermissionFlagsBits.ViewAuditLog]);
             note = enabled

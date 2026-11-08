@@ -166,7 +166,10 @@ test('snapshot at a nuke alert: only when the newest is over an hour old; captur
         const insert = queries.find((q) => /INSERT/.test(q.sql));
         assert.equal(insert.params[0], OTHER);
         assert.equal(insert.params[2].channels.length, 2, 'captured when called');
-        assert.ok(queries.some((q) => /DELETE FROM server_snapshots/.test(q.sql) && q.params[1] === 7), 'pruned to KEEP_SNAPSHOTS');
+        assert.equal(insert.params[2].kind, 'nuke', 'tagged as on-demand');
+        assert.match(insert.params[1], /at a nuke alert/);
+        const prune = queries.find((q) => /DELETE FROM server_snapshots/.test(q.sql));
+        assert.deepEqual(prune.params, [OTHER, 3, true], 'only the on-demand pool is pruned, to 3');
     });
     await withPool(() => { throw new Error('db down'); }, async () => {
         assert.equal(await backup.snapshotIfStale(guild), null);
@@ -262,8 +265,8 @@ test('access: owner and non-offender admins allowed; the offender (customId or r
     const client = clientWith(nukedGuild(OTHER), nukedGuild(OTHER_2), nukedGuild(SUPPORT), nukedGuild(MAIN));
     const access = (guildId, userId, target, offender, admin = false) => handlers.nukeAccess(click(guildId, userId, { admin }).interaction, client, target, offender);
 
-    assert.deepEqual(access(OTHER, SERVER_OWNER, OTHER, OFFENDER), { ok: true, canRevert: true, owner: true });
-    assert.deepEqual(access(OTHER, ADMIN, OTHER, OFFENDER, true), { ok: true, canRevert: true, owner: false });
+    assert.deepEqual(access(OTHER, SERVER_OWNER, OTHER, OFFENDER), { ok: true, canRevert: true, owner: true, scope: 'owner' });
+    assert.deepEqual(access(OTHER, ADMIN, OTHER, OFFENDER, true), { ok: true, canRevert: true, owner: false, scope: 'admin' });
     assert.match(access(OTHER, OFFENDER, OTHER, OFFENDER, true).message, /acted on you/);
     assert.match(access(OTHER, MEMBER, OTHER, OFFENDER).message, /Only administrators/);
 
@@ -290,18 +293,18 @@ test('"Revert…" and "Show what changed" only show the plan with Confirm / Canc
     const row = snapshotRow(OTHER);
     await withPool(snapshotAnswer(row), async () => {
         const ask = click(OTHER, ADMIN, { admin: true });
-        await handlers.handleNukeRevert(ask.interaction, client, ['ask', '1800000000', OTHER, OFFENDER]);
+        await handlers.handleNukeRevert(ask.interaction, client, ['ask', '1793520000', OTHER, OFFENDER]);
         assert.equal(ask.interaction.deferred, true);
         assert.match(ids(ask.replies), new RegExp(`nukerevert:confirm:${OTHER}:11:${OFFENDER}`));
         assert.match(ids(ask.replies), /nukerevert:cancel/);
         assert.match(JSON.stringify(ask.replies), /Recreate/);
 
         const diff = click(OTHER, ADMIN, { admin: true });
-        await handlers.handleNukeDiff(diff.interaction, client, ['1800000000', OTHER, OFFENDER]);
+        await handlers.handleNukeDiff(diff.interaction, client, ['1793520000', OTHER, OFFENDER]);
         assert.match(ids(diff.replies), /nukerevert:confirm/);
 
         const member = click(OTHER, MEMBER);
-        await handlers.handleNukeRevert(member.interaction, client, ['ask', '1800000000', OTHER, OFFENDER]);
+        await handlers.handleNukeRevert(member.interaction, client, ['ask', '1793520000', OTHER, OFFENDER]);
         assert.equal(member.interaction.deferred, false);
         assert.match(JSON.stringify(member.replies), /Only administrators/);
 
@@ -352,4 +355,192 @@ test('Lock down (panic): refused for the offender and members, before anything r
     const { interaction, replies } = click(OTHER_2, SERVER_OWNER);
     await handlers.handleNukePanic(interaction, client, [OTHER, OFFENDER]);
     assert.match(JSON.stringify(replies), /another server/);
+});
+
+// ── 6. Owner-only permission restores (security review) ───────────────────
+
+const ADMIN_BIT = String(PermissionFlagsBits.Administrator);
+const MANAGE_CHANNELS = PermissionFlagsBits.ManageChannels;
+const VIEW = PermissionFlagsBits.ViewChannel;
+
+const dangerousChannels = (guildId) => [
+    channel('700000000000000003', 'general', ChannelType.GuildText, { overwrites: [{ roleId: '600000000000000001', allow: '0', deny: '2048' }] }),
+    channel('700000000000000005', 'staff', ChannelType.GuildText, {
+        overwrites: [
+            { roleId: guildId, allow: '0', deny: String(VIEW) },
+            { roleId: '600000000000000004', allow: String(VIEW | MANAGE_CHANNELS), deny: '0' },
+        ],
+    }),
+];
+const dangerousRoles = (memberPerms) => [
+    role('600000000000000001', 'Member', 1, memberPerms), role('600000000000000003', 'Admins', 3, ADMIN_BIT), role('600000000000000004', 'Helpers', 2, '2048'),
+];
+
+/** A snapshot where the nuke also deleted an Administrator role, changed @everyone and Member, and an overwrite. */
+function dangerousSnapshot(guildId) {
+    const before = liveGuild(guildId, { everyone: '1024', roles: dangerousRoles('1024'), channels: dangerousChannels(guildId) });
+    return { id: 21, guild_id: guildId, created_at: new Date('2026-11-01T04:00:00Z'), summary: 's', data: backup.captureStructure(before) };
+}
+
+function dangerousNuked(guildId) {
+    return liveGuild(guildId, {
+        everyone: '8', // @everyone was given Administrator
+        roles: [role('600000000000000001', 'Member', 1, '0')], // Member's permissions changed; Admins + Helpers deleted
+        channels: [channel('700000000000000003', 'general', ChannelType.GuildText)], // its overwrite removed; staff deleted
+    });
+}
+
+test('revert plan for an admin: permission restores and dangerous roles need the server owner; the owner gets everything', () => {
+    const diff = backup.diffAgainstLive(dangerousNuked(OTHER), dangerousSnapshot(OTHER));
+    const admin = backup.revertPlan(diff, { scope: 'admin' });
+    assert.deepEqual(admin.recreateRoles, ['Helpers'], 'Admins (Administrator) is left to the owner');
+    assert.deepEqual(admin.recreateChannels, ['staff']);
+    assert.deepEqual(admin.fixRolePermissions, []);
+    assert.equal(admin.fixOverwrites, 0);
+    assert.equal(admin.strippedChannelPermissions, true);
+    assert.equal(admin.needsOwner.length, 4);
+    const text = backup.formatRevertPlan(admin);
+    assert.match(text, /Needs the server owner/);
+    assert.match(text, /@everyone/);
+    assert.match(text, /`Admins`/);
+    assert.match(text, /permissions of `Member`/);
+
+    const owner = backup.revertPlan(diff, { scope: 'owner' });
+    assert.deepEqual(owner.recreateRoles.sort(), ['Admins', 'Helpers']);
+    assert.deepEqual(owner.fixRolePermissions, ['@everyone', 'Member']);
+    assert.ok(owner.fixOverwrites > 0);
+    assert.deepEqual(owner.needsOwner, []);
+    assert.equal(backup.hasDangerousBits('8'), true);
+    assert.equal(backup.hasDangerousBits(String(VIEW)), false);
+});
+
+test('admin revert: no @everyone or role permission restore, no dangerous role, no overwrite fix; channel denies kept, dangerous allows dropped', async () => {
+    const guild = dangerousNuked(OTHER);
+    const counts = await backup.revertToSnapshot(guild, dangerousSnapshot(OTHER), async () => {}, { pauseMs: 0, scope: 'admin' });
+    assert.deepEqual(guild.calls.rolesCreated.map((r) => r.name), ['Helpers']);
+    assert.ok(guild.calls.rolesCreated.every((r) => !backup.hasDangerousBits(r.permissions)));
+    assert.deepEqual(guild.calls.rest, [], 'no permission set, no overwrite put');
+    const [staff] = guild.calls.channelsCreated;
+    const everyone = staff.permissionOverwrites.find((o) => o.id === OTHER);
+    assert.equal(everyone.deny, VIEW, 'the private channel stays private');
+    const helpers = staff.permissionOverwrites.find((o) => o.id === guild.calls.rolesCreated[0].id);
+    assert.equal(helpers.allow, VIEW, 'Manage Channels dropped, View kept');
+    assert.match(backup.formatRevertSummary(counts), /need the server owner/);
+    assert.deepEqual(guild.calls.deleted, []);
+
+    const ownerGuild = dangerousNuked(OTHER);
+    await backup.revertToSnapshot(ownerGuild, dangerousSnapshot(OTHER), async () => {}, { pauseMs: 0 });
+    assert.equal(ownerGuild.calls.rolesCreated.length, 2, 'the owner recreates Admins too');
+    assert.ok(ownerGuild.calls.rest.some(([kind]) => kind === 'everyone'));
+    assert.ok(ownerGuild.calls.rest.some(([kind]) => kind === 'rolePerms'));
+    await assert.rejects(backup.revertToSnapshot(dangerousNuked(OTHER), dangerousSnapshot(OTHER), async () => {}, { pauseMs: 0, scope: 'root' }), /Unknown revert scope/);
+});
+
+const ALERT_SOON = String(1793505600 + 4 * 3600); // 4 h after the snapshot
+const ALERT_LATE = String(1793505600 + 30 * 3600); // 30 h after
+
+test('admin confirm: runs only the admin steps; only owner-only steps left means no Confirm and nothing runs', async () => {
+    const guild = dangerousNuked(OTHER);
+    const client = clientWith(guild);
+    const row = dangerousSnapshot(OTHER);
+    await withPool(snapshotAnswer(row), async () => {
+        const ask = click(OTHER, ADMIN, { admin: true });
+        await handlers.handleNukeRevert(ask.interaction, client, ['ask', ALERT_SOON, OTHER, OFFENDER]);
+        assert.match(JSON.stringify(ask.replies), /Needs the server owner/);
+        const confirmId = `nukerevert:confirm:${OTHER}:21:${OFFENDER}:${ALERT_SOON}`;
+        assert.match(ids(ask.replies), new RegExp(confirmId));
+        assert.ok(confirmId.length <= 100);
+
+        const { interaction, replies } = click(OTHER, ADMIN, { admin: true });
+        await handlers.handleNukeRevert(interaction, client, ['confirm', OTHER, '21', OFFENDER, ALERT_SOON]);
+        for (let i = 0; i < 100 && !JSON.stringify(replies).includes('Revert finished'); i += 1) await new Promise((r) => setTimeout(r, 20));
+        assert.match(JSON.stringify(replies), /Revert finished/);
+    });
+    assert.deepEqual(guild.calls.rolesCreated.map((r) => r.name), ['Helpers']);
+    assert.deepEqual(guild.calls.rest, []);
+
+    // Only owner-only steps left: @everyone and Member changed, nothing deleted.
+    const onlyPerms = liveGuild(OTHER, { everyone: '8', roles: dangerousRoles('0'), channels: dangerousChannels(OTHER) });
+    await withPool(snapshotAnswer(row), async () => {
+        const ask = click(OTHER, ADMIN, { admin: true });
+        await handlers.handleNukeRevert(ask.interaction, clientWith(onlyPerms), ['ask', ALERT_SOON, OTHER, OFFENDER]);
+        assert.doesNotMatch(ids(ask.replies), /nukerevert:confirm/, 'nothing an admin may run');
+        assert.match(JSON.stringify(ask.replies), /Needs the server owner/);
+        const { interaction, replies } = click(OTHER, ADMIN, { admin: true });
+        await handlers.handleNukeRevert(interaction, clientWith(onlyPerms), ['confirm', OTHER, '21', OFFENDER, ALERT_SOON]);
+        assert.match(JSON.stringify(replies), /needs the server owner/);
+    });
+    assert.deepEqual(onlyPerms.calls.rest, []);
+});
+
+test('24 h limit: an admin cannot revert from a snapshot over a day older than the alert (or of unknown time); the owner can', async () => {
+    const row = snapshotRow(OTHER);
+    assert.equal(handlers.snapshotTooOldForAdmin(row, ALERT_SOON), false);
+    assert.equal(handlers.snapshotTooOldForAdmin(row, ALERT_LATE), true);
+    assert.equal(handlers.snapshotTooOldForAdmin(row, undefined), true, 'old confirm buttons without a time');
+    const guild = nukedGuild(OTHER);
+    const client = clientWith(guild);
+    await withPool(snapshotAnswer(row), async () => {
+        const ask = click(OTHER, ADMIN, { admin: true });
+        await handlers.handleNukeRevert(ask.interaction, client, ['ask', ALERT_LATE, OTHER, OFFENDER]);
+        assert.match(JSON.stringify(ask.replies), /more than 24 hours older/);
+        assert.doesNotMatch(ids(ask.replies), /nukerevert:confirm/);
+
+        const diff = click(OTHER, ADMIN, { admin: true });
+        await handlers.handleNukeDiff(diff.interaction, client, [ALERT_LATE, OTHER, OFFENDER]);
+        assert.doesNotMatch(ids(diff.replies), /revert/i, 'the diff only, no revert buttons');
+        assert.match(JSON.stringify(diff.replies), /more than 24 hours older/);
+
+        for (const sec of [ALERT_LATE, undefined]) {
+            const { interaction, replies } = click(OTHER, ADMIN, { admin: true });
+            await handlers.handleNukeRevert(interaction, client, ['confirm', OTHER, '11', OFFENDER, sec]);
+            assert.match(JSON.stringify(replies), /Revert not started.*more than 24 hours older/);
+        }
+        assert.deepEqual(guild.calls.rolesCreated, []);
+
+        const owner = click(OTHER, SERVER_OWNER);
+        await handlers.handleNukeRevert(owner.interaction, client, ['ask', ALERT_LATE, OTHER, OFFENDER]);
+        assert.match(ids(owner.replies), /nukerevert:confirm/, 'the owner may');
+    });
+});
+
+// ── 7. On-demand snapshots never evict daily ones ─────────────────────────
+
+test('snapshot kinds: daily and on-demand pruned separately (7 daily, 3 on-demand); unknown kinds refused', async () => {
+    const guild = { id: OTHER };
+    const data = { guildId: OTHER, roles: [], channels: [], everyonePermissions: '0' };
+    await withPool((sql) => (/INSERT/.test(sql) ? [{ id: 1, created_at: new Date(), summary: 's' }] : []), async (queries) => {
+        await backup.takeSnapshot(guild, data);
+        await backup.takeSnapshot(guild, data, { kind: 'enable' });
+        const prunes = queries.filter((q) => /DELETE/.test(q.sql));
+        assert.deepEqual(prunes.map((q) => q.params), [[OTHER, 7, false], [OTHER, 3, true]]);
+        assert.ok(prunes.every((q) => q.sql.includes("COALESCE(data->>'kind', 'daily') <> 'daily'")), 'old rows without a kind count as daily');
+        assert.deepEqual(queries.filter((q) => /INSERT/.test(q.sql)).map((q) => q.params[2].kind), ['daily', 'enable']);
+        await assert.rejects(backup.takeSnapshot(guild, data, { kind: 'weekly' }), /Unknown snapshot kind/);
+    });
+    assert.ok(backup.KEEP_SNAPSHOTS >= 5);
+    assert.equal(backup.KEEP_ON_DEMAND_SNAPSHOTS, 3);
+});
+
+test('/automod staffguard: a snapshot only when the guard goes from off to on, and only with none from the last 24 h', async () => {
+    const off = { enabled: true, staffGuard: false };
+    const on = { enabled: true, staffGuard: true };
+    assert.equal(backup.guardTurnedOn(off, on), true);
+    assert.equal(backup.guardTurnedOn(on, on), false, 'already on');
+    assert.equal(backup.guardTurnedOn({ enabled: false, staffGuard: false }, { enabled: false, staffGuard: true }), false, 'automod still off');
+    assert.equal(backup.snapshotOnGuardEnabled(nukedGuild(OTHER), on, on), null);
+
+    const guild = nukedGuild(OTHER);
+    await withPool((sql) => (/MAX\(created_at\)/.test(sql) ? [{ newest: new Date(Date.now() - 20 * 3600 * 1000) }] : []), async (queries) => {
+        assert.equal(await backup.snapshotOnGuardEnabled(guild, off, on), null, 'one from 20 h ago is recent enough');
+        assert.equal(queries.filter((q) => /INSERT/.test(q.sql)).length, 0);
+    });
+    await withPool((sql) => {
+        if (/MAX\(created_at\)/.test(sql)) return [{ newest: new Date(Date.now() - 30 * 3600 * 1000) }];
+        if (/INSERT/.test(sql)) return [{ id: 8, created_at: new Date(), summary: 's' }];
+        return [];
+    }, async (queries) => {
+        assert.equal((await backup.snapshotOnGuardEnabled(guild, off, on)).id, 8);
+        assert.equal(queries.find((q) => /INSERT/.test(q.sql)).params[2].kind, 'enable');
+    });
 });

@@ -5,7 +5,10 @@
 // Which servers (anti-nuke "Wick-style extras"): the main and support servers, and every server
 // where the staff guard runs (staffGuardOn: automod on + staff guard on). One SQL query finds
 // them (guildScan.js), the job pauses between servers, and each keeps its newest KEEP_SNAPSHOTS.
-// A nuke alert also takes one at once (snapshotIfStale) when the newest is over an hour old.
+// A nuke alert also takes one at once (snapshotIfStale) when the newest is over an hour old, and
+// turning the staff guard on takes one when there is none from the last 24 h. Kinds (data.kind,
+// no schema change; no kind = daily): on-demand ones ('nuke', 'enable') are pruned on their own
+// (KEEP_ON_DEMAND_SNAPSHOTS) and can never push out a daily one (KEEP_SNAPSHOTS daily kept).
 //
 // Rebuild only adds: it never deletes or edits what the target server already has,
 // and refuses to run on the main server itself. Member-specific overwrites, managed
@@ -19,7 +22,7 @@
 // since the snapshot are listed but never deleted. Members do not get recreated roles
 // back (a snapshot has no member list).
 
-import { ChannelType, Routes } from 'discord.js';
+import { ChannelType, PermissionFlagsBits, Routes } from 'discord.js';
 import { isBotOwner } from '../config/bot.js';
 import { enforcementConfig } from '../config/enforcement.js';
 import { logger } from '../utils/logger.js';
@@ -27,7 +30,12 @@ import { query, T, isEnforcementDbAvailable } from './enforcement/db.js';
 import { GUILD_SQL, guildIdsFromSql } from './scheduling/guildScan.js';
 import { getAutomodSettings } from './automod/automodSettings.js';
 
-export const KEEP_SNAPSHOTS = 7;
+export const KEEP_SNAPSHOTS = 7; // daily ones per server (at least 5 must survive on-demand ones)
+export const KEEP_ON_DEMAND_SNAPSHOTS = 3;
+export const SNAPSHOT_KINDS = ['daily', 'nuke', 'enable'];
+const KIND_LABEL = { nuke: 'at a nuke alert', enable: 'when the staff guard was turned on' };
+// SQL: true for an on-demand snapshot (old rows without a kind are daily).
+const ON_DEMAND_SQL = `COALESCE(data->>'kind', 'daily') <> 'daily'`;
 const PAUSE_MS = 400;
 /** Pause between servers in the daily snapshot job (reading the cache is cheap; the DB write is not). */
 export const SNAPSHOT_PAUSE_MS = 1500;
@@ -105,19 +113,25 @@ export function captureStructure(guild) {
     };
 }
 
-/** Takes and stores a snapshot, keeping the latest KEEP_SNAPSHOTS. Returns the stored row. */
-export async function takeSnapshot(guild, data = captureStructure(guild)) {
+/**
+ * Takes and stores a snapshot of `kind` ('daily' | 'nuke' | 'enable'). Prunes only that kind's
+ * pool: daily ones to KEEP_SNAPSHOTS, on-demand ones to KEEP_ON_DEMAND_SNAPSHOTS, so on-demand
+ * snapshots never evict a daily one. Returns the stored row.
+ */
+export async function takeSnapshot(guild, data = captureStructure(guild), { kind = 'daily' } = {}) {
     if (!isEnforcementDbAvailable()) throw new Error('The database is unavailable');
+    if (!SNAPSHOT_KINDS.includes(kind)) throw new Error(`Unknown snapshot kind ${kind}`);
     const categories = data.channels.filter((c) => c.type === ChannelType.GuildCategory).length;
-    const summary = `${data.roles.length} roles, ${categories} categories, ${data.channels.length - categories} channels`;
+    const summary = `${data.roles.length} roles, ${categories} categories, ${data.channels.length - categories} channels${KIND_LABEL[kind] ? ` (${KIND_LABEL[kind]})` : ''}`;
     const { rows } = await query(
         `INSERT INTO ${T.serverSnapshots} (guild_id, summary, data) VALUES ($1, $2, $3) RETURNING id, created_at, summary`,
-        [guild.id, summary, data]
+        [guild.id, summary, { ...data, kind }]
     );
+    const onDemand = kind !== 'daily';
     await query(
-        `DELETE FROM ${T.serverSnapshots} WHERE guild_id = $1 AND id NOT IN (
-             SELECT id FROM ${T.serverSnapshots} WHERE guild_id = $1 ORDER BY created_at DESC LIMIT $2)`,
-        [guild.id, KEEP_SNAPSHOTS]
+        `DELETE FROM ${T.serverSnapshots} WHERE guild_id = $1 AND (${ON_DEMAND_SQL}) = $3 AND id NOT IN (
+             SELECT id FROM ${T.serverSnapshots} WHERE guild_id = $1 AND (${ON_DEMAND_SQL}) = $3 ORDER BY created_at DESC LIMIT $2)`,
+        [guild.id, onDemand ? KEEP_ON_DEMAND_SNAPSHOTS : KEEP_SNAPSHOTS, onDemand]
     );
     return rows[0];
 }
@@ -182,7 +196,7 @@ const staleChecks = new Map(); // guildId → running snapshotIfStale promise
  * one check. Resolves the new row, or null when a fresh one exists / it failed (logged; never
  * throws, it must not hold up the guard).
  */
-export function snapshotIfStale(guild, { maxAgeMs = STALE_SNAPSHOT_MS, now = Date.now() } = {}) {
+export function snapshotIfStale(guild, { maxAgeMs = STALE_SNAPSHOT_MS, now = Date.now(), kind = 'nuke' } = {}) {
     if (staleChecks.has(guild.id)) return staleChecks.get(guild.id);
     let data;
     try {
@@ -197,8 +211,8 @@ export function snapshotIfStale(guild, { maxAgeMs = STALE_SNAPSHOT_MS, now = Dat
             const { rows } = await query(`SELECT MAX(created_at) AS newest FROM ${T.serverSnapshots} WHERE guild_id = $1`, [guild.id]);
             const newest = rows[0]?.newest ? new Date(rows[0].newest).getTime() : 0;
             if (newest && now - newest < maxAgeMs) return null;
-            const row = await takeSnapshot(guild, data);
-            logger.info(`Server structure snapshot #${row.id} of ${guild.id} at a nuke alert: ${row.summary}`);
+            const row = await takeSnapshot(guild, data, { kind });
+            logger.info(`Server structure snapshot #${row.id} of ${guild.id} (${kind}): ${row.summary}`);
             return row;
         } catch (error) {
             logger.warn(`Snapshot at a nuke alert in ${guild.id} failed: ${error.message}`);
@@ -211,10 +225,28 @@ export function snapshotIfStale(guild, { maxAgeMs = STALE_SNAPSHOT_MS, now = Dat
     return run;
 }
 
+/** No snapshot when the staff guard is turned on if one is newer than this. */
+export const ENABLE_SNAPSHOT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+/** True when the staff guard runs with `after` settings and did not with `before` (automod + guard on). */
+export function guardTurnedOn(before, after) {
+    const on = (settings) => Boolean(settings?.enabled && settings?.staffGuard);
+    return !on(before) && on(after);
+}
+
+/**
+ * /automod staffguard: a snapshot ('enable' kind) only when the guard goes from off to on and
+ * no snapshot exists from the last 24 h. Resolves like snapshotIfStale, or returns null.
+ */
+export function snapshotOnGuardEnabled(guild, before, after) {
+    if (!guild || !guardTurnedOn(before, after)) return null;
+    return snapshotIfStale(guild, { maxAgeMs: ENABLE_SNAPSHOT_MAX_AGE_MS, kind: 'enable' });
+}
+
 export async function listSnapshots(guildId) {
     const { rows } = await query(
         `SELECT id, created_at, summary FROM ${T.serverSnapshots} WHERE guild_id = $1 ORDER BY created_at DESC LIMIT $2`,
-        [guildId, KEEP_SNAPSHOTS]
+        [guildId, KEEP_SNAPSHOTS + KEEP_ON_DEMAND_SNAPSHOTS]
     );
     return rows;
 }
@@ -428,24 +460,80 @@ export function diffAgainstLive(guild, snapshot) {
     return diffStructure(snapshot.data, captureStructure(guild));
 }
 
+// Permission bits a non-owner may never grant or restore through a revert (same list as the
+// staff guard's anti-nuke check, plus nothing else).
+export const DANGEROUS_PERMISSION_BITS = [
+    PermissionFlagsBits.Administrator, PermissionFlagsBits.ManageGuild, PermissionFlagsBits.ManageRoles,
+    PermissionFlagsBits.BanMembers, PermissionFlagsBits.KickMembers, PermissionFlagsBits.ManageChannels,
+    PermissionFlagsBits.ManageWebhooks, PermissionFlagsBits.MentionEveryone,
+].reduce((mask, bit) => mask | bit, 0n);
+
+/** True when the bitfield (string or bigint) has any dangerous permission. */
+export function hasDangerousBits(bits) {
+    return (BigInt(bits || 0) & DANGEROUS_PERMISSION_BITS) !== 0n;
+}
+
 /**
- * What a revert from `diff` would do, for the confirm step (pure). Nothing created since the
- * snapshot is deleted: those roles and channels are only listed (`leftAlone`).
+ * Which revert steps run for `scope` (pure): 'owner' (the server owner, /backup) runs all of
+ * them; 'admin' (an Administrator who is not the owner) only recreates deleted channels and
+ * categories (their overwrites without dangerous allow bits) and deleted roles without
+ * dangerous permissions. Everything that grants or restores permissions (@everyone, role
+ * permission restores, dangerous roles, overwrite fixes on existing channels) is `ownerOnly`.
  */
-export function revertPlan(diff) {
-    const overwrites = diff.overwriteChanges.reduce((n, entry) => n + entry.changes.length, 0);
+export function revertSteps(diff, scope = 'owner') {
+    const owner = scope === 'owner';
+    const overwriteCount = diff.overwriteChanges.reduce((n, entry) => n + entry.changes.length, 0);
     return {
-        recreateRoles: diff.deletedRoles.map((role) => role.name),
-        recreateCategories: diff.deletedChannels.filter((c) => c.type === ChannelType.GuildCategory).map((c) => c.name),
-        recreateChannels: diff.deletedChannels.filter((c) => c.type !== ChannelType.GuildCategory).map((c) => c.name),
-        fixRolePermissions: [...(diff.everyone ? ['@everyone'] : []), ...diff.changedRoles.map((role) => role.name)],
-        fixOverwrites: overwrites,
-        leftAlone: diff.addedRoles.length + diff.addedChannels.length,
-        empty: !diffHasChanges(diff),
+        everyone: owner ? diff.everyone : null,
+        roles: owner ? diff.deletedRoles : diff.deletedRoles.filter((role) => !hasDangerousBits(role.permissions)),
+        changedRoles: owner ? diff.changedRoles : [],
+        channels: diff.deletedChannels,
+        overwriteChanges: owner ? diff.overwriteChanges : [],
+        stripDangerousAllow: !owner,
+        ownerOnly: owner ? null : {
+            everyone: Boolean(diff.everyone),
+            roles: diff.deletedRoles.filter((role) => hasDangerousBits(role.permissions)).map((role) => role.name),
+            rolePermissions: diff.changedRoles.map((role) => role.name),
+            overwrites: overwriteCount,
+        },
     };
 }
 
-/** The confirm text for a revert plan (at most ~1500 characters). */
+/** True when `steps.ownerOnly` holds anything. */
+function anyOwnerOnly(ownerOnly) {
+    return Boolean(ownerOnly && (ownerOnly.everyone || ownerOnly.roles.length || ownerOnly.rolePermissions.length || ownerOnly.overwrites));
+}
+
+/**
+ * What a revert from `diff` would do for `scope` ('owner' | 'admin'), for the confirm step
+ * (pure). Nothing created since the snapshot is deleted: those are only listed (`leftAlone`).
+ * `needsOwner`: steps left out for an admin, shown as "needs the server owner".
+ */
+export function revertPlan(diff, { scope = 'owner' } = {}) {
+    const steps = revertSteps(diff, scope);
+    const ownerOnly = steps.ownerOnly;
+    const needsOwner = !anyOwnerOnly(ownerOnly) ? [] : [
+        ownerOnly.everyone ? 'restore @everyone\'s permissions' : null,
+        ownerOnly.roles.length ? `recreate ${ownerOnly.roles.length} role(s) with dangerous permissions: ${listOf(ownerOnly.roles, (name) => `\`${name}\``, 8)}` : null,
+        ownerOnly.rolePermissions.length ? `restore the permissions of ${listOf(ownerOnly.rolePermissions, (name) => `\`${name}\``, 8)}` : null,
+        ownerOnly.overwrites ? `put back ${ownerOnly.overwrites} channel permission overwrite(s) on existing channels` : null,
+    ].filter(Boolean);
+    const runnable = Boolean(steps.everyone || steps.roles.length || steps.changedRoles.length || steps.channels.length || steps.overwriteChanges.length);
+    return {
+        recreateRoles: steps.roles.map((role) => role.name),
+        recreateCategories: steps.channels.filter((c) => c.type === ChannelType.GuildCategory).map((c) => c.name),
+        recreateChannels: steps.channels.filter((c) => c.type !== ChannelType.GuildCategory).map((c) => c.name),
+        fixRolePermissions: [...(steps.everyone ? ['@everyone'] : []), ...steps.changedRoles.map((role) => role.name)],
+        fixOverwrites: steps.overwriteChanges.reduce((n, entry) => n + entry.changes.length, 0),
+        strippedChannelPermissions: steps.stripDangerousAllow && steps.channels.some((c) => c.overwrites.some((o) => hasDangerousBits(o.allow))),
+        needsOwner,
+        leftAlone: diff.addedRoles.length + diff.addedChannels.length,
+        empty: !diffHasChanges(diff),
+        runnable,
+    };
+}
+
+/** The confirm text for a revert plan (at most ~1800 characters). */
 export function formatRevertPlan(plan) {
     if (plan.empty) return 'Nothing to revert: the server matches the snapshot.';
     const few = (names) => listOf(names, (name) => `\`${name}\``, 10);
@@ -453,21 +541,25 @@ export function formatRevertPlan(plan) {
         plan.recreateRoles.length ? `- Recreate **${plan.recreateRoles.length}** role(s): ${few(plan.recreateRoles)} (members do not get them back)` : null,
         plan.recreateCategories.length ? `- Recreate **${plan.recreateCategories.length}** categor${plan.recreateCategories.length === 1 ? 'y' : 'ies'}: ${few(plan.recreateCategories)}` : null,
         plan.recreateChannels.length ? `- Recreate **${plan.recreateChannels.length}** channel(s) with their category, position and role permissions: ${few(plan.recreateChannels)}` : null,
+        plan.strippedChannelPermissions ? '-# Dangerous channel permissions (Manage Channels, Manage Permissions, Manage Webhooks, Mention Everyone) are left out of the recreated channels: the server owner can add them back.' : null,
         plan.fixRolePermissions.length ? `- Put back the permissions of ${few(plan.fixRolePermissions)}` : null,
         plan.fixOverwrites ? `- Put back **${plan.fixOverwrites}** channel permission overwrite(s)` : null,
+        plan.needsOwner?.length ? `**Needs the server owner** (they can press Revert… themselves):\n${plan.needsOwner.map((line) => `- ${line}`).join('\n')}` : null,
         plan.leftAlone ? `- Leave alone **${plan.leftAlone}** role(s)/channel(s) created since the snapshot (nothing is deleted)` : null,
         '-# Paced to stay inside Discord\'s rate limits: a big server takes a few minutes.',
-    ].filter(Boolean).join('\n').slice(0, 1500);
+    ].filter(Boolean).join('\n').slice(0, 1800);
 }
 
 /**
  * Undo the nuke: puts the snapshot's deleted roles and channels, role permissions and
  * channel overwrites back in the live server (any server, from one of its own snapshots),
  * pausing between calls (discord.js also waits out rate limits). It never deletes a role or a
- * channel. `report(text)` gets progress lines.
+ * channel. `report(text)` gets progress lines. `scope`: 'owner' (everything) or 'admin' (only
+ * what revertSteps allows a non-owner: no permission grant or restore).
  * Returns { rolesCreated, rolesFixed, channelsCreated, overwritesFixed, failed, skipped: string[], failedItems: string[] }.
  */
-export async function revertToSnapshot(guild, snapshot, report = async () => {}, { pauseMs = PAUSE_MS } = {}) {
+export async function revertToSnapshot(guild, snapshot, report = async () => {}, { pauseMs = PAUSE_MS, scope = 'owner' } = {}) {
+    if (scope !== 'owner' && scope !== 'admin') throw new Error(`Unknown revert scope ${scope}`);
     if (!snapshot || String(snapshot.guild_id) !== guild.id || snapshot.data?.guildId !== guild.id) {
         throw new Error('Revert only works from one of this server\'s own snapshots.');
     }
@@ -482,7 +574,8 @@ export async function revertToSnapshot(guild, snapshot, report = async () => {},
     const pause = () => (pauseMs ? sleep(pauseMs) : null);
 
     try {
-        const diff = diffAgainstLive(guild, snapshot);
+        const steps = revertSteps(diffAgainstLive(guild, snapshot), scope);
+        if (anyOwnerOnly(steps.ownerOnly)) counts.skipped.push('permission restores and dangerous roles (they need the server owner)');
         const top = guild.members.me?.roles.highest.position ?? 0;
         const roleMap = new Map(); // snapshot role id → recreated role id
         const liveRoleId = (id) => {
@@ -490,12 +583,12 @@ export async function revertToSnapshot(guild, snapshot, report = async () => {},
             return roleMap.get(id) || (guild.roles.cache.has(id) ? id : null);
         };
 
-        if (diff.everyone) {
-            await guild.roles.everyone.setPermissions(BigInt(diff.everyone.before), 'Revert to snapshot')
+        if (steps.everyone) {
+            await guild.roles.everyone.setPermissions(BigInt(steps.everyone.before), 'Revert to snapshot')
                 .then(() => { counts.rolesFixed += 1; }).catch((error) => fail('@everyone permissions', error));
         }
 
-        for (const role of diff.deletedRoles) {
+        for (const role of steps.roles) {
             try {
                 const created = await guild.roles.create({
                     name: role.name, color: role.color, hoist: role.hoist, mentionable: role.mentionable,
@@ -509,11 +602,11 @@ export async function revertToSnapshot(guild, snapshot, report = async () => {},
             await pause();
         }
         // Recreated roles back at their old height, below my own role.
-        const rolePositions = diff.deletedRoles.filter((role) => roleMap.has(role.id))
+        const rolePositions = steps.roles.filter((role) => roleMap.has(role.id))
             .map((role) => ({ role: roleMap.get(role.id), position: Math.max(1, Math.min(role.position, top - 1)) }));
         if (rolePositions.length) await guild.roles.setPositions(rolePositions).catch((error) => fail('role order', error));
 
-        for (const role of diff.changedRoles) {
+        for (const role of steps.changedRoles) {
             const live = guild.roles.cache.get(role.id);
             if (!live?.editable) {
                 counts.skipped.push(`role ${role.name} (above my role)`);
@@ -525,12 +618,14 @@ export async function revertToSnapshot(guild, snapshot, report = async () => {},
         }
         await report(`Roles: ${counts.rolesCreated} recreated, ${counts.rolesFixed} fixed. Restoring channels…`).catch(() => {});
 
+        // An admin's revert keeps every deny but drops dangerous allow bits.
+        const allowOf = (bits) => (steps.stripDangerousAllow ? BigInt(bits) & ~DANGEROUS_PERMISSION_BITS : BigInt(bits));
         const overwritesFor = (channel) => channel.overwrites
-            .map((o) => ({ id: liveRoleId(o.roleId), allow: BigInt(o.allow), deny: BigInt(o.deny), type: 0 }))
+            .map((o) => ({ id: liveRoleId(o.roleId), allow: allowOf(o.allow), deny: BigInt(o.deny), type: 0 }))
             .filter((o) => o.id);
         const channelMap = new Map();
         const channelPositions = [];
-        for (const channel of diff.deletedChannels) {
+        for (const channel of steps.channels) {
             const parent = channel.parentId
                 ? channelMap.get(channel.parentId) || (guild.channels.cache.has(channel.parentId) ? channel.parentId : undefined)
                 : undefined;
@@ -558,7 +653,7 @@ export async function revertToSnapshot(guild, snapshot, report = async () => {},
         }
         if (channelPositions.length) await guild.channels.setPositions(channelPositions).catch((error) => fail('channel order', error));
 
-        for (const entry of diff.overwriteChanges) {
+        for (const entry of steps.overwriteChanges) {
             for (const change of entry.changes) {
                 const roleId = liveRoleId(change.roleId);
                 if (!roleId) continue; // the role could not be recreated
