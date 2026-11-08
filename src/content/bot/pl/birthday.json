@@ -1,0 +1,111 @@
+{
+    "cmd": {
+        "birthday": "Komendy urodzinowe",
+        "set": "Ustaw swoje urodziny",
+        "month": "Miesiąc urodzenia (1-12)",
+        "day": "Dzień urodzenia (1-31)",
+        "info": "Zobacz urodziny",
+        "infoUser": "Członek, którego urodziny chcesz zobaczyć",
+        "list": "Wszystkie urodziny na serwerze",
+        "remove": "Usuń swoje urodziny",
+        "next": "Pokaż najbliższe urodziny",
+        "setchannel": "Ustaw lub wyłącz kanał życzeń urodzinowych. (Administrator)",
+        "channel": "Kanał tekstowy na życzenia. Zostaw puste, aby wyłączyć.",
+        "timezone": "Strefa czasowa serwera dla urodzin, np. Europe/Warsaw (domyślnie UTC)"
+    },
+    "unknownSubcommand": "Nieznana podkomenda",
+    "month": {
+        "january": "stycznia",
+        "february": "lutego",
+        "march": "marca",
+        "april": "kwietnia",
+        "may": "maja",
+        "june": "czerwca",
+        "july": "lipca",
+        "august": "sierpnia",
+        "september": "września",
+        "october": "października",
+        "november": "listopada",
+        "december": "grudnia",
+        "invalid": "nieprawidłowy miesiąc"
+    },
+    "date": "{day} {month}",
+    "info": {
+        "noneTitle": "Brak urodzin",
+        "noneSelf": "Nie ustawiono jeszcze twoich urodzin. Dodaj je komendą `/birthday set`.",
+        "noneOther": "{name} nie ustawił(a) jeszcze swoich urodzin.",
+        "title": "Urodziny",
+        "text": "**Data:** {date}\n**Członek:** {user}"
+    },
+    "list": {
+        "noneTitle": "Brak urodzin",
+        "none": "Na tym serwerze nikt jeszcze nie ustawił urodzin.",
+        "noneMembers": "Żaden z obecnych członków serwera nie ustawił urodzin.",
+        "header": {
+            "one": "**{count} urodziny na {server}**",
+            "few": "**{count} urodziny na {server}**",
+            "many": "**{count} urodzin na {server}**",
+            "other": "**{count} urodzin na {server}**"
+        },
+        "more": {
+            "one": "…i jeszcze {count}",
+            "few": "…i jeszcze {count}",
+            "many": "…i jeszcze {count}",
+            "other": "…i jeszcze {count}"
+        },
+        "title": "Urodziny"
+    },
+    "remove": {
+        "noneTitle": "Brak urodzin",
+        "none": "Nie masz ustawionych urodzin, więc nie ma czego usuwać.",
+        "title": "Urodziny usunięte",
+        "text": "Twoje urodziny zostały usunięte."
+    },
+    "set": {
+        "title": "Urodziny zapisane",
+        "text": "Twoje urodziny to **{date}**."
+    },
+    "setchannel": {
+        "notAllowedTitle": "Brak dostępu",
+        "notAllowed": "Potrzebujesz uprawnienia **Administrator**, aby ustawić kanał urodzinowy.",
+        "unknownTzTitle": "Nieznana strefa czasowa",
+        "unknownTz": "`{input}` to nie jest znana strefa czasowa. Użyj nazwy IANA, np. `Europe/London`, `America/New_York` lub `UTC` (lista podpowiada nazwy podczas pisania).",
+        "timezoneLine": "Urodziny liczą się według daty w **{timezone}** (jest tam teraz {date}). Życzenia wychodzą raz na lokalny dzień.",
+        "onTitle": "Życzenia urodzinowe włączone",
+        "on": "Życzenia urodzinowe będą teraz publikowane na {channel}.",
+        "tzTitle": "Strefa czasowa zmieniona",
+        "offTitle": "Życzenia urodzinowe wyłączone",
+        "off": "Nie podano kanału, więc życzenia urodzinowe są wyłączone.",
+        "failTitle": "Nie zapisano",
+        "fail": "Kanał urodzinowy nie został zapisany. Spróbuj ponownie za chwilę."
+    },
+    "next": {
+        "noneTitle": "Jeszcze brak urodzin",
+        "none": "Nikt tu jeszcze nie ustawił urodzin. Dodaj swoje komendą `/birthday set`.",
+        "noUpcomingTitle": "Brak nadchodzących urodzin",
+        "noUpcoming": "Żadne z zapisanych urodzin nie należą do kogoś, kto nadal jest na serwerze.",
+        "intro": "Najbliższe urodziny na {server}:",
+        "footer": "Dodaj swoje komendą /birthday set.",
+        "title": "Nadchodzące urodziny",
+        "today": "**Dziś**",
+        "tomorrow": "**Jutro**",
+        "inDays": {
+            "one": "Za {count} dzień",
+            "few": "Za {count} dni",
+            "many": "Za {count} dni",
+            "other": "Za {count} dnia"
+        }
+    },
+    "announce": {
+        "title": "Wszystkiego najlepszego",
+        "text": "Wszystkiego najlepszego z okazji urodzin, {members}! Miłego dnia."
+    },
+    "errors": {
+        "notNumbers": "Miesiąc i dzień muszą być liczbami",
+        "month": "Miesiąc musi być od 1 do 12",
+        "day": "Dzień musi być od 1 do 31",
+        "invalidDate": "Nieprawidłowa data. Sprawdź miesiąc i dzień (np. 29 lutego jest tylko w latach przestępnych)",
+        "saveFailed": "Nie udało się ustawić twoich urodzin. Spróbuj ponownie później.",
+        "removeFailed": "Nie udało się usunąć twoich urodzin. Spróbuj ponownie."
+    }
+}

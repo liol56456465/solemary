@@ -1,0 +1,140 @@
+{
+    "cmd": {
+        "giveaway": "Create and manage giveaways",
+        "create": "Start a new giveaway in a channel",
+        "end": "End a running giveaway now and pick the winners",
+        "reroll": "Pick new winners for an ended giveaway",
+        "delete": "Delete a giveaway and its message",
+        "gcreate": "Start a giveaway",
+        "duration": "How long it runs, like 30m, 1h or 5d",
+        "winners": "How many winners",
+        "prize": "What they win",
+        "channel": "Where to post it (default: this channel)",
+        "gdelete": "Deletes a giveaway message and removes it from the database.",
+        "gend": "End a giveaway now and pick the winners",
+        "greroll": "Pick new winners for an ended giveaway",
+        "messageId": "Message ID of the giveaway"
+    },
+    "unknownSubcommand": "Unknown subcommand.",
+    "guildOnly": "This command can only be used in a server.",
+    "needManageServer": {
+        "create": "You need the 'Manage Server' permission to start a giveaway.",
+        "delete": "You need the 'Manage Server' permission to delete a giveaway.",
+        "end": "You need the 'Manage Server' permission to end a giveaway.",
+        "reroll": "You need the 'Manage Server' permission to reroll a giveaway."
+    },
+    "created": {
+        "title": "Giveaway started",
+        "text": "**{prize}** is up in {channel}. It ends in **{duration}**."
+    },
+    "deleted": {
+        "title": "Giveaway deleted",
+        "withMessage": "Deleted **{prize}** and removed its message from #{channel}.",
+        "withoutMessage": "Deleted **{prize}** but couldn't find its message (already gone, or I can't see the channel).",
+        "hadWinners": {
+            "one": "It already had {count} winner(s).",
+            "other": "It already had {count} winner(s)."
+        },
+        "endedNoWinner": "It had ended with no winner.",
+        "noWinner": "No winner was picked."
+    },
+    "ended": {
+        "title": "Giveaway ended",
+        "text": {
+            "one": "Ended **{prize}** in {channel}. Picked {count} winner(s) from {entries} entries.",
+            "other": "Ended **{prize}** in {channel}. Picked {count} winner(s) from {entries} entries."
+        }
+    },
+    "reroll": {
+        "completeTitle": "Reroll Complete",
+        "noChannel": "The new winners have been selected and saved to the database. Could not find channel to announce.",
+        "noMessage": "The new winners have been announced in {channel}. (Original message not found).",
+        "title": "Rerolled",
+        "text": {
+            "one": "Picked {count} new winner(s) for **{prize}** in {channel}.",
+            "other": "Picked {count} new winner(s) for **{prize}** in {channel}."
+        }
+    },
+    "button": {
+        "slowDown": "Slow down a bit, then try again.",
+        "notActive": "This giveaway is no longer active.",
+        "alreadyEnded": "This giveaway has already ended.",
+        "alreadyIn": "You're already in this giveaway.",
+        "joinedTitle": "You're in",
+        "joined": {
+            "one": "Good luck. 1 person has entered so far.",
+            "other": "Good luck. {count} people have entered so far."
+        },
+        "guildOnly": "This button can only be used in a server.",
+        "needAdminEnd": "You need the Administrator role to end a giveaway.",
+        "needAdminReroll": "You need the Administrator role to reroll a giveaway.",
+        "endedTitle": "Giveaway ended",
+        "picked": {
+            "one": "Picked {count} winner.",
+            "other": "Picked {count} winners."
+        },
+        "nobodyEntered": "Nobody entered, so there is no winner.",
+        "rerolledTitle": "Giveaway rerolled",
+        "rerolledText": "New winners picked.",
+        "notFound": "This giveaway could not be found.",
+        "notEndedYet": "This giveaway has not ended yet, so winners are not available.",
+        "nobodyWon": "Nobody won this one.",
+        "winnersTitle": "Winners: {prize}",
+        "giveawayWord": "giveaway"
+    },
+    "embed": {
+        "ended": "This giveaway has ended.",
+        "clickJoin": "Click Join to enter.",
+        "host": "Host",
+        "winners": "Winners",
+        "entries": "Entries",
+        "wonBy": "Won by",
+        "nobodyEntered": "Nobody entered",
+        "ends": "Ends"
+    },
+    "buttons": {
+        "reroll": "Reroll",
+        "winners": "Winners",
+        "join": "Join",
+        "end": "End"
+    },
+    "post": {
+        "newGiveaway": "**New giveaway**",
+        "ended": "**Giveaway ended**",
+        "rerolled": "**Giveaway rerolled**",
+        "won": "{winners} won **{prize}**. Message <@{hostId}> to get your prize.",
+        "theGiveaway": "the giveaway",
+        "noWinner": "The giveaway for **{prize}** ended. Nobody entered, so there's no winner.",
+        "rerolledWon": "Rerolled: {winners} won **{prize}** instead. Message <@{hostId}> to get your prize.",
+        "rerolledShort": "Rerolled **{prize}**: {winners}"
+    },
+    "errors": {
+        "durationMissing": "Please provide a valid duration (e.g., 1h, 30m, 5d, 10s).",
+        "durationFormat": "Invalid duration format. Use: 1h, 30m, 5d, 10s (min: 10s, max: 30d)",
+        "durationAmount": "Duration amount must be between 1 and 999.",
+        "durationUnit": "Please use s (seconds), m (minutes), h (hours), or d (days).",
+        "durationMax": {
+            "one": "Maximum duration is {count} days.",
+            "other": "Maximum duration is {count} days."
+        },
+        "durationMin": {
+            "one": "Minimum duration is {count} seconds.",
+            "other": "Minimum duration is {count} seconds."
+        },
+        "prizeMissing": "Please provide a valid prize description.",
+        "prizeLength": "Prize must be between 1 and 256 characters.",
+        "winnerCount": "Winner count must be between {min} and {max}.",
+        "endMissing": "Cannot end a non-existent giveaway.",
+        "alreadyEnded": "This giveaway has already ended.",
+        "endFailed": "An error occurred while ending the giveaway.",
+        "badMessageId": "Please provide a valid message ID.",
+        "notFound": "No giveaway was found with that message ID in the database.",
+        "channelGone": "Could not find the channel where the giveaway was hosted. The giveaway state has been updated.",
+        "messageGone": "Could not find the giveaway message. The giveaway state has been updated.",
+        "stillActive": "This giveaway is still active. Please use `/giveaway end` to end it first.",
+        "notEnoughEntries": "Not enough entries to pick the required number of winners.",
+        "notTextChannel": "The channel must be a text channel.",
+        "missingPermissions": "I need View Channel, Send Messages and Embed Links in <#{channelId}> to post the giveaway.",
+        "deleteFailed": "The giveaway could not be removed from the database. Please try again."
+    }
+}

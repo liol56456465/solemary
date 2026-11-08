@@ -13,6 +13,7 @@ import { logger } from '../../utils/logger.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { CT, query, isCommunityDbAvailable, userError } from './db.js';
 import { limitMessage, planLimit } from '../billing/premiumEffects.js';
+import { botText, textForGuild } from '../../utils/botText.js';
 
 export const STICKY_MAX_LENGTH = 1800;
 export const STICKY_MIN_INTERVAL_MS = 15_000;
@@ -31,9 +32,10 @@ export function nextRepostDelay(now, lastPostAt, interval = STICKY_MIN_INTERVAL_
     return Math.max(settle, (lastPostAt || 0) + interval - now);
 }
 
-export function buildStickyPayload(content) {
+/** The sticky post; the footer in `lang` (a public post: the server's). The content is the admin's text, as written. */
+export function buildStickyPayload(content, { lang = 'en' } = {}) {
     return {
-        embeds: [createEmbed({ description: content, color: 'primary', footer: { text: 'Sticky message' } })],
+        embeds: [createEmbed({ description: content, color: 'primary', footer: { text: botText(lang).t('community.sticky.footer') } })],
         allowedMentions: { parse: [] },
     };
 }
@@ -85,7 +87,8 @@ async function repost(channel) {
     entry.timer = null;
     const previous = entry.lastMessageId;
     entry.lastPostAt = Date.now();
-    const sent = await channel.send(buildStickyPayload(entry.content)).catch((error) => {
+    const lang = textForGuild(entry.guildId || channel.guildId, { purpose: 'public' }).lang;
+    const sent = await channel.send(buildStickyPayload(entry.content, { lang })).catch((error) => {
         logger.warn(`Sticky: could not post in ${channel.id}: ${error.message}`);
         return null;
     });
@@ -122,11 +125,12 @@ export function noteStickyActivity(message) {
     }
 }
 
-/** Creates or replaces the sticky of a channel and posts it now. */
-export async function setSticky({ guildId, channel, content, updatedBy }) {
+/** Creates or replaces the sticky of a channel and posts it now. lang: the language of the errors (the admin's). */
+export async function setSticky({ guildId, channel, content, updatedBy, lang = 'en' }) {
+    const tr = botText(lang);
     const text = String(content || '').trim();
-    if (!text) throw userError('The sticky message cannot be empty.');
-    if (text.length > STICKY_MAX_LENGTH) throw userError(`Sticky messages are limited to ${STICKY_MAX_LENGTH} characters.`);
+    if (!text) throw userError(tr.t('community.sticky.empty'));
+    if (text.length > STICKY_MAX_LENGTH) throw userError(tr.t('community.sticky.tooLong', { max: STICKY_MAX_LENGTH }));
     if (!stickies.has(channel.id) && listStickies(guildId).length >= planLimit(guildId, 'stickies')) {
         throw userError(`${limitMessage(guildId, 'stickies', 'sticky messages')} Remove one first.`);
     }

@@ -1,0 +1,120 @@
+{
+    "cmd": {
+        "root": "Manage server statistics that track member counts and channel data",
+        "create": {
+            "desc": "Create a new statistics tracker channel in a category",
+            "type": "The type of statistics to track",
+            "channelType": "The channel type to create for this tracker",
+            "category": "The category where the statistics tracker channel will be created"
+        },
+        "list": {
+            "desc": "List all statistics trackers for this server"
+        },
+        "update": {
+            "desc": "Update an existing statistics tracker",
+            "counterId": "The ID of the tracker to update",
+            "type": "The new tracker type"
+        },
+        "delete": {
+            "desc": "Delete an existing statistics tracker",
+            "counterId": "The ID of the tracker to delete"
+        },
+        "choice": {
+            "members": "members + bots",
+            "membersOnly": "members only",
+            "bots": "bots only",
+            "voice": "voice channel (recommended)",
+            "text": "text channel"
+        }
+    },
+    "type": {
+        "members": {
+            "label": "Members + Bots",
+            "channelName": "Members & Bots"
+        },
+        "membersOnly": {
+            "label": "Members Only",
+            "channelName": "Members"
+        },
+        "bots": {
+            "label": "Bots Only",
+            "channelName": "Bots"
+        },
+        "unknown": {
+            "label": "Unknown",
+            "channelName": "Counter"
+        }
+    },
+    "success": "Success",
+    "unknownSubcommand": "Unknown subcommand.",
+    "noAdmin": {
+        "create": "You need the **Administrator** permission to create counters.",
+        "view": "You need the **Administrator** permission to view counters.",
+        "update": "You need the **Administrator** permission to update counters.",
+        "delete": "You need the **Administrator** permission to delete counters."
+    },
+    "error": {
+        "unknownType": "Unknown counter type.",
+        "notCategory": "Pick a category for the counter channel.",
+        "typeInUse": "A **{type}** counter already exists for this server. Delete it first before creating another.",
+        "typeInUseIn": "A **{type}** counter already exists for this server in {channel}. Delete it first before creating another.",
+        "typeInUseReuse": "A **{type}** counter already exists for this server. Delete it first before reusing that type.",
+        "typeInUseReuseIn": "A **{type}** counter already exists for this server in {channel}. Delete it first before reusing that type.",
+        "saveFailed": "Couldn't save the counter. Try again.",
+        "deleteFailed": "Couldn't delete the counter. Try again.",
+        "notFound": "Counter with ID `{id}` was not found.",
+        "notFoundList": "Counter with ID `{id}` not found. Use `/serverstats list` to see all counters.",
+        "channelMissing": "The channel for this counter no longer exists. You cannot update a counter for a deleted channel.",
+        "createFailed": "Something went wrong while creating the counter. Try again.",
+        "updateFailed": "Something went wrong while updating the counter. Try again.",
+        "loadFailed": "Couldn't load the counters. Try again.",
+        "noType": "You must provide a new counter type to update.",
+        "noneToDelete": "No counters found to delete.",
+        "serverOnly": "This action can only be used in a server.",
+        "actionMissing": "Counter delete action data is missing.",
+        "notYours": "Only the person who started this can use these buttons.",
+        "unknownAction": "Unknown counter delete action."
+    },
+    "create": {
+        "notRenamed": "Counter created, but I couldn't rename the channel yet. It will update on the next run.",
+        "done": "**Counter created**\n\n**Type:** {type}\n**Channel Type:** {channelType}\n**Category:** {category}\n**Channel:** {channel}\n**Channel Name:** {channelName}\n**Counter ID:** `{id}`\n\nIt updates every 15 minutes. `/serverstats list` shows all counters.",
+        "voice": "voice",
+        "text": "text"
+    },
+    "update": {
+        "notRenamed": "Counter updated, but I couldn't rename the channel yet. It will update on the next run.",
+        "done": "**Counter updated**\n\n**Counter ID:** `{id}`\n**Type:** {oldType} → {newType}\n**Channel:** {channel}\n**Channel Name:** {channelName}\n\nIt updates every 15 minutes."
+    },
+    "delete": {
+        "title": "Delete counter and channel",
+        "confirm": "Delete this counter and its channel?\n\n**ID:** `{id}`\n**Type:** {type}\n**Channel:** {channel}\n\n**The channel is deleted for good.**",
+        "alreadyDeleted": "already deleted",
+        "button": "Delete",
+        "cancel": "Cancel",
+        "cancelledTitle": "Cancelled",
+        "cancelledBody": "Nothing was deleted.",
+        "done": "**Counter deleted**\n\n**ID:** `{id}`\n**Type:** {type}",
+        "channelDeleted": "\n**Channel:** {name} (deleted)",
+        "channelFailed": "\n**Channel:** {name} (failed to delete)",
+        "channelGone": "\n**Channel:** Already deleted"
+    },
+    "list": {
+        "title": "Server counters",
+        "empty": "There are no counters yet.\n\nUse `/serverstats create` to add one.",
+        "typesName": "Counter types",
+        "typesValue": "**Members + Bots**: everyone\n**Members Only**: people, no bots\n**Bots Only**: just bots",
+        "examplesName": "Examples",
+        "examplesValue": "`/serverstats create type:members channel_type:voice category:Stats`\n`/serverstats create type:bots channel_type:text category:Server Info`\n`/serverstats list`",
+        "footer": "Counters update every 15 minutes",
+        "titleCount": "Server counters ({count})",
+        "description": "All counters in this server. They update every 15 minutes.",
+        "upToDate": "Up to date",
+        "notUpdated": "Not updated yet",
+        "counterName": "Counter #{number} · {channelName}",
+        "counterValue": "**ID:** `{id}`\n**Type:** {type}\n**Channel:** {channel}\n**Count:** {count}\n**Status:** {status}\n**Created:** {created}",
+        "totalsName": "Totals",
+        "totalsValue": "**Counters:** {counters}\n**Up to date:** {upToDate}\n**Next update:** <t:{next}:R>",
+        "commandsName": "Commands",
+        "commandsValue": "`/serverstats create`: add a counter\n`/serverstats update`: change a counter\n`/serverstats delete`: remove a counter"
+    }
+}

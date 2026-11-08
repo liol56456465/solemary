@@ -1,0 +1,108 @@
+{
+    "cmd": {
+        "birthday": "Comandos de cumpleaños",
+        "set": "Guarda tu cumpleaños",
+        "month": "Mes de nacimiento (1-12)",
+        "day": "Día de nacimiento (1-31)",
+        "info": "Ver un cumpleaños",
+        "infoUser": "El miembro cuyo cumpleaños quieres ver",
+        "list": "Todos los cumpleaños del servidor",
+        "remove": "Quita tu cumpleaños",
+        "next": "Ver los próximos cumpleaños",
+        "setchannel": "Elige o desactiva el canal de anuncios de cumpleaños. (Administrador)",
+        "channel": "El canal de texto para los anuncios. Déjalo vacío para desactivarlos.",
+        "timezone": "Zona horaria del servidor para cumpleaños, p. ej. Europe/Madrid (por defecto UTC)"
+    },
+    "unknownSubcommand": "Subcomando desconocido",
+    "month": {
+        "january": "enero",
+        "february": "febrero",
+        "march": "marzo",
+        "april": "abril",
+        "may": "mayo",
+        "june": "junio",
+        "july": "julio",
+        "august": "agosto",
+        "september": "septiembre",
+        "october": "octubre",
+        "november": "noviembre",
+        "december": "diciembre",
+        "invalid": "mes no válido"
+    },
+    "date": "{day} de {month}",
+    "info": {
+        "noneTitle": "Sin cumpleaños guardado",
+        "noneSelf": "Aún no has guardado tu cumpleaños. Usa `/birthday set` para añadirlo.",
+        "noneOther": "{name} aún no ha guardado su cumpleaños.",
+        "title": "Cumpleaños",
+        "text": "**Fecha:** {date}\n**Miembro:** {user}"
+    },
+    "list": {
+        "noneTitle": "Sin cumpleaños",
+        "none": "Todavía no se ha guardado ningún cumpleaños en este servidor.",
+        "noneMembers": "Ningún miembro actual del servidor ha guardado su cumpleaños.",
+        "header": {
+            "one": "**{count} cumpleaños en {server}**",
+            "many": "**{count} cumpleaños en {server}**",
+            "other": "**{count} cumpleaños en {server}**"
+        },
+        "more": {
+            "one": "…y {count} más",
+            "many": "…y {count} más",
+            "other": "…y {count} más"
+        },
+        "title": "Cumpleaños"
+    },
+    "remove": {
+        "noneTitle": "Sin cumpleaños guardado",
+        "none": "No tienes ningún cumpleaños guardado que quitar.",
+        "title": "Cumpleaños quitado",
+        "text": "Tu cumpleaños se ha quitado."
+    },
+    "set": {
+        "title": "Cumpleaños guardado",
+        "text": "Tu cumpleaños es el **{date}**."
+    },
+    "setchannel": {
+        "notAllowedTitle": "No permitido",
+        "notAllowed": "Necesitas el permiso **Administrador** para configurar el canal de cumpleaños.",
+        "unknownTzTitle": "Zona horaria desconocida",
+        "unknownTz": "`{input}` no es una zona horaria conocida. Usa un nombre IANA como `Europe/London`, `America/New_York` o `UTC` (la lista sugiere nombres mientras escribes).",
+        "timezoneLine": "Los cumpleaños siguen la fecha de **{timezone}** (allí ahora es {date}). Los anuncios salen una vez por día local.",
+        "onTitle": "Anuncios de cumpleaños activados",
+        "on": "Los anuncios de cumpleaños se publicarán ahora en {channel}.",
+        "tzTitle": "Zona horaria actualizada",
+        "offTitle": "Anuncios de cumpleaños desactivados",
+        "off": "No se indicó ningún canal, así que los anuncios de cumpleaños están desactivados.",
+        "failTitle": "No se guardó",
+        "fail": "El canal de cumpleaños no se guardó. Inténtalo de nuevo en un momento."
+    },
+    "next": {
+        "noneTitle": "Aún no hay cumpleaños",
+        "none": "Aquí nadie ha guardado su cumpleaños. Usa `/birthday set` para añadir el tuyo.",
+        "noUpcomingTitle": "No hay cumpleaños próximos",
+        "noUpcoming": "Ninguno de los cumpleaños guardados es de alguien que siga en el servidor.",
+        "intro": "Próximos cumpleaños en {server}:",
+        "footer": "Añade el tuyo con /birthday set.",
+        "title": "Próximos cumpleaños",
+        "today": "**Hoy**",
+        "tomorrow": "**Mañana**",
+        "inDays": {
+            "one": "En {count} día",
+            "many": "En {count} días",
+            "other": "En {count} días"
+        }
+    },
+    "announce": {
+        "title": "Feliz cumpleaños",
+        "text": "¡Feliz cumpleaños, {members}! Que sea un gran día."
+    },
+    "errors": {
+        "notNumbers": "El mes y el día deben ser números",
+        "month": "El mes debe estar entre 1 y 12",
+        "day": "El día debe estar entre 1 y 31",
+        "invalidDate": "Fecha no válida. Revisa el mes y el día (por ejemplo, el 29 de febrero solo existe en años bisiestos)",
+        "saveFailed": "No se pudo guardar tu cumpleaños. Inténtalo más tarde.",
+        "removeFailed": "No se pudo quitar tu cumpleaños. Inténtalo de nuevo."
+    }
+}

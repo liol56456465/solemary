@@ -8,6 +8,7 @@
 // requested and adding a Twitch feed is refused with a plain message.
 
 import { userError } from './db.js';
+import { botText } from '../../utils/botText.js';
 
 export const TWITCH_TOKEN_URL = 'https://id.twitch.tv/oauth2/token';
 export const TWITCH_API_URL = 'https://api.twitch.tv/helix';
@@ -17,14 +18,14 @@ const TOKEN_EARLY_REFRESH_MS = 5 * 60_000; // renew a little before Twitch says 
 const TWITCH_LOGIN = /^[a-z0-9_]{1,25}$/;
 const RESERVED_PATHS = new Set(['directory', 'videos', 'settings', 'search', 'downloads', 'jobs', 'p', 'turbo', 'subscriptions', 'inventory', 'wallet', 'drops']);
 
-/** A Twitch login from a login or a twitch.tv/<login> link (lowercased); throws a user error otherwise; pure. */
-export function parseTwitchLogin(input) {
+/** A Twitch login from a login or a twitch.tv/<login> link (lowercased); throws a user error (in `lang`) otherwise; pure. */
+export function parseTwitchLogin(input, { lang = 'en' } = {}) {
     let text = String(input ?? '').trim();
     const fromUrl = /^(?:https?:\/\/)?(?:www\.|m\.)?twitch\.tv\/([^/?#\s]+)/i.exec(text);
     if (fromUrl) text = fromUrl[1];
     const login = text.replace(/^@/, '').toLowerCase();
     if (TWITCH_LOGIN.test(login) && !RESERVED_PATHS.has(login)) return login;
-    throw userError('Give the Twitch login (the name in twitch.tv/<name>), or a twitch.tv/<name> link.');
+    throw userError(botText(lang).t('community.feed.twitchLoginInvalid'));
 }
 
 /** True when both Twitch app credentials are set; pure apart from reading env. */

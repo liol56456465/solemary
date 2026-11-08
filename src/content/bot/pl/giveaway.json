@@ -1,0 +1,154 @@
+{
+    "cmd": {
+        "giveaway": "Twórz losowania i zarządzaj nimi",
+        "create": "Rozpocznij nowe losowanie na kanale",
+        "end": "Zakończ trwające losowanie teraz i wylosuj zwycięzców",
+        "reroll": "Wylosuj nowych zwycięzców zakończonego losowania",
+        "delete": "Usuń losowanie i jego wiadomość",
+        "gcreate": "Rozpocznij losowanie",
+        "duration": "Jak długo trwa, np. 30m, 1h lub 5d",
+        "winners": "Ilu zwycięzców",
+        "prize": "Co wygrywają",
+        "channel": "Gdzie je opublikować (domyślnie: ten kanał)",
+        "gdelete": "Usuwa wiadomość losowania i usuwa je z bazy danych.",
+        "gend": "Zakończ losowanie teraz i wylosuj zwycięzców",
+        "greroll": "Wylosuj nowych zwycięzców zakończonego losowania",
+        "messageId": "ID wiadomości losowania"
+    },
+    "unknownSubcommand": "Nieznana podkomenda.",
+    "guildOnly": "Tej komendy można użyć tylko na serwerze.",
+    "needManageServer": {
+        "create": "Potrzebujesz uprawnienia Zarządzanie serwerem, aby rozpocząć losowanie.",
+        "delete": "Potrzebujesz uprawnienia Zarządzanie serwerem, aby usunąć losowanie.",
+        "end": "Potrzebujesz uprawnienia Zarządzanie serwerem, aby zakończyć losowanie.",
+        "reroll": "Potrzebujesz uprawnienia Zarządzanie serwerem, aby losować ponownie."
+    },
+    "created": {
+        "title": "Losowanie rozpoczęte",
+        "text": "**{prize}** czeka na {channel}. Losowanie kończy się za **{duration}**."
+    },
+    "deleted": {
+        "title": "Losowanie usunięte",
+        "withMessage": "Usunięto **{prize}** i jego wiadomość z #{channel}.",
+        "withoutMessage": "Usunięto **{prize}**, ale nie znaleziono jego wiadomości (już jej nie ma albo nie widzę kanału).",
+        "hadWinners": {
+            "one": "Miało już {count} zwycięzcę.",
+            "few": "Miało już {count} zwycięzców.",
+            "many": "Miało już {count} zwycięzców.",
+            "other": "Miało już {count} zwycięzcy."
+        },
+        "endedNoWinner": "Zakończyło się bez zwycięzcy.",
+        "noWinner": "Nie wylosowano zwycięzcy."
+    },
+    "ended": {
+        "title": "Losowanie zakończone",
+        "text": {
+            "one": "Zakończono **{prize}** na {channel}. Wylosowano {count} zwycięzcę spośród {entries} zgłoszeń.",
+            "few": "Zakończono **{prize}** na {channel}. Wylosowano {count} zwycięzców spośród {entries} zgłoszeń.",
+            "many": "Zakończono **{prize}** na {channel}. Wylosowano {count} zwycięzców spośród {entries} zgłoszeń.",
+            "other": "Zakończono **{prize}** na {channel}. Wylosowano {count} zwycięzcy spośród {entries} zgłoszeń."
+        }
+    },
+    "reroll": {
+        "completeTitle": "Ponowne losowanie gotowe",
+        "noChannel": "Nowi zwycięzcy są wylosowani i zapisani w bazie danych. Nie znaleziono kanału do ogłoszenia.",
+        "noMessage": "Nowi zwycięzcy zostali ogłoszeni na {channel}. (Nie znaleziono pierwotnej wiadomości.)",
+        "title": "Wylosowano ponownie",
+        "text": {
+            "one": "Wylosowano {count} nowego zwycięzcę **{prize}** na {channel}.",
+            "few": "Wylosowano {count} nowych zwycięzców **{prize}** na {channel}.",
+            "many": "Wylosowano {count} nowych zwycięzców **{prize}** na {channel}.",
+            "other": "Wylosowano {count} nowego zwycięzcy **{prize}** na {channel}."
+        }
+    },
+    "button": {
+        "slowDown": "Trochę wolniej, potem spróbuj ponownie.",
+        "notActive": "To losowanie już nie trwa.",
+        "alreadyEnded": "To losowanie już się zakończyło.",
+        "alreadyIn": "Już bierzesz udział w tym losowaniu.",
+        "joinedTitle": "Bierzesz udział",
+        "joined": {
+            "one": "Powodzenia. Na razie zgłosiła się {count} osoba.",
+            "few": "Powodzenia. Na razie zgłosiły się {count} osoby.",
+            "many": "Powodzenia. Na razie zgłosiło się {count} osób.",
+            "other": "Powodzenia. Na razie zgłosiło się {count} osoby."
+        },
+        "guildOnly": "Tego przycisku można użyć tylko na serwerze.",
+        "needAdminEnd": "Potrzebujesz roli z uprawnieniem Administrator, aby zakończyć losowanie.",
+        "needAdminReroll": "Potrzebujesz roli z uprawnieniem Administrator, aby losować ponownie.",
+        "endedTitle": "Losowanie zakończone",
+        "picked": {
+            "one": "Wylosowano {count} zwycięzcę.",
+            "few": "Wylosowano {count} zwycięzców.",
+            "many": "Wylosowano {count} zwycięzców.",
+            "other": "Wylosowano {count} zwycięzcy."
+        },
+        "nobodyEntered": "Nikt się nie zgłosił, więc nie ma zwycięzcy.",
+        "rerolledTitle": "Wylosowano ponownie",
+        "rerolledText": "Wylosowano nowych zwycięzców.",
+        "notFound": "Nie znaleziono tego losowania.",
+        "notEndedYet": "To losowanie jeszcze się nie zakończyło, więc zwycięzców jeszcze nie ma.",
+        "nobodyWon": "Tym razem nikt nie wygrał.",
+        "winnersTitle": "Zwycięzcy: {prize}",
+        "giveawayWord": "losowanie"
+    },
+    "embed": {
+        "ended": "To losowanie się zakończyło.",
+        "clickJoin": "Kliknij Dołącz, aby wziąć udział.",
+        "host": "Organizator",
+        "winners": "Zwycięzcy",
+        "entries": "Zgłoszenia",
+        "wonBy": "Wygrywa",
+        "nobodyEntered": "Nikt się nie zgłosił",
+        "ends": "Koniec"
+    },
+    "buttons": {
+        "reroll": "Losuj ponownie",
+        "winners": "Zwycięzcy",
+        "join": "Dołącz",
+        "end": "Zakończ"
+    },
+    "post": {
+        "newGiveaway": "**Nowe losowanie**",
+        "ended": "**Losowanie zakończone**",
+        "rerolled": "**Wylosowano ponownie**",
+        "won": "**{prize}** trafia do: {winners}. Napisz do <@{hostId}>, aby odebrać nagrodę.",
+        "theGiveaway": "nagroda z losowania",
+        "noWinner": "Losowanie **{prize}** się zakończyło. Nikt się nie zgłosił, więc nie ma zwycięzcy.",
+        "rerolledWon": "Ponowne losowanie: **{prize}** trafia teraz do: {winners}. Napisz do <@{hostId}>, aby odebrać nagrodę.",
+        "rerolledShort": "Ponowne losowanie **{prize}**: {winners}"
+    },
+    "errors": {
+        "durationMissing": "Podaj prawidłowy czas trwania (np. 1h, 30m, 5d, 10s).",
+        "durationFormat": "Nieprawidłowy format czasu. Użyj: 1h, 30m, 5d, 10s (min. 10s, maks. 30d)",
+        "durationAmount": "Liczba w czasie trwania musi wynosić od 1 do 999.",
+        "durationUnit": "Użyj s (sekundy), m (minuty), h (godziny) lub d (dni).",
+        "durationMax": {
+            "one": "Maksymalny czas trwania to {count} dzień.",
+            "few": "Maksymalny czas trwania to {count} dni.",
+            "many": "Maksymalny czas trwania to {count} dni.",
+            "other": "Maksymalny czas trwania to {count} dnia."
+        },
+        "durationMin": {
+            "one": "Minimalny czas trwania to {count} sekunda.",
+            "few": "Minimalny czas trwania to {count} sekundy.",
+            "many": "Minimalny czas trwania to {count} sekund.",
+            "other": "Minimalny czas trwania to {count} sekundy."
+        },
+        "prizeMissing": "Podaj prawidłowy opis nagrody.",
+        "prizeLength": "Nagroda musi mieć od 1 do 256 znaków.",
+        "winnerCount": "Liczba zwycięzców musi wynosić od {min} do {max}.",
+        "endMissing": "Nie można zakończyć losowania, które nie istnieje.",
+        "alreadyEnded": "To losowanie już się zakończyło.",
+        "endFailed": "Podczas kończenia losowania wystąpił błąd.",
+        "badMessageId": "Podaj prawidłowe ID wiadomości.",
+        "notFound": "W bazie danych nie ma losowania z tym ID wiadomości.",
+        "channelGone": "Nie znaleziono kanału, na którym było losowanie. Stan losowania został zaktualizowany.",
+        "messageGone": "Nie znaleziono wiadomości losowania. Stan losowania został zaktualizowany.",
+        "stillActive": "To losowanie nadal trwa. Najpierw zakończ je komendą `/giveaway end`.",
+        "notEnoughEntries": "Za mało zgłoszeń, aby wylosować wymaganą liczbę zwycięzców.",
+        "notTextChannel": "Kanał musi być kanałem tekstowym.",
+        "missingPermissions": "Potrzebuję uprawnień Wyświetlanie kanału, Wysyłanie wiadomości i Osadzanie linków na <#{channelId}>, aby opublikować losowanie.",
+        "deleteFailed": "Nie udało się usunąć losowania z bazy danych. Spróbuj ponownie."
+    }
+}

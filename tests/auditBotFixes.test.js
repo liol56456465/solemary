@@ -285,7 +285,7 @@ test('L4: application answers match the questions or the form is refused', async
   assert.equal(collectApplicationAnswers(fields({ q0: 'a' }), questions), null, 'a question was added');
   assert.equal(collectApplicationAnswers(fields({ q0: 'a', q1: 'b', q2: 'c' }), questions), null, 'a question was removed');
   const s = src('commands/Community/apply.js');
-  assert.ok(s.indexOf("postedToStaff ? 'Application sent'") > s.indexOf('postedToStaff = true'), 'the reply comes after the staff post');
+  assert.ok(s.indexOf("postedToStaff ? tr.t('community.apply.sent.title')") > s.indexOf('postedToStaff = true'), 'the reply comes after the staff post');
 });
 
 // L6 ------------------------------------------------------------------------------------------

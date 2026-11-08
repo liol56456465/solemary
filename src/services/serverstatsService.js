@@ -7,19 +7,28 @@ import { getServerCountersKey } from '../utils/database/keys.js';
 import { GUILD_SQL, sleep } from './scheduling/guildScan.js';
 import botConfig from '../config/bot.js';
 import { BoundedMap } from '../utils/boundedMap.js';
+import { botText, textForGuild } from '../utils/botText.js';
 
+// label / baseName are the English texts; other languages come from the bot catalog
+// (serverstats.type.*). Channel names are public: the server's language (Dashboard → Bot language).
 export const COUNTER_TYPE_CONFIG = {
   members: {
     label: 'Members + Bots',
     baseName: 'Members & Bots',
+    labelKey: 'serverstats.type.members.label',
+    nameKey: 'serverstats.type.members.channelName',
   },
   members_only: {
     label: 'Members Only',
     baseName: 'Members',
+    labelKey: 'serverstats.type.membersOnly.label',
+    nameKey: 'serverstats.type.membersOnly.channelName',
   },
   bots: {
     label: 'Bots Only',
     baseName: 'Bots',
+    labelKey: 'serverstats.type.bots.label',
+    nameKey: 'serverstats.type.bots.channelName',
   }
 };
 
@@ -27,24 +36,33 @@ function getCounterConfig(type) {
   return COUNTER_TYPE_CONFIG[type] || {
     label: 'Unknown',
     baseName: 'Counter',
+    labelKey: 'serverstats.type.unknown.label',
+    nameKey: 'serverstats.type.unknown.channelName',
   };
 }
 
-export function getCounterTypeLabel(type) {
-  return getCounterConfig(type).label;
+/** The counter type's name for people ("Members + Bots"); lang = one of the 8 codes, default English. */
+export function getCounterTypeLabel(type, { lang = 'en' } = {}) {
+  return botText(lang).t(getCounterConfig(type).labelKey);
 }
 
-export function getCounterBaseName(type) {
-  return getCounterConfig(type).baseName;
+/** The base of the counter channel's name ("Members & Bots"), in `lang` (default English). */
+export function getCounterBaseName(type, { lang = 'en' } = {}) {
+  return botText(lang).t(getCounterConfig(type).nameKey);
+}
+
+/** The language of a server's counter channel names (public: the server's bot language). */
+export function counterNameLanguage(guildId) {
+  return textForGuild(guildId, { purpose: 'public' }).lang;
 }
 
 export function getCounterEmoji(type) {
   return getCounterConfig(type).emoji || '';
 }
 
-export function formatCounterChannelName(type, count) {
+export function formatCounterChannelName(type, count, { lang = 'en' } = {}) {
   const template = botConfig.counters?.defaults?.channelName || '{name}-{count}';
-  const baseName = getCounterBaseName(type);
+  const baseName = getCounterBaseName(type, { lang });
   return template
     .replaceAll('{name}', baseName)
     .replaceAll('{count}', String(count));
@@ -209,12 +227,13 @@ export async function updateCounter(client, guild, counter, { stats = null, now 
       return false;
     }
 
-    const baseName = getCounterBaseName(type);
+    const lang = counterNameLanguage(guild.id);
+    const baseName = getCounterBaseName(type, { lang });
     if (process.env.NODE_ENV !== 'production') {
       logger.debug(`Base name: "${baseName}", Current name: "${channel.name}"`);
     }
     
-    const newName = formatCounterChannelName(type, count);
+    const newName = formatCounterChannelName(type, count, { lang });
     if (process.env.NODE_ENV !== 'production') {
       logger.debug(`New name would be: "${newName}"`);
     }
@@ -434,22 +453,25 @@ export async function mutateServerCounters(client, guildId, change) {
  * errors with the /serverstats messages (unknown type, not a category, type in use);
  * when saving fails the new channel is deleted again.
  */
-export async function createServerCounter(client, guild, { type, channelType = 'voice', category, actorTag = 'dashboard' }) {
+export async function createServerCounter(client, guild, { type, channelType = 'voice', category, actorTag = 'dashboard', lang = 'en' }) {
+  // lang: the language of the error texts (the /serverstats reply language; the dashboard: English).
+  const tr = botText(lang);
   if (!COUNTER_TYPE_CONFIG[type]) {
-    throw createError('Unknown counter type', ErrorTypes.USER_INPUT, 'Unknown counter type.', { type });
+    throw createError('Unknown counter type', ErrorTypes.USER_INPUT, tr.t('serverstats.error.unknownType'), { type });
   }
   if (!category || category.type !== ChannelType.GuildCategory) {
-    throw createError('Not a category', ErrorTypes.USER_INPUT, 'Pick a category for the counter channel.', { type });
+    throw createError('Not a category', ErrorTypes.USER_INPUT, tr.t('serverstats.error.notCategory'), { type });
   }
   const existing = (await getServerCounters(client, guild.id)).find((c) => c.type === type);
   if (existing) {
     const channel = guild.channels.cache.get(existing.channelId);
+    const typeLabel = getCounterTypeLabel(type, { lang });
     throw createError('Counter type in use', ErrorTypes.USER_INPUT,
-      `A **${getCounterTypeLabel(type)}** counter already exists for this server${channel ? ` in ${channel}` : ''}. Delete it first before creating another.`, { type });
+      channel ? tr.t('serverstats.error.typeInUseIn', { type: typeLabel, channel: String(channel) }) : tr.t('serverstats.error.typeInUse', { type: typeLabel }), { type });
   }
 
   const channel = await guild.channels.create({
-    name: getCounterBaseName(type),
+    name: getCounterBaseName(type, { lang: counterNameLanguage(guild.id) }),
     type: channelType === 'text' ? ChannelType.GuildText : ChannelType.GuildVoice,
     parent: category.id,
     reason: `Counter channel created by ${actorTag}`,
@@ -467,14 +489,14 @@ export async function createServerCounter(client, guild, { type, channelType = '
     await mutateServerCounters(client, guild.id, (counters) => {
       if (counters.some((c) => c.type === type)) {
         throw createError('Counter type in use', ErrorTypes.USER_INPUT,
-          `A **${getCounterTypeLabel(type)}** counter already exists for this server. Delete it first before creating another.`, { type });
+          tr.t('serverstats.error.typeInUse', { type: getCounterTypeLabel(type, { lang }) }), { type });
       }
       return [...counters, counter];
     });
   } catch (error) {
     await channel.delete('Counter creation failed during save').catch(() => null);
     if (error.type === ErrorTypes.USER_INPUT) throw error;
-    throw createError('Counter save failed', ErrorTypes.USER_INPUT, 'Couldn\'t save the counter. Try again.', { type, cause: error.message });
+    throw createError('Counter save failed', ErrorTypes.USER_INPUT, tr.t('serverstats.error.saveFailed'), { type, cause: error.message });
   }
   const renamed = await updateCounter(client, guild, counter);
   return { counter, channel, renamed };
@@ -484,12 +506,12 @@ export async function createServerCounter(client, guild, { type, channelType = '
  * Removes a counter from the list (atomic) and deletes its channel. Returns
  * { counter, channel, channelDeleted }. Throws a USER_INPUT error when there is no such counter.
  */
-export async function removeServerCounter(client, guild, counterId) {
+export async function removeServerCounter(client, guild, counterId, { lang = 'en' } = {}) {
   let removed = null;
   await mutateServerCounters(client, guild.id, (counters) => {
     removed = counters.find((c) => c.id === counterId) || null;
     if (!removed) {
-      throw createError('Counter not found', ErrorTypes.USER_INPUT, `Counter with ID \`${counterId}\` was not found.`,
+      throw createError('Counter not found', ErrorTypes.USER_INPUT, botText(lang).t('serverstats.error.notFound', { id: counterId }),
         { guildId: guild.id, counterId, operation: 'removeServerCounter' });
     }
     return counters.filter((c) => c.id !== counterId);
@@ -511,9 +533,10 @@ export async function removeServerCounter(client, guild, counterId) {
  * Changes a counter's type (atomic; one counter per type) and renames its channel.
  * Returns { counter, oldType, renamed }. Throws USER_INPUT errors with the /serverstats messages.
  */
-export async function changeCounterType(client, guild, counterId, newType) {
+export async function changeCounterType(client, guild, counterId, newType, { lang = 'en' } = {}) {
+  const tr = botText(lang); // the language of the error texts (default English: the dashboard)
   if (!COUNTER_TYPE_CONFIG[newType]) {
-    throw createError('Unknown counter type', ErrorTypes.USER_INPUT, 'Unknown counter type.', { newType });
+    throw createError('Unknown counter type', ErrorTypes.USER_INPUT, tr.t('serverstats.error.unknownType'), { newType });
   }
   let oldType = null;
   let updated = null;
@@ -521,18 +544,19 @@ export async function changeCounterType(client, guild, counterId, newType) {
     const counter = counters.find((c) => c.id === counterId);
     if (!counter) {
       throw createError('Counter not found', ErrorTypes.USER_INPUT,
-        `Counter with ID \`${counterId}\` not found. Use \`/serverstats list\` to see all counters.`, { counterId });
+        tr.t('serverstats.error.notFoundList', { id: counterId }), { counterId });
     }
     if (!guild.channels.cache.get(counter.channelId)) {
       throw createError('Counter channel missing', ErrorTypes.USER_INPUT,
-        'The channel for this counter no longer exists. You cannot update a counter for a deleted channel.', { counterId });
+        tr.t('serverstats.error.channelMissing'), { counterId });
     }
     if (newType !== counter.type) {
       const existing = counters.find((c) => c.type === newType && c.id !== counter.id);
       if (existing) {
         const existingChannel = guild.channels.cache.get(existing.channelId);
+        const typeLabel = getCounterTypeLabel(newType, { lang });
         throw createError('Counter type in use', ErrorTypes.USER_INPUT,
-          `A **${getCounterTypeLabel(newType)}** counter already exists for this server${existingChannel ? ` in ${existingChannel}` : ''}. Delete it first before reusing that type.`, { counterId });
+          existingChannel ? tr.t('serverstats.error.typeInUseReuseIn', { type: typeLabel, channel: String(existingChannel) }) : tr.t('serverstats.error.typeInUseReuse', { type: typeLabel }), { counterId });
       }
     }
     oldType = counter.type;

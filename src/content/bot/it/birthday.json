@@ -1,0 +1,108 @@
+{
+    "cmd": {
+        "birthday": "Comandi per i compleanni",
+        "set": "Imposta il tuo compleanno",
+        "month": "Mese di nascita (1-12)",
+        "day": "Giorno di nascita (1-31)",
+        "info": "Vedi un compleanno",
+        "infoUser": "Il membro di cui vedere il compleanno",
+        "list": "Elenca tutti i compleanni del server",
+        "remove": "Rimuovi il tuo compleanno",
+        "next": "Mostra i prossimi compleanni",
+        "setchannel": "Imposta o disattiva il canale degli auguri di compleanno. (Amministratore)",
+        "channel": "Il canale testuale per gli auguri. Lascia vuoto per disattivare.",
+        "timezone": "Fuso orario del server per i compleanni, es. Europe/Rome (predefinito UTC)"
+    },
+    "unknownSubcommand": "Sottocomando sconosciuto",
+    "month": {
+        "january": "gennaio",
+        "february": "febbraio",
+        "march": "marzo",
+        "april": "aprile",
+        "may": "maggio",
+        "june": "giugno",
+        "july": "luglio",
+        "august": "agosto",
+        "september": "settembre",
+        "october": "ottobre",
+        "november": "novembre",
+        "december": "dicembre",
+        "invalid": "mese non valido"
+    },
+    "date": "{day} {month}",
+    "info": {
+        "noneTitle": "Nessun compleanno impostato",
+        "noneSelf": "Non hai ancora impostato il tuo compleanno. Usa `/birthday set` per aggiungerlo.",
+        "noneOther": "{name} non ha ancora impostato il suo compleanno.",
+        "title": "Compleanno",
+        "text": "**Data:** {date}\n**Membro:** {user}"
+    },
+    "list": {
+        "noneTitle": "Nessun compleanno",
+        "none": "In questo server non è ancora stato impostato nessun compleanno.",
+        "noneMembers": "Nessuno dei membri attuali del server ha impostato un compleanno.",
+        "header": {
+            "one": "**{count} compleanno in {server}**",
+            "many": "**{count} compleanni in {server}**",
+            "other": "**{count} compleanni in {server}**"
+        },
+        "more": {
+            "one": "…e {count} altro",
+            "many": "…e altri {count}",
+            "other": "…e altri {count}"
+        },
+        "title": "Compleanni"
+    },
+    "remove": {
+        "noneTitle": "Nessun compleanno impostato",
+        "none": "Non hai un compleanno impostato da rimuovere.",
+        "title": "Compleanno rimosso",
+        "text": "Il tuo compleanno è stato rimosso."
+    },
+    "set": {
+        "title": "Compleanno salvato",
+        "text": "Il tuo compleanno è il **{date}**."
+    },
+    "setchannel": {
+        "notAllowedTitle": "Non consentito",
+        "notAllowed": "Ti serve il permesso **Amministratore** per configurare il canale dei compleanni.",
+        "unknownTzTitle": "Fuso orario sconosciuto",
+        "unknownTz": "`{input}` non è un fuso orario conosciuto. Usa un nome IANA come `Europe/London`, `America/New_York` o `UTC` (l'elenco suggerisce i nomi mentre scrivi).",
+        "timezoneLine": "I compleanni seguono la data di **{timezone}** (lì ora è il {date}). Gli auguri partono una volta per giorno locale.",
+        "onTitle": "Auguri di compleanno attivi",
+        "on": "Gli auguri di compleanno saranno pubblicati in {channel}.",
+        "tzTitle": "Fuso orario aggiornato",
+        "offTitle": "Auguri di compleanno disattivati",
+        "off": "Nessun canale indicato, quindi gli auguri di compleanno sono disattivati.",
+        "failTitle": "Non salvato",
+        "fail": "Il canale dei compleanni non è stato salvato. Riprova tra un attimo."
+    },
+    "next": {
+        "noneTitle": "Ancora nessun compleanno",
+        "none": "Qui nessuno ha ancora impostato un compleanno. Usa `/birthday set` per aggiungere il tuo.",
+        "noUpcomingTitle": "Nessun compleanno in arrivo",
+        "noUpcoming": "Nessuno dei compleanni salvati appartiene a qualcuno che è ancora nel server.",
+        "intro": "Prossimi compleanni in {server}:",
+        "footer": "Aggiungi il tuo con /birthday set.",
+        "title": "Prossimi compleanni",
+        "today": "**Oggi**",
+        "tomorrow": "**Domani**",
+        "inDays": {
+            "one": "Tra {count} giorno",
+            "many": "Tra {count} giorni",
+            "other": "Tra {count} giorni"
+        }
+    },
+    "announce": {
+        "title": "Buon compleanno",
+        "text": "Buon compleanno {members}, passate una bella giornata!"
+    },
+    "errors": {
+        "notNumbers": "Mese e giorno devono essere numeri",
+        "month": "Il mese deve essere tra 1 e 12",
+        "day": "Il giorno deve essere tra 1 e 31",
+        "invalidDate": "Data non valida. Controlla mese e giorno (per esempio il 29 febbraio esiste solo negli anni bisestili)",
+        "saveFailed": "Non è stato possibile impostare il tuo compleanno. Riprova più tardi.",
+        "removeFailed": "Non è stato possibile rimuovere il tuo compleanno. Riprova."
+    }
+}

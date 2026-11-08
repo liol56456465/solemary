@@ -1,0 +1,560 @@
+{
+    "cmd": {
+        "community": {
+            "desc": "Configura mensajes fijos, sugerencias, el starboard y los feeds",
+            "channel": "Canal",
+            "sticky": {
+                "desc": "Mensajes que se quedan al final de un canal",
+                "set": "Pon (o cambia) el mensaje fijo de un canal",
+                "message": "El texto que se queda al final",
+                "remove": "Quita el mensaje fijo de un canal",
+                "list": "Lista los mensajes fijos"
+            },
+            "suggestions": {
+                "desc": "Sugerencias de los miembros (/suggest)",
+                "channel": "Elige el canal de sugerencias (déjalo vacío para desactivarlas)"
+            },
+            "starboard": {
+                "desc": "Copia los mensajes populares a un canal starboard",
+                "set": "Activa o cambia el starboard",
+                "channel": "Canal del starboard",
+                "emoji": "Reacción que cuenta (por defecto ⭐)",
+                "threshold": "Reacciones necesarias (por defecto 3)",
+                "off": "Desactiva el starboard"
+            },
+            "feed": {
+                "desc": "Publica vídeos nuevos de YouTube o directos de Twitch en un canal",
+                "add": "Sigue un canal de YouTube o Twitch",
+                "source": "YouTube: ID del canal (UC…) o enlace /channel/. Twitch: login o enlace twitch.tv",
+                "channel": "Dónde publicar",
+                "platform": "YouTube (por defecto) o Twitch",
+                "message": "Mensaje con {title} {url} {author} ({game} en Twitch); puede mencionar un rol",
+                "remove": "Deja de seguir un canal de YouTube o Twitch",
+                "id": "Número del feed (#) de /community feed list",
+                "list": "Lista los feeds"
+            }
+        },
+        "cat": {
+            "desc": "El gato del servidor, que crece mientras los miembros chatean",
+            "view": "Mira el gato del servidor, su ánimo y cuánto le falta para crecer",
+            "name": "Cambia el nombre del gato del servidor (administradores)",
+            "newName": "El nuevo nombre"
+        },
+        "tag": {
+            "desc": "Respuestas guardadas que cualquiera puede publicar, también automáticas con una palabra clave",
+            "name": "Nombre de la etiqueta",
+            "triggerKind": "Publica esta etiqueta automáticamente cuando un mensaje coincida",
+            "trigger": "Palabra/frase o regex (sin distinguir mayúsculas)",
+            "allowChannels": "Solo activar en estos canales (#menciones; \"none\" la vacía)",
+            "denyChannels": "Nunca activar en estos canales (#menciones; \"none\" la vacía)",
+            "cooldown": "Segundos entre publicaciones automáticas por canal (por defecto 60)",
+            "show": "Publica una etiqueta en este canal",
+            "for": "Menciona a un miembro con ella",
+            "list": "Lista las etiquetas",
+            "create": "Crea una etiqueta",
+            "newName": "Nombre corto: minúsculas, dígitos, - y _",
+            "content": "El texto",
+            "edit": "Cambia una etiqueta (solo las opciones que indiques)",
+            "newContent": "Texto nuevo",
+            "delete": "Borra una etiqueta"
+        },
+        "suggest": {
+            "desc": "Sugiere algo para el servidor o (admins) responde a una sugerencia",
+            "new": "Publica una sugerencia que los miembros pueden votar",
+            "text": "Tu sugerencia",
+            "status": "Aprueba, rechaza o marca una sugerencia como en estudio",
+            "id": "Número de la sugerencia (#)",
+            "statusOption": "Nuevo estado",
+            "reason": "Se muestra en la sugerencia y se envía a quien la hizo"
+        },
+        "apply": {
+            "description": "Gestiona las solicitudes de roles",
+            "submit": {
+                "description": "Envía una solicitud para un rol",
+                "application": "La solicitud que quieres enviar"
+            },
+            "status": {
+                "description": "Consulta el estado de tu solicitud",
+                "id": "ID de la solicitud (déjalo vacío para verlas todas)"
+            },
+            "list": {
+                "description": "Muestra las solicitudes abiertas"
+            }
+        },
+        "appAdmin": {
+            "description": "Gestiona las solicitudes para el equipo",
+            "setup": {
+                "description": "Crea una nueva solicitud"
+            },
+            "review": {
+                "description": "Aprueba o rechaza una solicitud",
+                "id": "El ID de la solicitud"
+            },
+            "list": {
+                "description": "Muestra todas las solicitudes",
+                "status": "Filtrar por estado",
+                "choice": {
+                    "pending": "En espera",
+                    "approved": "Aprobadas",
+                    "denied": "Rechazadas"
+                },
+                "role": "Filtrar por ID de rol",
+                "user": "Filtrar por miembro",
+                "limit": "Número máximo de solicitudes a mostrar (por defecto: 10)"
+            },
+            "dashboard": {
+                "description": "Abre los ajustes de las solicitudes",
+                "application": "La solicitud que quieres configurar"
+            }
+        }
+    },
+    "sticky": {
+        "savedTitle": "Mensaje fijo guardado",
+        "posted": "Ahora se queda al final de {channel} y se vuelve a publicar cuando los miembros escriben ahí (como mucho cada 15 segundos).",
+        "notPosted": "Guardado, pero no pude publicar en {channel}. Comprueba que puedo ver el canal, enviar mensajes e insertar enlaces.",
+        "removed": "Mensaje fijo quitado de {channel}.",
+        "none": "{channel} no tiene mensaje fijo.",
+        "listTitle": "Mensajes fijos ({count})",
+        "listEmpty": "Ninguno. Añade uno con `/community sticky set`.",
+        "footer": "Mensaje fijo",
+        "empty": "El mensaje fijo no puede estar vacío.",
+        "tooLong": "Los mensajes fijos tienen un límite de {max} caracteres."
+    },
+    "suggestions": {
+        "channelSet": "Las sugerencias de `/suggest new` ahora van a {channel}. Asegúrate de que puedo enviar mensajes y embeds ahí.",
+        "off": "Las sugerencias están desactivadas (sin canal)."
+    },
+    "starboard": {
+        "onTitle": "Starboard activado",
+        "onLine": "Los mensajes con **{threshold}** reacciones {emoji} se copian a {channel}.",
+        "rules": "La reacción del propio autor y las de bots no cuentan; los mensajes de bots nunca van al starboard.",
+        "offDone": "Starboard desactivado. Las publicaciones que ya hay se quedan donde están.",
+        "emojiInvalid": "Usa un solo emoji: uno normal como ⭐ o un emoji personalizado de este servidor.",
+        "thresholdRange": "threshold debe estar entre 1 y {max}.",
+        "noText": "*(sin texto)*",
+        "attachments": "Adjuntos: {count}",
+        "source": "Origen",
+        "jump": "[Ir al mensaje]({url})"
+    },
+    "feed": {
+        "addedTitle": "Feed #{id} añadido",
+        "twitchWatch": "Publicaré en {channel} cuando **{author}** empiece un directo en Twitch (lo compruebo cada 2 minutos).",
+        "liveNow": "Está en directo ahora mismo: este directo no se anuncia, el siguiente sí.",
+        "previewTwitch": "\n**Vista previa** ({source}, sin publicar):\n{preview}",
+        "withCurrent": "con el directo actual",
+        "withExample": "con un directo de ejemplo",
+        "youtubeWatch": "Los vídeos nuevos de **{author}** se publicarán en {channel} (lo compruebo cada 15 minutos).",
+        "previewYoutube": "\n**Vista previa** (con el último vídeo, sin publicar):\n{preview}",
+        "noVideos": "\nEl canal todavía no tiene vídeos.",
+        "removed": "Feed #{id} quitado.",
+        "notFound": "No existe el feed #{id}. Mira `/community feed list`.",
+        "listTitle": "Feeds ({count})",
+        "listEmpty": "Ninguno. Añade uno con `/community feed add`.",
+        "exampleTitle": "Título de directo de ejemplo",
+        "defaultYoutube": "**{author}** ha publicado un vídeo nuevo: **{title}**\n{url}",
+        "defaultTwitch": "**{author}** está en directo en Twitch: **{title}**\n{url}",
+        "youtubeIdInvalid": "Indica el ID del canal de YouTube (empieza por UC, 24 caracteres) o un enlace youtube.com/channel/UC…. Los @identificadores no funcionan: abre el canal y luego Compartir → Copiar ID del canal.",
+        "twitchLoginInvalid": "Indica el login de Twitch (el nombre en twitch.tv/<name>) o un enlace twitch.tv/<name>.",
+        "tooLong": "El mensaje tiene un límite de {max} caracteres.",
+        "twitchDuplicate": "Ese canal de Twitch ya se publica en ese canal de Discord.",
+        "youtubeDuplicate": "Ese canal de YouTube ya se publica en ese canal de Discord.",
+        "choosePlatform": "Elige YouTube o Twitch.",
+        "youtubeNoChannel": "YouTube no tiene ningún canal con ese ID.",
+        "youtubeUnreachable": "No pude conectar con YouTube para comprobar ese canal ({error}). Inténtalo más tarde.",
+        "twitchOff": "Los avisos de Twitch todavía no están configurados en este bot.",
+        "twitchUnreachable": "No pude conectar con Twitch para comprobar ese canal ({error}). Inténtalo más tarde.",
+        "twitchNoChannel": "Twitch no tiene ningún canal con ese nombre."
+    },
+    "tag": {
+        "uses": "**Usos:** {uses}",
+        "createdBy": "**Creada por:** <@{userId}>",
+        "trigger": "**Activador:** {kind} `{trigger}`{disabled}",
+        "disabled": " (desactivado)",
+        "cooldown": "**Espera:** {seconds} s por canal",
+        "onlyIn": "**Solo en:** {channels}",
+        "neverIn": "**Nunca en:** {channels}",
+        "channelsUnreadable": "No pude leer ningún canal de {option}; menciónalos como #general o escribe \"none\".",
+        "notFound": "No hay ninguna etiqueta llamada **{name}**. Mira `/tag list`.",
+        "missing": "No hay ninguna etiqueta llamada **{name}**.",
+        "listLine": "`{name}`{auto} · usos: {uses}",
+        "auto": " · auto: {kind}",
+        "listTitle": "Etiquetas ({count})",
+        "listEmpty": "Todavía no hay etiquetas.",
+        "deleted": "Etiqueta **{name}** borrada.",
+        "needTrigger": "Indica también el texto del activador.",
+        "createdTitle": "Etiqueta {name} creada",
+        "updatedTitle": "Etiqueta {name} cambiada",
+        "textEmpty": "El texto de la etiqueta no puede estar vacío.",
+        "textTooLong": "El texto de una etiqueta tiene un límite de {max} caracteres.",
+        "kindInvalid": "trigger_kind debe ser none, word o regex.",
+        "noTrigger": "Esta etiqueta no tiene activador; indica trigger_kind (word o regex) junto con trigger.",
+        "cooldownRange": "cooldown debe estar entre 0 y 86400 segundos.",
+        "cooldownMin": "Las etiquetas con activador necesitan una espera de al menos {seconds} segundos.",
+        "nameInvalid": "Los nombres de etiqueta usan minúsculas, dígitos, - y _ (hasta 32).",
+        "exists": "Ya hay una etiqueta llamada **{name}**. Usa `/tag edit` para cambiarla.",
+        "nothingToChange": "Indica al menos una cosa que cambiar."
+    },
+    "cat": {
+        "dbDown": "La base de datos no responde ahora mismo, así que no se pudo cargar el gato. Inténtalo de nuevo en un momento.",
+        "nameInvalid": "Usa letras, números y espacios para el nombre.",
+        "notSaved": "La base de datos no responde ahora mismo, así que no se cambió nada.",
+        "renamedTitle": "Gato renombrado",
+        "renamed": "El gato del servidor ahora se llama {name}.",
+        "stageField": "Etapa",
+        "moodField": "Ánimo",
+        "messagesField": "Mensajes contados",
+        "nextField": "Siguiente etapa",
+        "toNext": "{bar}\nFaltan {left} mensajes para {stage}.",
+        "fullyGrown": "Totalmente crecido. Esta es la última etapa.",
+        "footer": "El gato crece con cada mensaje que los miembros envían aquí.",
+        "grewTitle": "{name} ha crecido: ahora es {stage}",
+        "grewText": "Gracias a todos los que chatean aquí. Tras {total} mensajes, {name} ahora está en la etapa {stage}.",
+        "stage": {
+            "kitten": "Gatito",
+            "young": "Gato joven",
+            "cat": "Gato",
+            "big": "Gato grande",
+            "legend": "Leyenda"
+        },
+        "mood": {
+            "scared": "asustado",
+            "proud": "orgulloso",
+            "happy": "feliz",
+            "sleepy": "somnoliento"
+        },
+        "sentence": {
+            "scared": "{name} tiene miedo: el servidor está bloqueado por un raid.",
+            "proud": "{name} está orgulloso: hoy ha crecido una etapa.",
+            "happy": "{name} está feliz: esta semana hubo más actividad en el servidor.",
+            "sleepy": "{name} tiene sueño: esta semana el servidor estuvo más tranquilo."
+        }
+    },
+    "suggest": {
+        "postedTitle": "Sugerencia #{id} publicada",
+        "postedText": "Los miembros pueden votarla aquí: {url}",
+        "notFound": "No hay ninguna sugerencia #{id} en este servidor.",
+        "decidedTitle": "Sugerencia #{id}: {status}",
+        "edited": "El mensaje de la sugerencia se actualizó.",
+        "notEdited": "No se pudo actualizar el mensaje de la sugerencia (borrado o sin acceso).",
+        "dmed": "Se avisó a quien la hizo por MD.",
+        "notDmed": "No se pudo enviar un MD a quien la hizo.",
+        "statusWord": {
+            "approved": "aprobada",
+            "denied": "rechazada",
+            "considering": "en estudio"
+        },
+        "label": {
+            "pending": "Votación abierta",
+            "approved": "Aprobada",
+            "denied": "Rechazada",
+            "considering": "En estudio"
+        },
+        "empty": "La sugerencia no puede estar vacía.",
+        "tooLong": "Las sugerencias tienen un límite de {max} caracteres.",
+        "notSetUp": "Las sugerencias todavía no están configuradas en este servidor (un admin puede usar `/community suggestions channel`).",
+        "cooldown": "Puedes publicar otra sugerencia dentro de {seconds} segundos.",
+        "postFailed": "No pude publicar en {channel}. Pide a un admin que revise mis permisos ahí.",
+        "closed": "La votación de esta sugerencia está cerrada.",
+        "statusInvalid": "El estado debe ser approved, denied o considering.",
+        "votes": "Votos",
+        "status": "Estado",
+        "reasonStaff": "Motivo (equipo)",
+        "reason": "Motivo",
+        "title": "Sugerencia #{id}",
+        "member": "Miembro {userId}",
+        "footer": "Sugiere algo con /suggest new",
+        "dmTitle": "Tu sugerencia #{id} en {server}: {status}",
+        "vote": {
+            "invalid": "Este botón no es válido.",
+            "gone": "Esta sugerencia ya no existe.",
+            "up": "Has votado 👍.",
+            "down": "Has votado 👎.",
+            "removed": "Tu voto se ha quitado.",
+            "hint": "{note} Pulsa el otro botón para cambiarlo, o el mismo para retirarlo."
+        }
+    },
+    "apply": {
+        "serverOnly": "Este comando solo se puede usar en un servidor.",
+        "disabled": "Las solicitudes están desactivadas en este servidor ahora mismo.",
+        "configNotFound": "No se encontraron los ajustes de esta solicitud.",
+        "closed": "La solicitud **{name}** está cerrada ahora mismo.",
+        "roleNotFound": "No se encontró el rol.",
+        "questionsChanged": "Las preguntas de esta solicitud cambiaron mientras rellenabas el formulario. Ábrelo de nuevo con `/apply submit`.",
+        "sent": {
+            "title": "Solicitud enviada",
+            "body": "Tu solicitud para **{name}** se envió al equipo."
+        },
+        "saved": {
+            "title": "Solicitud guardada",
+            "body": "Tu solicitud para **{name}** se guardó, pero no se pudo publicar para el equipo (no hay canal de solicitudes configurado o el bot no puede escribir ahí). Avisa a alguien del equipo."
+        },
+        "idLine": "ID de la solicitud: `{id}`",
+        "statusHint": "Puedes ver el estado con `/apply status id:{id}`",
+        "statusLabel": {
+            "pending": "En curso",
+            "approved": "Aceptada",
+            "denied": "Rechazada",
+            "unknown": "Desconocido"
+        },
+        "list": {
+            "none": "Ahora mismo no hay solicitudes abiertas.",
+            "title": "Solicitudes abiertas",
+            "description": "Estos son los roles que puedes solicitar:",
+            "entry": "**Rol:** {role}\n**Solicitar con:** `/apply submit application:\"{name}\"`",
+            "roleMissing": "No se encontró el rol",
+            "footer": "Usa /apply submit application:<nombre> para solicitar cualquiera de estos roles.",
+            "loadFailed": "No se pudieron cargar las solicitudes. Inténtalo más tarde."
+        },
+        "submit": {
+            "notFound": "Usa `/apply list` para ver las solicitudes abiertas.",
+            "closed": "La solicitud **{name}** está cerrada ahora mismo. Usa `/apply list` para ver las abiertas.",
+            "pending": "Ya tienes una solicitud en espera. Espera a que la revisen.",
+            "roleGone": "El rol de esta solicitud ya no existe.",
+            "modalTitle": "Solicitud: {name}"
+        },
+        "status": {
+            "notFound": "No se encontró la solicitud o no tienes permiso para verla.",
+            "unknownDate": "Fecha desconocida",
+            "unknownRole": "Rol desconocido",
+            "oneTitle": "Solicitud #{id} - {role}",
+            "oneBody": "**ID de la solicitud:** `{id}`\n**Estado:** {status}\n**Enviada:** {date}",
+            "none": "Todavía no has enviado ninguna solicitud.",
+            "allTitle": "Tus solicitudes",
+            "allDescription": {
+                "one": "{count} solicitud reciente.",
+                "many": "{count} solicitudes recientes.",
+                "other": "{count} solicitudes recientes."
+            },
+            "fieldName": "{role} ({status})",
+            "fieldValue": "**ID:** `{id}`\n**Estado:** {status}\n**Enviada:** {date}",
+            "footer": {
+                "one": "Las {shown} más recientes de {count} solicitud.",
+                "many": "Las {shown} más recientes de {count} solicitudes.",
+                "other": "Las {shown} más recientes de {count} solicitudes."
+            }
+        },
+        "dm": {
+            "approvedTitle": "Solicitud aceptada",
+            "deniedTitle": "Solicitud rechazada",
+            "approvedBody": "Tu solicitud para **{name}** fue **aprobada**\n**Nota:** {note}\n\nUsa `/apply status id:{id}` para ver los detalles.",
+            "deniedBody": "Tu solicitud para **{name}** fue **rechazada**\n**Nota:** {note}\n\nUsa `/apply status id:{id}` para ver los detalles.",
+            "noReason": "No se indicó ningún motivo."
+        }
+    },
+    "appAdmin": {
+        "alreadyProcessed": "Esta acción ya se procesó. Vuelve a usar el comando.",
+        "questionRequired": "Pregunta {number} (obligatoria)",
+        "questionOptional": "Pregunta {number} (opcional)",
+        "setup": {
+            "modalTitle": "Crear una solicitud",
+            "rolePlaceholder": "Elige el rol que se solicitará",
+            "roleLabel": "Rol de la solicitud",
+            "roleDescription": "El rol que los miembros van a solicitar",
+            "namePlaceholder": "p. ej., Moderador, Ayudante, Desarrollador",
+            "nameLabel": "Nombre de la solicitud",
+            "q1Placeholder": "¿Por qué quieres este rol?",
+            "q2Placeholder": "¿Qué experiencia tienes?",
+            "noRole": "Tienes que elegir un rol para la solicitud.",
+            "roleNotFound": "No se encontró el rol elegido.",
+            "createdTitle": "Solicitud creada",
+            "createdBody": "La solicitud **{name}** se creó para {role}.\n\nPuedes cambiar el canal de registro, los roles gestores, las preguntas y el tiempo de conservación en los ajustes."
+        },
+        "review": {
+            "notFound": "No se encontró la solicitud.",
+            "processed": "Esta solicitud ya se procesó.",
+            "title": "Revisar solicitud",
+            "body": "**Miembro:** <@{userId}>\n**Solicitud:** {name}\n**ID de la solicitud:** `{id}`",
+            "question": "P{number}: {question}",
+            "noAnswer": "*Sin respuesta*",
+            "approve": "Aprobar",
+            "deny": "Rechazar",
+            "approveTitle": "Aprobar solicitud - motivo",
+            "denyTitle": "Rechazar solicitud - motivo",
+            "reasonLabel": "Motivo (opcional)",
+            "reasonPlaceholder": "Indica un motivo para esta decisión...",
+            "approvedTitle": "Solicitud aprobada",
+            "approvedBody": "La solicitud fue **aprobada**.",
+            "deniedTitle": "Solicitud rechazada",
+            "deniedBody": "La solicitud fue **rechazada**.",
+            "failed": "Ocurrió un error al revisar la solicitud.",
+            "timeoutTitle": "Tiempo agotado",
+            "timeoutBody": "Los botones de revisión han caducado."
+        },
+        "list": {
+            "noneTitle": "No se encontraron solicitudes",
+            "noneDescription": "Ninguna solicitud enviada coincide con estos filtros.\n\nAun así, estos roles de solicitud están configurados:",
+            "roleEntry": "**Rol:** {role}\n**Abierto a solicitudes:** Sí",
+            "footer": "Los miembros solicitan con /apply submit y ven los roles con /apply list",
+            "noneConfigured": "No se encontraron solicitudes y no hay roles de solicitud configurados.\nUsa primero `/app-admin setup` para configurar un rol de solicitud.",
+            "title": "Solicitudes enviadas",
+            "description": {
+                "one": "{count} solicitud.",
+                "many": "{count} solicitudes.",
+                "other": "{count} solicitudes."
+            },
+            "unknownUser": "Miembro desconocido",
+            "entry": "**ID:** `{id}`\n**Estado:** {status}\n**Fecha:** {date}"
+        }
+    },
+    "appDashboard": {
+        "notSet": "`Sin configurar`",
+        "noneConfigured": "`Ninguno configurado`",
+        "noRoles": "`No hay roles de solicitud configurados`",
+        "title": "Ajustes de solicitudes",
+        "description": "Ajustes de solicitudes de **{server}**.\nElige abajo lo que quieres cambiar.",
+        "enabled": "Activadas",
+        "disabled": "Desactivadas",
+        "field": {
+            "status": "Solicitudes",
+            "logChannel": "Canal de registro",
+            "managerRoles": "Roles gestores",
+            "questions": "Preguntas",
+            "roles": "Roles de solicitud",
+            "retention": "Conservación",
+            "role": "Rol"
+        },
+        "questionsValue": "{count} configuradas, primera: {first}",
+        "retentionValue": "En espera: **{pending} d** · Decididas: **{reviewed} d**",
+        "footer15": "Se cierra tras 15 minutos de inactividad",
+        "footer10": "Se cierra tras 10 minutos de inactividad",
+        "menu": {
+            "placeholder": "Elige un ajuste...",
+            "logChannel": "Canal de registro",
+            "logChannelHelp": "El canal donde se publican las solicitudes nuevas",
+            "roleLogChannelHelp": "El canal donde se publican las solicitudes",
+            "managerRoles": "Roles gestores",
+            "managerRolesHelp": "Añade o quita un rol que puede gestionar solicitudes",
+            "questions": "Editar preguntas",
+            "questionsHelp": "Personaliza las preguntas del formulario de solicitud",
+            "roleAdd": "Añadir rol de solicitud",
+            "roleAddHelp": "Añade un rol que los miembros pueden solicitar",
+            "roleRemove": "Quitar rol de solicitud",
+            "roleRemoveHelp": "Quita un rol de la lista de solicitudes",
+            "retention": "Tiempo de conservación",
+            "retentionHelp": "Cuánto tiempo se guardan las solicitudes en espera y decididas"
+        },
+        "toggleButton": "Solicitudes",
+        "notSetUp": "Las solicitudes aún no están configuradas. Usa `/app-admin setup` para crear tu primera solicitud.",
+        "openFailed": "No se pudieron abrir los ajustes de solicitudes.",
+        "selector": {
+            "placeholder": "Elige una solicitud...",
+            "option": "Configurar la solicitud {name}",
+            "title": "Elegir solicitud",
+            "description": "Elige el rol de solicitud que quieres configurar.",
+            "noSelection": "No se eligió nada. Los ajustes se cerraron."
+        },
+        "role": {
+            "inheritsLog": "`Canal de registro general`",
+            "minChars": " (mín. {min} caracteres)",
+            "inheritsQuestions": "`Preguntas por defecto`",
+            "title": "Ajustes de la solicitud",
+            "description": "Ajustes de **{name}**",
+            "disableButton": "Desactivar solicitud",
+            "enableButton": "Activar solicitud",
+            "deleteButton": "Eliminar solicitud"
+        },
+        "selectionFailed": "Ocurrió un error al procesar tu elección.",
+        "unexpected": "Ocurrió un error inesperado al guardar los ajustes.",
+        "timedOutTitle": "Ajustes cerrados",
+        "timedOutBody": "Los ajustes se cerraron por inactividad. Vuelve a usar el comando para continuar.",
+        "system": {
+            "offTitle": "Solicitudes desactivadas",
+            "offBody": "Las solicitudes ahora están **desactivadas**.\n\nLos miembros ya no pueden solicitar roles.",
+            "onTitle": "Solicitudes activadas",
+            "onBody": "Las solicitudes ahora están **activadas**.\n\nLos miembros ya pueden solicitar roles."
+        },
+        "toggleFailed": "Ocurrió un error al cambiar el estado de las solicitudes.",
+        "configTimeoutTitle": "Tiempo agotado",
+        "configTimeoutBody": "Los ajustes se cerraron tras 10 minutos de inactividad.\n\nVuelve a usar el comando para continuar.",
+        "roleNotFound": "No se encontró el rol de solicitud.",
+        "roleToggle": {
+            "offTitle": "Solicitud desactivada",
+            "offBody": "La solicitud **{name}** ahora está **desactivada**.\n\nYa no aparece en `/apply submit`.",
+            "onTitle": "Solicitud activada",
+            "onBody": "La solicitud **{name}** ahora está **activada**.\n\nAhora aparece en `/apply submit`."
+        },
+        "delete": {
+            "thisApplication": "esta solicitud",
+            "modalTitle": "¿Eliminar la solicitud?",
+            "warning": "Vas a eliminar **{name}** para siempre. Se borrarán todas las solicitudes y ajustes guardados de este rol y no se podrán recuperar.",
+            "checkbox": "Lo confirmo, no se puede deshacer",
+            "modalFailed": "No se pudo mostrar la confirmación. Inténtalo de nuevo.",
+            "cancelled": "Se canceló la eliminación de la solicitud.",
+            "mustTick": "Marca la casilla de confirmación para eliminar la solicitud.",
+            "failed": "Ocurrió un error al eliminar la solicitud.",
+            "failedRetry": "Ocurrió un error al eliminar la solicitud. Inténtalo de nuevo.",
+            "doneTitle": "Solicitud eliminada",
+            "doneBody": "La solicitud de <@&{roleId}> (**{name}**) se eliminó para siempre.",
+            "doneCount": {
+                "one": "Eliminada: **{count}** solicitud",
+                "many": "Eliminadas: **{count}** solicitudes",
+                "other": "Eliminadas: **{count}** solicitudes"
+            }
+        },
+        "logChannel": {
+            "modalTitle": "Canal de registro",
+            "placeholder": "Elige un canal de texto...",
+            "labelHelp": "El canal donde se publicarán las solicitudes nuevas",
+            "updatedTitle": "Canal de registro cambiado",
+            "updatedBody": "Las solicitudes se publicarán ahora en {channel}.\nTambién puedes gestionarlo con `/logging dashboard`.",
+            "failed": "Ocurrió un error al cambiar el canal de registro."
+        },
+        "managers": {
+            "modalTitle": "Roles gestores",
+            "placeholder": "Elige los roles que gestionan solicitudes...",
+            "labelHelp": "Los roles elegidos se activan o desactivan como roles gestores",
+            "none": "`Ninguno`",
+            "updatedTitle": "Roles gestores cambiados",
+            "updatedBody": "Roles gestores actuales: {roles}",
+            "failed": "Ocurrió un error al cambiar los roles gestores."
+        },
+        "questions": {
+            "minTagHint": "Termina con [min:10] para exigir respuestas de al menos 10 caracteres",
+            "modalTitle": "Preguntas de la solicitud",
+            "needOne": "Hace falta al menos una pregunta.",
+            "updatedTitle": "Preguntas cambiadas",
+            "saved": {
+                "one": "{count} pregunta guardada.",
+                "many": "{count} preguntas guardadas.",
+                "other": "{count} preguntas guardadas."
+            }
+        },
+        "roleAdd": {
+            "placeholder": "Elige el rol que se puede solicitar...",
+            "labelHelp": "El rol de Discord que los miembros van a solicitar",
+            "nameLabel": "Nombre (vacío = nombre del rol)",
+            "exists": "{role} ya es un rol de solicitud.",
+            "addedTitle": "Rol añadido",
+            "addedBody": "{role} añadido como **{name}**.",
+            "failed": "Ocurrió un error al añadir el rol de solicitud."
+        },
+        "roleRemove": {
+            "none": "No hay roles de solicitud para quitar.",
+            "placeholder": "Elige el rol que quieres quitar...",
+            "labelHelp": "El rol que se quitará de la lista de solicitudes",
+            "notInList": "<@&{roleId}> no está en la lista de roles de solicitud.",
+            "removedTitle": "Rol quitado",
+            "removedBody": "<@&{roleId}> se quitó de los roles de solicitud.",
+            "failed": "Ocurrió un error al quitar el rol de solicitud."
+        },
+        "retention": {
+            "modalTitle": "Conservación de solicitudes",
+            "info": "**En espera**: cuánto tiempo se guardan las solicitudes sin decisión antes de borrarse automáticamente.\n**Decididas**: cuánto tiempo se guardan las solicitudes aprobadas o rechazadas.\n-# Escribe un número entero entre 1 y 3650 (máximo 10 años).",
+            "pendingLabel": "Guardar en espera (días)",
+            "reviewedLabel": "Guardar decididas (días)",
+            "pendingInvalid": "La conservación de solicitudes en espera debe ser un número entero entre **1** y **3650** días.",
+            "reviewedInvalid": "La conservación de solicitudes decididas debe ser un número entero entre **1** y **3650** días.",
+            "updatedTitle": "Conservación cambiada",
+            "pendingKept": {
+                "one": "Las solicitudes en espera se guardarán **{count} día**.",
+                "many": "Las solicitudes en espera se guardarán **{count} días**.",
+                "other": "Las solicitudes en espera se guardarán **{count} días**."
+            },
+            "reviewedKept": {
+                "one": "Las solicitudes decididas se guardarán **{count} día**.",
+                "many": "Las solicitudes decididas se guardarán **{count} días**.",
+                "other": "Las solicitudes decididas se guardarán **{count} días**."
+            }
+        }
+    }
+}

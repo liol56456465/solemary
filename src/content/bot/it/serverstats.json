@@ -1,0 +1,120 @@
+{
+    "cmd": {
+        "root": "Gestisci le statistiche del server: contatori di membri e bot",
+        "create": {
+            "desc": "Crea un nuovo canale contatore in una categoria",
+            "type": "Cosa conta il contatore",
+            "channelType": "Il tipo di canale per questo contatore",
+            "category": "La categoria in cui verrà creato il canale contatore"
+        },
+        "list": {
+            "desc": "Mostra tutti i contatori di questo server"
+        },
+        "update": {
+            "desc": "Modifica un contatore esistente",
+            "counterId": "L'ID del contatore da modificare",
+            "type": "Il nuovo tipo di contatore"
+        },
+        "delete": {
+            "desc": "Elimina un contatore esistente",
+            "counterId": "L'ID del contatore da eliminare"
+        },
+        "choice": {
+            "members": "membri + bot",
+            "membersOnly": "solo membri",
+            "bots": "solo bot",
+            "voice": "canale vocale (consigliato)",
+            "text": "canale testuale"
+        }
+    },
+    "type": {
+        "members": {
+            "label": "Membri + bot",
+            "channelName": "Membri e bot"
+        },
+        "membersOnly": {
+            "label": "Solo membri",
+            "channelName": "Membri"
+        },
+        "bots": {
+            "label": "Solo bot",
+            "channelName": "Bot"
+        },
+        "unknown": {
+            "label": "Sconosciuto",
+            "channelName": "Contatore"
+        }
+    },
+    "success": "Fatto",
+    "unknownSubcommand": "Sottocomando sconosciuto.",
+    "noAdmin": {
+        "create": "Ti serve il permesso **Amministratore** per creare contatori.",
+        "view": "Ti serve il permesso **Amministratore** per vedere i contatori.",
+        "update": "Ti serve il permesso **Amministratore** per modificare i contatori.",
+        "delete": "Ti serve il permesso **Amministratore** per eliminare i contatori."
+    },
+    "error": {
+        "unknownType": "Tipo di contatore sconosciuto.",
+        "notCategory": "Scegli una categoria per il canale contatore.",
+        "typeInUse": "Su questo server esiste già un contatore **{type}**. Eliminalo prima di crearne un altro.",
+        "typeInUseIn": "Su questo server esiste già un contatore **{type}** in {channel}. Eliminalo prima di crearne un altro.",
+        "typeInUseReuse": "Su questo server esiste già un contatore **{type}**. Eliminalo prima di riusare questo tipo.",
+        "typeInUseReuseIn": "Su questo server esiste già un contatore **{type}** in {channel}. Eliminalo prima di riusare questo tipo.",
+        "saveFailed": "Non è stato possibile salvare il contatore. Riprova.",
+        "deleteFailed": "Non è stato possibile eliminare il contatore. Riprova.",
+        "notFound": "Il contatore con ID `{id}` non è stato trovato.",
+        "notFoundList": "Il contatore con ID `{id}` non è stato trovato. Usa `/serverstats list` per vedere tutti i contatori.",
+        "channelMissing": "Il canale di questo contatore non esiste più. Non puoi modificare il contatore di un canale eliminato.",
+        "createFailed": "Qualcosa è andato storto durante la creazione del contatore. Riprova.",
+        "updateFailed": "Qualcosa è andato storto durante la modifica del contatore. Riprova.",
+        "loadFailed": "Non è stato possibile caricare i contatori. Riprova.",
+        "noType": "Indica un nuovo tipo di contatore per modificarlo.",
+        "noneToDelete": "Nessun contatore da eliminare.",
+        "serverOnly": "Questa azione funziona solo in un server.",
+        "actionMissing": "Mancano i dati per eliminare il contatore.",
+        "notYours": "Solo chi ha avviato questa azione può usare questi pulsanti.",
+        "unknownAction": "Azione di eliminazione del contatore sconosciuta."
+    },
+    "create": {
+        "notRenamed": "Contatore creato, ma non sono ancora riuscito a rinominare il canale. Si aggiornerà al prossimo giro.",
+        "done": "**Contatore creato**\n\n**Tipo:** {type}\n**Tipo di canale:** {channelType}\n**Categoria:** {category}\n**Canale:** {channel}\n**Nome del canale:** {channelName}\n**ID del contatore:** `{id}`\n\nSi aggiorna ogni 15 minuti. `/serverstats list` mostra tutti i contatori.",
+        "voice": "vocale",
+        "text": "testuale"
+    },
+    "update": {
+        "notRenamed": "Contatore modificato, ma non sono ancora riuscito a rinominare il canale. Si aggiornerà al prossimo giro.",
+        "done": "**Contatore modificato**\n\n**ID del contatore:** `{id}`\n**Tipo:** {oldType} → {newType}\n**Canale:** {channel}\n**Nome del canale:** {channelName}\n\nSi aggiorna ogni 15 minuti."
+    },
+    "delete": {
+        "title": "Elimina contatore e canale",
+        "confirm": "Eliminare questo contatore e il suo canale?\n\n**ID:** `{id}`\n**Tipo:** {type}\n**Canale:** {channel}\n\n**Il canale viene eliminato per sempre.**",
+        "alreadyDeleted": "già eliminato",
+        "button": "Elimina",
+        "cancel": "Annulla",
+        "cancelledTitle": "Annullato",
+        "cancelledBody": "Non è stato eliminato nulla.",
+        "done": "**Contatore eliminato**\n\n**ID:** `{id}`\n**Tipo:** {type}",
+        "channelDeleted": "\n**Canale:** {name} (eliminato)",
+        "channelFailed": "\n**Canale:** {name} (eliminazione non riuscita)",
+        "channelGone": "\n**Canale:** Già eliminato"
+    },
+    "list": {
+        "title": "Contatori del server",
+        "empty": "Non ci sono ancora contatori.\n\nUsa `/serverstats create` per aggiungerne uno.",
+        "typesName": "Tipi di contatore",
+        "typesValue": "**Membri + bot**: tutti\n**Solo membri**: le persone, senza bot\n**Solo bot**: solo i bot",
+        "examplesName": "Esempi",
+        "examplesValue": "`/serverstats create type:members channel_type:voice category:Statistiche`\n`/serverstats create type:bots channel_type:text category:Info server`\n`/serverstats list`",
+        "footer": "I contatori si aggiornano ogni 15 minuti",
+        "titleCount": "Contatori del server ({count})",
+        "description": "Tutti i contatori di questo server. Si aggiornano ogni 15 minuti.",
+        "upToDate": "Aggiornato",
+        "notUpdated": "Non ancora aggiornato",
+        "counterName": "Contatore n. {number} · {channelName}",
+        "counterValue": "**ID:** `{id}`\n**Tipo:** {type}\n**Canale:** {channel}\n**Conteggio:** {count}\n**Stato:** {status}\n**Creato:** {created}",
+        "totalsName": "Totali",
+        "totalsValue": "**Contatori:** {counters}\n**Aggiornati:** {upToDate}\n**Prossimo aggiornamento:** <t:{next}:R>",
+        "commandsName": "Comandi",
+        "commandsValue": "`/serverstats create`: aggiungi un contatore\n`/serverstats update`: modifica un contatore\n`/serverstats delete`: rimuovi un contatore"
+    }
+}

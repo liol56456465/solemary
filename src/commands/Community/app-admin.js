@@ -17,69 +17,60 @@ import {
     saveApplicationRoleSettings
 } from '../../utils/database.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+import { textForInteraction } from '../../utils/botText.js';
+import { describe, descriptionLocalizations } from '../../utils/commandLocalizations.js';
 import appDashboard from './modules/app_dashboard.js';
 import { createApplicationRole } from '../../services/applicationRoleService.js';
 import { getApplicationStatusPresentation, reviewApplicationAndNotify } from '../../services/applicationReviewService.js';
 
 export default {
-    data: new SlashCommandBuilder()
-    .setName("app-admin")
-    .setDescription("Manage staff applications")
+    data: describe(new SlashCommandBuilder()
+    .setName("app-admin"), 'community.cmd.appAdmin.description')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommand((subcommand) =>
-        subcommand
-            .setName("setup")
-            .setDescription("Set up a new application")
+        describe(subcommand
+            .setName("setup"), 'community.cmd.appAdmin.setup.description')
     )
     .addSubcommand((subcommand) =>
-        subcommand
-            .setName("review")
-            .setDescription("Approve or deny an application")
+        describe(subcommand
+            .setName("review"), 'community.cmd.appAdmin.review.description')
             .addStringOption((option) =>
-                option
-                    .setName("id")
-                    .setDescription("The application ID")
+                describe(option
+                    .setName("id"), 'community.cmd.appAdmin.review.id')
                     .setRequired(true),
             ),
     )
     .addSubcommand((subcommand) =>
-        subcommand
-            .setName("list")
-            .setDescription("List all applications")
+        describe(subcommand
+            .setName("list"), 'community.cmd.appAdmin.list.description')
             .addStringOption((option) =>
-                option
-                    .setName("status")
-                    .setDescription("Filter by status")
+                describe(option
+                    .setName("status"), 'community.cmd.appAdmin.list.status')
                     .addChoices(
-                        { name: "Pending", value: "pending" },
-                        { name: "Approved", value: "approved" },
-                        { name: "Denied", value: "denied" },
+                        { name: "Pending", name_localizations: descriptionLocalizations('community.cmd.appAdmin.list.choice.pending'), value: "pending" },
+                        { name: "Approved", name_localizations: descriptionLocalizations('community.cmd.appAdmin.list.choice.approved'), value: "approved" },
+                        { name: "Denied", name_localizations: descriptionLocalizations('community.cmd.appAdmin.list.choice.denied'), value: "denied" },
                     ),
             )
             .addStringOption((option) =>
-                option.setName("role").setDescription("Filter by role ID"),
+                describe(option.setName("role"), 'community.cmd.appAdmin.list.role'),
             )
             .addUserOption((option) =>
-                option.setName("user").setDescription("Filter by user"),
+                describe(option.setName("user"), 'community.cmd.appAdmin.list.user'),
             )
             .addNumberOption((option) =>
-                option
-                    .setName("limit")
-                    .setDescription(
-                        "Maximum number of applications to show (default: 10)",
-                    )
+                describe(option
+                    .setName("limit"), 'community.cmd.appAdmin.list.limit')
                     .setMinValue(1)
                     .setMaxValue(25),
             ),
     )
     .addSubcommand((subcommand) =>
-        subcommand
-            .setName("dashboard")
-            .setDescription("Open the applications configuration dashboard")
+        describe(subcommand
+            .setName("dashboard"), 'community.cmd.appAdmin.dashboard.description')
             .addStringOption((option) =>
-                option
-                    .setName("application")
-                    .setDescription("Select an application to configure")
+                describe(option
+                    .setName("application"), 'community.cmd.appAdmin.dashboard.application')
                     .setRequired(false)
                     .setAutocomplete(true),
             ),
@@ -89,7 +80,7 @@ export default {
 
     execute: withErrorHandling(async (interaction) => {
         if (!interaction.inGuild()) {
-            return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This command can only be used in a server.' });
+            return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: textForInteraction(interaction).t('community.apply.serverOnly') });
         }
 
         const { options, guild, member } = interaction;
@@ -121,58 +112,59 @@ export default {
 };
 
 async function handleSetup(interaction) {
-    
+    const tr = textForInteraction(interaction);
+
     if (interaction.deferred || interaction.replied) {
-        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This interaction has already been processed. Please try the command again.' });
+        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('community.appAdmin.alreadyProcessed') });
     }
 
     const modal = new ModalBuilder()
         .setCustomId('app_setup_modal')
-        .setTitle('Set up new application');
+        .setTitle(tr.t('community.appAdmin.setup.modalTitle'));
 
     const roleSelect = new RoleSelectMenuBuilder()
         .setCustomId('role_id')
-        .setPlaceholder('Select the role users will apply for')
+        .setPlaceholder(tr.t('community.appAdmin.setup.rolePlaceholder'))
         .setRequired(true);
 
     const roleLabel = new LabelBuilder()
-        .setLabel('Application role')
-        .setDescription('The role that users will be applying for')
+        .setLabel(tr.t('community.appAdmin.setup.roleLabel'))
+        .setDescription(tr.t('community.appAdmin.setup.roleDescription'))
         .setRoleSelectMenuComponent(roleSelect);
 
     const appNameInput = new TextInputBuilder()
         .setCustomId('app_name')
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder('e.g., Moderator, Helper, Developer')
+        .setPlaceholder(tr.t('community.appAdmin.setup.namePlaceholder'))
         .setMaxLength(50)
         .setMinLength(1)
         .setRequired(true);
 
     const appNameLabel = new LabelBuilder()
-        .setLabel('Application name')
+        .setLabel(tr.t('community.appAdmin.setup.nameLabel'))
         .setTextInputComponent(appNameInput);
 
     const q1Input = new TextInputBuilder()
         .setCustomId('app_question_1')
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder('Why do you want this role?')
+        .setPlaceholder(tr.t('community.appAdmin.setup.q1Placeholder'))
         .setMaxLength(112)
         .setMinLength(1)
         .setRequired(true);
 
     const q1Label = new LabelBuilder()
-        .setLabel('Question 1 (required)')
+        .setLabel(tr.t('community.appAdmin.questionRequired', { number: 1 }))
         .setTextInputComponent(q1Input);
 
     const q2Input = new TextInputBuilder()
         .setCustomId('app_question_2')
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder('What experience do you have?')
+        .setPlaceholder(tr.t('community.appAdmin.setup.q2Placeholder'))
         .setMaxLength(112)
         .setRequired(false);
 
     const q2Label = new LabelBuilder()
-        .setLabel('Question 2 (optional)')
+        .setLabel(tr.t('community.appAdmin.questionOptional', { number: 2 }))
         .setTextInputComponent(q2Input);
 
     const q3Input = new TextInputBuilder()
@@ -182,7 +174,7 @@ async function handleSetup(interaction) {
         .setRequired(false);
 
     const q3Label = new LabelBuilder()
-        .setLabel('Question 3 (optional)')
+        .setLabel(tr.t('community.appAdmin.questionOptional', { number: 3 }))
         .setTextInputComponent(q3Input);
 
     modal.addLabelComponents(roleLabel, appNameLabel, q1Label, q2Label, q3Label);
@@ -206,7 +198,7 @@ async function handleSetup(interaction) {
     const roleId = selectedRoles.first()?.id;
 
     if (!roleId) {
-        await replyUserError(submitted, { type: ErrorTypes.USER_INPUT, message: 'You must select a role for the application.' });
+        await replyUserError(submitted, { type: ErrorTypes.USER_INPUT, message: tr.t('community.appAdmin.setup.noRole') });
         return;
     }
 
@@ -219,7 +211,7 @@ async function handleSetup(interaction) {
 
     const role = await interaction.guild.roles.fetch(roleId).catch(() => null);
     if (!role) {
-        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: 'The selected role could not be found.' });
+        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: tr.t('community.appAdmin.setup.roleNotFound') });
         return;
     }
 
@@ -237,8 +229,8 @@ async function handleSetup(interaction) {
 
     await submitted.reply({
         embeds: [successEmbed(
-            'Application created',
-            `**${appName}** application has been created for ${role}.\n\nYou can change the log channel, manager roles, questions and retention period in the dashboard.`,
+            tr.t('community.appAdmin.setup.createdTitle'),
+            tr.t('community.appAdmin.setup.createdBody', { name: appName, role: String(role) }),
         )],
         flags: ['Ephemeral'],
     });
@@ -253,6 +245,7 @@ async function handleSetup(interaction) {
 
 async function handleReview(interaction) {
     const appId = interaction.options.getString("id");
+    const tr = textForInteraction(interaction);
 
     const application = await getApplication(
         interaction.client,
@@ -260,24 +253,24 @@ async function handleReview(interaction) {
         appId,
     );
     if (!application) {
-        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'Application not found.' });
+        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: tr.t('community.appAdmin.review.notFound') });
     }
 
     if (application.status !== "pending") {
-        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This application has already been processed.' });
+        return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('community.appAdmin.review.processed') });
     }
 
     const appEmbed = createEmbed({
-        title: `Review Application`,
-        description: `**User:** <@${application.userId}>\n**Application:** ${application.roleName}\n**Application ID:** \`${appId}\``,
+        title: tr.t('community.appAdmin.review.title'),
+        description: tr.t('community.appAdmin.review.body', { userId: application.userId, name: application.roleName, id: appId }),
         color: 'info',
     });
 
     if (application.answers && application.answers.length > 0) {
         application.answers.forEach((item, index) => {
             appEmbed.addFields({
-                name: `Q${index + 1}: ${item.question}`,
-                value: item.answer || '*No answer provided*',
+                name: tr.t('community.appAdmin.review.question', { number: index + 1, question: item.question }),
+                value: item.answer || tr.t('community.appAdmin.review.noAnswer'),
                 inline: false
             });
         });
@@ -286,11 +279,11 @@ async function handleReview(interaction) {
     const buttonRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId(`app_review_approve_${appId}`)
-            .setLabel('Approve')
+            .setLabel(tr.t('community.appAdmin.review.approve'))
             .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
             .setCustomId(`app_review_deny_${appId}`)
-            .setLabel('Deny')
+            .setLabel(tr.t('community.appAdmin.review.deny'))
             .setStyle(ButtonStyle.Danger),
     );
 
@@ -315,15 +308,15 @@ async function handleReview(interaction) {
 
         const reasonModal = new ModalBuilder()
             .setCustomId(`app_review_reason_${appId}_${isApprove ? 'approve' : 'deny'}`)
-            .setTitle(`${isApprove ? 'Approve' : 'Deny'} Application - Reason`);
+            .setTitle(isApprove ? tr.t('community.appAdmin.review.approveTitle') : tr.t('community.appAdmin.review.denyTitle'));
 
         reasonModal.addComponents(
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
                     .setCustomId('review_reason')
-                    .setLabel('Reason (optional)')
+                    .setLabel(tr.t('community.appAdmin.review.reasonLabel'))
                     .setStyle(TextInputStyle.Paragraph)
-                    .setPlaceholder('Provide a reason for this decision...')
+                    .setPlaceholder(tr.t('community.appAdmin.review.reasonPlaceholder'))
                     .setMaxLength(500)
                     .setRequired(false),
             ),
@@ -354,25 +347,24 @@ async function handleReview(interaction) {
 
             await reasonSubmit.reply({
                 embeds: [
-                    successEmbed(
-                        `Application ${status}`,
-                        `The application has been **${status}**.`,
-                    ),
+                    status === 'approved'
+                        ? successEmbed(tr.t('community.appAdmin.review.approvedTitle'), tr.t('community.appAdmin.review.approvedBody'))
+                        : successEmbed(tr.t('community.appAdmin.review.deniedTitle'), tr.t('community.appAdmin.review.deniedBody')),
                 ],
                 flags: ["Ephemeral"],
             });
 
         } catch (error) {
             logger.error('Error reviewing application:', error);
-            await replyUserError(buttonInteraction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while reviewing the application.' });
+            await replyUserError(buttonInteraction, { type: ErrorTypes.UNKNOWN, message: tr.t('community.appAdmin.review.failed') });
         }
     });
 
     collector.on('end', async (collected, reason) => {
         if (reason === 'time') {
             const timeoutEmbed = createEmbed({
-                title: 'Review timeout',
-                description: 'The review buttons have timed out.',
+                title: tr.t('community.appAdmin.review.timeoutTitle'),
+                description: tr.t('community.appAdmin.review.timeoutBody'),
                 color: 'warning',
             });
 
@@ -388,6 +380,7 @@ async function handleList(interaction) {
     const status = interaction.options.getString("status");
     const user = interaction.options.getUser("user");
     const limit = interaction.options.getNumber("limit") || 10;
+    const tr = textForInteraction(interaction);
 
     const filters = {};
     
@@ -431,29 +424,28 @@ async function handleList(interaction) {
         
         if (applicationRoles.length > 0) {
             const embed = createEmbed({ 
-                title: "No Applications Found", 
-                description: "No submitted applications found matching the specified criteria.\n\nHowever, the following application roles are configured:" 
+                title: tr.t('community.appAdmin.list.noneTitle'),
+                description: tr.t('community.appAdmin.list.noneDescription')
             });
 
             applicationRoles.forEach((appRole, index) => {
                 const role = interaction.guild.roles.cache.get(appRole.roleId);
                 embed.addFields({
                     name: `${index + 1}. ${appRole.name}`,
-                    value: `**Role:** ${role ?`<@&${appRole.roleId}>`: 'Role not found'}\n**Available for applications:** Yes`,
+                    value: tr.t('community.appAdmin.list.roleEntry', { role: role ? `<@&${appRole.roleId}>` : tr.t('community.apply.list.roleMissing') }),
                     inline: false
                 });
             });
 
             embed.setFooter({
-                text: "Users can apply with /apply submit or see available roles with /apply list"
+                text: tr.t('community.appAdmin.list.footer')
             });
 
             return InteractionHelper.safeEditReply(interaction, { embeds: [embed], flags: ["Ephemeral"] });
         } else {
             return await replyUserError(interaction, {
                 type: ErrorTypes.CONFIGURATION,
-                message: 'No applications found and no application roles configured.\n' +
-                    'Use `/app-admin roles add` to configure application roles first.'
+                message: tr.t('community.appAdmin.list.noneConfigured')
             });
         }
     }
@@ -462,23 +454,20 @@ async function handleList(interaction) {
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         .slice(0, limit);
 
-    const embed = createEmbed({ title: "Submitted Applications", description: `Showing ${applications.length} applications.`, });
+    const embed = createEmbed({ title: tr.t('community.appAdmin.list.title'), description: tr.tp('community.appAdmin.list.description', applications.length) });
 
     applications.forEach((app) => {
-        const statusView = getApplicationStatusPresentation(app?.status);
-        const roleName = app?.roleName || 'Unknown Role';
-        const username = app?.username || 'Unknown User';
+        const statusView = getApplicationStatusPresentation(app?.status, { lang: tr.lang });
+        const roleName = app?.roleName || tr.t('community.apply.status.unknownRole');
+        const username = app?.username || tr.t('community.appAdmin.list.unknownUser');
         const createdAt = app?.createdAt ? new Date(app.createdAt) : null;
         const createdAtDisplay = createdAt && !Number.isNaN(createdAt.getTime())
             ? createdAt.toLocaleString()
-            : 'Unknown date';
+            : tr.t('community.apply.status.unknownDate');
 
         embed.addFields({
             name: `${roleName} - ${username}`,
-            value:
-                `**ID:** \`${app.id}\`\n` +
-                `**Status:** ${statusView.statusLabel}\n` +
-                `**Date:** ${createdAtDisplay}`,
+            value: tr.t('community.appAdmin.list.entry', { id: app.id, status: statusView.statusLabel, date: createdAtDisplay }),
             inline: true,
         });
     });

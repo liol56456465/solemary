@@ -10,6 +10,7 @@ import { deleteGiveaway, getGuildGiveaways, saveGiveaway } from '../utils/giveaw
 import { Mutex } from '../utils/mutex.js';
 import { checkRateLimit, getRateLimitStatus } from '../utils/rateLimiter.js';
 import { logEvent, EVENT_TYPES } from './loggingService.js';
+import { botText, textForGuild } from '../utils/botText.js';
 
 const GIVEAWAY_CONFIG = botConfig.giveaways || {};
 const GIVEAWAY_INTERACTION_COOLDOWN = 1000;
@@ -18,12 +19,18 @@ function getGiveawayInteractionKey(userId, giveawayId) {
     return `giveaway:${userId}:${giveawayId}`;
 }
 
-export function parseDuration(durationString) {
+// User-facing errors take { lang } (the invoker's language; default English, e.g. the dashboard).
+// Public posts (the giveaway message, its buttons, the winner announcement) are in the
+// server's language (textForGuild, purpose 'public').
+const publicLang = (guildId) => textForGuild(guildId, { purpose: 'public' }).lang;
+
+export function parseDuration(durationString, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     if (!durationString || typeof durationString !== 'string') {
         throw new TitanBotError(
             'Invalid duration format provided',
             ErrorTypes.VALIDATION,
-            'Please provide a valid duration (e.g., 1h, 30m, 5d, 10s).',
+            tr.t('giveaway.errors.durationMissing'),
             { durationString }
         );
     }
@@ -35,7 +42,7 @@ export function parseDuration(durationString) {
         throw new TitanBotError(
             `Invalid duration format: ${durationString}`,
             ErrorTypes.VALIDATION,
-            'Invalid duration format. Use: 1h, 30m, 5d, 10s (min: 10s, max: 30d)',
+            tr.t('giveaway.errors.durationFormat'),
             { input: durationString }
         );
     }
@@ -47,7 +54,7 @@ export function parseDuration(durationString) {
         throw new TitanBotError(
             `Duration amount out of range: ${amount}`,
             ErrorTypes.VALIDATION,
-            'Duration amount must be between 1 and 999.',
+            tr.t('giveaway.errors.durationAmount'),
             { amount, unit }
         );
     }
@@ -70,7 +77,7 @@ export function parseDuration(durationString) {
             throw new TitanBotError(
                 `Unknown duration unit: ${unit}`,
                 ErrorTypes.VALIDATION,
-                'Please use s (seconds), m (minutes), h (hours), or d (days).',
+                tr.t('giveaway.errors.durationUnit'),
                 { unit }
             );
     }
@@ -80,7 +87,7 @@ export function parseDuration(durationString) {
         throw new TitanBotError(
             `Duration exceeds maximum: ${ms}ms > ${maxDuration}ms`,
             ErrorTypes.VALIDATION,
-            `Maximum duration is ${Math.floor(maxDuration / (24 * 60 * 60 * 1000))} days.`,
+            tr.tp('giveaway.errors.durationMax', Math.floor(maxDuration / (24 * 60 * 60 * 1000))),
             { requestedMs: ms, maxMs: maxDuration }
         );
     }
@@ -90,7 +97,7 @@ export function parseDuration(durationString) {
         throw new TitanBotError(
             `Duration below minimum: ${ms}ms < ${minDuration}ms`,
             ErrorTypes.VALIDATION,
-            `Minimum duration is ${Math.ceil(minDuration / 1000)} seconds.`,
+            tr.tp('giveaway.errors.durationMin', Math.ceil(minDuration / 1000)),
             { requestedMs: ms, minMs: minDuration }
         );
     }
@@ -98,12 +105,13 @@ export function parseDuration(durationString) {
     return ms;
 }
 
-export function validatePrize(prize) {
+export function validatePrize(prize, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     if (!prize || typeof prize !== 'string') {
         throw new TitanBotError(
             'Prize must be a non-empty string',
             ErrorTypes.VALIDATION,
-            'Please provide a valid prize description.',
+            tr.t('giveaway.errors.prizeMissing'),
             { prize }
         );
     }
@@ -113,7 +121,7 @@ export function validatePrize(prize) {
         throw new TitanBotError(
             `Prize length out of range: ${trimmed.length}`,
             ErrorTypes.VALIDATION,
-            'Prize must be between 1 and 256 characters.',
+            tr.t('giveaway.errors.prizeLength'),
             { length: trimmed.length }
         );
     }
@@ -121,7 +129,7 @@ export function validatePrize(prize) {
     return trimmed;
 }
 
-export function validateWinnerCount(winnerCount) {
+export function validateWinnerCount(winnerCount, { lang = 'en' } = {}) {
     const minimumWinners = GIVEAWAY_CONFIG.minimumWinners ?? 1;
     const maximumWinners = GIVEAWAY_CONFIG.maximumWinners ?? 10;
 
@@ -129,35 +137,38 @@ export function validateWinnerCount(winnerCount) {
         throw new TitanBotError(
             `Invalid winner count: ${winnerCount}`,
             ErrorTypes.VALIDATION,
-            `Winner count must be between ${minimumWinners} and ${maximumWinners}.`,
+            botText(lang).t('giveaway.errors.winnerCount', { min: minimumWinners, max: maximumWinners }),
             { winnerCount, minimumWinners, maximumWinners }
         );
     }
 }
 
-export function createGiveawayEmbed(giveaway, status, winners = []) {
+/** The giveaway message embed. lang: the server's language (default English). */
+export function createGiveawayEmbed(giveaway, status, winners = [], { lang = 'en' } = {}) {
     try {
+        const tr = botText(lang);
         const isEnded = status === 'ended' || status === 'reroll';
-        const color = isEnded ? getColor('giveaway.ended') : getColor('giveaway.active');
+        // Colour keys of config/bot.js (backticks: not catalog keys, so the key-usage test skips them).
+        const color = isEnded ? getColor(`giveaway.ended`) : getColor(`giveaway.active`);
         
         const embed = new EmbedBuilder()
             .setTitle(String(giveaway.prize))
-            .setDescription(isEnded ? 'This giveaway has ended.' : 'Click Join to enter.')
+            .setDescription(isEnded ? tr.t('giveaway.embed.ended') : tr.t('giveaway.embed.clickJoin'))
             .setColor(color)
             .addFields(
-                { name: 'Host', value: `<@${giveaway.hostId}>`, inline: true },
-                { name: 'Winners', value: giveaway.winnerCount.toString(), inline: true },
-                { name: 'Entries', value: giveaway.participants?.length?.toString() || '0', inline: true }
+                { name: tr.t('giveaway.embed.host'), value: `<@${giveaway.hostId}>`, inline: true },
+                { name: tr.t('giveaway.embed.winners'), value: giveaway.winnerCount.toString(), inline: true },
+                { name: tr.t('giveaway.embed.entries'), value: giveaway.participants?.length?.toString() || '0', inline: true }
             );
 
         if (isEnded) {
             const winnerDisplay = winners.length > 0 
                 ? winners.map(id => `<@${id}>`).join(', ')
-                : 'Nobody entered';
-            embed.addFields({ name: 'Won by', value: winnerDisplay, inline: false });
+                : tr.t('giveaway.embed.nobodyEntered');
+            embed.addFields({ name: tr.t('giveaway.embed.wonBy'), value: winnerDisplay, inline: false });
         } else {
             const endTime = giveaway.endsAt || giveaway.endTime;
-            embed.addFields({ name: 'Ends', value: `<t:${Math.floor(endTime / 1000)}:R>`, inline: false });
+            embed.addFields({ name: tr.t('giveaway.embed.ends'), value: `<t:${Math.floor(endTime / 1000)}:R>`, inline: false });
         }
 
         embed.setTimestamp();
@@ -174,20 +185,22 @@ export function createGiveawayEmbed(giveaway, status, winners = []) {
     }
 }
 
-export function createGiveawayButtons(ended = false) {
+/** The giveaway message buttons. lang: the server's language (default English). */
+export function createGiveawayButtons(ended = false, { lang = 'en' } = {}) {
     try {
+        const tr = botText(lang);
         const row = new ActionRowBuilder();
 
         if (ended) {
             row.addComponents(
                 new ButtonBuilder()
                     .setCustomId('giveaway_reroll')
-                    .setLabel('Reroll')
+                    .setLabel(tr.t('giveaway.buttons.reroll'))
                     .setStyle(ButtonStyle.Secondary)
                     .setDisabled(false),
                 new ButtonBuilder()
                     .setCustomId('giveaway_view')
-                    .setLabel('Winners')
+                    .setLabel(tr.t('giveaway.buttons.winners'))
                     .setStyle(ButtonStyle.Primary)
                     .setDisabled(false)
             );
@@ -195,13 +208,13 @@ export function createGiveawayButtons(ended = false) {
             row.addComponents(
                 new ButtonBuilder()
                     .setCustomId('giveaway_join')
-                    .setLabel('Join')
+                    .setLabel(tr.t('giveaway.buttons.join'))
                     .setEmoji('🎉')
                     .setStyle(ButtonStyle.Primary)
                     .setDisabled(false),
                 new ButtonBuilder()
                     .setCustomId('giveaway_end')
-                    .setLabel('End')
+                    .setLabel(tr.t('giveaway.buttons.end'))
                     .setStyle(ButtonStyle.Danger)
                     .setDisabled(false)
             );
@@ -272,13 +285,14 @@ export async function recordUserInteraction(userId, giveawayId) {
     );
 }
 
-export async function endGiveaway(client, giveaway, guildId, endedBy) {
+export async function endGiveaway(client, giveaway, guildId, endedBy, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     try {
         if (!giveaway) {
             throw new TitanBotError(
                 'Giveaway object is null or undefined',
                 ErrorTypes.VALIDATION,
-                'Cannot end a non-existent giveaway.',
+                tr.t('giveaway.errors.endMissing'),
                 { giveaway }
             );
         }
@@ -287,7 +301,7 @@ export async function endGiveaway(client, giveaway, guildId, endedBy) {
             throw new TitanBotError(
                 `Giveaway ${giveaway.messageId} is already ended`,
                 ErrorTypes.VALIDATION,
-                'This giveaway has already ended.',
+                tr.t('giveaway.errors.alreadyEnded'),
                 { giveawayId: giveaway.messageId, status: 'already_ended' }
             );
         }
@@ -321,7 +335,7 @@ export async function endGiveaway(client, giveaway, guildId, endedBy) {
         throw new TitanBotError(
             'Failed to end giveaway',
             ErrorTypes.UNKNOWN,
-            'An error occurred while ending the giveaway.',
+            tr.t('giveaway.errors.endFailed'),
             { error: error.message, giveawayId: giveaway?.messageId }
         );
     }
@@ -373,6 +387,8 @@ export async function checkGiveaways(client) {
 
           const participants = giveaway.participants || [];
           const winners = selectWinners(participants, giveaway.winnerCount || 1);
+          const lang = publicLang(guildId);
+          const tr = botText(lang);
 
           const winnerMentions = winners.length > 0
             ? winners.map(id => `<@${id}>`).join(', ')
@@ -396,15 +412,15 @@ export async function checkGiveaways(client) {
             return;
           }
 
-          const endedEmbed = createGiveawayEmbed(giveaway, 'ended', winners);
+          const endedEmbed = createGiveawayEmbed(giveaway, 'ended', winners, { lang });
 
           await message.edit({
             embeds: [endedEmbed],
-            components: [createGiveawayButtons(true)]
+            components: [createGiveawayButtons(true, { lang })]
           }).catch((error) => logger.warn(`Could not edit ended giveaway message ${messageId}: ${error.message}`));
 
           if (winners.length > 0) {
-            const winnerAnnouncement = `${winnerMentions} won **${giveaway.prize || 'the giveaway'}**. Message <@${giveaway.hostId}> to get your prize.`;
+            const winnerAnnouncement = tr.t('giveaway.post.won', { winners: winnerMentions, prize: giveaway.prize || tr.t('giveaway.post.theGiveaway'), hostId: giveaway.hostId });
             const winnerPingMsg = await channel.send({ content: winnerAnnouncement, allowedMentions: { users: [...new Set([...winners, giveaway.hostId].filter(Boolean))] } });
             giveaway.winnerPingMessageId = winnerPingMsg.id;
             // Only the ping id is new here; the ended state is already saved, so a failed
@@ -444,7 +460,7 @@ export async function checkGiveaways(client) {
               logger.debug('Error logging giveaway winner:', error);
             }
           } else {
-            await channel.send({ content: `The giveaway for **${giveaway.prize}** ended. Nobody entered, so there's no winner.`, allowedMentions: { parse: [] } });
+            await channel.send({ content: tr.t('giveaway.post.noWinner', { prize: giveaway.prize }), allowedMentions: { parse: [] } });
           }
 
           logger.info(`Ended giveaway ${messageId} in guild ${guildId}`);
@@ -463,25 +479,25 @@ export async function checkGiveaways(client) {
 // per-giveaway lock as the Join button and the scheduled end (checkGiveaways), and
 // re-read the giveaway inside it, so entries and a concurrent end aren't lost.
 
-function validateGiveawayMessageId(messageId) {
+function validateGiveawayMessageId(messageId, lang = 'en') {
   if (!messageId || !/^\d+$/.test(messageId)) {
     throw new TitanBotError(
       'Invalid message ID format',
       ErrorTypes.VALIDATION,
-      'Please provide a valid message ID.',
+      botText(lang).t('giveaway.errors.badMessageId'),
       { providedId: messageId }
     );
   }
 }
 
-async function findGiveaway(client, guildId, messageId) {
+async function findGiveaway(client, guildId, messageId, lang = 'en') {
   const giveaways = await getGuildGiveaways(client, guildId);
   const giveaway = giveaways.find(g => g.messageId === messageId);
   if (!giveaway) {
     throw new TitanBotError(
       `Giveaway not found: ${messageId}`,
       ErrorTypes.VALIDATION,
-      'No giveaway was found with that message ID in the database.',
+      botText(lang).t('giveaway.errors.notFound'),
       { messageId, guildId }
     );
   }
@@ -510,12 +526,13 @@ async function fetchGiveawayMessage(channel, messageId) {
  * Throws TitanBotError (userMessage) for a bad id, an unknown or already-ended
  * giveaway, and a missing channel or message (the ended state is saved first).
  */
-export async function endGiveawayNow(client, guildId, messageId, endedBy) {
-  validateGiveawayMessageId(messageId);
+export async function endGiveawayNow(client, guildId, messageId, endedBy, { lang = 'en' } = {}) {
+  validateGiveawayMessageId(messageId, lang);
+  const tr = botText(lang);
 
   return Mutex.runExclusive(`giveaway:${messageId}`, async () => {
-    const giveaway = await findGiveaway(client, guildId, messageId);
-    const endResult = await endGiveaway(client, giveaway, guildId, endedBy);
+    const giveaway = await findGiveaway(client, guildId, messageId, lang);
+    const endResult = await endGiveaway(client, giveaway, guildId, endedBy, { lang });
     const updatedGiveaway = endResult.giveaway;
     const winners = endResult.winners;
 
@@ -525,7 +542,7 @@ export async function endGiveawayNow(client, guildId, messageId, endedBy) {
       throw new TitanBotError(
         `Channel not found: ${updatedGiveaway.channelId}`,
         ErrorTypes.VALIDATION,
-        'Could not find the channel where the giveaway was hosted. The giveaway state has been updated.',
+        tr.t('giveaway.errors.channelGone'),
         { channelId: updatedGiveaway.channelId, messageId }
       );
     }
@@ -536,23 +553,25 @@ export async function endGiveawayNow(client, guildId, messageId, endedBy) {
       throw new TitanBotError(
         `Message not found: ${messageId}`,
         ErrorTypes.VALIDATION,
-        'Could not find the giveaway message. The giveaway state has been updated.',
+        tr.t('giveaway.errors.messageGone'),
         { messageId, channelId: updatedGiveaway.channelId }
       );
     }
 
     await saveGiveaway(client, guildId, updatedGiveaway);
+    const postLang = publicLang(guildId);
+    const post = botText(postLang);
 
     await message.edit({
-      content: '**Giveaway ended**',
-      embeds: [createGiveawayEmbed(updatedGiveaway, 'ended', winners)],
-      components: [createGiveawayButtons(true)],
+      content: post.t('giveaway.post.ended'),
+      embeds: [createGiveawayEmbed(updatedGiveaway, 'ended', winners, { lang: postLang })],
+      components: [createGiveawayButtons(true, { lang: postLang })],
     });
 
     if (winners.length > 0) {
       const winnerMentions = winners.map((id) => `<@${id}>`).join(',');
       const winnerPingMsg = await channel.send({
-        content: `${winnerMentions} won **${updatedGiveaway.prize}**. Message <@${updatedGiveaway.hostId}> to get your prize.`,
+        content: post.t('giveaway.post.won', { winners: winnerMentions, prize: updatedGiveaway.prize, hostId: updatedGiveaway.hostId }),
       });
       updatedGiveaway.winnerPingMessageId = winnerPingMsg.id;
       await saveGiveaway(client, guildId, updatedGiveaway);
@@ -580,7 +599,7 @@ export async function endGiveawayNow(client, guildId, messageId, endedBy) {
       }
     } else {
       await channel.send({
-        content: `The giveaway for **${updatedGiveaway.prize}** ended. Nobody entered, so there's no winner.`,
+        content: post.t('giveaway.post.noWinner', { prize: updatedGiveaway.prize }),
       });
       logger.info(`Giveaway ended with no winners: ${messageId}`);
     }
@@ -604,17 +623,18 @@ export async function endGiveawayNow(client, guildId, messageId, endedBy) {
  * Throws TitanBotError (userMessage) for a bad id, an unknown or still-active
  * giveaway, and too few entries.
  */
-export async function rerollGiveaway(client, guildId, messageId, rerolledBy) {
-  validateGiveawayMessageId(messageId);
+export async function rerollGiveaway(client, guildId, messageId, rerolledBy, { lang = 'en' } = {}) {
+  validateGiveawayMessageId(messageId, lang);
+  const tr = botText(lang);
 
   return Mutex.runExclusive(`giveaway:${messageId}`, async () => {
-    const giveaway = await findGiveaway(client, guildId, messageId);
+    const giveaway = await findGiveaway(client, guildId, messageId, lang);
 
     if (!giveaway.isEnded && !giveaway.ended) {
       throw new TitanBotError(
         `Giveaway still active: ${messageId}`,
         ErrorTypes.VALIDATION,
-        'This giveaway is still active. Please use `/giveaway end` to end it first.',
+        tr.t('giveaway.errors.stillActive'),
         { messageId, status: 'active' }
       );
     }
@@ -624,7 +644,7 @@ export async function rerollGiveaway(client, guildId, messageId, rerolledBy) {
       throw new TitanBotError(
         `Insufficient participants for reroll: ${participants.length} < ${giveaway.winnerCount}`,
         ErrorTypes.VALIDATION,
-        'Not enough entries to pick the required number of winners.',
+        tr.t('giveaway.errors.notEnoughEntries'),
         { participantsCount: participants.length, winnersNeeded: giveaway.winnerCount }
       );
     }
@@ -653,19 +673,21 @@ export async function rerollGiveaway(client, guildId, messageId, rerolledBy) {
 
     const message = await fetchGiveawayMessage(channel, messageId);
     await saveGiveaway(client, guildId, updatedGiveaway);
+    const postLang = publicLang(guildId);
+    const post = botText(postLang);
 
     if (message) {
       await message.edit({
-        content: '**Giveaway rerolled**',
-        embeds: [createGiveawayEmbed(updatedGiveaway, 'reroll', newWinners)],
-        components: [createGiveawayButtons(true)],
+        content: post.t('giveaway.post.rerolled'),
+        embeds: [createGiveawayEmbed(updatedGiveaway, 'reroll', newWinners, { lang: postLang })],
+        components: [createGiveawayButtons(true, { lang: postLang })],
       });
     }
 
     const winnerMentions = newWinners.map((id) => `<@${id}>`).join(',');
     const pingContent = message
-      ? `Rerolled: ${winnerMentions} won **${giveaway.prize}** instead. Message <@${giveaway.hostId}> to get your prize.`
-      : `Rerolled **${giveaway.prize}**: ${winnerMentions}`;
+      ? post.t('giveaway.post.rerolledWon', { winners: winnerMentions, prize: giveaway.prize, hostId: giveaway.hostId })
+      : post.t('giveaway.post.rerolledShort', { prize: giveaway.prize, winners: winnerMentions });
 
     const existingPingMsg = giveaway.winnerPingMessageId
       ? await channel.messages.fetch(giveaway.winnerPingMessageId).catch(() => null)
@@ -717,16 +739,17 @@ const GIVEAWAY_CHANNEL_PERMISSIONS = ['ViewChannel', 'SendMessages', 'EmbedLinks
  * logs GIVEAWAY_CREATE. Resolves { giveaway, message, durationMs, saved }.
  * Throws TitanBotError (userMessage) for bad input or a channel the bot can't use.
  */
-export async function createGiveaway(client, guild, { channel, duration, winnerCount, prize, hostId }) {
-  const durationMs = parseDuration(duration);
-  validateWinnerCount(winnerCount);
-  const prizeName = validatePrize(prize);
+export async function createGiveaway(client, guild, { channel, duration, winnerCount, prize, hostId, lang = 'en' }) {
+  const tr = botText(lang);
+  const durationMs = parseDuration(duration, { lang });
+  validateWinnerCount(winnerCount, { lang });
+  const prizeName = validatePrize(prize, { lang });
 
   if (!channel || typeof channel.isTextBased !== 'function' || !channel.isTextBased()) {
     throw new TitanBotError(
       'Target channel is not text-based',
       ErrorTypes.VALIDATION,
-      'The channel must be a text channel.',
+      tr.t('giveaway.errors.notTextChannel'),
       { channelId: channel?.id, channelType: channel?.type }
     );
   }
@@ -736,7 +759,7 @@ export async function createGiveaway(client, guild, { channel, duration, winnerC
     throw new TitanBotError(
       `Missing permissions in ${channel.id}`,
       ErrorTypes.PERMISSION,
-      `I need View Channel, Send Messages and Embed Links in <#${channel.id}> to post the giveaway.`,
+      tr.t('giveaway.errors.missingPermissions', { channelId: channel.id }),
       { channelId: channel.id, expected: true }
     );
   }
@@ -757,10 +780,11 @@ export async function createGiveaway(client, guild, { channel, duration, winnerC
     createdAt: new Date().toISOString(),
   };
 
+  const postLang = publicLang(guild.id);
   const message = await channel.send({
-    content: '**New giveaway**',
-    embeds: [createGiveawayEmbed(giveaway, 'active')],
-    components: [createGiveawayButtons(false)],
+    content: botText(postLang).t('giveaway.post.newGiveaway'),
+    embeds: [createGiveawayEmbed(giveaway, 'active', [], { lang: postLang })],
+    components: [createGiveawayButtons(false, { lang: postLang })],
   });
 
   giveaway.messageId = message.id;
@@ -798,12 +822,12 @@ export async function createGiveaway(client, guild, { channel, duration, winnerC
  * { giveaway, deletedMessage, channelName }. Throws TitanBotError (userMessage) for a
  * bad id, an unknown giveaway or a failed database delete.
  */
-export async function deleteGiveawayNow(client, guild, messageId, deletedBy) {
-  validateGiveawayMessageId(messageId);
+export async function deleteGiveawayNow(client, guild, messageId, deletedBy, { lang = 'en' } = {}) {
+  validateGiveawayMessageId(messageId, lang);
   const guildId = guild.id;
 
   return Mutex.runExclusive(`giveaway:${messageId}`, async () => {
-    const giveaway = await findGiveaway(client, guildId, messageId);
+    const giveaway = await findGiveaway(client, guildId, messageId, lang);
     let deletedMessage = false;
     let channelName = 'Unknown Channel';
 
@@ -835,7 +859,7 @@ export async function deleteGiveawayNow(client, guild, messageId, deletedBy) {
       throw new TitanBotError(
         `Failed to delete giveaway from database: ${messageId}`,
         ErrorTypes.UNKNOWN,
-        'The giveaway could not be removed from the database. Please try again.',
+        botText(lang).t('giveaway.errors.deleteFailed'),
         { messageId, guildId }
       );
     }

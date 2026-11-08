@@ -5,6 +5,8 @@ import { TitanBotError, ErrorTypes } from '../../../utils/errorHandler.js';
 // Validation, posting, saving and logging live in the service (shared with the web dashboard).
 import { createGiveaway } from '../../../services/giveawayService.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { textForInteraction } from '../../../utils/botText.js';
+import { describe } from '../../../utils/commandLocalizations.js';
 
 import { botConfig } from '../../../config/bot.js';
 
@@ -12,41 +14,31 @@ const GIVEAWAY_MIN_WINNERS = botConfig.giveaways?.minimumWinners ?? 1;
 const GIVEAWAY_MAX_WINNERS = botConfig.giveaways?.maximumWinners ?? 10;
 
 export default {
-    data: new SlashCommandBuilder()
-        .setName("gcreate")
-        .setDescription("Start a giveaway")
+    data: describe(new SlashCommandBuilder().setName("gcreate"), 'giveaway.cmd.gcreate')
         .addStringOption((option) =>
-            option
-                .setName("duration")
-                .setDescription(
-                    "How long it runs, like 30m, 1h or 5d",
-                )
+            describe(option.setName("duration"), 'giveaway.cmd.duration')
                 .setRequired(true),
         )
         .addIntegerOption((option) =>
-            option
-                .setName("winners")
-                .setDescription("How many winners")
+            describe(option.setName("winners"), 'giveaway.cmd.winners')
                 .setMinValue(GIVEAWAY_MIN_WINNERS)
                 .setMaxValue(GIVEAWAY_MAX_WINNERS)
                 .setRequired(true),
         )
         .addStringOption((option) =>
-            option
-                .setName("prize")
-                .setDescription("What they win")
+            describe(option.setName("prize"), 'giveaway.cmd.prize')
                 .setRequired(true),
         )
         .addChannelOption((option) =>
-            option
-                .setName("channel")
-                .setDescription("Where to post it (default: this channel)")
+            describe(option.setName("channel"), 'giveaway.cmd.channel')
                 .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                 .setRequired(false),
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
     async execute(interaction) {
+        // Ephemeral answers: the moderator's own Discord language. The giveaway post: the server's.
+        const tr = textForInteraction(interaction);
         // Defer up front: sending the giveaway message + DB write can exceed the 3s window
         await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
 
@@ -54,7 +46,7 @@ export default {
             throw new TitanBotError(
                 'Giveaway command used outside guild',
                 ErrorTypes.VALIDATION,
-                'This command can only be used in a server.',
+                tr.t('giveaway.guildOnly'),
                 { userId: interaction.user.id }
             );
         }
@@ -63,7 +55,7 @@ export default {
             throw new TitanBotError(
                 'User lacks ManageGuild permission',
                 ErrorTypes.PERMISSION,
-                "You need the 'Manage Server' permission to start a giveaway.",
+                tr.t('giveaway.needManageServer.create'),
                 { userId: interaction.user.id, guildId: interaction.guildId }
             );
         }
@@ -81,13 +73,14 @@ export default {
             winnerCount,
             prize,
             hostId: interaction.user.id,
+            lang: tr.lang,
         });
 
         await InteractionHelper.safeReply(interaction, {
             embeds: [
                 successEmbed(
-                    'Giveaway started',
-                    `**${giveaway.prize}** is up in ${targetChannel}. It ends in **${durationString}**.`,
+                    tr.t('giveaway.created.title'),
+                    tr.t('giveaway.created.text', { prize: giveaway.prize, channel: String(targetChannel), duration: durationString }),
                 ),
             ],
             flags: MessageFlags.Ephemeral,

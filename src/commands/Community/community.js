@@ -5,8 +5,11 @@ import { listStickies, removeSticky, setSticky, STICKY_MAX_LENGTH } from '../../
 import { updateCommunitySettings } from '../../services/community/settingsService.js';
 import { starboardSettingsPatch, STARBOARD_MAX_THRESHOLD } from '../../services/community/starboardService.js';
 import { addFeed, listFeeds, removeFeed, renderFeedMessage, FEED_TEMPLATE_MAX } from '../../services/community/feedService.js';
+import { textForInteraction } from '../../utils/botText.js';
+import { describe } from '../../utils/commandLocalizations.js';
 
 const TEXT_CHANNELS = [ChannelType.GuildText, ChannelType.GuildAnnouncement];
+const FEED_TOKENS = { title: '{title}', url: '{url}', author: '{author}', game: '{game}' };
 
 function truncate(text, max) {
     const value = String(text ?? '');
@@ -14,7 +17,7 @@ function truncate(text, max) {
 }
 
 /** /community sticky set | remove | list */
-async function handleSticky(interaction, sub) {
+async function handleSticky(interaction, sub, tr) {
     if (sub === 'set') {
         const channel = interaction.options.getChannel('channel', true);
         const { posted } = await setSticky({
@@ -22,26 +25,27 @@ async function handleSticky(interaction, sub) {
             channel,
             content: interaction.options.getString('message', true),
             updatedBy: interaction.user.id,
+            lang: tr.lang,
         });
         return InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed('Sticky message saved', posted
-                ? `It is now pinned to the bottom of ${channel} and is reposted after members talk there (at most every 15 seconds).`
-                : `Saved, but I could not post in ${channel}. Check that I can view the channel, send messages and embed links there.`)],
+            embeds: [successEmbed(tr.t('community.sticky.savedTitle'), posted
+                ? tr.t('community.sticky.posted', { channel: String(channel) })
+                : tr.t('community.sticky.notPosted', { channel: String(channel) }))],
         });
     }
     if (sub === 'remove') {
         const channel = interaction.options.getChannel('channel', true);
         const removed = await removeSticky({ channelId: channel.id, channel });
         return InteractionHelper.safeEditReply(interaction, {
-            content: removed ? `Removed the sticky message from ${channel}.` : `${channel} has no sticky message.`,
+            content: removed ? tr.t('community.sticky.removed', { channel: String(channel) }) : tr.t('community.sticky.none', { channel: String(channel) }),
         });
     }
     if (sub === 'list') {
         const lines = listStickies(interaction.guildId).map((sticky) => `<#${sticky.channelId}> · ${truncate(sticky.content.replace(/\s+/g, ' '), 120)}`);
         return InteractionHelper.safeEditReply(interaction, {
             embeds: [createEmbed({
-                title: `Sticky messages (${lines.length})`,
-                description: lines.join('\n') || 'None. Add one with `/community sticky set`.',
+                title: tr.t('community.sticky.listTitle', { count: lines.length }),
+                description: lines.join('\n') || tr.t('community.sticky.listEmpty'),
                 color: 'primary',
             })],
         });
@@ -49,37 +53,37 @@ async function handleSticky(interaction, sub) {
 }
 
 /** /community suggestions channel [channel] */
-async function handleSuggestions(interaction, sub) {
+async function handleSuggestions(interaction, sub, tr) {
     if (sub === 'channel') {
         const channel = interaction.options.getChannel('channel');
         await updateCommunitySettings(interaction.guildId, { suggestionsChannelId: channel?.id ?? null }, interaction.user.id);
         return InteractionHelper.safeEditReply(interaction, {
             content: channel
-                ? `Suggestions from \`/suggest new\` now go to ${channel}. Make sure I can send messages and embeds there.`
-                : 'Suggestions are turned off (no channel).',
+                ? tr.t('community.suggestions.channelSet', { channel: String(channel) })
+                : tr.t('community.suggestions.off'),
         });
     }
 }
 
 /** /community starboard set | off */
-async function handleStarboard(interaction, sub) {
+async function handleStarboard(interaction, sub, tr) {
     if (sub === 'set') {
         const channel = interaction.options.getChannel('channel', true);
         const settings = await updateCommunitySettings(interaction.guildId, starboardSettingsPatch({
             channelId: channel.id,
             emoji: interaction.options.getString('emoji'),
             threshold: interaction.options.getInteger('threshold'),
-        }), interaction.user.id);
+        }, { lang: tr.lang }), interaction.user.id);
         return InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed('Starboard on', [
-                `Messages with **${settings.starboardThreshold}** ${settings.starboardEmoji} reactions are copied to ${channel}.`,
-                "The author's own reaction and bots don't count; bot messages are never starred.",
+            embeds: [successEmbed(tr.t('community.starboard.onTitle'), [
+                tr.t('community.starboard.onLine', { threshold: settings.starboardThreshold, emoji: settings.starboardEmoji, channel: String(channel) }),
+                tr.t('community.starboard.rules'),
             ].join('\n'))],
         });
     }
     if (sub === 'off') {
         await updateCommunitySettings(interaction.guildId, { starboardChannelId: null }, interaction.user.id);
-        return InteractionHelper.safeEditReply(interaction, { content: 'Starboard turned off. Existing starboard posts stay where they are.' });
+        return InteractionHelper.safeEditReply(interaction, { content: tr.t('community.starboard.offDone') });
     }
 }
 
@@ -87,7 +91,7 @@ const PLATFORM_LABELS = { youtube: 'YouTube', twitch: 'Twitch' };
 const platformName = (kind) => PLATFORM_LABELS[kind] || kind;
 
 /** /community feed add | remove | list */
-async function handleFeed(interaction, sub) {
+async function handleFeed(interaction, sub, tr) {
     if (sub === 'add') {
         const channel = interaction.options.getChannel('channel', true);
         const platform = interaction.options.getString('platform') || 'youtube';
@@ -98,37 +102,40 @@ async function handleFeed(interaction, sub) {
             channelId: channel.id,
             template: interaction.options.getString('message'),
             createdBy: interaction.user.id,
+            lang: tr.lang,
         });
+        // The preview shows the default message in the server's language, as it will be posted.
+        const postLang = textForInteraction(interaction, { purpose: 'public' }).lang;
         if (platform === 'twitch') {
-            const preview = renderFeedMessage(feed.template, latest, 'twitch');
+            const preview = renderFeedMessage(feed.template, latest, 'twitch', { lang: postLang });
             return InteractionHelper.safeEditReply(interaction, {
-                embeds: [successEmbed(`Feed #${feed.id} added`, [
-                    `I will post in ${channel} when **${latest.author}** goes live on Twitch (checked every 2 minutes).`,
-                    live ? 'They are live right now: this stream is not announced, the next one will be.' : '',
-                    `\n**Preview** (${live ? 'with the current stream' : 'with an example stream'}, not posted):\n${truncate(preview, 1500)}`,
+                embeds: [successEmbed(tr.t('community.feed.addedTitle', { id: feed.id }), [
+                    tr.t('community.feed.twitchWatch', { channel: String(channel), author: latest.author }),
+                    live ? tr.t('community.feed.liveNow') : '',
+                    tr.t('community.feed.previewTwitch', { source: live ? tr.t('community.feed.withCurrent') : tr.t('community.feed.withExample'), preview: truncate(preview, 1500) }),
                 ].filter(Boolean).join('\n'))],
             });
         }
-        const preview = latest ? renderFeedMessage(feed.template, latest) : null;
+        const preview = latest ? renderFeedMessage(feed.template, latest, 'youtube', { lang: postLang }) : null;
         return InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed(`Feed #${feed.id} added`, [
-                `New videos from **${latest?.author || feed.sourceId}** will be posted in ${channel} (checked every 15 minutes).`,
-                preview ? `\n**Preview** (with the latest video, not posted):\n${truncate(preview, 1500)}` : '\nThe channel has no videos yet.',
+            embeds: [successEmbed(tr.t('community.feed.addedTitle', { id: feed.id }), [
+                tr.t('community.feed.youtubeWatch', { author: latest?.author || feed.sourceId, channel: String(channel) }),
+                preview ? tr.t('community.feed.previewYoutube', { preview: truncate(preview, 1500) }) : tr.t('community.feed.noVideos'),
             ].join('\n'))],
         });
     }
     if (sub === 'remove') {
         const id = interaction.options.getInteger('id', true);
         const removed = await removeFeed(interaction.guildId, id);
-        return InteractionHelper.safeEditReply(interaction, { content: removed ? `Removed feed #${id}.` : `There is no feed #${id}. See \`/community feed list\`.` });
+        return InteractionHelper.safeEditReply(interaction, { content: removed ? tr.t('community.feed.removed', { id }) : tr.t('community.feed.notFound', { id }) });
     }
     if (sub === 'list') {
         const lines = listFeeds(interaction.guildId).map((feed) =>
             `**#${feed.id}** ${platformName(feed.kind)} \`${feed.sourceId}\` → <#${feed.channelId}>${feed.template ? ` · "${truncate(feed.template.replace(/\s+/g, ' '), 60)}"` : ''}`);
         return InteractionHelper.safeEditReply(interaction, {
             embeds: [createEmbed({
-                title: `Feeds (${lines.length})`,
-                description: lines.join('\n') || 'None. Add one with `/community feed add`.',
+                title: tr.t('community.feed.listTitle', { count: lines.length }),
+                description: lines.join('\n') || tr.t('community.feed.listEmpty'),
                 color: 'primary',
             })],
         });
@@ -139,39 +146,39 @@ export default {
     // Admin-only (not in commandAccess.js): community feature setup.
     slashOnly: true,
     category: 'Community',
-    data: new SlashCommandBuilder()
-        .setName('community')
-        .setDescription('Set up sticky messages, suggestions, the starboard and feeds')
-        .addSubcommandGroup((group) => group.setName('sticky').setDescription('Messages kept at the bottom of a channel')
-            .addSubcommand((sub) => sub.setName('set').setDescription('Set (or replace) the sticky message of a channel')
-                .addChannelOption((option) => option.setName('channel').setDescription('Channel').setRequired(true).addChannelTypes(...TEXT_CHANNELS))
-                .addStringOption((option) => option.setName('message').setDescription('The text to keep at the bottom')
+    data: describe(new SlashCommandBuilder()
+        .setName('community'), 'community.cmd.community.desc')
+        .addSubcommandGroup((group) => describe(group.setName('sticky'), 'community.cmd.community.sticky.desc')
+            .addSubcommand((sub) => describe(sub.setName('set'), 'community.cmd.community.sticky.set')
+                .addChannelOption((option) => describe(option.setName('channel'), 'community.cmd.community.channel').setRequired(true).addChannelTypes(...TEXT_CHANNELS))
+                .addStringOption((option) => describe(option.setName('message'), 'community.cmd.community.sticky.message')
                     .setRequired(true).setMaxLength(STICKY_MAX_LENGTH)))
-            .addSubcommand((sub) => sub.setName('remove').setDescription('Remove the sticky message of a channel')
-                .addChannelOption((option) => option.setName('channel').setDescription('Channel').setRequired(true).addChannelTypes(...TEXT_CHANNELS)))
-            .addSubcommand((sub) => sub.setName('list').setDescription('List sticky messages')))
-        .addSubcommandGroup((group) => group.setName('suggestions').setDescription('Member suggestions (/suggest)')
-            .addSubcommand((sub) => sub.setName('channel').setDescription('Set the suggestions channel (leave empty to turn suggestions off)')
-                .addChannelOption((option) => option.setName('channel').setDescription('Channel').addChannelTypes(...TEXT_CHANNELS))))
-        .addSubcommandGroup((group) => group.setName('starboard').setDescription('Copy popular messages to a starboard channel')
-            .addSubcommand((sub) => sub.setName('set').setDescription('Turn the starboard on or change it')
-                .addChannelOption((option) => option.setName('channel').setDescription('Starboard channel').setRequired(true).addChannelTypes(...TEXT_CHANNELS))
-                .addStringOption((option) => option.setName('emoji').setDescription('Reaction that counts (default ⭐)').setMaxLength(64))
-                .addIntegerOption((option) => option.setName('threshold').setDescription('Reactions needed (default 3)')
+            .addSubcommand((sub) => describe(sub.setName('remove'), 'community.cmd.community.sticky.remove')
+                .addChannelOption((option) => describe(option.setName('channel'), 'community.cmd.community.channel').setRequired(true).addChannelTypes(...TEXT_CHANNELS)))
+            .addSubcommand((sub) => describe(sub.setName('list'), 'community.cmd.community.sticky.list')))
+        .addSubcommandGroup((group) => describe(group.setName('suggestions'), 'community.cmd.community.suggestions.desc')
+            .addSubcommand((sub) => describe(sub.setName('channel'), 'community.cmd.community.suggestions.channel')
+                .addChannelOption((option) => describe(option.setName('channel'), 'community.cmd.community.channel').addChannelTypes(...TEXT_CHANNELS))))
+        .addSubcommandGroup((group) => describe(group.setName('starboard'), 'community.cmd.community.starboard.desc')
+            .addSubcommand((sub) => describe(sub.setName('set'), 'community.cmd.community.starboard.set')
+                .addChannelOption((option) => describe(option.setName('channel'), 'community.cmd.community.starboard.channel').setRequired(true).addChannelTypes(...TEXT_CHANNELS))
+                .addStringOption((option) => describe(option.setName('emoji'), 'community.cmd.community.starboard.emoji').setMaxLength(64))
+                .addIntegerOption((option) => describe(option.setName('threshold'), 'community.cmd.community.starboard.threshold')
                     .setMinValue(1).setMaxValue(STARBOARD_MAX_THRESHOLD)))
-            .addSubcommand((sub) => sub.setName('off').setDescription('Turn the starboard off')))
-        .addSubcommandGroup((group) => group.setName('feed').setDescription('Post new YouTube videos or Twitch go-lives in a channel')
-            .addSubcommand((sub) => sub.setName('add').setDescription('Follow a YouTube or Twitch channel')
-                .addStringOption((option) => option.setName('source').setDescription('YouTube: channel id (UC…) or /channel/ link. Twitch: login or twitch.tv link')
+            .addSubcommand((sub) => describe(sub.setName('off'), 'community.cmd.community.starboard.off')))
+        .addSubcommandGroup((group) => describe(group.setName('feed'), 'community.cmd.community.feed.desc')
+            .addSubcommand((sub) => describe(sub.setName('add'), 'community.cmd.community.feed.add')
+                .addStringOption((option) => describe(option.setName('source'), 'community.cmd.community.feed.source')
                     .setRequired(true).setMaxLength(200))
-                .addChannelOption((option) => option.setName('channel').setDescription('Where to post').setRequired(true).addChannelTypes(...TEXT_CHANNELS))
-                .addStringOption((option) => option.setName('platform').setDescription('YouTube (default) or Twitch')
+                .addChannelOption((option) => describe(option.setName('channel'), 'community.cmd.community.feed.channel').setRequired(true).addChannelTypes(...TEXT_CHANNELS))
+                .addStringOption((option) => describe(option.setName('platform'), 'community.cmd.community.feed.platform')
                     .addChoices({ name: 'YouTube', value: 'youtube' }, { name: 'Twitch', value: 'twitch' }))
-                .addStringOption((option) => option.setName('message').setDescription('Message with {title} {url} {author} ({game} on Twitch); may mention a role')
+                // The {title} {url} {author} {game} tokens are typed by admins: passed as params so they stay as written.
+                .addStringOption((option) => describe(option.setName('message'), 'community.cmd.community.feed.message', FEED_TOKENS)
                     .setMaxLength(FEED_TEMPLATE_MAX)))
-            .addSubcommand((sub) => sub.setName('remove').setDescription('Stop following a YouTube or Twitch channel')
-                .addIntegerOption((option) => option.setName('id').setDescription('Feed number (#) from /community feed list').setRequired(true).setMinValue(1)))
-            .addSubcommand((sub) => sub.setName('list').setDescription('List feeds')))
+            .addSubcommand((sub) => describe(sub.setName('remove'), 'community.cmd.community.feed.remove')
+                .addIntegerOption((option) => describe(option.setName('id'), 'community.cmd.community.feed.id').setRequired(true).setMinValue(1)))
+            .addSubcommand((sub) => describe(sub.setName('list'), 'community.cmd.community.feed.list')))
         .setDMPermission(false),
 
     async execute(interaction) {
@@ -179,9 +186,10 @@ export default {
         if (!deferred) return;
         const group = interaction.options.getSubcommandGroup(false);
         const sub = interaction.options.getSubcommand();
-        if (group === 'sticky') return handleSticky(interaction, sub);
-        if (group === 'suggestions') return handleSuggestions(interaction, sub);
-        if (group === 'starboard') return handleStarboard(interaction, sub);
-        if (group === 'feed') return handleFeed(interaction, sub);
+        const tr = textForInteraction(interaction);
+        if (group === 'sticky') return handleSticky(interaction, sub, tr);
+        if (group === 'suggestions') return handleSuggestions(interaction, sub, tr);
+        if (group === 'starboard') return handleStarboard(interaction, sub, tr);
+        if (group === 'feed') return handleFeed(interaction, sub, tr);
     },
 };

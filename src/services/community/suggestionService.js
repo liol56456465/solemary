@@ -13,6 +13,7 @@ import { logger } from '../../utils/logger.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { CT, query, withTransaction, userError } from './db.js';
 import { getCommunitySettings } from './settingsService.js';
+import { botText, textForGuild } from '../../utils/botText.js';
 
 export const SUGGESTION_MAX_LENGTH = 1500;
 export const SUGGESTION_REASON_MAX = 500;
@@ -20,7 +21,14 @@ export const SUGGESTION_COOLDOWN_MS = 2 * 60 * 1000;
 export const SUGGESTION_STATUSES = ['approved', 'denied', 'considering'];
 export const VOTE_BUTTON_ID = 'suggest_vote';
 
-const STATUS_LABEL = { pending: 'Open for votes', approved: 'Approved', denied: 'Denied', considering: 'Under consideration' };
+// Status labels in the bot catalog (English: Open for votes, Approved, Denied, Under consideration).
+const STATUS_LABEL_KEYS = {
+    pending: 'community.suggest.label.pending', approved: 'community.suggest.label.approved',
+    denied: 'community.suggest.label.denied', considering: 'community.suggest.label.considering',
+};
+const statusLabel = (tr, status) => (STATUS_LABEL_KEYS[status] ? tr.t(STATUS_LABEL_KEYS[status]) : status);
+/** The language of the suggestion post: the server's (a public post). */
+const postLang = (guildId) => textForGuild(guildId, { purpose: 'public' }).lang;
 const STATUS_COLOR = { pending: 'primary', approved: 'success', denied: 'error', considering: 'warning' };
 const lastSuggested = new Map(); // guildId:userId → ms
 
@@ -33,24 +41,25 @@ export function nextVote(current, clicked) {
     return current === clicked ? 0 : clicked;
 }
 
-/** The suggestion message (embed + buttons) for a row; pure. */
-export function buildSuggestionMessage(row, author = null) {
+/** The suggestion message (embed + buttons) for a row; pure. lang: the server's (a public post). */
+export function buildSuggestionMessage(row, author = null, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     const fields = [
-        { name: 'Votes', value: `👍 ${row.upvotes}  ·  👎 ${row.downvotes}`, inline: true },
-        { name: 'Status', value: STATUS_LABEL[row.status] || row.status, inline: true },
+        { name: tr.t('community.suggest.votes'), value: `👍 ${row.upvotes}  ·  👎 ${row.downvotes}`, inline: true },
+        { name: tr.t('community.suggest.status'), value: statusLabel(tr, row.status), inline: true },
     ];
     if (row.status !== 'pending' && row.status_reason) {
-        fields.push({ name: row.decided_by ? 'Reason (staff)' : 'Reason', value: row.status_reason });
+        fields.push({ name: row.decided_by ? tr.t('community.suggest.reasonStaff') : tr.t('community.suggest.reason'), value: row.status_reason });
     }
     const embed = createEmbed({
-        title: `Suggestion #${row.id}`,
+        title: tr.t('community.suggest.title', { id: row.id }),
         description: row.content,
         color: STATUS_COLOR[row.status] || 'primary',
         fields,
         author: author
             ? { name: author.username, ...(author.displayAvatarURL ? { iconURL: author.displayAvatarURL() } : {}) }
-            : { name: `Member ${row.user_id}` },
-        footer: { text: 'Suggest something with /suggest new' },
+            : { name: tr.t('community.suggest.member', { userId: row.user_id }) },
+        footer: { text: tr.t('community.suggest.footer') },
         timestamp: row.created_at ? new Date(row.created_at) : true,
     });
     const open = isVotingOpen(row.status);
@@ -72,16 +81,17 @@ export function takeSuggestionSlot(guildId, userId, now = Date.now()) {
     return 0;
 }
 
-/** Posts a suggestion; returns { row, message }. */
-export async function createSuggestion({ guild, user, content }) {
+/** Posts a suggestion; returns { row, message }. lang: the language of the errors (the member's). */
+export async function createSuggestion({ guild, user, content, lang = 'en' }) {
+    const tr = botText(lang);
     const text = String(content ?? '').trim();
-    if (!text) throw userError('The suggestion cannot be empty.');
-    if (text.length > SUGGESTION_MAX_LENGTH) throw userError(`Suggestions are limited to ${SUGGESTION_MAX_LENGTH} characters.`);
+    if (!text) throw userError(tr.t('community.suggest.empty'));
+    if (text.length > SUGGESTION_MAX_LENGTH) throw userError(tr.t('community.suggest.tooLong', { max: SUGGESTION_MAX_LENGTH }));
     const { suggestionsChannelId } = getCommunitySettings(guild.id);
     const channel = suggestionsChannelId ? guild.channels.cache.get(suggestionsChannelId) : null;
-    if (!channel) throw userError('Suggestions are not set up in this server yet (an admin can use `/community suggestions channel`).');
+    if (!channel) throw userError(tr.t('community.suggest.notSetUp'));
     const left = takeSuggestionSlot(guild.id, user.id);
-    if (left > 0) throw userError(`You can post another suggestion in ${Math.ceil(left / 1000)} seconds.`);
+    if (left > 0) throw userError(tr.t('community.suggest.cooldown', { seconds: Math.ceil(left / 1000) }));
 
     const { rows: [row] } = await query(
         `INSERT INTO ${CT.suggestions} (guild_id, user_id, content, channel_id) VALUES ($1, $2, $3, $4) RETURNING *`,
@@ -89,12 +99,12 @@ export async function createSuggestion({ guild, user, content }) {
     );
     let message;
     try {
-        message = await channel.send(buildSuggestionMessage(row, user));
+        message = await channel.send(buildSuggestionMessage(row, user, { lang: postLang(guild.id) }));
     } catch (error) {
         await query(`DELETE FROM ${CT.suggestions} WHERE id = $1`, [row.id]).catch(() => {});
         lastSuggested.delete(`${guild.id}:${user.id}`);
         logger.warn(`Suggestion could not be posted in ${channel.id}: ${error.message}`);
-        throw userError(`I could not post in ${channel}. Ask an admin to check my permissions there.`);
+        throw userError(tr.t('community.suggest.postFailed', { channel: String(channel) }));
     }
     await query(`UPDATE ${CT.suggestions} SET message_id = $2 WHERE id = $1`, [row.id, message.id]);
     return { row: { ...row, message_id: message.id }, message };
@@ -104,14 +114,14 @@ export async function createSuggestion({ guild, user, content }) {
  * Records a vote click. Returns { row, vote } with the recounted row, or null
  * when the suggestion does not exist. Throws a user error when voting is closed.
  */
-export async function castVote({ suggestionId, guildId, userId, clicked }) {
+export async function castVote({ suggestionId, guildId, userId, clicked, lang = 'en' }) {
     return withTransaction(async (client) => {
         const { rows: [suggestion] } = await client.query(
             `SELECT id, status FROM ${CT.suggestions} WHERE id = $1 AND guild_id = $2 FOR UPDATE`,
             [suggestionId, guildId]
         );
         if (!suggestion) return null;
-        if (!isVotingOpen(suggestion.status)) throw userError('Voting on this suggestion is closed.');
+        if (!isVotingOpen(suggestion.status)) throw userError(botText(lang).t('community.suggest.closed'));
         const { rows: [existing] } = await client.query(
             `SELECT vote FROM ${CT.suggestionVotes} WHERE suggestion_id = $1 AND user_id = $2`,
             [suggestionId, userId]
@@ -138,8 +148,8 @@ export async function castVote({ suggestionId, guildId, userId, clicked }) {
 }
 
 /** Sets a status; returns the updated row or null when there is no such suggestion in the guild. */
-export async function setSuggestionStatus({ guildId, suggestionId, status, reason, decidedBy }) {
-    if (!SUGGESTION_STATUSES.includes(status)) throw userError('Status must be approved, denied or considering.');
+export async function setSuggestionStatus({ guildId, suggestionId, status, reason, decidedBy, lang = 'en' }) {
+    if (!SUGGESTION_STATUSES.includes(status)) throw userError(botText(lang).t('community.suggest.statusInvalid'));
     const text = String(reason ?? '').trim().slice(0, SUGGESTION_REASON_MAX) || null;
     const { rows: [row] } = await query(
         `UPDATE ${CT.suggestions} SET status = $3, status_reason = $4, decided_by = $5, decided_at = NOW()
@@ -164,8 +174,8 @@ export async function listOpenSuggestions(guildId, limit = 25) {
  * suggestion message and DMs the author. Returns { row, edited, dmed }, or null when
  * there is no such suggestion in the guild.
  */
-export async function decideSuggestion({ client, guild, suggestionId, status, reason, decidedBy }) {
-    const row = await setSuggestionStatus({ guildId: guild.id, suggestionId, status, reason, decidedBy });
+export async function decideSuggestion({ client, guild, suggestionId, status, reason, decidedBy, lang = 'en' }) {
+    const row = await setSuggestionStatus({ guildId: guild.id, suggestionId, status, reason, decidedBy, lang });
     if (!row) return null;
     const edited = await refreshSuggestionMessage(client, row);
     const dmed = await notifySuggestionAuthor(client, row, guild.name);
@@ -184,7 +194,7 @@ export async function refreshSuggestionMessage(client, row) {
         const channel = client.channels.cache.get(row.channel_id) || await client.channels.fetch(row.channel_id);
         const message = await channel.messages.fetch(row.message_id);
         const author = await client.users.fetch(row.user_id).catch(() => null);
-        await message.edit(buildSuggestionMessage(row, author));
+        await message.edit(buildSuggestionMessage(row, author, { lang: postLang(row.guild_id) }));
         return true;
     } catch (error) {
         logger.warn(`Suggestion #${row.id} message could not be updated: ${error.message}`);
@@ -192,16 +202,17 @@ export async function refreshSuggestionMessage(client, row) {
     }
 }
 
-/** DMs the author about a status change; true when delivered. */
+/** DMs the author about a status change (the server's language); true when delivered. */
 export async function notifySuggestionAuthor(client, row, guildName) {
     try {
         const user = await client.users.fetch(row.user_id);
+        const tr = textForGuild(row.guild_id, { userId: row.user_id, purpose: 'dm' });
         await user.send({
             embeds: [createEmbed({
-                title: `Your suggestion #${row.id} in ${guildName}: ${STATUS_LABEL[row.status]}`,
+                title: tr.t('community.suggest.dmTitle', { id: row.id, server: guildName, status: statusLabel(tr, row.status) }),
                 description: row.content.length > 1000 ? `${row.content.slice(0, 999)}…` : row.content,
                 color: STATUS_COLOR[row.status],
-                fields: row.status_reason ? [{ name: 'Reason', value: row.status_reason }] : [],
+                fields: row.status_reason ? [{ name: tr.t('community.suggest.reason'), value: row.status_reason }] : [],
             })],
             allowedMentions: { parse: [] },
         });

@@ -9,17 +9,18 @@ const SUBCOMMAND_GROUP = 2;
 /**
  * @param {import('discord.js').SlashCommandBuilder} builder  name, description, permissions
  *   and any subcommands the command already has
- * @param {Record<string, { module: { data: { toJSON(): object }, execute: Function }, description: string }>} parts
+ * @param {Record<string, { module: { data: { toJSON(): object }, execute: Function }, description: string, descriptionLocalizations?: Record<string, string> }>} parts
+ *   (descriptionLocalizations: the subcommand's description per Discord locale, optional)
  */
 export function mergeSubcommands(builder, parts) {
     const data = {
         name: builder.name,
         toJSON() {
             const base = builder.toJSON();
-            const merged = Object.entries(parts).map(([name, { module, description }]) => {
+            const merged = Object.entries(parts).map(([name, { module, description, descriptionLocalizations }]) => {
                 const options = module.data.toJSON().options ?? [];
                 const nested = options.some((option) => option.type === SUBCOMMAND);
-                return { type: nested ? SUBCOMMAND_GROUP : SUBCOMMAND, name, description, options };
+                return { type: nested ? SUBCOMMAND_GROUP : SUBCOMMAND, name, description, ...(descriptionLocalizations ? { description_localizations: descriptionLocalizations } : {}), options };
             });
             return { ...base, options: [...(base.options ?? []), ...merged] };
         },

@@ -1,0 +1,105 @@
+{
+    "cmd": {
+        "birthday": "Befehle für Geburtstage",
+        "set": "Deinen Geburtstag eintragen",
+        "month": "Geburtsmonat (1-12)",
+        "day": "Geburtstag im Monat (1-31)",
+        "info": "Geburtstag ansehen",
+        "infoUser": "Mitglied, dessen Geburtstag du sehen willst",
+        "list": "Alle Geburtstage auf dem Server auflisten",
+        "remove": "Deinen Geburtstag entfernen",
+        "next": "Die nächsten Geburtstage zeigen",
+        "setchannel": "Kanal für Geburtstagsankündigungen festlegen oder ausschalten. (Administrator)",
+        "channel": "Der Textkanal für Ankündigungen. Leer lassen zum Ausschalten.",
+        "timezone": "Zeitzone des Servers für Geburtstage, z. B. Europe/Berlin (Standard UTC)"
+    },
+    "unknownSubcommand": "Unbekannter Unterbefehl",
+    "month": {
+        "january": "Januar",
+        "february": "Februar",
+        "march": "März",
+        "april": "April",
+        "may": "Mai",
+        "june": "Juni",
+        "july": "Juli",
+        "august": "August",
+        "september": "September",
+        "october": "Oktober",
+        "november": "November",
+        "december": "Dezember",
+        "invalid": "Ungültiger Monat"
+    },
+    "date": "{day}. {month}",
+    "info": {
+        "noneTitle": "Kein Geburtstag eingetragen",
+        "noneSelf": "Du hast deinen Geburtstag noch nicht eingetragen. Mit `/birthday set` kannst du ihn hinzufügen.",
+        "noneOther": "{name} hat noch keinen Geburtstag eingetragen.",
+        "title": "Geburtstag",
+        "text": "**Datum:** {date}\n**Mitglied:** {user}"
+    },
+    "list": {
+        "noneTitle": "Keine Geburtstage",
+        "none": "Auf diesem Server wurden noch keine Geburtstage eingetragen.",
+        "noneMembers": "Keines der aktuellen Mitglieder hat einen Geburtstag eingetragen.",
+        "header": {
+            "one": "**{count} Geburtstag auf {server}**",
+            "other": "**{count} Geburtstage auf {server}**"
+        },
+        "more": {
+            "one": "…und {count} weiterer",
+            "other": "…und {count} weitere"
+        },
+        "title": "Geburtstage"
+    },
+    "remove": {
+        "noneTitle": "Kein Geburtstag eingetragen",
+        "none": "Du hast keinen Geburtstag eingetragen, den du entfernen könntest.",
+        "title": "Geburtstag entfernt",
+        "text": "Dein Geburtstag ist entfernt."
+    },
+    "set": {
+        "title": "Geburtstag gespeichert",
+        "text": "Dein Geburtstag ist auf den **{date}** gesetzt."
+    },
+    "setchannel": {
+        "notAllowedTitle": "Nicht erlaubt",
+        "notAllowed": "Um den Geburtstagskanal einzurichten, brauchst du die Berechtigung **Administrator**.",
+        "unknownTzTitle": "Unbekannte Zeitzone",
+        "unknownTz": "`{input}` ist keine bekannte Zeitzone. Nutze einen IANA-Namen wie `Europe/London`, `America/New_York` oder `UTC` (die Liste schlägt beim Tippen Namen vor).",
+        "timezoneLine": "Geburtstage richten sich nach dem Datum in **{timezone}** (dort ist gerade der {date}). Ankündigungen kommen einmal pro Ortstag.",
+        "onTitle": "Geburtstagsankündigungen an",
+        "on": "Geburtstagsankündigungen werden jetzt in {channel} gepostet.",
+        "tzTitle": "Zeitzone geändert",
+        "offTitle": "Geburtstagsankündigungen aus",
+        "off": "Kein Kanal angegeben, also sind Geburtstagsankündigungen ausgeschaltet.",
+        "failTitle": "Nicht gespeichert",
+        "fail": "Der Geburtstagskanal wurde nicht gespeichert. Versuch es gleich noch einmal."
+    },
+    "next": {
+        "noneTitle": "Noch keine Geburtstage",
+        "none": "Hier hat noch niemand einen Geburtstag eingetragen. Mit `/birthday set` trägst du deinen ein.",
+        "noUpcomingTitle": "Keine anstehenden Geburtstage",
+        "noUpcoming": "Keiner der gespeicherten Geburtstage gehört jemandem, der noch auf dem Server ist.",
+        "intro": "Die nächsten Geburtstage auf {server}:",
+        "footer": "Trag deinen mit /birthday set ein.",
+        "title": "Anstehende Geburtstage",
+        "today": "**Heute**",
+        "tomorrow": "**Morgen**",
+        "inDays": {
+            "one": "In {count} Tag",
+            "other": "In {count} Tagen"
+        }
+    },
+    "announce": {
+        "title": "Alles Gute zum Geburtstag",
+        "text": "Alles Gute zum Geburtstag, {members}! Einen schönen Tag!"
+    },
+    "errors": {
+        "notNumbers": "Monat und Tag müssen Zahlen sein",
+        "month": "Der Monat muss zwischen 1 und 12 liegen",
+        "day": "Der Tag muss zwischen 1 und 31 liegen",
+        "invalidDate": "Ungültiges Datum. Prüfe Monat und Tag (den 29. Februar gibt es zum Beispiel nur in Schaltjahren)",
+        "saveFailed": "Dein Geburtstag konnte nicht gespeichert werden. Versuch es später noch einmal.",
+        "removeFailed": "Dein Geburtstag konnte nicht entfernt werden. Versuch es noch einmal."
+    }
+}

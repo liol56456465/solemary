@@ -6,10 +6,12 @@ import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { hasAdminAccess } from '../../../utils/commandGate.js';
+import { textForInteraction } from '../../../utils/botText.js';
 export async function handleUpdate(interaction, client) {
     const guild = interaction.guild;
     const counterId = interaction.options.getString("counter-id");
     const newType = interaction.options.getString("type");
+    const tr = textForInteraction(interaction); // ephemeral: the admin's Discord language
 
     try {
         await InteractionHelper.safeDefer(interaction);
@@ -19,12 +21,12 @@ export async function handleUpdate(interaction, client) {
     }
 
     if (!hasAdminAccess(interaction)) {
-        await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the **Administrator** permission to update counters.' }).catch(logger.error);
+        await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('serverstats.noAdmin.update') }).catch(logger.error);
         return;
     }
 
     if (!newType) {
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'You must provide a new counter type to update.' }).catch(logger.error);
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('serverstats.error.noType') }).catch(logger.error);
         return;
     }
 
@@ -32,7 +34,7 @@ export async function handleUpdate(interaction, client) {
         // Atomic (row lock): validation, one counter per type, save and rename (services/serverstatsService.js).
         let result;
         try {
-            result = await changeCounterType(client, guild, counterId, newType);
+            result = await changeCounterType(client, guild, counterId, newType, { lang: tr.lang });
         } catch (error) {
             if (error.userMessage && error.type === ErrorTypes.USER_INPUT) {
                 await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: error.userMessage }).catch(logger.error);
@@ -42,18 +44,24 @@ export async function handleUpdate(interaction, client) {
         }
         const { counter: updatedCounter, oldType, renamed } = result;
         if (!renamed) {
-            await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Counter updated, but I couldn\'t rename the channel yet. It will update on the next run.' }).catch(logger.error);
+            await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('serverstats.update.notRenamed') }).catch(logger.error);
             return;
         }
 
         const finalChannel = guild.channels.cache.get(updatedCounter.channelId);
 
         await InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed(`**Counter updated**\n\n**Counter ID:** \`${counterId}\`\n**Type:** ${getCounterTypeLabel(oldType)} → ${getCounterTypeLabel(newType)}\n**Channel:** ${finalChannel}\n**Channel Name:** ${finalChannel.name}\n\nIt updates every 15 minutes.`)]
+            embeds: [successEmbed(tr.t('serverstats.success'), tr.t('serverstats.update.done', {
+                id: counterId,
+                oldType: getCounterTypeLabel(oldType, { lang: tr.lang }),
+                newType: getCounterTypeLabel(newType, { lang: tr.lang }),
+                channel: String(finalChannel),
+                channelName: finalChannel.name,
+            }))]
         }).catch(logger.error);
 
     } catch (error) {
         logger.error("Error updating counter:", error);
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Something went wrong while updating the counter. Try again.' }).catch(logger.error);
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('serverstats.error.updateFailed') }).catch(logger.error);
     }
 }

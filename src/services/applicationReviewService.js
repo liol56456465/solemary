@@ -10,16 +10,23 @@ import { logger } from '../utils/logger.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { getApplication } from '../utils/database.js';
 import ApplicationService from './applicationService.js';
+import { botText, textForGuild } from '../utils/botText.js';
 
 export const REVIEW_NOTE_MAX = 500;
+const NO_REASON = 'No reason provided.';
 
-export function getApplicationStatusPresentation(statusValue) {
+/**
+ * Status of an application for display. lang: the language of the label (default English;
+ * the staff log message keeps English, like the rest of the log).
+ */
+export function getApplicationStatusPresentation(statusValue, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     const normalized = typeof statusValue === 'string' ? statusValue.trim().toLowerCase() : 'unknown';
     const statusLabel =
-        normalized === 'pending' ? 'In Progress' :
-        normalized === 'approved' ? 'Accepted' :
-        normalized === 'denied' ? 'Denied' :
-        'Unknown';
+        normalized === 'pending' ? tr.t('community.apply.statusLabel.pending') :
+        normalized === 'approved' ? tr.t('community.apply.statusLabel.approved') :
+        normalized === 'denied' ? tr.t('community.apply.statusLabel.denied') :
+        tr.t('community.apply.statusLabel.unknown');
     const statusEmoji = '';
     return { normalized, statusLabel, statusEmoji };
 }
@@ -35,7 +42,7 @@ export async function reviewApplicationAndNotify(client, guild, applicationId, {
     if (!application) {
         throw createError('Application not found', ErrorTypes.USER_INPUT, 'Application not found.', { applicationId, expected: true });
     }
-    const note = String(reason ?? '').trim().slice(0, REVIEW_NOTE_MAX) || 'No reason provided.';
+    const note = String(reason ?? '').trim().slice(0, REVIEW_NOTE_MAX) || NO_REASON;
     const isApprove = action === 'approve';
     const status = isApprove ? 'approved' : 'denied';
 
@@ -44,12 +51,12 @@ export async function reviewApplicationAndNotify(client, guild, applicationId, {
     let dmDelivered = false;
     try {
         const user = await client.users.fetch(application.userId);
-        const view = getApplicationStatusPresentation(status);
+        // A DM to the applicant: the server's language. The stored note stays as written.
+        const tr = textForGuild(guild.id, { userId: application.userId, purpose: 'dm' });
+        const params = { name: application.roleName, note: note === NO_REASON ? tr.t('community.apply.dm.noReason') : note, id: applicationId };
         const dmEmbed = createEmbed({
-            title: `Application ${view.statusLabel}`,
-            description: `Your application for **${application.roleName}** has been **${status}**\n`
-                + `**Note:** ${note}\n\n`
-                + `Use \`/apply status id:${applicationId}\` to view details.`,
+            title: isApprove ? tr.t('community.apply.dm.approvedTitle') : tr.t('community.apply.dm.deniedTitle'),
+            description: isApprove ? tr.t('community.apply.dm.approvedBody', params) : tr.t('community.apply.dm.deniedBody', params),
         }).setColor(getApplicationStatusColor(status));
         await user.send({ embeds: [dmEmbed] });
         dmDelivered = true;

@@ -1,6 +1,8 @@
 import { SlashCommandBuilder, MessageFlags, ChannelType } from 'discord.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
+import { textForInteraction } from '../../utils/botText.js';
+import { describe } from '../../utils/commandLocalizations.js';
 
 import birthdaySet from './modules/birthday_set.js';
 import birthdayInfo from './modules/birthday_info.js';
@@ -12,71 +14,47 @@ import birthdaySetchannel from './modules/birthday_setchannel.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { searchTimeZones } from '../../utils/timezone.js';
 export default {
-    data: new SlashCommandBuilder()
-        .setName('birthday')
-        .setDescription('Birthday system commands')
+    data: describe(new SlashCommandBuilder().setName('birthday'), 'birthday.cmd.birthday')
         .addSubcommand(subcommand =>
-            subcommand
-                .setName('set')
-                .setDescription('Set your birthday')
+            describe(subcommand.setName('set'), 'birthday.cmd.set')
                 .addIntegerOption(option =>
-                    option
-                        .setName('month')
-                        .setDescription('Birth month (1-12)')
+                    describe(option.setName('month'), 'birthday.cmd.month')
                         .setRequired(true)
                         .setMinValue(1)
                         .setMaxValue(12)
                 )
                 .addIntegerOption(option =>
-                    option
-                        .setName('day')
-                        .setDescription('Birth day (1-31)')
+                    describe(option.setName('day'), 'birthday.cmd.day')
                         .setRequired(true)
                         .setMinValue(1)
                         .setMaxValue(31)
                 )
         )
         .addSubcommand(subcommand =>
-            subcommand
-                .setName('info')
-                .setDescription('View birthday information')
+            describe(subcommand.setName('info'), 'birthday.cmd.info')
                 .addUserOption(option =>
-                    option
-                        .setName('user')
-                        .setDescription('User to check birthday for')
+                    describe(option.setName('user'), 'birthday.cmd.infoUser')
                         .setRequired(false)
                 )
         )
         .addSubcommand(subcommand =>
-            subcommand
-                .setName('list')
-                .setDescription('List all birthdays in the server')
+            describe(subcommand.setName('list'), 'birthday.cmd.list')
         )
         .addSubcommand(subcommand =>
-            subcommand
-                .setName('remove')
-                .setDescription('Remove your birthday')
+            describe(subcommand.setName('remove'), 'birthday.cmd.remove')
         )
         .addSubcommand(subcommand =>
-            subcommand
-                .setName('next')
-                .setDescription('Show upcoming birthdays')
+            describe(subcommand.setName('next'), 'birthday.cmd.next')
         )
         .addSubcommand(subcommand =>
-            subcommand
-                .setName('setchannel')
-                .setDescription('Set or disable the channel for birthday announcements. (Administrator)')
+            describe(subcommand.setName('setchannel'), 'birthday.cmd.setchannel')
                 .addChannelOption(option =>
-                    option
-                        .setName('channel')
-                        .setDescription('The text channel for announcements. Leave empty to disable.')
+                    describe(option.setName('channel'), 'birthday.cmd.channel')
                         .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                         .setRequired(false)
                 )
                 .addStringOption(option =>
-                    option
-                        .setName('timezone')
-                        .setDescription('Server time zone for birthdays, e.g. Europe/London (default UTC)')
+                    describe(option.setName('timezone'), 'birthday.cmd.timezone')
                         .setAutocomplete(true)
                         .setRequired(false)
                 )
@@ -105,7 +83,7 @@ export default {
             case 'setchannel':
                 return await birthdaySetchannel.execute(interaction, config, client);
             default:
-                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Unknown subcommand' });
+                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: textForInteraction(interaction).t('birthday.unknownSubcommand') });
         }
     }
 };

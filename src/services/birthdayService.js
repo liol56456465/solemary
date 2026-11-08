@@ -6,6 +6,22 @@ import { logger } from '../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../utils/errorHandler.js';
 import { DEFAULT_TIMEZONE, canonicalTimeZone, localDateParts, localDateKey } from '../utils/timezone.js';
 import { GUILD_SQL, guildIdsFromSql } from './scheduling/guildScan.js';
+import { botText, textForGuild } from '../utils/botText.js';
+
+// Month names in the bot catalog (birthday.json), one literal key per month.
+const MONTH_KEYS = [
+  'birthday.month.january', 'birthday.month.february', 'birthday.month.march', 'birthday.month.april',
+  'birthday.month.may', 'birthday.month.june', 'birthday.month.july', 'birthday.month.august',
+  'birthday.month.september', 'birthday.month.october', 'birthday.month.november', 'birthday.month.december',
+];
+
+/** "March 14" (English), "14. März" (German) … for a stored birthday. Pure. */
+export function birthdayDateText(month, day, { lang = 'en' } = {}) {
+  const tr = botText(lang);
+  const key = MONTH_KEYS[month - 1];
+  const monthName = key ? tr.t(key) : tr.t('birthday.month.invalid');
+  return tr.t('birthday.date', { month: monthName, day });
+}
 
 function isLeapYear(year) {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
@@ -42,26 +58,27 @@ function guildTimeZone(config) {
   return config?.birthdayTimezone || DEFAULT_TIMEZONE;
 }
 
-export function validateBirthday(month, day) {
+export function validateBirthday(month, day, { lang = 'en' } = {}) {
+  const tr = botText(lang);
   
   if (typeof month !== 'number' || typeof day !== 'number') {
     return {
       isValid: false,
-      error: 'Month and day must be numbers'
+      error: tr.t('birthday.errors.notNumbers')
     };
   }
 
   if (month < 1 || month > 12) {
     return {
       isValid: false,
-      error: 'Month must be between 1 and 12'
+      error: tr.t('birthday.errors.month')
     };
   }
 
   if (day < 1 || day > 31) {
     return {
       isValid: false,
-      error: 'Day must be between 1 and 31'
+      error: tr.t('birthday.errors.day')
     };
   }
 
@@ -71,17 +88,17 @@ export function validateBirthday(month, day) {
   if (isNaN(date.getTime()) || date.getMonth() !== month - 1 || date.getDate() !== day) {
     return {
       isValid: false,
-      error: 'Invalid date. Please check the month and day combination (e.g., February 29th only exists in leap years)'
+      error: tr.t('birthday.errors.invalidDate')
     };
   }
 
   return { isValid: true };
 }
 
-export async function setBirthday(client, guildId, userId, month, day) {
+export async function setBirthday(client, guildId, userId, month, day, { lang = 'en' } = {}) {
   try {
     
-    const validation = validateBirthday(month, day);
+    const validation = validateBirthday(month, day, { lang });
     if (!validation.isValid) {
       logger.warn('Birthday validation failed', {
         userId,
@@ -105,7 +122,7 @@ export async function setBirthday(client, guildId, userId, month, day) {
       throw new TitanBotError(
         'Failed to save birthday to database',
         ErrorTypes.DATABASE,
-        'Failed to set your birthday. Please try again later.',
+        botText(lang).t('birthday.errors.saveFailed'),
         { userId, guildId, month, day }
       );
     }
@@ -193,7 +210,7 @@ export async function getAllBirthdays(client, guildId) {
   }
 }
 
-export async function deleteBirthday(client, guildId, userId) {
+export async function deleteBirthday(client, guildId, userId, { lang = 'en' } = {}) {
   try {
     
     const birthday = await getUserBirthday(client, guildId, userId);
@@ -210,7 +227,7 @@ export async function deleteBirthday(client, guildId, userId) {
       throw new TitanBotError(
         'Failed to delete birthday from database',
         ErrorTypes.DATABASE,
-        'Failed to remove your birthday. Please try again.',
+        botText(lang).t('birthday.errors.removeFailed'),
         { userId, guildId }
       );
     }
@@ -450,11 +467,13 @@ export async function checkBirthdays(client, { query } = {}) {
 
       if (birthdayMembers.length > 0) {
         const mentionList = birthdayMembers.map(m => m.toString()).join(', ');
+        // A public post: the server's language.
+        const tr = textForGuild(guildId, { purpose: 'public' });
 
         await channel.send({
           embeds: [{
-            title: 'Happy birthday',
-            description: `Happy birthday ${mentionList}, have a good one.`,
+            title: tr.t('birthday.announce.title'),
+            description: tr.t('birthday.announce.text', { members: mentionList }),
             color: 0xff69b4,
             timestamp: new Date()
           }]

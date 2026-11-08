@@ -1,0 +1,553 @@
+{
+    "cmd": {
+        "community": {
+            "desc": "Set up sticky messages, suggestions, the starboard and feeds",
+            "channel": "Channel",
+            "sticky": {
+                "desc": "Messages kept at the bottom of a channel",
+                "set": "Set (or replace) the sticky message of a channel",
+                "message": "The text to keep at the bottom",
+                "remove": "Remove the sticky message of a channel",
+                "list": "List sticky messages"
+            },
+            "suggestions": {
+                "desc": "Member suggestions (/suggest)",
+                "channel": "Set the suggestions channel (leave empty to turn suggestions off)"
+            },
+            "starboard": {
+                "desc": "Copy popular messages to a starboard channel",
+                "set": "Turn the starboard on or change it",
+                "channel": "Starboard channel",
+                "emoji": "Reaction that counts (default ⭐)",
+                "threshold": "Reactions needed (default 3)",
+                "off": "Turn the starboard off"
+            },
+            "feed": {
+                "desc": "Post new YouTube videos or Twitch go-lives in a channel",
+                "add": "Follow a YouTube or Twitch channel",
+                "source": "YouTube: channel id (UC…) or /channel/ link. Twitch: login or twitch.tv link",
+                "channel": "Where to post",
+                "platform": "YouTube (default) or Twitch",
+                "message": "Message with {title} {url} {author} ({game} on Twitch); may mention a role",
+                "remove": "Stop following a YouTube or Twitch channel",
+                "id": "Feed number (#) from /community feed list",
+                "list": "List feeds"
+            }
+        },
+        "cat": {
+            "desc": "The server cat, which grows as members chat",
+            "view": "See the server cat, its mood and how close it is to growing",
+            "name": "Rename the server cat (administrators)",
+            "newName": "The new name"
+        },
+        "tag": {
+            "desc": "Saved answers anyone can post, optionally sent automatically on a keyword",
+            "name": "Tag name",
+            "triggerKind": "Post this tag automatically when a message matches",
+            "trigger": "Word/phrase, or regex (case-insensitive)",
+            "allowChannels": "Only trigger in these channels (#mentions; \"none\" clears)",
+            "denyChannels": "Never trigger in these channels (#mentions; \"none\" clears)",
+            "cooldown": "Seconds between auto-posts per channel (default 60)",
+            "show": "Post a tag in this channel",
+            "for": "Mention a member with it",
+            "list": "List the tags",
+            "create": "Create a tag",
+            "newName": "Short name: lowercase letters, digits, - and _",
+            "content": "The text",
+            "edit": "Change a tag (only the options you give)",
+            "newContent": "New text",
+            "delete": "Delete a tag"
+        },
+        "suggest": {
+            "desc": "Suggest something for the server, or (admins) answer a suggestion",
+            "new": "Post a suggestion members can vote on",
+            "text": "Your suggestion",
+            "status": "Approve, deny or mark a suggestion as under consideration",
+            "id": "Suggestion number (#)",
+            "statusOption": "New status",
+            "reason": "Shown on the suggestion and sent to the author"
+        },
+        "apply": {
+            "description": "Manage role applications",
+            "submit": {
+                "description": "Submit an application for a role",
+                "application": "The application you want to submit"
+            },
+            "status": {
+                "description": "Check the status of your application",
+                "id": "Application ID (leave empty to see all)"
+            },
+            "list": {
+                "description": "List available applications to apply for"
+            }
+        },
+        "appAdmin": {
+            "description": "Manage staff applications",
+            "setup": {
+                "description": "Set up a new application"
+            },
+            "review": {
+                "description": "Approve or deny an application",
+                "id": "The application ID"
+            },
+            "list": {
+                "description": "List all applications",
+                "status": "Filter by status",
+                "choice": {
+                    "pending": "Pending",
+                    "approved": "Approved",
+                    "denied": "Denied"
+                },
+                "role": "Filter by role ID",
+                "user": "Filter by user",
+                "limit": "Maximum number of applications to show (default: 10)"
+            },
+            "dashboard": {
+                "description": "Open the applications configuration dashboard",
+                "application": "Select an application to configure"
+            }
+        }
+    },
+    "sticky": {
+        "savedTitle": "Sticky message saved",
+        "posted": "It is now pinned to the bottom of {channel} and is reposted after members talk there (at most every 15 seconds).",
+        "notPosted": "Saved, but I could not post in {channel}. Check that I can view the channel, send messages and embed links there.",
+        "removed": "Removed the sticky message from {channel}.",
+        "none": "{channel} has no sticky message.",
+        "listTitle": "Sticky messages ({count})",
+        "listEmpty": "None. Add one with `/community sticky set`.",
+        "footer": "Sticky message",
+        "empty": "The sticky message cannot be empty.",
+        "tooLong": "Sticky messages are limited to {max} characters."
+    },
+    "suggestions": {
+        "channelSet": "Suggestions from `/suggest new` now go to {channel}. Make sure I can send messages and embeds there.",
+        "off": "Suggestions are turned off (no channel)."
+    },
+    "starboard": {
+        "onTitle": "Starboard on",
+        "onLine": "Messages with **{threshold}** {emoji} reactions are copied to {channel}.",
+        "rules": "The author's own reaction and bots don't count; bot messages are never starred.",
+        "offDone": "Starboard turned off. Existing starboard posts stay where they are.",
+        "emojiInvalid": "Use one emoji: a standard one like ⭐ or a custom emoji from this server.",
+        "thresholdRange": "threshold must be between 1 and {max}.",
+        "noText": "*(no text)*",
+        "attachments": "{count} attachment(s)",
+        "source": "Source",
+        "jump": "[Jump to message]({url})"
+    },
+    "feed": {
+        "addedTitle": "Feed #{id} added",
+        "twitchWatch": "I will post in {channel} when **{author}** goes live on Twitch (checked every 2 minutes).",
+        "liveNow": "They are live right now: this stream is not announced, the next one will be.",
+        "previewTwitch": "\n**Preview** ({source}, not posted):\n{preview}",
+        "withCurrent": "with the current stream",
+        "withExample": "with an example stream",
+        "youtubeWatch": "New videos from **{author}** will be posted in {channel} (checked every 15 minutes).",
+        "previewYoutube": "\n**Preview** (with the latest video, not posted):\n{preview}",
+        "noVideos": "\nThe channel has no videos yet.",
+        "removed": "Removed feed #{id}.",
+        "notFound": "There is no feed #{id}. See `/community feed list`.",
+        "listTitle": "Feeds ({count})",
+        "listEmpty": "None. Add one with `/community feed add`.",
+        "exampleTitle": "Example stream title",
+        "defaultYoutube": "**{author}** posted a new video: **{title}**\n{url}",
+        "defaultTwitch": "**{author}** is live on Twitch: **{title}**\n{url}",
+        "youtubeIdInvalid": "Give the YouTube channel id (starts with UC, 24 characters), or a youtube.com/channel/UC… link. @handles are not supported: open the channel, then Share → Copy channel ID.",
+        "twitchLoginInvalid": "Give the Twitch login (the name in twitch.tv/<name>), or a twitch.tv/<name> link.",
+        "tooLong": "The message is limited to {max} characters.",
+        "twitchDuplicate": "That Twitch channel is already posted to that Discord channel.",
+        "youtubeDuplicate": "That YouTube channel is already posted to that Discord channel.",
+        "choosePlatform": "Choose YouTube or Twitch.",
+        "youtubeNoChannel": "YouTube has no channel with that id.",
+        "youtubeUnreachable": "Could not reach YouTube to check that channel ({error}). Try again later.",
+        "twitchOff": "Twitch alerts are not set up on this bot yet.",
+        "twitchUnreachable": "Could not reach Twitch to check that channel ({error}). Try again later.",
+        "twitchNoChannel": "Twitch has no channel with that name."
+    },
+    "tag": {
+        "uses": "**Uses:** {uses}",
+        "createdBy": "**Created by:** <@{userId}>",
+        "trigger": "**Trigger:** {kind} `{trigger}`{disabled}",
+        "disabled": " (disabled)",
+        "cooldown": "**Cooldown:** {seconds}s per channel",
+        "onlyIn": "**Only in:** {channels}",
+        "neverIn": "**Never in:** {channels}",
+        "channelsUnreadable": "Could not read any channels from {option}; mention them like #general, or write \"none\".",
+        "notFound": "There is no tag called **{name}**. See `/tag list`.",
+        "missing": "There is no tag called **{name}**.",
+        "listLine": "`{name}`{auto} · {uses} uses",
+        "auto": " · auto: {kind}",
+        "listTitle": "Tags ({count})",
+        "listEmpty": "No tags yet.",
+        "deleted": "Deleted tag **{name}**.",
+        "needTrigger": "Give the trigger text too.",
+        "createdTitle": "Tag {name} created",
+        "updatedTitle": "Tag {name} updated",
+        "textEmpty": "The tag text cannot be empty.",
+        "textTooLong": "Tag text is limited to {max} characters.",
+        "kindInvalid": "trigger_kind must be none, word or regex.",
+        "noTrigger": "This tag has no trigger; set trigger_kind (word or regex) along with the trigger.",
+        "cooldownRange": "cooldown must be 0–86400 seconds.",
+        "cooldownMin": "Tags with a trigger need a cooldown of at least {seconds} seconds.",
+        "nameInvalid": "Tag names use lowercase letters, digits, - and _ (up to 32).",
+        "exists": "There is already a tag called **{name}**. Use `/tag edit` to change it.",
+        "nothingToChange": "Give at least one thing to change."
+    },
+    "cat": {
+        "dbDown": "The database is not responding right now, so the cat could not be loaded. Please try again in a moment.",
+        "nameInvalid": "Use letters, numbers and spaces for the name.",
+        "notSaved": "The database is not responding right now, so nothing was changed.",
+        "renamedTitle": "Cat renamed",
+        "renamed": "The server cat is now called {name}.",
+        "stageField": "Stage",
+        "moodField": "Mood",
+        "messagesField": "Messages counted",
+        "nextField": "Next stage",
+        "toNext": "{bar}\n{left} more messages to {stage}.",
+        "fullyGrown": "Fully grown. This is the last stage.",
+        "footer": "The cat grows with every message members send here.",
+        "grewTitle": "{name} grew into a {stage}",
+        "grewText": "Thanks to everyone who chats here. {name} is now a {stage} after {total} messages.",
+        "stage": {
+            "kitten": "Kitten",
+            "young": "Young cat",
+            "cat": "Cat",
+            "big": "Big cat",
+            "legend": "Legend"
+        },
+        "mood": {
+            "scared": "scared",
+            "proud": "proud",
+            "happy": "happy",
+            "sleepy": "sleepy"
+        },
+        "sentence": {
+            "scared": "{name} is scared: the server is in raid lockdown.",
+            "proud": "{name} is proud: it grew a stage today.",
+            "happy": "{name} is happy: the server was busier this week.",
+            "sleepy": "{name} is sleepy: the server was quieter this week."
+        }
+    },
+    "suggest": {
+        "postedTitle": "Suggestion #{id} posted",
+        "postedText": "Members can vote on it here: {url}",
+        "notFound": "There is no suggestion #{id} in this server.",
+        "decidedTitle": "Suggestion #{id}: {status}",
+        "edited": "The suggestion message was updated.",
+        "notEdited": "The suggestion message could not be updated (deleted or no access).",
+        "dmed": "The author was told by DM.",
+        "notDmed": "The author could not be DMed.",
+        "statusWord": {
+            "approved": "approved",
+            "denied": "denied",
+            "considering": "considering"
+        },
+        "label": {
+            "pending": "Open for votes",
+            "approved": "Approved",
+            "denied": "Denied",
+            "considering": "Under consideration"
+        },
+        "empty": "The suggestion cannot be empty.",
+        "tooLong": "Suggestions are limited to {max} characters.",
+        "notSetUp": "Suggestions are not set up in this server yet (an admin can use `/community suggestions channel`).",
+        "cooldown": "You can post another suggestion in {seconds} seconds.",
+        "postFailed": "I could not post in {channel}. Ask an admin to check my permissions there.",
+        "closed": "Voting on this suggestion is closed.",
+        "statusInvalid": "Status must be approved, denied or considering.",
+        "votes": "Votes",
+        "status": "Status",
+        "reasonStaff": "Reason (staff)",
+        "reason": "Reason",
+        "title": "Suggestion #{id}",
+        "member": "Member {userId}",
+        "footer": "Suggest something with /suggest new",
+        "dmTitle": "Your suggestion #{id} in {server}: {status}",
+        "vote": {
+            "invalid": "This button is not valid.",
+            "gone": "This suggestion no longer exists.",
+            "up": "You voted 👍.",
+            "down": "You voted 👎.",
+            "removed": "Your vote was removed.",
+            "hint": "{note} Click the other button to change it, or the same one to withdraw it."
+        }
+    },
+    "apply": {
+        "serverOnly": "This command can only be used in a server.",
+        "disabled": "Applications are currently disabled in this server.",
+        "configNotFound": "Application configuration not found.",
+        "closed": "The **{name}** application is currently closed.",
+        "roleNotFound": "Role not found.",
+        "questionsChanged": "The questions for this application changed while you were filling in the form. Please open it again with `/apply submit`.",
+        "sent": {
+            "title": "Application sent",
+            "body": "Your application for **{name}** was sent to staff."
+        },
+        "saved": {
+            "title": "Application saved",
+            "body": "Your application for **{name}** was saved, but it could not be posted for staff (no application channel is set up, or the bot can't post there). Let a staff member know."
+        },
+        "idLine": "Application ID: `{id}`",
+        "statusHint": "You can check the status with `/apply status id:{id}`",
+        "statusLabel": {
+            "pending": "In Progress",
+            "approved": "Accepted",
+            "denied": "Denied",
+            "unknown": "Unknown"
+        },
+        "list": {
+            "none": "No applications are currently available.",
+            "title": "Available Applications",
+            "description": "Here are the roles you can apply for:",
+            "entry": "**Role:** {role}\n**Apply with:** `/apply submit application:\"{name}\"`",
+            "roleMissing": "Role not found",
+            "footer": "Use /apply submit application:<name> to apply for any of these roles.",
+            "loadFailed": "Failed to load applications. Please try again later."
+        },
+        "submit": {
+            "notFound": "Use `/apply list` to see available applications.",
+            "closed": "The **{name}** application is currently closed. Use `/apply list` to see open ones.",
+            "pending": "You already have a pending application. Please wait for it to be reviewed.",
+            "roleGone": "The role for this application no longer exists.",
+            "modalTitle": "Application for {name}"
+        },
+        "status": {
+            "notFound": "Application not found or you do not have permission to view it.",
+            "unknownDate": "Unknown date",
+            "unknownRole": "Unknown Role",
+            "oneTitle": "Application #{id} - {role}",
+            "oneBody": "**Application ID:** `{id}`\n**Status:** {status}\n**Submitted:** {date}",
+            "none": "You have not submitted any applications yet.",
+            "allTitle": "Your Applications",
+            "allDescription": {
+                "one": "Showing {count} recent application(s).",
+                "other": "Showing {count} recent application(s)."
+            },
+            "fieldName": "{role} ({status})",
+            "fieldValue": "**ID:** `{id}`\n**Status:** {status}\n**Submitted:** {date}",
+            "footer": {
+                "one": "Showing latest {shown} of {count} applications.",
+                "other": "Showing latest {shown} of {count} applications."
+            }
+        },
+        "dm": {
+            "approvedTitle": "Application Accepted",
+            "deniedTitle": "Application Denied",
+            "approvedBody": "Your application for **{name}** has been **approved**\n**Note:** {note}\n\nUse `/apply status id:{id}` to view details.",
+            "deniedBody": "Your application for **{name}** has been **denied**\n**Note:** {note}\n\nUse `/apply status id:{id}` to view details.",
+            "noReason": "No reason provided."
+        }
+    },
+    "appAdmin": {
+        "alreadyProcessed": "This interaction has already been processed. Please try the command again.",
+        "questionRequired": "Question {number} (required)",
+        "questionOptional": "Question {number} (optional)",
+        "setup": {
+            "modalTitle": "Set up new application",
+            "rolePlaceholder": "Select the role users will apply for",
+            "roleLabel": "Application role",
+            "roleDescription": "The role that users will be applying for",
+            "namePlaceholder": "e.g., Moderator, Helper, Developer",
+            "nameLabel": "Application name",
+            "q1Placeholder": "Why do you want this role?",
+            "q2Placeholder": "What experience do you have?",
+            "noRole": "You must select a role for the application.",
+            "roleNotFound": "The selected role could not be found.",
+            "createdTitle": "Application created",
+            "createdBody": "**{name}** application has been created for {role}.\n\nYou can change the log channel, manager roles, questions and retention period in the dashboard."
+        },
+        "review": {
+            "notFound": "Application not found.",
+            "processed": "This application has already been processed.",
+            "title": "Review Application",
+            "body": "**User:** <@{userId}>\n**Application:** {name}\n**Application ID:** `{id}`",
+            "question": "Q{number}: {question}",
+            "noAnswer": "*No answer provided*",
+            "approve": "Approve",
+            "deny": "Deny",
+            "approveTitle": "Approve Application - Reason",
+            "denyTitle": "Deny Application - Reason",
+            "reasonLabel": "Reason (optional)",
+            "reasonPlaceholder": "Provide a reason for this decision...",
+            "approvedTitle": "Application approved",
+            "approvedBody": "The application has been **approved**.",
+            "deniedTitle": "Application denied",
+            "deniedBody": "The application has been **denied**.",
+            "failed": "An error occurred while reviewing the application.",
+            "timeoutTitle": "Review timeout",
+            "timeoutBody": "The review buttons have timed out."
+        },
+        "list": {
+            "noneTitle": "No Applications Found",
+            "noneDescription": "No submitted applications found matching the specified criteria.\n\nHowever, the following application roles are configured:",
+            "roleEntry": "**Role:** {role}\n**Available for applications:** Yes",
+            "footer": "Users can apply with /apply submit or see available roles with /apply list",
+            "noneConfigured": "No applications found and no application roles configured.\nUse `/app-admin setup` to configure application roles first.",
+            "title": "Submitted Applications",
+            "description": {
+                "one": "Showing {count} application.",
+                "other": "Showing {count} applications."
+            },
+            "unknownUser": "Unknown User",
+            "entry": "**ID:** `{id}`\n**Status:** {status}\n**Date:** {date}"
+        }
+    },
+    "appDashboard": {
+        "notSet": "`Not set`",
+        "noneConfigured": "`None configured`",
+        "noRoles": "`No application roles configured`",
+        "title": "Applications dashboard",
+        "description": "Manage application settings for **{server}**.\nSelect an option below to modify a setting.",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "field": {
+            "status": "Application status",
+            "logChannel": "Log channel",
+            "managerRoles": "Manager roles",
+            "questions": "Questions",
+            "roles": "Application roles",
+            "retention": "Retention",
+            "role": "Role"
+        },
+        "questionsValue": "{count} configured, first: {first}",
+        "retentionValue": "Pending: **{pending}d** · Reviewed: **{reviewed}d**",
+        "footer15": "Dashboard closes after 15 minutes of inactivity",
+        "footer10": "Dashboard closes after 10 minutes of inactivity",
+        "menu": {
+            "placeholder": "Select a setting to configure...",
+            "logChannel": "Log channel",
+            "logChannelHelp": "Set the channel where new applications are logged",
+            "roleLogChannelHelp": "Set the channel where applications are logged",
+            "managerRoles": "Manager roles",
+            "managerRolesHelp": "Add or remove a role that can manage applications",
+            "questions": "Edit questions",
+            "questionsHelp": "Customise the questions shown on the application form",
+            "roleAdd": "Add application role",
+            "roleAddHelp": "Add a role that members can apply for",
+            "roleRemove": "Remove application role",
+            "roleRemoveHelp": "Remove a role from the applications list",
+            "retention": "Retention period",
+            "retentionHelp": "Set how long pending and reviewed applications are kept"
+        },
+        "toggleButton": "Applications",
+        "notSetUp": "The applications system has not been configured yet. Please run `/app-admin setup` to create your first application.",
+        "openFailed": "Failed to open the applications dashboard.",
+        "selector": {
+            "placeholder": "Select an application to configure...",
+            "option": "Configure the {name} application",
+            "title": "Select application",
+            "description": "Choose which application role you want to configure.",
+            "noSelection": "No selection was made. The dashboard has closed."
+        },
+        "role": {
+            "inheritsLog": "`Inherits global log channel`",
+            "minChars": " (min {min} chars)",
+            "inheritsQuestions": "`Inherits global questions`",
+            "title": "Application dashboard",
+            "description": "Configuration for **{name}**",
+            "disableButton": "Disable Application",
+            "enableButton": "Enable Application",
+            "deleteButton": "Delete application"
+        },
+        "selectionFailed": "An error occurred while processing your selection.",
+        "unexpected": "An unexpected error occurred while updating the configuration.",
+        "timedOutTitle": "Dashboard timed out",
+        "timedOutBody": "This dashboard has been closed due to inactivity. Please run the command again to continue.",
+        "system": {
+            "offTitle": "Applications turned off",
+            "offBody": "The applications system is now **disabled**.\n\nMembers will no longer be able to apply for roles.",
+            "onTitle": "Applications turned on",
+            "onBody": "The applications system is now **enabled**.\n\nMembers can now start applying for roles."
+        },
+        "toggleFailed": "An error occurred while toggling the application status.",
+        "configTimeoutTitle": "Configuration timeout",
+        "configTimeoutBody": "This dashboard session has timed out due to inactivity (10 minutes).\n\nTo continue configuring your applications, please run the command again.",
+        "roleNotFound": "Application role not found.",
+        "roleToggle": {
+            "offTitle": "Application turned off",
+            "offBody": "The **{name}** application is now **disabled**.\n\nThis application will no longer appear in `/apply submit` options.",
+            "onTitle": "Application turned on",
+            "onBody": "The **{name}** application is now **enabled**.\n\nThis application will now appear in `/apply submit` options."
+        },
+        "delete": {
+            "thisApplication": "this application",
+            "modalTitle": "Confirm application deletion",
+            "warning": "You are about to permanently delete **{name}**. All stored applications and settings for this role will be removed and cannot be recovered.",
+            "checkbox": "I confirm, this cannot be undone",
+            "modalFailed": "Failed to show confirmation modal. Please try again.",
+            "cancelled": "Application deletion was cancelled.",
+            "mustTick": "You must tick the confirmation checkbox to delete the application.",
+            "failed": "An error occurred while deleting the application.",
+            "failedRetry": "An error occurred while deleting the application. Please try again.",
+            "doneTitle": "Application deleted",
+            "doneBody": "The application for <@&{roleId}> (**{name}**) has been permanently deleted.",
+            "doneCount": {
+                "one": "Deleted: **{count}** application",
+                "other": "Deleted: **{count}** applications"
+            }
+        },
+        "logChannel": {
+            "modalTitle": "Configure log channel",
+            "placeholder": "Select a text channel...",
+            "labelHelp": "Channel where new applications will be logged",
+            "updatedTitle": "Log channel updated",
+            "updatedBody": "Application logs will now be sent to {channel}.\nYou can also manage this from `/logging dashboard`.",
+            "failed": "An error occurred while updating the log channel."
+        },
+        "managers": {
+            "modalTitle": "Configure manager roles",
+            "placeholder": "Select roles to grant manager access...",
+            "labelHelp": "Selected roles will be toggled on/off as manager roles",
+            "none": "`None`",
+            "updatedTitle": "Manager roles updated",
+            "updatedBody": "Current manager roles: {roles}",
+            "failed": "An error occurred while updating manager roles."
+        },
+        "questions": {
+            "minTagHint": "End with [min:10] to require answers of at least 10 characters",
+            "modalTitle": "Edit application questions",
+            "needOne": "At least one question is required.",
+            "updatedTitle": "Questions updated",
+            "saved": {
+                "one": "{count} question saved.",
+                "other": "{count} questions saved."
+            }
+        },
+        "roleAdd": {
+            "placeholder": "Select the role members can apply for...",
+            "labelHelp": "Select the Discord role members will be applying for",
+            "nameLabel": "Display name (leave blank to use role name)",
+            "exists": "{role} is already an application role.",
+            "addedTitle": "Role added",
+            "addedBody": "{role} added as **{name}**.",
+            "failed": "An error occurred while adding the application role."
+        },
+        "roleRemove": {
+            "none": "There are no application roles configured to remove.",
+            "placeholder": "Select the role to remove...",
+            "labelHelp": "Select the role to remove from the applications list",
+            "notInList": "<@&{roleId}> is not in the application roles list.",
+            "removedTitle": "Role removed",
+            "removedBody": "<@&{roleId}> has been removed from the application roles.",
+            "failed": "An error occurred while removing the application role."
+        },
+        "retention": {
+            "modalTitle": "Application retention periods",
+            "info": "**Pending**: how long unanswered/in-progress applications are kept before being automatically removed.\n**Reviewed**: how long approved or denied applications are kept.\n-# Enter a whole number between 1 and 3650 (max 10 years).",
+            "pendingLabel": "Pending retention (days)",
+            "reviewedLabel": "Reviewed retention (days)",
+            "pendingInvalid": "Pending retention must be a whole number between **1** and **3650** days.",
+            "reviewedInvalid": "Reviewed retention must be a whole number between **1** and **3650** days.",
+            "updatedTitle": "Retention updated",
+            "pendingKept": {
+                "one": "Pending applications will be kept for **{count} day**.",
+                "other": "Pending applications will be kept for **{count} days**."
+            },
+            "reviewedKept": {
+                "one": "Reviewed applications will be kept for **{count} day**.",
+                "other": "Reviewed applications will be kept for **{count} days**."
+            }
+        }
+    }
+}

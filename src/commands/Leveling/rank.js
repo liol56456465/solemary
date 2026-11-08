@@ -8,20 +8,24 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { hasAdministrator } from '../../utils/commandGate.js';
 import { hasOwnerPower } from '../../utils/ownerPower.js';
 import { CARD_FILE_NAME, cardAvatarUrl, tryLevelCard } from '../../services/leveling/levelCard.js';
+import { botText, textForInteraction } from '../../utils/botText.js';
+import { describe } from '../../utils/commandLocalizations.js';
 
 /**
  * "x2 (role Booster) in <#channel>" for an xpBoostBreakdown result, or null. With more than
- * one source each shows its own multiplier. roleName = the boosting role's name. Pure.
+ * one source each shows its own multiplier. roleName = the boosting role's name. lang = the
+ * reply's language (default English). Pure.
  */
-export function xpBoostLine(boost, { hereId = null, roleName = null } = {}) {
+export function xpBoostLine(boost, { hereId = null, roleName = null, lang = 'en' } = {}) {
   if (!boost || !(boost.multiplier > 1)) return null;
+  const tr = botText(lang);
   const sources = [];
-  if (boost.role > 1) sources.push([`role ${roleName ? escapeMarkdown(roleName) : 'boost'}`, boost.role]);
-  if (boost.channel > 1) sources.push(['channel boost', boost.channel]);
-  if (boost.global > 1) sources.push(['server-wide', boost.global]);
+  if (boost.role > 1) sources.push([roleName ? tr.t('leveling.boost.role', { name: escapeMarkdown(roleName) }) : tr.t('leveling.boost.roleUnnamed'), boost.role]);
+  if (boost.channel > 1) sources.push([tr.t('leveling.boost.channel'), boost.channel]);
+  if (boost.global > 1) sources.push([tr.t('leveling.boost.global'), boost.global]);
   const parts = sources.length > 1 ? sources.map(([label, value]) => `${label} x${value}`) : sources.map(([label]) => label);
-  if (boost.capped) parts.push(`capped at x${TOTAL_MULTIPLIER_CAP}`);
-  const where = hereId ? ` in <#${hereId}>` : '';
+  if (boost.capped) parts.push(tr.t('leveling.boost.capped', { cap: TOTAL_MULTIPLIER_CAP }));
+  const where = hereId ? tr.t('leveling.boost.where', { channelId: hereId }) : '';
   return `x${boost.multiplier}${parts.length ? ` (${parts.join(', ')})` : ''}${where}`;
 }
 
@@ -30,7 +34,7 @@ export function xpBoostLine(boost, { hereId = null, roleName = null } = {}) {
  * Also null where the member earns no XP at all (ignored channel or role, blacklisted), the
  * same checks messageCreate makes before it gives XP.
  */
-export function rankBoostLine(levelingConfig, member, channel) {
+export function rankBoostLine(levelingConfig, member, channel, { lang = 'en' } = {}) {
   const roleIds = member?.roles?.cache ? [...member.roles.cache.keys()] : [];
   if (channel?.id && levelingConfig?.ignoredChannels?.includes(channel.id)) return null;
   if (levelingConfig?.ignoredRoles?.length && roleIds.some((id) => levelingConfig.ignoredRoles.includes(id))) return null;
@@ -42,23 +46,17 @@ export function rankBoostLine(levelingConfig, member, channel) {
   });
   if (!boost) return null;
   const roleName = boost.roleId ? member.roles.cache.get(boost.roleId)?.name ?? null : null;
-  return xpBoostLine(boost, { hereId: channel?.id ?? null, roleName });
+  return xpBoostLine(boost, { hereId: channel?.id ?? null, roleName, lang });
 }
 
 export default {
-  data: new SlashCommandBuilder()
-    .setName('rank')
-    .setDescription("Check your or another user's rank and level")
+  data: describe(new SlashCommandBuilder().setName('rank'), 'leveling.cmd.rank.description')
     .addUserOption((option) =>
-      option
-        .setName('user')
-        .setDescription('The user to check the rank of')
+      describe(option.setName('user'), 'leveling.cmd.rank.user')
         .setRequired(false)
     )
     .addBooleanOption((option) =>
-      option
-        .setName('card')
-        .setDescription('Show the rank as an image card')
+      describe(option.setName('card'), 'leveling.cmd.rank.card')
         .setRequired(false)
     )
     .setDMPermission(false),
@@ -66,6 +64,9 @@ export default {
 
   async execute(interaction, config, client) {
     await InteractionHelper.safeDefer(interaction);
+    // The rank is posted in the channel (server language); refusals go to the user (their language).
+    const pub = textForInteraction(interaction, { purpose: 'public' });
+    const tr = textForInteraction(interaction);
 
     const levelingConfig = await getLevelingConfig(client, interaction.guildId);
     if (!levelingConfig?.enabled) {
@@ -73,7 +74,7 @@ export default {
         embeds: [
           new EmbedBuilder()
             .setColor('#f1c40f')
-            .setDescription('The leveling system is currently disabled on this server.')
+            .setDescription(pub.t('leveling.disabled'))
         ],
         flags: MessageFlags.Ephemeral
       });
@@ -88,7 +89,7 @@ export default {
       throw new TitanBotError(
         `Non-admin ${interaction.user.id} tried to view rank of ${targetUser.id}`,
         ErrorTypes.PERMISSION,
-        'Only admins can check another member\'s rank. Use `/rank` without a user to see your own.'
+        tr.t('leveling.rank.othersAdminOnly')
       );
     }
     const member = await interaction.guild.members
@@ -99,7 +100,7 @@ export default {
       throw new TitanBotError(
         `User ${targetUser.id} not found in guild`,
         ErrorTypes.USER_INPUT,
-        'Could not find the specified user in this server.'
+        tr.t('leveling.notFound')
       );
     }
 
@@ -126,6 +127,7 @@ export default {
         xp: safeUserData.xp,
         xpNeeded: safeUserData.level >= 1000 ? 0 : xpNeeded,
         accent: levelingConfig.cardAccent,
+        lang: pub.lang,
       });
       if (png) {
         await InteractionHelper.safeEditReply(interaction, { files: [{ attachment: png, name: CARD_FILE_NAME }], allowedMentions: { parse: [] } });
@@ -137,26 +139,26 @@ export default {
     const progressBar = createProgressBar(progress, 20);
 
     const embed = new EmbedBuilder()
-      .setTitle(`${member.displayName}'s rank`)
+      .setTitle(pub.t('leveling.rank.title', { name: member.displayName }))
       .setThumbnail(member.displayAvatarURL({ dynamic: true }))
       .addFields(
         {
-          name: 'Level',
+          name: pub.t('leveling.rank.level'),
           value: safeUserData.level.toString(),
           inline: true
         },
         {
-          name: 'XP',
+          name: pub.t('leveling.rank.xp'),
           value: `${safeUserData.xp}/${xpNeeded}`,
           inline: true
         },
         {
-          name: 'Total XP',
+          name: pub.t('leveling.rank.totalXp'),
           value: safeUserData.totalXp.toString(),
           inline: true
         },
         {
-          name: `Progress to Level ${safeUserData.level + 1}`,
+          name: pub.t('leveling.rank.progress', { level: safeUserData.level + 1 }),
           value: `${progressBar} ${progress}%`
         }
       )
@@ -164,8 +166,8 @@ export default {
       .setTimestamp();
 
     // Shown only when the member's boost here is above x1 (the same math as messageCreate).
-    const boostLine = rankBoostLine(levelingConfig, member, interaction.channel);
-    if (boostLine) embed.addFields({ name: 'XP boost', value: boostLine });
+    const boostLine = rankBoostLine(levelingConfig, member, interaction.channel, { lang: pub.lang });
+    if (boostLine) embed.addFields({ name: pub.t('leveling.rank.boost'), value: boostLine });
 
     await InteractionHelper.safeEditReply(interaction, { embeds: [embed], allowedMentions: { parse: [] } });
     logger.debug(`Rank checked for user ${targetUser.id} in guild ${interaction.guildId}`);

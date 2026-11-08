@@ -1,0 +1,147 @@
+{
+    "cmd": {
+        "giveaway": "Créer et gérer des giveaways",
+        "create": "Lancer un nouveau giveaway dans un salon",
+        "end": "Terminer un giveaway en cours et tirer les gagnants",
+        "reroll": "Tirer de nouveaux gagnants pour un giveaway terminé",
+        "delete": "Supprimer un giveaway et son message",
+        "gcreate": "Lancer un giveaway",
+        "duration": "Combien de temps il dure, par ex. 30m, 1h ou 5d",
+        "winners": "Combien de gagnants",
+        "prize": "Ce que les gagnants reçoivent",
+        "channel": "Où le publier (par défaut : ce salon)",
+        "gdelete": "Supprime le message d'un giveaway et le retire de la base de données.",
+        "gend": "Terminer un giveaway maintenant et tirer les gagnants",
+        "greroll": "Tirer de nouveaux gagnants pour un giveaway terminé",
+        "messageId": "ID du message du giveaway"
+    },
+    "unknownSubcommand": "Sous-commande inconnue.",
+    "guildOnly": "Cette commande ne marche que sur un serveur.",
+    "needManageServer": {
+        "create": "Tu as besoin de la permission Gérer le serveur pour lancer un giveaway.",
+        "delete": "Tu as besoin de la permission Gérer le serveur pour supprimer un giveaway.",
+        "end": "Tu as besoin de la permission Gérer le serveur pour terminer un giveaway.",
+        "reroll": "Tu as besoin de la permission Gérer le serveur pour retirer au sort un giveaway."
+    },
+    "created": {
+        "title": "Giveaway lancé",
+        "text": "**{prize}** est en jeu dans {channel}. Fin dans **{duration}**."
+    },
+    "deleted": {
+        "title": "Giveaway supprimé",
+        "withMessage": "**{prize}** supprimé, et son message retiré de #{channel}.",
+        "withoutMessage": "**{prize}** supprimé, mais son message est introuvable (déjà supprimé, ou je ne vois pas le salon).",
+        "hadWinners": {
+            "one": "Il avait déjà {count} gagnant.",
+            "many": "Il avait déjà {count} gagnants.",
+            "other": "Il avait déjà {count} gagnants."
+        },
+        "endedNoWinner": "Il s'était terminé sans gagnant.",
+        "noWinner": "Aucun gagnant n'avait été tiré."
+    },
+    "ended": {
+        "title": "Giveaway terminé",
+        "text": {
+            "one": "**{prize}** terminé dans {channel}. {count} gagnant tiré parmi {entries} participations.",
+            "many": "**{prize}** terminé dans {channel}. {count} gagnants tirés parmi {entries} participations.",
+            "other": "**{prize}** terminé dans {channel}. {count} gagnants tirés parmi {entries} participations."
+        }
+    },
+    "reroll": {
+        "completeTitle": "Nouveau tirage fait",
+        "noChannel": "Les nouveaux gagnants sont tirés et enregistrés dans la base de données. Le salon pour l'annonce est introuvable.",
+        "noMessage": "Les nouveaux gagnants ont été annoncés dans {channel}. (Message d'origine introuvable.)",
+        "title": "Nouveau tirage",
+        "text": {
+            "one": "{count} nouveau gagnant tiré pour **{prize}** dans {channel}.",
+            "many": "{count} nouveaux gagnants tirés pour **{prize}** dans {channel}.",
+            "other": "{count} nouveaux gagnants tirés pour **{prize}** dans {channel}."
+        }
+    },
+    "button": {
+        "slowDown": "Doucement, puis réessaie.",
+        "notActive": "Ce giveaway n'est plus actif.",
+        "alreadyEnded": "Ce giveaway est déjà terminé.",
+        "alreadyIn": "Tu participes déjà à ce giveaway.",
+        "joinedTitle": "Tu participes",
+        "joined": {
+            "one": "Bonne chance. {count} personne participe pour l'instant.",
+            "many": "Bonne chance. {count} personnes participent pour l'instant.",
+            "other": "Bonne chance. {count} personnes participent pour l'instant."
+        },
+        "guildOnly": "Ce bouton ne marche que sur un serveur.",
+        "needAdminEnd": "Tu as besoin du rôle Administrateur pour terminer un giveaway.",
+        "needAdminReroll": "Tu as besoin du rôle Administrateur pour retirer au sort un giveaway.",
+        "endedTitle": "Giveaway terminé",
+        "picked": {
+            "one": "{count} gagnant tiré.",
+            "many": "{count} gagnants tirés.",
+            "other": "{count} gagnants tirés."
+        },
+        "nobodyEntered": "Personne n'a participé, il n'y a donc pas de gagnant.",
+        "rerolledTitle": "Giveaway retiré au sort",
+        "rerolledText": "Nouveaux gagnants tirés.",
+        "notFound": "Ce giveaway est introuvable.",
+        "notEndedYet": "Ce giveaway n'est pas encore terminé, il n'y a donc pas encore de gagnants.",
+        "nobodyWon": "Personne n'a gagné cette fois.",
+        "winnersTitle": "Gagnants : {prize}",
+        "giveawayWord": "giveaway"
+    },
+    "embed": {
+        "ended": "Ce giveaway est terminé.",
+        "clickJoin": "Clique sur Participer pour tenter ta chance.",
+        "host": "Organisateur",
+        "winners": "Gagnants",
+        "entries": "Participations",
+        "wonBy": "Gagné par",
+        "nobodyEntered": "Personne n'a participé",
+        "ends": "Fin"
+    },
+    "buttons": {
+        "reroll": "Retirer au sort",
+        "winners": "Gagnants",
+        "join": "Participer",
+        "end": "Terminer"
+    },
+    "post": {
+        "newGiveaway": "**Nouveau giveaway**",
+        "ended": "**Giveaway terminé**",
+        "rerolled": "**Giveaway retiré au sort**",
+        "won": "**{prize}** revient à {winners}. Écris à <@{hostId}> pour recevoir ton prix.",
+        "theGiveaway": "le giveaway",
+        "noWinner": "Le giveaway pour **{prize}** est terminé. Personne n'a participé, il n'y a donc pas de gagnant.",
+        "rerolledWon": "Nouveau tirage : **{prize}** revient finalement à {winners}. Écris à <@{hostId}> pour recevoir ton prix.",
+        "rerolledShort": "Nouveau tirage pour **{prize}** : {winners}"
+    },
+    "errors": {
+        "durationMissing": "Indique une durée valide (par ex. 1h, 30m, 5d, 10s).",
+        "durationFormat": "Format de durée invalide. Utilise : 1h, 30m, 5d, 10s (min. 10s, max. 30d)",
+        "durationAmount": "Le nombre de la durée doit être entre 1 et 999.",
+        "durationUnit": "Utilise s (secondes), m (minutes), h (heures) ou d (jours).",
+        "durationMax": {
+            "one": "La durée maximale est de {count} jour.",
+            "many": "La durée maximale est de {count} jours.",
+            "other": "La durée maximale est de {count} jours."
+        },
+        "durationMin": {
+            "one": "La durée minimale est de {count} seconde.",
+            "many": "La durée minimale est de {count} secondes.",
+            "other": "La durée minimale est de {count} secondes."
+        },
+        "prizeMissing": "Indique une description de prix valide.",
+        "prizeLength": "Le prix doit faire entre 1 et 256 caractères.",
+        "winnerCount": "Le nombre de gagnants doit être entre {min} et {max}.",
+        "endMissing": "Impossible de terminer un giveaway qui n'existe pas.",
+        "alreadyEnded": "Ce giveaway est déjà terminé.",
+        "endFailed": "Une erreur s'est produite en terminant le giveaway.",
+        "badMessageId": "Indique un ID de message valide.",
+        "notFound": "Aucun giveaway avec cet ID de message dans la base de données.",
+        "channelGone": "Le salon du giveaway est introuvable. L'état du giveaway a été mis à jour.",
+        "messageGone": "Le message du giveaway est introuvable. L'état du giveaway a été mis à jour.",
+        "stillActive": "Ce giveaway est encore en cours. Termine-le d'abord avec `/giveaway end`.",
+        "notEnoughEntries": "Pas assez de participations pour tirer le nombre de gagnants demandé.",
+        "notTextChannel": "Le salon doit être un salon textuel.",
+        "missingPermissions": "J'ai besoin de Voir le salon, Envoyer des messages et Intégrer des liens dans <#{channelId}> pour publier le giveaway.",
+        "deleteFailed": "Le giveaway n'a pas pu être retiré de la base de données. Réessaie."
+    }
+}

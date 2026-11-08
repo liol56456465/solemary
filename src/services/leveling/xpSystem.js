@@ -9,6 +9,7 @@ import { wrapServiceBoundary } from '../../utils/errorHandler.js';
 import { applyRoleRulesToMember } from '../members/roleRuleService.js';
 import { syncLevelRolesForMember } from './levelRoleSyncService.js';
 import { CARD_FILE_NAME, cardAvatarUrl, tryLevelCard } from './levelCard.js';
+import { botText, textForGuild } from '../../utils/botText.js';
 
 /**
  * Award XP to a member. Returns null when XP is skipped (disabled/invalid amount).
@@ -115,6 +116,18 @@ export const addXp = wrapServiceBoundary(async function addXp(client, guild, mem
   userMessage: 'Failed to award XP. Please try again.',
 });
 
+/** The bot's own level-up message (stored in English; posted in the server's language). */
+export const DEFAULT_LEVEL_UP_MESSAGE = '{user} is now level {level}.';
+
+/**
+ * The template a level-up post uses: the admin's own text as written; the bot's default (or
+ * nothing stored) in the server's language. English is the old text, unchanged.
+ */
+export function levelUpTemplate(stored, lang = 'en') {
+  if (stored && stored !== DEFAULT_LEVEL_UP_MESSAGE) return stored;
+  return botText(lang).t('leveling.levelUp.default', { user: '{user}', level: '{level}' });
+}
+
 /**
  * The level-up card PNG when the server turned cards on and the bot may attach files there,
  * else null (the plain text line is sent). Never throws.
@@ -132,6 +145,7 @@ export async function levelUpCardFor(guild, member, levelData, config, permissio
       xp: levelData.xp,
       xpNeeded: levelData.level >= 1000 ? 0 : getXpForLevel(levelData.level),
       accent: config.cardAccent,
+      lang: textForGuild(guild.id, { member, purpose: 'public' }).lang,
     });
   } catch {
     return null;
@@ -155,7 +169,7 @@ export async function sendLevelUpAnnouncement(guild, member, levelData, config, 
       return;
     }
 
-    const message = config.levelUpMessage
+    const message = levelUpTemplate(config.levelUpMessage, textForGuild(guild.id, { member, purpose: 'public' }).lang)
       .replace(/{user}/g, member.toString())
       .replace(/{level}/g, levelData.level)
       .replace(/{xp}/g, levelData.xp)

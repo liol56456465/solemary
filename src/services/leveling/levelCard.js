@@ -10,6 +10,7 @@
 import { fileURLToPath } from 'node:url';
 import { logger } from '../../utils/logger.js';
 import { EMBED_COLOURS, parseHexColour } from '../botMessageService.js';
+import { botText } from '../../utils/botText.js';
 
 export const CARD_WIDTH = 800;
 export const CARD_HEIGHT = 240;
@@ -114,7 +115,9 @@ async function decodeAvatar(loadImage, avatar) {
  * in bot code). `avatar` is image bytes or null (placeholder circle). `altName` is used
  * when no character of `name` can be drawn.
  */
-export async function renderLevelCard({ name, altName = null, serverName, level, xp, xpNeeded, accent, avatar = null }) {
+export async function renderLevelCard({ name, altName = null, serverName, level, xp, xpNeeded, accent, avatar = null, lang = 'en' }) {
+    const tr = botText(lang);
+    const number = (n) => n.toLocaleString(tr.lang === 'en' ? 'en-US' : tr.lang);
     const lib = await ensureCardFont();
     if (!lib) throw new Error('Level card library or font is not available');
     const { createCanvas, loadImage } = lib;
@@ -127,8 +130,8 @@ export async function renderLevelCard({ name, altName = null, serverName, level,
     // altName (the username) when nothing of the display name can be drawn (e.g. all CJK).
     // (Punctuation alone, e.g. '王-王' → '-', counts as nothing left.)
     const drawnName = drawableText(name);
-    const displayName = /[\p{L}\p{N}]/u.test(drawnName) ? drawnName : drawableText(altName, 'Member');
-    const guildName = drawableText(serverName, 'This server');
+    const displayName = /[\p{L}\p{N}]/u.test(drawnName) ? drawnName : drawableText(altName, tr.t('leveling.card.member'));
+    const guildName = drawableText(serverName, tr.t('leveling.card.server'));
 
     const canvas = createCanvas(CARD_WIDTH, CARD_HEIGHT);
     const ctx = canvas.getContext('2d');
@@ -177,7 +180,7 @@ export async function renderLevelCard({ name, altName = null, serverName, level,
     ctx.textBaseline = 'alphabetic';
 
     // Level, top right.
-    const levelLabel = 'LEVEL';
+    const levelLabel = tr.t('leveling.card.level');
     const levelValue = String(lvl);
     ctx.font = `56px ${FONT}`;
     const valueWidth = ctx.measureText(levelValue).width;
@@ -213,10 +216,10 @@ export async function renderLevelCard({ name, altName = null, serverName, level,
 
     ctx.font = `20px ${FONT}`;
     ctx.fillStyle = COLOURS.muted;
-    ctx.fillText(atMax ? 'Highest level reached' : `Next: level ${lvl + 1}`, left, barY - 14);
+    ctx.fillText(atMax ? tr.t('leveling.card.maxReached') : tr.t('leveling.card.next', { level: lvl + 1 }), left, barY - 14);
     ctx.textAlign = 'right';
     ctx.fillStyle = COLOURS.text;
-    ctx.fillText(atMax ? 'Max' : `${have.toLocaleString('en-US')} / ${need.toLocaleString('en-US')} XP`, right, barY - 14);
+    ctx.fillText(atMax ? tr.t('leveling.card.max') : tr.t('leveling.card.progress', { xp: number(have), needed: number(need) }), right, barY - 14);
 
     return canvas.encode('png');
 }

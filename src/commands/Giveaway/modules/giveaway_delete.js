@@ -5,23 +5,20 @@ import { TitanBotError, ErrorTypes } from '../../../utils/errorHandler.js';
 // The lookup, message delete, database delete and logging live in the service
 // (shared with the web dashboard).
 import { deleteGiveawayNow } from '../../../services/giveawayService.js';
+import { textForInteraction } from '../../../utils/botText.js';
+import { describe } from '../../../utils/commandLocalizations.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 export default {
-    data: new SlashCommandBuilder()
-        .setName("gdelete")
-        .setDescription(
-            "Deletes a giveaway message and removes it from the database.",
-        )
+    data: describe(new SlashCommandBuilder().setName("gdelete"), 'giveaway.cmd.gdelete')
         .addStringOption((option) =>
-            option
-                .setName("messageid")
-                .setDescription("Message ID of the giveaway")
+            describe(option.setName("messageid"), 'giveaway.cmd.messageId')
                 .setRequired(true),
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
     async execute(interaction) {
+        const tr = textForInteraction(interaction);
         // Defer up front: message lookups, edits and logging can exceed the 3s window
         await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
 
@@ -29,7 +26,7 @@ export default {
             throw new TitanBotError(
                 'Giveaway command used outside guild',
                 ErrorTypes.VALIDATION,
-                'This command can only be used in a server.',
+                tr.t('giveaway.guildOnly'),
                 { userId: interaction.user.id }
             );
         }
@@ -38,7 +35,7 @@ export default {
             throw new TitanBotError(
                 'User lacks ManageGuild permission',
                 ErrorTypes.PERMISSION,
-                "You need the 'Manage Server' permission to delete a giveaway.",
+                tr.t('giveaway.needManageServer.delete'),
                 { userId: interaction.user.id, guildId: interaction.guildId }
             );
         }
@@ -51,27 +48,28 @@ export default {
             interaction.guild,
             messageId,
             interaction.user.id,
+            { lang: tr.lang },
         );
 
-        const statusMsg = deletedMessage
-            ? `and removed its message from #${channelName}`
-            : `but couldn't find its message (already gone, or I can't see the channel)`;
+        const deletedLine = deletedMessage
+            ? tr.t('giveaway.deleted.withMessage', { prize: giveaway.prize, channel: channelName })
+            : tr.t('giveaway.deleted.withoutMessage', { prize: giveaway.prize });
 
         const winnerIds = Array.isArray(giveaway.winnerIds) ? giveaway.winnerIds : [];
         const hasWinners = winnerIds.length > 0;
         const wasEnded = giveaway.ended === true || giveaway.isEnded === true || hasWinners;
 
         const winnerStatusMsg = hasWinners
-            ? `It already had ${winnerIds.length} winner(s).`
+            ? tr.tp('giveaway.deleted.hadWinners', winnerIds.length)
             : wasEnded
-                ? 'It had ended with no winner.'
-                : 'No winner was picked.';
+                ? tr.t('giveaway.deleted.endedNoWinner')
+                : tr.t('giveaway.deleted.noWinner');
 
         return InteractionHelper.safeReply(interaction, {
             embeds: [
                 successEmbed(
-                    "Giveaway deleted",
-                    `Deleted **${giveaway.prize}** ${statusMsg}. ${winnerStatusMsg}`,
+                    tr.t('giveaway.deleted.title'),
+                    `${deletedLine} ${winnerStatusMsg}`,
                 ),
             ],
             flags: MessageFlags.Ephemeral,

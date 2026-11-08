@@ -1,0 +1,120 @@
+{
+    "cmd": {
+        "root": "Gestiona las estadísticas del servidor: contadores de miembros y bots",
+        "create": {
+            "desc": "Crea un nuevo canal contador en una categoría",
+            "type": "Qué cuenta el contador",
+            "channelType": "El tipo de canal para este contador",
+            "category": "La categoría donde se creará el canal contador"
+        },
+        "list": {
+            "desc": "Muestra todos los contadores de este servidor"
+        },
+        "update": {
+            "desc": "Cambia un contador existente",
+            "counterId": "El ID del contador que quieres cambiar",
+            "type": "El nuevo tipo de contador"
+        },
+        "delete": {
+            "desc": "Borra un contador existente",
+            "counterId": "El ID del contador que quieres borrar"
+        },
+        "choice": {
+            "members": "miembros + bots",
+            "membersOnly": "solo miembros",
+            "bots": "solo bots",
+            "voice": "canal de voz (recomendado)",
+            "text": "canal de texto"
+        }
+    },
+    "type": {
+        "members": {
+            "label": "Miembros + bots",
+            "channelName": "Miembros y bots"
+        },
+        "membersOnly": {
+            "label": "Solo miembros",
+            "channelName": "Miembros"
+        },
+        "bots": {
+            "label": "Solo bots",
+            "channelName": "Bots"
+        },
+        "unknown": {
+            "label": "Desconocido",
+            "channelName": "Contador"
+        }
+    },
+    "success": "Listo",
+    "unknownSubcommand": "Subcomando desconocido.",
+    "noAdmin": {
+        "create": "Necesitas el permiso **Administrador** para crear contadores.",
+        "view": "Necesitas el permiso **Administrador** para ver los contadores.",
+        "update": "Necesitas el permiso **Administrador** para cambiar contadores.",
+        "delete": "Necesitas el permiso **Administrador** para borrar contadores."
+    },
+    "error": {
+        "unknownType": "Tipo de contador desconocido.",
+        "notCategory": "Elige una categoría para el canal contador.",
+        "typeInUse": "Ya hay un contador **{type}** en este servidor. Bórralo primero antes de crear otro.",
+        "typeInUseIn": "Ya hay un contador **{type}** en este servidor en {channel}. Bórralo primero antes de crear otro.",
+        "typeInUseReuse": "Ya hay un contador **{type}** en este servidor. Bórralo primero antes de volver a usar ese tipo.",
+        "typeInUseReuseIn": "Ya hay un contador **{type}** en este servidor en {channel}. Bórralo primero antes de volver a usar ese tipo.",
+        "saveFailed": "No se pudo guardar el contador. Inténtalo de nuevo.",
+        "deleteFailed": "No se pudo borrar el contador. Inténtalo de nuevo.",
+        "notFound": "No se encontró el contador con ID `{id}`.",
+        "notFoundList": "No se encontró el contador con ID `{id}`. Usa `/serverstats list` para ver todos los contadores.",
+        "channelMissing": "El canal de este contador ya no existe. No puedes cambiar el contador de un canal borrado.",
+        "createFailed": "Algo salió mal al crear el contador. Inténtalo de nuevo.",
+        "updateFailed": "Algo salió mal al cambiar el contador. Inténtalo de nuevo.",
+        "loadFailed": "No se pudieron cargar los contadores. Inténtalo de nuevo.",
+        "noType": "Indica un nuevo tipo de contador para cambiarlo.",
+        "noneToDelete": "No hay contadores para borrar.",
+        "serverOnly": "Esta acción solo se puede usar en un servidor.",
+        "actionMissing": "Faltan los datos para borrar el contador.",
+        "notYours": "Solo la persona que empezó esto puede usar estos botones.",
+        "unknownAction": "Acción de borrado de contador desconocida."
+    },
+    "create": {
+        "notRenamed": "Contador creado, pero aún no pude renombrar el canal. Se actualizará en la próxima pasada.",
+        "done": "**Contador creado**\n\n**Tipo:** {type}\n**Tipo de canal:** {channelType}\n**Categoría:** {category}\n**Canal:** {channel}\n**Nombre del canal:** {channelName}\n**ID del contador:** `{id}`\n\nSe actualiza cada 15 minutos. `/serverstats list` muestra todos los contadores.",
+        "voice": "de voz",
+        "text": "de texto"
+    },
+    "update": {
+        "notRenamed": "Contador cambiado, pero aún no pude renombrar el canal. Se actualizará en la próxima pasada.",
+        "done": "**Contador cambiado**\n\n**ID del contador:** `{id}`\n**Tipo:** {oldType} → {newType}\n**Canal:** {channel}\n**Nombre del canal:** {channelName}\n\nSe actualiza cada 15 minutos."
+    },
+    "delete": {
+        "title": "Borrar contador y canal",
+        "confirm": "¿Borrar este contador y su canal?\n\n**ID:** `{id}`\n**Tipo:** {type}\n**Canal:** {channel}\n\n**El canal se borra para siempre.**",
+        "alreadyDeleted": "ya borrado",
+        "button": "Borrar",
+        "cancel": "Cancelar",
+        "cancelledTitle": "Cancelado",
+        "cancelledBody": "No se borró nada.",
+        "done": "**Contador borrado**\n\n**ID:** `{id}`\n**Tipo:** {type}",
+        "channelDeleted": "\n**Canal:** {name} (borrado)",
+        "channelFailed": "\n**Canal:** {name} (no se pudo borrar)",
+        "channelGone": "\n**Canal:** Ya borrado"
+    },
+    "list": {
+        "title": "Contadores del servidor",
+        "empty": "Aún no hay contadores.\n\nUsa `/serverstats create` para añadir uno.",
+        "typesName": "Tipos de contador",
+        "typesValue": "**Miembros + bots**: todos\n**Solo miembros**: personas, sin bots\n**Solo bots**: solo bots",
+        "examplesName": "Ejemplos",
+        "examplesValue": "`/serverstats create type:members channel_type:voice category:Estadísticas`\n`/serverstats create type:bots channel_type:text category:Info del servidor`\n`/serverstats list`",
+        "footer": "Los contadores se actualizan cada 15 minutos",
+        "titleCount": "Contadores del servidor ({count})",
+        "description": "Todos los contadores de este servidor. Se actualizan cada 15 minutos.",
+        "upToDate": "Al día",
+        "notUpdated": "Aún sin actualizar",
+        "counterName": "Contador n.º {number} · {channelName}",
+        "counterValue": "**ID:** `{id}`\n**Tipo:** {type}\n**Canal:** {channel}\n**Cuenta:** {count}\n**Estado:** {status}\n**Creado:** {created}",
+        "totalsName": "Totales",
+        "totalsValue": "**Contadores:** {counters}\n**Al día:** {upToDate}\n**Próxima actualización:** <t:{next}:R>",
+        "commandsName": "Comandos",
+        "commandsValue": "`/serverstats create`: añade un contador\n`/serverstats update`: cambia un contador\n`/serverstats delete`: quita un contador"
+    }
+}
