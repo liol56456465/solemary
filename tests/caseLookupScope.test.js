@@ -313,17 +313,20 @@ test('automod review card Keep: another server\'s case code counts as gone (both
 
 // ── Automod "Contest this" (DM, no guild) ─────────────────────────────────
 
-test('automod contest: any-server lookup, but only the member\'s own main-server automod case passes', async () => {
+test('automod contest: any-server lookup; only the member\'s own automod case passes, in every server (B1)', async () => {
     homeIds();
     const automod = (guildId) => caseIn(guildId, { reason_key: 'automod:links' });
-    for (const guildId of [OTHER, THIRD]) {
+    // Automod runs in every server now: a member contests their own automod case of any server;
+    // the contest goes to that case's own server's review channel (automodContest.markReviewCard).
+    for (const guildId of [MAIN, OTHER, THIRD]) {
         await withPool({ record: automod(guildId) }, async () => {
-            assert.deepEqual(await resolveContestCase(TARGET, CODE), { error: 'That case no longer exists.' }, guildId);
+            assert.equal((await resolveContestCase(TARGET, CODE)).record?.case_code, CODE, guildId);
+            assert.match((await resolveContestCase(ADMIN, CODE)).error, /Only the member/, guildId);
         });
     }
-    await withPool({ record: automod(MAIN) }, async () => {
-        assert.equal((await resolveContestCase(TARGET, CODE)).record?.case_code, CODE);
-        assert.match((await resolveContestCase(ADMIN, CODE)).error, /Only the member/);
+    // Not an automod case: never contestable, whatever the server.
+    await withPool({ record: caseIn(OTHER) }, async () => {
+        assert.ok((await resolveContestCase(TARGET, CODE)).error, 'manual case');
     });
 });
 

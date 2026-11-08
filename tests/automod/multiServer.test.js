@@ -710,6 +710,65 @@ test('review cards: a card only reaches cases of its own server (home servers sh
     assert.deepEqual((await recordsFor('aaa,bbb', OTHER, lookup)).map((r) => r.case_code), ['aaa']);
     await assert.rejects(recordsFor('bbb', OTHER, lookup), /no longer exists/);
     assert.deepEqual((await recordsFor('ccc,ddd,aaa', MAIN, lookup)).map((r) => r.case_code), ['ccc', 'ddd']);
+    // Two non-home servers never reach each other's cases, in either direction, nor the home pair's.
+    assert.deepEqual((await recordsFor('aaa,bbb,ccc,ddd', OTHER2, lookup)).map((r) => r.case_code), ['bbb']);
+    await assert.rejects(recordsFor('aaa', OTHER2, lookup), /no longer exists/);
+    await assert.rejects(recordsFor('ccc,ddd', OTHER, lookup), /no longer exists/);
+    // The support server sees the home pair's cases (one shared staff), never another server's.
+    assert.deepEqual((await recordsFor('ddd,ccc,aaa,bbb', SUPPORT, lookup)).map((r) => r.case_code), ['ddd', 'ccc']);
+});
+
+test('review cards: an action runs in the case\'s own server, with the moderator as a member there', async () => {
+    const { actingGuild } = await import('../../src/services/automod/reviewCards.js');
+    for (const id of [MAIN, SUPPORT, OTHER, OTHER2]) setSettingsCacheForTests(id, {});
+    const admin = (guildId, isAdmin = true) => ({
+        id: 'u1', guild: { id: guildId },
+        permissions: { has: () => isAdmin, any: () => isAdmin },
+        roles: { cache: new Map() },
+    });
+    const guilds = new Map();
+    const fakeGuild = (id, members) => ({
+        id, name: `server ${id}`,
+        members: { fetch: async (userId) => { const m = members[userId]; if (!m) throw new Error('Unknown Member'); return m; } },
+    });
+    guilds.set(SUPPORT, fakeGuild(SUPPORT, { u1: admin(SUPPORT) }));
+    guilds.set(OTHER2, fakeGuild(OTHER2, { u1: admin(OTHER2) }));
+    const click = (guildId) => ({
+        guild: { id: guildId }, guildId, member: admin(guildId), user: { id: 'u1' },
+        client: { guilds: { cache: guilds } },
+    });
+
+    // Same server (or no server named): the clicking server and member, unchanged.
+    const own = click(OTHER);
+    assert.equal((await actingGuild(own, OTHER)).guild, own.guild);
+    assert.equal((await actingGuild(own, null)).moderator, own.member);
+    // Two non-home servers: refused both ways, even when the admin is an Administrator in both.
+    await assert.rejects(actingGuild(click(OTHER), OTHER2), /another server/);
+    guilds.set(OTHER, fakeGuild(OTHER, { u1: admin(OTHER) }));
+    await assert.rejects(actingGuild(click(OTHER2), OTHER), /another server/);
+    // Non-home ↔ home: refused both ways.
+    await assert.rejects(actingGuild(click(OTHER), MAIN), /another server/);
+    await assert.rejects(actingGuild(click(MAIN), OTHER), /another server/);
+    // A main-server card about a support member: runs in the support server, as that member there.
+    const fromMain = await actingGuild(click(MAIN), SUPPORT);
+    assert.equal(fromMain.guild.id, SUPPORT);
+    assert.equal(fromMain.moderator.guild.id, SUPPORT);
+    // ...only when the moderator is an Administrator there too.
+    guilds.set(SUPPORT, fakeGuild(SUPPORT, { u1: admin(SUPPORT, false) }));
+    await assert.rejects(actingGuild(click(MAIN), SUPPORT), /Administrator permission in server/);
+    guilds.set(SUPPORT, fakeGuild(SUPPORT, {}));
+    await assert.rejects(actingGuild(click(MAIN), SUPPORT), /Administrator permission in server/);
+    guilds.delete(SUPPORT);
+    await assert.rejects(actingGuild(click(MAIN), SUPPORT), /no longer in the server/);
+    resetSettingsCacheForTests();
+});
+
+test('review cards: the "apply" select names the member\'s server', async () => {
+    const { buildCardPayload } = await import('../../src/services/automod/reviewFormat.js');
+    const ids = (entry) => JSON.stringify(buildCardPayload(entry).components);
+    const base = { kind: 'monitor', rule: 'spam', userId: '111', actions: [], hits: [], tier: 'full', evidence: 'x', at: Date.now() };
+    assert.match(ids({ ...base, guildId: SUPPORT }), new RegExp(`amreview:apply:spam:111:${SUPPORT}`));
+    assert.match(ids(base), /amreview:apply:spam:111"/);
 });
 
 test('review, join gate and raid release buttons: no main-server-only guard left, administrators still required', async () => {
@@ -719,4 +778,44 @@ test('review, join gate and raid release buttons: no main-server-only guard left
         assert.doesNotMatch(text, /mainGuildId/, name);
         assert.match(text, /!interaction\.guildId \|\| !isAdministrator\(interaction\.member\)/, name);
     }
+});
+
+test('/automod works in every server: each server changes only its own settings; staffguard toggle', async () => {
+    setup();
+    const { default: automodCommand } = await import('../../src/commands/Enforcement/automod.js');
+    const run = async (guildId, sub, options = {}) => {
+        const replies = [];
+        const guild = guildId ? { ...fakeGuild(guildId), members: { me: { permissions: { has: () => true } }, cache: new Map() } } : null;
+        const interaction = {
+            id: `i${Math.random()}`, createdTimestamp: Date.now(), guildId, guild,
+            user: { id: 'admin', username: 'admin' },
+            member: { id: 'admin', permissions: { has: () => true, any: () => true }, roles: { cache: new Map() } },
+            options: {
+                getSubcommand: () => sub, getSubcommandGroup: () => null,
+                getBoolean: (name) => options[name] ?? null, getString: (name) => options[name] ?? null,
+                getInteger: (name) => options[name] ?? null, getChannel: () => null, getRole: () => null,
+            },
+            deferReply: async () => { interaction.deferred = true; },
+            editReply: async (payload) => { replies.push(payload); return payload; },
+            reply: async (payload) => { replies.push(payload); return payload; },
+        };
+        await automodCommand.execute(interaction);
+        return JSON.stringify(replies);
+    };
+    assert.match(await run(OTHER, 'staffguard', { enabled: true }), /Staff guard is \*\*on\*\*.*automod enable/);
+    assert.equal((await getAutomodSettings(OTHER)).staffGuard, true);
+    assert.equal((await getAutomodSettings(OTHER2)).staffGuard, false, 'another server is untouched');
+    assert.match(await run(OTHER2, 'enable', { enabled: true }), /Automod/);
+    assert.equal((await getAutomodSettings(OTHER2)).enabled, true);
+    assert.equal((await getAutomodSettings(OTHER)).enabled, false, 'another server is untouched');
+    await assert.rejects(run(MAIN, 'staffguard', { enabled: false }), /always on in this server/);
+    await assert.rejects(run(null, 'status'), (error) => /Use this command in a server/.test(error.userMessage));
+});
+
+test('join gate: a "Verify with Discord" counts only in its own server (the home pair counts as one)', async () => {
+    const { verificationScope } = await import('../../src/services/automod/joinGate.js');
+    assert.deepEqual(verificationScope(MAIN), [MAIN, SUPPORT]);
+    assert.deepEqual(verificationScope(SUPPORT), [MAIN, SUPPORT]);
+    assert.deepEqual(verificationScope(OTHER), [OTHER]);
+    assert.deepEqual(verificationScope(OTHER2), [OTHER2]);
 });

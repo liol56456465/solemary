@@ -5,7 +5,7 @@
 //   amreview:keep:<code>[,<code>…]       keep the automatic action(s)
 //   amreview:undo:<code>[,<code>…]       reverse them (unban/unmute/remove warn, DM the user)
 //   amreview:change:<code>[,<code>…]     (select) reverse them and apply another punishment
-//   amreview:apply:<rule>:<userId>       (select) apply a punishment (monitor mode, reports, failed actions)
+//   amreview:apply:<rule>:<userId>[:<guildId>] (select) apply a punishment (monitor mode, reports, failed actions)
 //   amreview:delete:<channelId>:<msgId>  delete a reported message
 //   amreview:dismiss                     close the card without acting
 //   amreview:tune:<rule>                 (alerts) switch a rule to monitor (automodTuning.js)
@@ -22,15 +22,15 @@ import { logger } from '../../utils/logger.js';
 import { Mutex } from '../../utils/mutex.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { truncate } from '../enforcement/format.js';
-import { getCaseByCode } from '../enforcement/caseService.js';
-import { createRejoinInvite, executeAction, sendDm } from '../enforcement/enforcementService.js';
+import { getCaseByCode, isSameCaseServer } from '../enforcement/caseService.js';
+import { createRejoinInvite, executeAction, isAdministrator, sendDm } from '../enforcement/enforcementService.js';
 import { liftCase } from '../enforcement/appealService.js';
 import { dmServerName } from '../enforcement/dmTemplates.js';
 import { fetchStaffChannel } from './channelRouting.js';
 import {
     CLOSE_STATUS, REPORT_RULE, buildCardPayload, cardTier, closedTitle, describeStep, stripLeadingEmoji,
 } from './reviewFormat.js';
-import { burstKey, findOpenBurst, markClosed, recordHit, registerCard } from './reviewRegistry.js';
+import { burstKey, findOpenBurst, getCard, markClosed, recordHit, registerCard } from './reviewRegistry.js';
 import { switchRuleToMonitor } from './automodTuning.js';
 import { ruleDefinition } from './customRules.js';
 import { restoreIfContested } from './automodContest.js';
@@ -327,8 +327,36 @@ async function maybeAskSecondOpinion(message, keeper, records) {
 const codeList = (records) => records.map((record) => `\`${record.case_code}\``).join(', ');
 
 /**
+ * The server an action from a card runs in, and the moderator as a member of it. A card in the
+ * main server can be about a support-server member (home servers share one review channel), so
+ * every action that touches a member runs in the case's or message's own server (`guildId`),
+ * never simply in the server of the click. Another server than the click's (only the other home
+ * server can pass isSameCaseServer) needs the moderator to be an Administrator there too: role
+ * hierarchy and the mass-action guard are checked in that server. Throws a user error otherwise.
+ */
+export async function actingGuild(interaction, guildId) {
+    const clickGuildId = interaction.guild?.id || interaction.guildId;
+    const targetId = guildId || clickGuildId;
+    if (targetId === clickGuildId && interaction.guild) return { guild: interaction.guild, moderator: interaction.member };
+    if (!targetId || !isSameCaseServer(targetId, clickGuildId)) throw userError('This card belongs to another server.');
+    const guild = interaction.client?.guilds?.cache?.get(targetId);
+    if (!guild) throw userError('I am no longer in the server this card is about.');
+    const moderator = await guild.members.fetch(interaction.user.id).catch(() => null);
+    if (!moderator || !isAdministrator(moderator)) {
+        throw userError(`You need the Administrator permission in ${guild.name} to act on its members.`);
+    }
+    return { guild, moderator };
+}
+
+/** The server a card's message is about (its registry entry), else null (the click's server). */
+function cardGuildId(message) {
+    return (message?.id && getCard(message.id)?.guildId) || null;
+}
+
+/**
  * Handles a review card component. Returns the confirmation text for the moderator.
- * `interaction.member` must be an administrator in the main server (checked by the caller).
+ * `interaction.member` must be an administrator of the clicking server (checked by the caller);
+ * actions that touch a member run in the case's own server (actingGuild).
  */
 export async function handleReviewAction(interaction, args) {
     const [action, ...rest] = args;
@@ -378,7 +406,9 @@ export async function handleReviewAction(interaction, args) {
 
     if (action === 'delete') {
         const [channelId, messageId] = rest;
-        const channel = guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null);
+        const channelGuildId = client.channels?.cache?.get?.(channelId)?.guildId || cardGuildId(message);
+        const { guild: messageGuild } = await actingGuild(interaction, channelGuildId);
+        const channel = messageGuild.channels.cache.get(channelId) || await messageGuild.channels.fetch(channelId).catch(() => null);
         const target = channel?.isTextBased?.() ? await channel.messages.fetch(messageId).catch(() => null) : null;
         if (target) await target.delete().catch(() => {});
         await closeCard(message, target ? `Message deleted by ${by}` : `The message was already gone (${by})`, { status: 'deleted', by });
@@ -403,14 +433,16 @@ export async function handleReviewAction(interaction, args) {
         const choice = REVIEW_ACTIONS[interaction.values?.[0]];
         if (!choice) throw userError('Pick a punishment from the list.');
         const latest = records[records.length - 1];
+        // The new punishment goes to the case's own server; checked before anything is reversed.
+        const acting = await actingGuild(interaction, latest.guild_id);
         const targetUser = await client.users.fetch(latest.target_user_id);
         const notes = [];
         for (const record of records) notes.push(...(await reverse(client, record, admin, 'changed')).notes);
         let result;
         try {
             result = await executeAction({
-                guild,
-                moderator: interaction.member,
+                guild: acting.guild,
+                moderator: acting.moderator,
                 targetUser,
                 flow: flowFor(choice.step, {
                     reason: `${latest.reason} (changed by ${by})`,
@@ -434,13 +466,14 @@ export async function handleReviewAction(interaction, args) {
         const [rule, userId] = rest;
         const choice = REVIEW_ACTIONS[interaction.values?.[0]];
         if (!choice) throw userError('Pick a punishment from the list.');
+        const acting = await actingGuild(interaction, rest[2] || cardGuildId(message));
         const targetUser = await client.users.fetch(userId).catch(() => null);
         if (!targetUser) throw userError('That user no longer exists.');
-        const definition = ruleDefinition(rule, null, guild?.id);
+        const definition = ruleDefinition(rule, null, acting.guild.id);
         const label = definition?.label;
         const result = await executeAction({
-            guild,
-            moderator: interaction.member,
+            guild: acting.guild,
+            moderator: acting.moderator,
             targetUser,
             flow: flowFor(choice.step, {
                 reason: label ? `Automod: ${label} (applied by ${by})` : `Reported message (decided by ${by})`,

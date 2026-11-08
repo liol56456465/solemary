@@ -289,6 +289,9 @@ export function actionKeyFor(step) {
         action.step.type === step?.type && (action.step.durationMs ?? null) === (step?.durationMs ?? null))?.[0] || null;
 }
 
+// The server the member is in (a home-server card can be about a support-server member), so
+// "apply" acts there even after a restart (reviewCards.actingGuild). Old cards have none.
+const guildSuffix = (entry) => (entry.guildId ? `:${entry.guildId}` : '');
 const dismissButton = () => new ButtonBuilder().setCustomId('amreview:dismiss').setLabel('Dismiss').setStyle(ButtonStyle.Secondary);
 
 export function cardComponents(entry, tier = cardTier(entry)) {
@@ -305,14 +308,14 @@ export function cardComponents(entry, tier = cardTier(entry)) {
             buttons.unshift(new ButtonBuilder().setCustomId(`amreview:delete:${entry.channelId}:${entry.report.messageId}`).setLabel('Delete message').setStyle(ButtonStyle.Danger));
         }
         return [
-            new ActionRowBuilder().addComponents(actionSelect(`amreview:apply:${REPORT_RULE}:${entry.userId}`, 'Punish the author…')),
+            new ActionRowBuilder().addComponents(actionSelect(`amreview:apply:${REPORT_RULE}:${entry.userId}${guildSuffix(entry)}`, 'Punish the author…')),
             new ActionRowBuilder().addComponents(buttons),
         ];
     }
     if (entry.kind === 'monitor' || !codes) {
         const suggested = entry.kind === 'monitor' ? entry.suggested : latestAction(entry)?.step;
         return [
-            new ActionRowBuilder().addComponents(actionSelect(`amreview:apply:${entry.rule}:${entry.userId}`, 'Apply a punishment…', actionKeyFor(suggested))),
+            new ActionRowBuilder().addComponents(actionSelect(`amreview:apply:${entry.rule}:${entry.userId}${guildSuffix(entry)}`, 'Apply a punishment…', actionKeyFor(suggested))),
             new ActionRowBuilder().addComponents(dismissButton()),
         ];
     }

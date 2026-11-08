@@ -2,12 +2,11 @@ import { AutoModerationActionType, ChannelType, MessageFlags, PermissionFlagsBit
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
-import { enforcementConfig } from '../../config/enforcement.js';
 import { AUTOMOD_RULES } from '../../config/automod.js';
 import { isAdministrator } from '../../services/enforcement/enforcementService.js';
 import {
-    exemptChannelIdsOf, getAutomodSettings, getTrustedRoleProblem, setAutomodEnabled, setAutomodMode, setChannelRuleMode,
-    setExemptChannel, setInviteAllowlist, setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted,
+    exemptChannelIdsOf, getAutomodSettings, getTrustedRoleProblem, isLegacyAutomodGuild, setAutomodEnabled, setAutomodMode, setChannelRuleMode,
+    setExemptChannel, setInviteAllowlist, setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setStaffGuard, setTrusted,
 } from '../../services/automod/automodSettings.js';
 import { endLockdown, getLockdownState } from '../../services/automod/raidService.js';
 import { describeStep } from '../../services/automod/reviewCards.js';
@@ -89,6 +88,12 @@ export function inviteAllowlistText(list, maxChars = 300) {
     return text;
 }
 
+function staffGuardText(guildId, settings) {
+    if (isLegacyAutomodGuild(guildId)) return 'always on in this server';
+    if (!settings.staffGuard) return 'off';
+    return settings.enabled ? 'on' : 'on, but only while automod is on';
+}
+
 function trustedText(trusted) {
     const parts = [];
     if (trusted?.roleId) parts.push(`<@&${trusted.roleId}>`);
@@ -121,6 +126,7 @@ async function statusEmbed(guildId) {
             `**Join gate** (new members): ${describeJoinGate(settings.joinGate)}`,
             `**Raid panic mode** (lockdown also pauses invites and DMs): ${settings.panic.enabled ? `on, for ${settings.panic.hours} h` : 'off'}`,
             `**Allowed invites** (besides this server's own): ${inviteAllowlistText(settings.inviteAllowlist)}`,
+            `**Staff guard** (anti-nuke: staff who mass-ban, mass-delete or add bots lose their staff roles): ${staffGuardText(guildId, settings)}`,
             '',
             '**Punishments** (1st → 2nd → 3rd+ offence within 30 days). A mode in **bold** is set for that rule with `/automod rule`; the others follow the global mode:',
             ...rules,
@@ -245,6 +251,8 @@ export default {
             .addStringOption((option) => option.setName('action').setDescription('What to do').setRequired(true)
                 .addChoices({ name: 'list', value: 'list' }, { name: 'add', value: 'add' }, { name: 'remove', value: 'remove' }, { name: 'clear', value: 'clear' }))
             .addStringOption((option) => option.setName('invite').setDescription('Invite link, invite code or server id').setMaxLength(100)))
+        .addSubcommand((sub) => sub.setName('staffguard').setDescription('Anti-nuke: staff who mass-ban, mass-delete channels or roles, or add bots lose their staff roles')
+            .addBooleanOption((option) => option.setName('enabled').setDescription('On or off').setRequired(true)))
         .addSubcommand((sub) => sub.setName('lockdown-end').setDescription('End a join-raid lockdown: restore the verification level, resume invites and DMs'))
         .addSubcommandGroup((group) => group.setName('native').setDescription('Discord\'s own AutoMod rules: what the bot does when one blocks a message')
             .addSubcommand((sub) => sub.setName('list').setDescription('List the server\'s native AutoMod rules and their policy'))
@@ -277,7 +285,8 @@ export default {
                 .addStringOption((option) => option.setName('name').setDescription('The rule').setRequired(true).setAutocomplete(true)))),
 
     async autocomplete(interaction) {
-        if (interaction.guildId !== enforcementConfig.mainGuildId || !isAdministrator(interaction.member)) return interaction.respond([]);
+        // Any server (multi-server B1): each server reads and changes only its own rules.
+        if (!interaction.guildId || !isAdministrator(interaction.member)) return interaction.respond([]);
         const focused = String(interaction.options.getFocused() || '').toLowerCase();
         if (interaction.options.getSubcommandGroup(false) === 'custom') {
             return interaction.respond(customRuleChoices(storedCustomRules(interaction.guildId), focused)).catch(() => {});
@@ -291,8 +300,10 @@ export default {
     },
 
     async execute(interaction) {
-        if (interaction.guildId !== enforcementConfig.mainGuildId) {
-            throw new TitanBotError('Wrong guild for /automod', ErrorTypes.PERMISSION, 'This command only works in the main server.', { expected: true });
+        // Every server (multi-server B1): settings, state and posts are this server's own. Automod
+        // is off by default outside the main server until /automod enable turns it on.
+        if (!interaction.guildId) {
+            throw new TitanBotError('/automod outside a server', ErrorTypes.PERMISSION, 'Use this command in a server.', { expected: true });
         }
         if (!isAdministrator(interaction.member)) {
             throw new TitanBotError('Not an administrator', ErrorTypes.PERMISSION, 'You need the Administrator permission to manage automod.', { expected: true });
@@ -431,6 +442,15 @@ export default {
             note = enabled
                 ? `Raid panic mode is **on**: when a join raid starts a lockdown, invites and DMs are paused for **${saved.panic.hours} h** (lifted again by \`/automod lockdown-end\`).${canPause ? '' : '\nI don\'t have **Manage Server**, so the pause will fail until I get it.'}`
                 : 'Raid panic mode is **off**: a lockdown only raises the verification level.';
+        } else if (sub === 'staffguard') {
+            const enabled = interaction.options.getBoolean('enabled');
+            if (isLegacyAutomodGuild(guildId)) throw userError('The staff guard is always on in this server.');
+            const saved = await setStaffGuard(guildId, enabled);
+            const me = interaction.guild.members.me;
+            const canAct = me?.permissions.has([PermissionFlagsBits.ManageRoles, PermissionFlagsBits.ViewAuditLog]);
+            note = enabled
+                ? `Staff guard is **on**${saved.enabled ? '' : ' (it starts working once automod is on: `/automod enable`)'}: an admin who mass-bans, mass-kicks or mass-deletes channels or roles loses their staff roles, and a bot added by a non-owner is kicked. The server owner is never affected.${canAct ? '' : '\nI need **Manage Roles** and **View Audit Log** for it to work.'}`
+                : 'Staff guard is **off**.';
         } else if (sub === 'exempt') {
             const channel = interaction.options.getChannel('channel');
             const { exempt: adding } = await setExemptChannel(guildId, channel.id, 'toggle');

@@ -93,10 +93,10 @@ test('full card: jump link only while the message exists; buttons keep amreview 
     assert.ok(kept.embeds[0].data.fields.some((f) => f.name === 'Message link'));
 
     const monitor = cardComponents(entryFrom(params({ rule: 'spam', monitor: true, suggested: warn })));
-    assert.deepEqual(monitor.flatMap((row) => row.components.map((c) => c.data.custom_id)), ['amreview:apply:spam:111', 'amreview:dismiss']);
+    assert.deepEqual(monitor.flatMap((row) => row.components.map((c) => c.data.custom_id)), ['amreview:apply:spam:111:g1', 'amreview:dismiss']);
 
     const report = cardComponents(entryFrom(params({ report: { reporter: 'bob', messageId: '999', removed: false } })));
-    assert.deepEqual(report.flatMap((row) => row.components.map((c) => c.data.custom_id)), ['amreview:apply:report:111', 'amreview:delete:222:999', 'amreview:dismiss']);
+    assert.deepEqual(report.flatMap((row) => row.components.map((c) => c.data.custom_id)), ['amreview:apply:report:111:g1', 'amreview:delete:222:999', 'amreview:dismiss']);
 });
 
 test('compact line: one line and one Undo button', () => {
