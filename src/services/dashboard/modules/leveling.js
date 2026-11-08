@@ -111,13 +111,13 @@ ${postForm(ctx, 'leveling', 'boost-add', html`<input type="hidden" name="type" v
         const rewards = Object.entries(cfg.roleRewards || {}).sort((a, b) => Number(a[0]) - Number(b[0]));
         const rewardTable = html`${table([tr.t('leveling.rewards.level'), tr.t('leveling.rewards.role'), tr.t('leveling.rewards.problems'), ''], rewards.map(([level, roleId]) => [level, roleName(g, roleId),
             roleWarnings(g, roleId, { autoAssign: true }).join('; ') || html`<span class="ok">${tr.t('leveling.rewards.ok')}</span>`,
-            buttonForm(ctx, 'leveling', 'reward-remove', remove, { level })]), tr.t('leveling.rewards.empty'))}
+            buttonForm(ctx, 'leveling', 'reward-remove', remove, { level }, { canEdit: ctx.canEdit && ctx.canAct })]), tr.t('leveling.rewards.empty'))}
 ${postForm(ctx, 'leveling', 'reward-add', html`<div class="grid">${numberInput('level', '', { label: tr.t('leveling.rewards.atLevel'), min: 1, max: MAX_LEVEL })}
-${rolePicker(g, 'roleId', null, { label: tr.t('leveling.rewards.giveRole'), optional: false, autoAssign: true })}</div>`, { submit: tr.t('leveling.rewards.add') })}
+${rolePicker(g, 'roleId', null, { label: tr.t('leveling.rewards.giveRole'), optional: false, autoAssign: true })}</div>`, { submit: tr.t('leveling.rewards.add'), canEdit: ctx.canEdit && ctx.canAct })}
 ${postForm(ctx, 'leveling', 'reward-mode', selectInput('rewardMode', rewardModeOf(cfg), REWARD_MODES.map((mode) => [mode, tr.t(`leveling.rewards.mode.${mode}`)]), {
             label: tr.t('leveling.rewards.modeLabel'),
             help: tr.t('leveling.rewards.modeHelp'),
-        }), { submit: tr.t('leveling.rewards.modeSubmit'), reset: true })}`;
+        }), { submit: tr.t('leveling.rewards.modeSubmit'), reset: true, canEdit: ctx.canEdit && ctx.canAct })}`;
         const members = ctx.canAct
             ? postForm(ctx, 'leveling', 'member', html`<div class="grid">${html`<label>${tr.t('leveling.member.userId')}<input name="userId" inputmode="numeric" maxlength="20"><span class="hint">${tr.t('leveling.member.userIdHelp')}</span></label>`}
 ${selectInput('op', 'add', [['add', tr.t('leveling.member.op.add')], ['remove', tr.t('leveling.member.op.remove')], ['set', tr.t('leveling.member.op.set')]], { label: tr.t('leveling.member.opLabel') })}
@@ -253,27 +253,39 @@ ${topic(tr.t('leveling.topic.cat'), tr.t('leveling.topic.catLine'), section(tr.t
             const changes = diffSnapshots(before?.[field] || {}, after?.[field] || {}, null, `${AUDIT}${field}.`);
             return { changes, message: tr.t('leveling.action.boostRemoved') };
         },
-        async 'reward-mode'(ctx, form) {
-            const tr = textFor(ctx);
-            const rewardMode = choiceField(form, 'rewardMode', REWARD_MODES, tr.t('leveling.rewards.modeLabel'));
-            const cfg = await ctx.services.getLevelingConfig(ctx.client, ctx.guildId);
-            const patch = changedOnly({ rewardMode }, { rewardMode: rewardModeOf(cfg) });
-            return update(ctx, patch, tr.t(rewardMode === 'highest' ? 'leveling.action.modeHighest' : 'leveling.action.modeKeep'));
+        // Administrator only: roles the bot gives as level rewards.
+        'reward-mode': {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const rewardMode = choiceField(form, 'rewardMode', REWARD_MODES, tr.t('leveling.rewards.modeLabel'));
+                const cfg = await ctx.services.getLevelingConfig(ctx.client, ctx.guildId);
+                const patch = changedOnly({ rewardMode }, { rewardMode: rewardModeOf(cfg) });
+                return update(ctx, patch, tr.t(rewardMode === 'highest' ? 'leveling.action.modeHighest' : 'leveling.action.modeKeep'));
+            },
         },
-        async 'reward-add'(ctx, form) {
-            const tr = textFor(ctx);
-            const level = intField(form, 'level', { min: 1, max: MAX_LEVEL, label: tr.t('leveling.rewards.level') });
-            const roleId = autoRoleField(ctx.guild, form, 'roleId', { optional: false, label: tr.t('leveling.rewards.rewardRole') });
-            const { before, after } = await ctx.services.setLevelRoleReward(ctx.client, ctx.guildId, level, roleId);
-            const changes = diffSnapshots(before?.roleRewards || {}, after?.roleRewards || {}, null, `${AUDIT}roleRewards.`);
-            return { changes, message: tr.t('leveling.action.rewardAdded', { level: tr.fmtNumber(level) }) };
+        // Administrator only: roles the bot gives as level rewards.
+        'reward-add': {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const level = intField(form, 'level', { min: 1, max: MAX_LEVEL, label: tr.t('leveling.rewards.level') });
+                const roleId = autoRoleField(ctx.guild, form, 'roleId', { optional: false, label: tr.t('leveling.rewards.rewardRole') });
+                const { before, after } = await ctx.services.setLevelRoleReward(ctx.client, ctx.guildId, level, roleId);
+                const changes = diffSnapshots(before?.roleRewards || {}, after?.roleRewards || {}, null, `${AUDIT}roleRewards.`);
+                return { changes, message: tr.t('leveling.action.rewardAdded', { level: tr.fmtNumber(level) }) };
+            },
         },
-        async 'reward-remove'(ctx, form) {
-            const tr = textFor(ctx);
-            const level = intField(form, 'level', { min: 1, max: MAX_LEVEL, label: tr.t('leveling.rewards.level') });
-            const { before, after } = await ctx.services.setLevelRoleReward(ctx.client, ctx.guildId, level, null);
-            const changes = diffSnapshots(before?.roleRewards || {}, after?.roleRewards || {}, null, `${AUDIT}roleRewards.`);
-            return { changes, message: changes.length ? tr.t('leveling.action.rewardRemoved', { level: tr.fmtNumber(level) }) : tr.t('leveling.action.noReward') };
+        // Administrator only: roles the bot gives as level rewards.
+        'reward-remove': {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const level = intField(form, 'level', { min: 1, max: MAX_LEVEL, label: tr.t('leveling.rewards.level') });
+                const { before, after } = await ctx.services.setLevelRoleReward(ctx.client, ctx.guildId, level, null);
+                const changes = diffSnapshots(before?.roleRewards || {}, after?.roleRewards || {}, null, `${AUDIT}roleRewards.`);
+                return { changes, message: changes.length ? tr.t('leveling.action.rewardRemoved', { level: tr.fmtNumber(level) }) : tr.t('leveling.action.noReward') };
+            },
         },
         member: {
             admin: true,

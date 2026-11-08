@@ -9,6 +9,7 @@ import { diffSnapshots } from '../audit.js';
 import { DEFAULT_TIMEZONE } from '../../../utils/timezone.js';
 import { changedOnly, section } from './common.js';
 import { textFor } from '../language.js';
+import { requireCanAct } from './serverScope.js';
 
 // Words: src/content/dashboard/<lang>/birthdays.json.
 
@@ -53,6 +54,8 @@ ${rolePicker(g, 'roleId', b.roleId, { label: tr.t('birthdays.settings.role'), au
                 ...(form.roleId !== undefined ? { roleId: autoRoleField(ctx.guild, form, 'roleId', { label: tr.t('birthdays.settings.role') }) } : {}),
             }, current);
             if (!Object.keys(patch).length) return { changes: [], message: tr.t('errors.nothingChanged') };
+            // The birthday role is given by the bot: changing it needs Administrator (the channel and time zone do not).
+            if (Object.hasOwn(patch, 'roleId')) requireCanAct(ctx, tr.t('birthdays.roleNeedsAdmin'), 'roleId');
             const { before, after } = await ctx.services.updateBirthdaySettings(ctx.client, ctx.guildId, patch);
             const changes = diffSnapshots(before, after);
             return { changes, message: tr.t(changes.length ? 'birthdays.action.saved' : 'errors.nothingChanged') };

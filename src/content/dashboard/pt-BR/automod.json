@@ -1,6 +1,6 @@
 {
   "page": {
-    "help": "O Automod acompanha as mensagens e as entradas no servidor principal e age sozinho contra spam, palavrões, links indesejados e raids, para a equipe não precisar pegar tudo. Você também pode mudar isso com /automod no Discord."
+    "help": "O Automod acompanha as mensagens e as entradas neste servidor e age sozinho contra spam, palavrões, links indesejados e raids, para a equipe não precisar pegar tudo. Você também pode mudar isso com /automod no Discord."
   },
   "ruleNames": {
     "scam": "Link de golpe ou phishing",
@@ -403,7 +403,9 @@
     "noProbation": "Esse membro não está em vigilância extra.",
     "pickChannel": "Escolha pelo menos um canal.",
     "tooManyChannels": "Escolha no máximo {max} canais ({picked} escolhidos).",
-    "ignoredChannel": "O Automod ignora #{channel}, então um teste ali não encontra nada. Escolha outro canal."
+    "ignoredChannel": "O Automod ignora #{channel}, então um teste ali não encontra nada. Escolha outro canal.",
+    "offNeedsAdmin": "Para desligar o automod você precisa da permissão de Administrador neste servidor. Nada foi alterado.",
+    "staffGuardOwnerOnly": "Só o dono do servidor pode desligar o automod enquanto a proteção da equipe está ligada (desligar o automod também para essa proteção). Nada foi alterado."
   },
   "action": {
     "automodOn": "O Automod está ativado.",

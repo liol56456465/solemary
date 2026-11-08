@@ -185,5 +185,17 @@
     "transparencyOff": "El informe de transparencia está desactivado: /transparency ya no está en la web.",
     "trustOn": "La tarjeta de confianza está activada: /trust es pública.",
     "trustOff": "La tarjeta de confianza está desactivada: /trust ya no está en la web."
+  },
+  "appealsHome": {
+    "title": "Dónde apelan los miembros",
+    "help": "Los mensajes de sanción (MD) dicen a los miembros dónde pueden pedir que se levante una sanción. Soporte de Mewvo: apelan en el servidor de soporte de Mewvo. Nuestro propio servidor: el MD incluye una invitación a un servidor que gestionáis vosotros.",
+    "choice": "Los miembros apelan en",
+    "mewvo": "Soporte de Mewvo",
+    "own": "Nuestro propio servidor",
+    "invite": "Invitación a nuestro propio servidor",
+    "inviteHelp": "Una invitación de discord.gg que no caduque. Solo se usa con «Nuestro propio servidor». Vacío: el MD no lleva línea de invitación.",
+    "badInvite": "Invitación a nuestro propio servidor: debe ser un enlace de invitación de discord.gg. No se ha cambiado nada.",
+    "homeNote": "Esto no se aplica aquí: los miembros de los servidores propios de Mewvo siempre apelan en el servidor de soporte de Mewvo.",
+    "homeOnlyAction": "Este ajuste no se aplica en los servidores propios de Mewvo. No se ha cambiado nada."
   }
 }

@@ -527,6 +527,7 @@ ${review.required ? html`<dt>${t('cases.appeal.review')}</dt><dd class="warn">${
 ${r.type === 'ban' || r.type === 'mute' ? html`<dt>${t('cases.detail.ends')}</dt><dd>${r.expires_at ? d(r.expires_at) : t('cases.duration.permanentLower')}</dd>` : ''}
 ${ladder ? html`<dt>${t('cases.appeal.ladder')}</dt><dd>${t('cases.appeal.ladderValue', { stage: stageLabelText(ladder.level, tr), count: ladder.warns_since_level })}</dd>` : ''}
 </dl>
+${pending && !appeal.channel_id ? html`<p class="notice">${t('cases.appeal.noChannel')}</p>` : ''}
 ${appeal ? html`<h2>${t('cases.appeal.appealHead', { status: appealStatus(appeal.status), date: d(appeal.created_at), age: ageIn(appeal.created_at, now, tr) })}</h2>
 <dl>${answers.length ? answers.map((a) => html`<dt>${a.label}</dt><dd class="value">${a.value}</dd>`) : html`<dt>${t('cases.appeal.answers')}</dt><dd class="muted">${t('cases.detail.none')}</dd>`}</dl>` : html`<p class="muted">${t('cases.appeal.noAppeal')}</p>`}
 <h2>${t('cases.detail.evidence', { count: evidence.length })}</h2>

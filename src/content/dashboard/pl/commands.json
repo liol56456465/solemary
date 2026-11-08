@@ -9,7 +9,7 @@
     "prefixHelp": "Niektóre komendy działają też w zwykłej wiadomości: wpisz ten znak, a po nim nazwę komendy, zamiast używać komendy z ukośnikiem. Od 1 do 10 znaków, bez spacji.",
     "modRole": "Rola moderatora",
     "modRoleHelp": "Członkowie z tą rolą mogą używać komend moderacyjnych. Mogą też logować się do tego panelu jako moderatorzy: widzą członków, sprawy i odwołania oraz mogą ostrzegać, wyciszać, cofać wyciszenie, wyrzucać i dawać przerwy (timeout). Nie mogą banować ani zmieniać ustawień. Mewvo nigdy sam nie nadaje nikomu tej roli.",
-    "needsAdmin": "Aby zmieniać ustawienia bota i korzystać z tutejszych narzędzi, potrzebujesz uprawnienia Administrator na głównym serwerze.",
+    "needsAdmin": "Aby zmieniać ustawienia bota i korzystać z tutejszych narzędzi, potrzebujesz uprawnienia Administrator na tym serwerze.",
     "saved": "Ustawienia bota zapisane.",
     "nothing": "Nic się nie zmieniło.",
     "prefixRule": "Prefiks musi mieć od 1 do 10 znaków, bez spacji.",

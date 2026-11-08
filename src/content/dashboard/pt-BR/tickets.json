@@ -90,5 +90,6 @@
     "blockedOpen": "{user} não pode mais usar o modmail. A conversa aberta #{channel} continua até você fechá-la.",
     "notBlocked": "Esse membro não estava bloqueado.",
     "unblocked": "Desbloqueado no modmail."
-  }
+  },
+  "staffRoleNeedsAdmin": "Para mudar o cargo da equipe você precisa da permissão de Administrador neste servidor (ele abre cada ticket para os membros dele). Nada foi alterado."
 }

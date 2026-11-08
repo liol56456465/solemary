@@ -9,7 +9,7 @@
     "prefixHelp": "Certaines commandes fonctionnent aussi dans un message normal : tape ce signe puis le nom de la commande, au lieu d’utiliser une commande slash. De 1 à 10 caractères, sans espaces.",
     "modRole": "Rôle de modérateur",
     "modRoleHelp": "Les membres qui ont ce rôle peuvent utiliser les commandes de modération. Ils peuvent aussi se connecter à ce tableau de bord en tant que modérateurs : ils voient les membres, les dossiers et les appels, et peuvent avertir, mettre en sourdine, retirer la sourdine, expulser et exclure temporairement. Ils ne peuvent ni bannir ni modifier les paramètres. Mewvo ne donne jamais ce rôle à personne de lui-même.",
-    "needsAdmin": "Pour modifier les paramètres du bot et utiliser les utilitaires de cette page, il te faut la permission Administrateur sur le serveur principal.",
+    "needsAdmin": "Pour modifier les paramètres du bot et utiliser les utilitaires de cette page, il te faut la permission Administrateur sur ce serveur.",
     "saved": "Paramètres du bot enregistrés.",
     "nothing": "Rien n’a changé.",
     "prefixRule": "Le préfixe doit faire de 1 à 10 caractères, sans espaces.",

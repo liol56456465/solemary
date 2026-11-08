@@ -1,6 +1,7 @@
 // commands.js — Commands: turn commands, subcommands and whole categories off and on
-// in the main server (commandAccessService, the functions /commands uses). Who may use
-// a command (EVERYONE / support server lists) is code, shown read-only.
+// in this server (commandAccessService, the functions /commands uses). Who may use
+// a command (EVERYONE / support server lists) is code, shown read-only; the support server
+// list only in Mewvo's own servers.
 // Also: "Bot settings" (prefix and moderator role, as /configwizard: ConfigService) and
 // "Utilities" (Shorten a link, as /shorten: services/urlShortener.js).
 
@@ -12,6 +13,7 @@ import { html, path } from '../html.js';
 import { InputError, boolField, buttonForm, moduleSwitch, postForm, rolePicker, roleField, text, textInput } from '../forms.js';
 import { section, table } from './common.js';
 import { currentText, textFor } from '../language.js';
+import { isHomeScope } from './serverScope.js';
 
 // Words: src/content/dashboard/<lang>/commands.json (command names and descriptions come from the
 // commands themselves and stay as they are).
@@ -157,7 +159,7 @@ ${table([t('list.command'), t('every.whatItDoes'), t('every.who'), t('every.onDa
             html`<code>/${e.key}</code>`, e.description, WHO[e.access],
             e.page ? html`<a href="${path(`/${e.page}`)}">${e.page}</a>` : html`<span class="muted">-</span>`,
             e.access === 'admin' && !e.page ? t('every.afterEveryone') : AFTER[e.access]]))}
-<p class="muted">${tr.tx('commands.every.support', { list: html`${[...SUPPORT_SERVER_COMMANDS].sort().map((c, i) => html`${i ? ', ' : ''}<code>${c}</code>`)}` })}</p>`;
+${isHomeScope(ctx) ? html`<p class="muted">${tr.tx('commands.every.support', { list: html`${[...SUPPORT_SERVER_COMMANDS].sort().map((c, i) => html`${i ? ', ' : ''}<code>${c}</code>`)}` })}</p>` : ''}`;
         return html`${settingsPart}${section(t('every.title', { count: tr.fmtNumber(entries.length) }), every)}${categories}`;
     },
 

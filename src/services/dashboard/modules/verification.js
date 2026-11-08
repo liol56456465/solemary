@@ -157,17 +157,17 @@ ${channelPicker(g, 'channelId', null, { label: tr.t('verification.panel.channel'
 ${rolePicker(g, 'roleId', null, { label: tr.t('verification.panel.role'), autoAssign: true, optional: false, help: tr.t('verification.panel.roleSetupHelp') })}
 ${textInput('buttonText', botConfig.verification?.defaultButtonText || 'Verify', { label: tr.t('verification.panel.buttonText'), max: 80 })}
 ${textArea('message', botConfig.verification?.defaultMessage || '', { label: tr.t('verification.panel.message'), max: 2000, help: tr.t('verification.panel.messageHelp') })}</div>`, { submit: tr.t('verification.panel.setup'), canEdit: canPost })}`;
-        const manual = html`${toggleForm(ctx, 'verification', 'enabled', v.enabled === true, { label: tr.t('verification.panel.toggle') })}${panel}
+        const manual = html`${toggleForm(ctx, 'verification', 'enabled', v.enabled === true, { label: tr.t('verification.panel.toggle'), canEdit: canPost })}${panel}
 ${postForm(ctx, 'verification', 'settings', html`<div class="grid">
 ${rolePicker(g, 'roleId', v.roleId || null, { label: tr.t('verification.panel.role'), autoAssign: true, optional: false, help: tr.t('verification.panel.roleHelp') })}
 ${textInput('buttonText', v.buttonText || botConfig.verification?.defaultButtonText || 'Verify', { label: tr.t('verification.panel.buttonText'), max: 80 })}
-${textArea('message', v.message || botConfig.verification?.defaultMessage || '', { label: tr.t('verification.panel.message'), max: 2000, help: tr.t('verification.panel.messageHelp') })}</div>`)}
+${textArea('message', v.message || botConfig.verification?.defaultMessage || '', { label: tr.t('verification.panel.message'), max: 2000, help: tr.t('verification.panel.messageHelp') })}</div>`, { canEdit: canPost })}
 <p class="muted">${tr.tx('verification.panel.savingNote')}</p>`;
-        const autoForm = html`${toggleForm(ctx, 'verification', 'auto-enabled', auto.enabled === true, { label: tr.t('verification.auto.toggle') })}
+        const autoForm = html`${toggleForm(ctx, 'verification', 'auto-enabled', auto.enabled === true, { label: tr.t('verification.auto.toggle'), canEdit: canPost })}
 ${postForm(ctx, 'verification', 'auto', html`<div class="grid">
 ${selectInput('criteria', auto.criteria || 'none', criteria(tr), { label: tr.t('verification.auto.criteria'), help: tr.t('verification.auto.criteriaHelp') })}
 ${numberInput('accountAgeDays', auto.accountAgeDays ?? '', { label: tr.t('verification.auto.age'), min: 1, max: 365, help: tr.t('verification.auto.ageHelp') })}
-${rolePicker(g, 'autoRoleId', auto.roleId || null, { label: tr.t('verification.auto.role'), autoAssign: true, noneLabel: tr.t('verification.auto.roleNone'), help: tr.t('verification.auto.roleHelp') })}</div>`)}`;
+${rolePicker(g, 'autoRoleId', auto.roleId || null, { label: tr.t('verification.auto.role'), autoAssign: true, noneLabel: tr.t('verification.auto.roleNone'), help: tr.t('verification.auto.roleHelp') })}</div>`, { canEdit: canPost })}`;
         const web = postForm(ctx, 'verification', 'redirect', html`<div class="grid">${textInput('verifySuccessRedirect', redirect, { label: tr.t('verification.web.page'), max: 500, placeholder: 'https://…', help: tr.t('verification.web.pageHelp') })}</div>`);
         // Keys: the English titles' slugs.
         return html`${section(tr.t('verification.panel.title'), manual, '', { key: 'verification-panel' })}${quizCard(ctx, v, rules)}${section(tr.t('verification.auto.title'), autoForm, '', { key: 'auto-verify' })}${section(tr.t('verification.web.title'), web, tr.t('verification.web.help'), { key: 'web-verification' })}`;
@@ -203,51 +203,67 @@ ${rolePicker(g, 'autoRoleId', auto.roleId || null, { label: tr.t('verification.a
                 };
             },
         },
-        async enabled(ctx, form) {
-            const tr = textFor(ctx);
-            const enabled = boolField(form, 'enabled', tr.t('verification.panel.toggle'));
-            const v = await ctx.services.getVerificationSettings(ctx.client, ctx.guildId);
-            if (enabled && v.autoVerify?.enabled) throw new InputError(tr.t('verification.error.autoIsOn'));
-            if (enabled && !v.channelId) throw new InputError(tr.t('verification.error.notSetUp'));
-            const result = await update(ctx, { enabled }, tr.t(enabled ? 'verification.action.on' : 'verification.action.off'));
-            result.warnings = [tr.t('verification.action.toggleNote')];
-            return result;
+        // Administrator only: the verification gate and the roles it gives.
+        enabled: {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const enabled = boolField(form, 'enabled', tr.t('verification.panel.toggle'));
+                const v = await ctx.services.getVerificationSettings(ctx.client, ctx.guildId);
+                if (enabled && v.autoVerify?.enabled) throw new InputError(tr.t('verification.error.autoIsOn'));
+                if (enabled && !v.channelId) throw new InputError(tr.t('verification.error.notSetUp'));
+                const result = await update(ctx, { enabled }, tr.t(enabled ? 'verification.action.on' : 'verification.action.off'));
+                result.warnings = [tr.t('verification.action.toggleNote')];
+                return result;
+            },
         },
-        async settings(ctx, form) {
-            const tr = textFor(ctx);
-            const v = await ctx.services.getVerificationSettings(ctx.client, ctx.guildId);
-            const buttonText = text(form, 'buttonText', 80);
-            const message = text(form, 'message', 2000);
-            if (!buttonText) throw new InputError(tr.t('verification.error.buttonEmpty'));
-            if (!message) throw new InputError(tr.t('verification.error.messageEmpty'));
-            return update(ctx, changedOnly({
-                roleId: autoRoleField(ctx.guild, form, 'roleId', { optional: false, label: tr.t('verification.panel.role') }),
-                buttonText,
-                message,
-            }, v), tr.t('verification.action.saved'));
+        // Administrator only: the verification gate and the roles it gives.
+        settings: {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const v = await ctx.services.getVerificationSettings(ctx.client, ctx.guildId);
+                const buttonText = text(form, 'buttonText', 80);
+                const message = text(form, 'message', 2000);
+                if (!buttonText) throw new InputError(tr.t('verification.error.buttonEmpty'));
+                if (!message) throw new InputError(tr.t('verification.error.messageEmpty'));
+                return update(ctx, changedOnly({
+                    roleId: autoRoleField(ctx.guild, form, 'roleId', { optional: false, label: tr.t('verification.panel.role') }),
+                    buttonText,
+                    message,
+                }, v), tr.t('verification.action.saved'));
+            },
         },
-        async 'auto-enabled'(ctx, form) {
-            const tr = textFor(ctx);
-            const enabled = boolField(form, 'enabled', tr.t('verification.auto.toggle'));
-            const v = await ctx.services.getVerificationSettings(ctx.client, ctx.guildId);
-            if (enabled) {
-                const blocking = [];
-                if (v.enabled) blocking.push(tr.t('verification.error.blockPanel'));
-                if (await autoRoleConfigured(ctx)) blocking.push(tr.t('verification.error.blockAutoRoles'));
-                if (blocking.length) throw new InputError(tr.t('verification.error.blocked', { list: blocking.join(', ') }));
-            }
-            return update(ctx, { autoVerify: { enabled } }, tr.t(enabled ? 'verification.action.autoOn' : 'verification.action.autoOff'));
+        // Administrator only: the verification gate and the roles it gives.
+        'auto-enabled': {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const enabled = boolField(form, 'enabled', tr.t('verification.auto.toggle'));
+                const v = await ctx.services.getVerificationSettings(ctx.client, ctx.guildId);
+                if (enabled) {
+                    const blocking = [];
+                    if (v.enabled) blocking.push(tr.t('verification.error.blockPanel'));
+                    if (await autoRoleConfigured(ctx)) blocking.push(tr.t('verification.error.blockAutoRoles'));
+                    if (blocking.length) throw new InputError(tr.t('verification.error.blocked', { list: blocking.join(', ') }));
+                }
+                return update(ctx, { autoVerify: { enabled } }, tr.t(enabled ? 'verification.action.autoOn' : 'verification.action.autoOff'));
+            },
         },
-        async auto(ctx, form) {
-            const tr = textFor(ctx);
-            const v = await ctx.services.getVerificationSettings(ctx.client, ctx.guildId);
-            const chosen = choiceField(form, 'criteria', CRITERIA_KEYS, tr.t('verification.auto.criteriaLabel'));
-            const accountAgeDays = intField(form, 'accountAgeDays', { min: 1, max: 365, label: tr.t('verification.auto.age'), fallback: null });
-            ctx.services.validateAutoVerifyCriteria(chosen, accountAgeDays);
-            const roleId = autoRoleField(ctx.guild, form, 'autoRoleId', { label: tr.t('verification.auto.roleLabel') });
-            const patch = changedOnly({ criteria: chosen, accountAgeDays: chosen === 'account_age' ? accountAgeDays : null, roleId }, v.autoVerify || {});
-            if (!Object.keys(patch).length) return nothing(ctx);
-            return update(ctx, { autoVerify: patch }, tr.t('verification.action.autoSaved'));
+        // Administrator only: the verification gate and the roles it gives.
+        auto: {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const v = await ctx.services.getVerificationSettings(ctx.client, ctx.guildId);
+                const chosen = choiceField(form, 'criteria', CRITERIA_KEYS, tr.t('verification.auto.criteriaLabel'));
+                const accountAgeDays = intField(form, 'accountAgeDays', { min: 1, max: 365, label: tr.t('verification.auto.age'), fallback: null });
+                ctx.services.validateAutoVerifyCriteria(chosen, accountAgeDays);
+                const roleId = autoRoleField(ctx.guild, form, 'autoRoleId', { label: tr.t('verification.auto.roleLabel') });
+                const patch = changedOnly({ criteria: chosen, accountAgeDays: chosen === 'account_age' ? accountAgeDays : null, roleId }, v.autoVerify || {});
+                if (!Object.keys(patch).length) return nothing(ctx);
+                return update(ctx, { autoVerify: patch }, tr.t('verification.action.autoSaved'));
+            },
         },
         async 'quiz-enabled'(ctx, form) {
             const tr = textFor(ctx);

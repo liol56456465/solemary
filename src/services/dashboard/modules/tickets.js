@@ -12,6 +12,7 @@ import {
 import { diffSnapshots } from '../audit.js';
 import { changedOnly, section, table, topic } from './common.js';
 import { textFor } from '../language.js';
+import { requireCanAct } from './serverScope.js';
 
 // Words: src/content/dashboard/<lang>/tickets.json. The default button text and panel message
 // ("Open ticket", "Need help from staff? …") are posted in Discord and stay as they are.
@@ -129,6 +130,8 @@ ${section(tr.t('tickets.canned.title'), html`${table([tr.t('tickets.canned.name'
                 ticketPanelMessage: multiline(form, 'ticketPanelMessage', 2000) || current.ticketPanelMessage || 'Need help from staff? Press the button below to open a private ticket.',
             }, { ...current, dmOnClose: current.dmOnClose !== false, maxTicketsPerUser: current.maxTicketsPerUser ?? 3, ticketButtonLabel: current.ticketButtonLabel || 'Open ticket' });
             if (!Object.keys(patch).length) return { changes: [], message: tr.t('errors.nothingChanged') };
+            // The staff role opens every ticket channel to its members: changing it needs Administrator.
+            if (Object.hasOwn(patch, 'ticketStaffRoleId')) requireCanAct(ctx, tr.t('tickets.staffRoleNeedsAdmin'), 'ticketStaffRoleId');
 
             const { before, after } = await ctx.services.updateTicketSettings(ctx.client, ctx.guildId, patch);
             return { changes: diffSnapshots(before, after, Object.keys(patch)), message: tr.t('tickets.action.settingsSaved') };

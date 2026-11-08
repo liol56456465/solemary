@@ -225,7 +225,9 @@
     "open": "Öffnen",
     "decideHere": "Entscheide hier oder in Discord (Annehmen / Ablehnen an der Einspruchsnachricht): Die Wirkung ist dieselbe.",
     "adminsDecide": "Administratoren entscheiden Einsprüche hier (bei eingeschaltetem Bearbeiten) oder in Discord.",
-    "empty": "Keine offenen Einsprüche. Neue Einsprüche erscheinen hier und in den Einspruchskanälen in Discord."
+    "empty": "Keine offenen Einsprüche. Neue Einsprüche erscheinen hier und in den Einspruchskanälen in Discord.",
+    "noChannel": "Kein Kanal: hier entscheiden",
+    "noChannelTitle": "Dieser Server hat keine Einspruchskategorie, daher hat dieser Einspruch keinen Kanal in Discord. Entscheide ihn hier."
   },
   "change": {
     "title": "Diesen Fall ändern",
@@ -280,7 +282,8 @@
     "ownerOverride": "Du hast diese Strafe verhängt. Als Bot-Inhaber darfst du trotzdem entscheiden; das wird als Inhaber-Ausnahme protokolliert.",
     "note": "Notiz (optional, erscheint im Einspruchskanal und im Log)",
     "accept": "Annehmen…",
-    "deny": "Ablehnen…"
+    "deny": "Ablehnen…",
+    "noChannel": "Dieser Einspruch hat keinen Kanal in Discord (der Server hat keine Einspruchskategorie). Entscheide ihn hier."
   },
   "appealConfirm": {
     "effect": {

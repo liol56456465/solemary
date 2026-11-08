@@ -1,6 +1,6 @@
 {
   "page": {
-    "help": "Automod überwacht Nachrichten und Beitritte im Hauptserver und geht selbst gegen Spam, Schimpfwörter, unerwünschte Links und Raids vor, damit das Team nicht alles selbst erwischen muss. Du kannst das auch mit /automod in Discord ändern."
+    "help": "Automod überwacht Nachrichten und Beitritte auf diesem Server und geht selbst gegen Spam, Schimpfwörter, unerwünschte Links und Raids vor, damit das Team nicht alles selbst erwischen muss. Du kannst das auch mit /automod in Discord ändern."
   },
   "ruleNames": {
     "scam": "Betrugs- oder Phishing-Link",
@@ -387,7 +387,9 @@
     "noProbation": "Dieses Mitglied ist nicht in Extra-Beobachtung.",
     "pickChannel": "Wähle mindestens einen Kanal.",
     "tooManyChannels": "Wähle höchstens {max} Kanäle ({picked} gewählt).",
-    "ignoredChannel": "Automod ignoriert #{channel}, ein Testlauf findet dort also nichts. Wähle einen anderen Kanal."
+    "ignoredChannel": "Automod ignoriert #{channel}, ein Testlauf findet dort also nichts. Wähle einen anderen Kanal.",
+    "offNeedsAdmin": "Um Automod auszuschalten, brauchst du die Berechtigung Administrator auf diesem Server. Es wurde nichts geändert.",
+    "staffGuardOwnerOnly": "Nur der Serverinhaber kann Automod ausschalten, solange der Team-Schutz an ist (Automod auszuschalten stoppt auch den Team-Schutz). Es wurde nichts geändert."
   },
   "action": {
     "automodOn": "Automod ist jetzt an.",

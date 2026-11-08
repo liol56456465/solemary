@@ -1,6 +1,6 @@
 {
   "page": {
-    "help": "Automoderacja obserwuje wiadomości i dołączenia na głównym serwerze i sama reaguje na spam, wulgaryzmy, niechciane linki i rajdy, żeby ekipa nie musiała wszystkiego wyłapywać. Możesz to też zmienić komendą /automod na Discordzie."
+    "help": "Automoderacja obserwuje wiadomości i dołączenia na tym serwerze i sama reaguje na spam, wulgaryzmy, niechciane linki i rajdy, żeby ekipa nie musiała wszystkiego wyłapywać. Możesz to też zmienić komendą /automod na Discordzie."
   },
   "ruleNames": {
     "scam": "Link oszustów lub phishing",
@@ -419,7 +419,9 @@
     "noProbation": "Ten członek nie jest pod wzmożoną obserwacją.",
     "pickChannel": "Wybierz co najmniej jeden kanał.",
     "tooManyChannels": "Wybierz najwyżej {max} kanałów (wybrano {picked}).",
-    "ignoredChannel": "Automoderacja ignoruje #{channel}, więc test nic tam nie znajdzie. Wybierz inny kanał."
+    "ignoredChannel": "Automoderacja ignoruje #{channel}, więc test nic tam nie znajdzie. Wybierz inny kanał.",
+    "offNeedsAdmin": "Aby wyłączyć automoderację, potrzebujesz uprawnienia Administrator na tym serwerze. Nic nie zostało zmienione.",
+    "staffGuardOwnerOnly": "Tylko właściciel serwera może wyłączyć automoderację, gdy ochrona przed ekipą jest włączona (wyłączenie automoderacji zatrzymuje też tę ochronę). Nic nie zostało zmienione."
   },
   "action": {
     "automodOn": "Automoderacja jest teraz włączona.",

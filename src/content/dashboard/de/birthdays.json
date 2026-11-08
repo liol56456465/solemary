@@ -22,5 +22,6 @@
   "action": {
     "saved": "Geburtstagseinstellungen gespeichert.",
     "off": "Geburtstagsankündigungen sind aus."
-  }
+  },
+  "roleNeedsAdmin": "Um die Geburtstagsrolle zu ändern, brauchst du die Berechtigung Administrator auf diesem Server. Es wurde nichts geändert."
 }

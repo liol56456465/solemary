@@ -22,5 +22,6 @@
   "action": {
     "saved": "Paramètres des anniversaires enregistrés.",
     "off": "Les annonces d’anniversaire sont désactivées."
-  }
+  },
+  "roleNeedsAdmin": "Pour modifier le rôle d’anniversaire, il te faut la permission Administrateur sur ce serveur. Rien n’a été modifié."
 }

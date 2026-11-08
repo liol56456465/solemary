@@ -185,5 +185,17 @@
     "transparencyOff": "Il rapporto di trasparenza è disattivato: /transparency non è più sul sito.",
     "trustOn": "La scheda di fiducia è attiva: /trust è pubblica.",
     "trustOff": "La scheda di fiducia è disattivata: /trust non è più sul sito."
+  },
+  "appealsHome": {
+    "title": "Dove i membri fanno ricorso",
+    "help": "I messaggi sulle sanzioni (DM) dicono ai membri dove possono chiedere di togliere una sanzione. Supporto Mewvo: fanno ricorso nel server di supporto di Mewvo. Il nostro server: il DM indica un invito a un server che gestite voi.",
+    "choice": "I membri fanno ricorso in",
+    "mewvo": "Supporto Mewvo",
+    "own": "Il nostro server",
+    "invite": "Invito al nostro server",
+    "inviteHelp": "Un invito discord.gg che non scade. Usato solo con \"Il nostro server\". Vuoto: il DM non ha la riga con l'invito.",
+    "badInvite": "Invito al nostro server: deve essere un link di invito discord.gg. Non è stato cambiato nulla.",
+    "homeNote": "Qui non si applica: i membri dei server di Mewvo fanno sempre ricorso nel server di supporto di Mewvo.",
+    "homeOnlyAction": "Questa impostazione non si applica ai server di Mewvo. Non è stato cambiato nulla."
   }
 }

@@ -22,5 +22,6 @@
   "action": {
     "saved": "Birthday settings saved.",
     "off": "Birthday announcements are off."
-  }
+  },
+  "roleNeedsAdmin": "To change the birthday role you need the Administrator permission in this server. Nothing was changed."
 }

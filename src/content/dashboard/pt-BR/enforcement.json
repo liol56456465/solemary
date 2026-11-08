@@ -185,5 +185,17 @@
     "transparencyOff": "O relatório de transparência está desativado: /transparency saiu do site.",
     "trustOn": "O cartão de confiança está ativado: /trust é público.",
     "trustOff": "O cartão de confiança está desativado: /trust saiu do site."
+  },
+  "appealsHome": {
+    "title": "Onde os membros recorrem",
+    "help": "As mensagens de punição (DMs) dizem aos membros onde podem pedir que uma punição seja retirada. Suporte do Mewvo: recorrem no servidor de suporte do Mewvo. Nosso próprio servidor: a DM traz um convite para um servidor que vocês administram.",
+    "choice": "Os membros recorrem em",
+    "mewvo": "Suporte do Mewvo",
+    "own": "Nosso próprio servidor",
+    "invite": "Convite para o nosso próprio servidor",
+    "inviteHelp": "Um convite discord.gg que não expira. Usado só com \"Nosso próprio servidor\". Vazio: a DM não tem linha de convite.",
+    "badInvite": "Convite para o nosso próprio servidor: precisa ser um link de convite discord.gg. Nada foi alterado.",
+    "homeNote": "Isto não se aplica aqui: membros dos servidores do próprio Mewvo sempre recorrem no servidor de suporte do Mewvo.",
+    "homeOnlyAction": "Esta configuração não se aplica aos servidores do próprio Mewvo. Nada foi alterado."
   }
 }

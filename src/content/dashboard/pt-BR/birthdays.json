@@ -22,5 +22,6 @@
   "action": {
     "saved": "Configurações de aniversário salvas.",
     "off": "Os anúncios de aniversário estão desativados."
-  }
+  },
+  "roleNeedsAdmin": "Para mudar o cargo de aniversário você precisa da permissão de Administrador neste servidor. Nada foi alterado."
 }

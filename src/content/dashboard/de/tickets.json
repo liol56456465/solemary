@@ -90,5 +90,6 @@
     "blockedOpen": "{user} kann Modmail nicht mehr nutzen. Das offene Gespräch #{channel} bleibt, bis du es schließt.",
     "notBlocked": "Dieses Mitglied war nicht gesperrt.",
     "unblocked": "Für Modmail entsperrt."
-  }
+  },
+  "staffRoleNeedsAdmin": "Um die Teamrolle zu ändern, brauchst du die Berechtigung Administrator auf diesem Server (sie öffnet jedes Ticket für ihre Mitglieder). Es wurde nichts geändert."
 }

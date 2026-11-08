@@ -1,6 +1,6 @@
 {
   "page": {
-    "help": "Automod surveille les messages et les arrivées sur le serveur principal et agit seul contre le spam, les gros mots, les liens indésirables et les raids, pour que l’équipe n’ait pas à tout repérer. Tu peux aussi modifier ces réglages avec /automod dans Discord."
+    "help": "Automod surveille les messages et les arrivées sur ce serveur et agit seul contre le spam, les gros mots, les liens indésirables et les raids, pour que l’équipe n’ait pas à tout repérer. Tu peux aussi modifier ces réglages avec /automod dans Discord."
   },
   "ruleNames": {
     "scam": "Lien d’arnaque ou d’hameçonnage",
@@ -403,7 +403,9 @@
     "noProbation": "Ce membre n’est pas en surveillance renforcée.",
     "pickChannel": "Choisis au moins un salon.",
     "tooManyChannels": "Choisis {max} salons au plus ({picked} choisis).",
-    "ignoredChannel": "Automod ignore #{channel}, donc un essai n’y trouvera rien. Choisis un autre salon."
+    "ignoredChannel": "Automod ignore #{channel}, donc un essai n’y trouvera rien. Choisis un autre salon.",
+    "offNeedsAdmin": "Pour désactiver l’automod, il te faut la permission Administrateur sur ce serveur. Rien n’a été modifié.",
+    "staffGuardOwnerOnly": "Seul le propriétaire du serveur peut désactiver l’automod tant que la protection de l’équipe est active (désactiver l’automod arrête aussi cette protection). Rien n’a été modifié."
   },
   "action": {
     "automodOn": "Automod est maintenant activé.",

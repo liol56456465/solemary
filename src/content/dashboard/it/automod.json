@@ -1,6 +1,6 @@
 {
   "page": {
-    "help": "Automod controlla messaggi e ingressi nel server principale e interviene da solo contro spam, parolacce, link indesiderati e raid, così lo staff non deve accorgersi di tutto. Puoi cambiare queste impostazioni anche con /automod su Discord."
+    "help": "Automod controlla messaggi e ingressi in questo server e interviene da solo contro spam, parolacce, link indesiderati e raid, così lo staff non deve accorgersi di tutto. Puoi cambiare queste impostazioni anche con /automod su Discord."
   },
   "ruleNames": {
     "scam": "Link truffa o di phishing",
@@ -403,7 +403,9 @@
     "noProbation": "Questo membro non è in sorveglianza extra.",
     "pickChannel": "Scegli almeno un canale.",
     "tooManyChannels": "Scegli al massimo {max} canali ({picked} scelti).",
-    "ignoredChannel": "Automod ignora #{channel}, quindi lì una prova non trova niente. Scegli un altro canale."
+    "ignoredChannel": "Automod ignora #{channel}, quindi lì una prova non trova niente. Scegli un altro canale.",
+    "offNeedsAdmin": "Per disattivare l'automod ti serve il permesso Amministratore in questo server. Non è stato cambiato nulla.",
+    "staffGuardOwnerOnly": "Solo il proprietario del server può disattivare l'automod mentre la protezione dello staff è attiva (disattivare l'automod ferma anche la protezione). Non è stato cambiato nulla."
   },
   "action": {
     "automodOn": "Automod ora è attivo.",
