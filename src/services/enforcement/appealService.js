@@ -612,8 +612,8 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
                 })];
             });
         await staffChannel.send({
-            // /appeals is registered in the main server only: other servers decide with the buttons.
-            content: `New appeal from ${user.username} for \`${record.case_code}\`. ${home ? 'Decide with the buttons below or `/appeals`.' : 'Decide with the buttons below.'}`
+            // /appeals works in every server (B2 global commands), each for its own cases.
+            content: `New appeal from ${user.username} for \`${record.case_code}\`. Decide with the buttons below or \`/appeals\`.`
                 + (inSupport ? ` To talk with the appellant: <#${channel.id}> in the support server (they see only their own summary there).` : ''),
             embeds,
             components: [appealDecisionRow(record.case_code)],

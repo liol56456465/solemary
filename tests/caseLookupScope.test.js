@@ -198,7 +198,7 @@ test('editCase: own server\'s case is edited', async () => {
     }
 });
 
-// ── /case history and /case evidence list (main server only) ──────────────
+// ── /case history and /case evidence list ─────────────────────────────────
 
 test('/case history and /case evidence list: another server\'s code is refused; own code shown', async () => {
     homeIds();
@@ -221,13 +221,20 @@ test('/case history and /case evidence list: another server\'s code is refused; 
     }
 });
 
-test('/case in another server is refused before any lookup', async () => {
+test('/case in another server (multi-server B1): only that server\'s own cases', async () => {
     homeIds();
-    await withPool({ record: caseIn(OTHER) }, async (pool) => {
+    const run = (record) => withPool({ record }, async () => {
         const interaction = fakeInteraction({ guildId: OTHER, options: { code: CODE }, sub: 'history' });
-        await assert.rejects(caseCommand.execute(interaction, {}, fakeClient()), (e) => /only works in the main server/.test(e.userMessage));
-        assert.equal(pool.queries.length, 0);
+        const error = await caseCommand.execute(interaction, {}, fakeClient()).then(() => null, (e) => e);
+        if (error) await handleInteractionError(interaction, error, { type: 'command', commandName: 'case' });
+        return replyText(interaction);
     });
+    for (const own of [MAIN, SUPPORT, THIRD]) {
+        const text = await run(caseIn(own));
+        assert.match(text, /No case with code `abc2345` in this server\./, own);
+        assert.ok(!/cat warn 1/.test(text));
+    }
+    assert.match(await run(caseIn(OTHER)), /abc2345/);
 });
 
 // ── /appeals code (dossier) ───────────────────────────────────────────────
@@ -242,12 +249,12 @@ test('/appeals code: another server\'s dossier is never shown (both directions);
     });
     for (const [own, caller] of CROSS) {
         const text = await run(caseIn(own), caller);
-        // /appeals is a main-server command: elsewhere it is refused before any lookup.
-        const refusal = caller === MAIN ? /No case with code `abc2345` in this server\./ : /only works in the main server/;
+        // /appeals works in every server (B1) except Mewvo's Support server, each for its own cases.
+        const refusal = caller === SUPPORT ? /Decide Mewvo appeals in the main server/ : /No case with code `abc2345` in this server\./;
         assert.match(text, refusal, `${own} from ${caller}: ${text}`);
         assert.ok(!/cat warn 1/.test(text), `${own} from ${caller}: no dossier`);
     }
-    for (const [own, caller] of [[MAIN, MAIN], [SUPPORT, MAIN]]) {
+    for (const [own, caller] of [[MAIN, MAIN], [SUPPORT, MAIN], [OTHER, OTHER]]) {
         assert.match(await run(caseIn(own), caller), /cat warn 1/, `${own} from ${caller}`);
     }
 });
@@ -282,13 +289,14 @@ test('/case search result menu: another server\'s code reads as gone; own code o
         assert.ok(!/cat warn 1/.test(text));
     }
     assert.match(await open(caseIn(MAIN)), /cat warn 1/);
-    // From another server the menu is refused outright (main-server tool).
-    await withPool({ record: caseIn(OTHER) }, async (pool) => {
+    // Another server (multi-server B1): its own case opens, a main-server code reads as gone.
+    const openIn = (record) => withPool({ record }, async () => {
         const interaction = fakeInteraction({ guildId: OTHER, values: [CODE] });
         await handleCaseSearchSelect(interaction, fakeClient(), ['open', ADMIN]);
-        assert.match(replyText(interaction), /Run \/case search yourself/);
-        assert.equal(pool.queries.length, 0);
+        return replyText(interaction);
     });
+    assert.match(await openIn(caseIn(OTHER)), /cat warn 1/);
+    assert.match(await openIn(caseIn(MAIN)), /That case no longer exists\./);
 });
 
 // ── Automod review cards ──────────────────────────────────────────────────

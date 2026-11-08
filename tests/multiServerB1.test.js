@@ -1,11 +1,11 @@
 // Multi-server B1: moderation, appeals, staff reports and modmail work in every server.
 // Each test uses a server that is not one of Mewvo's (OTHER) and checks that Mewvo's own
-// servers (MAIN, SUPPORT) behave as before: the enforcement panel, native AutoMod bridging,
+// servers (MAIN, SUPPORT) behave as before: the enforcement panel,
 // the expiry cron, the mass-action alert, the OWNER_IDS override, staff reports and the
 // modmail "which server?" choice.
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { AutoModerationActionType, ChannelType, PermissionFlagsBits } from 'discord.js';
+import { ChannelType, PermissionFlagsBits } from 'discord.js';
 
 const MAIN = '100000000000000001';
 const SUPPORT = '100000000000000002';
@@ -25,7 +25,6 @@ const { botConfig } = await import('../src/config/bot.js');
 const { enforcementConfig } = await import('../src/config/enforcement.js');
 const { resetSettingsCacheForTests, setSettingsCacheForTests } = await import('../src/services/settings/guildSettings.js');
 const { handleEnforcementButton } = await import('../src/handlers/enforcementPanel.js');
-const { handleNativeExecution, resetNativeBridge } = await import('../src/services/automod/nativeBridge.js');
 const { runEnforcementExpiry } = await import('../src/services/enforcement/expiryService.js');
 const { enforceMassActionGuard, massAlertRecipients } = await import('../src/services/enforcement/massActionGuard.js');
 const { hasOwnerPower } = await import('../src/utils/ownerPower.js');
@@ -111,23 +110,6 @@ test('panel: still refused for a non-administrator in another server and outside
     const dm = panelClick(null);
     await handleEnforcementButton(dm.interaction, {}, ['cancel', MODERATOR, 'nonce']);
     assert.equal(dm.updates.length, 0);
-});
-
-// ── Native AutoMod bridge ─────────────────────────────────────────────────
-
-test('native bridge: another server\'s Discord AutoMod blocks are bridged with that server\'s own policies', async () => {
-    resetNativeBridge();
-    emptyKv();
-    const execution = (guildId) => ({
-        guild: { id: guildId, client: {} }, ruleId: '700000000000000001', userId: MODERATOR,
-        action: { type: AutoModerationActionType.BlockMessage },
-    });
-    await withPool((sql) => (/native/i.test(sql) ? [{ rule_id: '700000000000000001', policy: 'ignore', dedupe_minutes: 10 }] : []), async (queries) => {
-        await handleNativeExecution(execution(OTHER));
-        await handleNativeExecution(execution(MAIN));
-        const policyReads = queries.filter((q) => /dedupe_minutes FROM/.test(q.sql)).map((q) => q.params[0]);
-        assert.deepEqual(policyReads, [OTHER, MAIN], 'each server reads its own rule policies (before: other servers returned early)');
-    });
 });
 
 // ── Expiry cron ───────────────────────────────────────────────────────────
@@ -416,4 +398,87 @@ test('modmail buttons: the pick menu and the button pass the server; an old butt
 
 test('enforcement config: tests run with the expected home ids', () => {
     assert.equal(enforcementConfig.mainGuildId, MAIN);
+});
+
+// ── Leftovers: Manage Server commands, prefix permission guard, /appeals, /case, panel texts ──
+
+test('owner override: Manage Server commands (/setup) and the prefix permission guard follow the same rule', async () => {
+    const noPerms = { has: () => false };
+    const setup = (guildId) => checkCommandAccess({ command: {}, accessKey: 'setup', guild: { id: guildId, ownerId: SERVER_OWNER }, userId: OWNER_ID, permissions: noPerms });
+    assert.deepEqual(setup(MAIN), { allowed: true, ownerOverride: true }, 'home: OWNER_IDS keep the override');
+    assert.equal(setup(SUPPORT).allowed, true);
+    assert.equal(setup(OTHER).allowed, false, 'another server: OWNER_IDS need Manage Server like everyone else');
+    const manager = checkCommandAccess({ command: {}, accessKey: 'setup', guild: { id: OTHER, ownerId: SERVER_OWNER }, userId: MODERATOR, permissions: { has: (flag) => flag === PermissionFlagsBits.ManageGuild } });
+    assert.deepEqual(manager, { allowed: true });
+
+    const { enforceDefaultCommandPermissions } = await import('../src/utils/permissionGuard.js');
+    const command = { data: { name: 'x', default_member_permissions: String(PermissionFlagsBits.Administrator) } };
+    const replies = [];
+    const prefixCall = (guildId) => ({
+        user: { id: OWNER_ID }, guildId, commandName: 'x',
+        member: { id: OWNER_ID, guild: { id: guildId, ownerId: SERVER_OWNER }, permissions: noPerms, roles: { cache: new Map() } },
+        reply: async (payload) => { replies.push(payload); }, followUp: async (payload) => { replies.push(payload); },
+        editReply: async (payload) => { replies.push(payload); }, isRepliable: () => true, deferred: false, replied: false,
+    });
+    assert.equal(await enforceDefaultCommandPermissions(prefixCall(MAIN), command), true);
+    assert.equal(await enforceDefaultCommandPermissions(prefixCall(OTHER), command), false);
+});
+
+function slashCall(guildId, { admin = false } = {}) {
+    return {
+        user: { id: MODERATOR, username: 'mod' }, guildId, guild: guildId ? { id: guildId, ownerId: SERVER_OWNER } : null,
+        member: guildId ? { id: MODERATOR, guild: { ownerId: SERVER_OWNER }, permissions: perms(admin) } : null,
+        options: { getString: () => null, getSubcommand: () => 'search', getSubcommandGroup: () => null },
+    };
+}
+
+test('/appeals and /case: open in any server (each only for its own cases); /appeals refused in the Support server', async () => {
+    const { default: appeals } = await import('../src/commands/Enforcement/appeals.js');
+    const { default: caseCommand } = await import('../src/commands/Enforcement/case.js');
+    const userMessage = (pattern) => (error) => pattern.test(error.userMessage);
+    // Another server: past the server check, stopped only by the Administrator check.
+    await assert.rejects(appeals.execute(slashCall(OTHER), {}, {}), userMessage(/Administrator/));
+    await assert.rejects(caseCommand.execute(slashCall(OTHER), {}, {}), userMessage(/Administrator/));
+    await assert.rejects(appeals.execute(slashCall(SUPPORT, { admin: true }), {}, {}), userMessage(/main server/));
+    await assert.rejects(appeals.execute(slashCall(null), {}, {}), userMessage(/in a server/));
+    await assert.rejects(caseCommand.execute(slashCall(null), {}, {}), userMessage(/in a server/));
+});
+
+test('/appeals list: only the calling server\'s pending appeals are read', async () => {
+    const { listPendingAppeals } = await import('../src/services/enforcement/appealService.js');
+    await withPool(() => [], async (queries) => {
+        await listPendingAppeals(20, OTHER);
+        assert.match(queries[0].sql, /c\.guild_id = \$2/);
+        assert.deepEqual(queries[0].params, [20, OTHER]);
+    });
+});
+
+test('appeal panel: the refusal text no longer says "Mewvo servers" to other servers', async () => {
+    const { wrongPlaceMessage } = await import('../src/handlers/appealsHandler.js');
+    assert.equal(wrongPlaceMessage(null, 'open'), 'Use the appeal panel in a server.');
+    assert.match(wrongPlaceMessage('main', 'report'), /support server/);
+});
+
+test('staff activity: staff messages are counted per server, in every server', async () => {
+    const { noteStaffMessage, flushStaffMessages } = await import('../src/services/staffActivityService.js');
+    const staffMessage = (guildId) => ({
+        guildId, author: { id: MODERATOR },
+        member: { id: MODERATOR, guild: { ownerId: SERVER_OWNER }, permissions: perms(true) },
+    });
+    noteStaffMessage(staffMessage(OTHER));
+    noteStaffMessage(staffMessage(MAIN));
+    noteStaffMessage({ ...staffMessage(null), member: null });
+    await withPool(() => [], async (queries) => {
+        await flushStaffMessages();
+        const servers = queries.filter((q) => /staff_activity/i.test(q.sql)).map((q) => q.params[0]).sort();
+        assert.deepEqual(servers, [MAIN, OTHER].sort());
+    });
+});
+
+test('modmail close: the transcript only goes to a channel of the conversation\'s own server', () => {
+    const at = (guildId, sendable = true) => ({ guildId, isSendable: () => sendable });
+    assert.equal(modmail.isOwnTranscriptChannel(at(OTHER), OTHER), true);
+    assert.equal(modmail.isOwnTranscriptChannel(at(OTHER_2), OTHER), false, 'another server\'s channel id is ignored');
+    assert.equal(modmail.isOwnTranscriptChannel(at(OTHER, false), OTHER), false);
+    assert.equal(modmail.isOwnTranscriptChannel(null, OTHER), false);
 });

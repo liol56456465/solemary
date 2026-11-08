@@ -95,7 +95,11 @@ export function panelServer(interaction) {
     return 'other';
 }
 
-const WRONG_PLACE = 'Appeals are handled in the Mewvo servers.';
+/** Outside a server (or a report button in Mewvo's main server, where reports are not filed). */
+export function wrongPlaceMessage(server, step) {
+    if (server === 'main' && step === 'report') return 'Staff reports are filed from the panel in the Mewvo support server.';
+    return 'Use the appeal panel in a server.';
+}
 
 /** Staff reports: the support server's panel (for Mewvo) or another server's own panel; never the main one. */
 const takesReports = (server) => server === 'support' || server === 'other';
@@ -104,7 +108,7 @@ export async function handleAppealButton(interaction, client, args) {
     const server = panelServer(interaction);
     const [step] = args;
     if (!server || (step === 'report' && !takesReports(server))) {
-        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: WRONG_PLACE });
+        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: wrongPlaceMessage(server, step) });
     }
     if (step === 'open') return InteractionHelper.safeShowModal(interaction, appealModal());
     if (step === 'report') return InteractionHelper.safeShowModal(interaction, reportModal());
@@ -172,7 +176,7 @@ async function showMyAppeals(interaction) {
 export async function handleAppealModal(interaction, client, args) {
     const server = panelServer(interaction);
     if (!server) {
-        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: WRONG_PLACE });
+        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: wrongPlaceMessage(server, args?.[0]) });
     }
 
     await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });

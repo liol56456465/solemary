@@ -32,9 +32,9 @@ async function bump(guildId, userId, field, amount = 1) {
     );
 }
 
-/** Counts a message from a staff member in the main server (cheap: buffered). */
+/** Counts a message from a staff member, per server (cheap: buffered; multi-server B1: every server). */
 export function noteStaffMessage(message) {
-    if (message.guildId !== enforcementConfig.mainGuildId || !isStaff(message.member)) return;
+    if (!message.guildId || !isStaff(message.member)) return;
     const key = `${message.guildId}:${message.author.id}`;
     pendingMessages.set(key, (pendingMessages.get(key) || 0) + 1);
 }

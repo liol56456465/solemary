@@ -3,7 +3,8 @@
 import { PermissionFlagsBits } from 'discord.js';
 import { logger } from './logger.js';
 import { replyUserError, ErrorTypes } from './errorHandler.js';
-import { isBotOwner, getBotMessage } from '../config/bot.js';
+import { getBotMessage } from '../config/bot.js';
+import { hasOwnerPower } from './ownerPower.js';
 
 /**
  * Read default_member_permissions from a SlashCommandBuilder (or its JSON).
@@ -149,7 +150,8 @@ export async function checkModerationPermissions(
  * @returns {Promise<boolean>} true when the member may proceed
  */
 export async function enforceDefaultCommandPermissions(interaction, command, context = {}) {
-  if (isBotOwner(interaction.user?.id)) {
+  // OWNER_IDS skip it in Mewvo's own servers only (multi-server B1, utils/ownerPower.js).
+  if (hasOwnerPower(interaction.user?.id, interaction.guildId ?? interaction.guild?.id)) {
     return true;
   }
 

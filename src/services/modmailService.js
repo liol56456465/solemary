@@ -441,6 +441,11 @@ export async function handleModmailStaffMessage(message, prefix = getCommandPref
     return true;
 }
 
+/** A transcript channel of the conversation's own server that the bot can post in (never another server's). */
+export function isOwnTranscriptChannel(transcriptChannel, guildId) {
+    return Boolean(transcriptChannel && guildId && transcriptChannel.guildId === guildId && transcriptChannel.isSendable?.());
+}
+
 /** Ends a conversation: tells the member, files the transcript, deletes the channel. */
 export async function closeModmail(channel, closer, reason = '') {
     const userId = await modmailUserId(channel);
@@ -459,7 +464,7 @@ export async function closeModmail(channel, closer, reason = '') {
         const transcriptChannel = config.ticketTranscriptChannelId
             ? await client.channels.fetch(config.ticketTranscriptChannelId).catch(() => null)
             : null;
-        const transcript = transcriptChannel?.isSendable() ? await generateTranscript(channel) : null;
+        const transcript = isOwnTranscriptChannel(transcriptChannel, channel.guild.id) ? await generateTranscript(channel) : null;
         if (transcript) {
             await transcriptChannel.send({
                 content: `Modmail with <@${userId}> (\`${userId}\`) closed by ${closer}.${note}`,
