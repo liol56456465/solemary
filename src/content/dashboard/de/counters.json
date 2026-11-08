@@ -52,5 +52,10 @@
     "started": "Zählspiel bei 1 gestartet.",
     "reset": "Es wird wieder ab 1 gezählt.",
     "off": "Das Zählspiel ist aus."
+  },
+  "types": {
+    "members": "Mitglieder + Bots",
+    "members_only": "Nur Mitglieder",
+    "bots": "Nur Bots"
   }
 }

@@ -77,7 +77,9 @@
     "closeHelpModmail": "Como o botão Fechar: o membro é avisado por DM, a transcrição vai para o canal de transcrições e o canal é excluído.",
     "closeHelpTicket": "Como o botão Fechar: o ticket é fechado (movido para a categoria de fechados, se houver uma), o membro recebe uma DM se isso estiver ligado, e a transcrição é arquivada.",
     "reason": "Motivo (opcional)",
-    "closeButton": "Fechar…"
+    "closeButton": "Fechar…",
+    "dmFailed": "Não foi possível mandar DM ao membro (ele saiu do servidor ou fechou as DMs).",
+    "closedFromDashboard": "Fechado pelo painel"
   },
   "confirm": {
     "title": "Confirmar fechamento",

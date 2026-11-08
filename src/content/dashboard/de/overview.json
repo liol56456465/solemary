@@ -203,6 +203,12 @@
     "appealPanel": {
       "label": "Einspruch-Panel gepostet",
       "hint": "Eine Nachricht mit einem Einspruch-Knopf, damit bestrafte Mitglieder das Team bitten können, die Strafe aufzuheben. Eine kommt in deinen Server, eine in den Support-Server."
+    },
+    "appealPanelForm": {
+      "channel": "Kanal für das Einspruchs-Panel",
+      "post": "Einspruchs-Panels posten",
+      "postAgain": "Einspruchs-Panels erneut posten",
+      "confirm": "Die Einspruchs-Panels jetzt posten? Frühere Einspruchs-Panels in diesen Kanälen werden ersetzt."
     }
   },
   "value": {

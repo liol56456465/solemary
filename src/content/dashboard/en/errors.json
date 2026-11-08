@@ -42,5 +42,6 @@
   "handoverTooLong": "Keep the note under 1000 characters.",
   "serverNotFound": "Server not found",
   "serverNotFoundText": "Server not found or you can't manage it. Pick a server from your list.",
-  "blockedText": "You can't use this bot."
+  "blockedText": "You can't use this bot.",
+  "databaseDown": "The database is not responding right now, so nothing was changed. Try again in a minute."
 }

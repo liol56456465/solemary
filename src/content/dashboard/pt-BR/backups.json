@@ -39,6 +39,7 @@
       "one": "Backup aplicado: {count} configuração mudou. Ela está no registro de auditoria.",
       "many": "Backup aplicado: {count} configurações mudaram. Elas estão no registro de auditoria.",
       "other": "Backup aplicado: {count} configurações mudaram. Elas estão no registro de auditoria."
-    }
+    },
+    "applyFailed": "O backup não foi aplicado: o banco de dados não respondeu, então nada foi alterado. Tente Aplicar de novo."
   }
 }

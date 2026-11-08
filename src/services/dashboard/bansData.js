@@ -9,6 +9,71 @@ export const BAN_FILTERS = {
     temporary: 'Temporary', permanent: 'Permanent', appeal: 'Appeal pending',
 };
 
+export const BAN_FETCH_PAGE = 1000; // Discord's maximum per request
+export const BAN_LIST_CAP = 10_000; // ten requests at most; the page says when the list was cut
+export const BAN_CACHE_TTL_MS = 60 * 1000;
+
+/** The highest snowflake of a page (the `after` cursor for the next one). */
+function maxId(ids) {
+    let max = null;
+    for (const id of ids) if (max === null || BigInt(id) > BigInt(max)) max = id;
+    return max;
+}
+
+/**
+ * Discord's ban list of a guild, paged with `after` (1,000 per request) up to `cap`:
+ * { bans: [GuildBan], truncated } (truncated: there may be more than `cap`).
+ */
+export async function fetchBanList(guild, { cap = BAN_LIST_CAP, pageSize = BAN_FETCH_PAGE } = {}) {
+    const bans = [];
+    let after;
+    for (;;) {
+        const limit = Math.min(pageSize, cap - bans.length);
+        if (limit <= 0) return { bans, truncated: true };
+        const page = await guild.bans.fetch({ limit, cache: false, ...(after ? { after } : {}) });
+        const entries = [...(page?.entries?.() || [])];
+        for (const [, ban] of entries) bans.push(ban);
+        if (entries.length < limit) return { bans, truncated: false };
+        const next = maxId(entries.map(([id]) => id));
+        if (!next || next === after) return { bans, truncated: false };
+        after = next;
+        if (bans.length >= cap) {
+            // Exactly `cap` read: one more request of one ban tells whether anything is left.
+            const more = await guild.bans.fetch({ limit: 1, cache: false, after });
+            return { bans, truncated: Boolean(more?.size) };
+        }
+    }
+}
+
+/**
+ * A per-guild TTL cache of fetchBanList (shared by the Banned page and the member search):
+ * get(guild) → { bans, truncated, at }; invalidate(guildId) after a ban or unban from the
+ * dashboard. Concurrent misses share one fetch. A failed fetch is not cached (it throws).
+ */
+export function createBanCache({ ttlMs = BAN_CACHE_TTL_MS, cap = BAN_LIST_CAP, now = () => Date.now(), fetchList = fetchBanList } = {}) {
+    const entries = new Map(); // guildId → { at, value } | { pending }
+    return {
+        async get(guild) {
+            const hit = entries.get(guild.id);
+            if (hit?.value && now() - hit.at < ttlMs) return hit.value;
+            if (hit?.pending) return hit.pending;
+            const pending = fetchList(guild, { cap }).then((result) => {
+                const value = { ...result, at: now() };
+                entries.set(guild.id, { at: value.at, value });
+                return value;
+            }, (error) => {
+                entries.delete(guild.id);
+                throw error;
+            });
+            entries.set(guild.id, { ...(hit || {}), pending });
+            return pending;
+        },
+        invalidate(guildId) {
+            entries.delete(guildId);
+        },
+    };
+}
+
 /** The open ban case per banned member: Map(userId → case row). Test and voided cases excluded. */
 export async function activeBanCases(guildId) {
     const { rows } = await query(

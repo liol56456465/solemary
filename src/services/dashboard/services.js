@@ -6,6 +6,7 @@
 
 import { getGuildConfig, updateGuildConfig } from '../config/guildConfig.js';
 import { getSetting, updateSettings } from '../settings/guildSettings.js';
+import { applyBackup as applySettingsBackup } from '../settings/settingsBackup.js';
 // Automod
 import {
     getAutomodSettings, getTrustedRoleProblem, setAutomodEnabled, setAutomodMode, setChannelRuleMode, setExemptChannel,
@@ -20,7 +21,9 @@ import { collectOpenReviews } from '../automod/reviewQueue.js';
 import { endProbation, listProbations } from '../automod/probationService.js';
 import { getAutomodBacktest, startAutomodBacktest } from '../automod/backtest.js';
 // Logging
-import { getLoggingStatus, resolveLogChannel, setLogChannel, setLoggingEnabled, toggleEventLogging, updateIgnoreList } from '../loggingService.js';
+import {
+    getLoggingStatus, resolveLogChannel, setLogChannel, setLogChannels, setLoggingEnabled, toggleEventLogging, updateEventLogging, updateIgnoreList,
+} from '../loggingService.js';
 // Welcome
 import { addAutoRole, getWelcomeSettings, removeAutoRole, updateWelcomeSettings } from '../welcomeService.js';
 // The image store of /greet dashboard: re-posts an upload so its link keeps working.
@@ -31,7 +34,7 @@ import { findModmailChannel, setModmailBlocked } from '../modmailService.js';
 import { isBuiltInCanned, listCanned, removeCanned, saveCanned } from '../cannedService.js';
 // Leveling
 import {
-    addLevels, getLevelingConfig, getUserLevelData, removeLevels, setLevelBoost, setLevelRoleReward, setUserLevel, updateLevelingConfig,
+    addLevels, getLevelingConfig, getUserLevelData, removeLevels, setLevelBoost, setLevelRoleReward, setUserLevel, updateLevelIgnoreList, updateLevelingConfig,
 } from '../leveling/leveling.js';
 import { syncLevelRolesForMember } from '../leveling/levelRoleSyncService.js';
 // Verification
@@ -54,6 +57,7 @@ import { reviewApplicationAndNotify } from '../applicationReviewService.js';
 import { updateApplicationSettings } from '../applicationSettingsService.js';
 // Community
 import { getCommunitySettings, updateCommunitySettings } from '../community/settingsService.js';
+import { ensureCommunityCaches } from '../community/index.js';
 import { getServerCat } from '../community/catService.js';
 import { starboardSettingsPatch } from '../community/starboardService.js';
 import { listStickies, removeSticky, setSticky } from '../community/stickyService.js';
@@ -97,16 +101,16 @@ function updateConfigSetting(client, guildId, key, value, actorId) {
 }
 
 export const defaultServices = {
-    getGuildConfig, updateGuildConfig, getSetting, updateSettings,
+    getGuildConfig, updateGuildConfig, getSetting, updateSettings, applySettingsBackup,
     getAutomodSettings, getTrustedRoleProblem, setAutomodEnabled, setAutomodMode, setChannelRuleMode, setExemptChannel,
     setHeadsUp, setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted,
     loadNativePolicies, setNativePolicy, automodStats, automodRuleStats, headsUpStats,
     endLockdown, getLockdownState, collectOpenReviews, endProbation, listProbations,
     startAutomodBacktest, getAutomodBacktest,
-    getLoggingStatus, resolveLogChannel, setLogChannel, setLoggingEnabled, toggleEventLogging, updateIgnoreList,
+    getLoggingStatus, resolveLogChannel, setLogChannel, setLogChannels, setLoggingEnabled, toggleEventLogging, updateEventLogging, updateIgnoreList,
     addAutoRole, getWelcomeSettings, removeAutoRole, updateWelcomeSettings, storeWelcomeImage, resolveWelcomeImageUrl,
     getTicketSettings, updateTicketSettings, setModmailBlocked, findModmailChannel, isBuiltInCanned, listCanned, removeCanned, saveCanned,
-    addLevels, getLevelingConfig, getUserLevelData, removeLevels, setLevelBoost, setLevelRoleReward, setUserLevel, updateLevelingConfig,
+    addLevels, getLevelingConfig, getUserLevelData, removeLevels, setLevelBoost, setLevelRoleReward, setUserLevel, updateLevelingConfig, updateLevelIgnoreList,
     syncLevelRolesForMember,
     getVerificationSettings, updateVerificationSettings, validateAutoVerifyCriteria,
     addPanelRole, deletePanel, getAllReactionRoleMessages, removePanelRole,
@@ -115,7 +119,7 @@ export const defaultServices = {
     activateCountingGame, disableCountingGame, getCountingGameConfig, resetCountingGame,
     getJoinToCreateConfiguration, removeTriggerChannel, updateChannelConfig,
     getApplicationSettings, updateApplicationSettings, getApplications, reviewApplicationAndNotify,
-    getServerCat, getCommunitySettings, updateCommunitySettings, starboardSettingsPatch, listStickies, removeSticky, setSticky,
+    getServerCat, ensureCommunityCaches, getCommunitySettings, updateCommunitySettings, starboardSettingsPatch, listStickies, removeSticky, setSticky,
     createTag, deleteTag, listTags, addFeed, listFeeds, removeFeed, listOpenSuggestions, getSuggestion, decideSuggestion,
     disableCategory, disableCommand, enableCategory, enableCommand, getCommandAccessSnapshot, resolveCommandTarget, getCategoryRegistry,
     purgeChannelMessages, lockChannel, unlockChannel, fixBotChannelPermissions,

@@ -22,6 +22,8 @@ import { textFor } from '../language.js';
 // Words: src/content/dashboard/<lang>/applications.json.
 
 const PENDING_SHOWN = 25;
+// The page reads the newest applications only (database.js getApplications reads in batches).
+export const APPLICATIONS_READ = 200;
 const REVIEWED_SHOWN = 10;
 const APPLICATION_ID = /^[0-9a-z-]{1,40}$/i;
 const time = (value) => {
@@ -41,7 +43,7 @@ export function splitApplications(applications = []) {
     return { pending: pending.slice(0, PENDING_SHOWN), pendingTotal: pending.length, reviewed: reviewed.slice(0, REVIEWED_SHOWN) };
 }
 
-function submittedSection(ctx, { pending, pendingTotal, reviewed }) {
+function submittedSection(ctx, { pending, pendingTotal, reviewed, capped = false }) {
     const tr = textFor(ctx);
     const canReview = ctx.canEdit && ctx.canAct;
     const who = (a) => html`${a.username || tr.t('applications.submitted.unknownUser')} <span class="muted">${a.userId}</span>`;
@@ -57,7 +59,8 @@ ${textArea('note', '', { label: tr.t('applications.submitted.note'), max: REVIEW
     const waiting = pendingTotal > pending.length
         ? tr.tp('applications.submitted.waitingShown', pendingTotal, { shown: tr.fmtNumber(pending.length) })
         : tr.tp('applications.submitted.waiting', pendingTotal);
-    return html`${pendingTotal ? html`<p>${waiting}</p>${pendingBlocks}` : html`<p class="muted">${tr.tx('applications.submitted.none')}</p>`}
+    const cappedNote = capped ? html`<p class="muted">${tr.t('applications.submitted.capped', { count: tr.fmtNumber(APPLICATIONS_READ) })}</p>` : '';
+    return html`${cappedNote}${pendingTotal ? html`<p>${waiting}</p>${pendingBlocks}` : html`<p class="muted">${tr.tx('applications.submitted.none')}</p>`}
 ${canReview ? '' : html`<p class="muted">${tr.tx('applications.submitted.needsAdmin')}</p>`}
 <h3>${tr.tx('applications.submitted.recent')}</h3>${table([tr.t('applications.submitted.application'), tr.t('applications.submitted.member'), tr.t('applications.submitted.decision'), tr.t('applications.submitted.noteColumn'), tr.t('applications.submitted.reviewed')], reviewedRows, tr.t('applications.submitted.nothingReviewed'))}`;
 }
@@ -79,9 +82,10 @@ export default {
         const [s, roles, submitted] = await Promise.all([
             ctx.services.getApplicationSettings(ctx.client, ctx.guildId),
             ctx.services.listApplicationRoles(ctx.client, ctx.guildId),
-            ctx.services.getApplications(ctx.client, ctx.guildId, { limit: 1000 }),
+            ctx.services.getApplications(ctx.client, ctx.guildId, { limit: APPLICATIONS_READ }),
         ]);
-        return { s, roles, submitted: splitApplications(submitted || []) };
+        const list = submitted || [];
+        return { s, roles, submitted: { ...splitApplications(list), capped: list.length >= APPLICATIONS_READ } };
     },
 
     render(ctx, { s, roles = [], submitted = splitApplications([]) }) {

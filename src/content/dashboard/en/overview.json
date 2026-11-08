@@ -203,6 +203,12 @@
     "appealPanel": {
       "label": "Appeal panel posted",
       "hint": "A message with an Appeal button, so punished members can ask staff to lift it. One goes in your server, one in the support server."
+    },
+    "appealPanelForm": {
+      "channel": "Channel for the appeal panel",
+      "post": "Post the appeal panels",
+      "postAgain": "Post the appeal panels again",
+      "confirm": "Post the appeal panels now? Earlier appeal panels in these channels are replaced."
     }
   },
   "value": {

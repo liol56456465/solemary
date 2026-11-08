@@ -1,10 +1,25 @@
 {
   "kinds": {
-    "appeal": { "label": "Apelaciones", "single": "Apelación" },
-    "ticket": { "label": "Tickets", "single": "Ticket" },
-    "modmail": { "label": "Modmail", "single": "Modmail" },
-    "report": { "label": "Reportes sobre el staff", "single": "Reporte sobre el staff" },
-    "review": { "label": "Revisiones de Automod", "single": "Revisión de Automod" }
+    "appeal": {
+      "label": "Apelaciones",
+      "single": "Apelación"
+    },
+    "ticket": {
+      "label": "Tickets",
+      "single": "Ticket"
+    },
+    "modmail": {
+      "label": "Modmail",
+      "single": "Modmail"
+    },
+    "report": {
+      "label": "Reportes sobre el staff",
+      "single": "Reporte sobre el staff"
+    },
+    "review": {
+      "label": "Revisiones de Automod",
+      "single": "Revisión de Automod"
+    }
   },
   "action": {
     "appeal": "Revisar apelación",
@@ -61,7 +76,9 @@
     "closeHelpModmail": "Como el botón Cerrar: se avisa al miembro por MD, la transcripción va al canal de transcripciones y el canal se elimina.",
     "closeHelpTicket": "Como el botón Cerrar: el ticket se cierra (se mueve a la categoría de cerrados si hay una), el miembro recibe un MD si eso está activado y la transcripción se archiva.",
     "reason": "Motivo (opcional)",
-    "closeButton": "Cerrar…"
+    "closeButton": "Cerrar…",
+    "dmFailed": "No se pudo enviar un MD al miembro (salió del servidor o cerró sus MD).",
+    "closedFromDashboard": "Cerrado desde el panel"
   },
   "confirm": {
     "title": "Confirmar cierre",

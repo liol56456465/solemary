@@ -42,5 +42,6 @@
   "handoverTooLong": "La note doit faire moins de 1000 caractères.",
   "serverNotFound": "Serveur introuvable",
   "serverNotFoundText": "Serveur introuvable, ou tu ne peux pas le gérer. Choisis un serveur dans ta liste.",
-  "blockedText": "Tu ne peux pas utiliser ce bot."
+  "blockedText": "Tu ne peux pas utiliser ce bot.",
+  "databaseDown": "La base de données ne répond pas pour le moment, rien n’a été modifié. Réessayez dans une minute."
 }

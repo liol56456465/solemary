@@ -21,7 +21,10 @@
     "exportFree": "Nicht im Free-Tarif",
     "exportFreeText": "Der Fall-Export gehört zu Mewvo Normal (letzte 90 Tage) und Pro oder Max (ganze Geschichte), im Tarif des Server-Inhabers.",
     "notFound": "Fall nicht gefunden",
-    "notFoundText": "Es gibt keinen Fall mit diesem Code."
+    "notFoundText": "Es gibt keinen Fall mit diesem Code.",
+    "exportAudit": "{count} Fälle ({window})",
+    "exportWindow": "letzte {days} Tage",
+    "exportFullHistory": "gesamter Verlauf"
   },
   "auditModules": {
     "appeals": "Einsprüche (Registry)",

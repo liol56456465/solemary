@@ -1329,8 +1329,14 @@ test('banned page: Discord bans joined with open cases; filters; escaped; Unban 
     const view = await get(o, o.d.enforcement.bans);
     assert.ok(view.body.includes('#s-member-actions">Open'), 'owners without Administrator can look, not unban');
 
-    h.guild.bans = { fetch: async () => { throw new Error('discord down'); } };
-    const down = await get(h, h.d.enforcement.bans);
+    // The list is cached per dashboard for a minute (bansData.js createBanCache): a fresh dashboard sees the outage.
+    const fetches = [];
+    h.guild.bans = { fetch: async (options) => { fetches.push(options); throw new Error('discord down'); } };
+    assert.equal((await get(h, h.d.enforcement.bans)).statusCode, 200, 'served from the cache');
+    assert.equal(fetches.length, 0);
+    const d2 = await setup({ overrides: { activeBanCases: h.e.activeBanCases } });
+    d2.guild.bans = h.guild.bans;
+    const down = await get(d2, d2.d.enforcement.bans);
     assert.equal(down.statusCode, 503);
     assert.match(down.body, /could not be loaded/);
 });
@@ -1527,4 +1533,56 @@ test('case + appeal routes: getCaseByCode gets this server; another server\'s ca
         assert.equal(serviceCalls(h, changers).length, 0, `${name}: nothing changed`);
         assert.equal(h.auditRows.length, 0);
     }
+});
+
+// ── Audit fixes D3, D4, D14 ───────────────────────────────────────────────
+
+test('D3: the staff page says the safety limit blocks could not be loaded instead of "none"', async () => {
+    const h = await setup({ overrides: { listMassActionBlocks: async () => { throw new Error('db down'); } } });
+    const res = await get(h, h.d.staff);
+    assert.equal(res.statusCode, 200);
+    assert.match(res.body, /safety limit blocks could not be loaded/);
+    assert.ok(!res.body.includes('Nobody is blocked.'), 'not shown as an empty list');
+    const noConfig = await setup({ overrides: { getGuildConfig: async () => { throw new Error('db down'); } } });
+    assert.match((await get(noConfig, noConfig.d.staff)).body, /Coverage could not be loaded/, 'no UTC default for the heatmap');
+});
+
+test('D3: a failed safety-limit read fails the member page instead of showing "not blocked"', async () => {
+    const h = await setup({ overrides: { getMassActionBlock: async () => { throw new Error('db down'); } } });
+    const res = await get(h, h.d.enforcement.userPage, { params: { id: TARGET } }).catch((error) => ({ statusCode: 500, body: error.message }));
+    assert.notEqual(res.statusCode, 200);
+});
+
+test('D4: the Banned page pages Discord\'s list and says when it shows only the first bans', async () => {
+    const h = await setup({ overrides: { activeBanCases: async () => new Map() } });
+    const ids = Array.from({ length: 1500 }, (_, i) => String(300000000000000000n + BigInt(i)));
+    const calls = [];
+    h.guild.bans = { fetch: async ({ limit, after } = {}) => {
+        calls.push({ limit, after });
+        const start = after ? ids.findIndex((id) => BigInt(id) > BigInt(after)) : 0;
+        return new Map((start < 0 ? [] : ids.slice(start, start + limit)).map((id) => [id, { user: { id, username: `u${id.slice(-4)}`, globalName: null, displayAvatarURL: () => null }, reason: null }]));
+    } };
+    const page = await get(h, h.d.enforcement.bans);
+    assert.equal(page.statusCode, 200);
+    assert.match(page.body, /1,500 banned|1500 banned/);
+    assert.equal(calls.length, 2, 'two pages of up to 1,000');
+    assert.ok(!page.body.includes('Showing the first'), 'not cut');
+});
+
+test('D14: a bulk job makes one forced fetch per member (the moderator is checked from the cache)', async () => {
+    const h = await setup();
+    const preview = await post(h, h.d.enforcement.bulkPreview, { form: { scope: 'selected', ids: [TARGET, OTHER], action: 'role-add', roleId: '600000000000000002' } });
+    const token = preview.body.match(/name="token" value="([^"]+)"/)[1];
+    const fh = preview.body.match(/name="fh" value="([^"]+)"/)[1];
+    // The moderator is in the member cache (the gateway keeps it current).
+    h.guild.members.cache.set(ADMIN, await h.guild.members.fetch({ user: ADMIN }));
+    const fetches = [];
+    const fetch = h.guild.members.fetch;
+    h.guild.members.fetch = async (arg) => { fetches.push(typeof arg === 'string' ? arg : arg?.user); return fetch(arg); };
+    const runJob = await post(h, h.d.enforcement.bulkExecute, { form: { token, fh } });
+    const done = await waitForJob(h, runJob.redirectedTo);
+    assert.match(done.body, /Finished: 2 done/);
+    const perMember = fetches.filter((id) => id === TARGET || id === OTHER);
+    assert.equal(perMember.length, 2, 'one fetch per member');
+    assert.equal(fetches.filter((id) => id === ADMIN).length <= 1, true, 'the moderator is not fetched again for every member');
 });

@@ -163,7 +163,8 @@
     "minutesHelp": "0 bis {max} (24 Stunden).",
     "seconds": "Sekunden",
     "secondsHelp": "0 bis 59.",
-    "submit": "Countdown starten"
+    "submit": "Countdown starten",
+    "defaultTitle": "Countdown"
   },
   "clock": {
     "hours": "{n} Std.",

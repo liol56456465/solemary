@@ -107,44 +107,46 @@ ${section(tr.t('logging.ignore.title'), ignoreForms, tr.t('logging.ignore.help')
             const changes = diffSnapshots({ enabled: before.enabled }, { enabled }, null, 'logging.');
             return { changes, message: tr.t(enabled ? 'logging.action.on' : 'logging.action.off') };
         },
+        // One locked write per form (loggingService setLogChannels / updateEventLogging): the save
+        // is all or nothing, and the audit rows are the changes made against the locked values.
         async channels(ctx, form) {
             const tr = textFor(ctx);
-            const before = await ctx.services.getLoggingStatus(ctx.client, ctx.guildId);
-            const changes = [];
+            const wanted = {};
             for (const destination of LOG_DESTINATIONS) {
                 if (form?.[destination] === undefined) continue; // absent from the form: unchanged
-                const value = channelField(ctx.guild, form, destination, { label: destinationLabel(tr, destination) });
-                const old = before.channels?.[destination] || null;
-                if (value === old) continue;
-                failIfFalse(await ctx.services.setLogChannel(ctx.client, ctx.guildId, destination, value));
-                changes.push({ key: `logging.channels.${destination}`, old, new: value });
+                wanted[destination] = channelField(ctx.guild, form, destination, { label: destinationLabel(tr, destination) });
             }
-            if (!changes.length) return nothing(ctx);
-            return { changes, message: tr.t('logging.action.channelsSaved') };
+            if (!Object.keys(wanted).length) return nothing(ctx);
+            const saved = await ctx.services.setLogChannels(ctx.client, ctx.guildId, wanted);
+            if (!saved.length) return nothing(ctx);
+            return { changes: saved.map((c) => ({ key: `logging.channels.${c.destination}`, old: c.old, new: c.new })), message: tr.t('logging.action.channelsSaved') };
         },
         async events(ctx, form) {
-            const before = await ctx.services.getLoggingStatus(ctx.client, ctx.guildId);
-            const events = before.enabledEvents || {};
             const changes = [];
-            for (const [category, types] of eventCategories()) {
-                const wildcard = `${category}.*`;
-                const wanted = checkbox(form, categoryField(category));
-                if ((events[wildcard] !== false) !== wanted) {
-                    failIfFalse(await ctx.services.toggleEventLogging(ctx.client, ctx.guildId, [wildcard], wanted));
-                    changes.push({ key: `logging.events.${wildcard}`, old: !wanted, new: wanted });
-                    continue; // the category toggle sets every event in it
+            await ctx.services.updateEventLogging(ctx.client, ctx.guildId, (events) => {
+                const steps = [];
+                changes.length = 0;
+                for (const [category, types] of eventCategories()) {
+                    const wildcard = `${category}.*`;
+                    const wanted = checkbox(form, categoryField(category));
+                    if ((events[wildcard] !== false) !== wanted) {
+                        steps.push({ types: [wildcard], enabled: wanted });
+                        changes.push({ key: `logging.events.${wildcard}`, old: !wanted, new: wanted });
+                        continue; // the category toggle sets every event in it
+                    }
+                    const on = [];
+                    const off = [];
+                    for (const type of types) {
+                        const want = checkbox(form, fieldName(type));
+                        if ((events[type] !== false) !== want) (want ? on : off).push(type);
+                    }
+                    if (on.length) steps.push({ types: on, enabled: true });
+                    if (off.length) steps.push({ types: off, enabled: false });
+                    for (const type of on) changes.push({ key: `logging.events.${type}`, old: false, new: true });
+                    for (const type of off) changes.push({ key: `logging.events.${type}`, old: true, new: false });
                 }
-                const on = [];
-                const off = [];
-                for (const type of types) {
-                    const want = checkbox(form, fieldName(type));
-                    if ((events[type] !== false) !== want) (want ? on : off).push(type);
-                }
-                if (on.length) failIfFalse(await ctx.services.toggleEventLogging(ctx.client, ctx.guildId, on, true));
-                if (off.length) failIfFalse(await ctx.services.toggleEventLogging(ctx.client, ctx.guildId, off, false));
-                for (const type of on) changes.push({ key: `logging.events.${type}`, old: false, new: true });
-                for (const type of off) changes.push({ key: `logging.events.${type}`, old: true, new: false });
-            }
+                return steps;
+            });
             if (!changes.length) return nothing(ctx);
             return { changes, message: textFor(ctx).t('logging.action.eventsSaved') };
         },

@@ -12,12 +12,18 @@
   },
   "preview": {
     "title": "Check the backup",
-    "wouldChange": { "one": "{count} setting would change", "other": "{count} settings would change" },
+    "wouldChange": {
+      "one": "{count} setting would change",
+      "other": "{count} settings would change"
+    },
     "server": "Server",
     "setting": "Setting",
     "now": "Now",
     "fromFile": "From the file",
-    "confirm": { "one": "Apply {count} change from the backup?", "other": "Apply {count} changes from the backup?" },
+    "confirm": {
+      "one": "Apply {count} change from the backup?",
+      "other": "Apply {count} changes from the backup?"
+    },
     "apply": "Apply these changes",
     "cancel": "Cancel",
     "once": "This works once and expires in 10 minutes. Every change goes to the audit log.",
@@ -27,6 +33,10 @@
   "route": {
     "chooseFile": "Choose a backup file.",
     "expired": "That check expired or was already used. Load the file again.",
-    "applied": { "one": "Backup applied: {count} setting changed. They are in the audit log.", "other": "Backup applied: {count} settings changed. They are in the audit log." }
+    "applied": {
+      "one": "Backup applied: {count} setting changed. They are in the audit log.",
+      "other": "Backup applied: {count} settings changed. They are in the audit log."
+    },
+    "applyFailed": "The backup was not applied: the database did not answer, so nothing was changed. Try Apply again."
   }
 }

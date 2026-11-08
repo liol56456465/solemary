@@ -1,10 +1,25 @@
 {
   "kinds": {
-    "appeal": { "label": "Ricorsi", "single": "Ricorso" },
-    "ticket": { "label": "Ticket", "single": "Ticket" },
-    "modmail": { "label": "Modmail", "single": "Modmail" },
-    "report": { "label": "Segnalazioni sullo staff", "single": "Segnalazione sullo staff" },
-    "review": { "label": "Revisioni Automod", "single": "Revisione Automod" }
+    "appeal": {
+      "label": "Ricorsi",
+      "single": "Ricorso"
+    },
+    "ticket": {
+      "label": "Ticket",
+      "single": "Ticket"
+    },
+    "modmail": {
+      "label": "Modmail",
+      "single": "Modmail"
+    },
+    "report": {
+      "label": "Segnalazioni sullo staff",
+      "single": "Segnalazione sullo staff"
+    },
+    "review": {
+      "label": "Revisioni Automod",
+      "single": "Revisione Automod"
+    }
   },
   "action": {
     "appeal": "Esamina il ricorso",
@@ -61,7 +76,9 @@
     "closeHelpModmail": "Come il pulsante Chiudi: il membro viene avvisato via DM, la trascrizione va nel canale delle trascrizioni e il canale viene eliminato.",
     "closeHelpTicket": "Come il pulsante Chiudi: il ticket viene chiuso (spostato nella categoria dei chiusi, se impostata), il membro riceve un DM se l'opzione è attiva, e la trascrizione viene archiviata.",
     "reason": "Motivo (facoltativo)",
-    "closeButton": "Chiudi…"
+    "closeButton": "Chiudi…",
+    "dmFailed": "Impossibile inviare un DM al membro (ha lasciato il server o ha chiuso i DM).",
+    "closedFromDashboard": "Chiuso dalla dashboard"
   },
   "confirm": {
     "title": "Conferma chiusura",

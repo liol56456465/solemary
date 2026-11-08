@@ -57,7 +57,8 @@
     "count": "Baneos/expulsiones",
     "lift": "Quitar bloqueo",
     "ownersOnly": "Solo los dueños del bot pueden quitar un bloqueo (como /staff restore).",
-    "none": "Nadie está bloqueado."
+    "none": "Nadie está bloqueado.",
+    "failed": "No se pudieron cargar los bloqueos del límite de seguridad (la base de datos no responde). Recarga la página en un minuto."
   },
   "activity": {
     "week": "Semana",

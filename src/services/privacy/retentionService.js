@@ -17,6 +17,10 @@
 //                       data goes; batches of BATCH_LIMIT, at most KV_MAX_BATCHES per run.
 //                       ticket_data is NOT pruned: ticket reads ignore expires_at, so an expired
 //                       ticket row is still live data there.
+// With the bot client (runRetention's first argument), CLIENT_RETENTION_RULES also run:
+//   applications  submitted applications past the server's own retention (pending /
+//                 reviewed days, Applications settings); moved here from the read path, so
+//                 opening a list no longer deletes anything
 // Elsewhere, on their own daily crons in app.js: the raid timeline (incident_timelines and
 // their events, 90 days after the end; incidentTimeline.js), member_events (90 days),
 // website accounts that never linked Discord (accountStore.prune, 7 days).
@@ -30,6 +34,7 @@ import { pgConfig } from '../../config/database/postgres.js';
 import { logger } from '../../utils/logger.js';
 import { query as dbQuery } from '../enforcement/db.js';
 import { IP_RETENTION_MS, pruneVerificationIpHashes } from '../verificationGuard.js';
+import { cleanupExpiredApplications } from '../../utils/database.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const YEAR_MS = 365 * DAY_MS;
@@ -158,15 +163,37 @@ export const RETENTION_RULES = Object.freeze([
 ]);
 
 /**
+ * Expired submitted applications of every server the bot is in (key-value store; the
+ * per-server retention days). One failing server is logged and the others still run.
+ */
+export async function pruneExpiredApplications({ client, cleanup = cleanupExpiredApplications } = {}) {
+    if (!client?.db || !client.guilds?.cache) return 0;
+    let removed = 0;
+    for (const guildId of client.guilds.cache.keys()) {
+        try {
+            removed += (await cleanup(client, guildId))?.removed || 0;
+        } catch (error) {
+            logger.warn(`Retention: applications of one server not cleaned this run: ${error.message}`);
+        }
+    }
+    return removed;
+}
+
+/** Rules that need the bot client (key-value store data); run only when runRetention gets one. */
+export const CLIENT_RETENTION_RULES = Object.freeze([
+    ['applications', pruneExpiredApplications],
+]);
+
+/**
  * Runs every rule. Returns { counts: { rule: n }, failed: [rule] }; never throws. A failed
  * rule is logged (warn) and the next one runs. One info line with the counts.
  */
-export async function runRetention(_client = null, { query = dbQuery, tables = pgConfig.tables, now = Date.now(), rules = RETENTION_RULES } = {}) {
+export async function runRetention(client = null, { query = dbQuery, tables = pgConfig.tables, now = Date.now(), rules = RETENTION_RULES, clientRules = CLIENT_RETENTION_RULES } = {}) {
     const counts = {};
     const failed = [];
-    for (const [name, rule] of rules) {
+    for (const [name, rule] of [...rules, ...(client ? clientRules : [])]) {
         try {
-            counts[name] = await rule({ query, tables, now });
+            counts[name] = await rule({ query, tables, now, client });
         } catch (error) {
             failed.push(name);
             logger.warn(`Retention: rule ${name} failed, nothing deleted by it this run: ${error.message}`);

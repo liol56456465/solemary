@@ -21,7 +21,10 @@
     "exportFree": "No incluido en el plan Free",
     "exportFreeText": "La exportación de casos viene con Mewvo Normal (últimos 90 días) y Pro o Max (todo el historial), según el plan del propietario del servidor.",
     "notFound": "Caso no encontrado",
-    "notFoundText": "No hay ningún caso con ese código."
+    "notFoundText": "No hay ningún caso con ese código.",
+    "exportAudit": "{count} casos ({window})",
+    "exportWindow": "últimos {days} días",
+    "exportFullHistory": "historial completo"
   },
   "auditModules": {
     "appeals": "Apelaciones (registro)",

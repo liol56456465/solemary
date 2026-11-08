@@ -43,7 +43,8 @@
     "member": "Membro",
     "noteColumn": "Nota",
     "reviewed": "Analisada",
-    "nothingReviewed": "Nada analisado ainda."
+    "nothingReviewed": "Nada analisado ainda.",
+    "capped": "Aqui são lidas só as {count} candidaturas mais recentes; as mais antigas não são contadas abaixo."
   },
   "roles": {
     "title": "Candidaturas ({count})",

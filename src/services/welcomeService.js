@@ -55,14 +55,16 @@ const logsSchema = (prefix) => z.strictObject({
 const WelcomeSettingsPatchSchema = z.strictObject({
     enabled: bool(LABELS.enabled).optional(),
     channelId: nullableSnowflake(LABELS.channelId).optional(),
-    welcomeMessage: message(LABELS.welcomeMessage).optional(),
+    // Empty = cleared: the join event then posts the default welcome (guildMemberAdd.js).
+    welcomeMessage: message(LABELS.welcomeMessage, { allowEmpty: true }).optional(),
     welcomeEmbed: looseObject(LABELS.welcomeEmbed).optional(),
     welcomePing: bool(LABELS.welcomePing).optional(),
     welcomeImage: z.string({ error: `${LABELS.welcomeImage} must be a URL.` }).max(2048, `${LABELS.welcomeImage} URL is too long.`).nullable().optional(),
     welcomeImageRef: looseObject(LABELS.welcomeImageRef).nullable().optional(),
     goodbyeEnabled: bool(LABELS.goodbyeEnabled).optional(),
     goodbyeChannelId: nullableSnowflake(LABELS.goodbyeChannelId).optional(),
-    leaveMessage: message(LABELS.leaveMessage).optional(),
+    // Empty = cleared: the leave event then posts the default goodbye (guildMemberRemove.js).
+    leaveMessage: message(LABELS.leaveMessage, { allowEmpty: true }).optional(),
     leaveEmbed: looseObject(LABELS.leaveEmbed).optional(),
     goodbyeImageRef: looseObject(LABELS.goodbyeImageRef).nullable().optional(),
     dmMessage: message(LABELS.dmMessage, { allowEmpty: true }).optional(),

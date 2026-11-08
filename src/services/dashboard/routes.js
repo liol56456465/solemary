@@ -138,6 +138,7 @@ import { createOwnerErrorsHandlers, defaultErrorPageDeps } from './ownerErrors.j
 import { IMAGE_MAX_BYTES as SITE_IMAGE_MAX_BYTES } from '../site/siteImages.js';
 import { InputError, plainText } from './forms.js';
 import { createMemberSearch, memberSearchPage, searchJson, searchParams } from './memberSearch.js';
+import { createBanCache } from './bansData.js';
 import { MAX_UPLOAD_BYTES, MultipartError, parseMultipart } from './multipart.js';
 import { createPgSessionStore } from './sessionStore.js';
 import { query } from '../enforcement/db.js';
@@ -363,7 +364,8 @@ export function createDashboard({
     enforcement = defaultEnforcement, confirms: confirmStore = createConfirmStore(), owner = defaultOwnerDeps,
     inbox = defaultInboxData, inboxBadge = false,
     memberTools = defaultMemberTools, incidents = defaultIncidents, website = defaultWebsiteDeps,
-    memberSearch = createMemberSearch(), ownerErrors = defaultErrorPageDeps,
+    // One ban list cache per dashboard, shared by the Banned page and the member search.
+    banCache = createBanCache(), memberSearch = createMemberSearch({ banCache }), ownerErrors = defaultErrorPageDeps,
     guildLists = createGuildListCache(), picker = null, settingsReady = ensureGuildSettings,
 }) {
     const secret = settings.sessionSecret;
@@ -455,15 +457,21 @@ export function createDashboard({
         const now = Date.now();
         if (now - moduleStatesCache.at < MODULE_STATES_TTL_MS) return moduleStatesCache.value;
         const overviewData = data.overview || defaultOverviewData;
+        let failed = false;
+        const orNull = (run) => Promise.resolve().then(run).catch(() => { failed = true; return null; });
         const [config, welcome, automodSettings, joinToCreate, applications] = await Promise.all([
-            overviewData.getGuildConfig(client, guildId).catch(() => null),
-            overviewData.getWelcomeConfig(client, guildId).catch(() => null),
-            Promise.resolve().then(() => services.getAutomodSettings(guildId)).catch(() => null),
-            Promise.resolve().then(() => services.getJoinToCreateConfiguration(client, guildId)).catch(() => null),
-            Promise.resolve().then(() => services.getApplicationSettings(client, guildId)).catch(() => null),
+            orNull(() => overviewData.getGuildConfig(client, guildId)),
+            orNull(() => overviewData.getWelcomeConfig(client, guildId)),
+            orNull(() => services.getAutomodSettings(guildId)),
+            orNull(() => services.getJoinToCreateConfiguration(client, guildId)),
+            orNull(() => services.getApplicationSettings(client, guildId)),
         ]);
-        moduleStatesCache = { at: now, value: moduleStatesFrom(config, welcome, { automod: automodSettings, joinToCreate, applications }) };
-        return moduleStatesCache.value;
+        const value = moduleStatesFrom(config, welcome, { automod: automodSettings, joinToCreate, applications });
+        // A failed read is never cached as "off": the last good states stay (not refreshed), or
+        // this request's partial states are used once and the next request reads again.
+        if (failed) return moduleStatesCache.at ? moduleStatesCache.value : value;
+        moduleStatesCache = { at: now, value };
+        return value;
     }
 
     function securityHeaders(req, res, next) {
@@ -833,7 +841,7 @@ export function createDashboard({
         }
         logger.info(`Dashboard case export by ${req.dashboard.session.userId}: ${rows.length} case(s), plan ${planId}`);
         await audits.writeRows(guildId, { userId: req.dashboard.session.userId, username: req.dashboard.session.username }, 'cases',
-            [{ key: 'export', old: null, new: `${rows.length} cases (${Number.isFinite(exportWindowDays(planId)) ? `last ${exportWindowDays(planId)} days` : 'full history'})` }])
+            [{ key: 'export', old: null, new: exportAuditText(textOfReq(req), rows.length, exportWindowDays(planId)) }])
             .catch((error) => logger.error(`Dashboard audit write failed (case export): ${error.message}`));
         res.set('Cache-Control', 'no-store');
         res.set('Content-Disposition', `attachment; filename="mewvo-cases-${new Date().toISOString().slice(0, 10)}.csv"`);
@@ -938,11 +946,24 @@ export function createDashboard({
         if (refused) return refused;
         const token = str(req.body?.token, 100);
         const entry = backupPlans.get(token);
-        backupPlans.delete(token);
-        if (!entry || entry.userId !== req.dashboard.session.userId || Date.now() - entry.at > BACKUP_PLAN_TTL_MS) {
+        if (entry && Date.now() - entry.at > BACKUP_PLAN_TTL_MS) backupPlans.delete(token);
+        // Another admin's token is refused without spending it; a token being applied cannot run twice.
+        if (!entry || entry.userId !== req.dashboard.session.userId || Date.now() - entry.at > BACKUP_PLAN_TTL_MS || entry.applying) {
             return backup(req, res, 400, textOfReq(req).t('backups.route.expired'));
         }
-        const changed = await applyBackup(entry.plan, { userId: req.dashboard.session.userId, username: req.dashboard.session.username }, { env });
+        entry.applying = true;
+        let changed;
+        try {
+            // One transaction for both servers (settingsBackup.js applyBackup): all or nothing.
+            changed = await (services.applySettingsBackup || applyBackup)(entry.plan, { userId: req.dashboard.session.userId, username: req.dashboard.session.username }, { env });
+        } catch (error) {
+            logger.warn(`Dashboard settings backup apply failed (nothing changed): ${error.message}`);
+            return sendHtml(res, 503, backupPreviewPage({ ...shellOf(req), plan: entry.plan, token, error: textOfReq(req).t('backups.route.applyFailed') }));
+        } finally {
+            entry.applying = false;
+        }
+        // Spent only after the write succeeded: a failed apply can be retried with the same check.
+        backupPlans.delete(token);
         moduleStatesCache = { at: 0, value: {} };
         logger.info(`Dashboard settings backup applied by ${req.dashboard.session.userId}: ${changed} change(s)`);
         await sessions.setFlash?.(req.dashboard.session.id, textOfReq(req).tp('backups.route.applied', changed));
@@ -1049,7 +1070,15 @@ export function createDashboard({
 
     async function renderModule(req, res, module, status = 200, { error = null, errorAction = null, errorField = null, errorFix = null, warnings = [] } = {}) {
         const ctx = contextFor(req);
-        const data = await module.load(ctx);
+        let data;
+        try {
+            data = await module.load(ctx);
+        } catch (loadError) {
+            // A database that does not answer: say so (503), never a page of defaults.
+            if (loadError?.type !== 'database') throw loadError;
+            logger.warn(`Dashboard ${module.key} page not loaded (database): ${loadError.message}`);
+            return failT(res, 503, 'wrong', 'databaseDown', req);
+        }
         // The module's own commands with their switches (not on the Commands page itself).
         let commandsSection = '';
         if (module.key !== 'commands' && client?.commands && MODULE_COMMANDS[module.key]) {
@@ -1171,7 +1200,7 @@ export function createDashboard({
     // checks; renderCase / renderStaff re-render those pages with an error.
     const enforcementHandlers = createEnforcementHandlers({
         client, guildId, settings, sessions, audits, services, enforcement, confirms,
-        sendHtml, fail, shellOf, checkPost, postLimiter, recordDashboardChange,
+        sendHtml, fail, shellOf, checkPost, postLimiter, recordDashboardChange, banCache,
         renderCase: (...args) => renderCase(...args), renderStaff: (...args) => renderStaff(...args),
     });
 
@@ -1294,6 +1323,12 @@ export function createDashboard({
         sessions, states, confirms, permissionFix: permissionFixHandlers, enforcement: enforcementHandlers, owner: ownerHandlers, website: websiteHandlers, ownerErrors: ownerErrorsHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
         incidents: createIncidentHandlers({ client, guildId, incidents, sendHtml, shellOf, notFound }),
     };
+}
+
+/** The audit row of a case export: "12 cases (last 90 days)" / "(full history)", in the admin's language. */
+function exportAuditText(tr, count, days) {
+    const window = Number.isFinite(days) ? tr.t('general.cases.exportWindow', { days: tr.fmtNumber(days) }) : tr.t('general.cases.exportFullHistory');
+    return tr.t('general.cases.exportAudit', { count: tr.fmtNumber(count), window });
 }
 
 /** Wraps an async handler so a thrown error becomes a plain 500 page (and a log line). */

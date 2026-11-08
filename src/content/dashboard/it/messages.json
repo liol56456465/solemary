@@ -167,7 +167,8 @@
     "minutesHelp": "Da 0 a {max} (24 ore).",
     "seconds": "Secondi",
     "secondsHelp": "Da 0 a 59.",
-    "submit": "Avvia"
+    "submit": "Avvia",
+    "defaultTitle": "Conto alla rovescia"
   },
   "clock": {
     "hours": "{n} h",

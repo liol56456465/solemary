@@ -10,7 +10,7 @@ import { html } from '../html.js';
 import {
     InputError, PERMS, autoRoleField, boolField, buttonForm, channelField, channelName, channelPicker, checkbox, decimalField, roleField,
     switchInput, choiceField, intField, numberInput, postForm, rolePicker, roleName, roleWarnings, selectInput,
-    text, textArea, textInput, toggleForm, userIdField,
+    isSnowflake, text, textArea, textInput, toggleForm, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
 import { NOTHING, changedOnly, registryValue, saveRegistry, section, table, topic } from './common.js';
@@ -54,6 +54,16 @@ const xpRangeOf = (cfg) => ({
     max: cfg.xpRange?.max ?? cfg.xpPerMessage?.max ?? 25,
 });
 
+/** The default level-up message in the page language; {user} and {level} stay placeholders. */
+const defaultLevelUpMessage = (tr) => tr.t('leveling.xp.defaultMessage', { user: '{user}', level: '{level}' });
+
+/** One no-XP list change (leveling.js updateLevelIgnoreList); `unchanged` when it was already so. */
+async function ignoreChange(ctx, field, action, id, message, unchanged) {
+    const { before, after, changed } = await ctx.services.updateLevelIgnoreList(ctx.client, ctx.guildId, field, action, id);
+    if (!changed) return { changes: [], message: unchanged };
+    return { changes: diffSnapshots(before, after, [field], AUDIT), message };
+}
+
 async function update(ctx, patch, message) {
     if (!Object.keys(patch).length) return NOTHING;
     const { before, after } = await ctx.services.updateLevelingConfig(ctx.client, ctx.guildId, patch);
@@ -84,7 +94,7 @@ ${numberInput('xpMax', range.max, { label: tr.t('leveling.xp.max'), min: 1, max:
 ${numberInput('xpCooldown', cfg.xpCooldown ?? 60, { label: tr.t('leveling.xp.cooldown'), min: 0, max: 3600, help: tr.t('leveling.xp.cooldownHelp') })}
 ${channelPicker(g, 'levelUpChannel', cfg.levelUpChannel || null, { label: tr.t('leveling.xp.channel'), perms: PERMS.post, noneLabel: tr.t('leveling.xp.channelNone'), help: tr.t('leveling.xp.channelHelp') })}
 ${switchInput('announceLevelUp', cfg.announceLevelUp !== false, { label: tr.t('leveling.xp.announce'), help: tr.t('leveling.xp.announceHelp') })}
-${textArea('levelUpMessage', cfg.levelUpMessage || '{user} is now level {level}.', { label: tr.t('leveling.xp.message'), max: 500, rows: 2, help: tr.t('leveling.xp.messageHelp', { user: '{user}', level: '{level}' }) })}</div>`);
+${textArea('levelUpMessage', cfg.levelUpMessage || defaultLevelUpMessage(tr), { label: tr.t('leveling.xp.message'), max: 500, rows: 2, help: tr.t('leveling.xp.messageHelp', { user: '{user}', level: '{level}' }) })}</div>`);
         const accent = cardAccentOf(cfg.cardAccent);
         const knownAccent = EMBED_COLOURS.find(([, , h]) => h.toUpperCase() === accent);
         const colourLabel = (key, label) => (tr.has(`leveling.colours.${key}`) ? tr.t(`leveling.colours.${key}`) : label);
@@ -188,7 +198,7 @@ ${topic(tr.t('leveling.topic.cat'), tr.t('leveling.topic.catLine'), section(tr.t
                 xpCooldown: intField(form, 'xpCooldown', { min: 0, max: 3600, label: tr.t('leveling.xp.cooldown') }),
                 levelUpChannel: channelField(ctx.guild, form, 'levelUpChannel', { label: tr.t('leveling.xp.channel') }),
                 announceLevelUp: checkbox(form, 'announceLevelUp'),
-                levelUpMessage: text(form, 'levelUpMessage', 500) || cfg.levelUpMessage || '{user} is now level {level}.',
+                levelUpMessage: text(form, 'levelUpMessage', 500) || defaultLevelUpMessage(tr), // cleared = back to the default message
             }, { ...cfg, xpCooldown: cfg.xpCooldown ?? 60, announceLevelUp: cfg.announceLevelUp !== false, levelUpChannel: cfg.levelUpChannel || null });
             if (min !== range.min || max !== range.max) patch.xpRange = { min, max };
             return update(ctx, patch, tr.t('leveling.action.settingsSaved'));
@@ -202,28 +212,24 @@ ${topic(tr.t('leveling.topic.cat'), tr.t('leveling.topic.catLine'), section(tr.t
             }, { levelUpCard: cfg.levelUpCard === true, cardAccent: cardAccentOf(cfg.cardAccent) });
             return update(ctx, patch, tr.t('leveling.action.cardSaved'));
         },
+        // Add / remove under the config row lock (updateLevelIgnoreList), never a cached read plus a whole-list save.
         async 'ignore-add'(ctx, form) {
             const tr = textFor(ctx);
             const type = choiceField(form, 'type', ['channel', 'role'], tr.t('leveling.ignored.type'));
-            const cfg = await ctx.services.getLevelingConfig(ctx.client, ctx.guildId);
             const field = type === 'channel' ? 'ignoredChannels' : 'ignoredRoles';
             const id = type === 'channel'
                 ? channelField(ctx.guild, form, 'id', { optional: false, kinds: ['text', 'voice', 'forum'], label: tr.t('leveling.boosts.channel') })
                 : text(form, 'id', 25);
             if (type === 'role' && !ctx.guild?.roles?.cache?.get(id)) throw new InputError(tr.t('leveling.error.roleMissing'));
-            const list = cfg[field] || [];
-            if (list.includes(id)) return { changes: [], message: tr.t('leveling.action.alreadyListed') };
-            return update(ctx, { [field]: [...list, id] }, tr.t('leveling.action.ignoreAdded'));
+            return ignoreChange(ctx, field, 'add', id, tr.t('leveling.action.ignoreAdded'), tr.t('leveling.action.alreadyListed'));
         },
         async 'ignore-remove'(ctx, form) {
             const tr = textFor(ctx);
             const type = choiceField(form, 'type', ['channel', 'role'], tr.t('leveling.ignored.type'));
             const id = text(form, 'id', 25);
-            const cfg = await ctx.services.getLevelingConfig(ctx.client, ctx.guildId);
+            if (!isSnowflake(id)) return { changes: [], message: tr.t('leveling.action.notListed') };
             const field = type === 'channel' ? 'ignoredChannels' : 'ignoredRoles';
-            const list = cfg[field] || [];
-            if (!list.includes(id)) return { changes: [], message: tr.t('leveling.action.notListed') };
-            return update(ctx, { [field]: list.filter((x) => x !== id) }, tr.t('leveling.action.removed'));
+            return ignoreChange(ctx, field, 'remove', id, tr.t('leveling.action.removed'), tr.t('leveling.action.notListed'));
         },
         async 'boost-add'(ctx, form) {
             const tr = textFor(ctx);

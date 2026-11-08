@@ -141,7 +141,8 @@
     "empty": "Personne n’est banni sur le serveur principal.",
     "bannedCount": "{count} bannis sur le serveur principal",
     "help": "Débannir ouvre la page du membre : tu vois l’effet, puis tu confirmes. Le membre reçoit un MP avec une invitation pour revenir.",
-    "searchPlaceholder": "Nom ou ID utilisateur"
+    "searchPlaceholder": "Nom ou ID utilisateur",
+    "truncated": "Affichage des {count} premiers bannissements : la liste de Discord est plus longue. Ouvrez un membre par son ID utilisateur pour voir quelqu’un qui n’est pas listé."
   },
   "standing": {
     "banEnds": "bannissement {case}, fin le {date}",
@@ -280,5 +281,10 @@
     "until": "Jusqu’au",
     "noEnd": "Sans date de fin",
     "empty": "Personne n’est sur la liste de surveillance."
+  },
+  "findMember": {
+    "tooShort": "Tapez au moins 2 lettres du nom.",
+    "discordFailed": "Discord n’a pas répondu à la recherche : seuls les membres que Mewvo connaît déjà sont listés.",
+    "bansFailed": "La liste des bannissements n’a pas pu être chargée : les utilisateurs bannis ne sont pas listés."
   }
 }

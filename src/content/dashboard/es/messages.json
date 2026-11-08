@@ -167,7 +167,8 @@
     "minutesHelp": "De 0 a {max} (24 horas).",
     "seconds": "Segundos",
     "secondsHelp": "De 0 a 59.",
-    "submit": "Iniciar cuenta atrás"
+    "submit": "Iniciar cuenta atrás",
+    "defaultTitle": "Cuenta atrás"
   },
   "clock": {
     "hours": "{n} h",

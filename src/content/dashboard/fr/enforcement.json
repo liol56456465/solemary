@@ -62,7 +62,8 @@
     "openCap": "Maximum de signalements et modmails ouverts",
     "openCapHelp": "Combien de salons de signalement d’équipe et de modmail peuvent être ouverts en même temps. Quand la limite est atteinte, les nouveaux sont refusés et l’équipe reçoit une alerte. Les appels ne sont jamais refusés.",
     "invite": "Invitation au serveur de support",
-    "inviteHelp": "Un lien vers ton serveur de support. Les membres bannis le reçoivent pour pouvoir quand même faire appel."
+    "inviteHelp": "Un lien vers ton serveur de support. Les membres bannis le reçoivent pour pouvoir quand même faire appel.",
+    "inviteRequired": "L’invitation au serveur d’assistance ne peut pas être vide : collez un lien d’invitation discord.gg. Rien n’a été modifié."
   },
   "roles": {
     "title": "Rôles",

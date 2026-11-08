@@ -202,6 +202,11 @@ async function update(ctx, patch, message) {
     return { changes, message: changes.length ? message : textFor(ctx).t('errors.nothingChanged') };
 }
 
+/** { [name]: text } when the form sent the field (an empty value clears it), {} when absent. */
+function sentText(form, name, max = 2000) {
+    return form?.[name] !== undefined ? { [name]: text(form, name, max) } : {};
+}
+
 export default {
     key: 'welcome',
     label: 'Welcome & goodbye',
@@ -272,8 +277,9 @@ ${section(tr.t('welcome.logs.title'), logs, tr.t('welcome.logs.help'), { key: 'j
             return update(ctx, changedOnly({
                 channelId: channelField(ctx.guild, form, 'channelId', { label: tr.t('welcome.join.channel') }),
                 welcomePing: checkbox(form, 'welcomePing'),
-                welcomeMessage: text(form, 'welcomeMessage', 2000) || current.welcomeMessage,
-                dmMessage: text(form, 'dmMessage', 2000),
+                // Sent empty = cleared (the bot then posts its default welcome); absent = unchanged.
+                ...sentText(form, 'welcomeMessage'),
+                ...sentText(form, 'dmMessage'),
             }, current), tr.t('welcome.action.welcomeSaved'));
         },
         async goodbye(ctx, form) {
@@ -282,7 +288,7 @@ ${section(tr.t('welcome.logs.title'), logs, tr.t('welcome.logs.help'), { key: 'j
             return update(ctx, changedOnly({
                 goodbyeChannelId: channelField(ctx.guild, form, 'goodbyeChannelId', { label: tr.t('welcome.leave.channel') }),
                 goodbyePing: checkbox(form, 'goodbyePing'),
-                leaveMessage: text(form, 'leaveMessage', 2000) || current.leaveMessage,
+                ...sentText(form, 'leaveMessage'),
             }, current), tr.t('welcome.action.goodbyeSaved'));
         },
         'welcome-embed': {

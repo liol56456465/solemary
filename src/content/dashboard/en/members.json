@@ -137,7 +137,8 @@
     "empty": "Nobody is banned in the main server.",
     "bannedCount": "{count} banned in the main server",
     "help": "Unban opens the member page: you see the effect, then confirm. The member gets a DM with an invite back.",
-    "searchPlaceholder": "Name or user ID"
+    "searchPlaceholder": "Name or user ID",
+    "truncated": "Showing the first {count} bans: Discord's ban list is longer than that. Open a member by user ID to see someone who is not listed."
   },
   "standing": {
     "banEnds": "ban {case}, ends {date}",
@@ -275,5 +276,10 @@
     "until": "Until",
     "noEnd": "No end date",
     "empty": "Nobody is on the watchlist."
+  },
+  "findMember": {
+    "tooShort": "Type at least 2 letters of the name.",
+    "discordFailed": "Discord did not answer the search, so only members Mewvo already knows are listed.",
+    "bansFailed": "The ban list could not be loaded, so banned users are not listed."
   }
 }

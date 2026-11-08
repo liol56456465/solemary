@@ -62,7 +62,8 @@
     "openCap": "Massimo di segnalazioni e modmail aperti",
     "openCapHelp": "Quanti canali di segnalazione sullo staff e di modmail possono essere aperti insieme. Raggiunto il limite, i nuovi vengono rifiutati e lo staff riceve un avviso. I ricorsi non vengono mai rifiutati.",
     "invite": "Invito al server di supporto",
-    "inviteHelp": "Un link al tuo server di supporto. I membri bannati lo ricevono così possono comunque fare ricorso."
+    "inviteHelp": "Un link al tuo server di supporto. I membri bannati lo ricevono così possono comunque fare ricorso.",
+    "inviteRequired": "L’invito al server di supporto non può essere vuoto: incolla un link di invito discord.gg. Non è cambiato nulla."
   },
   "roles": {
     "title": "Ruoli",

@@ -15,6 +15,8 @@
 import { createRateLimiter } from './security.js';
 import { html, layout, path, queryString } from './html.js';
 import { logger } from '../../utils/logger.js';
+import { createBanCache } from './bansData.js';
+import { currentText } from './language.js';
 
 export const SEARCH_PATH = '/members/search';
 export const SEARCH_JSON_PATH = '/members/search.json';
@@ -66,18 +68,15 @@ function rank(results, needle) {
  * { results: [{ id, name, username, bot, banned }], error: string | null } (never throws for a
  * Discord failure: the cached members are still returned, with `error` saying so).
  */
-export function createMemberSearch({ ttlMs = CACHE_TTL_MS, banTtlMs = BAN_TTL_MS, maxEntries = CACHE_MAX, rate = SEARCH_RATE, now = () => Date.now() } = {}) {
+export function createMemberSearch({ ttlMs = CACHE_TTL_MS, banTtlMs = BAN_TTL_MS, maxEntries = CACHE_MAX, rate = SEARCH_RATE, now = () => Date.now(), banCache = null } = {}) {
     const cache = new Map();
-    const bans = new Map();
+    // The ban list: the dashboard's shared per-guild cache (bansData.js; the Banned page uses the same one).
+    const bans = banCache || createBanCache({ ttlMs: banTtlMs, now });
     const limiter = createRateLimiter(rate);
 
     async function banList(guild) {
-        const hit = bans.get(guild.id);
-        if (hit && now() - hit.at < banTtlMs) return hit.list;
-        const fetched = await guild.bans.fetch({ limit: 1000 });
-        const list = [...(fetched?.values?.() || [])].map(banResult).filter(Boolean);
-        bans.set(guild.id, { at: now(), list });
-        return list;
+        const { bans: list } = await bans.get(guild);
+        return list.map(banResult).filter(Boolean);
     }
 
     async function lookup(guild, query, includeBans, limit) {
@@ -94,7 +93,7 @@ export function createMemberSearch({ ttlMs = CACHE_TTL_MS, banTtlMs = BAN_TTL_MS
             }
             return { results: [...out.values()], error };
         }
-        if (query.length < 2) return { results: [], error: 'Type at least 2 letters of the name.' };
+        if (query.length < 2) return { results: [], error: currentText().t('members.findMember.tooShort') };
         const needle = query.toLowerCase();
         for (const member of guild.members?.cache?.values?.() || []) {
             const row = memberResult(member);
@@ -107,7 +106,7 @@ export function createMemberSearch({ ttlMs = CACHE_TTL_MS, banTtlMs = BAN_TTL_MS
                 for (const member of found?.values?.() || []) add(memberResult(member));
             } catch (err) {
                 logger.warn(`Dashboard member search failed: ${err.message}`);
-                error = 'Discord did not answer the search, so only members Mewvo already knows are listed.';
+                error = currentText().t('members.findMember.discordFailed');
             }
         }
         if (includeBans && guild.bans && out.size < limit) {
@@ -115,7 +114,7 @@ export function createMemberSearch({ ttlMs = CACHE_TTL_MS, banTtlMs = BAN_TTL_MS
                 for (const row of await banList(guild)) if (fields(row).some((v) => v.includes(needle))) add(row);
             } catch (err) {
                 logger.warn(`Dashboard ban list for member search failed: ${err.message}`);
-                error = error || 'The ban list could not be loaded, so banned users are not listed.';
+                error = error || currentText().t('members.findMember.bansFailed');
             }
         }
         return { results: rank([...out.values()], needle), error };

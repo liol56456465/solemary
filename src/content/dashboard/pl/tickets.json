@@ -91,5 +91,9 @@
     "notBlocked": "Ten członek nie był zablokowany.",
     "unblocked": "Odblokowano w modmailu."
   },
-  "staffRoleNeedsAdmin": "Aby zmienić rolę ekipy, potrzebujesz uprawnienia Administrator na tym serwerze (otwiera każde zgłoszenie dla jej członków). Nic nie zostało zmienione."
+  "staffRoleNeedsAdmin": "Aby zmienić rolę ekipy, potrzebujesz uprawnienia Administrator na tym serwerze (otwiera każde zgłoszenie dla jej członków). Nic nie zostało zmienione.",
+  "defaults": {
+    "buttonLabel": "Otwórz zgłoszenie",
+    "panelMessage": "Potrzebujesz pomocy obsługi? Naciśnij przycisk poniżej, aby otworzyć prywatne zgłoszenie."
+  }
 }

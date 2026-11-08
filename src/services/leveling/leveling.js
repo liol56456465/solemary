@@ -520,6 +520,40 @@ export async function updateLevelingConfig(client, guildId, patch) {
   }
 }
 
+const IGNORE_FIELDS = new Set(['ignoredChannels', 'ignoredRoles']);
+export const MAX_IGNORED = 100;
+
+/**
+ * Atomically adds (action 'add') or removes (action 'remove') one id on a no-XP list
+ * (field: ignoredChannels | ignoredRoles), under the guild-config row lock, so two admins at
+ * once cannot drop each other's entry. Returns { before, after, changed } (changed false: it was
+ * already on the list / not on it, nothing else is touched).
+ */
+export async function updateLevelIgnoreList(client, guildId, field, action, id) {
+  try {
+    if (!guildId || !IGNORE_FIELDS.has(field) || !['add', 'remove'].includes(action)) {
+      throw validationError(`Invalid ignore list change: ${field} ${action}`, 'Invalid no-XP list change.');
+    }
+    if (!(typeof id === 'string' && SNOWFLAKE.test(id))) {
+      throw validationError(`Invalid ignore list id: ${id}`, 'That is not a valid channel or role.');
+    }
+    let changed = false;
+    const result = await mutateLevelingConfig(client, guildId, (current) => {
+      const list = Array.isArray(current[field]) ? current[field] : [];
+      const has = list.includes(id);
+      if (action === 'add' ? has : !has) return current;
+      if (action === 'add' && list.length >= MAX_IGNORED) {
+        throw validationError(`Too many ${field}`, `At most ${MAX_IGNORED} entries on a no-XP list.`);
+      }
+      changed = true;
+      return { ...current, [field]: action === 'add' ? [...list, id] : list.filter((x) => x !== id) };
+    });
+    return { ...result, changed };
+  } catch (error) {
+    throw wrapSaveError(error, guildId);
+  }
+}
+
 /**
  * Atomically sets (roleId) or removes (roleId === null) the role reward for one
  * level, leaving the other rewards as stored. Returns { before, after }.

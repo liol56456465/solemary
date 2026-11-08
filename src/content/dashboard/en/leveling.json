@@ -39,7 +39,8 @@
     "announce": "Announce level-ups",
     "announceHelp": "Off: members still level up, but no message is posted.",
     "message": "Level-up message",
-    "messageHelp": "You can use {user} (mentions the member) and {level} (their new level)."
+    "messageHelp": "You can use {user} (mentions the member) and {level} (their new level).",
+    "defaultMessage": "{user} is now level {level}."
   },
   "card": {
     "title": "Level-up card",

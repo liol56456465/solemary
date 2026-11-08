@@ -46,7 +46,8 @@
     "managed": "{label}: ролью {role} управляет интеграция или бот.",
     "problem": "{label}: {problem}",
     "userId": "{label}: нужен ID пользователя Discord (от 17 до 20 цифр).",
-    "listItem": "{label} {number}"
+    "listItem": "{label} {number}",
+    "tooMany": "Слишком много: можно выбрать не больше {max} (отправлено {count})."
   },
   "warn": {
     "channelGone": "канала {id} больше нет",

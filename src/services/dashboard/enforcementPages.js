@@ -178,6 +178,7 @@ ${rows.map((row) => html`<tr><td><a class="member-cell" href="${userHref(row.id)
             : list ? html`<p class="empty">${t('members.bans.empty')}</p>` : '';
     const body = html`<header class="page-head"><h1>${t('members.bans.title')}</h1><p class="muted">${list ? html`${t('members.bans.bannedCount', { count: tr.fmtNumber(list.banned) })} · ` : ''}${tx('members.bans.help')}</p></header>
 ${error ? html`<p class="error" role="alert">${error}</p>` : ''}
+${list?.truncated ? html`<p class="notice" role="status">${t('members.bans.truncated', { count: tr.fmtNumber(list.banned) })}</p>` : ''}
 ${list ? html`${chips}<form class="filters" method="get" action="${path('/bans')}" role="search"><input type="hidden" name="filter" value="${filters.filter || ''}">
 <label class="wide-filter">${t('members.list.search')}<input type="search" name="q" value="${filters.q || ''}" maxlength="40" autocomplete="off" placeholder="${t('members.bans.searchPlaceholder')}"></label>
 <button class="primary" type="submit">${t('cases.filter.search')}</button> <a href="${path('/bans')}">${t('members.list.clear')}</a></form>${table}` : ''}`;
@@ -634,10 +635,11 @@ ${heatTable(t('staffPage.coverage.staff', { count: report.totalStaff }), report.
 ${report.gaps.length ? html`<ol>${report.gaps.map((slot) => html`<li>${slotText(slot, tr)}: ${tr.tp('staffPage.coverage.incidentCount', slot.incidents)}, ${tr.tp('staffPage.coverage.actionCount', slot.staff)}</li>`)}</ol>` : html`<p class="muted">${t('staffPage.coverage.none')}</p>`}`, '', { key: 'staff-coverage' });
 }
 
-/** blocks: listMassActionBlocks; names: Map(id → username); canLift: OWNER_IDS (like /staff restore). */
-export function blocksSection({ blocks = [], names = new Map(), canLift = false, csrf, editEnabled = true }) {
+/** blocks: listMassActionBlocks (failed: it could not be loaded); names: Map(id → username); canLift: OWNER_IDS (like /staff restore). */
+export function blocksSection({ blocks = [], failed = false, names = new Map(), canLift = false, csrf, editEnabled = true }) {
     const tr = currentText();
     const { t } = tr;
+    if (failed || !blocks) return section(t('staffPage.blocks.title', { count: '?' }), html`<p class="muted">${t('staffPage.blocks.failed')}</p>`, '', { key: 'staff-blocks' });
     return section(t('staffPage.blocks.title', { count: blocks.length }), html`${blocks.length ? html`<div class="scroll"><table><thead><tr><th>${t('staffPage.stats.moderator')}</th><th>${t('staffPage.blocks.until')}</th><th>${t('staffPage.blocks.count')}</th><th>${t('members.watch.since')}</th><th></th></tr></thead><tbody>
 ${blocks.map((b) => html`<tr><td>${names.get(b.moderatorId) || b.moderatorId} <span class="muted">${b.moderatorId}</span></td><td>${dateIn(b.until, tr)}</td><td>${b.count ?? '-'}</td><td>${dateIn(b.at, tr)}</td>
 <td>${canLift && editEnabled ? actionForm(csrf, '/staff/blocks/lift', '', { submit: t('staffPage.blocks.lift'), hidden: { moderator: b.moderatorId }, inline: true, danger: true }) : ''}</td></tr>`)}

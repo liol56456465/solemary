@@ -91,5 +91,9 @@
     "notBlocked": "Questo membro non era bloccato.",
     "unblocked": "Sbloccato dal modmail."
   },
-  "staffRoleNeedsAdmin": "Per cambiare il ruolo dello staff ti serve il permesso Amministratore in questo server (apre ogni ticket ai suoi membri). Non è stato cambiato nulla."
+  "staffRoleNeedsAdmin": "Per cambiare il ruolo dello staff ti serve il permesso Amministratore in questo server (apre ogni ticket ai suoi membri). Non è stato cambiato nulla.",
+  "defaults": {
+    "buttonLabel": "Apri ticket",
+    "panelMessage": "Ti serve aiuto dallo staff? Premi il pulsante qui sotto per aprire un ticket privato."
+  }
 }

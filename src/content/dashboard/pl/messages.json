@@ -171,7 +171,8 @@
     "minutesHelp": "Od 0 do {max} (24 godziny).",
     "seconds": "Sekundy",
     "secondsHelp": "Od 0 do 59.",
-    "submit": "Uruchom odliczanie"
+    "submit": "Uruchom odliczanie",
+    "defaultTitle": "Odliczanie"
   },
   "clock": {
     "hours": "{n} godz.",

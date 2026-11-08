@@ -563,7 +563,7 @@ ${section(tr.t('messages.countdown.sectionTitle'), countdown, `${tr.t('messages.
                 const g = ctx.guild;
                 const tr = textFor(ctx);
                 const channel = postChannel(g, form, PERMS.post);
-                const title = text(form, 'title', COUNTDOWN_TITLE_MAX) || 'Countdown';
+                const title = text(form, 'title', COUNTDOWN_TITLE_MAX) || tr.t('messages.countdown.defaultTitle');
                 const minutes = intField(form, 'minutes', { min: 0, max: 1440, label: tr.t('messages.countdown.minutes'), fallback: 0 });
                 const seconds = intField(form, 'seconds', { min: 0, max: 59, label: tr.t('messages.countdown.seconds'), fallback: 0 });
                 const totalSeconds = minutes * 60 + seconds;

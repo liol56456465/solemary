@@ -57,7 +57,8 @@
     "count": "Bannissements/expulsions",
     "lift": "Lever le blocage",
     "ownersOnly": "Seuls les propriétaires du bot peuvent lever un blocage (comme /staff restore).",
-    "none": "Personne n’est bloqué."
+    "none": "Personne n’est bloqué.",
+    "failed": "Les blocages de la limite de sécurité n’ont pas pu être chargés (la base de données ne répond pas). Rechargez la page dans une minute."
   },
   "activity": {
     "week": "Semaine",

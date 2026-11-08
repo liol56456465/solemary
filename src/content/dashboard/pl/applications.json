@@ -46,7 +46,8 @@
     "member": "Członek",
     "noteColumn": "Notatka",
     "reviewed": "Rozpatrzone",
-    "nothingReviewed": "Nic jeszcze nie rozpatrzono."
+    "nothingReviewed": "Nic jeszcze nie rozpatrzono.",
+    "capped": "Wczytywanych jest tu tylko {count} najnowszych zgłoszeń; starsze nie są liczone poniżej."
   },
   "roles": {
     "title": "Podania ({count})",

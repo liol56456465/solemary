@@ -62,7 +62,8 @@
     "openCap": "Máximo de denúncias e modmails abertos",
     "openCapHelp": "Quantos canais de denúncia da equipe e de modmail podem ficar abertos ao mesmo tempo. Quando o limite é atingido, os novos são recusados e a equipe recebe um alerta. Apelações nunca são recusadas.",
     "invite": "Convite do servidor de suporte",
-    "inviteHelp": "Um link para o seu servidor de suporte. Membros banidos o recebem para ainda poderem apelar."
+    "inviteHelp": "Um link para o seu servidor de suporte. Membros banidos o recebem para ainda poderem apelar.",
+    "inviteRequired": "O convite do servidor de suporte não pode ficar vazio: cole um link de convite discord.gg. Nada foi alterado."
   },
   "roles": {
     "title": "Cargos",

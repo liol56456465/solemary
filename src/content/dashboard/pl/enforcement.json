@@ -66,7 +66,8 @@
     "openCap": "Maks. otwartych zgłoszeń i modmaili",
     "openCapHelp": "Ile kanałów zgłoszeń na ekipę i modmaila może być otwartych jednocześnie. Po osiągnięciu limitu nowe są odrzucane, a ekipa dostaje alert. Odwołania nigdy nie są odrzucane.",
     "invite": "Zaproszenie na serwer wsparcia",
-    "inviteHelp": "Link do twojego serwera wsparcia. Zbanowani członkowie go dostają, żeby mimo to mogli się odwołać."
+    "inviteHelp": "Link do twojego serwera wsparcia. Zbanowani członkowie go dostają, żeby mimo to mogli się odwołać.",
+    "inviteRequired": "Zaproszenie na serwer wsparcia nie może być puste: wklej link zaproszenia discord.gg. Nic nie zmieniono."
   },
   "roles": {
     "title": "Role",

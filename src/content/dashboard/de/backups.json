@@ -36,6 +36,7 @@
     "applied": {
       "one": "Backup angewendet: {count} Einstellung geändert. Sie steht im Audit-Log.",
       "other": "Backup angewendet: {count} Einstellungen geändert. Sie stehen im Audit-Log."
-    }
+    },
+    "applyFailed": "Die Sicherung wurde nicht angewendet: Die Datenbank hat nicht geantwortet, daher wurde nichts geändert. Versuche „Anwenden“ erneut."
   }
 }

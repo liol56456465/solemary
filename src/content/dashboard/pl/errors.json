@@ -42,5 +42,6 @@
   "handoverTooLong": "Notatka musi mieć mniej niż 1000 znaków.",
   "serverNotFound": "Nie znaleziono serwera",
   "serverNotFoundText": "Nie znaleziono serwera albo nie możesz nim zarządzać. Wybierz serwer ze swojej listy.",
-  "blockedText": "Nie możesz używać tego bota."
+  "blockedText": "Nie możesz używać tego bota.",
+  "databaseDown": "Baza danych w tej chwili nie odpowiada, więc nic nie zmieniono. Spróbuj ponownie za minutę."
 }

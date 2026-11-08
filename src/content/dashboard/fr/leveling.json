@@ -39,7 +39,8 @@
     "announce": "Annoncer les passages de niveau",
     "announceHelp": "Désactivé : les membres montent quand même de niveau, mais aucun message n’est publié.",
     "message": "Message de passage de niveau",
-    "messageHelp": "Tu peux utiliser {user} (mentionne le membre) et {level} (son nouveau niveau)."
+    "messageHelp": "Tu peux utiliser {user} (mentionne le membre) et {level} (son nouveau niveau).",
+    "defaultMessage": "{user} est maintenant niveau {level}."
   },
   "card": {
     "title": "Carte de niveau",

@@ -207,6 +207,12 @@
     "appealPanel": {
       "label": "Pannello dei ricorsi pubblicato",
       "hint": "Un messaggio con un pulsante Ricorso, così i membri puniti possono chiedere allo staff di togliere la sanzione. Uno va nel tuo server, uno nel server di supporto."
+    },
+    "appealPanelForm": {
+      "channel": "Canale per il pannello dei ricorsi",
+      "post": "Pubblica i pannelli dei ricorsi",
+      "postAgain": "Pubblica di nuovo i pannelli dei ricorsi",
+      "confirm": "Pubblicare ora i pannelli dei ricorsi? I pannelli precedenti in questi canali vengono sostituiti."
     }
   },
   "value": {

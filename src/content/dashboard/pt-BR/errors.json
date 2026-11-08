@@ -42,5 +42,6 @@
   "handoverTooLong": "Mantenha o recado com menos de 1000 caracteres.",
   "serverNotFound": "Servidor não encontrado",
   "serverNotFoundText": "Servidor não encontrado ou você não pode gerenciá-lo. Escolha um servidor da sua lista.",
-  "blockedText": "Você não pode usar este bot."
+  "blockedText": "Você não pode usar este bot.",
+  "databaseDown": "O banco de dados não está respondendo agora, então nada foi alterado. Tente de novo em um minuto."
 }

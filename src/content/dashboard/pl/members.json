@@ -145,7 +145,8 @@
     "empty": "Na głównym serwerze nikt nie jest zbanowany.",
     "bannedCount": "Zbanowani na głównym serwerze: {count}",
     "help": "Odbanowanie otwiera stronę członka: widzisz skutek, potem potwierdzasz. Członek dostaje wiadomość prywatną z zaproszeniem z powrotem.",
-    "searchPlaceholder": "Nazwa lub ID użytkownika"
+    "searchPlaceholder": "Nazwa lub ID użytkownika",
+    "truncated": "Pokazano pierwsze {count} banów: lista Discorda jest dłuższa. Otwórz członka po ID użytkownika, aby zobaczyć kogoś, kogo nie ma na liście."
   },
   "standing": {
     "banEnds": "ban {case}, kończy się {date}",
@@ -285,5 +286,10 @@
     "until": "Do",
     "noEnd": "Bez daty końca",
     "empty": "Nikogo nie ma na liście obserwacji."
+  },
+  "findMember": {
+    "tooShort": "Wpisz co najmniej 2 litery nazwy.",
+    "discordFailed": "Discord nie odpowiedział na wyszukiwanie, więc pokazano tylko członków, których Mewvo już zna.",
+    "bansFailed": "Nie udało się wczytać listy banów, więc zbanowani użytkownicy nie są pokazani."
   }
 }

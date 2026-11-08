@@ -52,5 +52,10 @@
     "started": "Jogo de contagem iniciado em 1.",
     "reset": "A contagem recomeça em 1.",
     "off": "O jogo de contagem está desligado."
+  },
+  "types": {
+    "members": "Membros + bots",
+    "members_only": "Só membros",
+    "bots": "Só bots"
   }
 }

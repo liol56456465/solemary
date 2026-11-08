@@ -15,7 +15,8 @@ import { textFor } from '../language.js';
 import { requireCanAct, managerActions } from './serverScope.js';
 
 // Words: src/content/dashboard/<lang>/tickets.json. The default button text and panel message
-// ("Open ticket", "Need help from staff? …") are posted in Discord and stay as they are.
+// (tickets.defaults.*) are prefilled in the admin's dashboard language; they are posted in
+// Discord as saved, and the admin can change them before posting.
 
 export default {
     key: 'tickets',
@@ -43,7 +44,7 @@ ${numberInput('maxTicketsPerUser', t.maxTicketsPerUser ?? 3, { label: tr.t('tick
 ${switchInput('dmOnClose', t.dmOnClose !== false, { label: tr.t('tickets.settings.dmOnClose'), help: tr.t('tickets.settings.dmOnCloseHelp') })}
 ${channelPicker(g, 'ticketLogsChannelId', t.ticketLogsChannelId, { label: tr.t('tickets.settings.logChannel'), perms: PERMS.post, help: tr.t('tickets.settings.logChannelHelp') })}
 ${channelPicker(g, 'ticketTranscriptChannelId', t.ticketTranscriptChannelId, { label: tr.t('tickets.settings.transcriptChannel'), perms: PERMS.postFiles, help: tr.t('tickets.settings.transcriptChannelHelp') })}
-${textInput('ticketButtonLabel', t.ticketButtonLabel || 'Open ticket', { label: tr.t('tickets.settings.buttonText'), max: 80, help: tr.t('tickets.settings.buttonTextHelp') })}
+${textInput('ticketButtonLabel', t.ticketButtonLabel || tr.t('tickets.defaults.buttonLabel'), { label: tr.t('tickets.settings.buttonText'), max: 80, help: tr.t('tickets.settings.buttonTextHelp') })}
 ${textArea('ticketPanelMessage', t.ticketPanelMessage || '', { label: tr.t('tickets.settings.panelMessage'), max: 2000, help: tr.t('tickets.settings.panelMessageHelp') })}</div>`);
         const canPost = ctx.canEdit && ctx.canAct;
         const panel = t.ticketPanelChannelId
@@ -52,13 +53,13 @@ ${buttonForm(ctx, 'tickets', 'panel-publish', tr.t('tickets.panel.republish'), {
 <p class="muted">${tr.tx('tickets.panel.textNote')}</p>`
             : html`<p class="warn">${tr.tx('tickets.panel.none')}</p>${postForm(ctx, 'tickets', 'setup', html`<div class="grid">
 ${channelPicker(g, 'panelChannelId', null, { label: tr.t('tickets.panel.postIn'), perms: PERMS.post, optional: false, help: tr.t('tickets.panel.postInHelp') })}
-${textInput('buttonLabel', 'Open ticket', { label: tr.t('tickets.settings.buttonText'), max: 80 })}
+${textInput('buttonLabel', tr.t('tickets.defaults.buttonLabel'), { label: tr.t('tickets.settings.buttonText'), max: 80 })}
 ${channelPicker(g, 'categoryId', null, { label: tr.t('tickets.settings.openCategory'), kinds: ['category'], perms: PERMS.category, noneLabel: tr.t('tickets.panel.newCategory'), help: tr.t('tickets.settings.openCategoryHelp') })}
 ${channelPicker(g, 'closedCategoryId', null, { label: tr.t('tickets.settings.closedCategory'), kinds: ['category'], perms: PERMS.category, help: tr.t('tickets.settings.closedCategoryHelp') })}
 ${rolePicker(g, 'staffRoleId', null, { label: tr.t('tickets.settings.staffRole'), assign: false, help: tr.t('tickets.settings.staffRoleHelp') })}
 ${numberInput('maxTicketsPerUser', 3, { label: tr.t('tickets.settings.maxPerUser'), min: 1, max: 10, help: tr.t('tickets.settings.maxRange') })}
 ${switchInput('dmOnClose', true, { label: tr.t('tickets.settings.dmOnClose') })}
-${textArea('panelMessage', 'Need help from staff? Press the button below to open a private ticket.', { label: tr.t('tickets.settings.panelMessage'), max: 2000 })}</div>`, { submit: tr.t('tickets.panel.submit'), canEdit: canPost })}`;
+${textArea('panelMessage', tr.t('tickets.defaults.panelMessage'), { label: tr.t('tickets.settings.panelMessage'), max: 2000 })}</div>`, { submit: tr.t('tickets.panel.submit'), canEdit: canPost })}`;
         const blockForm = postForm(ctx, 'tickets', 'block', html`<div class="grid">
 ${memberField({ name: 'userId', label: tr.t('tickets.blocked.member'), value: pickedFromQuery(ctx.query, 'block_user'), required: true, pick: 'block_user', back: path('/tickets'), anchor: 'modmail-blocked-members', bans: true, guild: g })}
 ${textInput('reason', '', { label: tr.t('tickets.blocked.reason'), max: 200, help: tr.t('tickets.blocked.reasonHelp') })}</div>`, { submit: tr.t('tickets.blocked.submit'), canEdit: ctx.canEdit && ctx.canAct, confirm: tr.t('tickets.blocked.confirm') })
@@ -126,8 +127,9 @@ ${section(tr.t('tickets.canned.title'), html`${table([tr.t('tickets.canned.name'
                 dmOnClose: checkbox(form, 'dmOnClose'),
                 ticketLogsChannelId: channelField(g, form, 'ticketLogsChannelId', { label: tr.t('tickets.settings.logChannel') }),
                 ticketTranscriptChannelId: channelField(g, form, 'ticketTranscriptChannelId', { label: tr.t('tickets.settings.transcriptChannel') }),
-                ticketButtonLabel: text(form, 'ticketButtonLabel', 80) || 'Open ticket',
-                ticketPanelMessage: multiline(form, 'ticketPanelMessage', 2000) || current.ticketPanelMessage || 'Need help from staff? Press the button below to open a private ticket.',
+                // Cleared = back to the default text (in the dashboard language).
+                ticketButtonLabel: text(form, 'ticketButtonLabel', 80) || tr.t('tickets.defaults.buttonLabel'),
+                ticketPanelMessage: multiline(form, 'ticketPanelMessage', 2000) || tr.t('tickets.defaults.panelMessage'),
             }, { ...current, dmOnClose: current.dmOnClose !== false, maxTicketsPerUser: current.maxTicketsPerUser ?? 3, ticketButtonLabel: current.ticketButtonLabel || 'Open ticket' });
             if (!Object.keys(patch).length) return { changes: [], message: tr.t('errors.nothingChanged') };
             // The staff role opens every ticket channel to its members: changing it needs Administrator.

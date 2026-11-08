@@ -53,7 +53,8 @@
     "count": "Banns/Kicks",
     "lift": "Sperre aufheben",
     "ownersOnly": "Nur die Bot-Inhaber können eine Sperre aufheben (wie /staff restore).",
-    "none": "Niemand ist gesperrt."
+    "none": "Niemand ist gesperrt.",
+    "failed": "Die Sperren durch das Sicherheitslimit konnten nicht geladen werden (Datenbank antwortet nicht). Lade die Seite in einer Minute neu."
   },
   "activity": {
     "week": "Woche",

@@ -6,8 +6,8 @@ import { ENFORCEMENT_REASONS, enforcementConfig } from '../../../config/enforcem
 import { AUTOMOD_RULES } from '../../../config/automod.js';
 import { html, raw } from '../html.js';
 import { InputError, PERMS, boolField, channelField, channelPicker, checkbox, choiceField, numberInput, postForm, roleField, rolePicker, switchInput, text, textInput, toggleForm } from '../forms.js';
-import { MAX_TEMPLATES, TEMPLATE_ACTIONS, TEMPLATE_NAME_MAX, cleanTemplates } from '../../enforcement/templateService.js';
-import { DAY, MINUTE, changedOnly, durationField, registryValue, saveRegistry, section, table, topic } from './common.js';
+import { MAX_TEMPLATES, TEMPLATE_ACTIONS, TEMPLATE_ID, TEMPLATE_NAME_MAX, cleanTemplates, newTemplateId, withTemplateIds } from '../../enforcement/templateService.js';
+import { DAY, MINUTE, changedOnly, durationField, registryValue, saveRegistry, saveRegistryWith, section, table, topic } from './common.js';
 import { textFor } from '../language.js';
 import { inviteOrNull } from '../../site/shell.js';
 import { isHomeScope, adminOnlyActions } from './serverScope.js';
@@ -145,11 +145,12 @@ ${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE)
 </div>`, { canEdit: adminEdit });
         const ladder = table([t('enforcement.rules.level'), t('enforcement.rules.banLength')], Object.entries(enforcementConfig.ladderBans).map(([level, ms]) => [level, ms ? durationText(tr, ms) : t('enforcement.rules.permanent')]));
         const words = actionWords(tr);
-        const templates = Array.isArray(v.enforcementTemplates) ? v.enforcementTemplates : [];
+        // Ids: stored ones, or derived from the name for templates saved before ids (templateService.js).
+        const templates = withTemplateIds(v.enforcementTemplates);
         const reasonLabel = (key) => ENFORCEMENT_REASONS.find((r) => r.key === key)?.label || key;
         const templateList = templates.length
-            ? table([t('enforcement.templates.name'), t('enforcement.templates.whatItDoes'), t('enforcement.templates.reason'), ''], templates.map((tp, i) => [tp.name, templateText(tr, tp), reasonLabel(tp.reasonKey),
-                postForm(ctx, 'enforcement', 'template-remove', html`<input type="hidden" name="index" value="${String(i)}">`, { submit: t('enforcement.templates.remove'), inline: true, danger: true, confirm: t('enforcement.templates.removeConfirm', { name: tp.name }) })]))
+            ? table([t('enforcement.templates.name'), t('enforcement.templates.whatItDoes'), t('enforcement.templates.reason'), ''], templates.map((tp) => [tp.name, templateText(tr, tp), reasonLabel(tp.reasonKey),
+                postForm(ctx, 'enforcement', 'template-remove', html`<input type="hidden" name="id" value="${tp.id}">`, { submit: t('enforcement.templates.remove'), inline: true, danger: true, confirm: t('enforcement.templates.removeConfirm', { name: tp.name }) })]))
             : html`<p class="muted">${tr.tx('enforcement.templates.empty')}</p>`;
         const templateAdd = templates.length >= MAX_TEMPLATES ? html`<p class="muted">${tr.tx('enforcement.templates.max', { count: tr.fmtNumber(MAX_TEMPLATES) })}</p>` : postForm(ctx, 'enforcement', 'template-add', html`<div class="grid">
 <label>${tr.tx('enforcement.templates.name')}<input name="name" maxlength="${TEMPLATE_NAME_MAX}" required placeholder="${t('enforcement.templates.namePlaceholder')}"><span class="hint">${tr.tx('enforcement.templates.nameHint')}</span></label>
@@ -206,25 +207,36 @@ ${section(t('enforcement.rules.stepsTitle'), steps, t('enforcement.rules.stepsHe
                 };
             },
         },
+        // Add and remove run under the settings row lock (saveRegistryWith): two admins at once
+        // cannot overwrite each other's change, and a remove names the template by its stable id.
         async 'template-add'(ctx, form) {
             const tr = textFor(ctx);
-            const list = Array.isArray(current(ctx).enforcementTemplates) ? current(ctx).enforcementTemplates : [];
-            let next;
-            try {
-                next = cleanTemplates([...list, { name: text(form, 'name', TEMPLATE_NAME_MAX + 10), action: text(form, 'action', 10), reasonKey: text(form, 'reasonKey', 40), duration: text(form, 'duration', 20) }]);
-            } catch (error) {
-                throw new InputError(error.userMessage || tr.t('enforcement.result.templateInvalid'));
-            }
-            const result = await saveRegistry(ctx, { enforcementTemplates: next }, 'enforcement');
-            return { ...result, message: tr.t('enforcement.result.templateAdded', { name: next[next.length - 1].name }) };
+            const input = { name: text(form, 'name', TEMPLATE_NAME_MAX + 10), action: text(form, 'action', 10), reasonKey: text(form, 'reasonKey', 40), duration: text(form, 'duration', 20) };
+            let added = null;
+            const result = await saveRegistryWith(ctx, ['enforcementTemplates'], (valueOf) => {
+                const list = withTemplateIds(valueOf('enforcementTemplates'));
+                let next;
+                try {
+                    next = cleanTemplates([...list, { ...input, id: newTemplateId() }]);
+                } catch (error) {
+                    throw new InputError(error.userMessage || tr.t('enforcement.result.templateInvalid'));
+                }
+                added = next.at(-1);
+                return { enforcementTemplates: next };
+            }, 'enforcement');
+            return { ...result, message: tr.t('enforcement.result.templateAdded', { name: added.name }) };
         },
         async 'template-remove'(ctx, form) {
             const tr = textFor(ctx);
-            const list = Array.isArray(current(ctx).enforcementTemplates) ? current(ctx).enforcementTemplates : [];
-            const index = Number.parseInt(text(form, 'index', 3), 10);
-            if (!Number.isInteger(index) || !list[index]) throw new InputError(tr.t('enforcement.result.templateGone'));
-            const removed = list[index];
-            const result = await saveRegistry(ctx, { enforcementTemplates: list.filter((_, i) => i !== index) }, 'enforcement');
+            const id = text(form, 'id', 20);
+            if (!TEMPLATE_ID.test(id)) throw new InputError(tr.t('enforcement.result.templateGone'));
+            let removed = null;
+            const result = await saveRegistryWith(ctx, ['enforcementTemplates'], (valueOf) => {
+                const list = withTemplateIds(valueOf('enforcementTemplates'));
+                removed = list.find((t) => t.id === id) || null;
+                if (!removed) throw new InputError(tr.t('enforcement.result.templateGone'));
+                return { enforcementTemplates: list.filter((t) => t.id !== id) };
+            }, 'enforcement');
             return { ...result, message: tr.t('enforcement.result.templateRemoved', { name: removed.name }) };
         },
         // Other servers only: where members appeal (punishment DMs). Home servers always use the Mewvo support server.
@@ -262,6 +274,10 @@ ${section(t('enforcement.rules.stepsTitle'), steps, t('enforcement.rules.stepsHe
             const tr = textFor(ctx);
             // The Support invite is a setting of Mewvo's own servers only.
             const invite = isHomeScope(ctx) ? text(form, 'supportServerInvite', 100) : '';
+            // A sent but empty invite is refused out loud (the setting needs a link), never "Nothing changed".
+            if (isHomeScope(ctx) && form.supportServerInvite !== undefined && !invite) {
+                throw new InputError(tr.t('enforcement.channels.inviteRequired'), 400, 'supportServerInvite');
+            }
             // A field absent from the form stays unchanged (Setup step by step sends only its one field).
             const sent = (name, opts) => (form[name] !== undefined ? { [name]: channelField(g, form, name, opts) } : {});
             const patch = changedOnly({

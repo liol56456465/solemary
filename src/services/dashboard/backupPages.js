@@ -28,11 +28,12 @@ ${canWrite ? html`<p class="muted">${tr.t('backups.page.loadHelp')}</p>${uploadF
 }
 
 /** The preview after an upload: changes, skipped entries, and Apply (with a one-time token). */
-export function backupPreviewPage({ session, access = null, moduleStates = {}, plan, token }) {
+export function backupPreviewPage({ session, access = null, moduleStates = {}, plan, token, error = null }) {
     const tr = dashboardText(session?.lang);
     const count = plan.changes.length;
     const body = html`<p><a href="${path('/backup')}">← ${tr.t('frame.nav.items.backup')}</a></p>
 <header class="page-head"><h1>${tr.t('backups.preview.title')}</h1></header>
+${error ? html`<p class="error" role="alert">${error}</p>` : ''}
 ${count ? html`<section class="card"><h2>${tr.tp('backups.preview.wouldChange', count)}</h2>
 <div class="scroll"><table><thead><tr><th>${tr.t('backups.preview.server')}</th><th>${tr.t('backups.preview.setting')}</th><th>${tr.t('backups.preview.now')}</th><th>${tr.t('backups.preview.fromFile')}</th></tr></thead><tbody>
 ${plan.changes.map((c) => html`<tr><td>${c.guild}</td><td>${c.label}</td><td class="value">${shortValue(c.old, tr)}</td><td class="value">${shortValue(c.new, tr)}</td></tr>`)}

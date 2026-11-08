@@ -44,10 +44,17 @@ test('check: refuses non-backups; lists only changes; skips unknown, wrong-serve
     assert.deepEqual(same.changes, [], 'an unchanged file changes nothing');
 });
 
-test('apply: one updateSettings per server with changes, audited as module backup', async () => {
+test('apply: both servers in one batch (one transaction), audited as module backup', async () => {
     const calls = [];
-    const update = async (guildId, patch, actor) => { calls.push({ guildId, patch, actor }); return { changes: Object.keys(patch).map((key) => ({ key })) }; };
-    const n = await applyBackup({ patches: { main: { openChannelCap: 33 }, support: {} } }, { userId: '1', username: 'a' }, { env, update });
+    const updateBatch = async (writes, actor) => { calls.push({ writes, actor }); return { changes: writes.flatMap((w) => Object.keys(w.patch).map((key) => ({ key }))) }; };
+    const n = await applyBackup({ patches: { main: { openChannelCap: 33 }, support: {} } }, { userId: '1', username: 'a' }, { env, updateBatch });
     assert.equal(n, 1);
-    assert.deepEqual(calls, [{ guildId: env.MAIN_GUILD_ID, patch: { openChannelCap: 33 }, actor: { userId: '1', username: 'a', module: 'backup' } }]);
+    assert.deepEqual(calls, [{ writes: [{ guildId: env.MAIN_GUILD_ID, patch: { openChannelCap: 33 } }], actor: { userId: '1', username: 'a', module: 'backup' } }]);
+    assert.equal(await applyBackup({ patches: { main: {}, support: {} } }, { userId: '1' }, { env, updateBatch }), 0, 'nothing to write: no transaction');
+    assert.equal(calls.length, 1);
+});
+
+test('apply: a failed batch throws, so nothing is reported as applied', async () => {
+    const updateBatch = async () => { throw new Error('db down'); };
+    await assert.rejects(applyBackup({ patches: { main: { openChannelCap: 33 }, support: {} } }, { userId: '1' }, { env, updateBatch }), /db down/);
 });

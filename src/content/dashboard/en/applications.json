@@ -40,7 +40,8 @@
     "member": "Member",
     "noteColumn": "Note",
     "reviewed": "Reviewed",
-    "nothingReviewed": "Nothing reviewed yet."
+    "nothingReviewed": "Nothing reviewed yet.",
+    "capped": "Only the newest {count} applications are read here; older ones are not counted below."
   },
   "roles": {
     "title": "Applications ({count})",
