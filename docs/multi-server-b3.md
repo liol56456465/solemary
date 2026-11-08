@@ -149,3 +149,71 @@ then discord-reviewer over the wave.
   and is requested in the authorize URL. Existing users see the new consent line "Know what servers you're in" once.
 - Deployment secrets: no new or changed secret (only if decision 7 picks a flag).
 - Needs the owner's OK anyway: the privacy-page wording for the `guilds` scope, and the deploy itself.
+
+## 9. Privacy page draft (A5, OWNER REVIEW: legal text)
+The English text is in `src/services/site/pages/legal.js` (`privacyPage`), marked `<!-- OWNER REVIEW: legal text -->`:
+one new table row "Dashboard server list" and one paragraph "When Mewvo is removed from a server". The legal pages
+are English-only (`isEnglishOnlyPath`, site.js sitemap note), so the other 7 languages are drafts here only, for the
+day the legal pages get translated. `LEGAL_UPDATED` is not bumped yet: bump it when the text is approved.
+
+<!-- OWNER REVIEW: legal text -->
+**de.** *Serverliste des Dashboards:* Wenn du dich im Dashboard anmeldest, fragt Mewvo Discord nach der Liste der
+Server, in denen du bist (die Berechtigung „guilds“). Davon behält Mewvo nur ID, Name und Symbol der Server, in denen
+Mewvo ist oder die du verwalten kannst. Zweck: nur die Serverauswahl. Gespeichert: nur im Arbeitsspeicher des
+laufenden Servers, höchstens 12 Stunden, nie in der Datenbank; das Discord-Login-Token wird nicht behalten.
+*Wenn Mewvo von einem Server entfernt wird:* Die Daten des Servers werden nicht gelöscht, sondern behalten, bis der
+Server die Löschung verlangt. Der Eigentümer des Servers schreibt dazu an die Kontaktadresse oder im Support-Server
+und nennt die Server-ID; Mewvo prüft das und löscht innerhalb eines Monats. Mitglieder können ihre eigenen Daten
+jederzeit löschen lassen.
+
+**es.** *Lista de servidores del panel:* Al iniciar sesión en el panel, Mewvo pide a Discord la lista de servidores en
+los que estás (el permiso «guilds»). Solo guarda el ID, el nombre y el icono de los servidores donde está Mewvo o que
+puedes gestionar. Uso: solo el selector de servidores. Se guarda solo en la memoria del servidor en marcha, hasta 12
+horas, nunca en la base de datos; el token de inicio de sesión de Discord no se guarda.
+*Si se quita Mewvo de un servidor:* los datos del servidor no se borran; se guardan hasta que el servidor pida que se
+borren. El propietario del servidor lo pide por el contacto o en el servidor de soporte, con el ID del servidor; Mewvo
+lo comprueba y los borra en un plazo de un mes. Los miembros pueden pedir que se borren sus propios datos en cualquier
+momento.
+
+**fr.** *Liste des serveurs du tableau de bord :* quand tu te connectes au tableau de bord, Mewvo demande à Discord la
+liste des serveurs où tu es (la permission « guilds »). Mewvo n’en garde que l’ID, le nom et l’icône des serveurs où
+Mewvo est présent ou que tu peux gérer. Usage : uniquement le choix du serveur. Conservée seulement dans la mémoire du
+serveur en cours d’exécution, 12 heures au plus, jamais dans la base de données ; le jeton de connexion Discord n’est
+pas conservé.
+*Quand Mewvo est retiré d’un serveur :* les données du serveur ne sont pas supprimées ; elles sont gardées jusqu’à ce
+que le serveur en demande la suppression. Le propriétaire du serveur la demande via le contact ou sur le serveur de
+support, avec l’ID du serveur ; Mewvo vérifie et supprime sous un mois. Les membres peuvent faire supprimer leurs
+propres données à tout moment.
+
+**it.** *Elenco server della dashboard:* quando accedi alla dashboard, Mewvo chiede a Discord l’elenco dei server in
+cui sei (il permesso “guilds”). Ne tiene solo ID, nome e icona dei server in cui c’è Mewvo o che puoi gestire. Uso:
+solo la scelta del server. Conservato solo nella memoria del server in esecuzione, fino a 12 ore, mai nel database; il
+token di accesso Discord non viene conservato.
+*Quando Mewvo viene rimosso da un server:* i dati del server non vengono cancellati; restano finché il server non ne
+chiede la cancellazione. Il proprietario del server la chiede tramite il contatto o nel server di supporto, indicando
+l’ID del server; Mewvo verifica e cancella entro un mese. I membri possono far cancellare i propri dati in qualsiasi
+momento.
+
+**pl.** *Lista serwerów panelu:* gdy logujesz się do panelu, Mewvo prosi Discorda o listę serwerów, na których jesteś
+(uprawnienie „guilds”). Zachowuje z niej tylko ID, nazwę i ikonę serwerów, na których jest Mewvo albo którymi możesz
+zarządzać. Cel: tylko wybór serwera. Przechowywane tylko w pamięci działającego serwera, do 12 godzin, nigdy w bazie
+danych; token logowania Discorda nie jest zachowywany.
+*Gdy Mewvo zostanie usunięty z serwera:* dane serwera nie są usuwane; są przechowywane, dopóki serwer nie poprosi o ich
+usunięcie. Właściciel serwera prosi o to przez kontakt albo na serwerze wsparcia, podając ID serwera; Mewvo to
+sprawdza i usuwa dane w ciągu miesiąca. Członkowie mogą w każdej chwili poprosić o usunięcie własnych danych.
+
+**pt-BR.** *Lista de servidores do painel:* quando você entra no painel, o Mewvo pede ao Discord a lista dos servidores
+em que você está (a permissão “guilds”). Guarda só o ID, o nome e o ícone dos servidores em que o Mewvo está ou que
+você pode gerenciar. Uso: só o seletor de servidores. Fica só na memória do servidor em execução, por até 12 horas,
+nunca no banco de dados; o token de login do Discord não é guardado.
+*Quando o Mewvo é removido de um servidor:* os dados do servidor não são apagados; ficam guardados até o servidor pedir
+a exclusão. O dono do servidor pede pelo contato ou no servidor de suporte, informando o ID do servidor; o Mewvo
+confere e apaga em até um mês. Os membros podem pedir a exclusão dos próprios dados a qualquer momento.
+
+**ru.** *Список серверов панели:* при входе в панель Mewvo запрашивает у Discord список серверов, на которых вы
+состоите (разрешение «guilds»). Из него сохраняются только ID, название и значок серверов, где есть Mewvo или которыми
+вы можете управлять. Цель: только выбор сервера. Хранится только в памяти работающего сервера, не дольше 12 часов,
+никогда в базе данных; токен входа Discord не сохраняется.
+*Если Mewvo удалён с сервера:* данные сервера не удаляются, а хранятся, пока сервер не попросит их удалить. Владелец
+сервера просит об этом через контакт или на сервере поддержки, указав ID сервера; Mewvo проверяет запрос и удаляет
+данные в течение месяца. Участники могут в любой момент попросить удалить свои собственные данные.

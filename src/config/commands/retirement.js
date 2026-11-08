@@ -11,6 +11,7 @@
  */
 
 import { EVERYONE_COMMANDS, MANAGE_SERVER_COMMANDS } from './commandAccess.js';
+import { dashboardUrlFor } from '../../services/site/shell.js';
 
 /** Owner-only emergency kit: moderation and recovery that must work when the website is down. */
 export const OWNER_KIT = new Set([
@@ -55,12 +56,15 @@ export function dashboardPageFor(accessKey) {
     return DASHBOARD_PAGE[accessKey] || DASHBOARD_PAGE[name] || 'overview';
 }
 
-/** What a retired command answers: where it moved. */
-export function retiredMessage(accessKey, publicUrl = process.env.PUBLIC_URL || '') {
-    const base = String(publicUrl).trim().replace(/\/+$/, '');
+/**
+ * What a retired command answers: where it moved, on this server's dashboard
+ * (`${PUBLIC_URL}/dashboard/<guildId>/<page>`, via dashboardUrlFor; no PUBLIC_URL: the page name only).
+ */
+export function retiredMessage(accessKey, guildId, env = process.env) {
+    const base = dashboardUrlFor(guildId, env);
     const page = dashboardPageFor(accessKey);
     return base
-        ? `This command moved to the dashboard: ${base}/dashboard/${page}`
+        ? `This command moved to the dashboard: ${base}/${page}`
         : `This command moved to the dashboard (${page} page).`;
 }
 
