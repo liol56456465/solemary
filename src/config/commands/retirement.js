@@ -10,7 +10,7 @@
  * Off (default), nothing changes. Flip back by unsetting the variable and restarting.
  */
 
-import { EVERYONE_COMMANDS } from './commandAccess.js';
+import { EVERYONE_COMMANDS, MANAGE_SERVER_COMMANDS } from './commandAccess.js';
 
 /** Owner-only emergency kit: moderation and recovery that must work when the website is down. */
 export const OWNER_KIT = new Set([
@@ -64,9 +64,9 @@ export function retiredMessage(accessKey, publicUrl = process.env.PUBLIC_URL || 
         : `This command moved to the dashboard (${page} page).`;
 }
 
-/** True when this key stays registered while retired: everyone-commands, the owner kit and kept admin commands. */
+/** True when this key stays registered while retired: everyone-commands, the owner kit, kept admin commands and /setup (Manage Server). */
 function keepKey(key) {
-    return EVERYONE_COMMANDS.has(key) || OWNER_KIT.has(key) || KEPT_ADMIN_COMMANDS.has(key);
+    return EVERYONE_COMMANDS.has(key) || OWNER_KIT.has(key) || KEPT_ADMIN_COMMANDS.has(key) || MANAGE_SERVER_COMMANDS.has(key);
 }
 
 /**

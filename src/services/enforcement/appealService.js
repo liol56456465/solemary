@@ -14,7 +14,7 @@ import { Mutex } from '../../utils/mutex.js';
 import { withOpenChannelSlot } from '../openChannelCap.js';
 import { logEvent, EVENT_TYPES } from '../loggingService.js';
 import { query, withTransaction, T, isUniqueViolation } from './db.js';
-import { getCaseByCode, listCasesForUser, setEndDmDelivered, OPEN_STATUSES } from './caseService.js';
+import { getCaseByCode, getCaseByCodeAnyServer, listCasesForUser, setEndDmDelivered, OPEN_STATUSES } from './caseService.js';
 import { getGuildConfig } from '../config/guildConfig.js';
 import {
     createRejoinInvite, getLadder, liftLadderBanForWarn, logEnforcement, postModLog, revokeWarn, sendDm,
@@ -294,6 +294,9 @@ function appealLine(appeal) {
  * Used in the appeal channel and by /appeals.
  */
 export async function buildCaseDossier(record, { appeal = null, client = null } = {}) {
+    // The member's appeals in this case's server only (an appeal row's guild_id is its staff
+    // server): appeals they filed in other servers are never counted or shown here.
+    const staffGuildId = appealStaffGuildId(record);
     const [{ rows: caseAppeals }, { rows: userAppeals }, { rows: [appealCount] }, { rows: otherCases, total }, ladder, evidence] = await Promise.all([
         query(
             `SELECT * FROM ${T.appeals} WHERE case_code = $1 AND kind = 'appeal' ORDER BY created_at DESC LIMIT 10`,
@@ -301,12 +304,12 @@ export async function buildCaseDossier(record, { appeal = null, client = null } 
         ),
         query(
             `SELECT DISTINCT ON (case_code) case_code, status FROM ${T.appeals}
-             WHERE user_id = $1 AND kind = 'appeal' ORDER BY case_code, created_at DESC`,
-            [record.target_user_id]
+             WHERE user_id = $1 AND kind = 'appeal' AND guild_id = $2 ORDER BY case_code, created_at DESC`,
+            [record.target_user_id, staffGuildId]
         ),
         query(
-            `SELECT COUNT(*)::int AS count FROM ${T.appeals} WHERE user_id = $1 AND kind = 'appeal'`,
-            [record.target_user_id]
+            `SELECT COUNT(*)::int AS count FROM ${T.appeals} WHERE user_id = $1 AND kind = 'appeal' AND guild_id = $2`,
+            [record.target_user_id, staffGuildId]
         ),
         listCasesForUser(record.guild_id, record.target_user_id, { limit: 16 }),
         getLadder(record.guild_id, record.target_user_id).catch(() => null),
@@ -508,7 +511,9 @@ function memberAppealSummary(record, answers) {
 }
 
 export async function submitAppeal({ client, user, caseCode, answers }) {
-    const record = await getCaseByCode(caseCode);
+    // Any server: the member appeals their own case (assertAppealable checks the user id, with the
+    // same "not found" text for unknown and other people's codes), wherever it was issued.
+    const record = await getCaseByCodeAnyServer(caseCode);
     return Mutex.runExclusive(`appeal:${caseCode}`, async () => {
         await assertAppealable(record, user.id);
         // Home cases: the main server, as before. Another server's case: that server only; when it
@@ -892,9 +897,10 @@ export function assertAppealReviewer(record, deciderId, { client = null, ...opti
  */
 export async function decideAppeal({ client, admin, caseCode, decision, note, via = 'unknown', callerGuildId }) {
     if (!callerGuildId) throw new Error('decideAppeal: callerGuildId is required');
-    const record = await getCaseByCode(caseCode);
+    // Another server's case reads as unknown (nothing about it is shown or changed).
+    const record = await getCaseByCode(caseCode, callerGuildId);
     if (!record) {
-        throw userError(`No case with code \`${caseCode}\`.`);
+        throw userError(`No case with code \`${caseCode}\` in this server.`);
     }
     assertCaseOfCallerServer(record, callerGuildId);
     // Before anything changes: the issuing moderator may not decide (when the setting is on).

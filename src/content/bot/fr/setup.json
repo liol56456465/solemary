@@ -1,0 +1,70 @@
+{
+    "title": "Configurer Mewvo sur {server}",
+    "intro": "Ce qui est déjà configuré sur ce serveur. La plupart des réglages sont sur le tableau de bord.",
+    "dashboardButton": "Ouvrir le tableau de bord",
+    "noDashboard": "Le lien du tableau de bord n’est pas encore disponible pour ce bot.",
+    "checklistTitle": "Liste de contrôle",
+    "on": "activé",
+    "off": "désactivé",
+    "item": {
+        "modLog": {
+            "label": "Salon des logs de modération",
+            "next": "Choisis un salon sur le tableau de bord (Sanctions)."
+        },
+        "staff": {
+            "label": "Salon de vérification du staff",
+            "next": "Choisis un salon sur le tableau de bord (Automod).",
+            "fallback": "Non défini : les vérifications vont dans les logs de modération. Choisis un salon sur le tableau de bord (Automod)."
+        },
+        "appeals": {
+            "label": "Appels",
+            "mewvo": "Les membres font appel sur le serveur de support Mewvo.",
+            "mewvoChoice": "Les membres font appel sur le serveur de support Mewvo. Tu peux utiliser ton propre serveur à la place (tableau de bord).",
+            "own": "Les membres font appel sur ton propre serveur : {invite}",
+            "ownMissing": "Ton propre serveur est choisi, mais aucune invitation n’est définie. Ajoutes-en une sur le tableau de bord (Sanctions)."
+        },
+        "automod": {
+            "label": "Automod",
+            "next": "Active-le sur le tableau de bord (Automod)."
+        },
+        "verification": {
+            "label": "Vérification",
+            "next": "Configure-la avec /verification ou sur le tableau de bord."
+        },
+        "welcome": {
+            "label": "Messages de bienvenue",
+            "next": "Configure-les avec /welcome ou sur le tableau de bord."
+        },
+        "tickets": {
+            "label": "Tickets",
+            "next": "Configure-les avec /ticket ou sur le tableau de bord."
+        },
+        "leveling": {
+            "label": "Niveaux",
+            "next": "Active-les avec /level ou sur le tableau de bord."
+        },
+        "language": {
+            "label": "Langue du bot",
+            "default": "Anglais (par défaut). Choisis la langue des messages et des MP sur le tableau de bord (Langue du bot)."
+        }
+    },
+    "commandsTitle": "Toutes les commandes",
+    "commandsHint": "Choisis une catégorie ci-dessous pour voir ses commandes. 🔒 = administrateurs uniquement.",
+    "selectPlaceholder": "Choisis une catégorie",
+    "categoryTitle": "Commandes : {category}",
+    "categoryEmpty": "Aucune commande dans cette catégorie.",
+    "more": {
+        "one": "…et {count} autre",
+        "many": "…et {count} autres",
+        "other": "…et {count} autres"
+    },
+    "notYours": "Ce menu appartient à quelqu’un d’autre. Lance /setup pour avoir le tien.",
+    "welcome": {
+        "title": "Merci d’avoir ajouté Mewvo !",
+        "body": "Un admin peut taper **/setup** pour commencer.",
+        "help": "Tape **/help** pour voir les commandes. Des questions ? Demande sur le serveur de support Mewvo.",
+        "dm": "Tu as ajouté Mewvo à **{server}**. Un admin peut y taper **/setup** pour commencer.",
+        "dashboardButton": "Ouvrir le tableau de bord",
+        "supportButton": "Serveur de support Mewvo"
+    }
+}

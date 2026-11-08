@@ -648,7 +648,7 @@ export function createDashboard({
 
     async function renderCase(req, res, status = 200, { error = null } = {}) {
         const code = normalizeCaseCode(str(req.params?.code, 10));
-        const record = code ? await data.getCaseByCode(code) : null;
+        const record = code ? await data.getCaseByCode(code, guildId) : null;
         if (!record || record.guild_id !== guildId) return fail(res, 404, textOfReq(req).t('general.cases.notFound'), textOfReq(req).t('general.cases.notFoundText'), req);
         const [edits, evidenceRows, appeals, notes] = await Promise.all([
             data.getCaseEdits(code, 50),

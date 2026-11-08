@@ -28,6 +28,27 @@ const shouldLogVerifications = verificationDefaults.logAllVerifications ?? true;
 const shouldKeepAuditTrail = verificationDefaults.keepAuditTrail ?? false;
 let lastCleanupAt = 0;
 
+/** What a member sees when the server they try to verify in has no verification set up. */
+export const VERIFICATION_NOT_SET_UP = 'Verification is not set up in this server yet. Ask a server administrator to set it up with `/verification setup`.';
+
+/**
+ * Why verification cannot start in this server (its own config, per server), or null when it
+ * is set up: enabled, with a verified role that still exists. Checked before the "Verify with
+ * Discord" link is shown and before the OAuth callback stores anything. Throws when the config
+ * cannot be read (database down): never verify on an error.
+ */
+export async function verificationSetupProblem(client, guildId, { readConfig = getGuildConfig } = {}) {
+    const guild = client?.guilds?.cache?.get(guildId);
+    if (!guild) return 'I am not in that server any more, so I cannot verify you there.';
+    const config = await readConfig(client, guildId);
+    const verification = config?.verification;
+    if (!verification?.enabled || !verification.roleId) return VERIFICATION_NOT_SET_UP;
+    if (guild.roles?.cache && !guild.roles.cache.has(verification.roleId)) {
+        return 'The verified role of this server no longer exists. Ask a server administrator to run `/verification setup` again.';
+    }
+    return null;
+}
+
 export async function verifyUser(client, guildId, userId, options = {}) {
     const { source = 'manual', moderatorId = null } = options;
     
@@ -61,7 +82,7 @@ export async function verifyUser(client, guildId, userId, options = {}) {
             throw createError(
                 "Verification system disabled",
                 ErrorTypes.CONFIGURATION,
-                "The verification system is not enabled on this server.",
+                VERIFICATION_NOT_SET_UP,
                 { guildId }
             );
         }

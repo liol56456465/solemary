@@ -3,6 +3,7 @@
 import { query, T, isUniqueViolation } from './db.js';
 import { generateCaseCode } from './format.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
+import { enforcementConfig } from '../../config/enforcement.js';
 
 const MAX_CODE_ATTEMPTS = 8;
 export const OPEN_STATUSES = ['active', 'appeal_pending'];
@@ -84,7 +85,48 @@ export async function setEndDmDelivered(caseIds, delivered) {
     return true;
 }
 
-export async function getCaseByCode(caseCode) {
+/**
+ * The "server" a guild id counts as for case access: Mewvo's main and support servers are one
+ * ('home'), as in appealService.isCaseOfCallerServer; any other server is only itself.
+ */
+function caseServerOf(guildId) {
+    const id = guildId == null ? '' : String(guildId);
+    if (!id) return null;
+    const home = [enforcementConfig.mainGuildId, enforcementConfig.supportGuildId].filter(Boolean).map(String);
+    return home.includes(id) ? 'home' : id;
+}
+
+/** The guild ids whose cases count as `guildId`'s own: both home servers, or just that server. */
+export function caseServerGuildIds(guildId) {
+    const scope = caseServerOf(guildId);
+    if (!scope) return [];
+    if (scope !== 'home') return [scope];
+    return [...new Set([enforcementConfig.mainGuildId, enforcementConfig.supportGuildId].filter(Boolean).map(String))];
+}
+
+/** Whether a case of `caseGuildId` may be read or changed from `callerGuildId` (home servers count as one). */
+export function isSameCaseServer(caseGuildId, callerGuildId) {
+    const own = caseServerOf(caseGuildId);
+    return own !== null && own === caseServerOf(callerGuildId);
+}
+
+/**
+ * One case by its code, only when it belongs to the caller's server (`guildId`; main + support
+ * count as one). Another server's case gives null, exactly like an unknown code, so codes of
+ * other servers can't be read or probed. `guildId` is required.
+ */
+export async function getCaseByCode(caseCode, guildId) {
+    if (!guildId) throw new TypeError('getCaseByCode needs the guildId of the caller (use getCaseByCodeAnyServer for a deliberate any-server lookup)');
+    const record = await getCaseByCodeAnyServer(caseCode);
+    return record && isSameCaseServer(record.guild_id, guildId) ? record : null;
+}
+
+/**
+ * One case by its code, in whichever server it belongs to. Only for callers that check access
+ * another way (the member's own case by user id, owner tools, jobs working from a stored row);
+ * every caller says why next to the call.
+ */
+export async function getCaseByCodeAnyServer(caseCode) {
     const { rows } = await query(`SELECT * FROM ${T.cases} WHERE case_code = $1`, [caseCode]);
     return rows[0] || null;
 }
@@ -171,24 +213,36 @@ export async function getAppealHistory(caseCode) {
     return rows;
 }
 
-/** One user's own appeals, newest first, with the case they were about. */
-export async function listUserAppeals(userId, limit = 10) {
+/**
+ * One user's own appeals, newest first, with the case they were about. Every server by default:
+ * the member's own list (/appeal, the member portal). `guildId` limits it to the cases of that
+ * server (main + support as one), e.g. for a server's standing view.
+ */
+export async function listUserAppeals(userId, limit = 10, { guildId = null } = {}) {
+    const scoped = guildId != null;
     const { rows } = await query(
         `SELECT a.case_code, a.status, a.created_at, a.decided_at, a.claimed_at, c.type, c.name
          FROM ${T.appeals} a JOIN ${T.cases} c ON c.case_code = a.case_code
-         WHERE a.user_id = $1 AND a.kind = 'appeal' AND NOT c.is_test
+         WHERE a.user_id = $1 AND a.kind = 'appeal' AND NOT c.is_test${scoped ? ' AND c.guild_id = ANY($3::varchar[])' : ''}
          ORDER BY a.created_at DESC LIMIT $2`,
-        [userId, limit]
+        scoped ? [userId, limit, caseServerGuildIds(guildId)] : [userId, limit]
     );
     return rows;
 }
 
-/** Latest appeal status per case for one user: Map(case_code → 'pending' | 'accepted' | 'denied' | 'closed'). */
-export async function getLatestAppealStatuses(userId) {
+/**
+ * Latest appeal status per case of one user in one server (main + support as one):
+ * Map(case_code → 'pending' | 'accepted' | 'denied' | 'closed'). Staff views list pending
+ * appeals from it, so appeals in other servers must never be in it. `guildId` is required.
+ */
+export async function getLatestAppealStatuses(userId, guildId) {
+    if (!guildId) throw new TypeError('getLatestAppealStatuses needs the guildId of the caller');
     const { rows } = await query(
-        `SELECT DISTINCT ON (case_code) case_code, status FROM ${T.appeals}
-         WHERE user_id = $1 AND kind = 'appeal' ORDER BY case_code, created_at DESC`,
-        [userId]
+        `SELECT DISTINCT ON (a.case_code) a.case_code, a.status FROM ${T.appeals} a
+         JOIN ${T.cases} c ON c.case_code = a.case_code
+         WHERE a.user_id = $1 AND a.kind = 'appeal' AND c.guild_id = ANY($2::varchar[])
+         ORDER BY a.case_code, a.created_at DESC`,
+        [userId, caseServerGuildIds(guildId)]
     );
     return new Map(rows.map((row) => [row.case_code, row.status]));
 }

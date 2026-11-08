@@ -93,7 +93,7 @@ async function setup({
     blacklistList = null, managedRoles = async () => [],
     expectedCommands = async () => [{ name: 'help' }, { name: 'rank' }, { name: 'Moderate', type: 2 }],
     registeredCommands = async () => [{ name: 'help', type: 1 }, { name: 'rank', type: 1 }, { name: 'Moderate', type: 2 }],
-    registerMainCommands = async () => ({ guildId: '100000000000000001', count: 3 }), retired = false,
+    registerCommands = async () => ({ scope: 'global', count: 3 }), retired = false,
     premium = null, testCheckout = true, premiumRoles = { normal: null, pro: null, max: null },
     exportUserData = async (id) => ({ format: 'mewvo-data-export-v1', userId: id, levels: [] }),
 } = {}) {
@@ -131,7 +131,7 @@ async function setup({
         managedRoles,
         expectedCommands: rec('expectedCommands', expectedCommands),
         registeredCommands: rec('registeredCommands', registeredCommands),
-        registerMainCommands: rec('registerMainCommands', registerMainCommands),
+        registerCommands: rec('registerCommands', registerCommands),
         commandsRetired: () => retired,
         premium: premium || fakePremium(),
         premiumTestCheckout: () => testCheckout,
@@ -643,7 +643,7 @@ test('owner action text: every audit key the owner area writes reads as words', 
     const names = new Map([['100000000000000077', 'Other']]);
     assert.equal(ownerActionText('maintenance'), 'Maintenance mode');
     assert.equal(ownerActionText('announce'), 'Announcement to every server');
-    assert.equal(ownerActionText('commands.register'), 'Commands re-registered in the main server');
+    assert.equal(ownerActionText('commands.register'), 'Commands re-registered');
     assert.equal(ownerActionText('profile.presence'), 'Bot profile: status');
     assert.equal(ownerActionText('servers.100000000000000077.invite', names), 'Invite created in Other');
     assert.equal(ownerActionText('servers.100000000000000099.leave', names), 'Left 100000000000000099');
@@ -813,8 +813,8 @@ test('command sync page: counts, mismatches by name, errors never shown as "in s
     assert.ok(res.body.includes('2 slash commands + 0 context menus'), 'what Discord has');
     assert.ok(res.body.includes('Missing on Discord (2)') && res.body.includes('<b>rank</b>') && res.body.includes('<b>Moderate</b>'));
     assert.match(res.body, /not in the bot(&#39;|&#x27;|')s list \(1\)/);
-    assert.deepEqual(h.calls.find((c) => c.name === 'registeredCommands').args[1], MAIN, 'the main server is read');
-    assert.ok(!h.calls.some((c) => c.name === 'registerMainCommands'), 'a GET never registers');
+    assert.ok(h.calls.some((c) => c.name === 'registeredCommands'), 'the global list is read');
+    assert.ok(!h.calls.some((c) => c.name === 'registerCommands'), 'a GET never registers');
 
     const synced = await setup({ retired: true });
     const ok = (await get(synced, synced.ow.commands)).body;
@@ -841,29 +841,29 @@ test('command re-register: owner POST checks, confirm page token, the injected r
     assert.equal((await post(h, h.ow.registerPreview, { origin: 'https://evil.example' })).statusCode, 403, 'Origin');
     const preview = await post(h, h.ow.registerPreview);
     assert.equal(preview.statusCode, 200);
-    assert.ok(preview.body.includes('Confirm: re-register commands in the main server'));
+    assert.ok(preview.body.includes('Confirm: re-register global commands'));
     assert.ok(!/<style|style=|<script/i.test(preview.body.replace(ALLOWED_SCRIPT, '')));
     const { token, fh } = tokenOf(preview.body);
     assert.ok(!preview.body.includes('type="checkbox"'), 'no tick box any more');
     const wrongHash = await post(h, h.ow.register, { form: { token, fh: 'nope' } });
     assert.equal(wrongHash.statusCode, 400);
-    assert.ok(!h.calls.some((c) => c.name === 'registerMainCommands'), 'nothing registered with a wrong hash (and the token is gone)');
+    assert.ok(!h.calls.some((c) => c.name === 'registerCommands'), 'nothing registered with a wrong hash (and the token is gone)');
 
     const again = tokenOf((await post(h, h.ow.registerPreview)).body);
     const done = await post(h, h.ow.register, { form: { ...again } });
     assert.equal(done.statusCode, 303);
     assert.equal(done.redirectedTo, '/dashboard/owner/commands');
-    assert.equal(h.calls.filter((c) => c.name === 'registerMainCommands').length, 1);
+    assert.equal(h.calls.filter((c) => c.name === 'registerCommands').length, 1);
     assert.deepEqual(h.auditRows.map((r) => [r.module, r.key, r.old, r.new]), [['owner', 'commands.register', { count: 3 }, { count: 3, retired: false }]]);
     const reused = await post(h, h.ow.register, { form: { ...again } });
     assert.equal(reused.statusCode, 400, 'a token works once');
-    assert.equal(h.calls.filter((c) => c.name === 'registerMainCommands').length, 1);
+    assert.equal(h.calls.filter((c) => c.name === 'registerCommands').length, 1);
 
-    const failing = await setup({ registerMainCommands: async () => { throw new Error('Missing Access'); } });
+    const failing = await setup({ registerCommands: async () => { throw new Error('Missing Access'); } });
     const t = tokenOf((await post(failing, failing.ow.registerPreview)).body);
     const failed = await post(failing, failing.ow.register, { form: { ...t } });
     assert.equal(failed.statusCode, 400);
-    assert.match(failed.body, /Registration failed; the main server(&#39;|&#x27;|')s list was not changed: Missing Access/);
+    assert.match(failed.body, /Registration failed; the global list was not changed: Missing Access/);
     assert.equal(failing.auditRows.length, 0, 'a failed registration is not audited as done');
 });
 

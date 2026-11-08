@@ -116,7 +116,7 @@ export async function buildRecordEmbed(row, { client = null } = {}) {
 export async function buildRecordList(guildId, viewerId, targetUser, page) {
     const [{ rows, total }, appealStatuses, notes] = await Promise.all([
         listCasesForUser(guildId, targetUser.id, { limit: PAGE_SIZE, offset: page * PAGE_SIZE }),
-        getLatestAppealStatuses(targetUser.id),
+        getLatestAppealStatuses(targetUser.id, guildId),
         loadNotes(guildId, targetUser.id),
     ]);
     const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));

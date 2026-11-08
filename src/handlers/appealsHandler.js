@@ -263,8 +263,12 @@ export async function handleAppealDecisionButton(interaction, client, args) {
     const [decision, rawCode] = args;
     const caseCode = normalizeCaseCode(rawCode || '');
     // The case decides which server's staff may act on it (also for Claim).
-    const record = caseCode ? await getCaseByCode(caseCode) : null;
+    // Only this server's cases (main + support count as one): another server's code reads as unknown.
+    const record = caseCode && interaction.guildId ? await getCaseByCode(caseCode, interaction.guildId) : null;
     const refuse = (message) => replyUserError(interaction, { type: ErrorTypes.PERMISSION, message });
+    if (caseCode && !record) {
+        return replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: `No case with code \`${caseCode}\` in this server.` });
+    }
     if (record && !isCaseOfCallerServer(record, interaction.guildId)) return refuse(OTHER_SERVER_CASE);
     if (!(await canDecideAppeals(interaction, client, record))) {
         return refuse(isHomeGuild(interaction.guildId)

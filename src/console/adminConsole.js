@@ -11,7 +11,7 @@ import { enforcementConfig, getReason } from '../config/enforcement.js';
 import { getBotOwners } from '../config/bot.js';
 import { testMode } from '../config/testMode.js';
 import { executeAction, getLadder } from '../services/enforcement/enforcementService.js';
-import { getCaseByCode, getCountedWarns, listCasesForUser } from '../services/enforcement/caseService.js';
+import { getCaseByCodeAnyServer, getCountedWarns, listCasesForUser } from '../services/enforcement/caseService.js';
 import { formatDuration, parseDuration } from '../services/enforcement/format.js';
 
 const HELP = `
@@ -135,7 +135,8 @@ async function showCases(client, args) {
 }
 
 async function showCase(args) {
-    const row = await getCaseByCode(String(args[0] || '').toLowerCase());
+    // Any server: the owner's local console on the bot's host, not reachable from Discord.
+    const row = await getCaseByCodeAnyServer(String(args[0] || '').toLowerCase());
     if (!row) return out('  no case with that code');
     for (const [key, value] of Object.entries(row)) {
         if (value !== null && value !== '' && key !== 'id') out(`  ${key.padEnd(20)} ${value instanceof Date ? value.toLocaleString() : value}`);

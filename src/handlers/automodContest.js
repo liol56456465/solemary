@@ -11,7 +11,7 @@ import { LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputSt
 import { successEmbed } from '../utils/embeds.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
 import { normalizeCaseCode } from '../services/enforcement/format.js';
-import { getCaseByCode } from '../services/enforcement/caseService.js';
+import { getCaseByCodeAnyServer } from '../services/enforcement/caseService.js';
 import {
     CONTEST_MAX_CHARS, CONTEST_MIN_CHARS, checkContestTarget, getContest, recordContest,
 } from '../services/automod/automodContest.js';
@@ -40,8 +40,12 @@ function reply(interaction, content) {
     return InteractionHelper.safeReply(interaction, { content, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
 }
 
-/** The case behind a customId, checked against the member: { record } or { error }. */
-export async function resolveContestCase(userId, codeArg, lookup = getCaseByCode) {
+/**
+ * The case behind a customId, checked against the member: { record } or { error }.
+ * Any-server lookup: the button is in a DM (no guild); checkContestTarget then requires the
+ * member's own automod case of the main server, so nothing of another server is shown.
+ */
+export async function resolveContestCase(userId, codeArg, lookup = getCaseByCodeAnyServer) {
     const code = normalizeCaseCode(codeArg);
     if (!code) return { error: 'That button is broken (no case code).' };
     const record = await lookup(code);

@@ -278,11 +278,12 @@ async function dmReversal(client, record, invite, replacement = null) {
 }
 
 /** "a,b,c" → the existing case records, in order. Throws when none exist. */
-async function recordsFor(codesArg) {
+/** Only cases of the card's server (`guildId`): a code of another server counts as gone. */
+async function recordsFor(codesArg, guildId) {
     const codes = String(codesArg || '').split(',').map((code) => code.trim()).filter(Boolean);
     const records = [];
     for (const code of codes) {
-        const record = await getCaseByCode(code);
+        const record = guildId ? await getCaseByCode(code, guildId) : null;
         if (record) records.push(record);
     }
     if (!records.length) throw userError(`Case \`${codes.join(', ') || '?'}\` no longer exists.`);
@@ -343,7 +344,7 @@ export async function handleReviewAction(interaction, args) {
         if (!canGiveSecondOpinion(admin.id, keeperId)) {
             throw userError('You kept this one; a different administrator has to give the second opinion.');
         }
-        const records = await recordsFor(codes);
+        const records = await recordsFor(codes, guild?.id || interaction.guildId);
         const original = message.reference?.messageId
             ? await message.channel.messages.fetch(message.reference.messageId).catch(() => null)
             : null;
@@ -381,7 +382,7 @@ export async function handleReviewAction(interaction, args) {
     }
 
     if (action === 'keep' || action === 'undo' || action === 'change') {
-        const records = await recordsFor(rest[0]);
+        const records = await recordsFor(rest[0], guild?.id || interaction.guildId);
 
         if (action === 'keep') {
             await closeCard(message, `Kept by ${by}: ${codeList(records)}`, { status: 'kept', by });

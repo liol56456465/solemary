@@ -48,11 +48,14 @@ export function loadModmailLinks() {
     return loading;
 }
 
-/** The member this channel belongs to, or null. */
+/** The member this channel belongs to, or null (also when the link was stored for another server). */
 export async function linkedUserId(channel) {
     if (!channel?.id) return null;
     await loadModmailLinks();
-    return byChannel.get(channel.id)?.userId ?? null;
+    const link = byChannel.get(channel.id);
+    const channelGuildId = channel.guildId ?? channel.guild?.id ?? null;
+    if (!link || (channelGuildId && link.guildId !== channelGuildId)) return null;
+    return link.userId ?? null;
 }
 
 /** The member's modmail channel id in this server, or null. */

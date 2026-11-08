@@ -65,6 +65,7 @@
     "access": {
         "adminChannel": "Ti serve il ruolo Amministratore per usare questo comando. Chiedi un ruolo da mod o admin qui: <#{channelId}>",
         "admin": "Ti serve il ruolo Amministratore per usare questo comando.",
-        "adminOther": "Ti serve il ruolo Amministratore per usare questo comando. Chiedi a un admin di questo server se ti serve l’accesso."
+        "adminOther": "Ti serve il ruolo Amministratore per usare questo comando. Chiedi a un admin di questo server se ti serve l’accesso.",
+        "manageServer": "Ti serve il permesso Gestisci server o Amministratore per usare questo comando."
     }
 }
