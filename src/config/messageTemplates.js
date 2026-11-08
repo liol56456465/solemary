@@ -1,7 +1,9 @@
 // messageTemplates.js — ready-made announcement texts for the dashboard Messages page
 // ("Start from a template") and the /embedbuilder template picker. Choosing one only fills
 // the form (box title, box text, box colour); the admin edits it and posts it. Nothing is
-// posted from here, and posting keeps allowedMentions { parse: [] } (botMessageService.js).
+// posted from here; typed text never pings (botMessageService.js allowedMentions), only the
+// role / everyone the admin picks on the Messages page. Templates only Mewvo's own servers get
+// live in config/mewvoTemplates.js (messageTemplate / templatesByGroup with { home: true }).
 //
 // Each template: { id, group, name (picker label), title (box title), text (box text),
 // colour (a key of EMBED_COLOURS in botMessageService.js), celebrate? }.
@@ -18,10 +20,19 @@
 // the appeal window (appealWindowMs, 30 days by default). A server that changes those
 // settings on the Enforcement page should edit the numbers before posting.
 
+import { MEWVO_TEMPLATES, MEWVO_TEMPLATE_GROUP } from './mewvoTemplates.js';
+
 export const MESSAGE_TEMPLATE_GROUPS = Object.freeze([
     { key: 'support', label: 'Support server' },
     { key: 'news', label: 'Server news' },
+    { key: 'reminders', label: 'Welcome and rule reminders' },
     { key: 'events', label: 'Events and giveaways' },
+    { key: 'voice', label: 'Voice events and game nights' },
+    { key: 'downtime', label: 'Maintenance and downtime' },
+    { key: 'milestones', label: 'Server milestones' },
+    { key: 'partners', label: 'Partnerships' },
+    { key: 'polls', label: 'Polls and feedback' },
+    { key: 'holidays', label: 'Holiday greetings' },
     { key: 'community', label: 'Community' },
     { key: 'staff', label: 'Staff' },
     { key: 'safety', label: 'Safety and scams' },
@@ -468,23 +479,276 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         '2. Message a staff member or open a ticket in the support server.',
         '3. We send you a new invite.',
     ].join('\n'), 'yellow'),
+
+    // ── Welcome and rule reminders ────────────────────────────────────────
+    T('welcome-new-members', 'reminders', 'Welcome this week\'s new members', 'Welcome to everyone who joined', [
+        'A warm welcome to everyone who joined {server} this week.',
+        '',
+        '- Read the rules in #[rules channel].',
+        '- Pick your roles in #[roles channel].',
+        '- Say hi in #[chat channel].',
+        '',
+        'If you have a question, ask in #[help channel] or open a ticket.',
+    ].join('\n'), 'green'),
+    T('rules-reminder', 'reminders', 'Rules reminder', 'A quick rules reminder', [
+        'Things have been a bit loud lately, so here is a short reminder.',
+        '',
+        '- Be kind to each other.',
+        '- Keep each channel on its topic.',
+        '- No spam, no self-promotion outside #[promo channel].',
+        '',
+        'The full rules are in #[rules channel]. Staff will warn or mute if needed.',
+    ].join('\n'), 'yellow'),
+    T('rule-added', 'reminders', 'New rule added', 'New rule: [short name]', [
+        'We added a rule to {server}:',
+        '',
+        '**[Rule number]. [Rule title]**',
+        '[What the rule says, in one or two sentences.]',
+        '',
+        'Why: [the reason, for example what kept happening].',
+        '',
+        'It applies from now on. Nothing posted before today counts against you.',
+    ].join('\n'), 'blurple'),
+    T('rule-removed', 'reminders', 'Rule removed', 'A rule was removed', [
+        'Rule [number] ([rule title]) is gone. [Why it was removed.]',
+        '',
+        'The other rules are numbered again, so check #[rules channel] if you link to a rule by number.',
+    ].join('\n'), 'grey'),
+    T('rule-clarified', 'reminders', 'Rule clarified', 'Rule [number], explained', [
+        'A few people asked about rule [number], so here is what it means in practice.',
+        '',
+        '**Allowed:** [example]',
+        '**Not allowed:** [example]',
+        '',
+        'The rule itself did not change. Ask staff if something is still unclear.',
+    ].join('\n'), 'blurple'),
+    T('no-ping-staff', 'reminders', 'Do not ping staff', 'Please do not ping staff', [
+        'Pinging staff for every question slows everyone down.',
+        '',
+        '- For help, ask in #[help channel].',
+        '- For a problem with a member, open a ticket.',
+        '- Only ping staff when something is happening right now, like a raid.',
+    ].join('\n'), 'yellow'),
+    T('spoiler-reminder', 'reminders', 'Spoiler reminder', 'Use spoiler tags', [
+        '[Thing] just came out, so not everyone has seen it yet.',
+        '',
+        'Wrap spoilers like this: ||spoiler||. Talk about it freely in #[spoiler channel].',
+        '',
+        'Unmarked spoilers in other channels will be removed.',
+    ].join('\n'), 'purple'),
+
+    // ── Events and giveaways (more) ───────────────────────────────────────
+    T('giveaway-start', 'events', 'Giveaway started', 'Giveaway: [prize]', [
+        'We are giving away [prize] in {server}.',
+        '',
+        'How to enter: [react / press the button / message in #channel].',
+        'Ends: [date and time].',
+        'Winners: [number].',
+        '',
+        'One entry per person. Alt accounts are removed from the draw.',
+    ].join('\n'), 'purple'),
+    T('giveaway-ending', 'events', 'Giveaway ends soon', 'Last chance: [prize]', [
+        'The giveaway for [prize] ends in [time].',
+        '',
+        'If you have not entered yet, [how to enter].',
+    ].join('\n'), 'yellow'),
+    T('giveaway-reroll', 'events', 'Giveaway rerolled', 'New winner for [prize]', [
+        'The first winner did not claim [prize] in time, so we drew again.',
+        '',
+        'The new winner is [name]. Open a ticket within [48 hours] to claim it.',
+    ].join('\n'), 'purple'),
+    T('event-recap', 'events', 'Event recap', 'Thanks for coming', [
+        'Thanks to everyone who joined [event] yesterday. [Number] people took part.',
+        '',
+        '[Short recap: winners, best moment, screenshots channel.]',
+        '',
+        'Ideas for the next one? Post them in #[suggestions channel].',
+    ].join('\n'), 'green'),
+
+    // ── Voice events and game nights ──────────────────────────────────────
+    T('game-night', 'voice', 'Game night', 'Game night: [game]', [
+        'Game night in {server} on [day] at [time] ([time zone]).',
+        '',
+        'Game: [game]',
+        'Voice channel: #[voice channel]',
+        '',
+        'Everyone is welcome, new players too. React below if you want to join, so we know how many groups to make.',
+    ].join('\n'), 'blurple'),
+    T('movie-night', 'voice', 'Movie night', 'Movie night', [
+        'We are watching [movie] together on [day] at [time] ([time zone]).',
+        '',
+        'Join #[voice channel] a few minutes early. The stream starts on time.',
+        '',
+        'Chat about it in #[chat channel]. Keep spoilers out of other channels.',
+    ].join('\n'), 'purple'),
+    T('voice-hangout', 'voice', 'Voice hangout', 'Voice hangout tonight', [
+        'Hang out with us in #[voice channel] tonight from [time] ([time zone]).',
+        '',
+        'No plan, just talking. Drop in and leave whenever you like.',
+    ].join('\n'), 'blurple'),
+    T('stage-talk', 'voice', 'Stage talk / Q&A', 'Q&A on stage: [topic]', [
+        '[Name] answers your questions about [topic] on [day] at [time] ([time zone]) in #[stage channel].',
+        '',
+        'Post questions in #[questions channel] before it starts. Raise your hand on stage to ask live.',
+    ].join('\n'), 'blurple'),
+    T('karaoke-night', 'voice', 'Karaoke night', 'Karaoke night', [
+        'Karaoke in #[voice channel] on [day] at [time] ([time zone]).',
+        '',
+        'Sign up in #[event channel] with the song you want to sing. Listeners are welcome too.',
+    ].join('\n'), 'purple'),
+    T('tournament-signup', 'voice', 'Tournament sign-ups', 'Tournament: [game]', [
+        'Sign-ups for the [game] tournament are open until [date].',
+        '',
+        'Format: [teams of 2 / 1v1 / ...]',
+        'Starts: [date and time] ([time zone])',
+        'Prize: [prize, if any]',
+        '',
+        'Sign up in #[signup channel]. Read the tournament rules there first.',
+    ].join('\n'), 'blurple'),
+
+    // ── Maintenance and downtime ──────────────────────────────────────────
+    T('maintenance-extended', 'downtime', 'Maintenance takes longer', 'Maintenance is taking longer', [
+        'The work on the server is taking longer than planned. We now expect it to be done by [time] ([time zone]).',
+        '',
+        'Sorry for the wait. We will post here when it is finished.',
+    ].join('\n'), 'yellow'),
+    T('emergency-maintenance', 'downtime', 'Unplanned maintenance', 'Unplanned maintenance', [
+        'We need to fix something right away, so [what is affected] is not working for now.',
+        '',
+        'We expect it to take about [time]. You do not need to do anything.',
+    ].join('\n'), 'red'),
+    T('discord-outage', 'downtime', 'Discord is having problems', 'Discord is having problems', [
+        'Discord itself is having trouble right now. Messages may not send, and bots may not answer.',
+        '',
+        'This is not something we can fix. You can follow it on discordstatus.com. Things should work again once Discord fixes it.',
+    ].join('\n'), 'grey'),
+    T('channel-readonly', 'downtime', 'Channel read-only for now', '#[channel] is read-only for now', [
+        '#[channel] is read-only while we [reason].',
+        '',
+        'Use #[other channel] in the meantime. We will open it again on [date].',
+    ].join('\n'), 'grey'),
+
+    // ── Server milestones ─────────────────────────────────────────────────
+    T('server-anniversary', 'milestones', 'Server birthday', '{server} is [number] years old', [
+        '{server} started [number] years ago today.',
+        '',
+        'Thanks to everyone who helped it grow, from the first members to the people who joined last week.',
+        '',
+        '[Optional: an event or giveaway to mark it.]',
+    ].join('\n'), 'purple', { celebrate: true }),
+    T('boost-level', 'milestones', 'New boost level', 'Boost level [number] reached', [
+        'Thanks to our boosters, {server} reached boost level [number].',
+        '',
+        'That gives us [perks, for example better voice quality and more emoji slots].',
+    ].join('\n'), 'purple', { celebrate: true }),
+    T('message-milestone', 'milestones', 'Message milestone', '[Number] messages', [
+        'Members of {server} have now sent [number] messages. Thanks for keeping the chat alive.',
+    ].join('\n'), 'green'),
+
+    // ── Staff applications (more) ─────────────────────────────────────────
+    T('staff-apps-deadline', 'staff', 'Staff applications close soon', 'Staff applications close soon', [
+        'Staff applications close on [date]. If you want to apply, [how to apply].',
+        '',
+        'We read every application. Answers go out by DM by [date].',
+    ].join('\n'), 'yellow'),
+    T('staff-apps-results', 'staff', 'Staff application results', 'Staff applications: results', [
+        'Thanks to everyone who applied. Everyone has their answer by DM now.',
+        '',
+        'If you were not picked this time, you can apply again when applications open next. We will post it here.',
+    ].join('\n'), 'blurple'),
+
+    // ── Partnerships ──────────────────────────────────────────────────────
+    T('partner-requirements', 'partners', 'Partnership requirements', 'Want to partner with us?', [
+        'We partner with servers that:',
+        '- have at least [number] members,',
+        '- follow the Discord Terms of Service,',
+        '- have active staff and clear rules.',
+        '',
+        'To ask, open a ticket and choose Partnership. Include your invite link.',
+    ].join('\n'), 'purple'),
+    T('partnership-ended', 'partners', 'Partnership ended', 'Partnership with [server name] ended', [
+        'We are no longer partnered with [server name]. [Optional: short reason.]',
+        '',
+        'Their posts in #[partners channel] were removed.',
+    ].join('\n'), 'grey'),
+
+    // ── Polls and feedback ────────────────────────────────────────────────
+    T('feedback-wanted', 'polls', 'Feedback wanted', 'Tell us what you think', [
+        'We want to hear what you think about [topic].',
+        '',
+        'Answer in #[feedback channel] or in the poll below. Every answer is read by staff.',
+    ].join('\n'), 'blurple'),
+    T('suggestions-open', 'polls', 'Suggestions channel', 'Have an idea for the server?', [
+        'Post it in #[suggestions channel]. One idea per message, so people can vote on each.',
+        '',
+        'Staff look at the top ideas every [week / month] and say what will happen with them.',
+    ].join('\n'), 'blurple'),
+    T('poll-reminder', 'polls', 'Poll closes soon', 'The poll closes soon', [
+        'The poll about [topic] closes on [date]. If you have not voted yet, find it in #[channel].',
+    ].join('\n'), 'yellow'),
+
+    // ── Holiday greetings ─────────────────────────────────────────────────
+    T('new-year', 'holidays', 'Happy New Year', 'Happy New Year', [
+        'Happy New Year from the {server} staff team.',
+        '',
+        'Thanks for being part of the server this year. See you in the next one.',
+    ].join('\n'), 'purple', { celebrate: true }),
+    T('halloween', 'holidays', 'Halloween', 'Happy Halloween', [
+        'Happy Halloween from {server}.',
+        '',
+        '[Optional: costume contest in #channel, spooky roles, event time.]',
+    ].join('\n'), 'yellow'),
+    T('winter-holidays', 'holidays', 'Winter holidays', 'Happy holidays', [
+        'Happy holidays from the {server} staff team.',
+        '',
+        'Staff may answer slower until [date]. Tickets and appeals stay open.',
+    ].join('\n'), 'blurple'),
+    T('summer-break', 'holidays', 'Summer break', 'Summer break', [
+        'Many of us are away over the summer, so events pause until [date].',
+        '',
+        'The server stays open and staff still answer tickets.',
+    ].join('\n'), 'green'),
 ]);
 
-/** The template with this id, or null. */
-export function messageTemplate(id) {
-    return MESSAGE_TEMPLATES.find((t) => t.id === id) || null;
+/** True when `id` is one of the templates only Mewvo's own servers get (config/mewvoTemplates.js). */
+export function isHomeTemplate(id) {
+    return MEWVO_TEMPLATES.some((t) => t.id === id);
 }
 
-/** [{ key, label, templates: [...] }] in group order (groups without templates left out). */
-export function templatesByGroup() {
-    return MESSAGE_TEMPLATE_GROUPS
+/**
+ * The template with this id, or null. Home-only templates (config/mewvoTemplates.js) only with
+ * { home: true } (the caller checked isMewvoServer); everywhere else their ids are unknown.
+ */
+export function messageTemplate(id, { home = false } = {}) {
+    return MESSAGE_TEMPLATES.find((t) => t.id === id) || (home ? MEWVO_TEMPLATES.find((t) => t.id === id) : null) || null;
+}
+
+/** [{ key, label, templates: [...] }] in group order (groups without templates left out); the Mewvo group first with { home: true }. */
+export function templatesByGroup({ home = false } = {}) {
+    const groups = MESSAGE_TEMPLATE_GROUPS
         .map((g) => ({ ...g, templates: MESSAGE_TEMPLATES.filter((t) => t.group === g.key) }))
         .filter((g) => g.templates.length);
+    return home ? [{ ...MEWVO_TEMPLATE_GROUP, templates: [...MEWVO_TEMPLATES] }, ...groups] : groups;
 }
 
-/** { title, text, colour } with {server} replaced by the server name (or "the server"). Pure. */
-export function fillTemplate(template, { server } = {}) {
+/** The languages a template's text comes in: English, plus its translations (home templates). */
+export function templateLanguages(template) {
+    return ['en', ...Object.keys(template?.translations || {})];
+}
+
+/**
+ * { title, text, colour, lang } with {server} replaced by the server name (or "the server"),
+ * and for home templates {count} and {changes} by what the caller worked out. `lang` picks a
+ * translation when the template has one (else English; `lang` in the result says which).
+ * {mods} stays: it becomes the picked members' mentions when posting. Pure.
+ */
+export function fillTemplate(template, { server, lang = 'en', count = null, changes = null } = {}) {
     const name = String(server ?? '').trim() || 'the server';
-    const fill = (value) => String(value).replaceAll('{server}', name);
-    return { title: fill(template.title).slice(0, 256), text: fill(template.text), colour: template.colour };
+    const translated = lang !== 'en' ? template.translations?.[lang] : null;
+    const source = translated || template;
+    const fill = (value) => String(value)
+        .replaceAll('{server}', name)
+        .replaceAll('{count}', count === null || count === undefined ? '[number]' : String(count))
+        .replaceAll('{changes}', changes === null || changes === undefined ? '[changes]' : String(changes));
+    return { title: fill(source.title).slice(0, 256), text: fill(source.text), colour: template.colour, lang: translated ? lang : 'en' };
 }

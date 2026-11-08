@@ -1,12 +1,12 @@
 {
   "page": {
-    "help": "Post a message as Mewvo: an announcement right now or later, a message that repeats, a poll, or a countdown. Text you type here never pings anyone. Everything here needs the Administrator permission in this server."
+    "help": "Post a message as Mewvo: an announcement right now or later, a message that repeats, a poll, or a countdown. Text you type here never pings anyone; only a role, or everyone, that you pick gets a notification. Everything here needs the Administrator permission in this server."
   },
   "adminNote": "To post you need the Administrator permission in this server.",
   "fields": {
     "channel": "Channel",
     "content": "Message text",
-    "contentHelp": "The normal text of the message. You can leave it empty if you fill in the box below. Mentions show as names but never ping anyone. @everyone, @here, roles and members get no notification.",
+    "contentHelp": "The normal text of the message. You can leave it empty if you fill in the box below. Mentions you type show as names but never ping anyone. Only the role, or everyone, picked under Ping gets a notification.",
     "title": "Box title",
     "titleHelp": "An embed is a message box with a coloured edge, a bold title and text. Fill in these fields to send one. Leave them empty for a plain message.",
     "description": "Box text",
@@ -18,7 +18,23 @@
     "imageUrl": "Image link",
     "imageUrlHelp": "Optional. A link that starts with https:// and opens a picture. It shows large in the box.",
     "footer": "Box footer",
-    "footerHelp": "Optional small text at the bottom of the box."
+    "footerHelp": "Optional small text at the bottom of the box.",
+    "format": "Format",
+    "formatEmbed": "Embed (a box with a coloured edge)",
+    "formatText": "Plain text",
+    "formatHelp": "Plain text puts the box title, text, image link and footer into the message text instead of a box.",
+    "pingRole": "Ping a role",
+    "pingRoleHelp": "Optional. Members with this role get a notification. Only this role is pinged, even if the text mentions others.",
+    "pingNone": "Nobody",
+    "pingEveryone": "Ping everyone (@everyone)",
+    "pingEveryoneHelp": "Only when ticked. Everyone who can see the channel gets a notification.",
+    "buttons": "Link buttons",
+    "buttonsHelp": "Optional, up to {max} buttons under the message that open a link. Each needs a label and a link that starts with https://.",
+    "buttonLabel": "Button {n}: label",
+    "buttonUrl": "Button {n}: link",
+    "mods": "New moderators",
+    "modsHelp": "Pick the new moderators. Their mentions replace {token} in the text, and only they (and the ping above) get a notification.",
+    "mod": "Moderator {n}"
   },
   "colour": {
     "primary": "Mewvo blue",
@@ -36,7 +52,15 @@
     "filled": "Template \"{name}\" is filled in below, in Send a message and in Schedule a message. Replace the parts in [square brackets], check the text, then post or schedule it. Nothing is posted until you press the button.",
     "label": "Template",
     "hint": "Ready-made texts for common announcements. Where a text names the server, this server's name is filled in. Parts in [square brackets] are for you to fill in.",
-    "use": "Use this template"
+    "use": "Use this template",
+    "language": "Template language",
+    "languageHint": "Mewvo's own templates come in all 8 languages; the others are in English. Text you edit is posted exactly as you typed it.",
+    "filledLang": "Language: {language}.",
+    "noTranslation": "This template has no {language} text, so the English text was filled in.",
+    "homeOnly": "That template is only for Mewvo's own servers. Pick one from the list.",
+    "changelogTitle": "Changes to include",
+    "changelogHint": "The newest entries of the website changelog, in the template language. Tick the ones to include and press the button; the form below is filled again.",
+    "changelogUse": "Fill with these changes"
   },
   "send": {
     "title": "Send a message",
@@ -119,7 +143,9 @@
   "preview": {
     "title": "Preview",
     "image": "Image: {url}",
-    "note": "Shown as you typed it. Discord turns **bold**, links and mentions into formatting when it posts. Mentions never ping."
+    "note": "Shown as you typed it. Discord turns **bold**, links and mentions into formatting when it posts. Mentions you type never ping; only the ping you picked does.",
+    "ping": "Pings: {who}",
+    "buttons": "Buttons: {list}"
   },
   "poll": {
     "title": "Start a poll",
@@ -197,7 +223,16 @@
     "pollLink": "Poll message link: paste the link from Copy Message Link in Discord, like https://discord.com/channels/...",
     "pollOtherServer": "Poll message link: that message is in another server.",
     "countdownShort": "Duration: the countdown needs at least 1 second.",
-    "countdownLong": "Duration: a countdown cannot be longer than 24 hours."
+    "countdownLong": "Duration: a countdown cannot be longer than 24 hours.",
+    "homeOnly": "That template is only for Mewvo's own servers. Nothing was posted.",
+    "usersNotAllowed": "Members can only be pinged with the New moderators template, from Send a message.",
+    "modsMissing": "Pick at least one moderator for {token}, or remove {token} from the text. Moderators can only be picked in Send a message.",
+    "modId": "Moderator {n}: that is not a member. Pick one with Find a member, or paste an ID or @mention.",
+    "buttonHalf": "Button {n} needs both a label and a link.",
+    "buttonUrl": "Button {n}: the link must be a full https:// link.",
+    "buttonLabel": "Button {n}: the label can be at most {max} characters.",
+    "textTooLong": "Message text: with the pings in front it is {length} characters, at most {max} fit.",
+    "format": "Format: pick Embed or Plain text."
   },
   "action": {
     "posted": "Posted in #{channel}.",
@@ -219,5 +254,20 @@
     "pollPosted": "Poll posted in #{channel}. It closes {time}.",
     "pollEnded": "Poll ended in #{channel}. The final results are now shown on it.",
     "countdownStarted": "Countdown started in #{channel}: {duration}."
+  },
+  "ping": {
+    "nobody": "Nobody (no pings)"
+  },
+  "confirm": {
+    "heading": "Confirm: post in #{channel}",
+    "channel": "Channel",
+    "ping": "Gets a notification",
+    "format": "Format",
+    "buttons": "Buttons",
+    "noButtons": "None",
+    "message": "Message",
+    "submit": "Post now",
+    "everyoneNoPerm": "Mewvo lacks Mention Everyone in #{channel}, so @everyone will not notify anyone.",
+    "roleNotMentionable": "@{role} is not mentionable and Mewvo lacks Mention Everyone in #{channel}, so the role will not get a notification. The message still posts."
   }
 }

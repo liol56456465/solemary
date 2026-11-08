@@ -1,12 +1,12 @@
 {
   "page": {
-    "help": "Publikuj wiadomości jako Mewvo: ogłoszenie teraz albo później, wiadomość, która się powtarza, ankietę lub odliczanie. Tekst wpisany tutaj nigdy nikogo nie pinguje. Do wszystkiego tutaj potrzebujesz uprawnienia Administrator na tym serwerze."
+    "help": "Publikuj wiadomości jako Mewvo: ogłoszenie teraz albo później, wiadomość, która się powtarza, ankietę lub odliczanie. Tekst wpisany tutaj nigdy nikogo nie pinguje; powiadomienie dostaje tylko wybrana rola albo wszyscy, jeśli to wybierzesz. Do wszystkiego tutaj potrzebujesz uprawnienia Administrator na tym serwerze."
   },
   "adminNote": "Aby publikować, potrzebujesz uprawnienia Administrator na tym serwerze.",
   "fields": {
     "channel": "Kanał",
     "content": "Tekst wiadomości",
-    "contentHelp": "Zwykły tekst wiadomości. Możesz zostawić go pustym, jeśli wypełnisz ramkę poniżej. Wzmianki pokazują się jako nazwy, ale nikogo nie pingują. @everyone, @here, role i członkowie nie dostają powiadomień.",
+    "contentHelp": "Zwykły tekst wiadomości. Możesz zostawić go pustym, jeśli wypełnisz ramkę poniżej. Wpisane wzmianki pokazują się jako nazwy, ale nikogo nie pingują. Powiadomienie dostaje tylko rola albo wszyscy wybrani w polu Ping.",
     "title": "Tytuł ramki",
     "titleHelp": "Embed to ramka wiadomości z kolorowym brzegiem, pogrubionym tytułem i tekstem. Wypełnij te pola, aby go wysłać. Zostaw je puste dla zwykłej wiadomości.",
     "description": "Tekst ramki",
@@ -18,7 +18,23 @@
     "imageUrl": "Link do obrazka",
     "imageUrlHelp": "Opcjonalnie. Link, który zaczyna się od https:// i otwiera obrazek. Pokazuje się duży w ramce.",
     "footer": "Stopka ramki",
-    "footerHelp": "Opcjonalny mały tekst na dole ramki."
+    "footerHelp": "Opcjonalny mały tekst na dole ramki.",
+    "format": "Format",
+    "formatEmbed": "Embed (ramka z kolorową krawędzią)",
+    "formatText": "Zwykły tekst",
+    "formatHelp": "Przy zwykłym tekście tytuł, tekst, link do obrazka i stopka ramki trafiają do tekstu wiadomości zamiast do ramki.",
+    "pingRole": "Pinguj rolę",
+    "pingRoleHelp": "Opcjonalnie. Członkowie z tą rolą dostają powiadomienie. Pingowana jest tylko ta rola, nawet jeśli tekst wspomina inne.",
+    "pingNone": "Nikt",
+    "pingEveryone": "Pinguj wszystkich (@everyone)",
+    "pingEveryoneHelp": "Tylko gdy zaznaczone. Powiadomienie dostają wszyscy, którzy widzą kanał.",
+    "buttons": "Przyciski z linkiem",
+    "buttonsHelp": "Opcjonalnie, do {max} przycisków pod wiadomością, które otwierają link. Każdy potrzebuje napisu i linku zaczynającego się od https://.",
+    "buttonLabel": "Przycisk {n}: napis",
+    "buttonUrl": "Przycisk {n}: link",
+    "mods": "Nowi moderatorzy",
+    "modsHelp": "Wybierz nowych moderatorów. Ich wzmianki zastępują {token} w tekście i tylko oni (oraz ping powyżej) dostają powiadomienie.",
+    "mod": "Moderator {n}"
   },
   "colour": {
     "primary": "Niebieski Mewvo",
@@ -36,7 +52,15 @@
     "filled": "Szablon „{name}” jest wpisany poniżej, w „Wyślij wiadomość” i w „Zaplanuj wiadomość”. Zastąp części w [nawiasach kwadratowych], sprawdź tekst, a potem go opublikuj albo zaplanuj. Nic nie zostanie opublikowane, dopóki nie klikniesz przycisku.",
     "label": "Szablon",
     "hint": "Gotowe teksty do częstych ogłoszeń. Gdzie tekst wymienia serwer, wpisana jest nazwa tego serwera. Części w [nawiasach kwadratowych] uzupełniasz sam.",
-    "use": "Użyj szablonu"
+    "use": "Użyj szablonu",
+    "language": "Język szablonu",
+    "languageHint": "Własne szablony Mewvo są we wszystkich 8 językach; pozostałe po angielsku. Edytowany tekst jest publikowany dokładnie tak, jak go wpiszesz.",
+    "filledLang": "Język: {language}.",
+    "noTranslation": "Ten szablon nie ma tekstu w języku {language}, więc wstawiono tekst angielski.",
+    "homeOnly": "Ten szablon jest tylko dla serwerów Mewvo. Wybierz inny z listy.",
+    "changelogTitle": "Zmiany do dodania",
+    "changelogHint": "Najnowsze wpisy ze zmian na stronie, w języku szablonu. Zaznacz te do dodania i naciśnij przycisk; formularz poniżej wypełni się ponownie.",
+    "changelogUse": "Wypełnij tymi zmianami"
   },
   "send": {
     "title": "Wyślij wiadomość",
@@ -127,7 +151,9 @@
   "preview": {
     "title": "Podgląd",
     "image": "Obrazek: {url}",
-    "note": "Pokazane tak, jak wpisano. Przy publikacji Discord zamienia **pogrubienie**, linki i wzmianki na formatowanie. Wzmianki nigdy nie pingują."
+    "note": "Pokazane tak, jak wpisano. Przy publikacji Discord zamienia **pogrubienie**, linki i wzmianki na formatowanie. Wpisane wzmianki nigdy nie pingują; pinguje tylko wybrany ping.",
+    "ping": "Pingi: {who}",
+    "buttons": "Przyciski: {list}"
   },
   "poll": {
     "title": "Utwórz ankietę",
@@ -207,7 +233,16 @@
     "pollLink": "Link do wiadomości z ankietą: wklej link z Kopiuj link do wiadomości na Discordzie, np. https://discord.com/channels/...",
     "pollOtherServer": "Link do wiadomości z ankietą: ta wiadomość jest na innym serwerze.",
     "countdownShort": "Czas: odliczanie musi trwać co najmniej 1 sekundę.",
-    "countdownLong": "Czas: odliczanie nie może trwać dłużej niż 24 godziny."
+    "countdownLong": "Czas: odliczanie nie może trwać dłużej niż 24 godziny.",
+    "homeOnly": "Ten szablon jest tylko dla serwerów Mewvo. Nic nie zostało opublikowane.",
+    "usersNotAllowed": "Członków można pingować tylko szablonem Nowi moderatorzy, w Wyślij wiadomość.",
+    "modsMissing": "Wybierz co najmniej jednego moderatora dla {token} albo usuń {token} z tekstu. Moderatorów można wybrać tylko w Wyślij wiadomość.",
+    "modId": "Moderator {n}: to nie jest członek. Wybierz kogoś przez Znajdź członka albo wklej ID lub @wzmiankę.",
+    "buttonHalf": "Przycisk {n} potrzebuje napisu i linku.",
+    "buttonUrl": "Przycisk {n}: link musi być pełnym linkiem https://.",
+    "buttonLabel": "Przycisk {n}: napis może mieć najwyżej {max} znaków.",
+    "textTooLong": "Tekst wiadomości: z pingami na początku ma {length} znaków, mieści się najwyżej {max}.",
+    "format": "Format: wybierz Embed albo Zwykły tekst."
   },
   "action": {
     "posted": "Opublikowano na #{channel}.",
@@ -231,5 +266,20 @@
     "pollPosted": "Ankieta opublikowana na #{channel}. Zamyka się {time}.",
     "pollEnded": "Ankieta na #{channel} zakończona. Pokazuje teraz końcowe wyniki.",
     "countdownStarted": "Odliczanie uruchomione na #{channel}: {duration}."
+  },
+  "ping": {
+    "nobody": "Nikt (bez pingów)"
+  },
+  "confirm": {
+    "heading": "Potwierdź: publikacja w #{channel}",
+    "channel": "Kanał",
+    "ping": "Dostaje powiadomienie",
+    "format": "Format",
+    "buttons": "Przyciski",
+    "noButtons": "Brak",
+    "message": "Wiadomość",
+    "submit": "Opublikuj teraz",
+    "everyoneNoPerm": "Mewvo nie ma uprawnienia Wzmianka o wszystkich w #{channel}, więc @everyone nikogo nie powiadomi.",
+    "roleNotMentionable": "@{role} nie można wspomnieć, a Mewvo nie ma uprawnienia Wzmianka o wszystkich w #{channel}, więc rola nie dostanie powiadomienia. Wiadomość i tak zostanie opublikowana."
   }
 }

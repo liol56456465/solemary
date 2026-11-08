@@ -1,12 +1,12 @@
 {
   "page": {
-    "help": "Publica un mensaje como Mewvo: un anuncio ahora o más tarde, un mensaje que se repite, una encuesta o una cuenta atrás. El texto que escribes aquí nunca menciona a nadie. Todo lo de aquí necesita el permiso Administrador en este servidor."
+    "help": "Publica un mensaje como Mewvo: un anuncio ahora o más tarde, un mensaje que se repite, una encuesta o una cuenta atrás. El texto que escribes aquí nunca menciona a nadie; solo el rol, o todos, que elijas reciben una notificación. Todo lo de aquí necesita el permiso Administrador en este servidor."
   },
   "adminNote": "Para publicar necesitas el permiso Administrador en este servidor.",
   "fields": {
     "channel": "Canal",
     "content": "Texto del mensaje",
-    "contentHelp": "El texto normal del mensaje. Puedes dejarlo vacío si rellenas el recuadro de abajo. Las menciones se ven como nombres pero nunca notifican a nadie. @everyone, @here, los roles y los miembros no reciben notificación.",
+    "contentHelp": "El texto normal del mensaje. Puedes dejarlo vacío si rellenas el recuadro de abajo. Las menciones que escribes se ven como nombres pero nunca notifican a nadie. Solo el rol, o todos, elegidos en Mención reciben una notificación.",
     "title": "Título del recuadro",
     "titleHelp": "Un embed es un recuadro de mensaje con un borde de color, un título en negrita y texto. Rellena estos campos para enviar uno. Déjalos vacíos para un mensaje normal.",
     "description": "Texto del recuadro",
@@ -18,7 +18,23 @@
     "imageUrl": "Enlace de imagen",
     "imageUrlHelp": "Opcional. Un enlace que empieza por https:// y abre una imagen. Se ve grande en el recuadro.",
     "footer": "Pie del recuadro",
-    "footerHelp": "Texto pequeño opcional al final del recuadro."
+    "footerHelp": "Texto pequeño opcional al final del recuadro.",
+    "format": "Formato",
+    "formatEmbed": "Embed (un recuadro con borde de color)",
+    "formatText": "Texto simple",
+    "formatHelp": "En texto simple, el título, el texto, el enlace de imagen y el pie del recuadro van en el texto del mensaje en vez de en un recuadro.",
+    "pingRole": "Mencionar un rol",
+    "pingRoleHelp": "Opcional. Los miembros con este rol reciben una notificación. Solo se menciona este rol, aunque el texto mencione a otros.",
+    "pingNone": "Nadie",
+    "pingEveryone": "Mencionar a todos (@everyone)",
+    "pingEveryoneHelp": "Solo si está marcado. Todos los que ven el canal reciben una notificación.",
+    "buttons": "Botones de enlace",
+    "buttonsHelp": "Opcional, hasta {max} botones bajo el mensaje que abren un enlace. Cada uno necesita un texto y un enlace que empiece por https://.",
+    "buttonLabel": "Botón {n}: texto",
+    "buttonUrl": "Botón {n}: enlace",
+    "mods": "Nuevos moderadores",
+    "modsHelp": "Elige a los nuevos moderadores. Sus menciones sustituyen {token} en el texto, y solo ellos (y la mención de arriba) reciben una notificación.",
+    "mod": "Moderador {n}"
   },
   "colour": {
     "primary": "Azul Mewvo",
@@ -36,7 +52,15 @@
     "filled": "La plantilla \"{name}\" está rellenada abajo, en Enviar un mensaje y en Programar un mensaje. Cambia las partes entre [corchetes], revisa el texto y luego publícalo o prográmalo. No se publica nada hasta que pulses el botón.",
     "label": "Plantilla",
     "hint": "Textos ya hechos para anuncios frecuentes. Donde un texto nombra el servidor, se pone el nombre de este servidor. Las partes entre [corchetes] las rellenas tú.",
-    "use": "Usar esta plantilla"
+    "use": "Usar esta plantilla",
+    "language": "Idioma de la plantilla",
+    "languageHint": "Las plantillas propias de Mewvo están en los 8 idiomas; las demás, en inglés. El texto que editas se publica tal como lo escribiste.",
+    "filledLang": "Idioma: {language}.",
+    "noTranslation": "Esta plantilla no tiene texto en {language}, así que se ha rellenado el texto en inglés.",
+    "homeOnly": "Esa plantilla es solo para los servidores de Mewvo. Elige una de la lista.",
+    "changelogTitle": "Cambios que incluir",
+    "changelogHint": "Las entradas más recientes de los cambios de la web, en el idioma de la plantilla. Marca las que quieras incluir y pulsa el botón; el formulario de abajo se vuelve a rellenar.",
+    "changelogUse": "Rellenar con estos cambios"
   },
   "send": {
     "title": "Enviar un mensaje",
@@ -123,7 +147,9 @@
   "preview": {
     "title": "Vista previa",
     "image": "Imagen: {url}",
-    "note": "Se muestra tal como lo escribiste. Al publicar, Discord convierte **negrita**, los enlaces y las menciones en formato. Las menciones nunca notifican."
+    "note": "Se muestra tal como lo escribiste. Al publicar, Discord convierte **negrita**, los enlaces y las menciones en formato. Las menciones escritas nunca notifican; solo la mención elegida.",
+    "ping": "Menciones: {who}",
+    "buttons": "Botones: {list}"
   },
   "poll": {
     "title": "Crear una encuesta",
@@ -202,7 +228,16 @@
     "pollLink": "Enlace del mensaje de la encuesta: pega el enlace de Copiar enlace del mensaje en Discord, como https://discord.com/channels/...",
     "pollOtherServer": "Enlace del mensaje de la encuesta: ese mensaje está en otro servidor.",
     "countdownShort": "Duración: la cuenta atrás necesita al menos 1 segundo.",
-    "countdownLong": "Duración: una cuenta atrás no puede durar más de 24 horas."
+    "countdownLong": "Duración: una cuenta atrás no puede durar más de 24 horas.",
+    "homeOnly": "Esa plantilla es solo para los servidores de Mewvo. No se ha publicado nada.",
+    "usersNotAllowed": "Solo se puede mencionar a miembros con la plantilla Nuevos moderadores, desde Enviar un mensaje.",
+    "modsMissing": "Elige al menos un moderador para {token}, o quita {token} del texto. Los moderadores solo se eligen en Enviar un mensaje.",
+    "modId": "Moderador {n}: no es un miembro. Elige uno con Buscar un miembro, o pega un ID o una @mención.",
+    "buttonHalf": "El botón {n} necesita un texto y un enlace.",
+    "buttonUrl": "Botón {n}: el enlace debe ser un enlace https:// completo.",
+    "buttonLabel": "Botón {n}: el texto puede tener como máximo {max} caracteres.",
+    "textTooLong": "Texto del mensaje: con las menciones delante tiene {length} caracteres, caben como máximo {max}.",
+    "format": "Formato: elige Embed o Texto simple."
   },
   "action": {
     "posted": "Publicado en #{channel}.",
@@ -225,5 +260,20 @@
     "pollPosted": "Encuesta publicada en #{channel}. Se cierra el {time}.",
     "pollEnded": "Encuesta terminada en #{channel}. Ahora muestra los resultados finales.",
     "countdownStarted": "Cuenta atrás iniciada en #{channel}: {duration}."
+  },
+  "ping": {
+    "nobody": "Nadie (sin menciones)"
+  },
+  "confirm": {
+    "heading": "Confirmar: publicar en #{channel}",
+    "channel": "Canal",
+    "ping": "Recibe una notificación",
+    "format": "Formato",
+    "buttons": "Botones",
+    "noButtons": "Ninguno",
+    "message": "Mensaje",
+    "submit": "Publicar ahora",
+    "everyoneNoPerm": "A Mewvo le falta el permiso Mencionar a todos en #{channel}, así que @everyone no notificará a nadie.",
+    "roleNotMentionable": "@{role} no se puede mencionar y a Mewvo le falta Mencionar a todos en #{channel}, así que el rol no recibirá notificación. El mensaje se publica igualmente."
   }
 }

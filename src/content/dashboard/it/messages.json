@@ -1,12 +1,12 @@
 {
   "page": {
-    "help": "Pubblica un messaggio come Mewvo: un annuncio subito o più tardi, un messaggio che si ripete, un sondaggio o un conto alla rovescia. Il testo che scrivi qui non menziona mai nessuno. Per tutto quello che c'è qui ti serve il permesso Amministratore in questo server."
+    "help": "Pubblica un messaggio come Mewvo: un annuncio subito o più tardi, un messaggio che si ripete, un sondaggio o un conto alla rovescia. Il testo che scrivi qui non menziona mai nessuno; solo il ruolo, o tutti, che scegli ricevono una notifica. Per tutto quello che c'è qui ti serve il permesso Amministratore in questo server."
   },
   "adminNote": "Per pubblicare ti serve il permesso Amministratore in questo server.",
   "fields": {
     "channel": "Canale",
     "content": "Testo del messaggio",
-    "contentHelp": "Il testo normale del messaggio. Puoi lasciarlo vuoto se compili il riquadro qui sotto. Le menzioni appaiono come nomi ma non notificano nessuno. @everyone, @here, ruoli e membri non ricevono notifiche.",
+    "contentHelp": "Il testo normale del messaggio. Puoi lasciarlo vuoto se compili il riquadro qui sotto. Le menzioni che scrivi appaiono come nomi ma non notificano nessuno. Solo il ruolo, o tutti, scelti sotto Menzione ricevono una notifica.",
     "title": "Titolo del riquadro",
     "titleHelp": "Un embed è un riquadro di messaggio con un bordo colorato, un titolo in grassetto e del testo. Compila questi campi per inviarne uno. Lasciali vuoti per un messaggio semplice.",
     "description": "Testo del riquadro",
@@ -18,7 +18,23 @@
     "imageUrl": "Link dell'immagine",
     "imageUrlHelp": "Facoltativo. Un link che inizia con https:// e apre un'immagine. Appare grande nel riquadro.",
     "footer": "Piè di pagina del riquadro",
-    "footerHelp": "Testo piccolo facoltativo in fondo al riquadro."
+    "footerHelp": "Testo piccolo facoltativo in fondo al riquadro.",
+    "format": "Formato",
+    "formatEmbed": "Embed (un riquadro con il bordo colorato)",
+    "formatText": "Testo semplice",
+    "formatHelp": "Con il testo semplice titolo, testo, link dell'immagine e piè di pagina del riquadro finiscono nel testo del messaggio invece che in un riquadro.",
+    "pingRole": "Menziona un ruolo",
+    "pingRoleHelp": "Facoltativo. I membri con questo ruolo ricevono una notifica. Viene menzionato solo questo ruolo, anche se il testo ne cita altri.",
+    "pingNone": "Nessuno",
+    "pingEveryone": "Menziona tutti (@everyone)",
+    "pingEveryoneHelp": "Solo se spuntato. Tutti quelli che vedono il canale ricevono una notifica.",
+    "buttons": "Pulsanti link",
+    "buttonsHelp": "Facoltativo, fino a {max} pulsanti sotto il messaggio che aprono un link. Ognuno ha bisogno di un'etichetta e di un link che inizi con https://.",
+    "buttonLabel": "Pulsante {n}: etichetta",
+    "buttonUrl": "Pulsante {n}: link",
+    "mods": "Nuovi moderatori",
+    "modsHelp": "Scegli i nuovi moderatori. Le loro menzioni sostituiscono {token} nel testo, e solo loro (e la menzione sopra) ricevono una notifica.",
+    "mod": "Moderatore {n}"
   },
   "colour": {
     "primary": "Blu Mewvo",
@@ -36,7 +52,15 @@
     "filled": "Il modello \"{name}\" è inserito qui sotto, in Invia un messaggio e in Programma un messaggio. Sostituisci le parti tra [parentesi quadre], controlla il testo, poi pubblicalo o programmalo. Non viene pubblicato nulla finché non premi il pulsante.",
     "label": "Modello",
     "hint": "Testi pronti per gli annunci più comuni. Dove un testo nomina il server, viene inserito il nome di questo server. Le parti tra [parentesi quadre] le compili tu.",
-    "use": "Usa questo modello"
+    "use": "Usa questo modello",
+    "language": "Lingua del modello",
+    "languageHint": "I modelli di Mewvo sono in tutte le 8 lingue; gli altri sono in inglese. Il testo che modifichi viene pubblicato esattamente come l'hai scritto.",
+    "filledLang": "Lingua: {language}.",
+    "noTranslation": "Questo modello non ha un testo in {language}, quindi è stato inserito il testo inglese.",
+    "homeOnly": "Quel modello è solo per i server di Mewvo. Scegline uno dall'elenco.",
+    "changelogTitle": "Modifiche da includere",
+    "changelogHint": "Le voci più recenti delle novità del sito, nella lingua del modello. Spunta quelle da includere e premi il pulsante; il modulo qui sotto viene compilato di nuovo.",
+    "changelogUse": "Compila con queste modifiche"
   },
   "send": {
     "title": "Invia un messaggio",
@@ -123,7 +147,9 @@
   "preview": {
     "title": "Anteprima",
     "image": "Immagine: {url}",
-    "note": "Mostrato come l'hai scritto. Quando pubblica, Discord trasforma **grassetto**, link e menzioni in formattazione. Le menzioni non notificano mai."
+    "note": "Mostrato come l'hai scritto. Quando pubblica, Discord trasforma **grassetto**, link e menzioni in formattazione. Le menzioni scritte non notificano mai; solo la menzione scelta.",
+    "ping": "Menzioni: {who}",
+    "buttons": "Pulsanti: {list}"
   },
   "poll": {
     "title": "Avvia un sondaggio",
@@ -202,7 +228,16 @@
     "pollLink": "Link del messaggio del sondaggio: incolla il link da Copia link del messaggio su Discord, come https://discord.com/channels/...",
     "pollOtherServer": "Link del messaggio del sondaggio: quel messaggio è in un altro server.",
     "countdownShort": "Durata: il conto alla rovescia deve durare almeno 1 secondo.",
-    "countdownLong": "Durata: un conto alla rovescia non può durare più di 24 ore."
+    "countdownLong": "Durata: un conto alla rovescia non può durare più di 24 ore.",
+    "homeOnly": "Quel modello è solo per i server di Mewvo. Non è stato pubblicato nulla.",
+    "usersNotAllowed": "I membri si possono menzionare solo con il modello Nuovi moderatori, da Invia un messaggio.",
+    "modsMissing": "Scegli almeno un moderatore per {token}, oppure togli {token} dal testo. I moderatori si scelgono solo in Invia un messaggio.",
+    "modId": "Moderatore {n}: non è un membro. Scegline uno con Trova un membro, o incolla un ID o una @menzione.",
+    "buttonHalf": "Il pulsante {n} ha bisogno di un'etichetta e di un link.",
+    "buttonUrl": "Pulsante {n}: il link deve essere un link https:// completo.",
+    "buttonLabel": "Pulsante {n}: l'etichetta può avere al massimo {max} caratteri.",
+    "textTooLong": "Testo del messaggio: con le menzioni davanti sono {length} caratteri, ne entrano al massimo {max}.",
+    "format": "Formato: scegli Embed o Testo semplice."
   },
   "action": {
     "posted": "Pubblicato in #{channel}.",
@@ -225,5 +260,20 @@
     "pollPosted": "Sondaggio pubblicato in #{channel}. Si chiude il {time}.",
     "pollEnded": "Sondaggio chiuso in #{channel}. Ora mostra i risultati finali.",
     "countdownStarted": "Conto alla rovescia avviato in #{channel}: {duration}."
+  },
+  "ping": {
+    "nobody": "Nessuno (nessuna menzione)"
+  },
+  "confirm": {
+    "heading": "Conferma: pubblica in #{channel}",
+    "channel": "Canale",
+    "ping": "Riceve una notifica",
+    "format": "Formato",
+    "buttons": "Pulsanti",
+    "noButtons": "Nessuno",
+    "message": "Messaggio",
+    "submit": "Pubblica ora",
+    "everyoneNoPerm": "A Mewvo manca il permesso Menziona tutti in #{channel}, quindi @everyone non notificherà nessuno.",
+    "roleNotMentionable": "@{role} non è menzionabile e a Mewvo manca Menziona tutti in #{channel}, quindi il ruolo non riceverà una notifica. Il messaggio viene pubblicato comunque."
   }
 }

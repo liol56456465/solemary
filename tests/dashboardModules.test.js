@@ -434,8 +434,8 @@ function makeServices() {
             const ids = messages.map((m, i) => `71000000000000020${i}`);
             return { channel: guild.channels.cache.get(posted.channelId), ids, added: ids.map(message), leftovers: (s.rulesLeftovers || []).map(message) };
         },
-        postBotMessage: async (guild, { channel, content, embed }) => {
-            record('postBotMessage', [channel.id, content, embed]);
+        postBotMessage: async (guild, { channel, content, embed, ping = null, buttons = [] }) => {
+            record('postBotMessage', [channel.id, content, embed, ping, buttons]);
             return { message: { id: '710000000000000011' } };
         },
         createPoll: async (guild, { channel, question, options, anonymous }) => {
@@ -1800,6 +1800,11 @@ const CONFIRM_FLOWS = [
         heading: /Confirm: delete the Helper &lt;b&gt; application/, submit: '>Delete application</button>',
         changed: (h) => h.calls.some((c) => c.name === 'deleteApplicationRole'),
     },
+    {
+        name: 'messages/send', module: 'messages', action: 'send', form: { channelId: TEXT, content: 'Hello <b>', pingRole: ROLE_OK },
+        heading: /Confirm: post in #general/, submit: '>Post now</button>',
+        changed: (h) => h.calls.some((c) => c.name === 'postBotMessage'),
+    },
 ];
 
 for (const flow of CONFIRM_FLOWS) {
@@ -1907,7 +1912,7 @@ test('messages: Start from a template is a grouped GET picker; ?template= fills 
     assert.ok((picker.match(/<optgroup /g) || []).length >= 5, 'grouped');
     assert.ok((picker.match(/<option value="/g) || []).length >= 40, 'at least 40 templates');
     assert.match(picker, /<optgroup label="Support server"><option value="appeal-overview">How to appeal \(all punishments\)<\/option>/);
-    assert.ok(!/ selected/.test(picker), 'nothing chosen yet');
+    assert.ok(!/ selected/.test(picker.slice(picker.indexOf('<select name="template">'), picker.indexOf('</select>'))), 'no template chosen yet');
 
     const filled = (await run(h, h.d.modulePage, { method: 'GET', params: { module: 'messages' }, headers: { cookie: h.cookie }, query: { template: 'support-welcome' } }));
     assert.equal(filled.statusCode, 200);
@@ -1924,7 +1929,7 @@ test('messages: Start from a template is a grouped GET picker; ?template= fills 
     assert.ok(!unknown.body.includes('<x>'));
 
     // The admin edits the filled text and posts it: the normal send action, no pings.
-    const res = await post(h, 'messages', 'send', { channelId: TEXT, title: 'Welcome to Main', description: 'This server is for help with appeals.\r\nEdited.', colour: 'primary' });
+    const res = await postConfirmed(h, 'messages', 'send', { channelId: TEXT, title: 'Welcome to Main', description: 'This server is for help with appeals.\r\nEdited.', colour: 'primary' });
     assert.equal(res.statusCode, 303);
     const [, content, embed] = h.calls.find((c) => c.name === 'postBotMessage').args;
     assert.equal(content, '');
@@ -1934,7 +1939,7 @@ test('messages: Start from a template is a grouped GET picker; ?template= fills 
 
 test('messages/send: text, embed and colour reach the service; hex colour wins; bad hex and footer-only embeds are refused', async () => {
     const h = await setup();
-    assert.equal((await post(h, 'messages', 'send', CASES.messages.send.form)).statusCode, 303);
+    assert.equal((await postConfirmed(h, 'messages', 'send', CASES.messages.send.form)).statusCode, 303);
     const [channelId, content, embed] = h.calls.find((c) => c.name === 'postBotMessage').args;
     assert.equal(channelId, TEXT);
     assert.equal(content, 'Hello @everyone');
@@ -1943,9 +1948,9 @@ test('messages/send: text, embed and colour reach the service; hex colour wins; 
     assert.ok(h.auditRows.some((r) => r.key === 'message.710000000000000011' && r.new.embed.colour === '#9b59b6'));
 
     const hex = await setup();
-    await post(hex, 'messages', 'send', { channelId: TEXT, content: 'hi', colour: 'red', hex: '#00ff00' });
+    await postConfirmed(hex, 'messages', 'send', { channelId: TEXT, content: 'hi', colour: 'red', hex: '#00ff00' });
     assert.equal(hex.calls.find((c) => c.name === 'postBotMessage').args[2], null, 'no embed fields: text only');
-    await post(hex, 'messages', 'send', { channelId: TEXT, title: 't', hex: '00ff00' });
+    await postConfirmed(hex, 'messages', 'send', { channelId: TEXT, title: 't', hex: '00ff00' });
     assert.equal(hex.calls.filter((c) => c.name === 'postBotMessage')[1].args[2].colour, 0x00ff00);
 
     for (const [form, message] of [
@@ -1963,6 +1968,115 @@ test('messages/send: text, embed and colour reach the service; hex colour wins; 
         assert.match(res.body, message);
         assert.ok(!r.calls.some((c) => c.name === 'postBotMessage'), 'nothing posted');
     }
+});
+
+test('messages/send: preview first (Confirm / Cancel) with channel, ping, format and buttons; nothing posted until Post now', async () => {
+    const h = await setup();
+    const form = {
+        channelId: TEXT, title: 'News <b>', description: 'Hello', colour: 'primary', pingRole: ROLE_OK,
+        button1Label: 'Rules', button1Url: 'https://example.com/rules',
+    };
+    const page = await post(h, 'messages', 'send', form);
+    assert.equal(page.statusCode, 200);
+    assert.match(page.body, /Confirm: post in #general/);
+    assert.ok(page.body.includes('>Post now</button>'), 'the Confirm button names the action');
+    assert.ok(page.body.includes('<a class="btn" href="/dashboard/messages">Cancel</a>'));
+    assert.match(page.body, /<dt>Gets a notification<\/dt><dd>@Member<\/dd>/);
+    assert.match(page.body, /<dt>Format<\/dt><dd>Embed/);
+    assert.match(page.body, /<dt>Buttons<\/dt><dd>Rules \(https:\/\/example\.com\/rules\)<\/dd>/);
+    assert.ok(page.body.includes('News &lt;b&gt;') && !page.body.includes('News <b>'), 'the preview is escaped');
+    assert.ok(!h.calls.some((c) => c.name === 'postBotMessage'), 'nothing posted by the first submit');
+    assert.equal(h.auditRows.length, 0);
+
+    assert.equal((await postConfirmed(h, 'messages', 'send', form)).statusCode, 303);
+    const [, , embed, ping, buttons] = h.calls.find((c) => c.name === 'postBotMessage').args;
+    assert.equal(embed.title, 'News <b>');
+    assert.deepEqual(ping, { everyone: false, roleIds: [ROLE_OK], userIds: [] });
+    assert.deepEqual(buttons, [{ label: 'Rules', url: 'https://example.com/rules' }]);
+    assert.ok(h.auditRows.some((r) => r.key.startsWith('message.') && r.new.ping.roleIds[0] === ROLE_OK && r.new.buttons.length === 1));
+});
+
+test('messages/send: pings only what was picked (no ping by default, everyone only when ticked); plain text folds the box into the text', async () => {
+    const none = await setup();
+    await postConfirmed(none, 'messages', 'send', { channelId: TEXT, content: 'Hi @everyone <@&600000000000000001>' });
+    assert.equal(none.calls.find((c) => c.name === 'postBotMessage').args[3], null, 'typed mentions: no ping at all');
+
+    const all = await setup();
+    await postConfirmed(all, 'messages', 'send', { channelId: TEXT, content: 'Big news', pingEveryone: '1' });
+    assert.deepEqual(all.calls.find((c) => c.name === 'postBotMessage').args[3], { everyone: true, roleIds: [], userIds: [] });
+
+    const text = await setup();
+    await postConfirmed(text, 'messages', 'send', { channelId: TEXT, format: 'text', content: 'Intro', title: 'Title', description: 'Body', footer: 'Staff' });
+    const [, content, embed] = text.calls.find((c) => c.name === 'postBotMessage').args;
+    assert.equal(embed, null, 'no box');
+    assert.equal(content, 'Intro\n\n**Title**\n\nBody\n\n-# Staff');
+
+    for (const [form, message] of [
+        [{ channelId: TEXT, content: 'x', pingRole: GUILD }, /@everyone/],
+        [{ channelId: TEXT, content: 'x', pingRole: '699999999999999999' }, /not in the server|no longer exists|missing/i],
+        [{ channelId: TEXT, content: 'x', mod1: MEMBER }, /New moderators template/],
+        [{ channelId: TEXT, content: 'x', format: 'fancy' }, /Embed or Plain text/],
+    ]) {
+        const r = await setup();
+        const res = await post(r, 'messages', 'send', form);
+        assert.equal(res.statusCode, 400, JSON.stringify(form));
+        assert.match(res.body, message);
+        assert.ok(!r.calls.some((c) => c.name === 'postBotMessage'), 'nothing posted');
+    }
+});
+
+test('messages/send: link buttons are https only, label and link both needed, at most 3 fields', async () => {
+    for (const [form, message] of [
+        [{ button1Label: 'Site', button1Url: 'http://example.com' }, /Button 1: the link must be a full https:\/\/ link/],
+        [{ button2Label: 'Site', button2Url: 'javascript:alert(1)' }, /Button 2: the link must be a full https:\/\/ link/],
+        [{ button1Label: 'Site', button1Url: 'https://user:pw@example.com' }, /Button 1: the link must be a full https:\/\/ link/],
+        [{ button3Label: 'Site' }, /Button 3 needs both a label and a link/],
+        [{ button1Url: 'https://example.com' }, /Button 1 needs both a label and a link/],
+        [{ button1Label: 'x'.repeat(81), button1Url: 'https://example.com' }, /at most 80 characters/],
+    ]) {
+        const r = await setup();
+        const res = await post(r, 'messages', 'send', { channelId: TEXT, content: 'hi', ...form });
+        assert.equal(res.statusCode, 400, JSON.stringify(form));
+        assert.match(res.body, message);
+        assert.ok(!r.calls.some((c) => c.name === 'postBotMessage'));
+    }
+    const ok = await setup();
+    await postConfirmed(ok, 'messages', 'send', { channelId: TEXT, content: 'hi', button1Label: 'A', button1Url: 'https://a.example', button3Label: 'C', button3Url: 'https://c.example/x?y=1' });
+    assert.deepEqual(ok.calls.find((c) => c.name === 'postBotMessage').args[4], [{ label: 'A', url: 'https://a.example' }, { label: 'C', url: 'https://c.example/x?y=1' }]);
+});
+
+test('messages: home templates in Mewvo\'s own server: New moderators pings only the picked members; changelog and server count are filled', async () => {
+    const h = await setup();
+    const page = (await get(h, 'messages')).body;
+    assert.match(page, /<optgroup label="Mewvo \(only in Mewvo&#39;s own servers\)"><option value="mewvo-new-mods">New moderator\(s\)<\/option>/);
+    assert.ok(!page.includes('name="mod1"'), 'no member pickers without the template');
+
+    const mods = await run(h, h.d.modulePage, { method: 'GET', params: { module: 'messages' }, headers: { cookie: h.cookie }, query: { template: 'mewvo-new-mods', lang: 'de', mod1: MEMBER } });
+    assert.equal(mods.statusCode, 200);
+    assert.match(mods.body, /name="template" value="mewvo-new-mods"/, 'the template id goes along with the forms');
+    assert.match(mods.body, new RegExp(`name="mod1" value="${MEMBER}"`), 'picked member kept');
+    assert.ok(mods.body.includes('name="mod5"'));
+    assert.match(mods.body, /value="Neue Moderatoren"/, 'German text filled in');
+    assert.match(mods.body, /Language: Deutsch\./);
+
+    // {mods} → the picked members' mentions; only they get pinged.
+    const form = { template: 'mewvo-new-mods', channelId: TEXT, title: 'New moderators', description: 'Welcome {mods}.', mod1: MEMBER, mod2: `<@${OWNER}>` };
+    assert.equal((await postConfirmed(h, 'messages', 'send', form)).statusCode, 303);
+    const [, , embed, ping] = h.calls.find((c) => c.name === 'postBotMessage').args;
+    assert.equal(embed.description, `Welcome <@${MEMBER}>, <@${OWNER}>.`);
+    assert.deepEqual(ping, { everyone: false, roleIds: [], userIds: [MEMBER, OWNER] });
+    const missing = await post(h, 'messages', 'send', { ...form, mod1: '', mod2: '' });
+    assert.equal(missing.statusCode, 400);
+    assert.match(missing.body, /Pick at least one moderator for \{mods\}/);
+    const schedule = await post(h, 'messages', 'schedule', { ...form, repeat: 'daily', time: '10:00', timezone: 'UTC' });
+    assert.equal(schedule.statusCode, 400, 'members are pinged only from Send');
+    assert.match(schedule.body, /New moderators template/);
+
+    const changelog = await run(h, h.d.modulePage, { method: 'GET', params: { module: 'messages' }, headers: { cookie: h.cookie }, query: { template: 'mewvo-changelog', lang: 'en' } });
+    assert.match(changelog.body, /name="entry" value="2026-11-08:public" checked/);
+    assert.match(changelog.body, /Mewvo is public: any server can add it/);
+    const count = await run(h, h.d.modulePage, { method: 'GET', params: { module: 'messages' }, headers: { cookie: h.cookie }, query: { template: 'mewvo-server-count' } });
+    assert.match(count.body, /value="Mewvo is now in 2 servers"/, 'client.guilds.cache.size');
 });
 
 test('messages/scheduled: the list shows channel, next run in its zone, repeat, last result and the right buttons; text is escaped', async () => {
@@ -2045,7 +2159,7 @@ test('messages: a channel where the bot lacks a permission is refused clearly, n
     const h = await setup();
     h.guild.members.me.permissionsIn = () => ({ has: (p) => p !== PermissionFlagsBits.EmbedLinks });
     // Plain text needs no Embed Links; a box (embed) does, and the refusal offers Fix permissions.
-    assert.equal((await post(h, 'messages', 'send', { channelId: TEXT, content: 'hi' })).statusCode, 303, 'plain text posts without Embed Links');
+    assert.equal((await postConfirmed(h, 'messages', 'send', { channelId: TEXT, content: 'hi' })).statusCode, 303, 'plain text posts without Embed Links');
     assert.equal(h.calls.filter((c) => c.name === 'postBotMessage').length, 1);
     const res = await post(h, 'messages', 'send', { channelId: TEXT, content: 'hi', title: 'Box' });
     assert.equal(res.statusCode, 400);

@@ -3,10 +3,13 @@
 // dashboard's Messages page, so both post exactly the same thing.
 //
 // Every send uses allowedMentions { parse: [] }: typed text never pings @everyone,
-// @here, roles or members. The bot's permissions in the channel are checked first;
-// a missing one refuses with a clear message and nothing is posted.
+// @here, roles or members. The one exception is an announcement's explicit ping
+// (postBotMessage `ping`): the admin picks one role, members (the home "New moderators"
+// template) or ticks "ping everyone", and allowedMentions allows exactly those and nothing
+// else. The bot's permissions in the channel are checked first; a missing one refuses with
+// a clear message and nothing is posted.
 
-import { ChannelType, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { successEmbed } from '../utils/embeds.js';
 import { getColor } from '../config/bot.js';
@@ -18,6 +21,12 @@ export const EMBED_DESCRIPTION_MAX = 4096;
 export const EMBED_FOOTER_MAX = 2048;
 export const EMBED_TOTAL_MAX = 6000;
 export const IMAGE_URL_MAX = 2048;
+// Link buttons under an announcement (Discord: label 80, URL 512).
+export const LINK_BUTTON_MAX = 3;
+export const LINK_BUTTON_LABEL_MAX = 80;
+export const LINK_BUTTON_URL_MAX = 512;
+// Members one announcement may ping by name (the "New moderators" template).
+export const PING_USERS_MAX = 5;
 
 export const POLL_EMOJIS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
 export const POLL_MAX_OPTIONS = POLL_EMOJIS.length;
@@ -167,20 +176,93 @@ export function buildMessageEmbed({ title = '', description = '', colour = null,
     return embed;
 }
 
+// ── Announcement extras: an explicit ping and link buttons ──────────────
+
+const SNOWFLAKE_RE = /^\d{17,20}$/;
+
+/**
+ * The ping of an announcement, cleaned: { everyone, roleIds (at most 1), userIds (at most
+ * PING_USERS_MAX) }; ids that are not snowflakes are dropped. Empty → no ping at all.
+ */
+export function cleanPing(ping) {
+    const ids = (list, max) => [...new Set((Array.isArray(list) ? list : []).map(String).filter((id) => SNOWFLAKE_RE.test(id)))].slice(0, max);
+    return { everyone: ping?.everyone === true, roleIds: ids(ping?.roleIds, 1), userIds: ids(ping?.userIds, PING_USERS_MAX) };
+}
+
+/** True when the ping notifies nobody. */
+export function isEmptyPing(ping) {
+    const p = cleanPing(ping);
+    return !p.everyone && !p.roleIds.length && !p.userIds.length;
+}
+
+/** The mentions put in front of the text: "@everyone <@&role> <@user>" (only what was picked). */
+export function pingLine(ping) {
+    const p = cleanPing(ping);
+    return [p.everyone ? '@everyone' : '', ...p.roleIds.map((id) => `<@&${id}>`), ...p.userIds.map((id) => `<@${id}>`)].filter(Boolean).join(' ');
+}
+
+/**
+ * allowedMentions for a post: exactly what was picked. Nothing picked → { parse: [] } (no
+ * pings at all). "everyone" only when ticked; roles and users only the picked ids, so a role,
+ * member, @everyone or @here typed in the text never pings unless it was picked.
+ */
+export function announcementMentions(ping) {
+    const p = cleanPing(ping);
+    if (!p.everyone && !p.roleIds.length && !p.userIds.length) return noMentions();
+    return { parse: p.everyone ? ['everyone'] : [], roles: p.roleIds, users: p.userIds };
+}
+
+/** A link a button may open: https only, a real host name, no user:password, no spaces. */
+export function isLinkButtonUrl(url) {
+    if (typeof url !== 'string' || !url || url.length > LINK_BUTTON_URL_MAX || /\s/.test(url)) return false;
+    try {
+        const parsed = new URL(url);
+        return parsed.protocol === 'https:' && Boolean(parsed.hostname) && parsed.hostname.includes('.') && !parsed.username && !parsed.password;
+    } catch {
+        return false;
+    }
+}
+
+/** [{ label, url }] → at most LINK_BUTTON_MAX checked buttons; a bad one throws (never dropped silently). */
+export function cleanLinkButtons(buttons) {
+    const list = Array.isArray(buttons) ? buttons : [];
+    if (list.length > LINK_BUTTON_MAX) throw validation(`At most ${LINK_BUTTON_MAX} link buttons.`);
+    return list.map((b) => {
+        const label = String(b?.label ?? '').trim();
+        const url = String(b?.url ?? '').trim();
+        if (!label || label.length > LINK_BUTTON_LABEL_MAX) throw validation(`A button label needs 1 to ${LINK_BUTTON_LABEL_MAX} characters.`);
+        if (!isLinkButtonUrl(url)) throw validation('A button link must be a full https:// link.');
+        return { label, url };
+    });
+}
+
+/** The link buttons as one action row (or none). */
+export function linkButtonRows(buttons) {
+    const clean = cleanLinkButtons(buttons);
+    if (!clean.length) return [];
+    return [new ActionRowBuilder().addComponents(clean.map((b) => new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel(b.label).setURL(b.url)))];
+}
+
 /**
  * Posts `content` and/or `embed` (the fields of buildMessageEmbed) in `channel` as the bot.
- * Returns { message }.
+ * `ping` ({ everyone, roleIds, userIds }) puts those mentions in front of the text and is the
+ * only thing allowedMentions lets through; `buttons` ([{ label, url }], https) adds link
+ * buttons. Returns { message }.
  */
-export async function postBotMessage(guild, { channel, content = '', embed = null } = {}) {
-    const text = String(content ?? '').trim();
+export async function postBotMessage(guild, { channel, content = '', embed = null, ping = null, buttons = [] } = {}) {
+    const typed = String(content ?? '').trim();
+    const line = pingLine(ping);
+    const text = line ? (typed ? `${line}\n${typed}` : line) : typed;
     if (text.length > MESSAGE_CONTENT_MAX) throw validation(`The message text is limited to ${MESSAGE_CONTENT_MAX} characters.`);
     const built = embed ? buildMessageEmbed(embed) : null;
-    if (!text && !built) throw validation('Write a message or fill in the embed: there is nothing to post.');
+    if (!typed && !built) throw validation('Write a message or fill in the embed: there is nothing to post.');
+    const components = linkButtonRows(buttons);
     assertCanPost(guild, channel, permissionsForPost({ embeds: Boolean(built) }));
     const message = await channel.send({
         ...(text ? { content: text } : {}),
         ...(built ? { embeds: [built] } : {}),
-        allowedMentions: noMentions(),
+        ...(components.length ? { components } : {}),
+        allowedMentions: announcementMentions(ping),
     });
     return { message };
 }

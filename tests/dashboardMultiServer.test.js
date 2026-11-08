@@ -8,6 +8,7 @@
 // No Discord, no database. The pure helpers and the basic routing are in dashboardRouting.test.js.
 
 import { test } from 'node:test';
+import { MEWVO_TEMPLATES } from '../src/config/mewvoTemplates.js';
 import assert from 'node:assert/strict';
 import express from 'express';
 import { ChannelType, PermissionFlagsBits } from 'discord.js';
@@ -248,6 +249,10 @@ async function serve({ owners = [OWNER], bMembers = {}, mainMembers = {}, cases 
         updateSettings: async (guildId, patch) => ({ changes: Object.entries(patch).map(([key, value]) => ({ key, old: null, new: value })) }),
         postModLog: async () => {},
         getCommandAccessSnapshot: () => ({}),
+        // Messages page (home-only announcement templates).
+        listScheduledMessages: async () => [], openPollsFor: async () => ({ polls: [], partial: false }),
+        getSetting: async () => 'en',
+        postBotMessage: async () => ({ message: { id: '790000000000000001' } }),
     }, log);
     const data = spyDeps('data', {
         getCaseByCode: lookup,
@@ -863,6 +868,34 @@ test('Words explained: the Support server link only in the home servers (the pag
         assert.equal((await h.request(`/dashboard/${A}/support`, { cookie })).status, 404);
         const inMain = await h.request(`/dashboard/${MAIN}/help`, { cookie });
         assert.ok(inMain.body.includes(`href="/dashboard/${MAIN}/support"`));
+    } finally {
+        await h.close();
+    }
+});
+
+test('home-only announcement templates: listed in the main server only; in another server the page and the POST refuse them by id, nothing posted', async () => {
+    const h = await serve();
+    try {
+        const { cookie, csrf } = await h.loginAs(ADMIN);
+        const inMain = await h.request(`/dashboard/${MAIN}/messages`, { cookie });
+        assert.equal(inMain.status, 200);
+        assert.ok(inMain.body.includes('value="mewvo-new-mods"') && inMain.body.includes('value="mewvo-changelog"'), 'listed at home');
+        const inA = await h.request(`/dashboard/${A}/messages`, { cookie });
+        assert.equal(inA.status, 200);
+        for (const t of MEWVO_TEMPLATES) assert.ok(!inA.body.includes(`value="${t.id}"`), `${t.id}: not listed elsewhere`);
+        assert.ok(inA.body.includes('value="game-night"'), 'the general templates are there');
+        const asked = await h.request(`/dashboard/${A}/messages?template=mewvo-changelog`, { cookie });
+        assert.equal(asked.status, 200);
+        assert.match(asked.body, /That template is only for Mewvo(?:'|&#39;)s own servers/);
+        assert.ok(!asked.body.includes('Mewvo update'), 'nothing filled');
+        for (const action of ['send', 'schedule']) {
+            const res = await h.request(`/dashboard/${A}/messages/${action}`, {
+                method: 'POST', cookie, form: { csrf, template: 'mewvo-new-mods', channelId: A_CHANNEL, content: 'Hello', repeat: 'daily', time: '10:00', timezone: 'UTC' },
+            });
+            assert.equal(res.status, 403, action);
+            assert.match(res.body, /only for Mewvo&#39;s own servers\. Nothing was posted/);
+        }
+        assert.equal(h.log.filter((c) => c.fn === 'services.postBotMessage').length, 0, 'nothing posted');
     } finally {
         await h.close();
     }
