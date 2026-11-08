@@ -6,8 +6,24 @@
 
 export const CHANGELOG = Object.freeze([
     {
+        date: '2026-11-08',
+        items: ['public', 'perServerDashboard', 'webAppeals', 'recordAllServers'],
+    },
+    {
+        date: '2026-11-07',
+        items: ['languages'],
+    },
+    {
+        date: '2026-11-05',
+        items: ['websiteEditor'],
+    },
+    {
+        date: '2026-11-04',
+        items: ['languages'],
+    },
+    {
         date: '2026-11-01',
-        items: ['customAutomodRules', 'remind', 'profile', 'appealStatus', 'recordLinkInDms', 'gettingStartedList', 'activityPage', 'settingsBackup', 'caseNotesAndTags', 'shiftNote', 'weeklySummary', 'proMaxBranding', 'dashboardThemes'],
+        items: ['accounts', 'trustPages', 'customAutomodRules', 'remind', 'profile', 'appealStatus', 'recordLinkInDms', 'gettingStartedList', 'activityPage', 'settingsBackup', 'caseNotesAndTags', 'shiftNote', 'weeklySummary', 'proMaxBranding', 'dashboardThemes'],
     },
     {
         date: '2026-10-31',

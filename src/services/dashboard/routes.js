@@ -88,7 +88,7 @@ import { casesCsv, exportCases, exportWindowDays } from '../enforcement/caseExpo
 import { guildPlan } from '../billing/premiumEffects.js';
 import { backupPage, backupPreviewPage } from './backupPages.js';
 import { BACKUP_MAX_BYTES, applyBackup, exportSettings, planBackup } from '../settings/settingsBackup.js';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { listEvidence, resolveImageUrls } from '../enforcement/evidenceService.js';
 import { listPendingAppeals } from '../enforcement/appealService.js';
 import { needsSecondReviewer } from '../enforcement/appealReviewer.js';
@@ -324,10 +324,12 @@ let staticFileCache = null;
 function staticFiles() {
     staticFileCache ??= new Map(Object.entries(STATIC_FILES).map(([name, type]) => {
         try {
-            return [name, { type, body: fs.readFileSync(new URL(`./static/${name}`, import.meta.url), 'utf8') }];
+            const body = fs.readFileSync(new URL(`./static/${name}`, import.meta.url), 'utf8');
+            // The same short hash as the ?v= in html.js (CSS_PATH / JS_PATH): that URL is cached for a year.
+            return [name, { type, body, version: createHash('sha256').update(body).digest('hex').slice(0, 10) }];
         } catch (error) {
             logger.error(`Dashboard static file missing (${name}): ${error.message}`);
-            return [name, { type, body: '' }];
+            return [name, { type, body: '', version: null }];
         }
     }));
     return staticFileCache;
@@ -485,7 +487,7 @@ export function createDashboard({
         if (!staticLimiter.allow(clientIp(req))) return res.status(429).type('text/plain').send('Too many requests');
         const file = staticFiles().get(name);
         if (!file) return res.status(404).type('text/plain').send('Not found');
-        res.set('Cache-Control', 'public, max-age=3600');
+        res.set('Cache-Control', file.version && req.query?.v === file.version ? 'public, max-age=31536000, immutable' : 'public, max-age=3600');
         return res.status(200).type(file.type).send(file.body);
     }
 

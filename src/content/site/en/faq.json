@@ -35,7 +35,8 @@
     },
     "howTo": {
       "q": "How do I appeal?",
-      "a": "Use the link in the DM you got. Press **Appeal** on the appeal panel and enter why it should be lifted and the case code from the DM. If you are banned, use the panel in {support}. You get the decision by DM. [How appeals work](/docs/appeals)."
+      "a": "Use the link in the DM you got. You appeal to the server that punished you, and its staff decide. Press **Appeal** on the appeal panel and enter why it should be lifted and the case code from the DM. For Mewvo’s own server, banned members use the panel in {support}. You get the decision by DM. [How appeals work](/docs/appeals).",
+      "aPortal": "Use the link in the DM you got. You appeal to the server that punished you, and its staff decide. On this website, log in on [My appeals](/me/appeals): it works for every server that uses Mewvo, even after a ban. In Discord, press **Appeal** on the appeal panel and enter why it should be lifted and the case code from the DM; for Mewvo’s own server, banned members use the panel in {support}. [How appeals work](/docs/appeals)."
     },
     "lostCode": {
       "q": "I lost my case code.",
@@ -45,21 +46,25 @@
     "everyPunishment": {
       "q": "Can every punishment be appealed?",
       "a": "Most can. Bans and mutes can be appealed while they last, warnings and kicks within 30 days. A permanent ladder ban stops being appealable after 6 months or after a denied appeal, and staff can mark a severe ban as one that can’t be appealed. The DM always says which."
+    },
+    "web": {
+      "q": "Can I appeal on the website?",
+      "a": "Yes. Log in with Discord on [My appeals](/me/appeals). You see the cases from every server that uses Mewvo that you can appeal now, and the status of your appeals. It works even when you share no server with Mewvo any more. The staff of the server that punished you decide."
     }
   },
   "data": {
     "title": "Data and contact",
     "stored": {
       "q": "What data does Mewvo store?",
-      "a": "Discord IDs, your levels and XP, moderation cases, appeals and what you write in forms or tickets, and a few things you choose to save, such as a birthday. No email, no password, never sold. The [privacy page](/privacy) has the full list, and `/wipedata` deletes your levels, balance, AFK status and birthday in that server, plus your to-do list, reminders and stored Discord login. Moderation records stay; see the privacy page for why."
+      "a": "Discord IDs, your levels and XP, moderation cases, appeals and what you write in forms or tickets, and a few things you choose to save, such as a birthday. The bot never asks for an email or a password. If you create a Mewvo account on this website, it stores a username and a one-way scrypt hash of your password (never the password itself), still no email. Nothing is ever sold. The [privacy page](/privacy) has the full list, and `/wipedata` deletes your levels, balance, AFK status and birthday in that server, plus your to-do list, reminders and stored Discord login. Moderation records stay; see the privacy page for why."
     },
     "reachStaff": {
       "q": "How do I reach the staff?",
-      "a": "Three ways: DM the bot and choose **Send to staff** (modmail), open a ticket from the ticket panel, or ask in {support}. To report a staff member, use **Report staff** on the appeal panel in the support server; only administrators see those reports."
+      "a": "Ask the staff of your own server first: DM the bot and choose **Send to staff** (modmail; Mewvo asks which server it is for), or open a ticket from that server’s ticket panel. To report a staff member, use **Report staff** on the appeal panel; only that server’s administrators see those reports. Questions about Mewvo itself, or about Mewvo’s own server, go to {support}."
     },
     "down": {
       "q": "Is the bot down?",
-      "a": "Check the [status page](/status). It shows whether the bot is online and refreshes every minute."
+      "a": "Check the [status page](/status). It shows whether the bot is online; press Refresh there for the latest state."
     }
   }
 }

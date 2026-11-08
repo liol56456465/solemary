@@ -1,6 +1,7 @@
 {
   "meta": {
-    "description": "Mewvo to bot do moderacji na Discordzie: kody spraw i wiadomości prywatne, trzystopniowa drabina ostrzeżeń, odwołania, które trafiają do człowieka, automoderacja, tickety i narzędzia dla społeczności."
+    "description": "Mewvo to bot do moderacji na Discordzie: kody spraw i wiadomości prywatne, trzystopniowa drabina ostrzeżeń, odwołania, które trafiają do człowieka, automoderacja, tickety i narzędzia dla społeczności.",
+    "title": "Mewvo: bot do moderacji i społeczności na Discordzie"
   },
   "actions": {
     "readDocs": "Przeczytaj dokumentację",
@@ -34,7 +35,7 @@
       },
       "appeals": {
         "name": "Odwołania",
-        "text": "Członkowie odwołują się przez krótki formularz. Odwołania od bana otwierają kanał na serwerze wsparcia, więc działają także po banie, a decyzję podejmuje człowiek z ekipy.",
+        "text": "Członkowie odwołują się krótkim formularzem, na Discordzie albo na tej stronie, a decyduje ekipa serwera, który ich ukarał. Strona działa także po banie, gdy członek nie ma już żadnego wspólnego serwera z Mewvo.",
         "link": "Jak działają odwołania"
       },
       "automod": {

@@ -1,9 +1,9 @@
 {
   "title": "Normas",
-  "description": "Las normas del servidor de Discord de Mewvo.",
+  "description": "Las normas del servidor de comunidad propio de Mewvo en Discord.",
   "head": {
     "heading": "Normas del servidor",
-    "lead": "Las normas del servidor de Mewvo. Cuando el staff advierte, silencia, expulsa o banea por una de ellas, el mensaje directo indica la norma y enlaza aquí."
+    "lead": "Las normas del servidor de comunidad propio de Mewvo; cada otro servidor que usa Mewvo tiene las suyas. Cuando el staff de ese servidor advierte, silencia, expulsa o banea por una de estas normas, el mensaje directo nombra la norma y enlaza aquí."
   },
   "state": {
     "unavailable": "No se han podido cargar las normas en este momento. Vuelve a intentarlo en un minuto.",

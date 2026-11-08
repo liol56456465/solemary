@@ -30,9 +30,9 @@
   },
   "about": {
     "title": "Über uns",
-    "description": "Über Mewvo, den Discord-Bot des Mewvo-Servers.",
+    "description": "Über Mewvo, einen Discord-Bot für Moderation und Community, und wer ihn betreibt.",
     "heading": "Über Mewvo",
-    "lead": "Mewvo ist der Bot des Mewvo-Discord-Servers, gebaut und betrieben von dessen Inhaber für diese Community.",
+    "lead": "Mewvo ist ein Discord-Bot für Moderation und Community. Er begann als Bot des Mewvo-Servers und kann jetzt jedem Server hinzugefügt werden.",
     "started": {
       "heading": "Wie alles anfing",
       "text": "Mewvo begann als Fork von TitanBot, einem Open-Source-Discord-Bot (MIT), und wurde seitdem rund um die Bedürfnisse des Servers neu gebaut: ein Moderationssystem mit Fallcodes und Einsprüchen, eine Verwarnungsleiter, Automod, Tickets und Modmail sowie ein Web-Dashboard für das Team."
@@ -88,18 +88,18 @@
       }
     },
     "note": {
-      "refresh": "Diese Seite aktualisiert sich jede Minute.",
-      "refreshSupport": "Diese Seite aktualisiert sich jede Minute. Funktioniert etwas nicht? [Sag es uns auf dem Support-Server]({url})."
+      "refreshLink": "Aktualisieren",
+      "support": "Funktioniert etwas nicht? [Sag es uns auf dem Support-Server]({url})."
     }
   },
   "leaderboard": {
     "title": "Bestenliste",
     "titlePaged": "Bestenliste, Seite {page}",
-    "description": "Die Level-Bestenliste des Mewvo-Servers.",
+    "description": "Die Level-Bestenliste von Mewvos eigenem Community-Server.",
     "heading": "Bestenliste",
-    "lead": "Die aktivsten Mitglieder des Mewvo-Servers nach Level und Gesamt-XP. XP verdienst du durch Chatten; Mitglieder, die ihre Daten mit `/wipedata` löschen, werden nicht aufgeführt.",
+    "lead": "Die aktivsten Mitglieder von Mewvos eigenem Community-Server nach Level und Gesamt-XP. XP bekommst du durchs Schreiben; Mitglieder, die ihre Daten mit `/wipedata` löschen, werden nicht aufgeführt.",
     "unavailable": "Die Bestenliste konnte gerade nicht geladen werden. Es wurde nichts geändert; bitte versuch es in einer Minute noch einmal.",
-    "off": "Das Levelsystem ist auf dem Mewvo-Server ausgeschaltet, daher gibt es gerade keine Bestenliste.",
+    "off": "Das Levelsystem ist auf Mewvos Community-Server ausgeschaltet, daher gibt es gerade keine Bestenliste.",
     "empty": {
       "firstPage": "Noch hat niemand XP verdient.",
       "laterPage": "Auf dieser Seite ist niemand.",

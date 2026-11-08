@@ -1,9 +1,9 @@
 {
   "title": "Zasady",
-  "description": "Zasady serwera Discord Mewvo.",
+  "description": "Zasady własnego serwera społeczności Mewvo na Discordzie.",
   "head": {
     "heading": "Zasady serwera",
-    "lead": "Zasady serwera Mewvo. Gdy ekipa ostrzega, wycisza, wyrzuca lub banuje za złamanie jednej z nich, wiadomość prywatna podaje zasadę i link do tej strony."
+    "lead": "Zasady własnego serwera społeczności Mewvo; każdy inny serwer, który używa Mewvo, ma własne. Gdy ekipa tego serwera ostrzega, wycisza, wyrzuca lub banuje za jedną z tych zasad, wiadomość prywatna podaje zasadę i link do tej strony."
   },
   "state": {
     "unavailable": "Nie udało się teraz wczytać zasad. Spróbuj ponownie za minutę.",

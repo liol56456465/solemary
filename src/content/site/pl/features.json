@@ -90,7 +90,7 @@
       "items": {
         "appealPanel": {
           "term": "Panel odwołań",
-          "text": "/setappeal publikuje panel z przyciskami Appeal, My appeals i My record na głównym serwerze i na serwerze wsparcia."
+          "text": "/setappeal publikuje panel z przyciskami Appeal, My appeals i My record na twoim serwerze. Dla własnego serwera Mewvo jest też na serwerze wsparcia Mewvo."
         },
         "appealForm": {
           "term": "Formularz odwołania",
@@ -98,7 +98,7 @@
         },
         "banAndKickAppeals": {
           "term": "Odwołania od bana i wyrzucenia",
-          "text": "Otwierają kanał na serwerze wsparcia z członkiem w środku, więc rozmowa działa także po banie. Sprawa i historia trafiają na kanał ekipy tylko dla administratorów, z przyciskami Accept i Deny."
+          "text": "Dla własnego serwera Mewvo otwierają kanał na serwerze wsparcia Mewvo z członkiem w środku, żeby rozmowa działała po banie. Na każdym serwerze sprawa i historia trafiają na kanał ekipy tylko dla administratorów, z Accept i Deny (albo na listę Odwołania w panelu, gdy nie ustawiono kategorii odwołań)."
         },
         "limits": {
           "term": "Limity",
@@ -110,11 +110,15 @@
         },
         "bannedRole": {
           "term": "Rola dla zbanowanych",
-          "text": "Członkowie z aktywnym banem dostają rolę na serwerze wsparcia, usuwaną, gdy ban się kończy."
+          "text": "Dla własnego serwera Mewvo: członkowie z aktywnym banem dostają rolę na serwerze wsparcia Mewvo, zdejmowaną po zakończeniu bana."
         },
         "staffReports": {
           "term": "Zgłoszenia na ekipę",
           "text": "Członkowie mogą prywatnie zgłosić członka ekipy. Zgłoszenia widzą tylko administratorzy; jedno otwarte zgłoszenie na osobę i trzy dziennie."
+        },
+        "webAppeals": {
+          "term": "Odwołania na stronie",
+          "text": "Członkowie logują się przez Discorda w My appeals i odwołują się od własnych spraw z każdego serwera, który używa Mewvo, nawet gdy nie mają już wspólnego serwera z botem. Odwołanie trafia do ekipy serwera, który wystawił sprawę."
         }
       }
     },

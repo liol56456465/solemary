@@ -91,7 +91,7 @@ const standing = { ladder: { level: 0, warns_since_level: 0 }, warns: [], active
 async function serve({ appeals = fakeData().appeals, limits, me } = {}) {
     const app = express();
     const sessions = createMemorySessionStore({ ttlMs: 3600 * 1000 });
-    const data = { getMemberStanding: async () => standing, listCasesForUser: async () => ({ rows: [], total: 0 }), listUserAppeals: async () => [] };
+    const data = { getMemberStanding: async () => standing, listCasesAllServers: async () => [], listUserAppeals: async () => [] };
     registerMemberPortal(app, { env: ENV, sessions, data, fetchImpl: fakeDiscord(me), limits, ...(appeals ? { appeals } : {}) });
     const server = await new Promise((resolve) => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
     const base = `http://127.0.0.1:${server.address().port}`;
@@ -236,6 +236,52 @@ test('submit: needs the CSRF token and the same origin; then the normal appeal f
         assert.ok(after.body.includes('Your appeal for deny22 was sent to the staff of Beta &lt;script&gt;.'));
         const stranger = await app.request('/me/appeals?sent=xyzab2', { cookie });
         assert.ok(!stranger.body.includes('Your appeal for'), 'no flash for a case that is not theirs');
+    } finally {
+        await app.close();
+    }
+});
+
+test('submit after the login ran out: the typed answers come back with a login link to this appeal; nothing is sent', async () => {
+    const { appeals, calls } = fakeData();
+    const app = await serve({ appeals });
+    try {
+        const typed = { punished: 'I posted <b>links</b> in #general', reason: 'It will not happen again, I read the rules.', didIt: 'no', csrf: 'old-token' };
+        const res = await app.request('/me/appeal/bana22', { method: 'POST', body: form(typed), headers: { origin: ORIGIN } });
+        assert.equal(res.status, 401);
+        assert.ok(res.body.includes('Your login ran out, so nothing was sent.'));
+        assert.ok(res.body.includes('href="/me/login?next=%2Fme%2Fappeal%2Fbana22"'), 'the login comes back to this appeal');
+        assert.ok(res.body.includes('>I posted &lt;b&gt;links&lt;/b&gt; in #general</textarea>'), 'the first answer, escaped');
+        assert.ok(res.body.includes('>It will not happen again, I read the rules.</textarea>'), 'the second answer');
+        assert.ok(res.body.includes('No, I didn&#39;t do it') || res.body.includes("No, I didn't do it"), 'the choice');
+        assert.ok(!/<form[^>]*action="\/me\/appeal\//.test(res.body), 'no form that could be sent without a login');
+        assert.ok(!res.body.includes('Raiding'), 'nothing about the case without a login');
+        assert.equal(calls.filter((c) => c.name === 'submit').length, 0);
+        assert.equal(calls.filter((c) => c.name === 'case').length, 0, 'the case is not even looked up');
+        // From another site: the plain refusal, nothing echoed.
+        const evil = await app.request('/me/appeal/bana22', { method: 'POST', body: form(typed), headers: { origin: 'https://evil.example' } });
+        assert.equal(evil.status, 401);
+        assert.ok(!evil.body.includes('I posted'));
+    } finally {
+        await app.close();
+    }
+});
+
+test('submit with a stale CSRF token: the form comes back with the answers and a fresh token; nothing is sent until sent again', async () => {
+    const { appeals, calls } = fakeData();
+    const app = await serve({ appeals });
+    try {
+        const cookie = await login(app);
+        const csrf = await csrfOf(app, cookie, 'warnb2');
+        const stale = await app.request('/me/appeal/warnb2', { method: 'POST', cookie, body: form({ ...GOOD, csrf: 'from-an-old-tab' }), headers: { origin: ORIGIN } });
+        assert.equal(stale.status, 403);
+        assert.ok(stale.body.includes('This page was out of date, so nothing was sent.'));
+        assert.ok(stale.body.includes(`>${GOOD.punished}</textarea>`) && stale.body.includes(`>${GOOD.reason}</textarea>`), 'the answers are kept');
+        assert.ok(/value="partly" required checked/.test(stale.body), 'the choice is kept');
+        assert.ok(stale.body.includes(`name="csrf" value="${csrf}"`), 'the current session token, to send again by hand');
+        assert.equal(calls.filter((c) => c.name === 'submit').length, 0, 'never sent on its own');
+        const again = await app.request('/me/appeal/warnb2', { method: 'POST', cookie, body: form({ ...GOOD, csrf }), headers: { origin: ORIGIN } });
+        assert.equal(again.status, 303);
+        assert.equal(calls.filter((c) => c.name === 'submit').length, 1);
     } finally {
         await app.close();
     }

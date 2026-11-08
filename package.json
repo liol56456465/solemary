@@ -27,6 +27,7 @@
     "@discordjs/rest": "^2.6.1",
     "@napi-rs/canvas": "1.0.13",
     "axios": "^1.15.2",
+    "compression": "^1.8.2",
     "discord.js": "^14.26.4",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",

@@ -10,7 +10,7 @@ import { layout } from '../shell.js';
 export const FEATURE_GROUPS = Object.freeze([
     { key: 'enforcement', items: ['enforcementsPanel', 'reasons', 'caseCodes', 'dms', 'mutes', 'safetyChecks', 'massActionGuard', 'caseTools', 'warnForMessage', 'simulation', 'noContactOrders'] },
     { key: 'ladder', items: ['levels', 'neverResets', 'corrections', 'level3Appeals', 'myStanding'] },
-    { key: 'appeals', items: ['appealPanel', 'appealForm', 'banAndKickAppeals', 'limits', 'decisions', 'bannedRole', 'staffReports'] },
+    { key: 'appeals', items: ['appealPanel', 'webAppeals', 'appealForm', 'banAndKickAppeals', 'limits', 'decisions', 'bannedRole', 'staffReports'] },
     { key: 'automod', items: ['builtInRules', 'customRules', 'punishmentSteps', 'reviewCards', 'modes', 'hardToDodge', 'newMembers', 'raids', 'memberReports', 'nativeAutomod'] },
     { key: 'tickets', items: ['ticketPanel', 'transcripts', 'modmail', 'modmailCommands'] },
     { key: 'dashboard', items: ['signIn', 'moderate', 'settings', 'auditLog', 'temporaryRoles'] },

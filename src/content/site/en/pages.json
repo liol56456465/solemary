@@ -30,9 +30,9 @@
   },
   "about": {
     "title": "About",
-    "description": "About Mewvo, the Discord bot of the Mewvo server.",
+    "description": "About Mewvo, a Discord bot for moderation and community, and who runs it.",
     "heading": "About Mewvo",
-    "lead": "Mewvo is the bot of the Mewvo Discord server, built and run by its owner for that community.",
+    "lead": "Mewvo is a Discord bot for moderation and community. It started as the bot of the Mewvo server and can now be added to any server.",
     "started": {
       "heading": "How it started",
       "text": "Mewvo began as a fork of TitanBot, an open-source (MIT) Discord bot, and has since been rebuilt around the server’s own needs: an enforcement system with case codes and appeals, a warning ladder, automod, tickets and modmail, and a web dashboard for the staff team."
@@ -88,18 +88,18 @@
       }
     },
     "note": {
-      "refresh": "This page refreshes every minute.",
-      "refreshSupport": "This page refreshes every minute. Something not working? [Tell us in the support server]({url})."
+      "refreshLink": "Refresh",
+      "support": "Something not working? [Tell us in the support server]({url})."
     }
   },
   "leaderboard": {
     "title": "Leaderboard",
     "titlePaged": "Leaderboard, page {page}",
-    "description": "The Mewvo server leveling leaderboard.",
+    "description": "The leveling leaderboard of Mewvo’s own community server.",
     "heading": "Leaderboard",
-    "lead": "The most active members of the Mewvo server by level and total XP. You earn XP by chatting; members who delete their data with `/wipedata` are not listed.",
+    "lead": "The most active members of Mewvo’s own community server by level and total XP. You earn XP by chatting; members who delete their data with `/wipedata` are not listed.",
     "unavailable": "The leaderboard could not be loaded right now. Nothing was changed; please try again in a minute.",
-    "off": "Leveling is turned off on the Mewvo server, so there is no leaderboard right now.",
+    "off": "Leveling is turned off on Mewvo’s community server, so there is no leaderboard right now.",
     "empty": {
       "firstPage": "Nobody has earned XP yet.",
       "laterPage": "There is nobody on this page.",

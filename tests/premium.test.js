@@ -206,7 +206,7 @@ async function serve({ env = ENV, premium = memoryStore() } = {}) {
     const memberSessions = createMemorySessionStore({ ttlMs: 3600 * 1000 });
     const data = {
         getMemberStanding: async () => ({ ladder: { level: 0, warns_since_level: 0 }, warns: [], activeBan: null, activeMute: null }),
-        listCasesForUser: async () => ({ rows: [] }),
+        listCasesAllServers: async () => [],
         listUserAppeals: async () => [],
     };
     const memberPortalEnabled = registerMemberPortal(app, { env, sessions: memberSessions, data, fetchImpl: discord.fetchImpl, premium });

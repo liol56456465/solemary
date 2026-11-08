@@ -35,7 +35,8 @@
     },
     "howTo": {
       "q": "Como faço para apelar?",
-      "a": "Use o link da mensagem direta que você recebeu. Clique em **Appeal** (Apelar) no painel de apelações e informe por que a punição deve ser retirada e o código do caso da mensagem direta. Se você estiver banido, use o painel em {support}. Você recebe a decisão por mensagem direta. [Como funcionam as apelações](/docs/appeals)."
+      "a": "Use o link da mensagem direta que você recebeu. Você apela ao servidor que puniu você, e a equipe dele decide. Clique em **Appeal** (Apelar) no painel de apelações e informe por que a punição deve ser retirada e o código do caso da mensagem direta. Para o servidor do próprio Mewvo, membros banidos usam o painel em {support}. Você recebe a decisão por mensagem direta. [Como funcionam as apelações](/docs/appeals).",
+      "aPortal": "Use o link da mensagem direta que você recebeu. Você apela ao servidor que puniu você, e a equipe dele decide. Neste site, entre em [My appeals](/me/appeals): funciona para todos os servidores que usam o Mewvo, mesmo depois de um banimento. No Discord, clique em **Appeal** (Apelar) no painel de apelações e informe por que a punição deve ser retirada e o código do caso da mensagem direta; para o servidor do próprio Mewvo, membros banidos usam o painel em {support}. [Como funcionam as apelações](/docs/appeals)."
     },
     "lostCode": {
       "q": "Perdi o código do meu caso.",
@@ -45,21 +46,25 @@
     "everyPunishment": {
       "q": "É possível apelar de qualquer punição?",
       "a": "Da maioria, sim. Banimentos e silenciamentos podem ser apelados enquanto durarem; advertências e expulsões, em até 30 dias. Um banimento permanente da escada deixa de poder ser apelado após 6 meses ou após uma apelação negada, e a equipe pode marcar um banimento grave como sem direito a apelação. A mensagem direta sempre diz qual é o caso."
+    },
+    "web": {
+      "q": "Posso apelar pelo site?",
+      "a": "Sim. Entre com o Discord em [My appeals](/me/appeals). Você vê os casos de todos os servidores que usam o Mewvo que pode apelar agora e a situação das suas apelações. Funciona mesmo sem você compartilhar mais nenhum servidor com o Mewvo. Quem decide é a equipe do servidor que puniu você."
     }
   },
   "data": {
     "title": "Dados e contato",
     "stored": {
       "q": "Que dados o Mewvo armazena?",
-      "a": "IDs do Discord, seus níveis e XP, casos de moderação, apelações e o que você escreve em formulários ou tickets, além de algumas coisas que você escolhe salvar, como um aniversário. Nenhum e-mail, nenhuma senha, nunca vendidos. A [página de privacidade](/privacy) tem a lista completa, e `/wipedata` apaga seus níveis, saldo, status AFK e aniversário naquele servidor, além da sua lista de tarefas, lembretes e login do Discord armazenado. Os registros de moderação ficam; veja o motivo na página de privacidade."
+      "a": "IDs do Discord, seus níveis e XP, casos de moderação, apelações e o que você escreve em formulários ou tickets, além de algumas coisas que você escolhe salvar, como um aniversário. O bot nunca pede e-mail nem senha. Se você criar uma conta Mewvo neste site, ela guarda um nome de usuário e um hash scrypt irreversível da sua senha (nunca a senha em si), e continua sem e-mail. Nada é vendido, nunca. A [página de privacidade](/privacy) tem a lista completa, e `/wipedata` apaga seus níveis, saldo, status AFK e aniversário naquele servidor, além da sua lista de tarefas, lembretes e login do Discord salvo. Os registros de moderação ficam; a página de privacidade explica por quê."
     },
     "reachStaff": {
       "q": "Como falo com a equipe?",
-      "a": "De três formas: mande uma mensagem direta ao bot e escolha **Send to staff** (Enviar para a equipe) (modmail), abra um ticket pelo painel de tickets ou pergunte em {support}. Para denunciar alguém da equipe, use **Report staff** (Denunciar membro da equipe) no painel de apelações do servidor de suporte; só os administradores veem essas denúncias."
+      "a": "Pergunte primeiro à equipe do seu próprio servidor: mande uma mensagem direta ao bot e escolha **Send to staff** (Enviar para a equipe) (modmail; o Mewvo pergunta para qual servidor é) ou abra um ticket pelo painel de tickets desse servidor. Para denunciar alguém da equipe, use **Report staff** (Denunciar membro da equipe) no painel de apelações; só os administradores desse servidor veem essas denúncias. Perguntas sobre o próprio Mewvo ou sobre o servidor do Mewvo vão em {support}."
     },
     "down": {
       "q": "O bot está fora do ar?",
-      "a": "Veja a [página de status](/status). Ela mostra se o bot está online e atualiza a cada minuto."
+      "a": "Veja a [página de status](/status). Ela mostra se o bot está online; clique em Atualizar lá para ver o estado mais recente."
     }
   }
 }

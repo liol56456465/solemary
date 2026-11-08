@@ -46,7 +46,7 @@
     }
   },
   "login": {
-    "lead": "Zobacz własną historię moderacji na {server}: swoje ostrzeżenia, etap ostrzeżeń, aktywny ban lub wyciszenie, swoje sprawy i odwołania.",
+    "lead": "Zobacz własną historię moderacji ze wszystkich serwerów, które używają Mewvo: ostrzeżenia, poziom ostrzeżeń, aktywny ban lub wyciszenie, swoje sprawy i odwołania.",
     "withDiscord": "Zaloguj się przez Discorda",
     "withAccount": "Zaloguj się kontem Mewvo",
     "note": "Mewvo pyta Discorda tylko o to, kim jesteś (uprawnienie identify): bez e-maila, bez serwerów, nic więcej. Widzisz zawsze tylko własną historię. Logowanie trwa godzinę.",
@@ -55,7 +55,7 @@
   },
   "record": {
     "title": "Moja historia",
-    "lead": "Twoja historia moderacji na {server}, zalogowano jako **{username}**. Widzisz ją tylko ty.",
+    "lead": "Twoja historia moderacji ze wszystkich serwerów, które używają Mewvo, zalogowano jako **{username}**. Widzisz ją tylko ty.",
     "accountSettings": "Ustawienia konta",
     "download": "Pobierz moje dane",
     "subscription": "Subskrypcja",
@@ -70,7 +70,6 @@
     "activeBanPermanent": "Ban {code}: na stałe",
     "activeMuteEnds": "Wyciszenie {code}: kończy się {date}",
     "nothingActive": "Brak aktywnego bana lub wyciszenia.",
-    "cases": "Sprawy",
     "appeals": "Odwołania",
     "column": {
       "case": "Sprawa",
@@ -82,7 +81,8 @@
       "status": "Status",
       "appeal": "Odwołanie",
       "filed": "Złożone",
-      "decided": "Rozstrzygnięte"
+      "decided": "Rozstrzygnięte",
+      "server": "Serwer"
     },
     "permanent": "na stałe",
     "truncated": {
@@ -91,12 +91,13 @@
       "many": "Pokazano twoich {count} najnowszych spraw.",
       "other": "Pokazano twoje {count} najnowsze sprawy."
     },
-    "noCases": "Nie masz żadnych spraw na {server}.",
+    "noCases": "Nie masz spraw na żadnym serwerze, który używa Mewvo.",
     "noAppeals": "Nie złożyłeś żadnych odwołań.",
     "appealHintInvite": "Odwołaj się z panelu odwołań na Discordzie: [dołącz do serwera wsparcia]({invite}) i naciśnij **Appeal**, podając kod sprawy. Z tej strony nie da się złożyć odwołania.",
     "appealHint": "Odwołaj się z panelu odwołań na Discordzie, podając kod sprawy. Z tej strony nie da się złożyć odwołania.",
     "myAppeals": "Moje odwołania",
-    "appealHintWeb": "Odwołaj się od sprawy z dowolnego serwera na stronie [Moje odwołania]({href}). Możesz też odwołać się z panelu odwołań w Discordzie, podając kod sprawy."
+    "appealHintWeb": "Odwołaj się od sprawy z dowolnego serwera na stronie [Moje odwołania]({href}). Możesz też odwołać się z panelu odwołań w Discordzie, podając kod sprawy.",
+    "casesIn": "Sprawy na {server}"
   },
   "message": {
     "logInAgain": "Zaloguj się ponownie",
@@ -271,7 +272,13 @@
       "reason": "Wyjaśnij w co najmniej {min} znakach, dlaczego kara powinna zostać zdjęta.",
       "didIt": "Wybierz, czy to zrobiłeś.",
       "refused": "Twoje odwołanie nie zostało wysłane: od tej sprawy nie można się teraz odwołać. Może już czeka na nią odwołanie, trwa okres oczekiwania po odrzuceniu albo kara się skończyła.",
-      "tooMany": "Wysłano zbyt wiele odwołań. Spróbuj ponownie za godzinę."
+      "tooMany": "Wysłano zbyt wiele odwołań. Spróbuj ponownie za godzinę.",
+      "stale": "Ta strona była nieaktualna, więc nic nie zostało wysłane. Sprawdź odpowiedzi poniżej i wyślij odwołanie jeszcze raz."
+    },
+    "expired": {
+      "message": "Twoje logowanie wygasło, więc nic nie zostało wysłane. Twoje odpowiedzi są poniżej: skopiuj je, zaloguj się ponownie i wklej je do formularza.",
+      "logIn": "Zaloguj się ponownie",
+      "copyHint": "Po zalogowaniu wrócisz do tego odwołania z pustym formularzem."
     }
   }
 }

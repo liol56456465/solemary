@@ -45,7 +45,7 @@
     }
   },
   "login": {
-    "lead": "Consulta tu propio historial de moderación en {server}: tus advertencias, tu etapa de advertencia, cualquier baneo o silenciamiento activo, tus casos y tus apelaciones.",
+    "lead": "Consulta tu propio historial de moderación en todos los servidores que usan Mewvo: tus advertencias, tu nivel, cualquier baneo o silencio activo, tus casos y tus apelaciones.",
     "withDiscord": "Iniciar sesión con Discord",
     "withAccount": "Iniciar sesión con una cuenta de Mewvo",
     "note": "Mewvo solo le pregunta a Discord quién eres (el permiso identify): sin correo electrónico, sin servidores, nada más. Solo ves tu propio historial. La sesión dura una hora.",
@@ -54,7 +54,7 @@
   },
   "record": {
     "title": "Mi historial",
-    "lead": "Tu historial de moderación en {server}, con la sesión iniciada como **{username}**. Solo tú puedes verlo.",
+    "lead": "Tu historial de moderación en todos los servidores que usan Mewvo, con la sesión iniciada como **{username}**. Solo tú puedes verlo.",
     "accountSettings": "Ajustes de la cuenta",
     "download": "Descargar mis datos",
     "subscription": "Suscripción",
@@ -69,7 +69,6 @@
     "activeBanPermanent": "Baneo {code}: permanente",
     "activeMuteEnds": "Silenciamiento {code}: termina el {date}",
     "nothingActive": "Ningún baneo ni silenciamiento activo.",
-    "cases": "Casos",
     "appeals": "Apelaciones",
     "column": {
       "case": "Caso",
@@ -81,7 +80,8 @@
       "status": "Estado",
       "appeal": "Apelación",
       "filed": "Presentada",
-      "decided": "Resuelta"
+      "decided": "Resuelta",
+      "server": "Servidor"
     },
     "permanent": "permanente",
     "truncated": {
@@ -89,12 +89,13 @@
       "many": "Se muestran tus {count} casos más recientes.",
       "other": "Se muestran tus {count} casos más recientes."
     },
-    "noCases": "No tienes casos en {server}.",
+    "noCases": "No tienes casos en ningún servidor que use Mewvo.",
     "noAppeals": "No has presentado ninguna apelación.",
     "appealHintInvite": "Apela desde el panel de apelaciones de Discord: [únete al servidor de soporte]({invite}) y pulsa **Appeal** con el código de caso. Desde esta página no se puede apelar.",
     "appealHint": "Apela desde el panel de apelaciones de Discord con el código de caso. Desde esta página no se puede apelar.",
     "myAppeals": "Mis apelaciones",
-    "appealHintWeb": "Apela un caso de cualquier servidor en [Mis apelaciones]({href}). También puedes apelar desde el panel de apelaciones en Discord con el código del caso."
+    "appealHintWeb": "Apela un caso de cualquier servidor en [Mis apelaciones]({href}). También puedes apelar desde el panel de apelaciones en Discord con el código del caso.",
+    "casesIn": "Casos en {server}"
   },
   "message": {
     "logInAgain": "Volver a iniciar sesión",
@@ -264,7 +265,13 @@
       "reason": "Explica en al menos {min} caracteres por qué debería retirarse la sanción.",
       "didIt": "Elige si lo hiciste.",
       "refused": "Tu apelación no se envió: ahora mismo no se puede apelar este caso. Puede que ya tenga una apelación pendiente, que siga el tiempo de espera tras un rechazo o que la sanción haya terminado.",
-      "tooMany": "Has enviado demasiadas apelaciones. Vuelve a intentarlo dentro de una hora."
+      "tooMany": "Has enviado demasiadas apelaciones. Vuelve a intentarlo dentro de una hora.",
+      "stale": "Esta página estaba desactualizada, así que no se envió nada. Revisa tus respuestas abajo y vuelve a enviar la apelación."
+    },
+    "expired": {
+      "message": "Tu sesión caducó, así que no se envió nada. Tus respuestas están abajo: cópialas, vuelve a iniciar sesión y pégalas en el formulario.",
+      "logIn": "Volver a iniciar sesión",
+      "copyHint": "Después de iniciar sesión vuelves a esta apelación con el formulario vacío."
     }
   }
 }

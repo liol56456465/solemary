@@ -95,6 +95,7 @@ ${ref('imported')}</dl>
             const ref = (term) => html`<div><dt>${t(k(`form.${term}`))}</dt><dd>${ti(k(`form.${term}Text`))}</dd></div>`;
             return html`<h2 id="where">${t(k('where.title'))}</h2>
 <p>${ti(k('where.text'), { support: support(ctx) })}</p>
+${ctx.memberPortal ? html`<p>${ti(k('where.web'))}</p>` : ''}
 ${appealFormMock()}
 <h2 id="form">${t(k('form.title'))}</h2>
 <dl class="ref-list">${ref('why')}

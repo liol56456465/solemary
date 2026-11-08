@@ -30,9 +30,9 @@
   },
   "about": {
     "title": "O bocie",
-    "description": "O Mewvo, bocie Discorda serwera Mewvo.",
+    "description": "O Mewvo, bocie Discorda do moderacji i społeczności, i o tym, kto go prowadzi.",
     "heading": "O Mewvo",
-    "lead": "Mewvo to bot serwera Discord Mewvo, zbudowany i prowadzony przez jego właściciela dla tej społeczności.",
+    "lead": "Mewvo to bot Discorda do moderacji i społeczności. Zaczął jako bot serwera Mewvo, a teraz można go dodać do każdego serwera.",
     "started": {
       "heading": "Jak to się zaczęło",
       "text": "Mewvo zaczął jako fork TitanBota, bota Discorda o otwartym kodzie (MIT), i od tamtej pory został przebudowany pod potrzeby serwera: system kar z kodami spraw i odwołaniami, drabina ostrzeżeń, automoderacja, tickety i modmail oraz panel webowy dla ekipy."
@@ -94,18 +94,18 @@
       }
     },
     "note": {
-      "refresh": "Ta strona odświeża się co minutę.",
-      "refreshSupport": "Ta strona odświeża się co minutę. Coś nie działa? [Daj nam znać na serwerze wsparcia]({url})."
+      "refreshLink": "Odśwież",
+      "support": "Coś nie działa? [Daj nam znać na serwerze wsparcia]({url})."
     }
   },
   "leaderboard": {
     "title": "Ranking",
     "titlePaged": "Ranking, strona {page}",
-    "description": "Ranking poziomów serwera Mewvo.",
+    "description": "Ranking poziomów własnego serwera społeczności Mewvo.",
     "heading": "Ranking",
-    "lead": "Najbardziej aktywni członkowie serwera Mewvo według poziomu i łącznego XP. XP zdobywasz za pisanie na czacie; członkowie, którzy usunęli swoje dane komendą `/wipedata`, nie są tu pokazywani.",
+    "lead": "Najaktywniejsi członkowie własnego serwera społeczności Mewvo według poziomu i łącznego XP. XP zdobywasz, pisząc na czacie; osoby, które usunęły dane przez `/wipedata`, nie są wymienione.",
     "unavailable": "Nie udało się teraz wczytać rankingu. Nic nie zostało zmienione; spróbuj ponownie za minutę.",
-    "off": "Poziomy są wyłączone na serwerze Mewvo, więc na razie nie ma rankingu.",
+    "off": "Poziomy są wyłączone na serwerze społeczności Mewvo, więc teraz nie ma rankingu.",
     "empty": {
       "firstPage": "Nikt jeszcze nie zdobył XP.",
       "laterPage": "Na tej stronie nikogo nie ma.",

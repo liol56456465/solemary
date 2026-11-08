@@ -90,7 +90,7 @@
       "items": {
         "appealPanel": {
           "term": "Panneau d’appel",
-          "text": "/setappeal publie le panneau avec les boutons Appeal, My appeals et My record, sur le serveur principal et sur le serveur d’assistance."
+          "text": "/setappeal publie le panneau avec les boutons Appeal, My appeals et My record sur ton serveur. Pour le serveur de Mewvo, il est aussi sur le serveur d’assistance Mewvo."
         },
         "appealForm": {
           "term": "Formulaire d’appel",
@@ -98,7 +98,7 @@
         },
         "banAndKickAppeals": {
           "term": "Appels de bannissement et d’expulsion",
-          "text": "Ouvrent un salon sur le serveur d’assistance avec le membre dedans, pour que la conversation fonctionne après un bannissement. Le dossier et l’historique vont dans un salon de l’équipe réservé aux administrateurs, avec Accept et Deny."
+          "text": "Pour le serveur de Mewvo, ils ouvrent un salon sur le serveur d’assistance Mewvo avec le membre dedans, pour que la conversation fonctionne après un bannissement. Sur chaque serveur, le dossier et l’historique vont dans un salon d’équipe réservé aux administrateurs, avec Accept et Deny (ou dans la liste Appels du tableau de bord quand aucune catégorie d’appels n’est définie)."
         },
         "limits": {
           "term": "Limites",
@@ -110,11 +110,15 @@
         },
         "bannedRole": {
           "term": "Rôle Banni",
-          "text": "Les membres dont le bannissement est en cours reçoivent un rôle sur le serveur d’assistance, retiré à la fin du bannissement."
+          "text": "Pour le serveur de Mewvo : les membres avec un bannissement actif reçoivent un rôle sur le serveur d’assistance Mewvo, retiré à la fin du bannissement."
         },
         "staffReports": {
           "term": "Signalements visant l’équipe",
           "text": "Les membres peuvent signaler un membre de l’équipe en privé. Seuls les administrateurs voient les signalements ; un signalement ouvert par personne et trois par jour."
+        },
+        "webAppeals": {
+          "term": "Appels sur le site",
+          "text": "Les membres se connectent avec Discord sur My appeals et font appel de leurs propres dossiers de n’importe quel serveur qui utilise Mewvo, même s’ils ne partagent plus aucun serveur avec le bot. L’appel va à l’équipe du serveur qui a ouvert le dossier."
         }
       }
     },

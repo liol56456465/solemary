@@ -90,7 +90,7 @@
       "items": {
         "appealPanel": {
           "term": "Pannello dei ricorsi",
-          "text": "/setappeal pubblica il pannello con i pulsanti Appeal, My appeals e My record, nel server principale e nel server di supporto."
+          "text": "/setappeal pubblica il pannello con i pulsanti Appeal, My appeals e My record nel tuo server. Per il server di Mewvo è anche nel server di supporto di Mewvo."
         },
         "appealForm": {
           "term": "Modulo di ricorso",
@@ -98,7 +98,7 @@
         },
         "banAndKickAppeals": {
           "term": "Ricorsi contro ban ed espulsioni",
-          "text": "Aprono un canale nel server di supporto in cui c'è anche il membro, così la conversazione funziona dopo un ban. Il caso e lo storico vanno in un canale dello staff riservato agli amministratori, con Accept e Deny."
+          "text": "Per il server di Mewvo aprono un canale nel server di supporto di Mewvo con il membro dentro, così la conversazione funziona anche dopo un ban. In ogni server il caso e lo storico vanno in un canale dello staff riservato agli amministratori, con Accept e Deny (o nell’elenco Ricorsi della dashboard se non è impostata una categoria per i ricorsi)."
         },
         "limits": {
           "term": "Limiti",
@@ -110,11 +110,15 @@
         },
         "bannedRole": {
           "term": "Ruolo Banned",
-          "text": "I membri con un ban attivo ricevono un ruolo nel server di supporto, che viene tolto quando il ban termina."
+          "text": "Per il server di Mewvo: i membri con un ban attivo ricevono un ruolo nel server di supporto di Mewvo, rimosso quando il ban finisce."
         },
         "staffReports": {
           "term": "Segnalazioni sullo staff",
           "text": "I membri possono segnalare in privato un membro dello staff. Solo gli amministratori vedono le segnalazioni; una segnalazione aperta per persona e tre al giorno."
+        },
+        "webAppeals": {
+          "term": "Ricorsi sul sito",
+          "text": "I membri accedono con Discord su My appeals e fanno ricorso contro i propri casi da qualsiasi server che usa Mewvo, anche se non condividono più alcun server con il bot. Il ricorso va allo staff del server che ha aperto il caso."
         }
       }
     },

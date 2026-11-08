@@ -1,6 +1,7 @@
 {
   "meta": {
-    "description": "Mewvo ist ein Discord-Bot für Moderation mit Fallcodes und Direktnachrichten, einer dreistufigen Verwarnungsleiter, Einsprüchen, die bei einem Menschen ankommen, Automod, Tickets und Community-Tools."
+    "description": "Mewvo ist ein Discord-Bot für Moderation mit Fallcodes und Direktnachrichten, einer dreistufigen Verwarnungsleiter, Einsprüchen, die bei einem Menschen ankommen, Automod, Tickets und Community-Tools.",
+    "title": "Mewvo: Moderations- und Community-Bot für Discord"
   },
   "actions": {
     "readDocs": "Doku lesen",
@@ -34,7 +35,7 @@
       },
       "appeals": {
         "name": "Einsprüche",
-        "text": "Mitglieder legen über ein kurzes Formular Einspruch ein. Einsprüche gegen Banns öffnen einen Kanal auf dem Support-Server, damit sie auch nach einem Bann funktionieren, und ein Mensch aus dem Team entscheidet.",
+        "text": "Mitglieder legen mit einem kurzen Formular Einspruch ein, in Discord oder auf dieser Website, und das Team des Servers, der sie bestraft hat, entscheidet. Die Website funktioniert auch nach einem Bann, wenn das Mitglied keinen Server mehr mit Mewvo teilt.",
         "link": "So funktionieren Einsprüche"
       },
       "automod": {

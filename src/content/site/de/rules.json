@@ -1,9 +1,9 @@
 {
   "title": "Regeln",
-  "description": "Die Regeln des Mewvo-Discord-Servers.",
+  "description": "Die Regeln von Mewvos eigenem Community-Server auf Discord.",
   "head": {
     "heading": "Serverregeln",
-    "lead": "Die Regeln des Mewvo-Servers. Wenn das Team wegen einer davon verwarnt, stummschaltet, kickt oder bannt, nennt die Direktnachricht die Regel und verlinkt hierher."
+    "lead": "Die Regeln von Mewvos eigenem Community-Server; jeder andere Server, der Mewvo nutzt, hat seine eigenen. Wenn das Team dort wegen einer dieser Regeln verwarnt, stummschaltet, kickt oder bannt, nennt die Direktnachricht die Regel und verlinkt hierher."
   },
   "state": {
     "unavailable": "Die Regeln konnten gerade nicht geladen werden. Bitte versuch es in einer Minute noch einmal.",

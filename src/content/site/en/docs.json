@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Docs",
-    "description": "Short guides to Mewvo: getting started for staff, how warnings escalate, how appeals work and using the dashboard."
+    "description": "Short guides to Mewvo: setting it up, getting started for staff, how warnings escalate, how appeals work and using the dashboard."
   },
   "hub": {
     "title": "Guides",
@@ -57,7 +57,7 @@
       "summary": "Who can use what, your first enforcement action, and the commands you’ll use every week.",
       "access": {
         "title": "Who can do what",
-        "text": "Everyday commands (help, rank, leaderboard, fun, to-do lists, reports and so on) are open to every member. Anything that moderates, changes settings, posts as the bot, affects other members or moves currency needs the **Administrator** role. The check runs every time a command or button is used, not only when it is first opened.",
+        "text": "Everyday commands (help, rank, leaderboard, fun, to-do lists, reports and so on) are open to every member. Anything that moderates, changes settings, posts as the bot or affects other members needs the **Administrator** role. The check runs every time a command or button is used, not only when it is first opened.",
         "denied": "Members without Administrator who try a staff command are told so and pointed to the channel where they can request a role."
       },
       "firstAction": {
@@ -116,7 +116,8 @@
       "summary": "Where to appeal, what the form asks, who decides and how long it takes to try again.",
       "where": {
         "title": "Where to appeal",
-        "text": "Every punishment DM has the appeal link, or says it can’t be appealed. The appeal panel has three buttons: **Appeal**, **My appeals** and **My record**. Muted or warned members use the panel in the main server. Banned members use the one in {support}, which they can still reach after a ban."
+        "text": "Every punishment DM has the appeal link, or says it can’t be appealed. You always appeal to the server that punished you; its staff decide, not Mewvo. In Discord, the appeal panel has three buttons: **Appeal**, **My appeals** and **My record**. Muted or warned members use the panel in that server. For Mewvo’s own server, banned members use the one in {support}, which they can still reach after a ban.",
+        "web": "**On the website:** log in with Discord on [My appeals](/me/appeals). It lists your cases from every server that uses Mewvo that can be appealed now, even when you share no server with Mewvo any more. Pick one, answer the questions and send it. The staff of that server decide, and the decision shows on the same page."
       },
       "form": {
         "title": "The form",
@@ -129,9 +130,9 @@
       },
       "after": {
         "title": "What happens next",
-        "banKick": "**Ban and kick appeals** open a channel in the support server with you in it, so staff can ask questions.",
-        "muteWarn": "**Mute and warning appeals** are reviewed by staff in the main server.",
-        "decision": "The administrators decide. You get the decision by DM. An accepted appeal lifts what is still active and, for bans and kicks, comes with a one-time invite back."
+        "banKick": "**Ban and kick appeals** for Mewvo’s own server open a channel in the Mewvo Support server with you in it, so staff can ask questions. Other servers handle them in their own staff channels.",
+        "muteWarn": "**Mute and warning appeals** are reviewed by the staff of the server that punished you.",
+        "decision": "That server’s administrators decide. You get the decision by DM, and on My appeals if you appealed on the website. An accepted appeal lifts what is still active and, for bans and kicks, comes with a one-time invite back."
       },
       "limits": {
         "title": "Limits",

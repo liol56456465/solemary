@@ -90,7 +90,7 @@
       "items": {
         "appealPanel": {
           "term": "Einspruchs-Panel",
-          "text": "/setappeal postet das Panel mit den Buttons Appeal, My appeals und My record, auf dem Hauptserver und dem Support-Server."
+          "text": "/setappeal postet das Panel mit den Buttons Appeal, My appeals und My record auf deinem Server. Für Mewvos eigenen Server steht es auch auf dem Mewvo-Support-Server."
         },
         "appealForm": {
           "term": "Einspruchsformular",
@@ -98,7 +98,7 @@
         },
         "banAndKickAppeals": {
           "term": "Einsprüche gegen Banns und Kicks",
-          "text": "Öffnen einen Kanal auf dem Support-Server mit dem Mitglied darin, damit das Gespräch auch nach einem Bann funktioniert. Fall und Verlauf gehen in einen Teamkanal nur für Administratoren, mit Accept und Deny."
+          "text": "Für Mewvos eigenen Server öffnen sie einen Kanal auf dem Mewvo-Support-Server mit dem Mitglied darin, damit das Gespräch auch nach einem Bann funktioniert. Auf jedem Server gehen Fall und Verlauf in einen Teamkanal nur für Administratoren, mit Accept und Deny (oder in die Einspruchsliste des Dashboards, wenn keine Einspruchskategorie gesetzt ist)."
         },
         "limits": {
           "term": "Limits",
@@ -110,11 +110,15 @@
         },
         "bannedRole": {
           "term": "Bann-Rolle",
-          "text": "Mitglieder mit aktivem Bann bekommen eine Rolle auf dem Support-Server, die entfernt wird, wenn der Bann endet."
+          "text": "Für Mewvos eigenen Server: Mitglieder mit aktivem Bann bekommen eine Rolle auf dem Mewvo-Support-Server, die entfernt wird, wenn der Bann endet."
         },
         "staffReports": {
           "term": "Meldungen über das Team",
           "text": "Mitglieder können ein Teammitglied privat melden. Nur Administratoren sehen die Meldungen; eine offene Meldung pro Person und drei pro Tag."
+        },
+        "webAppeals": {
+          "term": "Einsprüche auf der Website",
+          "text": "Mitglieder melden sich unter My appeals mit Discord an und legen Einspruch gegen ihre eigenen Fälle aus jedem Server ein, der Mewvo nutzt, auch wenn sie keinen Server mehr mit dem Bot teilen. Der Einspruch geht an das Team des Servers, der den Fall vergeben hat."
         }
       }
     },

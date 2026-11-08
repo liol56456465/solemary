@@ -1,6 +1,7 @@
 {
   "meta": {
-    "description": "Mewvo est un bot Discord de modération avec codes de dossier et messages privés, une échelle d’avertissements en trois étapes, des appels lus par une vraie personne, l’automod, des tickets et des outils communautaires."
+    "description": "Mewvo est un bot Discord de modération avec codes de dossier et messages privés, une échelle d’avertissements en trois étapes, des appels lus par une vraie personne, l’automod, des tickets et des outils communautaires.",
+    "title": "Mewvo : bot de modération et de communauté pour Discord"
   },
   "actions": {
     "readDocs": "Lire la documentation",
@@ -34,7 +35,7 @@
       },
       "appeals": {
         "name": "Appels",
-        "text": "Les membres font appel avec un court formulaire. Les appels de bannissement ouvrent un salon sur le serveur d’assistance, pour fonctionner même après un bannissement, et une personne de l’équipe décide.",
+        "text": "Les membres font appel avec un court formulaire, sur Discord ou sur ce site, et l’équipe du serveur qui les a sanctionnés décide. Le site fonctionne même après un bannissement, quand le membre ne partage plus aucun serveur avec Mewvo.",
         "link": "Comment fonctionnent les appels"
       },
       "automod": {

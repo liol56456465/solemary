@@ -46,7 +46,7 @@
     }
   },
   "login": {
-    "lead": "Veja o seu próprio histórico de moderação em {server}: suas advertências, a etapa de advertência, qualquer banimento ou silenciamento ativo, seus casos e suas apelações.",
+    "lead": "Veja seu próprio histórico de moderação em todos os servidores que usam o Mewvo: suas advertências, seu nível, qualquer banimento ou silenciamento ativo, seus casos e suas apelações.",
     "withDiscord": "Entrar com o Discord",
     "withAccount": "Entrar com uma conta Mewvo",
     "note": "O Mewvo pede ao Discord apenas quem você é (a permissão identify): nenhum e-mail, nenhum servidor, nada mais. Você só vê o seu próprio histórico. O login dura uma hora.",
@@ -55,7 +55,7 @@
   },
   "record": {
     "title": "Meu histórico",
-    "lead": "Seu histórico de moderação em {server}, conectado como **{username}**. Só você pode ver isto.",
+    "lead": "Seu histórico de moderação em todos os servidores que usam o Mewvo, conectado como **{username}**. Só você pode ver isto.",
     "accountSettings": "Configurações da conta",
     "download": "Baixar meus dados",
     "subscription": "Assinatura",
@@ -70,7 +70,6 @@
     "activeBanPermanent": "Banimento {code}: permanente",
     "activeMuteEnds": "Silenciamento {code}: termina em {date}",
     "nothingActive": "Nenhum banimento ou silenciamento ativo.",
-    "cases": "Casos",
     "appeals": "Apelações",
     "column": {
       "case": "Caso",
@@ -82,7 +81,8 @@
       "status": "Status",
       "appeal": "Apelação",
       "filed": "Enviada",
-      "decided": "Decidida"
+      "decided": "Decidida",
+      "server": "Servidor"
     },
     "permanent": "permanente",
     "truncated": {
@@ -91,12 +91,13 @@
       "many": "Mostrando os seus {count} casos mais recentes.",
       "other": "Mostrando os seus {count} casos mais recentes."
     },
-    "noCases": "Você não tem casos em {server}.",
+    "noCases": "Você não tem casos em nenhum servidor que use o Mewvo.",
     "noAppeals": "Você não enviou nenhuma apelação.",
     "appealHintInvite": "Apele pelo painel de apelações no Discord: [entre no servidor de suporte]({invite}) e clique em **Appeal** (Apelar) com o código do caso. Não é possível apelar por esta página.",
     "appealHint": "Apele pelo painel de apelações no Discord com o código do caso. Não é possível apelar por esta página.",
     "myAppeals": "Meus recursos",
-    "appealHintWeb": "Recorra de um caso de qualquer servidor em [Meus recursos]({href}). Você também pode recorrer pelo painel de recursos no Discord com o código do caso."
+    "appealHintWeb": "Recorra de um caso de qualquer servidor em [Meus recursos]({href}). Você também pode recorrer pelo painel de recursos no Discord com o código do caso.",
+    "casesIn": "Casos em {server}"
   },
   "message": {
     "logInAgain": "Entrar de novo",
@@ -271,7 +272,13 @@
       "reason": "Explique em pelo menos {min} caracteres por que a punição deveria ser retirada.",
       "didIt": "Escolha se você fez isso.",
       "refused": "Seu recurso não foi enviado: no momento não é possível recorrer deste caso. Talvez já exista um recurso pendente, o tempo de espera depois de uma negativa ainda não acabou, ou a punição já terminou.",
-      "tooMany": "Você enviou recursos demais. Tente de novo daqui a uma hora."
+      "tooMany": "Você enviou recursos demais. Tente de novo daqui a uma hora.",
+      "stale": "Esta página estava desatualizada, então nada foi enviado. Confira suas respostas abaixo e envie a apelação de novo."
+    },
+    "expired": {
+      "message": "Seu login expirou, então nada foi enviado. Suas respostas estão abaixo: copie-as, entre de novo e cole no formulário.",
+      "logIn": "Entrar de novo",
+      "copyHint": "Depois de entrar, você volta para esta apelação com o formulário vazio."
     }
   }
 }

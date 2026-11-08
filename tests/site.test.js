@@ -95,7 +95,9 @@ test('the stylesheet is the site\'s own: its tokens, light and dark, no dashboar
         const res = await site.get(CSS_PATH);
         assert.equal(res.status, 200);
         assert.match(res.headers.get('content-type'), /text\/css/);
-        assert.equal(res.headers.get('cache-control'), 'public, max-age=3600');
+        assert.equal(res.headers.get('cache-control'), 'public, max-age=31536000, immutable', 'the hashed URL never changes');
+        assert.equal((await site.get('/site.css?v=0000000000')).headers.get('cache-control'), 'public, max-age=3600', 'an old hash: an hour');
+        assert.equal((await site.get('/site.css')).headers.get('cache-control'), 'public, max-age=3600', 'no hash: an hour');
         assert.equal(res.body, STYLESHEET);
         const file = readFileSync(new URL('../src/services/site/static/site.css', import.meta.url), 'utf8');
         assert.equal(STYLESHEET, file);
@@ -113,7 +115,8 @@ test('the script is the site\'s own static file: versioned, JavaScript, cached, 
         const res = await site.get(JS_PATH);
         assert.equal(res.status, 200);
         assert.match(res.headers.get('content-type'), /^text\/javascript/);
-        assert.equal(res.headers.get('cache-control'), 'public, max-age=3600');
+        assert.equal(res.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+        assert.equal((await site.get('/site.js?v=0000000000')).headers.get('cache-control'), 'public, max-age=3600');
         assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
         assert.equal(res.headers.get('content-security-policy'), SECURITY_HEADERS['Content-Security-Policy']);
         assert.equal(res.body, SCRIPT);
@@ -309,7 +312,7 @@ test('health and ready stay JSON and are not shadowed by the site', async () => 
     const ready = app.indexOf("app.get('/ready'");
     const site2 = app.indexOf('registerSite(app');
     assert.ok(health > 0 && ready > health && site2 > ready, 'order: /health, /ready, then the site');
-    assert.ok(app.includes("status: 'healthy',") && app.includes("message: 'Bot is ready',"));
+    assert.ok(app.includes("status: 'healthy',") && app.includes('createReadyHandler(this'));
     assert.ok(!app.includes('Mewvo System Online'), 'the old JSON root is gone');
 });
 
@@ -414,7 +417,7 @@ test('leaderboard: leveling turned off says so', async () => {
     try {
         const res = await site.get('/leaderboard');
         assert.equal(res.status, 200);
-        assert.ok(res.body.includes('Leveling is turned off on the Mewvo server'));
+        assert.ok(res.body.includes('Leveling is turned off on Mewvo’s community server'));
         assert.ok(!res.body.includes('<table'));
     } finally { await site.close(); }
 });
@@ -501,7 +504,7 @@ test('the real reader throws (never an empty board) when it cannot read', async 
     assert.equal(failing.reads(), 2, 'a failed read is not cached');
 });
 
-test('status: Online / Starting / Degraded, 200 always, refreshes, shows no counts, IDs or versions', async () => {
+test('status: Online / Starting / Degraded, 200 always, a Refresh link, shows no counts, IDs or versions', async () => {
     for (const [status, label] of [
         [{ state: 'online', uptimeMs: (2 * 24 + 3) * 3_600_000 }, 'Online'],
         [{ state: 'starting', uptimeMs: null }, 'Starting'],
@@ -513,7 +516,8 @@ test('status: Online / Starting / Degraded, 200 always, refreshes, shows no coun
             const res = await site.get('/status');
             assert.equal(res.status, 200, label);
             assert.ok(res.body.includes(`<span class="status-dot" aria-hidden="true"></span>${label}</p>`), label);
-            assert.ok(res.body.includes('<meta http-equiv="refresh" content="60">'));
+            assert.ok(!res.body.includes('http-equiv="refresh"'), 'no automatic reload');
+            assert.ok(res.body.includes('<a href="/status">Refresh</a>'), 'a Refresh link');
             assert.ok(res.body.includes('<li><a href="/status" aria-current="page">Status</a></li>'));
             const main = res.body.slice(res.body.indexOf('<main'), res.body.indexOf('</main>'));
             assert.ok(!/\d{17,20}/.test(main), 'no IDs');

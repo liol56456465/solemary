@@ -7,7 +7,7 @@ import { JS_PATH } from '../src/services/site/shell.js';
 import assert from 'node:assert/strict';
 import express from 'express';
 import {
-    MEMBER_SECURITY_HEADERS, MEMBER_SESSION_COOKIE, MEMBER_STATE_COOKIE, appealInfo, buildRecordView,
+    MAX_STANDING_SERVERS, MEMBER_SECURITY_HEADERS, MEMBER_SESSION_COOKIE, MEMBER_STATE_COOKIE, appealInfo, buildRecordGroups, buildRecordView,
     memberPortalSettings, memberSigningKey, registerMemberPortal,
 } from '../src/services/site/memberPortal.js';
 import { registerDashboard } from '../src/services/dashboard/routes.js';
@@ -72,7 +72,8 @@ function fakeData({ fail = false } = {}) {
         calls,
         data: {
             getMemberStanding: async (guildId, userId) => { guard('standing', userId); assert.equal(guildId, GUILD); return STANDING; },
-            listCasesForUser: async (guildId, userId) => { guard('cases', userId); assert.equal(guildId, GUILD); return { rows: CASES, total: CASES.length }; },
+            listCasesAllServers: async (userId) => { guard('cases', userId); return CASES; },
+            guildName: (guildId) => (guildId === GUILD ? 'Guild <One>' : null),
             listUserAppeals: async (userId) => { guard('appeals', userId); return APPEALS; },
             exportData: async (userId) => { guard('export', userId); return { format: 'mewvo-data-export-v1', userId, levels: [{ guild_id: GUILD, xp: 5 }] }; },
         },
@@ -346,6 +347,71 @@ test('the record: only the logged-in member, member-safe fields, test cases left
         assert.ok(body.includes('<form method="post" action="/me/logout">'));
     } finally {
         await app.close();
+    }
+});
+
+test('My record lists every server\'s cases, grouped by server name, each with its own standing; test cases left out', async () => {
+    const OTHER_GUILD = '100000000000000088';
+    const FAR = '100000000000000099';
+    setSettingsCacheForTests(OTHER_GUILD, {});
+    setSettingsCacheForTests(FAR, {});
+    const rows = [
+        caseRow({ case_code: 'ogwarn', guild_id: OTHER_GUILD, reason: 'Other server warn', created_at: past(1) }),
+        ...CASES,
+        caseRow({ case_code: 'ogtest', guild_id: OTHER_GUILD, is_test: true, reason: 'OTHER-SIMULATION' }),
+        caseRow({ case_code: 'farwrn', guild_id: FAR, reason: 'Far away warn', created_at: past(30) }),
+        caseRow({ case_code: 'stray2', guild_id: OTHER_GUILD, target_user_id: OTHER, reason: 'NOT-MINE' }),
+    ];
+    const standingCalls = [];
+    const data = {
+        listCasesAllServers: async (userId) => { assert.equal(userId, MEMBER); return rows; },
+        getMemberStanding: async (guildId, userId) => {
+            standingCalls.push(guildId);
+            assert.equal(userId, MEMBER);
+            if (guildId === OTHER_GUILD) return { ladder: { level: 1, warns_since_level: 0 }, warns: [rows[0]], activeBan: null, activeMute: null };
+            return guildId === GUILD ? STANDING : { ladder: { level: 0, warns_since_level: 0 }, warns: [], activeBan: null, activeMute: null };
+        },
+        listUserAppeals: async () => APPEALS,
+        guildName: (guildId) => ({ [GUILD]: 'Guild <One>', [OTHER_GUILD]: 'Other Guild' }[guildId] || null),
+        exportData: async () => ({}),
+    };
+    const app = await serve({ data });
+    try {
+        const { cookie } = await login(app);
+        const res = await app.request('/me', { cookie });
+        assert.equal(res.status, 200);
+        const body = res.body;
+        // Newest case first: the other server's group comes before the first one; the far server last.
+        const at = (text) => body.indexOf(text);
+        assert.ok(at('<h2 id="server-0">Other Guild</h2>') > -1, 'the other server by name');
+        assert.ok(at('<h2 id="server-1">Guild &lt;One&gt;</h2>') > at('server-0'), 'server names escaped, in newest-case order');
+        assert.ok(at('Unknown server') > at('server-1'), 'a server Mewvo is not in: a neutral label');
+        assert.ok(at('Other server warn') > at('server-0') && at('Other server warn') < at('server-1'), 'cases under their own server');
+        assert.ok(at('Spam') > at('server-1'));
+        assert.ok(body.includes('Level 1 of 3') && body.includes('Level 0 of 3'), 'each server has its own standing');
+        assert.deepEqual([...standingCalls].sort(), [GUILD, OTHER_GUILD, FAR].sort(), 'standing per server that has cases');
+        for (const hidden of ['ogtest', 'OTHER-SIMULATION', 'ttest2', 'NOT-MINE', 'stray2']) assert.ok(!body.includes(hidden), `hidden: ${hidden}`);
+        assert.ok(/<td>Guild &lt;One&gt;<\/td><td><code>bban23<\/code>/.test(body), 'the appeals table names the server');
+    } finally {
+        await app.close();
+        setSettingsCacheForTests(OTHER_GUILD, null);
+        setSettingsCacheForTests(FAR, null);
+    }
+});
+
+test('buildRecordGroups: standing only where it was read (cases only past the cap)', () => {
+    const ids = Array.from({ length: MAX_STANDING_SERVERS + 2 }, (_, i) => String(100000000000000100n + BigInt(i)));
+    for (const id of ids) setSettingsCacheForTests(id, {});
+    try {
+        const rows = ids.map((id, i) => caseRow({ case_code: `g${String(i).padStart(4, '0')}x`, guild_id: id, created_at: past(i + 1) }));
+        const standings = new Map(ids.slice(0, MAX_STANDING_SERVERS).map((id) => [id, STANDING]));
+        const record = buildRecordGroups({ cases: rows, appeals: [], standings });
+        assert.equal(record.groups.length, ids.length);
+        assert.equal(record.groups.filter((g) => g.summary).length, MAX_STANDING_SERVERS);
+        assert.equal(record.groups.at(-1).summary, false);
+        assert.equal(record.groups.at(-1).view.cases.length, 1);
+    } finally {
+        for (const id of ids) setSettingsCacheForTests(id, null);
     }
 });
 

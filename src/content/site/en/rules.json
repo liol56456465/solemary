@@ -1,9 +1,9 @@
 {
   "title": "Rules",
-  "description": "The rules of the Mewvo Discord server.",
+  "description": "The rules of Mewvo’s own community server on Discord.",
   "head": {
     "heading": "Server rules",
-    "lead": "The rules of the Mewvo server. When staff warn, mute, kick or ban for one of them, the DM names the rule and links here."
+    "lead": "The rules of Mewvo’s own community server; every other server that uses Mewvo has its own. When staff there warn, mute, kick or ban for one of these rules, the DM names the rule and links here."
   },
   "state": {
     "unavailable": "The rules could not be loaded right now. Please try again in a minute.",

@@ -29,7 +29,7 @@ const PASSWORD = 'a long password 1';
 
 const DATA = {
     getMemberStanding: async () => ({ ladder: { level: 0, warns_since_level: 0 }, warns: [], activeBan: null, activeMute: null }),
-    listCasesForUser: async () => ({ rows: [], total: 0 }),
+    listCasesAllServers: async () => [],
     listUserAppeals: async () => [],
     exportData: async (userId) => ({ format: 'mewvo-data-export-v1', userId, mewvoAccount: [] }),
 };
@@ -214,7 +214,7 @@ test('forced Discord link: every page except the link step, callback, logout and
         await discordBack(discordOnly, start);
         const record = await discordOnly.request('/me');
         assert.equal(record.status, 200);
-        assert.match(record.body, /Warning ladder/);
+        assert.match(record.body, /You have no cases in any server that uses Mewvo/);
     } finally {
         await app.close();
     }
@@ -284,7 +284,7 @@ test('the whole flow: sign up, link Discord with 6 months of Pro, 1-letter name,
         assert.equal(app.after.length, 1);
         assert.equal(app.after[0].from, 'bonus');
         const record = await b.request('/me');
-        assert.match(record.body, /Warning ladder/);
+        assert.match(record.body, /You have no cases in any server that uses Mewvo/);
         assert.match(record.body, /Account settings/);
         const settings0 = await b.request('/me/account');
         assert.doesNotMatch(settings0.body, /Change email|name="email"|<dt>Email<\/dt>/, 'no email in settings');
@@ -303,7 +303,7 @@ test('the whole flow: sign up, link Discord with 6 months of Pro, 1-letter name,
         const login = await passwordLogin(b, 'Q');
         assert.equal(login.status, 303);
         assert.equal(login.location, '/me');
-        assert.match((await b.request('/me')).body, /Warning ladder/);
+        assert.match((await b.request('/me')).body, /You have no cases in any server that uses Mewvo/);
 
         // 2FA on: the key on the page works, then 8 recovery codes are shown once.
         await b.request('/me/account');
@@ -347,7 +347,7 @@ test('the whole flow: sign up, link Discord with 6 months of Pro, 1-letter name,
         const noCode = await other.request('/me/reset', { form: { password: 'a brand new password' } });
         assert.equal(noCode.status, 400, 'no code, no reset');
         assert.equal((await other.request('/me/reset', { form: { password: 'a brand new password', code: '000000' } })).status, 400, 'wrong code, no reset');
-        assert.match((await b.request('/me')).body, /Warning ladder/, 'a refused reset ends no session');
+        assert.match((await b.request('/me')).body, /You have no cases in any server that uses Mewvo/, 'a refused reset ends no session');
         assert.equal((await b.request('/me/logout', { form: {} })).status, 303);
         assert.equal((await passwordLogin(b, 'q')).status, 303, 'a refused reset keeps the old password');
         await b.request('/me/login-2fa');
@@ -356,7 +356,7 @@ test('the whole flow: sign up, link Discord with 6 months of Pro, 1-letter name,
         assert.equal(reset.status, 303);
         assert.equal(reset.location, '/me/account', 'code checked on the form, so no second code step');
         assert.match((await b.request('/me')).body, /Log in with Discord/, 'the old session ended');
-        assert.match((await other.request('/me')).body, /Warning ladder/);
+        assert.match((await other.request('/me')).body, /You have no cases in any server that uses Mewvo/);
         assert.equal((await passwordLogin(b, 'q')).status, 401, 'the old password no longer works');
 
         // Delete: password + code needed; the bonus row stays with the Discord id.

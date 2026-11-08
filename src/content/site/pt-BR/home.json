@@ -1,6 +1,7 @@
 {
   "meta": {
-    "description": "Mewvo é um bot de moderação para Discord com códigos de caso e mensagens diretas, uma escada de advertências em três etapas, apelações analisadas por uma pessoa, automod, tickets e ferramentas para a comunidade."
+    "description": "Mewvo é um bot de moderação para Discord com códigos de caso e mensagens diretas, uma escada de advertências em três etapas, apelações analisadas por uma pessoa, automod, tickets e ferramentas para a comunidade.",
+    "title": "Mewvo: bot de moderação e comunidade para o Discord"
   },
   "actions": {
     "readDocs": "Ler a documentação",
@@ -34,7 +35,7 @@
       },
       "appeals": {
         "name": "Apelações",
-        "text": "Os membros apelam com um formulário curto. Apelações de banimento abrem um canal no servidor de suporte, então funcionam mesmo depois de um banimento, e uma pessoa da equipe decide.",
+        "text": "Os membros apelam com um formulário curto, no Discord ou neste site, e a equipe do servidor que os puniu decide. O site funciona até depois de um banimento, quando o membro já não compartilha nenhum servidor com o Mewvo.",
         "link": "Como funcionam as apelações"
       },
       "automod": {

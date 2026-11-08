@@ -44,7 +44,7 @@
     }
   },
   "login": {
-    "lead": "See your own moderation record in {server}: your warnings, warning stage, any active ban or mute, your cases and your appeals.",
+    "lead": "See your own moderation record in every server that uses Mewvo: your warnings, warning stage, any active ban or mute, your cases and your appeals.",
     "withDiscord": "Log in with Discord",
     "withAccount": "Log in with a Mewvo account",
     "note": "Mewvo asks Discord only who you are (the identify permission): no email, no servers, nothing else. You only ever see your own record. The login lasts one hour.",
@@ -53,7 +53,7 @@
   },
   "record": {
     "title": "My record",
-    "lead": "Your moderation record in {server}, logged in as **{username}**. Only you can see this.",
+    "lead": "Your moderation record in every server that uses Mewvo, logged in as **{username}**. Only you can see this.",
     "accountSettings": "Account settings",
     "download": "Download my data",
     "subscription": "Subscription",
@@ -68,7 +68,6 @@
     "activeBanPermanent": "Ban {code}: permanent",
     "activeMuteEnds": "Mute {code}: ends {date}",
     "nothingActive": "No active ban or mute.",
-    "cases": "Cases",
     "appeals": "Appeals",
     "column": {
       "case": "Case",
@@ -80,19 +79,21 @@
       "status": "Status",
       "appeal": "Appeal",
       "filed": "Filed",
-      "decided": "Decided"
+      "decided": "Decided",
+      "server": "Server"
     },
     "permanent": "permanent",
     "truncated": {
       "one": "Showing your newest {count} case.",
       "other": "Showing your newest {count} cases."
     },
-    "noCases": "You have no cases in {server}.",
+    "noCases": "You have no cases in any server that uses Mewvo.",
     "noAppeals": "You have not filed any appeals.",
     "appealHintInvite": "Appeal from the appeal panel in Discord: [join the support server]({invite}) and press **Appeal** with the case code. Nothing can be appealed from this page.",
     "appealHint": "Appeal from the appeal panel in Discord with the case code. Nothing can be appealed from this page.",
     "myAppeals": "My appeals",
-    "appealHintWeb": "Appeal a case from any server on [My appeals]({href}). You can also appeal from the appeal panel in Discord with the case code."
+    "appealHintWeb": "Appeal a case from any server on [My appeals]({href}). You can also appeal from the appeal panel in Discord with the case code.",
+    "casesIn": "Cases in {server}"
   },
   "message": {
     "logInAgain": "Log in again",
@@ -206,7 +207,13 @@
       "reason": "Explain in at least {min} characters why it should be lifted.",
       "didIt": "Choose whether you did it.",
       "refused": "Your appeal was not sent: this case cannot be appealed right now. It may already have a pending appeal, be in the waiting time after a denial, or have ended.",
-      "tooMany": "You sent too many appeals. Try again in an hour."
+      "tooMany": "You sent too many appeals. Try again in an hour.",
+      "stale": "This page was out of date, so nothing was sent. Check your answers below and send the appeal again."
+    },
+    "expired": {
+      "message": "Your login ran out, so nothing was sent. Your answers are below: copy them, log in again and paste them into the form.",
+      "logIn": "Log in again",
+      "copyHint": "After you log in you come back to this appeal with an empty form."
     }
   }
 }

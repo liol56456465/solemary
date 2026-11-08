@@ -4,9 +4,24 @@
   },
   "head": {
     "title": "Lista zmian",
-    "lead": "Co się zmieniło w Mewvo, od najnowszych. Zmiana trafia na listę, gdy jest gotowa. Bot na twoim serwerze dostanie ją przy następnej aktualizacji."
+    "lead": "Co się zmieniło w Mewvo, od najnowszych. Zmiana pojawia się tu, gdy jest gotowa. Mewvo działa na naszym hostingu dla wszystkich serwerów, więc nie trzeba niczego instalować ani aktualizować: każdy serwer dostaje zmianę w tym samym czasie."
   },
   "entries": {
+    "2026-11-08": {
+      "public": "Mewvo jest publiczne: każdy serwer może je dodać przyciskiem Dodaj do Discorda. Ustawienia, sprawy, odwołania i limity są osobne dla każdego serwera.",
+      "perServerDashboard": "Każdy serwer ma własny panel. Po zalogowaniu wybierasz serwer; otworzyć go mogą tylko jego administratorzy.",
+      "webAppeals": "Odwołania na stronie: zaloguj się w My appeals i odwołaj się od kary z dowolnego serwera, który używa Mewvo, także po banie. Decyduje ekipa tego serwera.",
+      "recordAllServers": "Moja historia pokazuje twoje sprawy z każdego serwera, który używa Mewvo, pogrupowane według serwera."
+    },
+    "2026-11-07": {
+      "languages": "Panel i wiadomości bota do członków są w tych samych 8 językach co strona. Każdy serwer wybiera język bota."
+    },
+    "2026-11-05": {
+      "websiteEditor": "Edytor strony: tekst strony w każdym języku i jej obrazy można zmieniać w panelu, bez nowej wersji bota."
+    },
+    "2026-11-04": {
+      "languages": "Strona jest w 8 językach: angielskim, niemieckim, francuskim, hiszpańskim, włoskim, polskim, portugalskim (Brazylia) i rosyjskim."
+    },
     "2026-11-01": {
       "customAutomodRules": "Własne reguły automoderacji: dodaj własne słowa i frazy do blokowania komendą /automod custom albo w panelu webowym. Słowa reguły możesz później zmienić. Część planów Normal, Pro i Max.",
       "remind": "/remind: ustaw przypomnienie dla siebie. Mewvo wyśle je w wiadomości prywatnej albo na kanale, jeśli masz zamknięte wiadomości prywatne.",
@@ -20,7 +35,9 @@
       "shiftNote": "Panel webowy: notatka dla następnej zmiany ekipy na stronie Overview.",
       "weeklySummary": "Cotygodniowe podsumowanie serwera w dzienniku moderacji w każdy poniedziałek.",
       "proMaxBranding": "Pro i Max: Mewvo może używać na twoim serwerze własnego pseudonimu i awatara, a ekipa może pobierać sprawy jako arkusz kalkulacyjny.",
-      "dashboardThemes": "Motywy panelu webowego: Light, Dark, Dim i High contrast."
+      "dashboardThemes": "Motywy panelu webowego: Light, Dark, Dim i High contrast.",
+      "accounts": "Konta Mewvo: logowanie na stronie nazwą użytkownika i hasłem, bez e-maila. Połącz konto Discord, aby zobaczyć swoją historię.",
+      "trustPages": "Karta zaufania pod /trust obok miesięcznego raportu przejrzystości: czas i wyniki odwołań oraz członkowie bez problemów z 90 dni, dla własnego serwera Mewvo. Oba można wyłączyć."
     },
     "2026-10-31": {
       "legalPages": "Polityka prywatności i Regulamin.",

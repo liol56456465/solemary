@@ -90,7 +90,7 @@
       "items": {
         "appealPanel": {
           "term": "Painel de apelações",
-          "text": "/setappeal publica o painel com os botões Appeal, My appeals e My record, no servidor principal e no servidor de suporte."
+          "text": "/setappeal publica o painel com os botões Appeal, My appeals e My record no seu servidor. Para o servidor do próprio Mewvo, ele também fica no servidor de suporte do Mewvo."
         },
         "appealForm": {
           "term": "Formulário de apelação",
@@ -98,7 +98,7 @@
         },
         "banAndKickAppeals": {
           "term": "Apelações de banimento e expulsão",
-          "text": "Abrem um canal no servidor de suporte com o membro dentro, para que a conversa funcione depois de um banimento. O caso e o histórico vão para um canal da equipe só para administradores, com Accept e Deny."
+          "text": "Para o servidor do próprio Mewvo, abrem um canal no servidor de suporte do Mewvo com o membro dentro, para a conversa funcionar depois de um banimento. Em todo servidor, o caso e o histórico vão para um canal da equipe só para administradores, com Accept e Deny (ou para a lista de Apelações do painel quando não há categoria de apelações)."
         },
         "limits": {
           "term": "Limites",
@@ -110,11 +110,15 @@
         },
         "bannedRole": {
           "term": "Cargo de banido",
-          "text": "Membros com um banimento ativo recebem um cargo no servidor de suporte, removido quando o banimento termina."
+          "text": "Para o servidor do próprio Mewvo: membros com banimento ativo recebem um cargo no servidor de suporte do Mewvo, removido quando o banimento termina."
         },
         "staffReports": {
           "term": "Denúncias contra a equipe",
           "text": "Os membros podem denunciar alguém da equipe em particular. Só os administradores veem as denúncias; uma denúncia aberta por pessoa e três por dia."
+        },
+        "webAppeals": {
+          "term": "Apelações no site",
+          "text": "Os membros entram com o Discord em My appeals e apelam dos próprios casos de qualquer servidor que use o Mewvo, mesmo sem compartilhar mais nenhum servidor com o bot. A apelação vai para a equipe do servidor que abriu o caso."
         }
       }
     },

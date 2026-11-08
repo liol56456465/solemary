@@ -23,7 +23,8 @@ function faqItems(ctx) {
             group: t('faq.appeals.title'),
             items: [
                 qa('appeals', 'ladder'),
-                qa('appeals', 'howTo'),
+                qa('appeals', 'howTo', ctx.memberPortal ? 'aPortal' : 'a'),
+                ...(ctx.memberPortal ? [qa('appeals', 'web')] : []),
                 qa('appeals', 'lostCode', ctx.memberPortal ? 'aPortal' : 'a'),
                 qa('appeals', 'everyPunishment'),
             ],
