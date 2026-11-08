@@ -251,8 +251,7 @@ async function handleWatch(interaction, client, sub) {
 }
 
 export default {
-    // Registered as a guild command in MAIN_GUILD_ID only. Admin-only (not in commandAccess).
-    scope: 'main',
+    // Admin-only (not in commandAccess).
     data: new SlashCommandBuilder()
         .setName('case')
         .setDescription('Search, edit and remove cases, evidence and history, keep-apart orders and the watchlist')

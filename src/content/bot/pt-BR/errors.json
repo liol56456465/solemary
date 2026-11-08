@@ -67,5 +67,15 @@
         "admin": "Você precisa do cargo de Administrador para usar este comando.",
         "adminOther": "Você precisa do cargo de Administrador para usar este comando. Peça acesso a um admin deste servidor se precisar.",
         "manageServer": "Você precisa da permissão Gerenciar servidor ou Administrador para usar este comando."
+    },
+    "dispatch": {
+        "unknownCommand": "Desculpe, esse comando não existe.",
+        "cooldown": "Este comando está em espera. Aguarde {time} antes de tentar de novo.",
+        "disabledHere": "Este comando está desativado neste servidor."
+    },
+    "panel": {
+        "otherModerator": "Este painel pertence a outro moderador. Use /enforcements você mesmo.",
+        "serverOnly": "Este painel só funciona em um servidor.",
+        "noAdmin": "Você não tem mais a permissão de Administrador, então este painel foi fechado."
     }
 }

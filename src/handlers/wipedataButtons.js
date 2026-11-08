@@ -21,6 +21,8 @@ const wipedataConfirmHandler = {
     try {
       const { deleted, failed } = await wipeMemberData(client, guildId, userId);
       const label = (id) => WIPE_ITEMS.find((item) => item.id === id)?.label || id;
+      // Leftovers of removed features (economy, AFK) are deleted but not named.
+      const shown = (ids) => ids.filter((id) => !WIPE_ITEMS.find((item) => item.id === id)?.legacy);
       if (failed.length > 0) {
         for (const { id, error } of failed) logger.error(`Wipedata: deleting ${id} failed for ${userId} in ${guildId}: ${error.message}`);
         await interaction.editReply({
@@ -36,8 +38,8 @@ const wipedataConfirmHandler = {
         return;
       }
       await interaction.editReply({
-        embeds: [successEmbed('Your data was deleted', `Deleted: ${deleted.map(label).join(', ')}.\n`
-          + 'Levels, balance, AFK and birthday in this server; to-do list, reminders and the stored login token everywhere.\n\n'
+        embeds: [successEmbed('Your data was deleted', `Deleted: ${shown(deleted).map(label).join(', ') || 'nothing was stored'}.\n`
+          + 'Levels and birthday in this server; to-do list, reminders and the stored login token everywhere.\n\n'
           + 'Moderation, appeal, report and verification records are kept, because they are the server\'s safety records. '
           + 'See the Privacy Policy for how to ask about those.')],
         components: [],

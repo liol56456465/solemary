@@ -24,6 +24,7 @@ import { enforcementConfig, ENFORCEMENT_REASONS, CUSTOM_REASON_KEY } from '../co
 import { createEmbed } from '../utils/embeds.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
 import { logger } from '../utils/logger.js';
+import { botText, resolveBotLanguage } from '../utils/botText.js';
 import { createError, ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import {
     executeAction,
@@ -67,22 +68,24 @@ function userError(message, type = ErrorTypes.VALIDATION) {
 
 /** Returns true when the clicker may use this component; otherwise replies and returns false. */
 async function guard(interaction, moderatorId) {
+    // Ephemeral refusals: the clicker's Discord language (utils/botText.js).
+    const tr = botText(resolveBotLanguage({ interaction, guildId: interaction.guildId, userId: interaction.user.id, purpose: 'reply' }));
     if (interaction.user.id !== moderatorId) {
         await replyUserError(interaction, {
             type: ErrorTypes.PERMISSION,
-            message: 'This panel belongs to another moderator. Run /enforcements yourself.',
+            message: tr.t('errors.panel.otherModerator'),
         });
         return false;
     }
     // Any server (multi-server B1): the panel acts in the server it was opened in (interaction.guild).
     if (!interaction.inGuild()) {
-        await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'This panel only works in a server.' });
+        await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('errors.panel.serverOnly') });
         return false;
     }
     if (!isAdministrator(interaction.member)) {
         await replyUserError(interaction, {
             type: ErrorTypes.PERMISSION,
-            message: 'You no longer have the Administrator permission, so this panel is closed.',
+            message: tr.t('errors.panel.noAdmin'),
         });
         return false;
     }

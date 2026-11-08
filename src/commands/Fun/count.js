@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, PermissionFlagsBits, ChannelType, MessageFlags } from 'discord.js';
+import { SlashCommandBuilder, ChannelType, MessageFlags } from 'discord.js';
 import { createEmbed, successEmbed, infoEmbed } from '../../utils/embeds.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import {
@@ -18,7 +18,6 @@ export default {
   data: new SlashCommandBuilder()
     .setName('count')
     .setDescription('Manage the server counting game')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .setDMPermission(false)
     .addSubcommand((subcommand) =>
       subcommand
@@ -69,10 +68,7 @@ export default {
         return;
       }
 
-      if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
-        return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the **Manage Server** permission to use this command.' });
-      }
-
+      // Access: utils/commandGate.js (status + leaderboard for everyone, the rest Administrator).
       const guildId = interaction.guildId;
       const subcommand = interaction.options.getSubcommand();
       const config = await getCountingGameConfig(interaction.client, guildId);

@@ -6,6 +6,7 @@ import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { getServerCountersKey } from '../utils/database/keys.js';
 import { GUILD_SQL, sleep } from './scheduling/guildScan.js';
 import botConfig from '../config/bot.js';
+import { BoundedMap } from '../utils/boundedMap.js';
 
 export const COUNTER_TYPE_CONFIG = {
   members: {
@@ -244,6 +245,42 @@ export async function updateCounter(client, guild, counter, { stats = null, now 
     logger.error("Error updating counter:", error);
     return false;
   }
+}
+
+// ── Join/leave refresh ───────────────────────────────────────────────────
+// A join or leave renames the server's counters at most once per 5 minutes: Discord allows two
+// channel renames per 10 minutes, and a raid or a mass kick would otherwise queue hundreds. The
+// 15-minute cron (updateAllServerCounters) catches up whatever a skipped event missed.
+export const MEMBER_CHANGE_RENAME_INTERVAL_MS = 5 * 60 * 1000;
+const memberChangeRefresh = new BoundedMap(5000); // guildId → time of the last event-driven refresh
+
+/**
+ * Called by guildMemberAdd / guildMemberRemove. Returns at once (the renames run in the
+ * background, errors only logged); true when a refresh was started, false when debounced.
+ * `deps` is for tests.
+ */
+export function refreshCountersOnMemberChange(client, guild, { now = Date.now(), deps = {} } = {}) {
+  if (!guild?.id) return false;
+  const last = memberChangeRefresh.get(guild.id);
+  if (last !== undefined && now - last < MEMBER_CHANGE_RENAME_INTERVAL_MS) return false;
+  memberChangeRefresh.set(guild.id, now);
+  const load = deps.getServerCounters || getServerCounters;
+  const rename = deps.updateCounter || updateCounter;
+  void (async () => {
+    const counters = await load(client, guild.id);
+    const stats = getGuildCounterStats(guild);
+    for (const counter of counters) {
+      if (counter && counter.type && counter.channelId && counter.enabled !== false) {
+        await rename(client, guild, counter, { stats, now });
+      }
+    }
+  })().catch((error) => logger.debug(`Counters of ${guild.id} not refreshed after a join/leave: ${error.message}`));
+  return true;
+}
+
+/** For tests. */
+export function _resetMemberChangeRefresh() {
+  memberChangeRefresh.clear();
 }
 
 /**

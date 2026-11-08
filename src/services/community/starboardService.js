@@ -12,6 +12,7 @@
 // POST_CACHE_SIZE) plus a bounded "no post" set; a message not in either is looked up
 // in the table by id (primary key / index), only in servers with a starboard.
 
+import { PermissionFlagsBits } from 'discord.js';
 import { logger } from '../../utils/logger.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { Mutex } from '../../utils/mutex.js';
@@ -184,11 +185,29 @@ async function fetchStarMessage(guild, entry) {
     });
 }
 
+/**
+ * True when @everyone can read the starboard but not the source channel: reposting would show a
+ * staff-only (or otherwise private) message to the whole server. A permission check that fails
+ * counts as private.
+ */
+export function exposesPrivateChannel(sourceChannel, starChannel, everyone) {
+    const canView = (channel) => {
+        try {
+            return Boolean(channel?.permissionsFor?.(everyone)?.has(PermissionFlagsBits.ViewChannel));
+        } catch {
+            return false;
+        }
+    };
+    return canView(starChannel) && !canView(sourceChannel);
+}
+
 async function createPost(guild, settings, message, count) {
     const channel = guild.channels.cache.get(settings.starboardChannelId);
     if (!channel?.isTextBased?.()) return false;
     // Never move an NSFW message into a channel that is not NSFW.
     if (message.channel?.nsfw && !channel.nsfw) return false;
+    // Never move a message from a private channel into a starboard everyone can read.
+    if (exposesPrivateChannel(message.channel, channel, guild.roles?.everyone ?? guild.id)) return false;
     const sent = await channel.send(buildStarPost(message, count, settings.starboardEmoji)).catch((error) => {
         logger.warn(`Starboard: could not post in ${channel.id}: ${error.message}`);
         return null;

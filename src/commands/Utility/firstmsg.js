@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, PermissionFlagsBits, PermissionsBitField, ChannelType } from 'discord.js';
+import { SlashCommandBuilder, PermissionsBitField, ChannelType } from 'discord.js';
 import { createEmbed, errorEmbed, successEmbed } from '../../utils/embeds.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { logger } from '../../utils/logger.js';
@@ -6,8 +6,7 @@ export default {
     data: new SlashCommandBuilder()
         .setName("firstmsg")
         .setDescription("Get a link to the first message in this channel")
-        .setDMPermission(false)
-        .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages),
+        .setDMPermission(false),
     category: "Utility",
 
     async execute(interaction, config, client) {

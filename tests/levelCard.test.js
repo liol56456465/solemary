@@ -141,7 +141,7 @@ test('tryLevelCard: a failed avatar draws the placeholder; a render error gives 
 
 // ── level-up send ─────────────────────────────────────────────────────────
 
-function fakeGuild({ perms = ['SendMessages', 'EmbedLinks', 'AttachFiles'], failCardSend = null } = {}) {
+function fakeGuild({ perms = ['ViewChannel', 'SendMessages', 'EmbedLinks', 'AttachFiles'], failCardSend = null } = {}) {
     const sent = [];
     const channel = {
         id: '200000000000000001',
@@ -204,7 +204,7 @@ test('card on but no card (busy/error), no Attach Files, or the card send fails:
     await sendLevelUpAnnouncement(a.guild, member, levelData, config({ levelUpCard: true }), { makeCard: async () => { throw new Error('boom'); } });
     assert.deepEqual(a.sent, [textOnly], 'card maker throws');
 
-    a = fakeGuild({ perms: ['SendMessages', 'EmbedLinks'] });
+    a = fakeGuild({ perms: ['ViewChannel', 'SendMessages', 'EmbedLinks'] });
     let made = 0;
     await sendLevelUpAnnouncement(a.guild, member, levelData, config({ levelUpCard: true }), { makeCard: async () => { made += 1; return png; } });
     assert.equal(made, 0, 'no card rendered without Attach Files');
@@ -236,4 +236,14 @@ test('leveling config refuses a bad card setting before touching the database', 
     const client = { db: new Proxy({}, { get() { throw new Error('database must not be used'); } }) };
     await assert.rejects(updateLevelingConfig(client, '100000000000000001', { levelUpCard: 'yes' }), /levelUpCard must be true or false/);
     await assert.rejects(updateLevelingConfig(client, '100000000000000001', { cardAccent: 'purple' }), /Invalid card accent/);
+});
+
+test('level-up line needs View + Send only (no Embed Links); the card also needs Attach Files', async () => {
+    let a = fakeGuild({ perms: ['ViewChannel', 'SendMessages'] });
+    await sendLevelUpAnnouncement(a.guild, member, levelData, config(), {});
+    assert.deepEqual(a.sent, [{ content: '<@300000000000000001> is now level 3.', allowedMentions: { parse: ['users'] } }]);
+
+    a = fakeGuild({ perms: ['ViewChannel', 'EmbedLinks'] });
+    await sendLevelUpAnnouncement(a.guild, member, levelData, config(), {});
+    assert.deepEqual(a.sent, [], 'no Send Messages: nothing sent');
 });

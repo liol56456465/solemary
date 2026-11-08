@@ -5,6 +5,7 @@ import { createEmbed, successEmbed } from '../../../utils/embeds.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { logger } from '../../../utils/logger.js';
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
+import { hasAdminAccess } from '../../../utils/commandGate.js';
 
 // /logging ignore channel|role (toggle) and /logging ignore list.
 // A channel covers its threads, and a category the channels in it; a role skips logs
@@ -18,8 +19,8 @@ export default {
   prefixOnly: false,
   async execute(interaction, config, client) {
     try {
-      if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-        return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need **Manage Server** permissions to change the logging ignore lists.' });
+      if (!hasAdminAccess(interaction)) {
+        return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the **Administrator** permission to change the logging ignore lists.' });
       }
       await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
       const sub = interaction.options.getSubcommand();

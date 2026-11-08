@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, PermissionFlagsBits, PermissionsBitField, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, escapeMarkdown } from 'discord.js';
+import { SlashCommandBuilder, PermissionsBitField, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, escapeMarkdown } from 'discord.js';
 import { createEmbed, successEmbed, infoEmbed, warningEmbed } from '../../utils/embeds.js';
 import { getFromDb, setInDb } from '../../utils/database.js';
 import { logger } from '../../utils/logger.js';
@@ -136,8 +136,7 @@ export default {
                         )
                 )
         )
-        .setDMPermission(false)
-        .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages),
+        .setDMPermission(false),
     category: "Utility",
 
     async execute(interaction, config, client) {

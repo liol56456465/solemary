@@ -11,7 +11,7 @@ import { logger } from '../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../utils/errorHandler.js';
 import { logEvent, EVENT_TYPES } from './loggingService.js';
 import { formatLogLine } from '../utils/logging/logEmbeds.js';
-import { ChannelType, PermissionFlagsBits } from 'discord.js';
+import { ChannelType, OverwriteType, PermissionFlagsBits } from 'discord.js';
 
 const CHANNEL_NAME_MAX_LENGTH = 100;
 const CHANNEL_VARIABLE_MAX_LENGTH = 32;
@@ -444,18 +444,6 @@ export async function getChannelConfiguration(client, guildId, channelId) {
     }
 }
 
-export function hasManageGuildPermission(member) {
-    try {
-        if (!member || !member.permissions) {
-            return false;
-        }
-        return member.permissions.has(PermissionFlagsBits.ManageGuild);
-    } catch (error) {
-        logger.error('Error checking ManageGuild permission:', error);
-        return false;
-    }
-}
-
 export async function logConfigurationChange(client, guildId, userId, action, details) {
     try {
         await logEvent({
@@ -523,9 +511,12 @@ export async function setupJoinToCreate(client, guild, {
         parent: category?.id,
         userLimit: 0,
         bitrate: 64000,
-        permissionOverwrites: [
-            { id: guild.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect] },
-        ],
+        // The category's overwrites (no @everyone allows): a private category stays private.
+        permissionOverwrites: buildJoinToCreateOverwrites(category, {
+            guildId: guild.id,
+            botId: guild.members?.me?.id ?? client?.user?.id ?? null,
+            botPermissions: guild.members?.me ? category?.permissionsFor?.(guild.members.me)?.bitfield ?? null : null,
+        }),
     });
 
     let config;
@@ -548,75 +539,39 @@ export async function setupJoinToCreate(client, guild, {
     return { channel, config };
 }
 
-export async function createTemporaryChannel(guild, member, options = {}) {
-    try {
-        if (!guild || !member) {
-            throw new TitanBotError(
-                'Invalid guild or member',
-                ErrorTypes.VALIDATION
-            );
+/**
+ * Permission overwrites for a Join to Create channel (the trigger or a temporary room): a copy of
+ * `source`'s overwrites (the category, else the trigger channel), so a private category stays
+ * private. Allows on @everyone are dropped (an old trigger carried "@everyone: View + Connect",
+ * which would open a private category); its denies are kept. The bot (`botId`) gets what it
+ * needs to move members and delete the room; the owner (`ownerId`) gets theirs on top.
+ * Bits the bot does not have in `source` are left out of the copy (see `botPermissions`).
+ */
+export function buildJoinToCreateOverwrites(source, { guildId, ownerId = null, botId = null, botPermissions = null } = {}) {
+    const entries = new Map();
+    const cache = source?.permissionOverwrites?.cache;
+    // Discord refuses overwrites with bits the bot itself lacks there (50013): copy only those
+    // bits (`botPermissions`: the bot's permissions in `source`; null or Administrator = all).
+    const mask = botPermissions == null || (BigInt(botPermissions) & PermissionFlagsBits.Administrator)
+        ? ~0n
+        : BigInt(botPermissions);
+    if (cache) {
+        for (const ow of cache.values()) {
+            const allow = ow.id === guildId ? 0n : BigInt(ow.allow?.bitfield ?? 0n) & mask;
+            const deny = BigInt(ow.deny?.bitfield ?? 0n) & mask;
+            if (!allow && !deny) continue;
+            entries.set(ow.id, { id: ow.id, type: ow.type, allow, deny });
         }
-
-        const {
-            nameTemplate,
-            userLimit,
-            bitrate,
-            parentId
-        } = options;
-
-        if (nameTemplate) {
-            validateChannelNameTemplate(nameTemplate);
-        }
-        if (userLimit !== undefined) {
-            validateUserLimit(userLimit);
-        }
-        if (bitrate !== undefined) {
-            validateBitrate(bitrate / 1000);
-        }
-
-        const channelName = formatChannelName(nameTemplate || '{username}\'s Room', {
-            username: member.user.username,
-            displayName: member.displayName,
-            userTag: member.user.tag,
-            guildName: guild.name
-        });
-
-        const tempChannel = await guild.channels.create({
-            name: channelName,
-            type: ChannelType.GuildVoice,
-            parent: parentId,
-            userLimit: userLimit === 0 ? undefined : userLimit,
-            bitrate: bitrate || 64000,
-            permissionOverwrites: [
-                {
-                    id: member.id,
-                    allow: [PermissionFlagsBits.Connect, PermissionFlagsBits.Speak, PermissionFlagsBits.PrioritySpeaker, PermissionFlagsBits.MoveMembers]
-                },
-                {
-                    id: guild.id,
-                    allow: [PermissionFlagsBits.Connect, PermissionFlagsBits.Speak]
-                }
-            ]
-        });
-
-        logger.info(`Created temporary voice channel ${tempChannel.name} (${tempChannel.id}) for user ${member.user.tag}`);
-
-        return {
-            id: tempChannel.id,
-            name: tempChannel.name,
-            ownerId: member.id
-        };
-
-    } catch (error) {
-        if (error instanceof TitanBotError) {
-            throw error;
-        }
-        throw new TitanBotError(
-            `Failed to create temporary channel: ${error.message}`,
-            ErrorTypes.DISCORD_API,
-            'Failed to create your temporary voice channel. Please contact an administrator.'
-        );
     }
+    const addOnTop = (id, bits) => {
+        if (!id) return;
+        const mask = bits.reduce((acc, bit) => acc | bit, 0n);
+        const prev = entries.get(id) ?? { id, type: OverwriteType.Member, allow: 0n, deny: 0n };
+        entries.set(id, { id, type: prev.type, allow: prev.allow | mask, deny: prev.deny & ~mask });
+    };
+    addOnTop(botId, [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect, PermissionFlagsBits.MoveMembers, PermissionFlagsBits.ManageChannels]);
+    addOnTop(ownerId, [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect, PermissionFlagsBits.Speak, PermissionFlagsBits.PrioritySpeaker, PermissionFlagsBits.MoveMembers]);
+    return [...entries.values()];
 }
 
 export default {
@@ -630,7 +585,6 @@ export default {
     getConfiguration,
     isTriggerChannel,
     getChannelConfiguration,
-    hasManageGuildPermission,
     logConfigurationChange,
-    createTemporaryChannel
+    buildJoinToCreateOverwrites
 };

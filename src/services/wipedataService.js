@@ -25,11 +25,14 @@ async function deleteVerifiedGuilds(userId) {
     await query(`DELETE FROM ${pgConfig.tables.oauth_verified_guilds} WHERE user_id = $1`, [userId]);
 }
 
-/** The data /wipedata removes, in the order shown to the member. */
+/**
+ * The data /wipedata removes, in the order shown to the member. `legacy`: left over from
+ * features Mewvo no longer has (economy, AFK); still deleted when present, but not listed.
+ */
 export const WIPE_ITEMS = [
     { id: 'levels', label: 'Levels and XP' },
-    { id: 'economy', label: 'Economy balance' },
-    { id: 'afk', label: 'AFK status' },
+    { id: 'economy', label: 'Economy balance', legacy: true },
+    { id: 'afk', label: 'AFK status', legacy: true },
     { id: 'birthday', label: 'Birthday' },
     { id: 'todo', label: 'Personal to-do list' },
     { id: 'reminders', label: 'Reminders' },

@@ -8,8 +8,6 @@ import { buildRecordEmbed, buildRecordList, resolveTargetUser } from '../../hand
 import { truncate } from '../../services/enforcement/format.js';
 
 export default {
-    // Registered as a guild command in MAIN_GUILD_ID only.
-    scope: 'main',
     data: new SlashCommandBuilder()
         .setName('background')
         .setDescription("Show a user's enforcement records and staff notes")

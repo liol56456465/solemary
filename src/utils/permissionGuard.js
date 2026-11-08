@@ -194,17 +194,6 @@ export function isAdmin(member) {
   return member.permissions.has(PermissionFlagsBits.Administrator);
 }
 
-export function isModerator(member, guildConfig = null) {
-  if (!member) return false;
-  if (memberHasConfiguredModeratorRole(member, guildConfig)) {
-    return true;
-  }
-  return member.permissions.has([
-    PermissionFlagsBits.Administrator,
-    PermissionFlagsBits.ManageGuild
-  ]);
-}
-
 export function hasPermission(member, permissions) {
   if (!member) return false;
   return member.permissions.has(permissions);
@@ -317,7 +306,6 @@ export function auditPermissionCheck(userId, action, allowed, reason = null) {
 
 export default {
   isAdmin,
-  isModerator,
   hasPermission,
   botHasPermission,
   getCommandDefaultPermissions,

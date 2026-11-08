@@ -25,7 +25,6 @@ export async function catViewReply(guildId, deps = {}) {
 }
 
 export default {
-    scope: 'main',
     slashOnly: true,
     category: 'Community',
     data: new SlashCommandBuilder()

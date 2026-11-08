@@ -67,5 +67,15 @@
         "admin": "Tu as besoin du rôle Administrateur pour utiliser cette commande.",
         "adminOther": "Tu as besoin du rôle Administrateur pour utiliser cette commande. Demande à un admin de ce serveur si tu as besoin d’accès.",
         "manageServer": "Tu as besoin de la permission Gérer le serveur ou Administrateur pour utiliser cette commande."
+    },
+    "dispatch": {
+        "unknownCommand": "Désolé, cette commande n'existe pas.",
+        "cooldown": "Cette commande est en pause. Attends {time} avant de réessayer.",
+        "disabledHere": "Cette commande est désactivée sur ce serveur."
+    },
+    "panel": {
+        "otherModerator": "Ce panneau appartient à un autre modérateur. Lance /enforcements toi-même.",
+        "serverOnly": "Ce panneau ne fonctionne que sur un serveur.",
+        "noAdmin": "Tu n'as plus la permission Administrateur, ce panneau est donc fermé."
     }
 }

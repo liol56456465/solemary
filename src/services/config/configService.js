@@ -3,7 +3,6 @@
 import { logger } from '../../utils/logger.js';
 import { BoundedMap } from '../../utils/boundedMap.js';
 import { getGuildConfig, setGuildConfig } from './guildConfig.js';
-import { PermissionFlagsBits } from 'discord.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { wrapServiceClassMethods } from '../../utils/serviceErrorBoundary.js';
 import { z } from 'zod';
@@ -607,13 +606,6 @@ class ConfigService {
             settings: summary,
             recordedAt: new Date().toISOString()
         };
-    }
-
-    static verifyPermission(member) {
-        return member.permissions.has([
-            PermissionFlagsBits.Administrator,
-            PermissionFlagsBits.ManageGuild
-        ]);
     }
 }
 

@@ -8,7 +8,6 @@ import {
 
 // /modmail close is for staff (checked here); block/unblock are admin-only (commandAccess.js).
 export default {
-    scope: 'main',
     data: new SlashCommandBuilder()
         .setName('modmail')
         .setDescription('Manage modmail conversations (members DM the bot to reach staff)')

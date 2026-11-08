@@ -220,6 +220,10 @@ export async function handleAppealModal(interaction, client, args) {
             )],
         });
     }
+
+    // An unknown step, or a report form in a server that takes no reports: answer instead of
+    // leaving the member at "thinking…".
+    return replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'This form is not available here any more. Open it again from the panel.' });
 }
 
 // ── Accept / Deny on an appeal (admins of the case's staff server) ──────────
@@ -280,7 +284,9 @@ export async function handleAppealDecisionButton(interaction, client, args) {
             : 'Only administrators of this server can decide its appeals.');
     }
     if (decision === 'claim' && caseCode) return handleClaim(interaction, client, caseCode);
-    if (!DECISIONS.has(decision) || !caseCode) return;
+    if (!DECISIONS.has(decision) || !caseCode) {
+        return replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'This button is out of date. Use `/appeals` to decide the appeal.' });
+    }
 
     const result = await decideAppeal({
         client, admin: interaction.user, caseCode, decision, note: null, via: 'button', callerGuildId: interaction.guildId,

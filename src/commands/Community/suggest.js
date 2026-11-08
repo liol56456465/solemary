@@ -9,7 +9,6 @@ import {
 
 export default {
     // new: everyone (commandAccess.js). status: admin-only.
-    scope: 'main',
     slashOnly: true,
     category: 'Community',
     data: new SlashCommandBuilder()

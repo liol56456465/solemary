@@ -110,6 +110,29 @@ export default {
     }, { type: 'command', commandName: 'apply' })
 };
 
+/**
+ * The answers of a submitted application form, one per question (fields q0, q1, …), or null
+ * when the form no longer matches the questions (they were edited while it was open: a field is
+ * missing, or there is one more than there are questions).
+ */
+export function collectApplicationAnswers(fields, questions) {
+    const read = (id) => {
+        try {
+            return fields.getTextInputValue(id);
+        } catch {
+            return undefined;
+        }
+    };
+    const answers = [];
+    for (let i = 0; i < questions.length; i++) {
+        const answer = read(`q${i}`);
+        if (answer === undefined || answer === null) return null;
+        answers.push({ question: questions[i].question, answer, minLength: questions[i].minLength });
+    }
+    if (read(`q${questions.length}`) !== undefined) return null;
+    return answers;
+}
+
 export async function handleApplicationModal(interaction) {
     if (!interaction.isModalSubmit()) return;
     
@@ -151,15 +174,13 @@ export async function handleApplicationModal(interaction) {
     }
     
     questions = normalizeApplicationQuestions(questions);
-    for (let i = 0; i < questions.length; i++) {
-        const answer = interaction.fields.getTextInputValue(`q${i}`);
-        answers.push({
-            question: questions[i].question,
-            answer: answer,
-            minLength: questions[i].minLength
-        });
+    // The questions may have been edited while the form was open: then the fields no longer
+    // match them, and the answers would land under the wrong questions.
+    const collected = collectApplicationAnswers(interaction.fields, questions);
+    if (!collected) {
+        return await replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'The questions for this application changed while you were filling in the form. Please open it again with `/apply submit`.' });
     }
-    
+    answers.push(...collected);
     try {
         const application = await ApplicationService.submitApplication(interaction.client, {
             guildId: interaction.guild.id,
@@ -171,49 +192,59 @@ export async function handleApplicationModal(interaction) {
             answers: answers
         });
         
+        // The application is saved; posting it for staff can fail (no channel, missing
+        // permissions). The reply says which of the two happened.
+        let postedToStaff = false;
+        try {
+            const settings = await getApplicationSettings(interaction.client, interaction.guild.id);
+            const roleSettings = await getApplicationRoleSettings(interaction.client, interaction.guild.id, roleId);
+            const guildConfig = await getGuildConfig(interaction.client, interaction.guild.id);
+
+            const logChannelId = resolveApplicationLogChannel(guildConfig, roleSettings, settings);
+
+            if (logChannelId) {
+                const logMessage = await logEvent({
+                    client: interaction.client,
+                    guildId: interaction.guild.id,
+                    eventType: EVENT_TYPES.APPLICATION_SUBMIT,
+                    channelId: logChannelId,
+                    data: {
+                        title: 'New application',
+                        lines: [
+                            formatLogLine('Applicant', `<@${interaction.user.id}> (${interaction.user.tag})`),
+                            formatLogLine('Application', applicationRole.name),
+                            formatLogLine('Role', role.name),
+                            formatLogLine('Application ID', `\`${application.id}\``),
+                        ],
+                        inlineFields: [
+                            { name: 'Status', value: 'In Progress', inline: true },
+                        ],
+                        author: await resolveUserAuthor(interaction.client, interaction.user.id),
+                    },
+                });
+
+                if (logMessage) {
+                    postedToStaff = true;
+                    await updateApplication(interaction.client, interaction.guild.id, application.id, {
+                        logMessageId: logMessage.id,
+                        logChannelId,
+                    }).catch((error) => logger.warn(`Application ${application.id}: log message id not saved: ${error.message}`));
+                }
+            }
+        } catch (error) {
+            logger.warn(`Application ${application.id} saved but not posted for staff: ${error.message}`);
+        }
+
         const embed = successEmbed(
-            'Application sent',
-            `Your application for **${applicationRole.name}** was sent to staff.\n\n` +
+            postedToStaff ? 'Application sent' : 'Application saved',
+            (postedToStaff
+                ? `Your application for **${applicationRole.name}** was sent to staff.\n\n`
+                : `Your application for **${applicationRole.name}** was saved, but it could not be posted for staff (no application channel is set up, or the bot can't post there). Let a staff member know.\n\n`) +
             `Application ID: \`${application.id}\`\n` +
             `You can check the status with \`/apply status id:${application.id}\``
         );
-        
+
         await InteractionHelper.safeEditReply(interaction, { embeds: [embed], flags: ["Ephemeral"] });
-        
-        const settings = await getApplicationSettings(interaction.client, interaction.guild.id);
-        const roleSettings = await getApplicationRoleSettings(interaction.client, interaction.guild.id, roleId);
-        const guildConfig = await getGuildConfig(interaction.client, interaction.guild.id);
-
-        const logChannelId = resolveApplicationLogChannel(guildConfig, roleSettings, settings);
-
-        if (logChannelId) {
-            const logMessage = await logEvent({
-                client: interaction.client,
-                guildId: interaction.guild.id,
-                eventType: EVENT_TYPES.APPLICATION_SUBMIT,
-                channelId: logChannelId,
-                data: {
-                    title: 'New application',
-                    lines: [
-                        formatLogLine('Applicant', `<@${interaction.user.id}> (${interaction.user.tag})`),
-                        formatLogLine('Application', applicationRole.name),
-                        formatLogLine('Role', role.name),
-                        formatLogLine('Application ID', `\`${application.id}\``),
-                    ],
-                    inlineFields: [
-                        { name: 'Status', value: 'In Progress', inline: true },
-                    ],
-                    author: await resolveUserAuthor(interaction.client, interaction.user.id),
-                },
-            });
-
-            if (logMessage) {
-                await updateApplication(interaction.client, interaction.guild.id, application.id, {
-                    logMessageId: logMessage.id,
-                    logChannelId,
-                });
-            }
-        }
         
     } catch (error) {
         logger.error('Error creating application:', {

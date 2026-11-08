@@ -95,10 +95,20 @@ export function hasAdministrator({ guild, userId, permissions }) {
     return Boolean(permissions?.has?.(PermissionFlagsBits.Administrator));
 }
 
+/**
+ * True when this user passes the Administrator gate here: Administrator, the server owner, or
+ * OWNER_IDS in Mewvo's own servers. For re-checks inside admin commands and their buttons and
+ * modals (components are not gated centrally), so they match the gate exactly.
+ */
+export function hasAdminAccess(interaction) {
+    if (!interaction?.user) return false;
+    return hasOwnerPower(interaction.user.id, interaction.guildId)
+        || hasAdministrator({ guild: interaction.guild, userId: interaction.user.id, permissions: interaction.memberPermissions ?? interaction.member?.permissions });
+}
+
 /** True when this user sees admin-only commands in /help (admins, the owner, OWNER_IDS in Mewvo's own servers). */
 export function canSeeAdminCommands(interaction) {
-    return hasOwnerPower(interaction.user.id, interaction.guildId)
-        || hasAdministrator({ guild: interaction.guild, userId: interaction.user.id, permissions: interaction.memberPermissions });
+    return hasAdminAccess(interaction);
 }
 
 /**

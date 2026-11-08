@@ -149,7 +149,8 @@ export async function sendLevelUpAnnouncement(guild, member, levelData, config, 
     }
 
     const permissions = levelUpChannel.permissionsFor(guild.members.me);
-    if (!permissions || !permissions.has(['SendMessages', 'EmbedLinks'])) {
+    // A plain text line (+ the card, which checks AttachFiles itself): no embed, so no EmbedLinks.
+    if (!permissions || !permissions.has(['ViewChannel', 'SendMessages'])) {
       logger.warn(`Missing permissions to send levelup message in ${levelUpChannel.id}`);
       return;
     }

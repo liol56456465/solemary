@@ -1,6 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
-import { getAllBirthdays } from '../../../services/birthdayService.js';
-import { deleteBirthday } from '../../../utils/database.js';
+import { getAllBirthdays, filterPresentBirthdays, fitLines } from '../../../services/birthdayService.js';
 import { logger } from '../../../utils/logger.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
@@ -22,29 +21,10 @@ export default {
             });
         }
 
-        const userIds = sortedBirthdays.map(b => b.userId);
-        const fetchedMembers = await interaction.guild.members.fetch({ user: userIds }).catch(() => null);
+        // Read-only: birthdays of people who left are hidden here; guildMemberRemove removes them.
+        const { present } = await filterPresentBirthdays(interaction.guild, sortedBirthdays);
 
-        let birthdayList = '';
-        let displayIndex = 0;
-        const staleUserIds = [];
-
-        for (const birthday of sortedBirthdays) {
-            if (fetchedMembers && !fetchedMembers.has(birthday.userId)) {
-                staleUserIds.push(birthday.userId);
-                continue;
-            }
-            displayIndex++;
-            birthdayList += `${displayIndex}. <@${birthday.userId}> - ${birthday.monthName} ${birthday.day}\n`;
-        }
-
-        if (fetchedMembers && staleUserIds.length > 0) {
-            for (const userId of staleUserIds) {
-                deleteBirthday(client, guildId, userId).catch(() => null);
-            }
-        }
-
-        if (displayIndex === 0) {
+        if (present.length === 0) {
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
                 .setTitle('No birthdays')
@@ -54,22 +34,25 @@ export default {
             });
         }
 
-        birthdayList = `**${displayIndex} birthday${displayIndex !== 1 ? 's' : ''} in ${interaction.guild.name}**\n\n` + birthdayList;
+        const header = `**${present.length} birthday${present.length !== 1 ? 's' : ''} in ${interaction.guild.name}**\n\n`;
+        const lines = present.map((birthday, index) => `${index + 1}. <@${birthday.userId}> - ${birthday.monthName} ${birthday.day}`);
+        // Embed descriptions stop at 4096 characters: a long list ends with "…and N more".
+        const { text } = fitLines(lines, { maxLength: 3800 - header.length });
 
         const embed = new EmbedBuilder()
             .setColor(0x00FF00)
             .setTitle('Birthdays')
-            .setDescription(`${birthdayList}\n\nTotal: ${displayIndex} birthday${displayIndex !== 1 ? 's' : ''}`);
+            .setDescription(`${header}${text}`);
 
         await InteractionHelper.safeEditReply(interaction, {
-            embeds: [embed]
+            embeds: [embed],
+            allowedMentions: { parse: [] },
         });
 
         logger.info('Birthday list retrieved successfully', {
             userId: interaction.user.id,
             guildId,
-            birthdayCount: displayIndex,
-            staleRemoved: staleUserIds.length,
+            birthdayCount: present.length,
             commandName: 'birthday_list'
         });
     }

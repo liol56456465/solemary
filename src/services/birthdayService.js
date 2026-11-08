@@ -281,6 +281,49 @@ export async function getUpcomingBirthdays(client, guildId, limit = 5) {
   }
 }
 
+// Discord answers a member fetch by id list for at most 100 ids at a time.
+export const BIRTHDAY_MEMBER_FETCH_BATCH = 100;
+
+/**
+ * The birthdays whose person is still in the server, in the given order. Members are fetched
+ * in batches of 100. A batch that fails to fetch keeps its entries (unknown is not "left").
+ * Read-only: removing the birthday of someone who left is guildMemberRemove's job.
+ * Returns { present, members } (members: Map userId → GuildMember for the ones found).
+ */
+export async function filterPresentBirthdays(guild, birthdays, { batchSize = BIRTHDAY_MEMBER_FETCH_BATCH } = {}) {
+  const ids = [...new Set(birthdays.map((b) => b.userId))];
+  const members = new Map();
+  const unknown = new Set();
+  for (let i = 0; i < ids.length; i += batchSize) {
+    const batch = ids.slice(i, i + batchSize);
+    const found = await guild.members.fetch({ user: batch }).catch(() => null);
+    if (!found) {
+      for (const id of batch) unknown.add(id);
+      continue;
+    }
+    for (const [id, member] of found) members.set(id, member);
+  }
+  const present = birthdays.filter((b) => members.has(b.userId) || unknown.has(b.userId));
+  return { present, members };
+}
+
+/**
+ * Lines for an embed description that stops before `maxLength`, ending with a "…and N more"
+ * line when something was left out. Returns { text, shown }.
+ */
+export function fitLines(lines, { maxLength = 3800, more = (n) => `…and ${n} more` } = {}) {
+  let text = '';
+  let shown = 0;
+  for (const line of lines) {
+    const next = `${text}${line}\n`;
+    if (next.length > maxLength) break;
+    text = next;
+    shown += 1;
+  }
+  if (shown < lines.length) text += more(lines.length - shown);
+  return { text: text.trimEnd(), shown };
+}
+
 export async function getTodaysBirthdays(client, guildId) {
   try {
     const birthdays = await getGuildBirthdays(client, guildId);

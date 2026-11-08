@@ -9,9 +9,7 @@ function refuse(message, type = ErrorTypes.USER_INPUT) {
 }
 
 export default {
-    // Registered as a guild command in MAIN_GUILD_ID only: right-click a message →
-    // Apps → Warn for this message. Admin-only (not in commandAccess).
-    scope: 'main',
+    // Right-click a message → Apps → Warn for this message. Admin-only (not in commandAccess).
     data: new ContextMenuCommandBuilder()
         .setName('Warn for this message')
         .setType(ApplicationCommandType.Message),

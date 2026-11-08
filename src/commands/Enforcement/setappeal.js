@@ -9,21 +9,19 @@ import { postAppealPanels, postServerAppealPanel } from '../../services/enforcem
 import { isHomeGuild } from '../../services/settings/guildSettings.js';
 
 export default {
-    // Registered as a guild command in MAIN_GUILD_ID only.
-    scope: 'main',
     data: new SlashCommandBuilder()
         .setName('setappeal')
-        .setDescription('Post the appeal panels: here (mutes/warns) and in #appeals in the support server (bans)')
+        .setDescription('Post the appeal and report panel in this server (or the channel you pick)')
         .addChannelOption((option) => option
             .setName('channel')
-            .setDescription('Where to post the main-server panel (default: this channel)')
+            .setDescription('Where to post the panel (default: this channel)')
             .addChannelTypes(ChannelType.GuildText)),
 
     async execute(interaction, config, client) {
         // Mewvo's support server posts nothing itself (its panel comes from the main server's run).
         if (!interaction.guildId || interaction.guildId === enforcementConfig.supportGuildId) {
             throw new TitanBotError('Wrong guild for /setappeal', ErrorTypes.PERMISSION,
-                'This command only works in the main server.', { expected: true });
+                "This server's appeal panel is posted by /setappeal in the main server.", { expected: true });
         }
         if (!isAdministrator(interaction.member)) {
             throw new TitanBotError('Not an administrator', ErrorTypes.PERMISSION,

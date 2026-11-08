@@ -23,9 +23,9 @@ export default {
 
         await InteractionHelper.safeReply(interaction, { embeds: [embed] });
 
-        logger.info('Google search link generated', {
+        // Never log the query (member text), and not at info: ids only.
+        logger.debug('Google search link generated', {
             userId: interaction.user.id,
-            query: query,
             guildId: interaction.guildId,
             commandName: 'google'
         });

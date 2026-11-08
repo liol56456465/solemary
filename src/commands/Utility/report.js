@@ -31,7 +31,7 @@ export default {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('setchannel')
-                .setDescription('Set the channel where user reports are sent. (Manage Server required)')
+                .setDescription('Set the channel where user reports are sent. (Administrator)')
                 .addChannelOption(option =>
                     option
                         .setName('channel')

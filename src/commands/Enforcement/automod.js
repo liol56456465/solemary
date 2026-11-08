@@ -190,8 +190,6 @@ async function handleNative(interaction, sub) {
 }
 
 export default {
-    // Registered as a guild command in MAIN_GUILD_ID only.
-    scope: 'main',
     data: new SlashCommandBuilder()
         .setName('automod')
         .setDescription('Automatic moderation: status, modes per rule and channel, review queue, raid lockdown')

@@ -39,7 +39,9 @@ export default {
         await checkImpersonation(newMember);
       }
 
-      if (oldMember.nickname !== newMember.nickname) {
+      // A partial old member (not cached, Partials.GuildMember) has no known nickname: checking
+      // impersonation is fine, but logging "Before: (no nickname)" would be wrong.
+      if (!oldMember.partial && oldMember.nickname !== newMember.nickname) {
         await logEvent({
           client: newMember.client,
           guildId: newMember.guild.id,
