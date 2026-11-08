@@ -7,6 +7,7 @@ import { html } from '../html.js';
 import { InputError, PERMS, buttonForm, channelField, channelName, channelPicker, channelWarnings, intField, isSnowflake, numberInput, postForm, text, textInput } from '../forms.js';
 import { section, table } from './common.js';
 import { textFor } from '../language.js';
+import { managerActions } from './serverScope.js';
 
 // Words: src/content/dashboard/<lang>/joinToCreate.json. The default channel name ("{username}'s Room")
 // is a value saved for Discord and stays as it is.
@@ -59,7 +60,7 @@ ${section(tr.t('joinToCreate.triggers.title'), table([tr.t('joinToCreate.trigger
 ${section(tr.t('joinToCreate.add.title'), add, tr.t(ctx.canAct ? 'joinToCreate.add.help' : 'joinToCreate.add.helpNoAdmin'), { key: 'new-trigger', open: triggers.length === 0 })}`;
     },
 
-    actions: {
+    actions: managerActions(['trigger', 'trigger-remove'], {
         'trigger-add': {
             admin: true,
             async run(ctx, form) {
@@ -105,5 +106,5 @@ ${section(tr.t('joinToCreate.add.title'), add, tr.t(ctx.canAct ? 'joinToCreate.a
 
             };
         },
-    },
+    }),
 };

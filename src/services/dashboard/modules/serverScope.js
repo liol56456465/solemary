@@ -34,3 +34,21 @@ export function adminOnlyActions(actions) {
         typeof action === 'function' ? { admin: true, run: action } : { ...action, admin: true },
     ]));
 }
+
+/**
+ * The few actions a viewer without Administrator (a Manage Server manager, an OWNER_IDS
+ * account without it at home, a moderator with Manage Server) may run: plainly harmless
+ * community settings. Every other action needs Administrator (routes.js moduleAction: the
+ * default is closed, so a new action stays Administrator-only until someone marks it).
+ * Wraps the named actions as { ...action, manager: true }; plain functions become { run }.
+ * A name that is not an action throws (a typo must not silently leave a list stale).
+ */
+export function managerActions(names, actions) {
+    const out = { ...actions };
+    for (const name of names) {
+        if (!Object.hasOwn(actions, name)) throw new Error(`managerActions: no action "${name}"`);
+        const action = actions[name];
+        out[name] = typeof action === 'function' ? { manager: true, run: action } : { ...action, manager: true };
+    }
+    return out;
+}

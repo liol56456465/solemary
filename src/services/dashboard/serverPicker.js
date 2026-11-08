@@ -4,8 +4,8 @@
 // The login asks Discord for `identify guilds` and reads GET /users/@me/guilds once with the
 // access token (the token is then dropped, as before; nothing is stored in the database). The
 // list keeps only what the picker needs: id, name and icon of the servers shared with the bot
-// or managed by the user (Manage Server / Administrator / owner), keyed by the session's hash,
-// at most 5,000 sessions, gone after 12 h (the session's life) or a restart ("Refresh server
+// or managed by the user (Manage Server / Administrator / owner; at most 50 without the bot), keyed by
+// the Discord user id (a new login replaces it), at most 5,000 users, gone 12 h after it was stored (absolute) or after a restart ("Refresh server
 // list" then logs in again with prompt=none).
 //
 // The list is a hint, never a permission: every shared server is re-checked live through the
@@ -26,9 +26,16 @@ const ADMINISTRATOR = 0x8n;
 const MANAGE_GUILD = 0x20n;
 const ICON_HASH = /^(a_)?[0-9a-f]{32}$/;
 
-/** The server lists of logged-in sessions (session.idHash → { at, guilds }). */
+/** At most this many "Add Mewvo" servers are stored per user (servers without the bot). */
+export const MAX_ADDABLE_GUILDS = 50;
+
+/**
+ * The server lists of logged-in users (Discord user id → list): a new login replaces the
+ * user's list. Each list is dropped 12 h after it was stored (absolute, not refreshed by
+ * reading: the privacy text says "at most 12 hours").
+ */
 export function createGuildListCache({ max = GUILD_LIST_MAX_SESSIONS, ttlMs = SESSION_TTL_MS, now } = {}) {
-    return createLruCache({ max, ttlMs, now });
+    return createLruCache({ max, ttlMs, now, absolute: true });
 }
 
 /** True when the OAuth guild entry says the user owns the server or has Manage Server / Administrator there. */
@@ -49,11 +56,15 @@ export function canManageFromOAuth(entry) {
 export function guildListFrom(raw, { botHas = () => false } = {}) {
     if (!Array.isArray(raw)) return [];
     const out = [];
+    let addable = 0;
     for (const entry of raw.slice(0, MAX_LISTED_GUILDS)) {
         const id = String(entry?.id ?? '');
         if (!isSnowflake(id)) continue;
         const canManage = canManageFromOAuth(entry);
-        if (!botHas(id) && !canManage) continue;
+        const shared = botHas(id);
+        if (!shared && !canManage) continue;
+        // Servers without the bot are only kept for "Add Mewvo": a bounded number of them.
+        if (!shared && (addable += 1) > MAX_ADDABLE_GUILDS) continue;
         out.push({
             id,
             name: String(entry?.name ?? '').slice(0, 100) || id,

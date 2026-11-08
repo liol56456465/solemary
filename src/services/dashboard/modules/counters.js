@@ -11,6 +11,7 @@ import { html } from '../html.js';
 import { InputError, PERMS, buttonForm, channelField, channelName, channelPicker, choiceField, postForm, selectInput, text } from '../forms.js';
 import { currentText, textFor } from '../language.js';
 import { section, table } from './common.js';
+import { managerActions } from './serverScope.js';
 
 const TYPES = Object.keys(COUNTER_TYPE_CONFIG);
 
@@ -62,7 +63,7 @@ ${channelPicker(g, 'categoryId', null, { label: tr.t('counters.create.category')
 ${section(tr.t('counters.counting.title'), countingBody, tr.t('counters.counting.help'), { key: 'counting-game' })}`;
     },
 
-    actions: {
+    actions: managerActions(['counter-type', 'counter-delete', 'counting-setup', 'counting-reset', 'counting-off'], {
         'counter-create': {
             admin: true,
             async run(ctx, form) {
@@ -116,5 +117,5 @@ ${section(tr.t('counters.counting.title'), countingBody, tr.t('counters.counting
             await ctx.services.disableCountingGame(ctx.client, ctx.guildId);
             return { changes: before.enabled ? [{ key: 'counting.enabled', old: true, new: false }] : [], message: textFor(ctx).t('counters.action.off') };
         },
-    },
+    }),
 };

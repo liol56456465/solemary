@@ -17,6 +17,7 @@ import {
 import { diffSnapshots } from '../audit.js';
 import { section, table } from './common.js';
 import { textFor } from '../language.js';
+import { managerActions } from './serverScope.js';
 
 // Words: src/content/dashboard/<lang>/community.json (trigger kinds and statuses stay codes in the form values).
 
@@ -127,7 +128,7 @@ ${section(tr.t('community.open.title', { count: tr.fmtNumber(openSuggestions.len
 ${section(tr.t('community.starboard.title'), starboard, tr.t('community.starboard.help'), { key: 'starboard' })}${section(tr.t('community.sticky.title'), sticky, tr.t('community.sticky.help'), { key: 'sticky-messages' })}${section(tr.t('community.tag.title'), tagForms, tr.t('community.tag.help'), { key: 'tags' })}${section(tr.t('community.feed.title'), feedForms, tr.t('community.feed.help'), { key: 'youtube-feeds' })}`;
     },
 
-    actions: {
+    actions: managerActions(['suggestions', 'starboard', 'starboard-off'], {
         'suggestion-status': {
             admin: true,
             async run(ctx, form) {
@@ -250,6 +251,6 @@ ${section(tr.t('community.starboard.title'), starboard, tr.t('community.starboar
             if (!removed) throw new InputError(tr.t('community.action.noFeed', { id }));
             return { changes: [{ key: `feed.${id}`, old: before ? { source: before.sourceId, channelId: before.channelId } : null, new: null }], message: tr.t('community.action.feedRemoved', { id }) };
         },
-    },
+    }),
 };
 

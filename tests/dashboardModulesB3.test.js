@@ -125,12 +125,12 @@ test('birthday role: changing it needs Administrator (403, nothing saved); the t
         return ctx;
     };
     const manager = make(false);
-    await assert.rejects(birthdays.actions.settings(manager, { roleId: '' }), (error) => error instanceof InputError && error.status === 403 && /Administrator/.test(error.message));
+    await assert.rejects(getAction(birthdays, 'settings').run(manager, { roleId: '' }), (error) => error instanceof InputError && error.status === 403 && /Administrator/.test(error.message));
     assert.equal(manager.calls.length, 0);
-    await birthdays.actions.settings(manager, { timezone: 'Europe/London' });
+    await getAction(birthdays, 'settings').run(manager, { timezone: 'Europe/London' });
     assert.deepEqual(manager.calls.map((c) => c.patch), [{ timezone: 'Europe/London' }]);
     const admin = make(true);
-    await birthdays.actions.settings(admin, { roleId: '' });
+    await getAction(birthdays, 'settings').run(admin, { roleId: '' });
     assert.deepEqual(admin.calls.map((c) => c.patch), [{ roleId: null }]);
 });
 
