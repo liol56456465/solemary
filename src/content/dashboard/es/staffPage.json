@@ -76,6 +76,7 @@
     "inactive": "Inactivo",
     "warnings": "Advertencias",
     "note": "Inactivo = sin trabajo de moderación y menos de 20 mensajes. Las acciones son los casos que creó; las revisiones son tarjetas de automod y de verificación.",
+    "partial": "Basado en los miembros en caché: ahora no se pudo cargar la lista completa de miembros, así que puede faltar parte del staff.",
     "none": "No se encontró staff.",
     "title": "Actividad del staff · semana del {start}"
   },

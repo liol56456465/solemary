@@ -78,7 +78,7 @@ export default {
         log(`Banned role sync skipped: ${bannedRoleSummary.skipped}`);
       } else {
         startupLog(
-          `Banned role sync: scanned ${bannedRoleSummary.scanned} support members, added ${bannedRoleSummary.added}, removed ${bannedRoleSummary.removed}, errors ${bannedRoleSummary.errors}`
+          `Banned role sync: scanned ${bannedRoleSummary.scanned} support members, added ${bannedRoleSummary.added}, removed ${bannedRoleSummary.removed}, errors ${bannedRoleSummary.errors}${bannedRoleSummary.partial ? " (cached members only)" : ""}`
         );
       }
 

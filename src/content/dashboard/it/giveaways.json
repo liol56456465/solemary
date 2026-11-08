@@ -59,6 +59,7 @@
       "many": "Scelto @{name} ({id}) tra {count} di membri adatti.",
       "other": "Scelto @{name} ({id}) tra {count} membri adatti."
     },
+    "pickedCached": "Scelto solo tra i membri in cache: al momento non è stato possibile caricare l’elenco completo dei membri.",
     "started": "Giveaway per «{prize}» avviato; termina tra {duration}.",
     "ended": "Giveaway terminato: vincitori {winners}, partecipanti {entries}.",
     "rerolled": "Nuova estrazione: nuovi vincitori {winners}.",

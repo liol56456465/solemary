@@ -7,6 +7,7 @@
 
 import { enforcementConfig } from '../config/enforcement.js';
 import { logger } from '../utils/logger.js';
+import { fetchAllMembers } from '../utils/memberFetchGate.js';
 import { query, T, isEnforcementDbAvailable } from './enforcement/db.js';
 import { postModLog } from './enforcement/enforcementService.js';
 import { isStaff } from './automod/automodService.js';
@@ -269,7 +270,7 @@ export async function postWeeklyStaffReport(client) {
 /** One server's weekly staff report (week starting `start`), in that server's staff channel. */
 export async function postWeeklyStaffReportFor(client, guild, start) {
     if (!guild) return;
-    await guild.members.fetch().catch(() => null);
+    const { partial } = await fetchAllMembers(guild, { maxAgeMs: 60 * 60_000, timeoutMs: 15_000 });
     const rows = await staffActivityForWeek(guild, start);
     if (!rows.length) return;
 
@@ -278,6 +279,7 @@ export async function postWeeklyStaffReportFor(client, guild, start) {
     await postModLog(client, 'staff', [
         { name: `Week of ${start}`, value: lines.join('\n').slice(0, 1024) || 'No staff' },
         { name: 'Inactive', value: inactive.length ? inactive.map((row) => `<@${row.userId}>`).join(', ').slice(0, 1024) : 'Nobody', inline: false },
+        ...(partial ? [{ name: 'Note', value: 'Based on cached members: the full member list could not be loaded, so some staff may be missing.', inline: false }] : []),
     ], { guildId: guild.id, title: 'Weekly staff activity' });
 
     if (inactive.length) {

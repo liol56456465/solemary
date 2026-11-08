@@ -59,6 +59,7 @@
       "many": "Elegido @{name} ({id}) entre {count} de miembros que coinciden.",
       "other": "Elegido @{name} ({id}) entre {count} miembros que coinciden."
     },
+    "pickedCached": "Elegido solo entre los miembros en caché: ahora no se pudo cargar la lista completa de miembros.",
     "started": "Sorteo de «{prize}» empezado; termina en {duration}.",
     "ended": "Sorteo terminado: {winners} ganador(es) entre {entries} participantes.",
     "rerolled": "Sorteado de nuevo: {winners} ganador(es) nuevo(s).",

@@ -58,6 +58,7 @@ import { currentLanguage, currentText, dashboardText } from './language.js';
 import { parseUserRef } from './memberSearch.js';
 import { MODERATOR, mayRun, moderatorActionTypes, requiredLevel } from './permissions.js';
 import { memberHasConfiguredModeratorRole } from '../../utils/permissionGuard.js';
+import { fetchAllMembers } from '../../utils/memberFetchGate.js';
 import { caseActions as caseActionForms } from './enforcementPages.js';
 import { normalizeTags } from '../enforcement/caseNotesService.js';
 import { evidenceFileName, sniffImage } from './multipart.js';
@@ -324,13 +325,12 @@ export function createEnforcementHandlers(core) {
 
     // ── Members ──────────────────────────────────────────────────────────
 
-    // The member cache can be incomplete after a restart; fetch everyone at most every 5 minutes.
-    let lastMemberFetch = 0;
+    // The member cache can be incomplete after a restart; complete it through the member fetch
+    // gate, at most every 5 minutes. Returns the gate result ({ partial, reason, ... }); the
+    // Members page shows its own "still loading" notice when the cache is under 90%.
     async function completeMemberCache(guild) {
-        if (!guild?.memberCount || guild.members.cache.size >= guild.memberCount * 0.9) return;
-        if (Date.now() - lastMemberFetch < 5 * 60 * 1000) return;
-        lastMemberFetch = Date.now();
-        await Promise.race([guild.members.fetch().catch(() => null), new Promise((resolve) => setTimeout(resolve, 8000))]);
+        if (!guild?.memberCount) return { partial: false, reason: 'cache' };
+        return fetchAllMembers(guild, { maxAgeMs: 5 * 60 * 1000, timeoutMs: 8000, waitMs: 5000 });
     }
 
     /** GET /dashboard/users: the Members list (filters in the query); an ID opens that member. */
@@ -1166,8 +1166,9 @@ export function createEnforcementHandlers(core) {
             Promise.resolve().then(() => e.listMassActionBlocks(guildId)).catch(() => []),
             // /staff activity is owner-only, so the weekly list is too.
             owner && guild ? loadOrNull('staff activity', async () => {
-                await completeMemberCache(guild);
-                return e.staffActivityForWeek(guild, start);
+                const { partial } = await completeMemberCache(guild);
+                const rows = await e.staffActivityForWeek(guild, start);
+                return Object.assign(rows, { partial: Boolean(partial) });
             }) : null,
             owner ? loadOrNull('removed staff roles', () => e.listRemovedStaffRoles(guildId)) : [],
             isSnowflake(lookupId) ? loadOrNull('staff warnings', () => e.listStaffWarnings(guildId, lookupId)) : undefined,
@@ -1181,7 +1182,7 @@ export function createEnforcementHandlers(core) {
         return [
             counts ? coverageSection({ report: buildCoverageReport(counts, config?.birthdayTimezone || 'UTC'), period, periods: COVERAGE_PERIODS, statsPeriod })
                 : html`<h2>${tr.t('moderation.staff.coverage')}</h2><p class="muted">${tr.t('moderation.staff.coverageFailed')}</p>`,
-            owner ? activitySection({ rows: activity, week, start, keep, warningsLink: owner })
+            owner ? activitySection({ rows: activity, week, start, keep, warningsLink: owner, partial: Boolean(activity?.partial) })
                 : html`<h2>${tr.t('moderation.staff.activity')}</h2><p class="muted">${tr.t('moderation.staff.activityOwners')}</p>`,
             disciplineSection({
                 isOwner: owner, csrf: req.dashboard.session.csrf, editEnabled: settings.editEnabled,

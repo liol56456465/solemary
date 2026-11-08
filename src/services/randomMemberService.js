@@ -4,7 +4,12 @@
 
 import { randomInt } from 'node:crypto';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
-import { logger } from '../utils/logger.js';
+import { fetchAllMembers } from '../utils/memberFetchGate.js';
+
+// Anyone can run /tools randomuser: refresh the list at most every 10 minutes, and only in
+// servers up to this size; bigger servers pick from the member cache.
+export const RANDOM_MEMBER_FETCH_MAX = 5_000;
+export const RANDOM_MEMBER_MAX_AGE_MS = 10 * 60_000;
 
 /** The members that pass the filters (bots excluded unless includeBots). */
 export function filterRandomMemberPool(members, { roleId = null, includeBots = false, onlineOnly = false } = {}) {
@@ -32,18 +37,18 @@ export function pickFromPool(pool, pick = randomInt) {
 }
 
 /**
- * Fetches the member list (falls back to the cache), filters it and picks one.
- * Returns { member, poolSize }; throws USER_INPUT when nobody matches.
+ * Completes the member list through the member fetch gate (cache-only in big servers or when
+ * the gate says later), filters it and picks one.
+ * Returns { member, poolSize, partial }; partial = picked from cached members only.
+ * Throws USER_INPUT when nobody matches.
  */
-export async function pickRandomMember(guild, { roleId = null, includeBots = false, onlineOnly = false } = {}, { pick = randomInt } = {}) {
-    await guild.members.fetch().catch((error) => {
-        logger.debug('randomuser: member fetch failed, using cache', { error: error?.message });
-    });
+export async function pickRandomMember(guild, { roleId = null, includeBots = false, onlineOnly = false } = {}, { pick = randomInt, fetchMembers = fetchAllMembers } = {}) {
+    const { partial } = await fetchMembers(guild, { maxAgeMs: RANDOM_MEMBER_MAX_AGE_MS, maxMembers: RANDOM_MEMBER_FETCH_MAX, timeoutMs: 10_000, waitMs: 5_000 });
     const pool = filterRandomMemberPool(guild.members.cache.values(), { roleId, includeBots, onlineOnly });
     if (!pool.length) {
         const roleName = roleId ? guild.roles?.cache?.get(roleId)?.name || roleId : null;
         const message = emptyPoolMessage({ roleName, onlineOnly });
         throw createError('No member matches the filters', ErrorTypes.USER_INPUT, message);
     }
-    return { member: pickFromPool(pool, pick), poolSize: pool.length };
+    return { member: pickFromPool(pool, pick), poolSize: pool.length, partial: Boolean(partial) };
 }

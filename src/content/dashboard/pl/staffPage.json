@@ -80,6 +80,7 @@
     "inactive": "Nieaktywny",
     "warnings": "Ostrzeżenia",
     "note": "Nieaktywny = brak pracy moderacyjnej i mniej niż 20 wiadomości. Akcje to utworzone przez nich sprawy; weryfikacje to karty automoderacji i weryfikacji.",
+    "partial": "Na podstawie członków w pamięci podręcznej: nie udało się teraz wczytać pełnej listy członków, więc może brakować części ekipy.",
     "none": "Nie znaleziono ekipy.",
     "title": "Aktywność ekipy · tydzień od {start}"
   },

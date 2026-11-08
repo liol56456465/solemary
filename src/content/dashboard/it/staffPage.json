@@ -76,6 +76,7 @@
     "inactive": "Inattivo",
     "warnings": "Avvertimenti",
     "note": "Inattivo = nessun lavoro di moderazione e meno di 20 messaggi. Le azioni sono i casi creati; le revisioni sono le schede di automod e verifica.",
+    "partial": "Basato sui membri in cache: al momento non è stato possibile caricare l’elenco completo dei membri, quindi alcuni membri dello staff potrebbero mancare.",
     "none": "Nessun membro dello staff trovato.",
     "title": "Attività dello staff · settimana del {start}"
   },

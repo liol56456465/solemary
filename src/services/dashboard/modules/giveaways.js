@@ -77,11 +77,12 @@ ${section(tr.t('giveaways.ended.title'), table([tr.t('giveaways.list.prize'), tr
                 const tr = textFor(ctx);
                 const roleId = roleField(ctx.guild, form, 'roleId', { label: tr.t('giveaways.random.roleLabel'), allowManaged: true });
                 const filters = { roleId, includeBots: checkbox(form, 'includeBots'), onlineOnly: checkbox(form, 'onlineOnly') };
-                const { member, poolSize } = await ctx.services.pickRandomMember(ctx.guild, filters);
+                const { member, poolSize, partial } = await ctx.services.pickRandomMember(ctx.guild, filters);
                 const name = member.user?.username || member.displayName || member.id;
+                const picked = tr.tp('giveaways.action.picked', poolSize, { name, id: member.id });
                 return {
-                    changes: [{ key: 'randomMember', old: null, new: { userId: member.id, username: name, from: poolSize, ...filters } }],
-                    message: tr.tp('giveaways.action.picked', poolSize, { name, id: member.id }),
+                    changes: [{ key: 'randomMember', old: null, new: { userId: member.id, username: name, from: poolSize, ...filters, ...(partial ? { cachedOnly: true } : {}) } }],
+                    message: partial ? `${picked} ${tr.t('giveaways.action.pickedCached')}` : picked,
                 };
             },
         },

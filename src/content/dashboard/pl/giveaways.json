@@ -60,6 +60,7 @@
       "many": "Wylosowano @{name} ({id}) spośród {count} pasujących członków.",
       "other": "Wylosowano @{name} ({id}) spośród {count} pasującego członka."
     },
+    "pickedCached": "Wybrano tylko spośród członków w pamięci podręcznej: nie udało się teraz wczytać pełnej listy członków.",
     "started": "Losowanie „{prize}” rozpoczęte; kończy się za {duration}.",
     "ended": "Losowanie zakończone. Zwycięzcy: {winners}, zgłoszenia: {entries}.",
     "rerolled": "Wylosowano ponownie. Nowi zwycięzcy: {winners}.",
