@@ -45,7 +45,7 @@ import { guildPlan as defaultGuildPlan } from '../../billing/premiumEffects.js';
 import { planName } from '../../billing/premiumService.js';
 import { textFor } from '../language.js';
 import { isLegacyAutomodGuild } from '../../automod/automodSettings.js';
-import { requireCanAct } from './serverScope.js';
+import { requireCanAct, adminOnlyActions } from './serverScope.js';
 
 // Words: src/content/dashboard/<lang>/automod.json. English rule, join-gate check and policy names
 // come from config/automod.js, joinGate.js and nativeBridge.js as before; other languages take
@@ -558,7 +558,8 @@ ${section(tr.t('automod.testRun.title'), testRunSection(ctx, data.backtest, data
         return html`${live}${ruleCards}${leniency}${raids}${results}`;
     },
 
-    actions: {
+    // Safety module: every action needs Administrator (serverScope.js adminOnlyActions).
+    actions: adminOnlyActions({
         // Turning automod on: any editor. Turning it off is a safety change: Administrator, and while
         // the staff guard is on only the server owner (turning automod off also stops the guard),
         // the same rule as /automod enable (commands/Enforcement/automod.js).
@@ -830,5 +831,5 @@ ${section(tr.t('automod.testRun.title'), testRunSection(ctx, data.backtest, data
             if (!Object.keys(patch).length) return nothing(tr);
             return saveRegistry(ctx, patch, 'automod');
         },
-    },
+    }),
 };

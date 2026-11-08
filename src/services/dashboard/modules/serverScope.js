@@ -22,3 +22,15 @@ export function isHomeScope(ctx) {
 export function requireCanAct(ctx, message, field = null) {
     if (!ctx?.canAct) throw new InputError(message, 403, field);
 }
+
+/**
+ * Safety modules (automod, logging, enforcement): every action is Administrator-only, so a
+ * Manage Server manager can't weaken moderation, hide the logs or move the mod log (owner
+ * decision 1, B3). Wraps each action as { ...action, admin: true }; plain functions become { run }.
+ */
+export function adminOnlyActions(actions) {
+    return Object.fromEntries(Object.entries(actions).map(([name, action]) => [
+        name,
+        typeof action === 'function' ? { admin: true, run: action } : { ...action, admin: true },
+    ]));
+}

@@ -81,8 +81,16 @@ test('admin markers: every role- or permission-granting action and safety settin
             assert.equal(getAction(getModule(moduleKey), action)?.admin, true, `${moduleKey}/${action} must be admin: true`);
         }
     }
+    // Safety modules: every action is Administrator-only (serverScope.js adminOnlyActions), so a
+    // manager can't weaken automod, hide or turn off the logs, or move the mod log.
+    for (const moduleKey of ['automod', 'logging', 'enforcement']) {
+        const module = getModule(moduleKey);
+        for (const action of Object.keys(module.actions)) {
+            assert.equal(getAction(module, action).admin, true, `${moduleKey}/${action} must be admin: true (safety module)`);
+        }
+    }
     // Plain settings stay open to every editor (a Manage Server manager).
-    for (const [moduleKey, action] of [['enforcement', 'channels'], ['enforcement', 'timings'], ['enforcement', 'appeals-home'], ['automod', 'mode'], ['birthdays', 'settings'], ['tickets', 'settings']]) {
+    for (const [moduleKey, action] of [['birthdays', 'settings'], ['tickets', 'settings']]) {
         assert.equal(getAction(getModule(moduleKey), action).admin, false, `${moduleKey}/${action} stays open`);
     }
 });

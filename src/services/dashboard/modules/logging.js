@@ -1,3 +1,4 @@
+import { adminOnlyActions } from './serverScope.js';
 // logging.js — Logging: on/off, a channel per log category (audit, applications,
 // reports), event toggles and the ignore lists. Writes go through loggingService
 // (the functions /logging uses).
@@ -96,7 +97,8 @@ ${section(tr.t('logging.events.title'), toggles, tr.t('logging.events.help'), { 
 ${section(tr.t('logging.ignore.title'), ignoreForms, tr.t('logging.ignore.help'), { key: 'ignore-lists', size: 'full' })}`;
     },
 
-    actions: {
+    // Safety module: every action needs Administrator (serverScope.js adminOnlyActions).
+    actions: adminOnlyActions({
         async enabled(ctx, form) {
             const tr = textFor(ctx);
             const enabled = boolField(form, 'enabled', tr.t('logging.action.label'));
@@ -176,5 +178,5 @@ ${section(tr.t('logging.ignore.title'), ignoreForms, tr.t('logging.ignore.help')
             failIfFalse(await ctx.services.updateIgnoreList(ctx.client, ctx.guildId, { action: 'remove', type, id }));
             return { changes: [{ key: `logging.ignore.${IGNORE_TYPES[type]}`, old: list, new: list.filter((x) => x !== id) }], message: tr.t('logging.action.removed') };
         },
-    },
+    }),
 };

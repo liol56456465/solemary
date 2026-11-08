@@ -10,7 +10,7 @@ import { MAX_TEMPLATES, TEMPLATE_ACTIONS, TEMPLATE_NAME_MAX, cleanTemplates } fr
 import { DAY, MINUTE, changedOnly, durationField, registryValue, saveRegistry, section, table, topic } from './common.js';
 import { textFor } from '../language.js';
 import { inviteOrNull } from '../../site/shell.js';
-import { isHomeScope } from './serverScope.js';
+import { isHomeScope, adminOnlyActions } from './serverScope.js';
 
 // Words: src/content/dashboard/<lang>/enforcement.json. Reason labels (config/enforcement.js) and
 // automod rule names (config/automod.js) come from the config and stay as they are.
@@ -192,7 +192,8 @@ ${section(t('enforcement.rules.stepsTitle'), steps, t('enforcement.rules.stepsHe
         return html`${where}${appeals}${safety}${home ? pages : ''}${rules}`;
     },
 
-    actions: {
+    // Safety module: every action needs Administrator (serverScope.js adminOnlyActions).
+    actions: adminOnlyActions({
         'appeal-panels': {
             admin: true,
             async run(ctx, form) {
@@ -329,5 +330,5 @@ ${section(t('enforcement.rules.stepsTitle'), steps, t('enforcement.rules.stepsHe
                 return saveRegistry(ctx, patch, 'enforcement');
             },
         },
-    },
+    }),
 };

@@ -736,21 +736,21 @@ const CASES = {
     enforcement: {
         'appeal-panels': { form: { channelId: TEXT }, service: 'postAppealPanels', admin: true,
             bad: { form: { channelId: VOICE }, message: /must be a text channel/ } },
-        channels: { form: { modLogChannelId: TEXT, evidenceChannelId: '', adminRequestChannelId: '', appealsCategoryId: CAT, reportsCategoryId: CAT, modmailCategoryId: '', openChannelCap: '15', supportServerInvite: 'https://discord.gg/abc' }, service: 'updateSettings',
+        channels: { admin: true, form: { modLogChannelId: TEXT, evidenceChannelId: '', adminRequestChannelId: '', appealsCategoryId: CAT, reportsCategoryId: CAT, modmailCategoryId: '', openChannelCap: '15', supportServerInvite: 'https://discord.gg/abc' }, service: 'updateSettings',
             bad: { form: { modLogChannelId: MISSING }, message: /not in the server/ } },
         roles: { form: { mutedRoleId: ROLE_OK, warnRole1: ROLE_OK2 }, service: 'updateSettings', admin: true, bad: { form: { mutedRoleId: GUILD }, message: /@everyone/ } },
-        timings: { form: { appealWindowDays: '20', appealCooldownDays: '7', rejoinInviteHours: '168', staleReportDays: '7', staleAppealReminderDays: '3' }, service: 'updateSettings',
+        timings: { admin: true, form: { appealWindowDays: '20', appealCooldownDays: '7', rejoinInviteHours: '168', staleReportDays: '7', staleAppealReminderDays: '3' }, service: 'updateSettings',
             bad: { form: { appealWindowDays: '999', appealCooldownDays: '7', rejoinInviteHours: '1', staleReportDays: '7', staleAppealReminderDays: '3' }, message: /between 1 and 365/ } },
         'appeal-review': { form: { independentAppealReview: '1' }, service: 'updateSettings', admin: true },
         // Other servers only: refused in Mewvo's own servers (the generic tests run in the main server).
-        'appeals-home': { form: { appealsHome: 'own', appealsInvite: 'https://discord.gg/ours' }, service: 'updateSettings', homeRefused: /This setting does not apply in Mewvo/ },
+        'appeals-home': { admin: true, form: { appealsHome: 'own', appealsInvite: 'https://discord.gg/ours' }, service: 'updateSettings', homeRefused: /This setting does not apply in Mewvo/ },
         'mass-action': { form: { massActionLimit: '7', massMuteLimit: '12', massActionWindowMinutes: '10', massActionBlockMinutes: '60' }, service: 'updateSettings', admin: true,
             bad: { form: { massActionLimit: 'x', massActionWindowMinutes: '10', massActionBlockMinutes: '60' }, message: /whole number/ } },
         transparency: { form: { enabled: 'true' }, service: 'updateSettings', admin: true, bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
         'trust-card': { form: { enabled: 'true' }, service: 'updateSettings', admin: true, bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
-        'template-add': { form: { name: 'Spam: short mute', action: 'mute', reasonKey: 'spam', duration: '1h' }, service: 'updateSettings',
+        'template-add': { admin: true, form: { name: 'Spam: short mute', action: 'mute', reasonKey: 'spam', duration: '1h' }, service: 'updateSettings',
             bad: { form: { name: 'No time', action: 'mute', reasonKey: 'spam', duration: '' }, message: /needs a duration/ } },
-        'template-remove': { seed: (s) => { s.registry.enforcementTemplates = [{ name: 'Spam', action: 'warn', reasonKey: 'spam', duration: null }]; }, form: { index: '0' }, service: 'updateSettings',
+        'template-remove': { admin: true, seed: (s) => { s.registry.enforcementTemplates = [{ name: 'Spam', action: 'warn', reasonKey: 'spam', duration: null }]; }, form: { index: '0' }, service: 'updateSettings',
             bad: { form: { index: '5' }, message: /gone already/ } },
     },
     appearance: {
@@ -765,30 +765,30 @@ const CASES = {
     },
     automod: {
         // Turning automod off needs Administrator (needsAct: the action itself is open to every editor for turning it on).
-        enabled: { form: { enabled: 'false' }, service: 'setAutomodEnabled', needsAct: true, bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
-        mode: { form: { mode: 'monitor' }, service: 'setAutomodMode', bad: { form: { mode: 'chaos' }, message: /unknown choice/ } },
-        rules: { form: { 'rule:caps': 'off' }, service: 'setRuleMode', bad: { form: { 'rule:caps': 'loud' }, message: /unknown mode/ } },
-        'test-run-rule': { form: { rule: 'caps', mode: 'monitor' }, service: 'setRuleMode', bad: { form: { rule: 'nope', mode: 'off' }, message: /Rule: unknown choice/ } },
-        'custom-add': { form: { name: 'Other servers', action: 'mute', muteDuration: '1h', words: 'join my server\nfree nitro' }, service: 'updateSettings',
+        enabled: { admin: true, form: { enabled: 'false' }, service: 'setAutomodEnabled', needsAct: true, bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
+        mode: { admin: true, form: { mode: 'monitor' }, service: 'setAutomodMode', bad: { form: { mode: 'chaos' }, message: /unknown choice/ } },
+        rules: { admin: true, form: { 'rule:caps': 'off' }, service: 'setRuleMode', bad: { form: { 'rule:caps': 'loud' }, message: /unknown mode/ } },
+        'test-run-rule': { admin: true, form: { rule: 'caps', mode: 'monitor' }, service: 'setRuleMode', bad: { form: { rule: 'nope', mode: 'off' }, message: /Rule: unknown choice/ } },
+        'custom-add': { admin: true, form: { name: 'Other servers', action: 'mute', muteDuration: '1h', words: 'join my server\nfree nitro' }, service: 'updateSettings',
             bad: { form: { name: 'No time', action: 'mute', muteDuration: '', words: 'bad' }, message: /needs a duration/ } },
-        'custom-edit': { seed: seedCustomRules, form: { id: CUSTOM_A, action: 'warn', words: 'new phrase\nother words' }, service: 'updateSettings',
+        'custom-edit': { admin: true, seed: seedCustomRules, form: { id: CUSTOM_A, action: 'warn', words: 'new phrase\nother words' }, service: 'updateSettings',
             bad: { seed: seedCustomRules, form: { id: CUSTOM_A, action: 'warn', words: '' }, message: /at least one word/ } },
-        'custom-toggle': { seed: seedCustomRules, form: { id: CUSTOM_A, enabled: 'false' }, service: 'updateSettings',
+        'custom-toggle': { admin: true, seed: seedCustomRules, form: { id: CUSTOM_A, enabled: 'false' }, service: 'updateSettings',
             bad: { seed: seedCustomRules, form: { id: 'gone1234', enabled: 'false' }, message: /gone already/ } },
-        'custom-remove': { seed: seedCustomRules, form: { id: CUSTOM_A }, service: 'updateSettings',
+        'custom-remove': { admin: true, seed: seedCustomRules, form: { id: CUSTOM_A }, service: 'updateSettings',
             bad: { form: { id: CUSTOM_A }, message: /gone already/ } },
-        'channel-add': { form: { channel: TEXT, rule: 'caps', mode: 'off' }, service: 'setChannelRuleMode', bad: { form: { channel: VOICE, rule: 'caps', mode: 'off' }, message: /must be a text channel or category/ } },
-        'channel-remove': { seed: (s) => { s.automod.channelRules = { [TEXT]: { caps: 'off' } }; }, form: { channel: TEXT, rule: 'caps' }, service: 'setChannelRuleMode', bad: { form: { channel: 'x', rule: 'caps' }, message: /not a channel ID/ } },
-        'exempt-add': { form: { channel: TEXT }, service: 'setExemptChannel', bad: { form: { channel: MISSING }, message: /not in the server/ } },
-        'exempt-remove': { form: { channel: TEXT2 }, service: 'setExemptChannel', bad: { form: { channel: '1' }, message: /not a channel ID/ } },
+        'channel-add': { admin: true, form: { channel: TEXT, rule: 'caps', mode: 'off' }, service: 'setChannelRuleMode', bad: { form: { channel: VOICE, rule: 'caps', mode: 'off' }, message: /must be a text channel or category/ } },
+        'channel-remove': { admin: true, seed: (s) => { s.automod.channelRules = { [TEXT]: { caps: 'off' } }; }, form: { channel: TEXT, rule: 'caps' }, service: 'setChannelRuleMode', bad: { form: { channel: 'x', rule: 'caps' }, message: /not a channel ID/ } },
+        'exempt-add': { admin: true, form: { channel: TEXT }, service: 'setExemptChannel', bad: { form: { channel: MISSING }, message: /not in the server/ } },
+        'exempt-remove': { admin: true, form: { channel: TEXT2 }, service: 'setExemptChannel', bad: { form: { channel: '1' }, message: /not a channel ID/ } },
         trusted: { form: { roleId: ROLE_OK, minLevel: '5' }, service: 'setTrusted', admin: true, bad: { form: { roleId: ROLE_MANAGED, minLevel: '5' }, message: /managed/ } },
-        'second-chance': { form: { enabled: 'false' }, service: 'setSecondChance', bad: { form: {}, message: /on or off/ } },
-        mood: { form: { enabled: 'false' }, service: 'setMoodAlerts', bad: { form: { enabled: '' }, message: /on or off/ } },
-        panic: { form: { hours: '5', enabled: '1' }, service: 'setPanic', bad: { form: { hours: '99' }, message: /between 1 and 24/ } },
-        'join-gate': { form: { 'gate:avatar': 'flag', 'gate:links': 'off', 'gate:botname': 'off', 'gate:age': 'off', ageDays: '7' }, service: 'setJoinGateCheck',
+        'second-chance': { admin: true, form: { enabled: 'false' }, service: 'setSecondChance', bad: { form: {}, message: /on or off/ } },
+        mood: { admin: true, form: { enabled: 'false' }, service: 'setMoodAlerts', bad: { form: { enabled: '' }, message: /on or off/ } },
+        panic: { admin: true, form: { hours: '5', enabled: '1' }, service: 'setPanic', bad: { form: { hours: '99' }, message: /between 1 and 24/ } },
+        'join-gate': { admin: true, form: { 'gate:avatar': 'flag', 'gate:links': 'off', 'gate:botname': 'off', 'gate:age': 'off', ageDays: '7' }, service: 'setJoinGateCheck',
             bad: { form: { 'gate:avatar': 'ban', 'gate:links': 'off', 'gate:botname': 'off', 'gate:age': 'off', ageDays: '7' }, message: /unknown choice/ } },
-        native: { form: { ruleId: NATIVE_RULE, policy: 'warn', dedupeMinutes: '' }, service: 'setNativePolicy', bad: { form: { ruleId: MISSING, policy: 'warn' }, message: /no longer exists/ } },
-        channels: { form: { reviewChannelId: TEXT, alertsChannelId: '', extraBlockedWords: 'foo\nBar' }, service: 'updateSettings', bad: { form: { reviewChannelId: CAT, alertsChannelId: '' }, message: /must be a text channel/ } },
+        native: { admin: true, form: { ruleId: NATIVE_RULE, policy: 'warn', dedupeMinutes: '' }, service: 'setNativePolicy', bad: { form: { ruleId: MISSING, policy: 'warn' }, message: /no longer exists/ } },
+        channels: { admin: true, form: { reviewChannelId: TEXT, alertsChannelId: '', extraBlockedWords: 'foo\nBar' }, service: 'updateSettings', bad: { form: { reviewChannelId: CAT, alertsChannelId: '' }, message: /must be a text channel/ } },
         'lockdown-end': { seed: (s) => { s.lockdown = { active: true, startedAt: '2026-10-28T10:00:00Z', joinerIds: ['1', '2'] }; }, form: {}, service: 'endLockdown', admin: true,
             bad: { form: {}, message: /no lockdown right now/ } },
         'probation-end': { form: { user: MEMBER }, service: 'endProbation', admin: true, bad: { form: { user: 'x' }, message: /Discord user ID/ } },
@@ -797,11 +797,11 @@ const CASES = {
             bad: { form: { channels: [VOICE], days: '7' }, message: /must be a text channel/ } },
     },
     logging: {
-        enabled: { form: { enabled: 'true' }, service: 'setLoggingEnabled', bad: { form: { enabled: 'x' }, message: /on or off/ } },
-        channels: { form: { audit: TEXT, applications: '', reports: '' }, service: 'setLogChannel', bad: { form: { audit: VOICE }, message: /must be a text channel/ } },
-        events: { form: {}, service: 'toggleEventLogging' },
+        enabled: { admin: true, form: { enabled: 'true' }, service: 'setLoggingEnabled', bad: { form: { enabled: 'x' }, message: /on or off/ } },
+        channels: { admin: true, form: { audit: TEXT, applications: '', reports: '' }, service: 'setLogChannel', bad: { form: { audit: VOICE }, message: /must be a text channel/ } },
+        events: { admin: true, form: {}, service: 'toggleEventLogging' },
         'ignore-add': { form: { type: 'role', id: ROLE_OK }, service: 'updateIgnoreList', admin: true, bad: { form: { type: 'user', id: 'abc' }, message: /Discord user ID/ } },
-        'ignore-remove': { form: { type: 'channel', id: TEXT2 }, service: 'updateIgnoreList', bad: { form: { type: 'planet', id: TEXT2 }, message: /unknown choice/ } },
+        'ignore-remove': { admin: true, form: { type: 'channel', id: TEXT2 }, service: 'updateIgnoreList', bad: { form: { type: 'planet', id: TEXT2 }, message: /unknown choice/ } },
     },
     welcome: {
         'welcome-enabled': { form: { enabled: 'true' }, service: 'updateWelcomeSettings', bad: { form: { enabled: '2' }, message: /on or off/ } },
@@ -1053,13 +1053,13 @@ test('every POST action: users without access are refused; admin-only actions re
             const owner = await setup({ userId: OWNER });
             c.seed?.(owner.state, owner.guild);
             const asOwner = await postConfirmed(owner, module.key, action, c.form);
-            if (c.homeRefused) {
-                assert.equal(asOwner.statusCode, 400, `${module.key}/${action} refused in a home server`);
-                assert.match(asOwner.body, c.homeRefused);
-            } else if (getAction(module, action).admin || c.needsAct) {
+            if (getAction(module, action).admin || c.needsAct) {
                 assert.equal(asOwner.statusCode, 403, `${module.key}/${action} owner must be refused`);
                 assert.match(asOwner.body, /Administrator/);
                 assert.equal(owner.calls.length, 0);
+            } else if (c.homeRefused) {
+                assert.equal(asOwner.statusCode, 400, `${module.key}/${action} refused in a home server`);
+                assert.match(asOwner.body, c.homeRefused);
             } else {
                 assert.equal(asOwner.statusCode, 303, `${module.key}/${action} owner may change settings (decision 4)`);
             }
