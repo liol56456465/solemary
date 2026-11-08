@@ -1,7 +1,7 @@
 // Leveling boosts: XP multiplier math, reward mode role plans, the per-member role sync
 // (rejoin, level-up, /level set) against a fake guild, and the boost service.
 
-import { test } from 'node:test';
+import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { TitanBotError, ErrorTypes } from '../src/utils/errorHandler.js';
 import {
@@ -12,6 +12,10 @@ import {
     getLevelingConfig, saveUserLevelData, setLevelBoost, updateLevelingConfig, saveLevelingConfig,
 } from '../src/services/leveling/leveling.js';
 import guildMemberAdd from '../src/events/guildMemberAdd.js';
+import { resetMemberFetchGate } from '../src/utils/memberFetchGate.js';
+
+// Each test starts with a fresh member fetch gate (the 60 s gap is per guild id).
+beforeEach(() => resetMemberFetchGate());
 
 const GUILD = '400000000000000001';
 const CH = '400000000000000002';
@@ -336,6 +340,7 @@ test('startup reconcile: one full member fetch, former members skipped without a
 
 test('startup reconcile: a failed or timed-out member fetch skips the guild (no per-id fetches)', async () => {
     for (const mode of ['fail', 'hang']) {
+        resetMemberFetchGate();
         const client = fakeClient();
         await seed(client, { level: 12 });
         const guild = fakeGuild();
@@ -351,6 +356,33 @@ test('startup reconcile: a failed or timed-out member fetch skips the guild (no 
         assert.equal(summary.skippedGuilds, 1, mode);
         assert.deepEqual(member.roles.added, [], mode);
     }
+});
+
+test('startup reconcile: goes through the member fetch gate (size cap, rate limit, 60 s gap)', async () => {
+    const client = fakeClient();
+    await seed(client, { level: 12 });
+    const big = fakeGuild();
+    const member = fakeMember(big, client);
+    big.memberCount = 30_000;
+    client.guilds.cache.set(GUILD, big);
+    let summary = await reconcileLevelRoles(client);
+    assert.deepEqual(big.fetchCalls, [], 'above FULL_FETCH_MAX_MEMBERS: no full fetch');
+    assert.equal(summary.skippedGuilds, 1, 'skipped: the cache is not complete');
+    assert.deepEqual(member.roles.added, []);
+
+    resetMemberFetchGate();
+    const limited = fakeGuild();
+    fakeMember(limited, client);
+    limited.members.fetch = async (id) => {
+        limited.fetchCalls.push(id === undefined || typeof id === 'object' ? 'all' : id);
+        throw Object.assign(new Error('Request with opcode 8 was rate limited.'), { data: { opcode: 8, retry_after: 30 } });
+    };
+    client.guilds.cache.set(GUILD, limited);
+    summary = await reconcileLevelRoles(client);
+    assert.equal(summary.skippedGuilds, 1, 'rate-limited: skipped, no throw');
+    summary = await reconcileLevelRoles(client);
+    assert.deepEqual(limited.fetchCalls, ['all'], 'no second full fetch while rate-limited');
+    assert.equal(summary.skippedGuilds, 1);
 });
 
 // ── the boost service ─────────────────────────────────────────────────────

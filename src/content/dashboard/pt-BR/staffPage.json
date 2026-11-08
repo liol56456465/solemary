@@ -76,6 +76,7 @@
     "inactive": "Inativo",
     "warnings": "Advertências",
     "note": "Inativo = nenhum trabalho de moderação e menos de 20 mensagens. Ações são os casos que criou; revisões são cartões do automod e da verificação.",
+    "partial": "Com base nos membros em cache: não foi possível carregar a lista completa de membros agora, então alguns membros da equipe podem estar faltando.",
     "none": "Nenhum membro da equipe encontrado.",
     "title": "Atividade da equipe · semana de {start}"
   },

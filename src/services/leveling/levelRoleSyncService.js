@@ -1,5 +1,6 @@
 import { PermissionFlagsBits } from 'discord.js';
 import { logger } from '../../utils/logger.js';
+import { fetchAllMembers } from '../../utils/memberFetchGate.js';
 import { getLevelingConfig, getUserLevelData, setLevelRoleReward } from './leveling.js';
 import { planRewardRoles, rewardModeOf, sortedRewards } from './levelBoosts.js';
 import { getRoleAssignmentProblem } from '../../utils/roleSafety.js';
@@ -139,30 +140,19 @@ export function roleSyncNote(summary) {
 const FULL_FETCH_TIMEOUT_MS = 15_000;
 
 /**
- * Fills the guild's member cache with one full member fetch. True when it finished within
- * `timeoutMs`; false when it failed or timed out (the cache may then be partial).
+ * Fills the guild's member cache through the member fetch gate. True when the cache is complete
+ * (fetched now, recently, or already >= 90% of memberCount); false when the gate refused (too
+ * big, rate-limited, busy) or the fetch failed or timed out (the cache may then be partial).
  */
 async function fillMemberCache(guild, timeoutMs = FULL_FETCH_TIMEOUT_MS) {
-    let timer;
-    const timeout = new Promise((resolve) => { timer = setTimeout(() => resolve('timeout'), timeoutMs); });
-    try {
-        const result = await Promise.race([
-            Promise.resolve().then(() => guild.members.fetch({ time: timeoutMs })).then(() => 'ok', (error) => {
-                logger.warn(`Level role sync: member fetch failed for guild ${guild.id}: ${error.message}`);
-                return 'failed';
-            }),
-            timeout,
-        ]);
-        if (result === 'timeout') logger.warn(`Level role sync: member fetch timed out for guild ${guild.id}`);
-        return result === 'ok';
-    } finally {
-        clearTimeout(timer);
-    }
+    const { partial, reason } = await fetchAllMembers(guild, { timeoutMs, maxAgeMs: 5 * 60_000 });
+    if (partial) logger.warn(`Level role sync: no complete member list for guild ${guild.id} (${reason})`);
+    return !partial;
 }
 
 /**
  * Startup sync of level reward roles. Level data is kept when members leave, so stored ids
- * include former members: the member cache is filled once (one full fetch, with a timeout) and
+ * include former members: the member cache is filled once (one full fetch through the member fetch gate) and
  * only ids present in it are handled, with no per-id Discord request. If that fetch fails or
  * times out the guild is skipped with a warning (summary.skippedGuilds) and synced next start
  * or on level-up/rejoin.

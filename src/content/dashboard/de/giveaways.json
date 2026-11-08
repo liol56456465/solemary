@@ -58,6 +58,7 @@
       "one": "@{name} ({id}) aus {count} passenden Mitglied gewählt.",
       "other": "@{name} ({id}) aus {count} passenden Mitgliedern gewählt."
     },
+    "pickedCached": "Nur aus zwischengespeicherten Mitgliedern gewählt: Die vollständige Mitgliederliste konnte gerade nicht geladen werden.",
     "started": "Gewinnspiel um „{prize}“ gestartet; es endet in {duration}.",
     "ended": "Gewinnspiel beendet: {winners} Gewinner aus {entries} Teilnahmen.",
     "rerolled": "Neu ausgelost: {winners} neue Gewinner.",

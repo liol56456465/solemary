@@ -50,11 +50,12 @@ export default {
         const onlineOnly = interaction.options.getBoolean('online') || false;
         const shouldMention = interaction.options.getBoolean('mention') || false;
 
-        // The member cache only holds members seen since startup; pickRandomMember fetches
-        // the full list (GuildMembers intent) and falls back to the cache on failure.
+        // The member cache only holds members seen since startup; pickRandomMember completes it
+        // through the member fetch gate and picks from the cache when a full fetch is not allowed.
         let selectedMember;
+        let fromCache = false;
         try {
-            ({ member: selectedMember } = await pickRandomMember(interaction.guild, { roleId: role?.id || null, includeBots, onlineOnly }));
+            ({ member: selectedMember, partial: fromCache } = await pickRandomMember(interaction.guild, { roleId: role?.id || null, includeBots, onlineOnly }));
         } catch (error) {
             return replyUserError(interaction, {
                 type: error?.type || ErrorTypes.USER_INPUT,
@@ -81,6 +82,7 @@ export default {
             { name: `Roles (${roles.length})`, value: roles.length > 0 ? roles.slice(0, 5).join('') + (roles.length > 5 ? `+${roles.length - 5} more` : '') : 'No roles', inline: false }
         )
         .setColor(getColor('primary'));
+        if (fromCache) embed.setFooter({ text: 'Picked from the members Mewvo has cached; the full member list was not loaded.' });
 
         const row = new ActionRowBuilder()
             .addComponents(

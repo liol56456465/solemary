@@ -72,6 +72,7 @@
     "inactive": "Inactive",
     "warnings": "Warnings",
     "note": "Inactive = no moderation work and under 20 messages. Actions are cases they created; reviews are automod and verification cards.",
+    "partial": "Based on cached members: the full member list could not be loaded right now, so some staff may be missing.",
     "none": "No staff found.",
     "title": "Staff activity · week of {start}"
   },

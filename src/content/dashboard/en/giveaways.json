@@ -58,6 +58,7 @@
       "one": "Picked @{name} ({id}) from {count} matching member.",
       "other": "Picked @{name} ({id}) from {count} matching members."
     },
+    "pickedCached": "Picked from cached members only: the full member list could not be loaded right now.",
     "started": "Giveaway for \"{prize}\" started; it ends in {duration}.",
     "ended": "Giveaway ended: {winners} winner(s) from {entries} entries.",
     "rerolled": "Rerolled: {winners} new winner(s).",

@@ -18,6 +18,7 @@
 import { query, T } from '../enforcement/db.js';
 import { pgConfig } from '../../config/database/postgres.js';
 import { logger } from '../../utils/logger.js';
+import { fetchAllMembers } from '../../utils/memberFetchGate.js';
 import { getRoleAssignmentProblem } from '../../utils/roleSafety.js';
 
 export const RULE_TRIGGERS = {
@@ -229,13 +230,14 @@ export async function loadLevels(guildId, userId = null) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** The member cache can be incomplete after a restart: fetch everyone at most once an hour. */
-const lastFetch = new Map();
-async function completeMemberCache(guild, now = Date.now()) {
-    if (!guild?.memberCount || guild.members.cache.size >= guild.memberCount * 0.9) return;
-    if (now - (lastFetch.get(guild.id) || 0) < 3_600_000) return;
-    lastFetch.set(guild.id, now);
-    await Promise.race([guild.members.fetch().catch(() => null), sleep(15_000)]);
+/**
+ * The member cache can be incomplete after a restart: complete it through the member fetch gate,
+ * at most once an hour per server. On a partial cache the rules only act on cached members
+ * (missing members are handled on a later run).
+ */
+async function completeMemberCache(guild) {
+    if (!guild?.memberCount) return { partial: false, reason: 'cache' };
+    return fetchAllMembers(guild, { maxAgeMs: 3_600_000, timeoutMs: 15_000 });
 }
 
 const defaultDeps = {
@@ -288,11 +290,12 @@ export async function runRoleRules(client, { now = new Date(), deps: overrides =
         if (!guild) continue;
         const rules = await deps.listRules(guildId);
         if (!rules.length) continue;
-        await deps.completeMemberCache(guild);
+        const fill = await deps.completeMemberCache(guild);
+        if (fill?.partial) logger.info(`Role rules (${guildId}): based on cached members only (${fill.reason})`);
         const levels = rules.some((r) => r.trigger === 'level_reached') ? await deps.loadLevels(guildId) : new Map();
         const plans = planRules(rules, guild.members.cache.values(), { guild, botMember: guild.members.me, now: now.getTime(), levels });
         const { results, capped } = await applyPlans(guild, plans, deps);
-        const total = { guildId, added: 0, removed: 0, failed: 0, capped };
+        const total = { guildId, added: 0, removed: 0, failed: 0, capped, partial: Boolean(fill?.partial) };
         for (const plan of plans) {
             const r = results.get(plan);
             total.added += r.added; total.removed += r.removed; total.failed += r.failed;

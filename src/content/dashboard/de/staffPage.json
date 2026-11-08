@@ -72,6 +72,7 @@
     "inactive": "Inaktiv",
     "warnings": "Verwarnungen",
     "note": "Inaktiv = keine Moderationsarbeit und unter 20 Nachrichten. Aktionen sind von ihnen erstellte Fälle; Prüfungen sind Automod- und Verifizierungskarten.",
+    "partial": "Basierend auf zwischengespeicherten Mitgliedern: Die vollständige Mitgliederliste konnte gerade nicht geladen werden, daher fehlen eventuell einige Teammitglieder.",
     "none": "Kein Team gefunden.",
     "title": "Teamaktivität · Woche ab {start}"
   },

@@ -18,6 +18,7 @@ import {
 import { isAdministrator } from '../../services/enforcement/enforcementService.js';
 import { buildCoverageReport, COVERAGE_PERIODS, loadCoverageCounts, slotLabel } from '../../services/staffCoverageService.js';
 import { getGuildConfig } from '../../services/config/guildConfig.js';
+import { fetchAllMembers } from '../../utils/memberFetchGate.js';
 
 function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
@@ -151,12 +152,13 @@ export default {
             const date = new Date();
             if (interaction.options.getString('week') === 'last') date.setUTCDate(date.getUTCDate() - 7);
             const start = weekStart(date);
-            await interaction.guild.members.fetch().catch(() => null);
+            const { partial } = await fetchAllMembers(interaction.guild, { maxAgeMs: 60 * 60_000, timeoutMs: 10_000, waitMs: 5_000 });
             const rows = await staffActivityForWeek(interaction.guild, start);
+            const cachedNote = partial ? '\n-# Based on cached members: the full member list could not be loaded right now, so some staff may be missing.' : '';
             return InteractionHelper.safeEditReply(interaction, {
                 embeds: [createEmbed({
                     title: `Staff activity, week of ${start}`,
-                    description: truncate(rows.length ? `${rows.map(formatActivityLine).join('\n')}\n\n-# (inactive) = no moderation work and under 20 messages. Actions are cases they created; reviews are automod and verification cards.` : 'No staff found.', 4096),
+                    description: truncate(rows.length ? `${rows.map(formatActivityLine).join('\n')}\n\n-# (inactive) = no moderation work and under 20 messages. Actions are cases they created; reviews are automod and verification cards.${cachedNote}` : `No staff found.${cachedNote}`, 4096),
                     color: 'primary',
                 })],
             });

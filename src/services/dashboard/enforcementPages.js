@@ -652,8 +652,9 @@ export const STAFF_WEEKS = { this: 'This week', last: 'Last week' };
  * rows: staffActivityForWeek (null = could not be loaded); week: 'this' | 'last'; start: YYYY-MM-DD.
  * `keep`: the other query values of the staff page (stats period, coverage) for the links.
  * `warningsLink`: owners get a "Warnings" link per member.
+ * `partial`: the member list was not fully loaded (member fetch gate); a note says so.
  */
-export function activitySection({ rows, week = 'this', start, keep = {}, warningsLink = false }) {
+export function activitySection({ rows, week = 'this', start, keep = {}, warningsLink = false, partial = false }) {
     const tr = currentText();
     const { t } = tr;
     const chips = html`<nav class="chips" aria-label="${t('staffPage.activity.week')}">${Object.keys(STAFF_WEEKS).map((key) => html`<a class="chip${key === week ? ' is-active' : ''}" href="${path(`/staff${queryString({ ...keep, week: key })}`)}"${key === week ? raw(' aria-current="page"') : ''}>${t(`staffPage.activity.weeks.${key}`)}</a>`)}</nav>`;
@@ -665,7 +666,8 @@ ${rows.map((r) => html`<tr><td><a href="${userHref(r.userId)}">${r.username}</a>
 <td>${r.inactive ? html`<span class="warn">${t('staffPage.activity.inactive')}</span> ` : ''}${warningsLink ? html`<a href="${path(`/staff${queryString({ ...keep, week, warnings: r.userId })}`)}#staff-discipline">${t('staffPage.activity.warnings')}</a>` : ''}</td></tr>`)}
 </tbody></table></div><p class="muted">${t('staffPage.activity.note')}</p>`
             : html`<p class="muted">${t('staffPage.activity.none')}</p>`;
-    return section(t('staffPage.activity.title', { start }), html`${chips}${body}`, '', { key: 'staff-activity' });
+    const partialNote = rows !== null && partial ? html`<p class="notice">${t('staffPage.activity.partial')}</p>` : '';
+    return section(t('staffPage.activity.title', { start }), html`${chips}${partialNote}${body}`, '', { key: 'staff-activity' });
 }
 
 /**

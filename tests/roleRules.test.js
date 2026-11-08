@@ -168,7 +168,7 @@ test('runRoleRules: gives and takes roles, pauses between calls, records each ru
         ['add', lvl.id, ROLE.veteran, 'Role rule: Level 5'],
     ]);
     assert.deepEqual(sleeps, [1000, 1000], 'a pause between calls, none before the first');
-    assert.deepEqual({ ...summary }, { guildId: G, added: 2, removed: 1, failed: 0, capped: false });
+    assert.deepEqual({ ...summary }, { guildId: G, added: 2, removed: 1, failed: 0, capped: false, partial: false });
     assert.equal(runs.length, 3);
     assert.deepEqual(runs.find((r) => r.id === 1), { id: 1, at: new Date(NOW), added: 1, removed: 1, failed: 0, problem: null });
     assert.match(runs.find((r) => r.id === 3).problem, /not below my highest role/);

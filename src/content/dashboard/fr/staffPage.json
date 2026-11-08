@@ -76,6 +76,7 @@
     "inactive": "Inactif",
     "warnings": "Avertissements",
     "note": "Inactif = aucun travail de modération et moins de 20 messages. Les actions sont les dossiers qu’ils ont créés ; les vérifications sont les cartes d’automod et de vérification.",
+    "partial": "Basé sur les membres en cache : la liste complète des membres n’a pas pu être chargée pour le moment, certains membres de l’équipe peuvent manquer.",
     "none": "Aucun membre de l’équipe trouvé.",
     "title": "Activité de l’équipe · semaine du {start}"
   },

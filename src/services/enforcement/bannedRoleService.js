@@ -7,6 +7,7 @@
 
 import { enforcementConfig } from '../../config/enforcement.js';
 import { logger } from '../../utils/logger.js';
+import { fetchAllMembers } from '../../utils/memberFetchGate.js';
 import { query, T, isEnforcementDbAvailable } from './db.js';
 import { getActiveCase, OPEN_STATUSES } from './caseService.js';
 
@@ -97,7 +98,10 @@ export async function reconcileBannedRoles(client) {
     );
     const bannedIds = new Set(rows.map((row) => row.target_user_id));
 
-    const members = await role.guild.members.fetch();
+    // Through the member fetch gate; on a partial cache only cached members are synced (the
+    // others get the role on their next join/ban/unban event or the next startup).
+    const { members, partial, reason } = await fetchAllMembers(role.guild, { maxAgeMs: 60 * 60_000, timeoutMs: 30_000 });
+    if (partial) logger.warn(`Banned role sync: based on cached members only (${reason})`);
     let added = 0;
     let removed = 0;
     let errors = 0;
@@ -118,5 +122,5 @@ export async function reconcileBannedRoles(client) {
             logger.warn(`Banned role sync failed for ${member.id}: ${error.message}`);
         }
     }
-    return { scanned: members.size, added, removed, errors };
+    return { scanned: members.size, added, removed, errors, partial };
 }
