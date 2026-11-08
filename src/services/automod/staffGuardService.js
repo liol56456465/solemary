@@ -29,6 +29,7 @@ import { postModLog } from '../enforcement/enforcementService.js';
 import { dateStamp } from '../enforcement/format.js';
 import { postAlert, showDiffRow } from './alertPost.js';
 import { isMewvoServer } from '../../utils/ownerPower.js';
+import { enforcementConfig } from '../../config/enforcement.js';
 
 const STAFF_ROLE_PERMISSIONS = [
     PermissionFlagsBits.Administrator,
@@ -114,6 +115,16 @@ export async function stripStaffRoles(member, reason) {
     return { removed: [...removable.values()], kept: [...kept.values()] };
 }
 
+/**
+ * The roles saved for a /staff restore that still exist in the server (Role objects), or null
+ * when nothing is saved. Read only. Throws on a DB error.
+ */
+export async function savedStaffRoles(guild, userId) {
+    const backup = await getFromDb(backupKey(guild.id, userId), null);
+    if (!backup?.roleIds?.length) return null;
+    return backup.roleIds.map((id) => guild.roles.cache.get(id)).filter(Boolean);
+}
+
 /** Gives back the roles removed by the guard or by staff warnings. Returns the restored roles. */
 export async function restoreStaffRoles(guild, userId, restoredBy) {
     const backup = await getFromDb(backupKey(guild.id, userId), null);
@@ -153,7 +164,7 @@ export async function listRemovedStaffRoles(guildId) {
  * Mewvo's own servers, so other servers' alerts get neither (multi-server B1).
  */
 function diffComponents(guild) {
-    return isMewvoServer(guild.id) ? [showDiffRow()] : [];
+    return isMewvoServer(guild.id) ? [showDiffRow(Date.now(), guild.id)] : [];
 }
 
 /** `nuke`: in Mewvo's servers the alert gets a "Show diff" button (snapshot vs now, for /backup revert). */
@@ -172,7 +183,8 @@ async function demote(guild, member, why, { nuke = false } = {}) {
         { name: 'Why', value: why },
         { name: 'Removed roles', value: removed.map((role) => role.name).join(', ') || 'none' },
         ...(kept.length ? [{ name: 'Could not remove (above my role)', value: kept.map((role) => role.name).join(', ') }] : []),
-        { name: 'Restore', value: withDiff ? '`/staff restore` · damage: **Show what changed**, then `/backup revert`' : '`/staff restore`' },
+        // /backup revert works on the main server only; the support server's diff is fixed by hand.
+        { name: 'Restore', value: withDiff ? (guild.id === enforcementConfig.mainGuildId ? '`/staff restore` · damage: **Show what changed**, then `/backup revert`' : '`/staff restore` · damage: **Show what changed**') : '`/staff restore`' },
     ];
     if (nuke) await postAlert(guild.client, 'staff', { guildId: guild.id, title: 'Staff roles removed', fields, components: diffComponents(guild) });
     else await postModLog(guild.client, 'staff', fields, { guildId: guild.id, title: 'Staff roles removed' });

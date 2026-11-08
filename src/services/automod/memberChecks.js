@@ -89,9 +89,9 @@ export function memberChecksStateSizes() {
     return { recentlyChecked: recentlyChecked.size, reportedMessages: reportedMessages.size };
 }
 
-/** A member report from the "Report message" context menu. */
+/** A member report from the "Report message" context menu, in the message's own server. Returns the card message, or null. */
 export async function reportMessage(message, reporter) {
-    await postReviewCard({
+    return postReviewCard({
         guild: message.guild,
         rule: 'report',
         evidence: `was reported by ${reporter.username} with "Report message"`,

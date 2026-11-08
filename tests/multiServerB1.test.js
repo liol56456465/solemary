@@ -480,7 +480,7 @@ test('appeal panel: the refusal text no longer says "Mewvo servers" to other ser
     assert.match(wrongPlaceMessage('main', 'report'), /support server/);
 });
 
-test('staff activity: staff messages are counted per server, only in Mewvo\'s servers (the only ones with a report)', async () => {
+test('staff activity: staff messages are counted per server, in every server (B4: each gets its own weekly report)', async () => {
     const { noteStaffMessage, flushStaffMessages } = await import('../src/services/staffActivityService.js');
     const staffMessage = (guildId) => ({
         guildId, author: { id: MODERATOR },
@@ -492,7 +492,7 @@ test('staff activity: staff messages are counted per server, only in Mewvo\'s se
     await withPool(() => [], async (queries) => {
         await flushStaffMessages();
         const servers = queries.filter((q) => /staff_activity/i.test(q.sql)).map((q) => q.params[0]).sort();
-        assert.deepEqual(servers, [MAIN], 'another server gets no weekly report yet: its messages are not stored');
+        assert.deepEqual(servers, [MAIN, OTHER], 'one upsert per server and member');
     });
 });
 

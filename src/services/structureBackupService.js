@@ -99,12 +99,22 @@ export async function takeSnapshot(guild) {
     return rows[0];
 }
 
-/** The daily job: snapshot the main server. */
+/**
+ * The daily job: snapshot the main server, and the support server too (multi-server B4: its
+ * nuke alerts' "Show what changed" compares the support server itself). Revert stays main-only.
+ */
 export async function snapshotMainServer(client) {
-    const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
-    if (!guild || !isEnforcementDbAvailable()) return;
-    const row = await takeSnapshot(guild);
-    logger.info(`Server structure snapshot #${row.id}: ${row.summary}`);
+    if (!isEnforcementDbAvailable()) return;
+    for (const guildId of [enforcementConfig.mainGuildId, enforcementConfig.supportGuildId]) {
+        const guild = guildId ? client.guilds.cache.get(guildId) : null;
+        if (!guild) continue;
+        try {
+            const row = await takeSnapshot(guild);
+            logger.info(`Server structure snapshot #${row.id} of ${guild.id}: ${row.summary}`);
+        } catch (error) {
+            logger.warn(`Server structure snapshot of ${guild.id} failed: ${error.message}`);
+        }
+    }
 }
 
 export async function listSnapshots(guildId) {

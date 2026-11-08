@@ -11,11 +11,27 @@ import { query, T, isEnforcementDbAvailable } from './enforcement/db.js';
 import { postModLog } from './enforcement/enforcementService.js';
 import { isStaff } from './automod/automodService.js';
 import { isMewvoServer } from '../utils/ownerPower.js';
+import { BoundedMap } from '../utils/boundedMap.js';
+import { resolveChannelId, staffGuildId } from './automod/channelRouting.js';
+import { isSettingsUnavailable, noteSettingsUnavailable } from './settings/guildScoped.js';
 
 // Staff with fewer messages than this and no moderation work in a week are flagged.
 const INACTIVE_MESSAGE_THRESHOLD = 20;
 
-const pendingMessages = new Map(); // guildId:userId → count
+// Buffered message counts, written once a minute (one upsert per staff member per minute).
+// Bounded: the bot is public; a dropped entry only loses a minute of one member's count.
+export const PENDING_MESSAGES_MAX = 20000;
+const pendingMessages = new BoundedMap(PENDING_MESSAGES_MAX); // guildId:userId → count
+// At most this many servers get a weekly staff report per run.
+export const WEEKLY_REPORT_GUILDS_MAX = 5000;
+
+/** Test hooks. */
+export function pendingStaffMessages() {
+    return new Map(pendingMessages);
+}
+export function resetStaffActivityState() {
+    pendingMessages.clear();
+}
 
 /** Monday 00:00 UTC of the week containing `date`, as YYYY-MM-DD. */
 export function weekStart(date = new Date()) {
@@ -34,14 +50,12 @@ async function bump(guildId, userId, field, amount = 1) {
 }
 
 /**
- * Counts a message from a staff member, per server (cheap: buffered). Only Mewvo's own servers:
- * the weekly staff report and the dashboard exist only there for now, so counting other servers'
- * staff messages would store data nobody reads. When per-server staff reports exist, widen this
- * to the servers that get one. (/staff activity elsewhere shows 0 messages until then; reviews,
- * tickets, actions and appeals are still counted per server.)
+ * Counts a message from a staff member, per server (cheap: buffered in memory, flushed once a
+ * minute). Every server (multi-server B4): each server gets its own weekly staff report and
+ * /staff activity.
  */
 export function noteStaffMessage(message) {
-    if (!message.guildId || !isMewvoServer(message.guildId) || !isStaff(message.member)) return;
+    if (!message.guildId || !isStaff(message.member)) return;
     const key = `${message.guildId}:${message.author.id}`;
     pendingMessages.set(key, (pendingMessages.get(key) || 0) + 1);
 }
@@ -188,15 +202,74 @@ export function formatActivityLine(row) {
     return `**${row.username}**${row.inactive ? ' (inactive)' : ''}: ${row.messages} msgs · ${row.actions} actions · ${row.appeals} appeals · ${row.reviews} reviews · ${row.tickets} tickets`;
 }
 
-/** Posts last week's staff activity in the mod log and DMs the owner who was inactive. */
-export async function postWeeklyStaffReport(client) {
-    const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
-    if (!guild || !isEnforcementDbAvailable()) return;
-    await guild.members.fetch().catch(() => null);
+/**
+ * Servers with any staff activity in the week starting `start` (YYYY-MM-DD): counted messages,
+ * reviews or tickets, cases made by a human moderator, or appeal decisions. Throws on a DB error.
+ */
+export async function guildsWithStaffActivity(start, botUserId) {
+    const end = new Date(`${start}T00:00:00Z`);
+    end.setUTCDate(end.getUTCDate() + 7);
+    const { rows } = await query(
+        `SELECT guild_id FROM ${T.staffActivity} WHERE week_start = $1
+         UNION SELECT guild_id FROM ${T.cases}
+               WHERE created_at >= $2 AND created_at < $3 AND is_test = FALSE AND voided_at IS NULL AND moderator_id <> $4
+         UNION SELECT guild_id FROM ${T.appeals}
+               WHERE decided_at >= $2 AND decided_at < $3 AND decided_by IS NOT NULL
+         LIMIT ${WEEKLY_REPORT_GUILDS_MAX}`,
+        [start, `${start}T00:00:00Z`, end.toISOString(), botUserId]
+    );
+    return rows.map((row) => String(row.guild_id));
+}
 
+/**
+ * The servers that get a weekly staff report: the main server (as before) plus `candidates`.
+ * Home servers count as one staff: the support server maps to the main server (one report, as
+ * before). Only servers the bot is in, and only where a staff channel for it is set (alerts, or
+ * the mod log it falls back to). A server whose settings can't be read is skipped this run.
+ * `channelFor` is injectable for tests.
+ */
+export function weeklyReportGuilds(client, candidates = [], { channelFor = (guildId) => resolveChannelId(guildId, 'alerts') } = {}) {
+    const out = [];
+    const seen = new Set();
+    for (const id of [enforcementConfig.mainGuildId, ...candidates]) {
+        if (!id) continue;
+        const guildId = staffGuildId(String(id));
+        if (seen.has(guildId) || !client.guilds.cache.has(guildId)) continue;
+        seen.add(guildId);
+        let channelId = null;
+        try {
+            channelId = channelFor(guildId);
+        } catch (error) {
+            if (!isSettingsUnavailable(error)) throw error;
+            noteSettingsUnavailable(guildId, 'weekly staff report');
+        }
+        if (!channelId) continue;
+        out.push(guildId);
+        if (out.length >= WEEKLY_REPORT_GUILDS_MAX) break;
+    }
+    return out;
+}
+
+/** Posts last week's staff activity in each server's own staff channel and DMs its owner who was inactive. */
+export async function postWeeklyStaffReport(client) {
+    if (!isEnforcementDbAvailable()) return;
     const lastWeek = new Date();
     lastWeek.setUTCDate(lastWeek.getUTCDate() - 7);
     const start = weekStart(lastWeek);
+    const candidates = await guildsWithStaffActivity(start, client.user?.id || '0');
+    for (const guildId of weeklyReportGuilds(client, candidates)) {
+        try {
+            await postWeeklyStaffReportFor(client, client.guilds.cache.get(guildId), start);
+        } catch (error) {
+            logger.warn(`Weekly staff report for ${guildId} failed: ${error.message}`);
+        }
+    }
+}
+
+/** One server's weekly staff report (week starting `start`), in that server's staff channel. */
+export async function postWeeklyStaffReportFor(client, guild, start) {
+    if (!guild) return;
+    await guild.members.fetch().catch(() => null);
     const rows = await staffActivityForWeek(guild, start);
     if (!rows.length) return;
 
@@ -204,17 +277,19 @@ export async function postWeeklyStaffReport(client) {
     const lines = rows.map(formatActivityLine);
     await postModLog(client, 'staff', [
         { name: `Week of ${start}`, value: lines.join('\n').slice(0, 1024) || 'No staff' },
-        { name: 'Inactive', value: inactive.length ? inactive.map((row) => `<@${row.userId}>`).join(', ') : 'Nobody', inline: false },
+        { name: 'Inactive', value: inactive.length ? inactive.map((row) => `<@${row.userId}>`).join(', ').slice(0, 1024) : 'Nobody', inline: false },
     ], { guildId: guild.id, title: 'Weekly staff activity' });
 
     if (inactive.length) {
         const owner = await guild.fetchOwner().catch(() => null);
+        const shown = inactive.slice(0, 50);
         await owner?.send({
             content: [
-                `**Staff activity, week of ${start}:** ${inactive.length} staff member(s) did no moderation work and sent under ${INACTIVE_MESSAGE_THRESHOLD} messages:`,
-                ...inactive.map((row) => `• ${row.username} (\`${row.userId}\`)`),
-                'Admin rule 8: stay active. Use `/staff warn` if needed.',
-            ].join('\n'),
+                `**Staff activity in ${guild.name}, week of ${start}:** ${inactive.length} staff member(s) did no moderation work and sent under ${INACTIVE_MESSAGE_THRESHOLD} messages:`,
+                ...shown.map((row) => `• ${row.username} (\`${row.userId}\`)`),
+                inactive.length > shown.length ? `…and ${inactive.length - shown.length} more.` : null,
+                isMewvoServer(guild.id) ? 'Admin rule 8: stay active. Use `/staff warn` if needed.' : 'Use `/staff warn` if needed.',
+            ].filter(Boolean).join('\n').slice(0, 2000),
             allowedMentions: { parse: [] },
         }).catch(() => {});
     }

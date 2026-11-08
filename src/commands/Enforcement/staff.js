@@ -4,12 +4,13 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
 import { automodConfig } from '../../config/automod.js';
-import { hasOwnerPower } from '../../utils/ownerPower.js';
+import { hasOwnerPower, isMewvoServer } from '../../utils/ownerPower.js';
 import { dateStamp, truncate } from '../../services/enforcement/format.js';
 import {
     giveStaffWarning,
     listStaffWarnings,
     restoreStaffRoles,
+    savedStaffRoles,
 } from '../../services/automod/staffGuardService.js';
 import {
     formatActivityLine, formatStatsLine, staffActivityForWeek, staffModerationStats, STATS_PERIODS, weekStart,
@@ -27,12 +28,39 @@ export function isOwner(interaction) {
     return interaction.guild?.ownerId === interaction.user.id || hasOwnerPower(interaction.user.id, interaction.guildId);
 }
 
+/**
+ * Who may run /staff restore (multi-server B4): the owner as before (the server owner, OWNER_IDS
+ * in Mewvo's servers). In any other server also its Administrators: there nobody else could lift
+ * a mass-action block or give back roles the staff guard removed. Mewvo's own servers stay
+ * owner-only (their staff guard protects the bot's home against a rogue admin).
+ */
+export function canRestore(interaction) {
+    if (isOwner(interaction)) return true;
+    return !isMewvoServer(interaction.guildId) && isAdministrator(interaction.member);
+}
+
+/**
+ * Why a non-owner Administrator may not restore `targetId` (null = allowed): not themselves
+ * (a blocked admin must not lift their own block), and no saved role at or above their own
+ * highest role (the bot would hand out roles they could not give by hand).
+ */
+export function restoreRefusal({ interaction, targetId, roles }) {
+    if (isOwner(interaction)) return null;
+    if (targetId === interaction.user.id) return 'You cannot restore yourself. Ask the server owner or another administrator.';
+    const top = interaction.member?.roles?.highest?.position ?? 0;
+    const tooHigh = (roles || []).filter((role) => role.position >= top);
+    if (tooHigh.length) {
+        return `Some saved roles are at or above your highest role (${truncate(tooHigh.map((role) => role.name).join(', '), 1000)}). Ask the server owner to restore them.`;
+    }
+    return null;
+}
+
 export default {
     // Registered as a guild command in MAIN_GUILD_ID only.
     scope: 'main',
     data: new SlashCommandBuilder()
         .setName('staff')
-        .setDescription('Staff warnings, activity, stats, coverage and restoring roles (owner only; stats/coverage: admins)')
+        .setDescription('Staff warnings, activity, stats, coverage and restoring roles (owner only; some subcommands: admins)')
         .addSubcommand((sub) => sub.setName('warn').setDescription('Give a staff member a warning (3 active remove their staff roles)')
             .addUserOption((option) => option.setName('user').setDescription('Staff member').setRequired(true))
             .addStringOption((option) => option.setName('reason').setDescription('Which admin rule they broke').setRequired(true).setMaxLength(500)))
@@ -59,7 +87,13 @@ export default {
         const sub = interaction.options.getSubcommand();
         // /staff stats and coverage are open to administrators; everything else is the owner's.
         const adminSub = sub === 'stats' || sub === 'coverage';
-        if (adminSub ? !(isOwner(interaction) || isAdministrator(interaction.member)) : !isOwner(interaction)) {
+        if (sub === 'restore') {
+            if (!canRestore(interaction)) {
+                throw new TitanBotError('Not allowed to restore', ErrorTypes.PERMISSION,
+                    isMewvoServer(interaction.guildId) ? 'Only the server owner can use /staff restore here.' : 'You need the Administrator permission to use /staff restore.',
+                    { expected: true });
+            }
+        } else if (adminSub ? !(isOwner(interaction) || isAdministrator(interaction.member)) : !isOwner(interaction)) {
             throw new TitanBotError('Not the owner', ErrorTypes.PERMISSION,
                 adminSub ? `You need the Administrator permission to see staff ${sub}.` : 'Only the server owner can use /staff.', { expected: true });
         }
@@ -156,6 +190,9 @@ export default {
         }
 
         if (sub === 'restore') {
+            // Per server: the block and the saved roles are keyed by this guild's id.
+            const refusal = restoreRefusal({ interaction, targetId: user.id, roles: await savedStaffRoles(interaction.guild, user.id) });
+            if (refusal) throw userError(refusal);
             // Also lifts a mass-action guard block on the panel.
             const block = await getMassActionBlock(interaction.guild.id, user.id);
             if (block) await clearMassActionBlock(interaction.guild.id, user.id);

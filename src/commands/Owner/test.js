@@ -7,6 +7,10 @@
 // only closes the record). The DM comes from the same dmTemplates functions as the
 // real action, and kicks and accepted appeals get a real one-time invite. It goes to
 // the person running the command, never to the target.
+//
+// Any server (multi-server B4): an Administrator of that server previews the DM as that server
+// would send it (its name, appeal invite, language and ladder), and the test case is saved in
+// that server.
 
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
@@ -20,16 +24,17 @@ import { insertCase, setDmDelivered } from '../../services/enforcement/caseServi
 import { appealAcceptedDm, appealDeniedDm, banDm, kickDm, muteDm, warnDm } from '../../services/enforcement/dmTemplates.js';
 import { addMonths, parseDuration } from '../../services/enforcement/format.js';
 import { resolveBotLanguage } from '../../utils/botText.js';
+import { isMewvoServer } from '../../utils/ownerPower.js';
 
 function userError(message) {
     return new TitanBotError(message, ErrorTypes.USER_INPUT, message, { expected: true });
 }
 
 /** Saves a test case shaped like the real action's, and returns the mod_cases row. */
-function saveTestCase({ moderator, target, type, reason, durationMs = null, unappealable = false, ladderLevel = 0, extra = {} }) {
+function saveTestCase({ guildId, moderator, target, type, reason, durationMs = null, unappealable = false, ladderLevel = 0, extra = {} }) {
     const now = new Date();
     return insertCase(null, {
-        guildId: enforcementConfig.mainGuildId,
+        guildId,
         targetUserId: target.id,
         targetUsername: target.username,
         moderatorId: moderator.id,
@@ -60,15 +65,18 @@ export function prebuiltReasonFields(reason) {
 }
 
 /** The warn DM, or — when this warn would hit the ladder limit — the automatic ban DM that replaces it. */
-async function warnPreview({ invoker, target, reason, ladder, lang }) {
+async function warnPreview({ guild, invoker, target, reason, ladder, lang }) {
     const step = previewWarn(ladder);
+    const dm = { guildId: guild.id, serverName: guild.name, lang };
     const warn = await saveTestCase({
+        guildId: guild.id,
         moderator: invoker, target, type: 'warn', reason, ladderLevel: step.nextLevel, extra: prebuiltReasonFields(reason),
     });
     if (!step.escalates) {
-        return { content: warnDm(warn, step.warnNumber, { lang }), record: warn, note: `warn ${step.warnNumber} of ${step.threshold}` };
+        return { content: warnDm(warn, step.warnNumber, dm), record: warn, note: `warn ${step.warnNumber} of ${step.threshold}` };
     }
     const ban = await saveTestCase({
+        guildId: guild.id,
         moderator: { id: invoker.client.user.id, username: invoker.client.user.username },
         target,
         type: 'ban',
@@ -81,53 +89,56 @@ async function warnPreview({ invoker, target, reason, ladder, lang }) {
         },
     });
     return {
-        content: banDm(ban, { lang }),
+        content: banDm(ban, dm),
         record: ban,
         note: `this warn reaches the limit, so they'd get the automatic ladder-level-${step.nextLevel} ban DM instead (warn \`${warn.case_code}\` was saved too)`,
     };
 }
 
-async function buildPreview({ action, guild, invoker, target, reason, durationMs, unappealable, lang = 'en' }) {
+/** The DM preview for `action`, as `guild` would send it (its name, invite, language, ladder). Saves a test case; executes nothing. */
+export async function buildPreview({ action, guild, invoker, target, reason, durationMs, unappealable, lang = 'en' }) {
     if (!action.startsWith('appeal-') && !isEnforcementDbAvailable()) {
         throw userError('The database is unavailable, so no test case can be saved. Try again later.');
     }
     const ladder = isEnforcementDbAvailable()
-        ? await getLadder(enforcementConfig.mainGuildId, target.id)
+        ? await getLadder(guild.id, target.id)
         : { level: 0, warns_since_level: 0 };
+    const dm = { guildId: guild.id, serverName: guild.name, lang };
     const save = (type, options = {}) => saveTestCase({
+        guildId: guild.id,
         moderator: invoker, target, type, reason, ladderLevel: ladder.level, ...options, extra: { ...prebuiltReasonFields(reason), ...options.extra },
     });
 
     switch (action) {
         case 'ban': {
             const record = await save('ban', { durationMs, unappealable });
-            return { content: banDm(record, { lang }), record };
+            return { content: banDm(record, dm), record };
         }
         case 'kick': {
             const record = await save('kick');
             const invite = await createRejoinInvite(guild, `Rejoin invite for kick ${record.case_code} (/test)`);
-            return { content: kickDm(record, invite, { lang }), record, invite };
+            return { content: kickDm(record, invite, dm), record, invite };
         }
         case 'mute': {
             if (!durationMs) throw userError('A mute needs a duration, e.g. `duration:1h`.');
             const record = await save('mute', { durationMs });
-            return { content: muteDm(record, { lang }), record };
+            return { content: muteDm(record, dm), record };
         }
         case 'warn':
-            return warnPreview({ invoker, target, reason, ladder, lang });
+            return warnPreview({ guild, invoker, target, reason, ladder, lang });
         case 'appeal-accepted': {
             const invite = await createRejoinInvite(guild, 'Appeal accepted (/test)');
-            return { content: appealAcceptedDm(invoker.username, invite, { lang }), invite };
+            return { content: appealAcceptedDm(invoker.username, invite, dm), invite };
         }
         case 'appeal-denied':
-            return { content: appealDeniedDm({ lang }) };
+            return { content: appealDeniedDm({ guildId: guild.id, lang }) };
         default:
             throw userError(`Unknown action: ${action}`);
     }
 }
 
 export default {
-    // Registered as a guild command in MAIN_GUILD_ID only.
+    // Every server (multi-server B4), for that server's Administrators.
     scope: 'main',
     data: new SlashCommandBuilder()
         .setName('test')
@@ -161,9 +172,9 @@ export default {
             .setDescription('Ban only: preview a ban they cannot appeal')),
 
     async execute(interaction) {
-        if (interaction.guildId !== enforcementConfig.mainGuildId) {
-            throw new TitanBotError('Wrong guild for /test', ErrorTypes.PERMISSION,
-                'This command only works in the main server.', { expected: true });
+        if (!interaction.guildId || !interaction.guild) {
+            throw new TitanBotError('/test outside a server', ErrorTypes.PERMISSION,
+                'This command only works in a server.', { expected: true });
         }
         if (!isAdministrator(interaction.member)) {
             throw new TitanBotError('Not an administrator', ErrorTypes.PERMISSION,
@@ -207,7 +218,7 @@ export default {
                 record
                     ? `Test case \`${record.case_code}\` was saved, so it can be appealed and decided with /appeals like a real one. `
                         + (target.id === interaction.user.id
-                            ? 'Appeal it from the support server with that code.'
+                            ? (isMewvoServer(interaction.guildId) ? 'Appeal it from the support server with that code.' : 'Appeal it with that code (the DM says where).')
                             : `Only ${target.username} can appeal it; run /test on yourself to try the appeal flow.`)
                     : null,
                 invite ? 'The invite in it is a real one-time invite to this server.' : null,
