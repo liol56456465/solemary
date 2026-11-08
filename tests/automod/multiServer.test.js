@@ -812,6 +812,43 @@ test('/automod works in every server: each server changes only its own settings;
     await assert.rejects(run(null, 'status'), (error) => /Use this command in a server/.test(error.userMessage));
 });
 
+test('/automod staffguard: any admin turns it on, only the server owner turns it (or automod) off', async () => {
+    setup();
+    const { default: automodCommand } = await import('../../src/commands/Enforcement/automod.js');
+    const run = async (guildId, userId, sub, options = {}) => {
+        const replies = [];
+        const guild = { ...fakeGuild(guildId), ownerId: 'serverowner', members: { me: { permissions: { has: () => true } }, cache: new Map() } };
+        const interaction = {
+            id: `i${Math.random()}`, createdTimestamp: Date.now(), guildId, guild,
+            user: { id: userId, username: userId },
+            member: { id: userId, permissions: { has: () => true, any: () => true }, roles: { cache: new Map() } },
+            options: {
+                getSubcommand: () => sub, getSubcommandGroup: () => null,
+                getBoolean: (name) => options[name] ?? null, getString: (name) => options[name] ?? null,
+                getInteger: (name) => options[name] ?? null, getChannel: () => null, getRole: () => null,
+            },
+            deferReply: async () => { interaction.deferred = true; },
+            editReply: async (payload) => { replies.push(payload); return payload; },
+            reply: async (payload) => { replies.push(payload); return payload; },
+        };
+        await automodCommand.execute(interaction);
+        return JSON.stringify(replies);
+    };
+    const ownerOnly = (error) => /Only the server owner/.test(error.userMessage || error.message);
+    await run(OTHER, 'admin', 'enable', { enabled: true });
+    await run(OTHER, 'admin', 'staffguard', { enabled: true });
+    assert.equal((await getAutomodSettings(OTHER)).staffGuard, true);
+    await assert.rejects(run(OTHER, 'admin', 'staffguard', { enabled: false }), ownerOnly);
+    await assert.rejects(run(OTHER, 'admin', 'enable', { enabled: false }), ownerOnly);
+    const after = await getAutomodSettings(OTHER);
+    assert.equal(after.staffGuard, true, 'an admin cannot switch the guard off');
+    assert.equal(after.enabled, true, 'an admin cannot switch automod off while the guard is on');
+    await run(OTHER, 'serverowner', 'staffguard', { enabled: false });
+    assert.equal((await getAutomodSettings(OTHER)).staffGuard, false);
+    await run(OTHER, 'admin', 'enable', { enabled: false });
+    assert.equal((await getAutomodSettings(OTHER)).enabled, false, 'with the guard off any admin may turn automod off');
+});
+
 test('join gate: a "Verify with Discord" counts only in its own server (the home pair counts as one)', async () => {
     const { verificationScope } = await import('../../src/services/automod/joinGate.js');
     assert.deepEqual(verificationScope(MAIN), [MAIN, SUPPORT]);

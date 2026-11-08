@@ -88,6 +88,9 @@ export function inviteAllowlistText(list, maxChars = 300) {
     return text;
 }
 
+/** Only the server owner may switch the staff guard off (directly or by turning automod off). */
+export const STAFF_GUARD_OWNER_ONLY = 'Only the server owner can turn the staff guard off (or turn automod off while the staff guard is on).';
+
 function staffGuardText(guildId, settings) {
     if (isLegacyAutomodGuild(guildId)) return 'always on in this server';
     if (!settings.staffGuard) return 'off';
@@ -366,6 +369,11 @@ export default {
 
         if (sub === 'enable') {
             const enabled = interaction.options.getBoolean('enabled');
+            // Turning automod off also stops the staff guard, so it is owner-only while the guard is on.
+            if (!enabled && !isLegacyAutomodGuild(guildId) && interaction.user.id !== interaction.guild.ownerId) {
+                const current = await getAutomodSettings(guildId);
+                if (current.staffGuard) throw userError(STAFF_GUARD_OWNER_ONLY);
+            }
             await setAutomodEnabled(guildId, enabled);
             note = `Automod is now **${enabled ? 'on' : 'off'}**.`;
         } else if (sub === 'mode') {
@@ -445,6 +453,8 @@ export default {
         } else if (sub === 'staffguard') {
             const enabled = interaction.options.getBoolean('enabled');
             if (isLegacyAutomodGuild(guildId)) throw userError('The staff guard is always on in this server.');
+            // A rogue admin must not be able to switch off the guard that limits them (anti-nuke).
+            if (!enabled && interaction.user.id !== interaction.guild.ownerId) throw userError(STAFF_GUARD_OWNER_ONLY);
             const saved = await setStaffGuard(guildId, enabled);
             const me = interaction.guild.members.me;
             const canAct = me?.permissions.has([PermissionFlagsBits.ManageRoles, PermissionFlagsBits.ViewAuditLog]);
