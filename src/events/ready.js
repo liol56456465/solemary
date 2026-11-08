@@ -12,6 +12,7 @@ import { loadBlacklistWithRetry } from "../services/owner/blacklistService.js";
 import { applyStoredBotState } from "../services/owner/botStateService.js";
 import { warnDisabledFeatures } from "../config/intents.js";
 import { logSessionStartLimit } from "../utils/sessionStartLimit.js";
+import { markInteractionsWarm } from "../utils/ackSafetyNet.js";
 
 export default {
   name: Events.ClientReady,
@@ -55,6 +56,9 @@ export default {
       });
       startupLog(watchCount == null ? "Watchlist: not loaded (database unavailable)" : `Watchlist: ${watchCount} active`);
       startupLog(`Community: ${await loadCommunityCaches(client)}`);
+      // Interactions that arrived before this point were acknowledged at once and waited for
+      // these caches (utils/ackSafetyNet.js); from now on they run normally.
+      markInteractionsWarm();
 
       // Reaction role cleanup, panel health and the level reward role sync: one paced background
       // job about 60 s from now, only for servers with panels or rules (scheduling/startupJobs.js).
@@ -72,6 +76,8 @@ export default {
       }
     } catch (error) {
       logger.error("Error in ready event:", error);
+    } finally {
+      markInteractionsWarm();
     }
   },
 };

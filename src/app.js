@@ -64,6 +64,7 @@ import { loadAllSettings, seedFromEnvOnce } from './services/settings/guildSetti
 import { runSafeTask, handleTaskError, ErrorCodes } from './utils/errorHandler.js';
 import { EXPECTED_SCHEMA_VERSION, EXPECTED_SCHEMA_LABEL } from './config/database/schemaVersion.js';
 import { refreshRates } from './services/site/exchangeRates.js';
+import { startEventLoopMonitor } from './utils/eventLoopMonitor.js';
 
 class Mewvo extends Client {
   constructor() {
@@ -99,6 +100,8 @@ class Mewvo extends Client {
   async start() {
     try {
       startupLog('Starting Mewvo...');
+      // Event-loop lag (a blocked loop can't acknowledge interactions): warns when p99 > 500 ms.
+      startEventLoopMonitor();
       if (testMode.enabled) {
         startupLog(`TEST MODE, effective config: ${JSON.stringify(describeTestMode())}`);
       }

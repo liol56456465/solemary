@@ -217,6 +217,8 @@ export const giveawayViewHandler = {
                 );
             }
 
+            // Every answer here is ephemeral: acknowledge before the database read.
+            await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
             const guildGiveaways = await getGuildGiveaways(client, interaction.guildId);
             const giveaway = guildGiveaways.find(g => g.messageId === interaction.message.id);
 

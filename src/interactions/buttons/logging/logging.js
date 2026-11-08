@@ -16,9 +16,11 @@ export default [
   {
     name: 'log_dash_add_filter',
     execute: loggingButtonsHandler.execute,
+    opensModal: true,
   },
   {
     name: 'log_dash_remove_filter',
     execute: loggingButtonsHandler.execute,
+    opensModal: true,
   },
 ];

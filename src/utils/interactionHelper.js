@@ -4,6 +4,7 @@ import { logger } from './logger.js';
 import { MessageFlags } from 'discord.js';
 import { handleInteractionError, createError, ErrorTypes } from './errorHandler.js';
 import { ResponseCoordinator } from './responseCoordinator.js';
+import { installAckWrappers, isAutoAckedAwaitingHandler, replyThroughNet, waitForAutoAck } from './ackSafetyNet.js';
 
 const INTERACTION_TIMEOUT_MS = 15 * 60 * 1000;
 const DEFAULT_DEFER_OPTIONS = { flags: MessageFlags.Ephemeral };
@@ -49,6 +50,10 @@ export class InteractionHelper {
             return;
         }
 
+        // The 3-second safety net's wrappers (utils/ackSafetyNet.js) go first, so the reply
+        // patch below sends its edits and follow-ups through them.
+        installAckWrappers(interaction);
+
         const originalReply = interaction.reply?.bind(interaction);
         const originalEditReply = interaction.editReply?.bind(interaction);
         const originalFollowUp = interaction.followUp?.bind(interaction);
@@ -61,6 +66,12 @@ export class InteractionHelper {
             const coordinator = InteractionHelper.getCoordinator(interaction);
             if (coordinator?.isUsageFinalized()) {
                 return coordinator.getReplyMessage();
+            }
+
+            // Auto-acknowledged by the safety net: the first reply becomes editReply/followUp.
+            if (!interaction._isPrefixCommand) {
+                const viaNet = await replyThroughNet(interaction, options);
+                if (viaNet.handled) return viaNet.result;
             }
 
             if (!interaction.deferred && !interaction.replied) {
@@ -104,6 +115,11 @@ export class InteractionHelper {
             return false;
         }
 
+        await waitForAutoAck(interaction);
+        if (isAutoAckedAwaitingHandler(interaction)) {
+            return await this.safeDefer(interaction, deferOptions);
+        }
+
         if (interaction.replied || interaction.deferred) {
             return true;
         }
@@ -118,6 +134,13 @@ export class InteractionHelper {
 
     static async safeDefer(interaction, options = {}) {
         try {
+            await waitForAutoAck(interaction);
+            if (isAutoAckedAwaitingHandler(interaction)) {
+                // Already deferred by the safety net: record that the handler wanted a reply
+                // of its own (and whether ephemeral); the wrapper sends nothing.
+                await interaction.deferReply(options);
+                return true;
+            }
             if (interaction.deferred || interaction.replied) {
                 return true;
             }
@@ -220,6 +243,15 @@ export class InteractionHelper {
                 return false;
             }
 
+            // Auto-acknowledged by the safety net while the handler was still working: send
+            // this as the handler's reply (editReply for a command, a follow-up for a
+            // component), never as an edit of the component's message.
+            await waitForAutoAck(interaction);
+            if (!interaction._isPrefixCommand && isAutoAckedAwaitingHandler(interaction)) {
+                await interaction.reply(options);
+                return true;
+            }
+
             if (coordinator && (interaction._isPrefixCommand || coordinator.hasResponded())) {
                 if (coordinator.hasResponded()) {
                     await coordinator.edit(sanitizeEditReplyOptions(options));
@@ -259,6 +291,14 @@ export class InteractionHelper {
         try {
             if (!this.isInteractionValid(interaction)) {
                 logger.warn(`Interaction ${interaction.id} has expired before showModal, ignoring`);
+                return false;
+            }
+
+            await waitForAutoAck(interaction);
+            if (isAutoAckedAwaitingHandler(interaction)) {
+                // The safety net acked first (a modal path not marked opensModal): the wrapper
+                // tells the user to try again and logs which handler needs the flag.
+                await interaction.showModal(modal);
                 return false;
             }
 

@@ -506,23 +506,44 @@ export async function startWarnFromMessage(interaction, message, targetUser) {
     return InteractionHelper.safeEditReply(interaction, reasonStepPayload(flow, moderatorId, nonce, { lang: langOf(interaction) }));
 }
 
+// Unban/unmute answer with a form, which must be the first response within 3 s: the target
+// comes from the user cache (the panel just fetched it) or a REST fetch with this budget.
+const MODAL_USER_FETCH_BUDGET_MS = 1200;
+
+async function fetchUserWithin(client, userId, ms) {
+    const cached = client.users.cache.get(userId);
+    if (cached) return cached;
+    let timer;
+    const fetching = client.users.fetch(userId).catch(() => null);
+    const timeout = new Promise((resolve) => { timer = setTimeout(() => resolve(null), ms); });
+    try {
+        return await Promise.race([fetching, timeout]);
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
 async function startAction(interaction, moderatorId, targetId, action) {
     const lang = langOf(interaction);
     const tr = botText(lang);
-    const targetUser = await interaction.client.users.fetch(targetId).catch(() => null);
+    const opensForm = action === 'unban' || action === 'unmute';
+    // Steps without a form acknowledge first (the user fetch may be a REST call).
+    if (!opensForm && ACTION_LABELS[action]) await interaction.deferUpdate();
+    const targetUser = opensForm
+        ? await fetchUserWithin(interaction.client, targetId, MODAL_USER_FETCH_BUDGET_MS)
+        : await interaction.client.users.fetch(targetId).catch(() => null);
     if (!targetUser || !ACTION_LABELS[action]) {
         return expired(interaction);
     }
 
     const flow = startFlow({ type: action, moderatorId, targetUser });
 
-    if (action === 'unban' || action === 'unmute') {
+    if (opensForm) {
         const nonce = createFlow(flow);
         return InteractionHelper.safeShowModal(interaction, liftModal(flow, moderatorId, nonce, { lang }));
     }
 
     if (action === 'removewarn') {
-        await interaction.deferUpdate();
         const warns = await getCountedWarns(interaction.guildId, targetId, (await getTargetState(interaction.guild, targetId)).ladder.level);
         if (warns.length === 0) {
             throw userError(tr.t('staff.panel.removeWarn.none'));
@@ -543,7 +564,7 @@ async function startAction(interaction, moderatorId, targetId, action) {
     }
 
     const nonce = createFlow(flow);
-    return interaction.update(reasonStepPayload(flow, moderatorId, nonce, { lang }));
+    return InteractionHelper.safeEditReply(interaction, reasonStepPayload(flow, moderatorId, nonce, { lang }));
 }
 
 export async function handleEnforcementButton(interaction, client, args) {

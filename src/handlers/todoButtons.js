@@ -5,6 +5,7 @@ import { checkRateLimit } from '../utils/rateLimiter.js';
 import { logger } from '../utils/logger.js';
 
 import { replyUserError, ErrorTypes } from '../utils/errorHandler.js';
+import { InteractionHelper } from '../utils/interactionHelper.js';
 import { botText, textForGuild } from '../utils/botText.js';
 import { replyText } from '../commands/Core/modules/commandText.js';
 // User text goes into embed markdown; escape it (escapeMarkdown also escapes backslashes) so it
@@ -124,6 +125,7 @@ async function refreshSharedTodoMessage(interaction, listId, messageId) {
 
 const sharedTodoAddHandler = {
   name: 'shared_todo_add',
+  opensModal: true,
   async execute(interaction, client, args) {
     const listId = args[0];
     const sourceMessageId = interaction.message?.id;
@@ -153,6 +155,7 @@ const sharedTodoAddHandler = {
 
 const sharedTodoCompleteHandler = {
   name: 'shared_todo_complete',
+  opensModal: true,
   async execute(interaction, client, args) {
     const listId = args[0];
     const sourceMessageId = interaction.message?.id;
@@ -182,6 +185,7 @@ const sharedTodoCompleteHandler = {
 
 const sharedTodoRemoveHandler = {
   name: 'shared_todo_remove',
+  opensModal: true,
   async execute(interaction, client, args) {
     const listId = args[0];
     const sourceMessageId = interaction.message?.id;
@@ -230,6 +234,10 @@ const sharedTodoAddModalHandler = {
       if (!taskText || taskText.trim().length === 0) {
         return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: replyText(interaction).t('utility.todo.emptyText') });
       }
+
+      // Every answer is ephemeral: acknowledge before the reads, the write and the list refresh.
+
+      await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
 
       const listKey = `shared_todo_${listId}`;
       let listData = await getFromDb(listKey, null);
@@ -291,6 +299,10 @@ const sharedTodoCompleteModalHandler = {
       if (!Number.isInteger(taskId) || taskId <= 0) {
         return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: replyText(interaction).t('utility.todo.badTaskId') });
       }
+
+      // Every answer is ephemeral: acknowledge before the reads, the write and the list refresh.
+
+      await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
 
       const listKey = `shared_todo_${listId}`;
       let listData = await getFromDb(listKey, null);
@@ -356,6 +368,10 @@ const sharedTodoRemoveModalHandler = {
       if (!Number.isInteger(taskId) || taskId <= 0) {
         return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: replyText(interaction).t('utility.todo.badTaskId') });
       }
+
+      // Every answer is ephemeral: acknowledge before the reads, the write and the list refresh.
+
+      await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
 
       const listKey = `shared_todo_${listId}`;
       const listData = await getFromDb(listKey, null);

@@ -290,12 +290,14 @@ export async function handleBackupRevert(interaction, client, args) {
     }
     if (decision !== 'confirm' || !/^\d+$/.test(idText || '')) return;
 
+    // Acknowledge before the snapshot read; the panel is then edited (deferUpdate + editReply).
+    await interaction.deferUpdate();
     const guild = client.guilds.cache.get(enforcementConfig.mainGuildId);
     const snapshot = guild ? await getSnapshot(guild.id, idText) : null;
     if (!snapshot) {
-        return interaction.update({ embeds: [createEmbed({ title: tr.t('automod.revert.notStarted'), description: tr.t('automod.revert.goneMain'), color: 'error' })], components: [] });
+        return interaction.editReply({ embeds: [createEmbed({ title: tr.t('automod.revert.notStarted'), description: tr.t('automod.revert.goneMain'), color: 'error' })], components: [] });
     }
-    await interaction.update({
+    await interaction.editReply({
         embeds: [successEmbed(tr.t('automod.revert.running'), tr.t('automod.revert.runningMain', { id: snapshot.id, date: dateStamp(snapshot.created_at) }))],
         components: [],
     });

@@ -291,21 +291,27 @@ export async function handleBackgroundNoteModal(interaction, client, args) {
     if (!staffOnly(interaction) || !/^\d{17,20}$/.test(targetId ?? '')) {
         return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('staff.background.notesAdminOnly') });
     }
+    if (step !== 'add' && step !== 'del') return;
+    if (step === 'add' && !interaction.fields.getTextInputValue('note').trim()) {
+        return replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: tr.t('staff.background.noteEmpty') });
+    }
+    // Acknowledge before the database write and the view rebuild (several queries). After
+    // deferUpdate, refusals below go out as ephemeral follow-ups (sendErrorResponse).
+    const fromMessage = Boolean(interaction.isFromMessage?.());
+    if (fromMessage) await interaction.deferUpdate();
+    else await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
+
     if (step === 'add') {
         const content = interaction.fields.getTextInputValue('note').trim();
-        if (!content) return replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: tr.t('staff.background.noteEmpty') });
         await addNote(interaction.guildId, targetId, content, { id: interaction.user.id, tag: interaction.user.tag });
     } else if (step === 'del') {
         const number = Number.parseInt(interaction.fields.getTextInputValue('number'), 10);
         const removed = await removeNote(interaction.guildId, targetId, { number });
         if (!removed) return replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: tr.t('staff.background.noNoteNumber', { number: interaction.fields.getTextInputValue('number') }) });
-    } else {
-        return;
     }
 
     const targetUser = await client.users.fetch(targetId);
     const view = await buildRecordList(interaction.guildId, interaction.user.id, targetUser, 0, { lang: tr.lang });
-    // The form was opened from the /background message: update it in place.
-    if (interaction.isFromMessage?.()) return interaction.update(view);
-    return InteractionHelper.safeReply(interaction, { ...view, flags: MessageFlags.Ephemeral });
+    // The form was opened from the /background message: edit it in place (deferUpdate above).
+    return InteractionHelper.safeEditReply(interaction, view);
 }

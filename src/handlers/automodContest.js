@@ -53,15 +53,32 @@ export async function resolveContestCase(userId, codeArg, lookup = getCaseByCode
     return check.ok ? { record } : { error: check.message };
 }
 
-export async function handleContestButton(interaction, client, args) {
+// The form must be the first response within 3 s, so the early checks (two database reads) get
+// this budget. When they are slower the form opens anyway: the submit (handleContestModal and
+// recordContest) checks the case and an earlier contest again.
+export const CONTEST_CHECK_BUDGET_MS = 1200;
+
+async function earlyContestCheck(userId, codeArg) {
+    const resolved = await resolveContestCase(userId, codeArg);
+    if (resolved.error) return resolved;
+    if (await getContest(resolved.record.case_code)) {
+        return { error: 'You already contested this decision. The moderators will look at it.' };
+    }
+    return resolved;
+}
+
+export async function handleContestButton(interaction, client, args, { budgetMs = CONTEST_CHECK_BUDGET_MS } = {}) {
     const [step, codeArg] = args;
     if (step !== 'open') return reply(interaction, 'Unknown action.');
-    const { record, error } = await resolveContestCase(interaction.user.id, codeArg);
-    if (error) return reply(interaction, error);
-    if (await getContest(record.case_code)) {
-        return reply(interaction, 'You already contested this decision. The moderators will look at it.');
-    }
-    return InteractionHelper.safeShowModal(interaction, contestModal(record.case_code));
+    const code = normalizeCaseCode(codeArg);
+    if (!code) return reply(interaction, 'That button is broken (no case code).');
+    let timer;
+    const checking = earlyContestCheck(interaction.user.id, codeArg);
+    checking.catch(() => {});
+    const timeout = new Promise((resolve) => { timer = setTimeout(() => resolve(null), budgetMs); });
+    const early = await Promise.race([checking, timeout]).finally(() => clearTimeout(timer));
+    if (early?.error) return reply(interaction, early.error);
+    return InteractionHelper.safeShowModal(interaction, contestModal(early?.record?.case_code ?? code));
 }
 
 export async function handleContestModal(interaction, client, args) {

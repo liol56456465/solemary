@@ -49,6 +49,8 @@ export default {
 
         const user = interaction.options.getUser('user', true);
         const blocked = subcommand === 'block';
+        // The answer is ephemeral: acknowledge before the write and the channel lookup.
+        await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
         await setModmailBlocked(client, interaction.guildId, user.id, blocked);
         const open = blocked ? await findModmailChannel(interaction.guild, user.id) : null;
         await InteractionHelper.safeReply(interaction, {

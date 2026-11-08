@@ -163,6 +163,7 @@ const feedbackHandler = {
 
 const commentHandler = {
     name: 'ticket_feedback_comment',
+    opensModal: true,
 
     async execute(interaction, client, args) {
         const tr = textForInteraction(interaction);
