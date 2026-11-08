@@ -1,0 +1,177 @@
+{
+    "cmd": {
+        "welcome": {
+            "description": "Configurar as mensagens de boas-vindas",
+            "setup": {
+                "description": "Configurar a mensagem de boas-vindas",
+                "channel": "O canal para enviar as mensagens de boas-vindas",
+                "message": "Mensagem de boas-vindas. Variáveis:",
+                "image": "URL de uma imagem para adicionar à mensagem",
+                "ping": "Mencionar o membro na mensagem"
+            }
+        },
+        "goodbye": {
+            "description": "Configurar as mensagens de despedida",
+            "setup": {
+                "description": "Configurar a mensagem de despedida",
+                "channel": "O canal para enviar as mensagens de despedida",
+                "message": "Mensagem de despedida. Variáveis:"
+            }
+        },
+        "greet": {
+            "description": "Gerenciar as configurações de boas-vindas e despedida",
+            "dashboard": "Abrir as configurações de boas-vindas e despedida"
+        },
+        "autorole": {
+            "description": "Gerenciar cargos dados automaticamente a novos membros",
+            "add": {
+                "description": "Adicionar um cargo dado automaticamente a novos membros",
+                "role": "O cargo a adicionar"
+            },
+            "remove": {
+                "description": "Remover um cargo da atribuição automática",
+                "role": "O cargo a remover"
+            },
+            "list": "Ver todos os cargos atribuídos automaticamente"
+        }
+    },
+    "manageServer": "Você precisa da permissão **Gerenciar servidor** para usar `{command}`.",
+    "invalidImage": "Informe uma URL de imagem válida (ela precisa começar com http:// ou https://).",
+    "setupDone": {
+        "preview": "Prévia",
+        "ping": "Mencionar o membro",
+        "status": "Status",
+        "yes": "Sim",
+        "no": "Não",
+        "on": "Ativado",
+        "footer": "Mais opções em /greet dashboard"
+    },
+    "welcome": {
+        "alreadySet": "As boas-vindas já estão configuradas para <#{channelId}>. Use **/greet dashboard** para mudar o canal, a mensagem, a menção ou a imagem.",
+        "empty": "A mensagem de boas-vindas não pode ficar vazia",
+        "doneTitle": "Mensagens de boas-vindas configuradas",
+        "doneBody": "As mensagens de boas-vindas vão para {channel}.",
+        "failed": "Ocorreu um erro ao configurar as boas-vindas. Tente de novo."
+    },
+    "goodbye": {
+        "alreadySet": "A despedida já está configurada para <#{channelId}>. Use **/greet dashboard** para mudar o canal, a mensagem, a menção ou a imagem.",
+        "empty": "A mensagem de despedida não pode ficar vazia",
+        "doneTitle": "Mensagens de despedida configuradas",
+        "doneBody": "As mensagens de despedida vão para {channel}.",
+        "failed": "Ocorreu um erro ao configurar a despedida. Tente de novo."
+    },
+    "autorole": {
+        "verificationConflict": "Você não pode adicionar um cargo automático enquanto a verificação ou o AutoVerify estiver ativado. Desative-os primeiro.",
+        "alreadySet": "O cargo {role} já é atribuído automaticamente.",
+        "changed": "Cargo automático trocado para {role}. Você só pode ter um.",
+        "set": "Cargo automático definido como {role}.",
+        "addFailed": "Ocorreu um erro ao adicionar o cargo. Tente de novo.",
+        "notSet": "O cargo {role} não é atribuído automaticamente.",
+        "removed": "{role} não é mais dado a novos membros.",
+        "removeFailed": "Ocorreu um erro ao remover o cargo. Tente de novo.",
+        "verificationOn": "A verificação está ativada",
+        "autoVerifyOn": "O AutoVerify está ativado",
+        "needsFixing": "\n\n**Precisa corrigir:**\n{list}",
+        "none": "Nenhum cargo automático definido.",
+        "noneWorking": "Nenhum cargo automático válido encontrado. Removi o que não existe mais.",
+        "title": "Cargo automático",
+        "footer": "Você só pode ter um cargo automático.",
+        "listFailed": "Ocorreu um erro ao listar os cargos automáticos. Tente de novo."
+    },
+    "greet": {
+        "failed": "Algo deu errado."
+    },
+    "dashboard": {
+        "notSet": "`Não definido`",
+        "title": "Boas-vindas e despedida",
+        "description": "Mensagens de boas-vindas e despedida de **{server}**.\nOs botões ativam ou desativam cada uma. Escolha uma configuração no menu para mudá-la.",
+        "on": "Ativado",
+        "off": "Desativado",
+        "field": {
+            "welcomeChannel": "Canal de boas-vindas",
+            "welcome": "Boas-vindas",
+            "welcomePing": "Menção nas boas-vindas",
+            "goodbyeChannel": "Canal de despedida",
+            "goodbye": "Despedida",
+            "goodbyePing": "Menção na despedida",
+            "welcomeMessage": "Mensagem de boas-vindas",
+            "goodbyeMessage": "Mensagem de despedida"
+        },
+        "footer": "Fecha após 10 minutos sem uso",
+        "menu": {
+            "placeholder": "Escolha uma configuração para mudar",
+            "welcomeChannel": "Canal de boas-vindas",
+            "welcomeChannelHint": "Para onde vão as mensagens de boas-vindas",
+            "welcomeMessage": "Mensagem de boas-vindas",
+            "welcomeMessageHint": "O que o bot diz quando alguém entra",
+            "welcomeImage": "Imagem de boas-vindas",
+            "welcomeImageHint": "Imagem mostrada com a mensagem de boas-vindas",
+            "goodbyeChannel": "Canal de despedida",
+            "goodbyeChannelHint": "Para onde vão as mensagens de despedida",
+            "goodbyeMessage": "Mensagem de despedida",
+            "goodbyeMessageHint": "O que o bot diz quando alguém sai",
+            "goodbyeImage": "Imagem de despedida",
+            "goodbyeImageHint": "Imagem mostrada com a mensagem de despedida"
+        },
+        "button": {
+            "welcome": "Boas-vindas",
+            "goodbye": "Despedida",
+            "pingWelcome": "Mencionar nas boas-vindas",
+            "pingGoodbye": "Mencionar na despedida"
+        },
+        "notConfigured": "Nem as boas-vindas nem a despedida foram configuradas ainda. Rode `/welcome setup` ou `/goodbye setup` primeiro.",
+        "choiceFailed": "Algo deu errado com essa escolha.",
+        "saveFailed": "Algo deu errado ao salvar. Tente de novo.",
+        "openFailed": "Não foi possível abrir as configurações de boas-vindas.",
+        "welcomeUpdated": "Boas-vindas atualizadas",
+        "welcomeNowOn": "As mensagens de boas-vindas agora estão **ativadas**.",
+        "welcomeNowOff": "As mensagens de boas-vindas agora estão **desativadas**.",
+        "goodbyeUpdated": "Despedida atualizada",
+        "goodbyeNowOn": "As mensagens de despedida agora estão **ativadas**.",
+        "goodbyeNowOff": "As mensagens de despedida agora estão **desativadas**.",
+        "welcomePingUpdated": "Menção nas boas-vindas atualizada",
+        "welcomePingOn": "Novos membros serão mencionados na mensagem de boas-vindas.",
+        "welcomePingOff": "Novos membros **não** serão mencionados na mensagem de boas-vindas.",
+        "goodbyePingUpdated": "Menção na despedida atualizada",
+        "goodbyePingOn": "Membros que saírem serão mencionados na mensagem de despedida.",
+        "goodbyePingOff": "Membros que saírem **não** serão mencionados na mensagem de despedida.",
+        "closedTitle": "Fechado",
+        "closedBody": "Fechado após 10 minutos sem uso. Rode o comando de novo para reabrir.",
+        "channelPlaceholder": "Escolha um canal de texto",
+        "welcomeChannelTitle": "Canal de boas-vindas",
+        "welcomeChannelPrompt": "**Atual:** {current}\n\nEscolha o canal para as mensagens de boas-vindas.",
+        "goodbyeChannelTitle": "Canal de despedida",
+        "goodbyeChannelPrompt": "**Atual:** {current}\n\nEscolha o canal para as mensagens de despedida.",
+        "needPermissions": "Eu preciso de **Ver canal**, **Enviar mensagens** e **Inserir links** em {channel}.",
+        "channelUpdated": "Canal atualizado",
+        "welcomeChannelNow": "As mensagens de boas-vindas agora vão para {channel}.",
+        "goodbyeChannelNow": "As mensagens de despedida agora vão para {channel}.",
+        "noChannel": "Nenhum canal escolhido, nada mudou.",
+        "welcomeMessageTitle": "Mensagem de boas-vindas",
+        "goodbyeMessageTitle": "Mensagem de despedida",
+        "messageLabel": "Mensagem (variáveis: {user}, {server} etc.)",
+        "saved": "Salvo",
+        "welcomeSaved": "Mensagem de boas-vindas salva.",
+        "goodbyeSaved": "Mensagem de despedida salva.",
+        "imageHint": "Cole uma URL de imagem **ou** envie um arquivo. Se fizer os dois, vale o arquivo. Deixe os dois vazios para remover a imagem.",
+        "imageUrlLabel": "URL da imagem (opcional)",
+        "imageUploadLabel": "Ou envie um arquivo de imagem (opcional)",
+        "imageBadProtocol": "A URL da imagem precisa começar com `http://` ou `https://`.",
+        "imageBadUrl": "Essa URL de imagem não parece certa.",
+        "welcomeImageTitle": "Imagem de boas-vindas",
+        "goodbyeImageTitle": "Imagem de despedida",
+        "imageSaved": "Imagem salva.",
+        "imageRemoved": "Imagem removida.",
+        "welcomeCopyKept": "\nUma cópia fica em <#{channelId}>. Não apague essa mensagem, as boas-vindas carregam a imagem dali.",
+        "goodbyeCopyKept": "\nUma cópia fica em <#{channelId}>. Não apague essa mensagem, a despedida carrega a imagem dali.",
+        "copyFailed": "\nNão consegui guardar uma cópia (preciso de Ver canal, Enviar mensagens e Anexar arquivos no canal do registro de auditoria ou aqui), então essa imagem vai parar de aparecer em cerca de um dia."
+    },
+    "post": {
+        "defaultWelcome": "Boas-vindas ao {server}, {user}. Você é o membro número {memberCount}.",
+        "defaultGoodbye": "{user} saiu do servidor. Agora somos {memberCount} membros.",
+        "welcomeTitle": "Boas-vindas",
+        "goodbyeTitle": "Até mais",
+        "user": "Usuário",
+        "memberCount": "Membros"
+    }
+}

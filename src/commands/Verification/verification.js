@@ -11,20 +11,25 @@ import { getWelcomeConfig } from '../../utils/database.js';
 import verificationDashboard from './modules/verification_dashboard.js';
 import autoVerify from './modules/autoVerify.js';
 import { mergeSubcommands } from '../../utils/mergedCommand.js';
+import { textForInteraction } from '../../utils/botText.js';
+import { descriptionLocalizations as localizations } from '../../utils/commandLocalizations.js';
 
 // /verification auto setup|dashboard replaces the separate /autoverify command.
-const verificationCommand = mergeSubcommands(
+const merged = mergeSubcommands(
     new SlashCommandBuilder()
         .setName("verification")
         .setDescription("Manage the server verification system")
+        .setDescriptionLocalizations(localizations('verification.cmd.verification.description'))
         .addSubcommand(subcommand =>
             subcommand
                 .setName("setup")
                 .setDescription("Set up the verification system")
+                .setDescriptionLocalizations(localizations('verification.cmd.verification.setup.description'))
                 .addChannelOption(option =>
                     option
                         .setName("verification_channel")
                         .setDescription("Channel where verification messages will be sent")
+                        .setDescriptionLocalizations(localizations('verification.cmd.verification.setup.channel'))
                         .addChannelTypes(ChannelType.GuildText)
                         .setRequired(true)
                 )
@@ -32,12 +37,14 @@ const verificationCommand = mergeSubcommands(
                     option
                         .setName("verified_role")
                         .setDescription("Role to give to verified users")
+                        .setDescriptionLocalizations(localizations('verification.cmd.verification.setup.role'))
                         .setRequired(true)
                 )
                 .addStringOption(option =>
                     option
                         .setName("message")
                         .setDescription("Custom verification message")
+                        .setDescriptionLocalizations(localizations('verification.cmd.verification.setup.message'))
                         .setMaxLength(2000)
                         .setRequired(false)
                 )
@@ -45,6 +52,7 @@ const verificationCommand = mergeSubcommands(
                     option
                         .setName("button_text")
                         .setDescription("Text for the verification button")
+                        .setDescriptionLocalizations(localizations('verification.cmd.verification.setup.buttonText'))
                         .setMaxLength(80)
                         .setRequired(false)
                 )
@@ -53,10 +61,12 @@ const verificationCommand = mergeSubcommands(
             subcommand
                 .setName("remove")
                 .setDescription("Remove verification from a user")
+                .setDescriptionLocalizations(localizations('verification.cmd.verification.remove.description'))
                 .addUserOption(option =>
                     option
                         .setName("user")
                         .setDescription("User to remove verification from")
+                        .setDescriptionLocalizations(localizations('verification.cmd.verification.remove.user'))
                         .setRequired(true)
                 )
         )
@@ -64,27 +74,29 @@ const verificationCommand = mergeSubcommands(
             subcommand
                 .setName("dashboard")
                 .setDescription("Open the verification system configuration dashboard")
+                .setDescriptionLocalizations(localizations('verification.cmd.verification.dashboard.description'))
         ),
     {
-        auto: { module: autoVerify, description: 'Automatic verification (verify members on join by rules)' },
+        auto: { module: autoVerify, description: 'Automatic verification (verify members on join by rules)', descriptionLocalizations: localizations('verification.cmd.verification.auto.description') },
     },
 );
 
 export default {
-    data: verificationCommand.data,
+    data: merged.data,
 
     async execute(interaction, config, client) {
-        if (await verificationCommand.run(interaction, config, client)) return;
+        if (await merged.run(interaction, config, client)) return;
 
         const wrappedExecute = withErrorHandling(async () => {
             const subcommand = interaction.options.getSubcommand();
             const guild = interaction.guild;
+            const tr = textForInteraction(interaction);
 
             if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
                 throw createError(
                     'Missing ManageGuild permission for verification admin subcommand',
                     ErrorTypes.PERMISSION,
-                    'You need the **Manage Server** permission to use this verification subcommand.',
+                    tr.t('verification.errors.needManageServer'),
                     { subcommand, requiredPermission: 'ManageGuild', userId: interaction.user.id }
                 );
             }
@@ -100,7 +112,7 @@ export default {
                     throw createError(
                         `Unknown subcommand: ${subcommand}`,
                         ErrorTypes.VALIDATION,
-                        "Please select a valid subcommand.",
+                        tr.t('verification.errors.badSubcommand'),
                         { subcommand }
                     );
             }
@@ -115,23 +127,27 @@ async function handleSetup(interaction, guild, client) {
     const verifiedRole = interaction.options.getRole("verified_role");
     const message = interaction.options.getString("message") || botConfig.verification.defaultMessage;
     const buttonText = interaction.options.getString("button_text") || botConfig.verification.defaultButtonText;
+    // Refusals are private (the admin's Discord language); the panel and the summary below are
+    // posted in the channel (the server's language).
+    const { lang } = textForInteraction(interaction);
+    const tr = textForInteraction(interaction, { purpose: 'public' });
 
     // Checks (permissions, role hierarchy, AutoVerify/AutoRole conflicts) run before
     // the defer, as before; posting and saving follow. All in
     // services/verificationPanelService.js, shared with the web dashboard.
-    await checkVerificationSetup(client, guild, { channel: verificationChannel, role: verifiedRole });
+    await checkVerificationSetup(client, guild, { channel: verificationChannel, role: verifiedRole, lang });
 
     await InteractionHelper.safeDefer(interaction);
 
-    await setupVerification(client, guild, { channel: verificationChannel, role: verifiedRole, message, buttonText });
+    await setupVerification(client, guild, { channel: verificationChannel, role: verifiedRole, message, buttonText, lang });
 
     await InteractionHelper.safeEditReply(interaction, {
         embeds: [successEmbed(
-            'Verification system updated',
+            tr.t('verification.setup.title'),
             [
-                `Channel: ${verificationChannel}`,
-                `Verified Role: ${verifiedRole}`,
-                `Button Text: ${buttonText}`
+                tr.t('verification.setup.channel', { channel: String(verificationChannel) }),
+                tr.t('verification.setup.role', { role: String(verifiedRole) }),
+                tr.t('verification.setup.button', { text: buttonText })
             ].join('\n')
         )]
     });
@@ -139,15 +155,18 @@ async function handleSetup(interaction, guild, client) {
 
 async function handleRemove(interaction, guild, client) {
     const targetUser = interaction.options.getUser("user");
+    const tr = textForInteraction(interaction);
+    const publicTr = textForInteraction(interaction, { purpose: 'public' });
 
     const result = await removeVerification(client, guild.id, targetUser.id, {
         moderatorId: interaction.user.id,
-        reason: 'admin_removal'
+        reason: 'admin_removal',
+        lang: tr.lang,
     });
 
     if (result.status === 'not_verified') {
         return await InteractionHelper.safeReply(interaction, {
-            embeds: [infoEmbed('Not verified', `${targetUser.tag} does not currently have the verified role.`)],
+            embeds: [infoEmbed(tr.t('verification.remove.notTitle'), tr.t('verification.remove.notText', { user: targetUser.tag }))],
             flags: MessageFlags.Ephemeral
         });
     }
@@ -159,6 +178,7 @@ async function handleRemove(interaction, guild, client) {
     });
 
     return await InteractionHelper.safeReply(interaction, {
-        embeds: [successEmbed('Verification removed', `Verification removed from ${targetUser.tag}.`)]
+        // Not ephemeral: posted in the channel, so the server's language.
+        embeds: [successEmbed(publicTr.t('verification.remove.doneTitle'), publicTr.t('verification.remove.doneText', { user: targetUser.tag }))]
     });
 }

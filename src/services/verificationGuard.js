@@ -23,6 +23,8 @@ import { OPEN_STATUSES } from './enforcement/caseService.js';
 import { dateStamp, formatDuration, truncate } from './enforcement/format.js';
 import { reviewChannel } from './automod/reviewCards.js';
 import { STATUS_COLORS } from './automod/reviewFormat.js';
+import { durationIn } from './enforcement/dmTemplates.js';
+import { textForGuild } from '../utils/botText.js';
 
 const DAY = 24 * 60 * 60 * 1000;
 export const MIN_ACCOUNT_AGE_MS = 7 * DAY;
@@ -139,14 +141,18 @@ export async function bannedOnSameNetwork(guildId, userId, ipHash, { q = query, 
 
 /**
  * Records where this verification in `guildId` came from and decides whether staff must
- * approve it. Returns { hold: boolean, reasons: string[] }. Never throws: if the checks can't
+ * approve it. Returns { hold: boolean, reasons: string[], items: object[] } (reasons: English, for
+ * the log; items: the same reasons as data, so the staff card is written in its server's language).
+ * Never throws: if the checks can't
  * run (no database), verification goes through as before.
  */
 export async function assessVerification(guildId, userId, ip) {
     const reasons = [];
+    const items = [];
     const age = accountAgeMs(userId);
     if (age < MIN_ACCOUNT_AGE_MS) {
         reasons.push(`Account is only ${formatDuration(Math.max(age, 60 * 1000))} old (minimum ${formatDuration(MIN_ACCOUNT_AGE_MS)})`);
+        items.push({ kind: 'young', ageMs: Math.max(age, 60 * 1000), minMs: MIN_ACCOUNT_AGE_MS });
     }
 
     const ipHash = hashIp(ip);
@@ -157,36 +163,51 @@ export async function assessVerification(guildId, userId, ip) {
             const matches = await bannedOnSameNetwork(guildId, userId, ipHash);
             for (const match of matches) {
                 reasons.push(`Same network as banned member ${match.target_username} (\`${match.user_id}\`, ban \`${match.case_code}\`)`);
+                items.push({ kind: 'network', username: match.target_username, userId: match.user_id, caseCode: match.case_code });
             }
         } catch (error) {
             logger.warn(`Verification network check failed for ${userId} in ${guildId}: ${error.message}`);
         }
     }
-    return { hold: reasons.length > 0, reasons };
+    return { hold: reasons.length > 0, reasons, items };
 }
 
-/** Posts the Approve / Deny card for a held verification. */
-export async function postVerificationHold(client, guildId, user, reasons) {
+/** One reason of a held verification in `tr`'s language (items from assessVerification). */
+export function holdReasonText(tr, item) {
+    if (item.kind === 'young') {
+        return tr.t('verification.hold.reasonYoung', { age: durationIn(item.ageMs, tr.lang), min: durationIn(item.minMs, tr.lang) });
+    }
+    return tr.t('verification.hold.reasonNetwork', { username: String(item.username ?? ''), userId: String(item.userId ?? ''), caseCode: String(item.caseCode ?? '') });
+}
+
+/**
+ * Posts the Approve / Deny card for a held verification, in the language of the server the card
+ * is posted in. `items` (from assessVerification) give the reasons in that language; without
+ * them the English `reasons` are shown as given.
+ */
+export async function postVerificationHold(client, guildId, user, reasons, items = null) {
     const channel = await reviewChannel(client, guildId);
     if (!channel) {
         logger.warn(`Verification of ${user.id} held, but there is no review channel to ask staff in`);
         return false;
     }
+    const tr = textForGuild(channel.guild?.id ?? guildId, { purpose: 'public' });
+    const lines = Array.isArray(items) && items.length ? items.map((item) => holdReasonText(tr, item)) : reasons;
     await channel.send({
         embeds: [createEmbed({
-            title: 'Verification needs approval',
+            title: tr.t('verification.hold.title'),
             fields: [
-                { name: 'User', value: `<@${user.id}> ${user.username} (\`${user.id}\`)`, inline: true },
-                { name: 'Account created', value: dateStamp(new Date(SnowflakeUtil.timestampFrom(user.id))), inline: true },
-                { name: 'Why it was held', value: truncate(reasons.map((r) => `• ${r}`).join('\n'), 1024) },
+                { name: tr.t('verification.hold.user'), value: `<@${user.id}> ${user.username} (\`${user.id}\`)`, inline: true },
+                { name: tr.t('verification.hold.created'), value: dateStamp(new Date(SnowflakeUtil.timestampFrom(user.id))), inline: true },
+                { name: tr.t('verification.hold.why'), value: truncate(lines.map((r) => `• ${r}`).join('\n'), 1024) },
             ],
-            footer: { text: 'Approve gives the verified role. Deny leaves them unverified and tells them by DM.' },
+            footer: { text: tr.t('verification.hold.footer') },
             color: STATUS_COLORS.waiting,
             timestamp: true,
         })],
         components: [new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId(`verifyreview:approve:${guildId}:${user.id}`).setLabel('Approve').setStyle(ButtonStyle.Success),
-            new ButtonBuilder().setCustomId(`verifyreview:deny:${guildId}:${user.id}`).setLabel('Deny').setStyle(ButtonStyle.Danger),
+            new ButtonBuilder().setCustomId(`verifyreview:approve:${guildId}:${user.id}`).setLabel(tr.t('verification.hold.approve')).setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId(`verifyreview:deny:${guildId}:${user.id}`).setLabel(tr.t('verification.hold.deny')).setStyle(ButtonStyle.Danger),
         )],
         allowedMentions: { parse: [] },
     });

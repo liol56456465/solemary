@@ -1,0 +1,177 @@
+{
+    "cmd": {
+        "welcome": {
+            "description": "Configurer les messages de bienvenue",
+            "setup": {
+                "description": "Configurer le message de bienvenue",
+                "channel": "Le salon où envoyer les messages de bienvenue",
+                "message": "Message de bienvenue. Variables :",
+                "image": "URL d'une image à ajouter au message",
+                "ping": "Mentionner le membre dans le message"
+            }
+        },
+        "goodbye": {
+            "description": "Configurer les messages d'au revoir",
+            "setup": {
+                "description": "Configurer le message d'au revoir",
+                "channel": "Le salon où envoyer les messages d'au revoir",
+                "message": "Message d'au revoir. Variables :"
+            }
+        },
+        "greet": {
+            "description": "Gérer les réglages de bienvenue et d'au revoir",
+            "dashboard": "Ouvrir les réglages de bienvenue et d'au revoir"
+        },
+        "autorole": {
+            "description": "Gérer les rôles donnés automatiquement aux nouveaux membres",
+            "add": {
+                "description": "Ajouter un rôle donné automatiquement aux nouveaux membres",
+                "role": "Le rôle à ajouter"
+            },
+            "remove": {
+                "description": "Retirer un rôle de l'attribution automatique",
+                "role": "Le rôle à retirer"
+            },
+            "list": "Afficher tous les rôles donnés automatiquement"
+        }
+    },
+    "manageServer": "Tu as besoin de la permission **Gérer le serveur** pour utiliser `{command}`.",
+    "invalidImage": "Indique une URL d'image valide (elle doit commencer par http:// ou https://).",
+    "setupDone": {
+        "preview": "Aperçu",
+        "ping": "Mentionner le membre",
+        "status": "Statut",
+        "yes": "Oui",
+        "no": "Non",
+        "on": "Activé",
+        "footer": "Plus d'options dans /greet dashboard"
+    },
+    "welcome": {
+        "alreadySet": "La bienvenue est déjà configurée pour <#{channelId}>. Utilise **/greet dashboard** pour changer le salon, le message, la mention ou l'image.",
+        "empty": "Le message de bienvenue ne peut pas être vide",
+        "doneTitle": "Messages de bienvenue configurés",
+        "doneBody": "Les messages de bienvenue iront dans {channel}.",
+        "failed": "Une erreur s'est produite pendant la configuration de la bienvenue. Réessaie."
+    },
+    "goodbye": {
+        "alreadySet": "L'au revoir est déjà configuré pour <#{channelId}>. Utilise **/greet dashboard** pour changer le salon, le message, la mention ou l'image.",
+        "empty": "Le message d'au revoir ne peut pas être vide",
+        "doneTitle": "Messages d'au revoir configurés",
+        "doneBody": "Les messages d'au revoir iront dans {channel}.",
+        "failed": "Une erreur s'est produite pendant la configuration de l'au revoir. Réessaie."
+    },
+    "autorole": {
+        "verificationConflict": "Tu ne peux pas ajouter d'auto-rôle tant que la vérification ou AutoVerify est activé. Désactive-les d'abord.",
+        "alreadySet": "Le rôle {role} est déjà donné automatiquement.",
+        "changed": "Auto-rôle remplacé par {role}. Tu ne peux en avoir qu'un.",
+        "set": "Auto-rôle défini sur {role}.",
+        "addFailed": "Une erreur s'est produite pendant l'ajout du rôle. Réessaie.",
+        "notSet": "Le rôle {role} n'est pas donné automatiquement.",
+        "removed": "{role} n'est plus donné aux nouveaux membres.",
+        "removeFailed": "Une erreur s'est produite pendant le retrait du rôle. Réessaie.",
+        "verificationOn": "La vérification est activée",
+        "autoVerifyOn": "AutoVerify est activé",
+        "needsFixing": "\n\n**À corriger :**\n{list}",
+        "none": "Aucun auto-rôle n'est défini.",
+        "noneWorking": "Aucun auto-rôle valide trouvé. J'ai retiré celui qui n'existe plus.",
+        "title": "Auto-rôle",
+        "footer": "Tu ne peux avoir qu'un seul auto-rôle.",
+        "listFailed": "Une erreur s'est produite pendant l'affichage des rôles automatiques. Réessaie."
+    },
+    "greet": {
+        "failed": "Une erreur s'est produite."
+    },
+    "dashboard": {
+        "notSet": "`Non défini`",
+        "title": "Bienvenue et au revoir",
+        "description": "Messages de bienvenue et d'au revoir pour **{server}**.\nLes boutons activent ou désactivent chacun d'eux. Choisis un réglage dans le menu pour le modifier.",
+        "on": "Activé",
+        "off": "Désactivé",
+        "field": {
+            "welcomeChannel": "Salon de bienvenue",
+            "welcome": "Bienvenue",
+            "welcomePing": "Mention de bienvenue",
+            "goodbyeChannel": "Salon d'au revoir",
+            "goodbye": "Au revoir",
+            "goodbyePing": "Mention d'au revoir",
+            "welcomeMessage": "Message de bienvenue",
+            "goodbyeMessage": "Message d'au revoir"
+        },
+        "footer": "Se ferme après 10 minutes sans utilisation",
+        "menu": {
+            "placeholder": "Choisis un réglage à modifier",
+            "welcomeChannel": "Salon de bienvenue",
+            "welcomeChannelHint": "Où vont les messages de bienvenue",
+            "welcomeMessage": "Message de bienvenue",
+            "welcomeMessageHint": "Ce que dit le bot quand quelqu'un arrive",
+            "welcomeImage": "Image de bienvenue",
+            "welcomeImageHint": "Image affichée avec le message de bienvenue",
+            "goodbyeChannel": "Salon d'au revoir",
+            "goodbyeChannelHint": "Où vont les messages d'au revoir",
+            "goodbyeMessage": "Message d'au revoir",
+            "goodbyeMessageHint": "Ce que dit le bot quand quelqu'un part",
+            "goodbyeImage": "Image d'au revoir",
+            "goodbyeImageHint": "Image affichée avec le message d'au revoir"
+        },
+        "button": {
+            "welcome": "Bienvenue",
+            "goodbye": "Au revoir",
+            "pingWelcome": "Mention à l'arrivée",
+            "pingGoodbye": "Mention au départ"
+        },
+        "notConfigured": "Ni la bienvenue ni l'au revoir n'ont encore été configurés. Lance d'abord `/welcome setup` ou `/goodbye setup`.",
+        "choiceFailed": "Une erreur s'est produite avec ce choix.",
+        "saveFailed": "Une erreur s'est produite pendant l'enregistrement. Réessaie.",
+        "openFailed": "Impossible d'ouvrir les réglages de bienvenue.",
+        "welcomeUpdated": "Bienvenue mise à jour",
+        "welcomeNowOn": "Les messages de bienvenue sont maintenant **activés**.",
+        "welcomeNowOff": "Les messages de bienvenue sont maintenant **désactivés**.",
+        "goodbyeUpdated": "Au revoir mis à jour",
+        "goodbyeNowOn": "Les messages d'au revoir sont maintenant **activés**.",
+        "goodbyeNowOff": "Les messages d'au revoir sont maintenant **désactivés**.",
+        "welcomePingUpdated": "Mention de bienvenue mise à jour",
+        "welcomePingOn": "Les nouveaux membres seront mentionnés dans le message de bienvenue.",
+        "welcomePingOff": "Les nouveaux membres ne seront **pas** mentionnés dans le message de bienvenue.",
+        "goodbyePingUpdated": "Mention d'au revoir mise à jour",
+        "goodbyePingOn": "Les membres qui partent seront mentionnés dans le message d'au revoir.",
+        "goodbyePingOff": "Les membres qui partent ne seront **pas** mentionnés dans le message d'au revoir.",
+        "closedTitle": "Fermé",
+        "closedBody": "Fermé après 10 minutes sans utilisation. Relance la commande pour le rouvrir.",
+        "channelPlaceholder": "Choisis un salon textuel",
+        "welcomeChannelTitle": "Salon de bienvenue",
+        "welcomeChannelPrompt": "**Actuel :** {current}\n\nChoisis le salon pour les messages de bienvenue.",
+        "goodbyeChannelTitle": "Salon d'au revoir",
+        "goodbyeChannelPrompt": "**Actuel :** {current}\n\nChoisis le salon pour les messages d'au revoir.",
+        "needPermissions": "J'ai besoin de **Voir le salon**, **Envoyer des messages** et **Intégrer des liens** dans {channel}.",
+        "channelUpdated": "Salon mis à jour",
+        "welcomeChannelNow": "Les messages de bienvenue vont maintenant dans {channel}.",
+        "goodbyeChannelNow": "Les messages d'au revoir vont maintenant dans {channel}.",
+        "noChannel": "Aucun salon choisi, rien n'a changé.",
+        "welcomeMessageTitle": "Message de bienvenue",
+        "goodbyeMessageTitle": "Message d'au revoir",
+        "messageLabel": "Message (variables : {user}, {server}, etc.)",
+        "saved": "Enregistré",
+        "welcomeSaved": "Message de bienvenue enregistré.",
+        "goodbyeSaved": "Message d'au revoir enregistré.",
+        "imageHint": "Colle une URL d'image **ou** envoie un fichier. Si tu fais les deux, le fichier l'emporte. Laisse les deux vides pour retirer l'image.",
+        "imageUrlLabel": "URL de l'image (facultatif)",
+        "imageUploadLabel": "Ou envoie un fichier image (facultatif)",
+        "imageBadProtocol": "L'URL de l'image doit commencer par `http://` ou `https://`.",
+        "imageBadUrl": "Cette URL d'image ne semble pas correcte.",
+        "welcomeImageTitle": "Image de bienvenue",
+        "goodbyeImageTitle": "Image d'au revoir",
+        "imageSaved": "Image enregistrée.",
+        "imageRemoved": "Image retirée.",
+        "welcomeCopyKept": "\nUne copie est gardée dans <#{channelId}>. Ne supprime pas ce message, le message de bienvenue y charge l'image.",
+        "goodbyeCopyKept": "\nUne copie est gardée dans <#{channelId}>. Ne supprime pas ce message, le message d'au revoir y charge l'image.",
+        "copyFailed": "\nJe n'ai pas pu garder de copie (j'ai besoin de Voir le salon, Envoyer des messages et Joindre des fichiers dans le salon du journal d'audit ou ici), donc cette image ne s'affichera plus dans environ un jour."
+    },
+    "post": {
+        "defaultWelcome": "Bienvenue sur {server}, {user}. Tu es le membre numéro {memberCount}.",
+        "defaultGoodbye": "{user} a quitté le serveur. Nous sommes maintenant {memberCount} membres.",
+        "welcomeTitle": "Bienvenue",
+        "goodbyeTitle": "Au revoir",
+        "user": "Utilisateur",
+        "memberCount": "Nombre de membres"
+    }
+}

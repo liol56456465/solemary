@@ -1,0 +1,177 @@
+{
+    "cmd": {
+        "welcome": {
+            "description": "Configurar los mensajes de bienvenida",
+            "setup": {
+                "description": "Configurar el mensaje de bienvenida",
+                "channel": "El canal al que enviar los mensajes de bienvenida",
+                "message": "Mensaje de bienvenida. Variables:",
+                "image": "URL de una imagen para añadir al mensaje",
+                "ping": "Mencionar al miembro en el mensaje"
+            }
+        },
+        "goodbye": {
+            "description": "Configurar los mensajes de despedida",
+            "setup": {
+                "description": "Configurar el mensaje de despedida",
+                "channel": "El canal al que enviar los mensajes de despedida",
+                "message": "Mensaje de despedida. Variables:"
+            }
+        },
+        "greet": {
+            "description": "Gestionar los ajustes de bienvenida y despedida",
+            "dashboard": "Abrir los ajustes de bienvenida y despedida"
+        },
+        "autorole": {
+            "description": "Gestionar los roles que reciben automáticamente los nuevos miembros",
+            "add": {
+                "description": "Añadir un rol que los nuevos miembros reciben automáticamente",
+                "role": "El rol que se añade"
+            },
+            "remove": {
+                "description": "Quitar un rol de la asignación automática",
+                "role": "El rol que se quita"
+            },
+            "list": "Ver todos los roles asignados automáticamente"
+        }
+    },
+    "manageServer": "Necesitas el permiso **Gestionar servidor** para usar `{command}`.",
+    "invalidImage": "Indica una URL de imagen válida (debe empezar por http:// o https://).",
+    "setupDone": {
+        "preview": "Vista previa",
+        "ping": "Mencionar al miembro",
+        "status": "Estado",
+        "yes": "Sí",
+        "no": "No",
+        "on": "Activado",
+        "footer": "Más opciones en /greet dashboard"
+    },
+    "welcome": {
+        "alreadySet": "La bienvenida ya está configurada para <#{channelId}>. Usa **/greet dashboard** para cambiar el canal, el mensaje, la mención o la imagen.",
+        "empty": "El mensaje de bienvenida no puede estar vacío",
+        "doneTitle": "Mensajes de bienvenida configurados",
+        "doneBody": "Los mensajes de bienvenida irán a {channel}.",
+        "failed": "Se produjo un error al configurar la bienvenida. Inténtalo de nuevo."
+    },
+    "goodbye": {
+        "alreadySet": "La despedida ya está configurada para <#{channelId}>. Usa **/greet dashboard** para cambiar el canal, el mensaje, la mención o la imagen.",
+        "empty": "El mensaje de despedida no puede estar vacío",
+        "doneTitle": "Mensajes de despedida configurados",
+        "doneBody": "Los mensajes de despedida irán a {channel}.",
+        "failed": "Se produjo un error al configurar la despedida. Inténtalo de nuevo."
+    },
+    "autorole": {
+        "verificationConflict": "No puedes añadir un autorol mientras la verificación o AutoVerify estén activados. Desactívalos primero.",
+        "alreadySet": "El rol {role} ya se asigna automáticamente.",
+        "changed": "Autorol cambiado a {role}. Solo puedes tener uno.",
+        "set": "Autorol establecido: {role}.",
+        "addFailed": "Se produjo un error al añadir el rol. Inténtalo de nuevo.",
+        "notSet": "El rol {role} no se asigna automáticamente.",
+        "removed": "{role} ya no se da a los nuevos miembros.",
+        "removeFailed": "Se produjo un error al quitar el rol. Inténtalo de nuevo.",
+        "verificationOn": "La verificación está activada",
+        "autoVerifyOn": "AutoVerify está activado",
+        "needsFixing": "\n\n**Hay que corregir:**\n{list}",
+        "none": "No hay ningún autorol establecido.",
+        "noneWorking": "No se encontró ningún autorol válido. Quité el que ya no existe.",
+        "title": "Autorol",
+        "footer": "Solo puedes tener un autorol.",
+        "listFailed": "Se produjo un error al mostrar los roles automáticos. Inténtalo de nuevo."
+    },
+    "greet": {
+        "failed": "Algo salió mal."
+    },
+    "dashboard": {
+        "notSet": "`Sin definir`",
+        "title": "Bienvenida y despedida",
+        "description": "Mensajes de bienvenida y despedida de **{server}**.\nLos botones activan o desactivan cada uno. Elige un ajuste en el menú para cambiarlo.",
+        "on": "Activado",
+        "off": "Desactivado",
+        "field": {
+            "welcomeChannel": "Canal de bienvenida",
+            "welcome": "Bienvenida",
+            "welcomePing": "Mención de bienvenida",
+            "goodbyeChannel": "Canal de despedida",
+            "goodbye": "Despedida",
+            "goodbyePing": "Mención de despedida",
+            "welcomeMessage": "Mensaje de bienvenida",
+            "goodbyeMessage": "Mensaje de despedida"
+        },
+        "footer": "Se cierra tras 10 minutos sin uso",
+        "menu": {
+            "placeholder": "Elige un ajuste para cambiar",
+            "welcomeChannel": "Canal de bienvenida",
+            "welcomeChannelHint": "Adónde van los mensajes de bienvenida",
+            "welcomeMessage": "Mensaje de bienvenida",
+            "welcomeMessageHint": "Lo que dice el bot cuando alguien entra",
+            "welcomeImage": "Imagen de bienvenida",
+            "welcomeImageHint": "Imagen que se muestra con el mensaje de bienvenida",
+            "goodbyeChannel": "Canal de despedida",
+            "goodbyeChannelHint": "Adónde van los mensajes de despedida",
+            "goodbyeMessage": "Mensaje de despedida",
+            "goodbyeMessageHint": "Lo que dice el bot cuando alguien se va",
+            "goodbyeImage": "Imagen de despedida",
+            "goodbyeImageHint": "Imagen que se muestra con el mensaje de despedida"
+        },
+        "button": {
+            "welcome": "Bienvenida",
+            "goodbye": "Despedida",
+            "pingWelcome": "Mencionar al dar la bienvenida",
+            "pingGoodbye": "Mencionar al despedir"
+        },
+        "notConfigured": "Ni la bienvenida ni la despedida están configuradas todavía. Ejecuta primero `/welcome setup` o `/goodbye setup`.",
+        "choiceFailed": "Algo salió mal con esa opción.",
+        "saveFailed": "Algo salió mal al guardar. Inténtalo de nuevo.",
+        "openFailed": "No se pudieron abrir los ajustes de bienvenida.",
+        "welcomeUpdated": "Bienvenida actualizada",
+        "welcomeNowOn": "Los mensajes de bienvenida ahora están **activados**.",
+        "welcomeNowOff": "Los mensajes de bienvenida ahora están **desactivados**.",
+        "goodbyeUpdated": "Despedida actualizada",
+        "goodbyeNowOn": "Los mensajes de despedida ahora están **activados**.",
+        "goodbyeNowOff": "Los mensajes de despedida ahora están **desactivados**.",
+        "welcomePingUpdated": "Mención de bienvenida actualizada",
+        "welcomePingOn": "Los nuevos miembros serán mencionados en el mensaje de bienvenida.",
+        "welcomePingOff": "Los nuevos miembros **no** serán mencionados en el mensaje de bienvenida.",
+        "goodbyePingUpdated": "Mención de despedida actualizada",
+        "goodbyePingOn": "Los miembros que se vayan serán mencionados en el mensaje de despedida.",
+        "goodbyePingOff": "Los miembros que se vayan **no** serán mencionados en el mensaje de despedida.",
+        "closedTitle": "Cerrado",
+        "closedBody": "Cerrado tras 10 minutos sin uso. Vuelve a ejecutar el comando para abrirlo de nuevo.",
+        "channelPlaceholder": "Elige un canal de texto",
+        "welcomeChannelTitle": "Canal de bienvenida",
+        "welcomeChannelPrompt": "**Actual:** {current}\n\nElige el canal para los mensajes de bienvenida.",
+        "goodbyeChannelTitle": "Canal de despedida",
+        "goodbyeChannelPrompt": "**Actual:** {current}\n\nElige el canal para los mensajes de despedida.",
+        "needPermissions": "Necesito **Ver canal**, **Enviar mensajes** e **Insertar enlaces** en {channel}.",
+        "channelUpdated": "Canal actualizado",
+        "welcomeChannelNow": "Los mensajes de bienvenida ahora van a {channel}.",
+        "goodbyeChannelNow": "Los mensajes de despedida ahora van a {channel}.",
+        "noChannel": "No se eligió ningún canal, no cambió nada.",
+        "welcomeMessageTitle": "Mensaje de bienvenida",
+        "goodbyeMessageTitle": "Mensaje de despedida",
+        "messageLabel": "Mensaje (variables: {user}, {server}, etc.)",
+        "saved": "Guardado",
+        "welcomeSaved": "Mensaje de bienvenida guardado.",
+        "goodbyeSaved": "Mensaje de despedida guardado.",
+        "imageHint": "Pega una URL de imagen **o** sube un archivo. Si haces ambas cosas, gana el archivo. Deja ambos vacíos para quitar la imagen.",
+        "imageUrlLabel": "URL de la imagen (opcional)",
+        "imageUploadLabel": "O sube un archivo de imagen (opcional)",
+        "imageBadProtocol": "La URL de la imagen debe empezar por `http://` o `https://`.",
+        "imageBadUrl": "Esa URL de imagen no parece correcta.",
+        "welcomeImageTitle": "Imagen de bienvenida",
+        "goodbyeImageTitle": "Imagen de despedida",
+        "imageSaved": "Imagen guardada.",
+        "imageRemoved": "Imagen quitada.",
+        "welcomeCopyKept": "\nSe guarda una copia en <#{channelId}>. No borres ese mensaje, la bienvenida carga la imagen desde ahí.",
+        "goodbyeCopyKept": "\nSe guarda una copia en <#{channelId}>. No borres ese mensaje, la despedida carga la imagen desde ahí.",
+        "copyFailed": "\nNo pude guardar una copia (necesito Ver canal, Enviar mensajes y Adjuntar archivos en el canal del registro de auditoría o aquí), así que esta imagen dejará de verse en un día más o menos."
+    },
+    "post": {
+        "defaultWelcome": "Te damos la bienvenida a {server}, {user}. Eres el miembro número {memberCount}.",
+        "defaultGoodbye": "{user} salió del servidor. Ahora somos {memberCount} miembros.",
+        "welcomeTitle": "Bienvenida",
+        "goodbyeTitle": "Hasta pronto",
+        "user": "Usuario",
+        "memberCount": "Miembros"
+    }
+}

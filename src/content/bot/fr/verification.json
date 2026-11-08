@@ -1,0 +1,298 @@
+{
+    "cmd": {
+        "verify": {
+            "description": "Te vérifier et accéder au serveur"
+        },
+        "verification": {
+            "description": "Gérer le système de vérification du serveur",
+            "setup": {
+                "description": "Configurer le système de vérification",
+                "channel": "Salon où le message de vérification sera publié",
+                "role": "Rôle donné aux membres vérifiés",
+                "message": "Message de vérification personnalisé",
+                "buttonText": "Texte du bouton de vérification"
+            },
+            "remove": {
+                "description": "Retirer la vérification d'un membre",
+                "user": "Membre à qui retirer la vérification"
+            },
+            "dashboard": {
+                "description": "Ouvrir le tableau de bord du système de vérification"
+            },
+            "auto": {
+                "description": "Vérification automatique (vérifier les membres à leur arrivée selon des règles)"
+            }
+        },
+        "autoverify": {
+            "description": "Régler la vérification automatique",
+            "setup": {
+                "description": "Configurer la vérification automatique",
+                "role": "Rôle donné aux membres qui remplissent le critère",
+                "criteria": "Critère de vérification automatique",
+                "accountAgeDays": "Âge minimum du compte en jours (requis pour le critère d'âge)",
+                "choiceAccountAge": "Âge du compte",
+                "choiceNone": "Aucun critère"
+            },
+            "dashboard": {
+                "description": "Ouvrir le tableau de bord de la vérification automatique"
+            }
+        }
+    },
+    "privacy": {
+        "oauth": "La vérification enregistre ton ID Discord, un jeton de connexion chiffré (pour t'ajouter au serveur de support Mewvo) et une empreinte brouillée de ton adresse IP pour repérer les contournements de ban.",
+        "direct": "La vérification enregistre ton ID Discord et la date de ta vérification.",
+        "link": "Confidentialité : {url}"
+    },
+    "verify": {
+        "quizTitle": "Quiz sur les règles",
+        "quizPrefix": "Utilise /verify ou le bouton Vérifier pour faire d'abord le quiz sur les règles.",
+        "alreadyTitle": "Déjà vérifié",
+        "alreadyText": "Tu es déjà vérifié.",
+        "verifiedTitle": "Vérifié",
+        "verifiedText": "Tu es vérifié et tu as reçu le rôle **{role}**.\n\n-# {privacy}"
+    },
+    "button": {
+        "oauthTitle": "Vérifier avec Discord",
+        "oauthText": "Appuie sur le bouton ci-dessous et autorise le bot avec ton compte Discord. Tu reçois le rôle dès que tu as autorisé.\n\n-# Le lien ne fonctionne que pour toi et expire dans 10 minutes.\n-# {privacy}",
+        "oauthButton": "Vérifier avec Discord",
+        "alreadyTitle": "Déjà vérifié",
+        "alreadyText": "Tu es déjà vérifié et tu as accès à tous les salons du serveur.",
+        "verifiedText": "Tu es vérifié et tu as reçu le rôle **{role}**. Bienvenue !\n\n-# {privacy}",
+        "serverOnly": "Ce bouton ne fonctionne que dans un serveur."
+    },
+    "quiz": {
+        "notYours": "Ce quiz n'est pas le tien. Clique sur Vérifier pour lancer le tien.",
+        "expired": "Ce quiz a expiré, clique de nouveau sur Vérifier.",
+        "expiredTitle": "Quiz expiré",
+        "questionTitle": "Quiz sur les règles : question {step} sur {total}",
+        "footerOne": "Réponds à cette question pour passer à la vérification. Le quiz expire après {minutes} minutes.",
+        "footerMany": {
+            "one": "Réponds aux {count} questions pour passer à la vérification. Le quiz expire après {minutes} minutes.",
+            "many": "Réponds aux {count} questions pour passer à la vérification. Le quiz expire après {minutes} minutes.",
+            "other": "Réponds aux {count} questions pour passer à la vérification. Le quiz expire après {minutes} minutes."
+        },
+        "minutes": {
+            "one": "{count} minute",
+            "many": "{count} minutes",
+            "other": "{count} minutes"
+        },
+        "rulesChannel": "le salon des règles",
+        "failedTitle": "Pas tout à fait",
+        "failedText": "Pas tout à fait — lis les règles dans {where} et réessaie dans {wait}.",
+        "cooldownTitle": "Quiz sur les règles",
+        "cooldownText": "Lis les règles dans {where} et réessaie dans {wait}."
+    },
+    "review": {
+        "otherServer": "Cette vérification appartient à un autre serveur. Approuve-la là-bas.",
+        "adminOnly": "Seuls les administrateurs peuvent approuver les vérifications.",
+        "theServer": "le serveur",
+        "dmApproved": "**Ta vérification sur {server} a été approuvée.** Tu as maintenant accès.",
+        "dmDenied": "**Ta vérification sur {server} n'a pas été approuvée.** Si tu penses que c'est une erreur, contacte un membre du staff.",
+        "cardApproved": "Approuvé par {admin}. MP : {dm}.",
+        "cardApprovedAlready": "Approuvé par {admin} (déjà vérifié). MP : {dm}.",
+        "cardDenied": "Refusé par {admin}. MP : {dm}.",
+        "dmDelivered": "envoyé",
+        "dmNotDelivered": "non envoyé",
+        "approvedTitle": "Vérification approuvée",
+        "approvedText": "{user} a maintenant le rôle **{role}**.",
+        "deniedTitle": "Vérification refusée",
+        "deniedText": "{user} reste non vérifié."
+    },
+    "hold": {
+        "title": "Vérification à approuver",
+        "user": "Membre",
+        "created": "Compte créé",
+        "why": "Pourquoi elle est en attente",
+        "footer": "Approuver donne le rôle vérifié. Refuser laisse le membre non vérifié et le prévient par MP.",
+        "approve": "Approuver",
+        "deny": "Refuser",
+        "reasonYoung": "Le compte n'a que {age} (minimum {min})",
+        "reasonNetwork": "Même réseau que le membre banni {username} (`{userId}`, ban `{caseCode}`)"
+    },
+    "panel": {
+        "title": "Vérification du serveur",
+        "defaultMessage": "Appuie sur le bouton ci-dessous pour accéder au reste du serveur.",
+        "defaultButton": "Vérifier"
+    },
+    "errors": {
+        "notSetUp": "La vérification n'est pas encore configurée sur ce serveur. Demande à un administrateur du serveur de la configurer avec `/verification setup`.",
+        "botLeft": "Je ne suis plus sur ce serveur, je ne peux donc pas t'y vérifier.",
+        "roleGoneSetup": "Le rôle vérifié de ce serveur n'existe plus. Demande à un administrateur du serveur de relancer `/verification setup`.",
+        "guildNotCached": "Serveur introuvable dans le cache du bot.",
+        "guildNotFound": "Serveur introuvable.",
+        "notMember": "Ce membre n'est pas sur ce serveur.",
+        "cannotAssign": "Je ne peux pas donner le rôle vérifié. Vérifie ma permission **Gérer les rôles** et l'ordre des rôles.",
+        "verifyFailed": "La vérification a échoué. Réessaie dans un instant.",
+        "disabled": "Le système de vérification n'est pas activé.",
+        "roleGone": "Le rôle vérifié n'existe plus.",
+        "cannotRemove": "Je ne peux pas retirer le rôle vérifié pour le moment. Vérifie ma permission **Gérer les rôles** et l'ordre des rôles.",
+        "removeFailed": "Impossible de retirer la vérification. Réessaie dans un instant.",
+        "noBotPerms": "Je n'ai pas pu vérifier mes permissions sur le serveur. Réessaie.",
+        "roleDeleted": "Le rôle vérifié a été supprimé. Relance `/verification setup`.",
+        "channelDeleted": "Le salon de vérification a été supprimé.",
+        "channelPerms": "Il me manque des permissions dans le salon de vérification : {perms}",
+        "cooldown": "Attends {seconds} secondes avant de te vérifier à nouveau.",
+        "tooMany": "Tu as essayé trop de fois. Attends un moment.",
+        "badCriteria": "Choisis un critère valide.",
+        "badAge": "L'âge du compte doit être entre {min} et {max} jours.",
+        "panelPerms": "J'ai besoin de **Voir le salon**, **Envoyer des messages** et **Intégrer des liens** dans le salon de vérification.",
+        "permsUnknown": "Je n'ai pas pu vérifier mes permissions sur ce serveur. Réessaie dans un instant.",
+        "needManageRoles": "J'ai besoin de la permission « Gérer les rôles » pour donner les rôles vérifiés.",
+        "badRole": "Choisis un rôle normal qui peut être attribué (pas @everyone ni un rôle géré par une intégration).",
+        "roleTooHigh": "Le rôle vérifié doit être sous mon rôle le plus haut dans l'ordre des rôles du serveur.",
+        "conflict": "Tu ne peux pas activer le système de vérification tant que **AutoVerify** ou **AutoRole** est configuré. Désactive-les d'abord.",
+        "needManageServer": "Tu as besoin de la permission **Gérer le serveur** pour utiliser cette sous-commande de vérification.",
+        "badSubcommand": "Choisis une sous-commande valide."
+    },
+    "autoDm": {
+        "title": "Tu es vérifié",
+        "text": "Tu as été vérifié automatiquement sur **{server}**.",
+        "roleName": "Rôle",
+        "roleText": "Tu as reçu le rôle {role}."
+    },
+    "setup": {
+        "title": "Système de vérification mis à jour",
+        "channel": "Salon : {channel}",
+        "role": "Rôle vérifié : {role}",
+        "button": "Texte du bouton : {text}"
+    },
+    "remove": {
+        "notTitle": "Non vérifié",
+        "notText": "{user} n'a pas le rôle vérifié en ce moment.",
+        "doneTitle": "Vérification retirée",
+        "doneText": "Vérification retirée à {user}."
+    },
+    "dash": {
+        "notSet": "`Non défini`",
+        "notConfigured": "`Non configuré`",
+        "enabled": "Activé",
+        "disabled": "Désactivé",
+        "footer": "Le tableau de bord se ferme après 10 minutes d'inactivité",
+        "timedOutTitle": "Tableau de bord expiré",
+        "timedOutText": "Ce tableau de bord a été fermé pour inactivité. Relance la commande pour continuer.",
+        "selectPlaceholder": "Choisis un réglage…",
+        "roleUpdated": "Rôle modifié",
+        "noRole": "Aucun rôle choisi. Le réglage n'a pas changé.",
+        "rolePlaceholder": "Choisis un rôle…",
+        "autoRoleConfigured": "AutoRole est configuré",
+        "conflicts": "Conflits de configuration",
+        "systemStatus": "État du système",
+        "panelStatus": {
+            "unknown": "`Inconnu`",
+            "activeLink": "Actif · [voir le panneau]({url})",
+            "active": "Actif",
+            "channelMissing": "Manquant : le salon du panneau a été supprimé",
+            "panelDeleted": "Manquant : le message du panneau a été supprimé. Utilise **{hint}** ci-dessous.",
+            "noChannel": "Non configuré : pas encore de salon pour le panneau"
+        }
+    },
+    "vdash": {
+        "title": "Tableau de bord de la vérification",
+        "intro": "Gère les réglages de vérification de **{server}**.\nChoisis une option ci-dessous pour modifier un réglage.",
+        "fieldPanel": "État du panneau",
+        "fieldChannel": "Salon de vérification",
+        "fieldRole": "Rôle vérifié",
+        "fieldButton": "Texte du bouton",
+        "fieldUsers": "Membres vérifiés",
+        "users": {
+            "one": "{count} membre",
+            "many": "{count} membres",
+            "other": "{count} membres"
+        },
+        "fieldMessage": "Message de vérification",
+        "optChannel": "Changer le salon de vérification",
+        "optChannelDesc": "Choisir le salon où le panneau de vérification est publié",
+        "optRole": "Changer le rôle vérifié",
+        "optRoleDesc": "Choisir le rôle donné quand un membre se vérifie",
+        "optMessage": "Modifier le message de vérification",
+        "optMessageDesc": "Personnaliser le message affiché dans l'embed du panneau",
+        "optButton": "Modifier le texte du bouton",
+        "optButtonDesc": "Changer le libellé du bouton de vérification",
+        "repostButton": "Republier le panneau",
+        "toggleButton": "Vérification",
+        "channelGone": "Le salon de vérification configuré n'existe plus. Choisis un nouveau salon dans le tableau de bord.",
+        "autoVerifyOn": "AutoVerify est activé",
+        "notConfigured": "Le système de vérification n'est pas encore configuré. Lance d'abord `/verification setup`.",
+        "repostedTitle": "Panneau republié",
+        "repostedText": "Panneau de vérification rétabli dans {channel}.",
+        "autoVerifyBlocks": "AutoVerify est activé en ce moment. Désactive d'abord AutoVerify avant d'activer le système de vérification manuel.\n\nLance `/verification auto dashboard` pour ouvrir le tableau de bord AutoVerify.",
+        "systemUpdatedTitle": "Système mis à jour",
+        "systemOn": "Le système de vérification est maintenant **activé**.",
+        "systemOff": "Le système de vérification est maintenant **désactivé**.",
+        "openFailed": "Impossible d'ouvrir le tableau de bord de la vérification.",
+        "channelPlaceholder": "Choisis un salon textuel…",
+        "channelTitle": "Changer le salon de vérification",
+        "channelText": "**Actuel :** {current}\n\nChoisis le salon où le panneau de vérification sera publié.\n\n> Le panneau actuel sera supprimé et republié dans le nouveau salon.",
+        "channelPerms": "J'ai besoin des permissions **Voir le salon**, **Envoyer des messages** et **Intégrer des liens** dans {channel}.",
+        "channelUpdatedTitle": "Salon modifié",
+        "channelUpdatedText": "Panneau de vérification déplacé dans {channel}.",
+        "noChannel": "Aucun salon choisi. Le réglage n'a pas changé.",
+        "roleTitle": "Changer le rôle vérifié",
+        "roleText": "**Actuel :** {current}\n\nChoisis le rôle donné quand un membre se vérifie.",
+        "roleUpdatedText": "Rôle vérifié réglé sur {role}.",
+        "messageModal": "Modifier le message de vérification",
+        "messageLabel": "Message affiché dans l'embed du panneau",
+        "messageUpdatedTitle": "Message modifié",
+        "messageUpdatedText": "Le panneau de vérification affiche maintenant le nouveau message.",
+        "buttonModal": "Modifier le texte du bouton",
+        "buttonLabel": "Libellé du bouton (80 caractères max.)",
+        "buttonUpdatedTitle": "Texte du bouton modifié",
+        "buttonUpdatedText": "Le bouton de vérification affiche maintenant **{text}**."
+    },
+    "auto": {
+        "conflict": "Tu ne peux pas activer **AutoVerify** tant que le système de vérification ou AutoRole est configuré. Désactive-les d'abord.",
+        "needManageRoles": "J'ai besoin de la permission « Gérer les rôles » pour donner les rôles AutoVerify.",
+        "badSubcommand": "Sous-commande non valide.",
+        "criteriaAge": "comptes de `{days} jours` minimum",
+        "criteriaNone": "Tous les membres immédiatement",
+        "setupTitle": "Vérification automatique configurée",
+        "setupText": "La vérification automatique est configurée.\n\n**Rôle :** {role}\n**Critère :** {criteria}\n\nLes membres qui remplissent ce critère recevront ce rôle en rejoignant le serveur."
+    },
+    "adash": {
+        "title": "Tableau de bord de la vérification automatique",
+        "intro": "Gère les réglages de vérification automatique de **{server}**.\nChoisis une option ci-dessous pour modifier un réglage.",
+        "criteriaAge": "`Âge du compte` - `{days} jours`",
+        "criteriaNone": "`Aucun critère`",
+        "fieldRole": "Rôle donné",
+        "fieldCriteria": "Critère",
+        "fieldAge": "Âge du compte",
+        "ageDays": "`{days}` jours",
+        "na": "`—`",
+        "optRole": "Changer le rôle",
+        "optRoleDesc": "Choisir le rôle donné automatiquement",
+        "optAge": "Modifier l'âge du compte",
+        "optAgeDesc": "Régler l'âge minimum du compte en jours",
+        "criteriaButton": "Changer le critère",
+        "toggleButton": "Vérification auto",
+        "verificationOn": "Le système de vérification est activé",
+        "turnOffFirst": "**Pour activer AutoVerify, désactive d'abord :**",
+        "notConfigured": "La vérification automatique n'est pas encore configurée.{blocking}\n\nUtilise `/verification auto setup` pour la configurer.",
+        "selectionError": "Une erreur est survenue en traitant ton choix.",
+        "unexpectedError": "Une erreur inattendue est survenue en modifiant les réglages.",
+        "statusTitle": "État modifié",
+        "statusOn": "La vérification automatique est maintenant **activée**.",
+        "statusOff": "La vérification automatique est maintenant **désactivée**.",
+        "openFailed": "Impossible d'ouvrir le tableau de bord de la vérification automatique.",
+        "criteriaTitle": "Choisir le critère de vérification",
+        "criteriaText": "Choisis le critère de la vérification automatique",
+        "criteriaPlaceholder": "Choisis un critère…",
+        "criteriaOptAge": "Âge du compte (plus de {days} jours)",
+        "criteriaOptAgeDesc": "Les membres aux comptes plus anciens sont vérifiés automatiquement",
+        "criteriaOptNone": "Aucun critère (vérifier tout le monde)",
+        "criteriaOptNoneDesc": "Tous les membres reçoivent le rôle immédiatement",
+        "criteriaShowAge": "Âge du compte ({days} jours)",
+        "criteriaShowNone": "Aucun critère",
+        "criteriaUpdatedTitle": "Critère modifié",
+        "criteriaUpdatedText": "Critère de vérification automatique changé en **{criteria}**.",
+        "noCriteria": "Aucun critère choisi. Le réglage n'a pas changé.",
+        "roleTitle": "Rôle de vérification automatique",
+        "roleText": "Choisis le rôle donné aux membres vérifiés automatiquement.",
+        "roleUpdatedText": "Rôle de vérification automatique réglé sur {role}.",
+        "ageModal": "Âge minimum du compte",
+        "ageLabel": "Âge minimum du compte (jours)",
+        "agePlaceholder": "Entre {min} et {max}",
+        "ageInvalid": "Saisis un nombre entre {min} et {max}.",
+        "ageUpdatedTitle": "Âge du compte modifié",
+        "ageUpdatedText": "Âge minimum du compte réglé sur **{days} jours**."
+    }
+}

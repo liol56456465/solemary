@@ -1,5 +1,8 @@
 // verificationReview.js — Approve / Deny on a held verification (verifyreview:<approve|deny>:<guildId>:<userId>).
 // Administrators of that server only.
+// Languages (docs/bot-i18n.md): the private answer = the admin's Discord language; the DM = the
+// language of the server the member verified in; the closed card (a staff post) = the language of
+// the server the card is in.
 
 import { MessageFlags } from 'discord.js';
 import { successEmbed } from '../utils/embeds.js';
@@ -12,17 +15,19 @@ import { closeCard } from '../services/automod/reviewCards.js';
 import { noteStaffReview } from '../services/staffActivityService.js';
 import { logger } from '../utils/logger.js';
 import { staffGuildId } from '../services/automod/channelRouting.js';
+import { textForGuild, textForInteraction } from '../utils/botText.js';
 
 export async function handleVerificationReview(interaction, client, args) {
     const [decision, guildId, userId] = args;
     if (!['approve', 'deny'].includes(decision) || !/^\d{17,20}$/.test(guildId || '') || !/^\d{17,20}$/.test(userId || '')) return;
+    const tr = textForInteraction(interaction);
     // The card lives in that server's staff server (a home server's cards: the main server; any other
     // server: itself); an Administrator of another server never decides it.
     if (interaction.guildId !== staffGuildId(guildId)) {
-        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'This verification belongs to another server. Approve it there.' });
+        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('verification.review.otherServer') });
     }
     if (!isAdministrator(interaction.member)) {
-        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Only administrators can approve verifications.' });
+        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('verification.review.adminOnly') });
     }
 
     await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
@@ -30,19 +35,25 @@ export async function handleVerificationReview(interaction, client, args) {
     const guild = client.guilds.cache.get(guildId);
     const admin = interaction.user;
     await noteStaffReview(interaction.guildId, admin.id);
+    const dmText = textForGuild(guildId, { userId, purpose: 'dm' });
+    const cardText = textForGuild(interaction.guildId, { purpose: 'public' });
+    const serverName = guild?.name || dmText.t('verification.review.theServer');
+    const delivered = (dm) => (dm ? cardText.t('verification.review.dmDelivered') : cardText.t('verification.review.dmNotDelivered'));
 
     if (decision === 'approve') {
-        const result = await verifyUser(client, guildId, userId, { source: 'staff_approval', moderatorId: admin.id });
+        const result = await verifyUser(client, guildId, userId, { source: 'staff_approval', moderatorId: admin.id, lang: tr.lang });
         // Held verifications come from "Verify with Discord": now they count for a member restore into this server.
         await markVerifiedIn(userId, guildId).catch((error) => logger.warn(`Could not record the approved verification of ${userId} in ${guildId}: ${error.message}`));
-        const dm = user ? await sendDm(user, `**Your verification in ${guild?.name || 'the server'} was approved.** You now have access.`) : false;
-        await closeCard(interaction.message, `Approved by ${admin.username}${result.status === 'already_verified' ? ' (they were already verified)' : ''}. DM: ${dm ? 'delivered' : 'not delivered'}.`,
-            { status: 'approved', by: admin.username });
-        return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed('Verification approved', `${user?.username || userId} now has the **${result.roleName}** role.`)] });
+        const dm = user ? await sendDm(user, dmText.t('verification.review.dmApproved', { server: serverName })) : false;
+        const outcome = result.status === 'already_verified'
+            ? cardText.t('verification.review.cardApprovedAlready', { admin: admin.username, dm: delivered(dm) })
+            : cardText.t('verification.review.cardApproved', { admin: admin.username, dm: delivered(dm) });
+        await closeCard(interaction.message, outcome, { status: 'approved', by: admin.username });
+        return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed(tr.t('verification.review.approvedTitle'), tr.t('verification.review.approvedText', { user: user?.username || userId, role: result.roleName }))] });
     }
 
-    const dm = user ? await sendDm(user, `**Your verification in ${guild?.name || 'the server'} was not approved.** If you think this is a mistake, contact a staff member.`) : false;
-    await closeCard(interaction.message, `Denied by ${admin.username}. DM: ${dm ? 'delivered' : 'not delivered'}.`,
+    const dm = user ? await sendDm(user, dmText.t('verification.review.dmDenied', { server: serverName })) : false;
+    await closeCard(interaction.message, cardText.t('verification.review.cardDenied', { admin: admin.username, dm: delivered(dm) }),
         { status: 'denied', by: admin.username });
-    return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed('Verification denied', `${user?.username || userId} stays unverified.`)] });
+    return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed(tr.t('verification.review.deniedTitle'), tr.t('verification.review.deniedText', { user: user?.username || userId }))] });
 }

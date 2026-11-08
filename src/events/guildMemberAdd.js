@@ -5,6 +5,7 @@ import { getGuildConfig } from '../services/config/guildConfig.js';
 import { getWelcomeConfig } from '../utils/database.js';
 import { formatWelcomeMessage } from '../utils/welcome.js';
 import { resolveWelcomeImageUrl } from '../utils/welcomeImageStore.js';
+import { botText, textForGuild } from '../utils/botText.js';
 import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 import { refreshCountersOnMemberChange } from '../services/serverstatsService.js';
 import { setBirthday as dbSetBirthday } from '../utils/database.js';
@@ -29,6 +30,26 @@ import { syncLevelRolesForMember } from '../services/leveling/levelRoleSyncServi
 // Welcome messages keep the mentions they had before the client default dropped roles
 // (2026-11-03): users and roles from the admin-written text, never @everyone/@here.
 export const WELCOME_MENTIONS = Object.freeze({ parse: ['users', 'roles'] });
+
+/**
+ * The welcome text: the admin's message (or embed description) as written, else the bot's
+ * default in the server's language. A default changed in config/bot.js (not the catalog's
+ * English) is used as written, as before.
+ */
+export function defaultWelcomeText(welcomeConfig, formatData, tr = botText()) {
+    const own = welcomeConfig?.welcomeMessage || welcomeConfig?.welcomeEmbed?.description;
+    if (own) return formatWelcomeMessage(own, formatData);
+    const configured = botConfig.welcome?.defaultWelcomeMessage;
+    if (configured && configured !== botText('en').t('welcome.post.defaultWelcome', { server: '{server}', user: '{user}', memberCount: '{memberCount}' })) {
+        return formatWelcomeMessage(configured, formatData);
+    }
+    const { user, guild } = formatData;
+    return tr.t('welcome.post.defaultWelcome', {
+        server: guild?.name || 'Server',
+        user: user?.toString?.() || 'User',
+        memberCount: guild?.memberCount?.toString?.() || '0',
+    });
+}
 
 export default {
   name: Events.GuildMemberAdd,
@@ -121,15 +142,15 @@ export default {
             // join pipeline (auto-role, verification, logging, counters) must still run.
             if (permissions?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages])) {
                 const formatData = { user, guild, member };
-                const welcomeMessage = formatWelcomeMessage(
-                    welcomeConfig.welcomeMessage || welcomeConfig.welcomeEmbed?.description || botConfig.welcome?.defaultWelcomeMessage || 'Welcome to {server}, {user}.',
-                    formatData
-                );
+                // A post in the channel: the bot's own default texts in the server's language. The
+                // admin's own message, title and footer are shown as written.
+                const tr = textForGuild(guild.id, { member, purpose: 'public' });
+                const welcomeMessage = defaultWelcomeText(welcomeConfig, formatData, tr);
 
                 const messageContent = welcomeConfig.welcomePing ? user.toString() : null;
 
                 const embedTitle = formatWelcomeMessage(
-                    welcomeConfig.welcomeEmbed?.title || 'Welcome',
+                    welcomeConfig.welcomeEmbed?.title || tr.t('welcome.post.welcomeTitle'),
                     formatData
                 );
                 const embedFooter = welcomeConfig.welcomeEmbed?.footer
@@ -151,8 +172,8 @@ export default {
                         .setDescription(welcomeMessage)
                         .setThumbnail(user.displayAvatarURL())
                         .addFields(
-                            { name: 'User', value: `${user.tag} (${user.id})`, inline: true },
-                            { name: 'Member count', value: guild.memberCount.toString(), inline: true }
+                            { name: tr.t('welcome.post.user'), value: `${user.tag} (${user.id})`, inline: true },
+                            { name: tr.t('welcome.post.memberCount'), value: guild.memberCount.toString(), inline: true }
                         )
                         .setTimestamp()
                         .setFooter({ text: embedFooter });

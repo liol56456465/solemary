@@ -1,0 +1,298 @@
+{
+    "cmd": {
+        "verify": {
+            "description": "Verificati e ottieni l'accesso al server"
+        },
+        "verification": {
+            "description": "Gestisci il sistema di verifica del server",
+            "setup": {
+                "description": "Configura il sistema di verifica",
+                "channel": "Canale in cui verrà pubblicato il messaggio di verifica",
+                "role": "Ruolo da dare ai membri verificati",
+                "message": "Messaggio di verifica personalizzato",
+                "buttonText": "Testo del pulsante di verifica"
+            },
+            "remove": {
+                "description": "Togli la verifica a un membro",
+                "user": "Membro a cui togliere la verifica"
+            },
+            "dashboard": {
+                "description": "Apri la dashboard di configurazione della verifica"
+            },
+            "auto": {
+                "description": "Verifica automatica (verifica i membri all'ingresso secondo regole)"
+            }
+        },
+        "autoverify": {
+            "description": "Configura la verifica automatica",
+            "setup": {
+                "description": "Configura la verifica automatica",
+                "role": "Ruolo da dare ai membri che soddisfano il criterio",
+                "criteria": "Criterio per la verifica automatica",
+                "accountAgeDays": "Età minima dell'account in giorni (serve per il criterio età)",
+                "choiceAccountAge": "Età dell'account",
+                "choiceNone": "Nessun criterio"
+            },
+            "dashboard": {
+                "description": "Apri la dashboard della verifica automatica"
+            }
+        }
+    },
+    "privacy": {
+        "oauth": "La verifica salva il tuo ID Discord, un token di accesso cifrato (per aggiungerti al server di supporto Mewvo) e un'impronta offuscata del tuo indirizzo IP per individuare chi aggira un ban.",
+        "direct": "La verifica salva il tuo ID Discord e il momento in cui ti sei verificato.",
+        "link": "Privacy: {url}"
+    },
+    "verify": {
+        "quizTitle": "Quiz sulle regole",
+        "quizPrefix": "Usa /verify o il pulsante Verifica per fare prima il quiz sulle regole.",
+        "alreadyTitle": "Già verificato",
+        "alreadyText": "Sei già verificato.",
+        "verifiedTitle": "Verificato",
+        "verifiedText": "Sei verificato e hai ricevuto il ruolo **{role}**.\n\n-# {privacy}"
+    },
+    "button": {
+        "oauthTitle": "Verifica con Discord",
+        "oauthText": "Premi il pulsante qui sotto e autorizza il bot con il tuo account Discord. Ricevi il ruolo appena hai autorizzato.\n\n-# Il link funziona solo per te e scade tra 10 minuti.\n-# {privacy}",
+        "oauthButton": "Verifica con Discord",
+        "alreadyTitle": "Già verificato",
+        "alreadyText": "Sei già verificato e hai accesso a tutti i canali del server.",
+        "verifiedText": "Sei verificato e hai ricevuto il ruolo **{role}**. Benvenuto!\n\n-# {privacy}",
+        "serverOnly": "Questo pulsante funziona solo in un server."
+    },
+    "quiz": {
+        "notYours": "Questo quiz non è tuo. Clicca su Verifica per iniziare il tuo.",
+        "expired": "Questo quiz è scaduto, clicca di nuovo su Verifica.",
+        "expiredTitle": "Quiz scaduto",
+        "questionTitle": "Quiz sulle regole: domanda {step} di {total}",
+        "footerOne": "Rispondi a questa domanda per passare alla verifica. Il quiz scade dopo {minutes} minuti.",
+        "footerMany": {
+            "one": "Rispondi a tutte le {count} domande per passare alla verifica. Il quiz scade dopo {minutes} minuti.",
+            "many": "Rispondi a tutte le {count} domande per passare alla verifica. Il quiz scade dopo {minutes} minuti.",
+            "other": "Rispondi a tutte le {count} domande per passare alla verifica. Il quiz scade dopo {minutes} minuti."
+        },
+        "minutes": {
+            "one": "{count} minuto",
+            "many": "{count} minuti",
+            "other": "{count} minuti"
+        },
+        "rulesChannel": "canale delle regole",
+        "failedTitle": "Non proprio",
+        "failedText": "Non proprio — leggi le regole in {where} e riprova tra {wait}.",
+        "cooldownTitle": "Quiz sulle regole",
+        "cooldownText": "Leggi le regole in {where} e riprova tra {wait}."
+    },
+    "review": {
+        "otherServer": "Questa verifica appartiene a un altro server. Approvala lì.",
+        "adminOnly": "Solo gli amministratori possono approvare le verifiche.",
+        "theServer": "il server",
+        "dmApproved": "**La tua verifica in {server} è stata approvata.** Ora hai accesso.",
+        "dmDenied": "**La tua verifica in {server} non è stata approvata.** Se pensi che sia un errore, contatta un membro dello staff.",
+        "cardApproved": "Approvata da {admin}. DM: {dm}.",
+        "cardApprovedAlready": "Approvata da {admin} (era già verificato). DM: {dm}.",
+        "cardDenied": "Rifiutata da {admin}. DM: {dm}.",
+        "dmDelivered": "consegnato",
+        "dmNotDelivered": "non consegnato",
+        "approvedTitle": "Verifica approvata",
+        "approvedText": "{user} ora ha il ruolo **{role}**.",
+        "deniedTitle": "Verifica rifiutata",
+        "deniedText": "{user} resta non verificato."
+    },
+    "hold": {
+        "title": "Verifica da approvare",
+        "user": "Membro",
+        "created": "Account creato",
+        "why": "Perché è in attesa",
+        "footer": "Approva dà il ruolo di verifica. Rifiuta lascia il membro non verificato e glielo dice in DM.",
+        "approve": "Approva",
+        "deny": "Rifiuta",
+        "reasonYoung": "L'account ha solo {age} (minimo {min})",
+        "reasonNetwork": "Stessa rete del membro bannato {username} (`{userId}`, ban `{caseCode}`)"
+    },
+    "panel": {
+        "title": "Verifica del server",
+        "defaultMessage": "Premi il pulsante qui sotto per accedere al resto del server.",
+        "defaultButton": "Verifica"
+    },
+    "errors": {
+        "notSetUp": "La verifica non è ancora configurata in questo server. Chiedi a un amministratore del server di configurarla con `/verification setup`.",
+        "botLeft": "Non sono più in quel server, quindi non posso verificarti lì.",
+        "roleGoneSetup": "Il ruolo di verifica di questo server non esiste più. Chiedi a un amministratore del server di eseguire di nuovo `/verification setup`.",
+        "guildNotCached": "Server non trovato nella cache del bot.",
+        "guildNotFound": "Server non trovato.",
+        "notMember": "Questo membro non è nel server.",
+        "cannotAssign": "Non posso dare il ruolo di verifica. Controlla il mio permesso **Gestire i ruoli** e l'ordine dei ruoli.",
+        "verifyFailed": "La verifica non è riuscita. Riprova tra un momento.",
+        "disabled": "Il sistema di verifica non è attivo.",
+        "roleGone": "Il ruolo di verifica non esiste più.",
+        "cannotRemove": "Ora non posso togliere il ruolo di verifica. Controlla il mio permesso **Gestire i ruoli** e l'ordine dei ruoli.",
+        "removeFailed": "Impossibile togliere la verifica. Riprova tra un momento.",
+        "noBotPerms": "Non sono riuscito a controllare i miei permessi nel server. Riprova.",
+        "roleDeleted": "Il ruolo di verifica è stato eliminato. Esegui di nuovo `/verification setup`.",
+        "channelDeleted": "Il canale di verifica è stato eliminato.",
+        "channelPerms": "Mi mancano dei permessi nel canale di verifica: {perms}",
+        "cooldown": "Aspetta {seconds} secondi prima di verificarti di nuovo.",
+        "tooMany": "Hai provato troppe volte. Aspetta un momento.",
+        "badCriteria": "Scegli un criterio valido.",
+        "badAge": "L'età dell'account deve essere tra {min} e {max} giorni.",
+        "panelPerms": "Mi servono **Visualizzare il canale**, **Inviare messaggi** e **Incorporare link** nel canale di verifica.",
+        "permsUnknown": "Non sono riuscito a controllare i miei permessi in questo server. Riprova tra un momento.",
+        "needManageRoles": "Mi serve il permesso \"Gestire i ruoli\" per dare i ruoli di verifica.",
+        "badRole": "Scegli un ruolo normale assegnabile (non @everyone né un ruolo gestito da un'integrazione).",
+        "roleTooHigh": "Il ruolo di verifica deve stare sotto il mio ruolo più alto nell'ordine dei ruoli del server.",
+        "conflict": "Non puoi attivare il sistema di verifica finché **AutoVerify** o **AutoRole** è configurato. Disattivali prima.",
+        "needManageServer": "Ti serve il permesso **Gestire il server** per usare questo sottocomando di verifica.",
+        "badSubcommand": "Scegli un sottocomando valido."
+    },
+    "autoDm": {
+        "title": "Sei verificato",
+        "text": "Sei stato verificato automaticamente in **{server}**.",
+        "roleName": "Ruolo",
+        "roleText": "Hai ricevuto il ruolo {role}."
+    },
+    "setup": {
+        "title": "Sistema di verifica aggiornato",
+        "channel": "Canale: {channel}",
+        "role": "Ruolo di verifica: {role}",
+        "button": "Testo del pulsante: {text}"
+    },
+    "remove": {
+        "notTitle": "Non verificato",
+        "notText": "{user} al momento non ha il ruolo di verifica.",
+        "doneTitle": "Verifica tolta",
+        "doneText": "Verifica tolta a {user}."
+    },
+    "dash": {
+        "notSet": "`Non impostato`",
+        "notConfigured": "`Non configurato`",
+        "enabled": "Attivo",
+        "disabled": "Disattivo",
+        "footer": "La dashboard si chiude dopo 10 minuti di inattività",
+        "timedOutTitle": "Dashboard scaduta",
+        "timedOutText": "Questa dashboard è stata chiusa per inattività. Esegui di nuovo il comando per continuare.",
+        "selectPlaceholder": "Scegli un'impostazione…",
+        "roleUpdated": "Ruolo aggiornato",
+        "noRole": "Nessun ruolo scelto. L'impostazione non è cambiata.",
+        "rolePlaceholder": "Scegli un ruolo…",
+        "autoRoleConfigured": "AutoRole è configurato",
+        "conflicts": "Conflitti di configurazione",
+        "systemStatus": "Stato del sistema",
+        "panelStatus": {
+            "unknown": "`Sconosciuto`",
+            "activeLink": "Attivo · [vedi pannello]({url})",
+            "active": "Attivo",
+            "channelMissing": "Mancante: il canale del pannello è stato eliminato",
+            "panelDeleted": "Mancante: il messaggio del pannello è stato eliminato. Usa **{hint}** qui sotto.",
+            "noChannel": "Non configurato: ancora nessun canale per il pannello"
+        }
+    },
+    "vdash": {
+        "title": "Dashboard del sistema di verifica",
+        "intro": "Gestisci le impostazioni di verifica di **{server}**.\nScegli un'opzione qui sotto per modificare un'impostazione.",
+        "fieldPanel": "Stato del pannello",
+        "fieldChannel": "Canale di verifica",
+        "fieldRole": "Ruolo di verifica",
+        "fieldButton": "Testo del pulsante",
+        "fieldUsers": "Membri verificati",
+        "users": {
+            "one": "{count} membro",
+            "many": "{count} membri",
+            "other": "{count} membri"
+        },
+        "fieldMessage": "Messaggio di verifica",
+        "optChannel": "Cambia canale di verifica",
+        "optChannelDesc": "Scegli il canale in cui viene pubblicato il pannello di verifica",
+        "optRole": "Cambia ruolo di verifica",
+        "optRoleDesc": "Scegli il ruolo dato quando un membro si verifica",
+        "optMessage": "Modifica messaggio di verifica",
+        "optMessageDesc": "Personalizza il messaggio mostrato nell'embed del pannello",
+        "optButton": "Modifica testo del pulsante",
+        "optButtonDesc": "Cambia la scritta sul pulsante di verifica",
+        "repostButton": "Ripubblica pannello",
+        "toggleButton": "Verifica",
+        "channelGone": "Il canale di verifica configurato non esiste più. Scegli un nuovo canale dalla dashboard.",
+        "autoVerifyOn": "AutoVerify è attivo",
+        "notConfigured": "Il sistema di verifica non è ancora configurato. Esegui prima `/verification setup`.",
+        "repostedTitle": "Pannello ripubblicato",
+        "repostedText": "Pannello di verifica ripristinato in {channel}.",
+        "autoVerifyBlocks": "AutoVerify è attivo. Disattiva prima AutoVerify e poi attiva il sistema di verifica manuale.\n\nEsegui `/verification auto dashboard` per aprire la dashboard di AutoVerify.",
+        "systemUpdatedTitle": "Sistema aggiornato",
+        "systemOn": "Il sistema di verifica ora è **attivo**.",
+        "systemOff": "Il sistema di verifica ora è **disattivato**.",
+        "openFailed": "Impossibile aprire la dashboard della verifica.",
+        "channelPlaceholder": "Scegli un canale testuale…",
+        "channelTitle": "Cambia canale di verifica",
+        "channelText": "**Attuale:** {current}\n\nScegli il canale in cui verrà pubblicato il pannello di verifica.\n\n> Il pannello attuale verrà eliminato e ripubblicato nel nuovo canale.",
+        "channelPerms": "Mi servono i permessi **Visualizzare il canale**, **Inviare messaggi** e **Incorporare link** in {channel}.",
+        "channelUpdatedTitle": "Canale aggiornato",
+        "channelUpdatedText": "Pannello di verifica spostato in {channel}.",
+        "noChannel": "Nessun canale scelto. L'impostazione non è cambiata.",
+        "roleTitle": "Cambia ruolo di verifica",
+        "roleText": "**Attuale:** {current}\n\nScegli il ruolo da dare quando un membro si verifica.",
+        "roleUpdatedText": "Ruolo di verifica impostato su {role}.",
+        "messageModal": "Modifica messaggio di verifica",
+        "messageLabel": "Messaggio nell'embed del pannello di verifica",
+        "messageUpdatedTitle": "Messaggio aggiornato",
+        "messageUpdatedText": "Il pannello di verifica ora mostra il nuovo messaggio.",
+        "buttonModal": "Modifica testo del pulsante",
+        "buttonLabel": "Testo del pulsante (max 80 caratteri)",
+        "buttonUpdatedTitle": "Testo del pulsante aggiornato",
+        "buttonUpdatedText": "Il pulsante di verifica ora dice **{text}**."
+    },
+    "auto": {
+        "conflict": "Non puoi attivare **AutoVerify** finché il sistema di verifica o AutoRole è configurato. Disattivali prima.",
+        "needManageRoles": "Mi serve il permesso \"Gestire i ruoli\" per dare i ruoli di AutoVerify.",
+        "badSubcommand": "Sottocomando non valido.",
+        "criteriaAge": "account di almeno `{days} giorni`",
+        "criteriaNone": "Tutti i membri subito",
+        "setupTitle": "Verifica automatica configurata",
+        "setupText": "La verifica automatica è configurata.\n\n**Ruolo:** {role}\n**Criterio:** {criteria}\n\nI membri che soddisfano il criterio riceveranno questo ruolo quando entrano nel server."
+    },
+    "adash": {
+        "title": "Dashboard della verifica automatica",
+        "intro": "Gestisci le impostazioni della verifica automatica di **{server}**.\nScegli un'opzione qui sotto per modificare un'impostazione.",
+        "criteriaAge": "`Età dell'account` - `{days} giorni`",
+        "criteriaNone": "`Nessun criterio`",
+        "fieldRole": "Ruolo assegnato",
+        "fieldCriteria": "Criterio",
+        "fieldAge": "Età dell'account",
+        "ageDays": "`{days}` giorni",
+        "na": "`—`",
+        "optRole": "Cambia ruolo",
+        "optRoleDesc": "Scegli il ruolo da dare automaticamente",
+        "optAge": "Modifica età dell'account",
+        "optAgeDesc": "Imposta l'età minima dell'account in giorni",
+        "criteriaButton": "Cambia criterio",
+        "toggleButton": "Verifica automatica",
+        "verificationOn": "Il sistema di verifica è attivo",
+        "turnOffFirst": "**Per attivare AutoVerify, disattiva prima:**",
+        "notConfigured": "La verifica automatica non è ancora configurata.{blocking}\n\nUsa `/verification auto setup` per configurarla.",
+        "selectionError": "Si è verificato un errore durante l'elaborazione della tua scelta.",
+        "unexpectedError": "Si è verificato un errore imprevisto durante la modifica delle impostazioni.",
+        "statusTitle": "Stato aggiornato",
+        "statusOn": "La verifica automatica ora è **attiva**.",
+        "statusOff": "La verifica automatica ora è **disattivata**.",
+        "openFailed": "Impossibile aprire la dashboard della verifica automatica.",
+        "criteriaTitle": "Scegli il criterio di verifica",
+        "criteriaText": "Scegli il criterio per la verifica automatica",
+        "criteriaPlaceholder": "Scegli un criterio…",
+        "criteriaOptAge": "Età dell'account (più di {days} giorni)",
+        "criteriaOptAgeDesc": "I membri con account più vecchi vengono verificati automaticamente",
+        "criteriaOptNone": "Nessun criterio (verifica tutti)",
+        "criteriaOptNoneDesc": "Tutti i membri ricevono subito il ruolo",
+        "criteriaShowAge": "Età dell'account ({days} giorni)",
+        "criteriaShowNone": "Nessun criterio",
+        "criteriaUpdatedTitle": "Criterio aggiornato",
+        "criteriaUpdatedText": "Criterio della verifica automatica cambiato in **{criteria}**.",
+        "noCriteria": "Nessun criterio scelto. L'impostazione non è cambiata.",
+        "roleTitle": "Ruolo della verifica automatica",
+        "roleText": "Scegli il ruolo da dare ai membri verificati automaticamente.",
+        "roleUpdatedText": "Ruolo della verifica automatica impostato su {role}.",
+        "ageModal": "Età minima dell'account",
+        "ageLabel": "Età minima dell'account (giorni)",
+        "agePlaceholder": "Tra {min} e {max}",
+        "ageInvalid": "Inserisci un numero tra {min} e {max}.",
+        "ageUpdatedTitle": "Età dell'account aggiornata",
+        "ageUpdatedText": "Età minima dell'account impostata su **{days} giorni**."
+    }
+}

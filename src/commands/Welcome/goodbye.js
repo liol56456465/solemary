@@ -6,32 +6,44 @@ import { formatWelcomeMessage, truncateForEmbedField } from '../../utils/welcome
 import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { ErrorTypes, replyUserError } from '../../utils/errorHandler.js';
+import { textForInteraction } from '../../utils/botText.js';
+import { descriptionLocalizations as localizations } from '../../utils/commandLocalizations.js';
+
+// The variables list stays as typed in every language (they are template tokens, not words).
+const VARIABLES = ' {user}, {username}, {server}, {memberCount}';
+const withVariables = (texts) => Object.fromEntries(Object.entries(texts).map(([locale, text]) => [locale, text + VARIABLES]));
 
 export default {
     data: new SlashCommandBuilder()
         .setName('goodbye')
         .setDescription('Configure the goodbye message system')
+        .setDescriptionLocalizations(localizations('welcome.cmd.goodbye.description'))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .addSubcommand(subcommand =>
             subcommand
                 .setName('setup')
                 .setDescription('Set up the goodbye message')
+                .setDescriptionLocalizations(localizations('welcome.cmd.goodbye.setup.description'))
                 .addChannelOption(option =>
                     option.setName('channel')
                         .setDescription('The channel to send goodbye messages to')
+                        .setDescriptionLocalizations(localizations('welcome.cmd.goodbye.setup.channel'))
                         .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                         .setRequired(true))
                 .addStringOption(option =>
                     option.setName('message')
                         .setDescription('Goodbye message. Variables: {user}, {username}, {server}, {memberCount}')
+                        .setDescriptionLocalizations(withVariables(localizations('welcome.cmd.goodbye.setup.message')))
                         .setRequired(true))
                 .addStringOption(option =>
                     option.setName('image')
                         .setDescription('Image URL to add to the message')
+                        .setDescriptionLocalizations(localizations('welcome.cmd.welcome.setup.image'))
                         .setRequired(false))
                 .addBooleanOption(option =>
                     option.setName('ping')
                         .setDescription('Ping the member in the message')
+                        .setDescriptionLocalizations(localizations('welcome.cmd.welcome.setup.ping'))
                         .setRequired(false))),
 
     async execute(interaction) {
@@ -46,9 +58,12 @@ export default {
         }
 
         const { options, guild, client } = interaction;
+        // Errors are private (the user's language); the setup summary is posted in the channel (the server's).
+        const tr = textForInteraction(interaction);
+        const pub = textForInteraction(interaction, { purpose: 'public' });
 
         if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
-            return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the **Manage Server** permission to use `/goodbye`.' });
+            return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('welcome.manageServer', { command: '/goodbye' }) });
         }
 
         const subcommand = options.getSubcommand();
@@ -62,12 +77,12 @@ export default {
             const existingConfig = await getWelcomeConfig(client, guild.id);
             if (existingConfig?.goodbyeChannelId) {
                 logger.info(`[Goodbye] Setup blocked because config already exists in channel ${existingConfig.goodbyeChannelId} for guild ${guild.id}`);
-                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: `Goodbye is already configured for <#${existingConfig.goodbyeChannelId}>. Use **/greet dashboard** to customize channel, message, ping, or image.` });
+                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('welcome.goodbye.alreadySet', { channelId: existingConfig.goodbyeChannelId }) });
             }
 
             if (!message || message.trim().length === 0) {
                 logger.warn(`[Goodbye] Empty message provided by ${interaction.user.tag} in ${guild.name}`);
-                return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Goodbye message cannot be empty' });
+                return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: tr.t('welcome.goodbye.empty') });
             }
 
             if (image) {
@@ -75,7 +90,7 @@ export default {
                     new URL(image);
                 } catch (e) {
                     logger.warn(`[Goodbye] Invalid image URL provided by ${interaction.user.tag}: ${image}`);
-                    return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Please provide a valid image URL (must start with http:// or https://' });
+                    return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: tr.t('welcome.invalidImage') });
                 }
             }
 
@@ -103,14 +118,14 @@ export default {
 
                 const embed = new EmbedBuilder()
                     .setColor(getColor('success'))
-                    .setTitle('Goodbye messages set up')
-                    .setDescription(`Goodbye messages will go to ${channel}.`)
+                    .setTitle(pub.t('welcome.goodbye.doneTitle'))
+                    .setDescription(pub.t('welcome.goodbye.doneBody', { channel: String(channel) }))
                     .addFields(
-                        { name: 'Preview', value: truncateForEmbedField(previewMessage) },
-                        { name: 'Ping the member', value: ping ? 'Yes' : 'No' },
-                        { name: 'Status', value: 'On' }
+                        { name: pub.t('welcome.setupDone.preview'), value: truncateForEmbedField(previewMessage) },
+                        { name: pub.t('welcome.setupDone.ping'), value: ping ? pub.t('welcome.setupDone.yes') : pub.t('welcome.setupDone.no') },
+                        { name: pub.t('welcome.setupDone.status'), value: pub.t('welcome.setupDone.on') }
                     )
-                    .setFooter({ text: 'More options in /greet dashboard' });
+                    .setFooter({ text: pub.t('welcome.setupDone.footer') });
 
                 if (image) {
                     embed.setImage(image);
@@ -122,7 +137,7 @@ export default {
                     return await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: error.userMessage });
                 }
                 logger.error(`[Goodbye] Failed to setup goodbye system for guild ${guild.id}:`, error);
-                await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred while configuring the goodbye system. Please try again.' });
+                await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('welcome.goodbye.failed') });
             }
         }
     },

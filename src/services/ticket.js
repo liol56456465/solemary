@@ -18,6 +18,7 @@ import { noteTicketClaim } from './staffActivityService.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { ensureTypedServiceError, wrapServiceBoundary } from '../utils/serviceErrorBoundary.js';
 import { PRIORITY_MAP } from '../utils/helpers.js';
+import { LANG_CODES, botText, textForGuild } from '../utils/botText.js';
 const TICKET_DELETE_DELAY_MS = 3000;
 const TICKET_DELETE_DELAY_SECONDS = Math.floor(TICKET_DELETE_DELAY_MS / 1000);
 const TICKET_SERVICE = 'ticketService';
@@ -26,11 +27,54 @@ function ticketUserError(message, userMessage, type = ErrorTypes.VALIDATION, con
   throw createError(message, type, userMessage, { service: TICKET_SERVICE, ...context });
 }
 
-function requireTicket(ticketData, channel) {
+// Language (docs/bot-i18n.md, "mixed" rule): a refusal goes to the person who acted, so it is in
+// their language (`{ lang }` from the caller, default English); posts in the ticket channel and
+// DMs to the ticket creator are in the server's language.
+const publicText = (guild) => textForGuild(guild?.id ?? null, { purpose: 'public' });
+const dmText = (guild, userId) => textForGuild(guild?.id ?? null, { purpose: 'dm', userId });
+
+// The same text in every language: the ticket's own messages are found again by their title or
+// field name, also when they were posted in another language (before the server switched).
+const allLanguages = (key, params) => new Set(LANG_CODES.map((lang) => botText(lang).t(key, params)));
+const lazy = (make) => { let value; return () => (value ??= make()); };
+const OPENING_TITLE_PREFIXES = lazy(() => [...allLanguages('ticket.opening.title', { number: '' })].filter(Boolean));
+const STATUS_FIELD_NAMES = lazy(() => allLanguages('ticket.opening.status'));
+const CLAIMED_FIELD_NAMES = lazy(() => allLanguages('ticket.opening.claimedBy'));
+const CLAIM_STATUS_TITLES = lazy(() => new Set([...allLanguages('ticket.post.claimedTitle'), ...allLanguages('ticket.post.unclaimedTitle')]));
+const CLOSED_TITLES = lazy(() => allLanguages('ticket.post.closedTitle'));
+const PRIORITY_LINE_PREFIXES = lazy(() => [...allLanguages('ticket.opening.priorityLine', { priority: '' })]);
+
+/** True for the ticket's opening message ("Ticket #12" in any language). */
+export function isOpeningMessage(message) {
+  const title = message?.embeds?.[0]?.title;
+  return typeof title === 'string' && OPENING_TITLE_PREFIXES().some((prefix) => title.startsWith(prefix));
+}
+
+/** The opening message's description without its priority line (any language). */
+export function withoutPriorityLine(description) {
+  const text = String(description ?? '');
+  const cuts = PRIORITY_LINE_PREFIXES().map((prefix) => text.indexOf(prefix)).filter((index) => index >= 0);
+  return cuts.length ? text.slice(0, Math.min(...cuts)) : text;
+}
+
+const PRIORITY_KEYS = {
+  none: 'ticket.priority.none',
+  low: 'ticket.priority.low',
+  medium: 'ticket.priority.medium',
+  high: 'ticket.priority.high',
+  urgent: 'ticket.priority.urgent',
+};
+
+/** A priority's name in `tr`'s language ("High"); an unknown value as it is. */
+export function priorityLabel(priority, tr = botText('en')) {
+  return PRIORITY_KEYS[priority] ? tr.t(PRIORITY_KEYS[priority]) : (PRIORITY_MAP[priority]?.label ?? String(priority));
+}
+
+function requireTicket(ticketData, channel, tr = botText('en')) {
   if (!ticketData) {
     ticketUserError(
       'Not a ticket channel',
-      'This is not a ticket channel.',
+      tr.t('ticket.service.notTicket'),
       ErrorTypes.VALIDATION,
       { channelId: channel?.id, guildId: channel?.guild?.id }
     );
@@ -50,20 +94,20 @@ function rethrowTicketError(error, operation, userMessage, context = {}) {
 
 
 
-function buildTicketControlRow({ claimedBy = null } = {}) {
+function buildTicketControlRow({ claimedBy = null } = {}, tr = botText('en')) {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('ticket_claim')
-      .setLabel(claimedBy ? 'Claimed' : 'Claim')
+      .setLabel(claimedBy ? tr.t('ticket.control.claimed') : tr.t('ticket.control.claim'))
       .setStyle(claimedBy ? ButtonStyle.Secondary : ButtonStyle.Primary)
       .setDisabled(!!claimedBy),
     new ButtonBuilder()
       .setCustomId('ticket_pin')
-      .setLabel('Pin')
+      .setLabel(tr.t('ticket.control.pin'))
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('ticket_close')
-      .setLabel('Close')
+      .setLabel(tr.t('ticket.control.close'))
       .setStyle(ButtonStyle.Danger),
   );
 }
@@ -125,7 +169,9 @@ export const getUserTicketCount = wrapServiceBoundary(async function getUserTick
   context: {},
 });
 
-export async function createTicket(guild, member, categoryId, reason = 'No reason provided', priority = 'none') {
+// The default reason is stored on the ticket record and goes into the logs: kept in English.
+export async function createTicket(guild, member, categoryId, reason = 'No reason provided', priority = 'none', { lang = 'en' } = {}) {
+  const tr = botText(lang);
   try {
     const config = await getGuildConfig(guild.client, guild.id);
     const ticketConfig = config.tickets || {};
@@ -136,7 +182,7 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
     if (currentTicketCount >= maxTicketsPerUser) {
       ticketUserError(
         `Max open tickets reached for ${member.id}`,
-        `You have reached the maximum number of open tickets (${maxTicketsPerUser}). Please close your existing tickets before creating a new one.`,
+        tr.t('ticket.service.maxTickets', { max: maxTicketsPerUser }),
         ErrorTypes.VALIDATION,
         { guildId: guild.id, userId: member.id, operation: 'createTicket' }
       );
@@ -200,29 +246,31 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
     };
     
     const priorityInfo = PRIORITY_MAP[priority] || PRIORITY_MAP.none;
-    
+    const pub = publicText(guild);
+
     const embed = createEmbed({
-      title: `Ticket #${ticketNumber}`,
-      description: `${member.toString()}, thanks for opening a ticket. Staff will be with you soon.\n\n**Reason:** ${reason}\n**Priority:** ${priorityInfo.label}`,
+      title: pub.t('ticket.opening.title', { number: ticketNumber }),
+      description: pub.t('ticket.opening.body', { member: member.toString(), reason })
+        + pub.t('ticket.opening.priorityLine', { priority: priorityLabel(PRIORITY_MAP[priority] ? priority : 'none', pub) }),
       color: priorityInfo.color,
       fields: [
-        { name: 'Status', value: 'Open', inline: true },
-        { name: 'Claimed By', value: 'Not claimed', inline: true },
-        { name: 'Created', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
+        { name: pub.t('ticket.opening.status'), value: pub.t('ticket.opening.statusOpen'), inline: true },
+        { name: pub.t('ticket.opening.claimedBy'), value: pub.t('ticket.opening.notClaimed'), inline: true },
+        { name: pub.t('ticket.opening.created'), value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
       ],
     });
-    
-    const row = buildTicketControlRow();
-    
+
+    const row = buildTicketControlRow({}, pub);
+
     if (ticketConfig.enablePriority) {
       row.addComponents(
         new ButtonBuilder()
           .setCustomId('ticket_priority:low')
-          .setLabel('Low')
+          .setLabel(priorityLabel('low', pub))
           .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
           .setCustomId('ticket_priority:high')
-          .setLabel('High')
+          .setLabel(priorityLabel('high', pub))
           .setStyle(ButtonStyle.Danger)
       );
     }
@@ -268,17 +316,18 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
     return { channel, ticketData };
     
   } catch (error) {
-    rethrowTicketError(error, 'createTicket', 'Failed to create ticket. Please try again in a moment.', { guildId: guild?.id, userId: member?.id });
+    rethrowTicketError(error, 'createTicket', tr.t('ticket.service.createFailed'), { guildId: guild?.id, userId: member?.id });
   }
 }
 
-export async function closeTicket(channel, closer, reason = 'No reason provided') {
+export async function closeTicket(channel, closer, reason = 'No reason provided', { lang = 'en' } = {}) {
+  const tr = botText(lang);
   try {
-    const ticketData = requireTicket(await getTicketData(channel.guild.id, channel.id), channel);
+    const ticketData = requireTicket(await getTicketData(channel.guild.id, channel.id), channel, tr);
     if (ticketData.status === 'closed') {
       ticketUserError(
         'Ticket is already closed',
-        'This ticket has already been closed.',
+        tr.t('ticket.service.alreadyClosed'),
         ErrorTypes.VALIDATION,
         { channelId: channel.id, operation: 'closeTicket' }
       );
@@ -321,12 +370,15 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
       logger.warn(`Could not fetch ticket creator ${ticketData.userId}: ${dmError.message}`);
     }
 
+    // DMs to the ticket creator and posts in the ticket channel: the server's language.
+    const dm = dmText(channel.guild, ticketData.userId);
+    const pub = publicText(channel.guild);
     if (dmOnClose && ticketCreator) {
       const dmEmbed = createEmbed({
-        title: 'Your ticket was closed',
-        description: `Your ticket **${channel.name}** has been closed.\n\n**Reason:** ${reason}\n**Closed by:** ${closer.tag}\n**Closed at:** <t:${Math.floor(Date.now() / 1000)}:F>\n\nIf you need anything else, just open a new ticket.`,
+        title: dm.t('ticket.dm.closedTitle'),
+        description: dm.t('ticket.dm.closedBody', { channel: channel.name, reason, closer: closer.tag, time: Math.floor(Date.now() / 1000) }),
         color: '#e74c3c',
-        footer: { text: `Ticket ID: ${ticketData.id}` }
+        footer: { text: dm.t('ticket.post.ticketId', { id: ticketData.id }) }
       });
 
       try {
@@ -340,10 +392,10 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
     if (ticketCreator) {
       try {
         const feedbackEmbed = createEmbed({
-          title: 'How did we do?',
-          description: `Rate your ticket **${channel.name}** from 1 to 5. Pick a number below.`,
+          title: dm.t('ticket.dm.feedbackTitle'),
+          description: dm.t('ticket.dm.feedbackBody', { channel: channel.name }),
           color: '#F1C40F',
-          footer: { text: 'This is optional.' },
+          footer: { text: dm.t('ticket.dm.feedbackFooter') },
         });
 
         const base = `ticket_feedback:${channel.guild.id}:${channel.id}`;
@@ -357,11 +409,11 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
         const declineRow = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
             .setCustomId(`ticket_feedback_comment:${channel.guild.id}:${channel.id}`)
-            .setLabel('Add a comment')
+            .setLabel(dm.t('ticket.dm.feedbackComment'))
             .setStyle(ButtonStyle.Secondary),
           new ButtonBuilder()
             .setCustomId(`ticket_feedback_decline:${channel.guild.id}:${channel.id}`)
-            .setLabel('No thanks')
+            .setLabel(dm.t('ticket.dm.feedbackDecline'))
             .setStyle(ButtonStyle.Secondary),
         );
 
@@ -400,22 +452,19 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
     }
     
     const messages = await channel.messages.fetch();
-    const ticketMessage = messages.find(m => 
-      m.embeds.length > 0 && 
-      m.embeds[0].title?.startsWith('Ticket #')
-    );
-    
+    const ticketMessage = messages.find(isOpeningMessage);
+
     if (ticketMessage) {
       const embed = ticketMessage.embeds[0];
-      const statusField = embed.fields?.find(f => f.name === 'Status');
-      
+      const statusField = embed.fields?.find(f => STATUS_FIELD_NAMES().has(f.name));
+
       if (statusField) {
-        statusField.value = 'Closed';
+        statusField.value = pub.t('ticket.opening.statusClosed');
       }
-      
+
       const updatedEmbed = createEmbed({
-        title: embed.title || 'Ticket',
-        description: embed.description || 'Ticket discussion',
+        title: embed.title || pub.t('ticket.opening.fallbackTitle'),
+        description: embed.description || pub.t('ticket.opening.fallbackDescription'),
         color: '#e74c3c',
         fields: embed.fields || [],
         footer: embed.footer
@@ -428,20 +477,21 @@ components: []
     }
     
     const closeEmbed = createEmbed({
-      title: 'Ticket Closed',
-      description: `This ticket has been closed by ${closer}.\n**Reason:** ${reason}${closeNotificationSent ? '\n\nThe ticket creator got a DM about it.' : dmOnClose ? '\n\nCouldn\'t DM the ticket creator about it.' : ''}`,
+      title: pub.t('ticket.post.closedTitle'),
+      description: pub.t('ticket.post.closedBody', { closer: String(closer), reason })
+        + (closeNotificationSent ? pub.t('ticket.post.closedDmSent') : dmOnClose ? pub.t('ticket.post.closedDmFailed') : ''),
       color: '#e74c3c',
-      footer: { text: `Ticket ID: ${ticketData.id}` }
+      footer: { text: pub.t('ticket.post.ticketId', { id: ticketData.id }) }
     });
-    
+
     const controlRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('ticket_reopen')
-        .setLabel('Reopen')
+        .setLabel(pub.t('ticket.control.reopen'))
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
         .setCustomId('ticket_delete')
-        .setLabel('Delete')
+        .setLabel(pub.t('ticket.control.delete'))
         .setStyle(ButtonStyle.Danger)
     );
     
@@ -480,18 +530,19 @@ components: []
     return ticketData;
     
   } catch (error) {
-    rethrowTicketError(error, 'closeTicket', 'Failed to close ticket. Please try again in a moment.', { guildId: channel?.guild?.id, channelId: channel?.id, closerId: closer?.id });
+    rethrowTicketError(error, 'closeTicket', tr.t('ticket.service.closeFailed'), { guildId: channel?.guild?.id, channelId: channel?.id, closerId: closer?.id });
   }
 }
 
-export async function claimTicket(channel, claimer) {
+export async function claimTicket(channel, claimer, { lang = 'en' } = {}) {
+  const tr = botText(lang);
   try {
-    const ticketData = requireTicket(await getTicketData(channel.guild.id, channel.id), channel);
-    
+    const ticketData = requireTicket(await getTicketData(channel.guild.id, channel.id), channel, tr);
+
     if (ticketData.claimedBy) {
       ticketUserError(
         'Ticket already claimed',
-        `This ticket is already claimed by <@${ticketData.claimedBy}>`,
+        tr.t('ticket.service.alreadyClaimed', { userId: ticketData.claimedBy }),
         ErrorTypes.VALIDATION,
         { channelId: channel.id, claimedBy: ticketData.claimedBy, operation: 'claimTicket' }
       );
@@ -502,22 +553,20 @@ export async function claimTicket(channel, claimer) {
     noteTicketClaim(channel.guild.id, claimer.id);
     
     await saveTicketData(channel.guild.id, channel.id, ticketData);
-    
+    const pub = publicText(channel.guild);
+
     const messages = await channel.messages.fetch();
-    const ticketMessage = messages.find(m => 
-      m.embeds.length > 0 && 
-      m.embeds[0].title?.startsWith('Ticket #')
-    );
-    
+    const ticketMessage = messages.find(isOpeningMessage);
+
     if (ticketMessage) {
       const embed = ticketMessage.embeds[0];
-      const claimedField = embed.fields?.find(f => f.name === 'Claimed By');
-      
+      const claimedField = embed.fields?.find(f => CLAIMED_FIELD_NAMES().has(f.name));
+
       if (claimedField) {
         claimedField.value = claimer.toString();
       }
-      
-      const row = buildTicketControlRow({ claimedBy: claimer.id });
+
+      const row = buildTicketControlRow({ claimedBy: claimer.id }, pub);
       
       await ticketMessage.edit({ 
         embeds: [embed],
@@ -526,21 +575,21 @@ export async function claimTicket(channel, claimer) {
     }
     
     const claimEmbed = createEmbed({
-      title: 'Ticket Claimed',
-      description: `${claimer} claimed this ticket.`,
+      title: pub.t('ticket.post.claimedTitle'),
+      description: pub.t('ticket.post.claimedBody', { user: String(claimer) }),
       color: '#2ecc71'
     });
-    
+
     const unclaimRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('ticket_unclaim')
-        .setLabel('Unclaim')
+        .setLabel(pub.t('ticket.control.unclaim'))
         .setStyle(ButtonStyle.Secondary)
     );
 
     const claimStatusMessage = messages.find(m =>
       m.embeds.length > 0 &&
-      (m.embeds[0].title === 'Ticket Claimed' || m.embeds[0].title === 'Ticket Unclaimed')
+      CLAIM_STATUS_TITLES().has(m.embeds[0].title)
     );
 
     if (claimStatusMessage) {
@@ -567,18 +616,19 @@ export async function claimTicket(channel, claimer) {
     return ticketData;
     
   } catch (error) {
-    rethrowTicketError(error, 'claimTicket', 'Failed to claim ticket. Please try again in a moment.', { guildId: channel?.guild?.id, channelId: channel?.id, claimerId: claimer?.id });
+    rethrowTicketError(error, 'claimTicket', tr.t('ticket.service.claimFailed'), { guildId: channel?.guild?.id, channelId: channel?.id, claimerId: claimer?.id });
   }
 }
 
-export async function reopenTicket(channel, reopener) {
+export async function reopenTicket(channel, reopener, { lang = 'en' } = {}) {
+  const tr = botText(lang);
   try {
-    const ticketData = requireTicket(await getTicketData(channel.guild.id, channel.id), channel);
-    
+    const ticketData = requireTicket(await getTicketData(channel.guild.id, channel.id), channel, tr);
+
     if (ticketData.status !== 'closed') {
       ticketUserError(
         'Ticket not closed',
-        'This ticket is not currently closed.',
+        tr.t('ticket.service.notClosed'),
         ErrorTypes.VALIDATION,
         { channelId: channel.id, operation: 'reopenTicket' }
       );
@@ -628,21 +678,19 @@ export async function reopenTicket(channel, reopener) {
       logger.warn(`Could not restore access for user ${ticketData.userId}:`, error.message);
     }
     
+    const pub = publicText(channel.guild);
     const messages = await channel.messages.fetch();
-    const ticketMessage = messages.find(m => 
-      m.embeds.length > 0 && 
-      m.embeds[0].title?.startsWith('Ticket #')
-    );
-    
+    const ticketMessage = messages.find(isOpeningMessage);
+
     if (ticketMessage) {
       const embed = ticketMessage.embeds[0];
-      const statusField = embed.fields?.find(f => f.name === 'Status');
-      
+      const statusField = embed.fields?.find(f => STATUS_FIELD_NAMES().has(f.name));
+
       if (statusField) {
-        statusField.value = 'Open';
+        statusField.value = pub.t('ticket.opening.statusOpen');
       }
-      
-      const row = buildTicketControlRow({ claimedBy: ticketData.claimedBy });
+
+      const row = buildTicketControlRow({ claimedBy: ticketData.claimedBy }, pub);
       
       await ticketMessage.edit({ 
         embeds: [embed],
@@ -651,14 +699,14 @@ export async function reopenTicket(channel, reopener) {
     }
     
     const reopenEmbed = createEmbed({
-      title: 'Ticket reopened',
-      description: `${reopener} reopened this ticket.`,
+      title: pub.t('ticket.reply.reopenedTitle'),
+      description: pub.t('ticket.post.reopenedBody', { user: String(reopener) }),
       color: '#2ecc71'
     });
 
     const closeStatusMessage = messages.find(m =>
       m.embeds.length > 0 &&
-      m.embeds[0].title === 'Ticket Closed' &&
+      CLOSED_TITLES().has(m.embeds[0].title) &&
       m.components.length > 0 &&
       m.components[0].components.some(c => c.customId === 'ticket_reopen')
     );
@@ -672,7 +720,7 @@ export async function reopenTicket(channel, reopener) {
     return { ticketData, movedToOpenCategory, openCategoryMoveFailed };
     
   } catch (error) {
-    rethrowTicketError(error, 'reopenTicket', 'Failed to reopen ticket. Please try again in a moment.', { guildId: channel?.guild?.id, channelId: channel?.id, reopenerId: reopener?.id });
+    rethrowTicketError(error, 'reopenTicket', tr.t('ticket.service.reopenFailed'), { guildId: channel?.guild?.id, channelId: channel?.id, reopenerId: reopener?.id });
   }
 }
 
@@ -889,13 +937,14 @@ async function deliverTicketTranscript(channel, ticketData, executor, { persist 
     try {
       const ticketCreator = await channel.client.users.fetch(ticketData.userId).catch(() => null);
       if (ticketCreator) {
+        const dm = dmText(channel.guild, ticketData.userId);
         await ticketCreator.send({
           embeds: [
             createEmbed({
-              title: 'Your ticket transcript',
-              description: `Here's the transcript for **${channel.name}**.`,
+              title: dm.t('ticket.dm.transcriptTitle'),
+              description: dm.t('ticket.dm.transcriptBody', { channel: channel.name }),
               color: '#3498db',
-              footer: { text: `Ticket ID: ${ticketData.id}` },
+              footer: { text: dm.t('ticket.post.ticketId', { id: ticketData.id }) },
             }),
           ],
           files: [buildTranscriptAttachment(transcript)],
@@ -941,15 +990,17 @@ async function deliverTicketTranscript(channel, ticketData, executor, { persist 
   };
 }
 
-export async function deleteTicket(channel, deleter) {
+export async function deleteTicket(channel, deleter, { lang = 'en' } = {}) {
+  const tr = botText(lang);
   try {
-    const ticketData = requireTicket(await getTicketData(channel.guild.id, channel.id), channel);
-    
+    const ticketData = requireTicket(await getTicketData(channel.guild.id, channel.id), channel, tr);
+    const pub = publicText(channel.guild);
+
     const deleteEmbed = createEmbed({
-      title: 'Ticket deleted',
-      description: `This ticket will be deleted in ${TICKET_DELETE_DELAY_SECONDS} seconds.`,
+      title: pub.t('ticket.reply.deletedTitle'),
+      description: pub.tp('ticket.post.deletedBody', TICKET_DELETE_DELAY_SECONDS),
       color: '#e74c3c',
-      footer: { text: `Ticket ID: ${ticketData.id}` }
+      footer: { text: pub.t('ticket.post.ticketId', { id: ticketData.id }) }
     });
     
     await channel.send({ embeds: [deleteEmbed] });
@@ -1020,18 +1071,19 @@ export async function deleteTicket(channel, deleter) {
     return ticketData;
     
   } catch (error) {
-    rethrowTicketError(error, 'deleteTicket', 'Failed to delete ticket. Please try again in a moment.', { guildId: channel?.guild?.id, channelId: channel?.id, deleterId: deleter?.id });
+    rethrowTicketError(error, 'deleteTicket', tr.t('ticket.service.deleteFailed'), { guildId: channel?.guild?.id, channelId: channel?.id, deleterId: deleter?.id });
   }
 }
 
-export async function unclaimTicket(channel, unclaimer) {
+export async function unclaimTicket(channel, unclaimer, { lang = 'en' } = {}) {
+  const tr = botText(lang);
   try {
-    const ticketData = requireTicket(await getTicketData(channel.guild.id, channel.id), channel);
-    
+    const ticketData = requireTicket(await getTicketData(channel.guild.id, channel.id), channel, tr);
+
     if (!ticketData.claimedBy) {
       ticketUserError(
         'Ticket not claimed',
-        'This ticket is not currently claimed.',
+        tr.t('ticket.service.notClaimed'),
         ErrorTypes.VALIDATION,
         { channelId: channel.id, operation: 'unclaimTicket' }
       );
@@ -1040,7 +1092,7 @@ export async function unclaimTicket(channel, unclaimer) {
     if (ticketData.claimedBy !== unclaimer.id && !unclaimer.permissions.has(PermissionFlagsBits.ManageChannels)) {
       ticketUserError(
         'Cannot unclaim ticket',
-        'You can only unclaim your own tickets or need Manage Channels permission.',
+        tr.t('ticket.service.unclaimOwn'),
         ErrorTypes.PERMISSION,
         { channelId: channel.id, operation: 'unclaimTicket' }
       );
@@ -1051,22 +1103,20 @@ export async function unclaimTicket(channel, unclaimer) {
     ticketData.claimedAt = null;
     
     await saveTicketData(channel.guild.id, channel.id, ticketData);
-    
+    const pub = publicText(channel.guild);
+
     const messages = await channel.messages.fetch();
-    const ticketMessage = messages.find(m => 
-      m.embeds.length > 0 && 
-      m.embeds[0].title?.startsWith('Ticket #')
-    );
-    
+    const ticketMessage = messages.find(isOpeningMessage);
+
     if (ticketMessage) {
       const embed = ticketMessage.embeds[0];
-      const claimedField = embed.fields?.find(f => f.name === 'Claimed By');
-      
+      const claimedField = embed.fields?.find(f => CLAIMED_FIELD_NAMES().has(f.name));
+
       if (claimedField) {
-        claimedField.value = 'Not claimed';
+        claimedField.value = pub.t('ticket.opening.notClaimed');
       }
-      
-      const row = buildTicketControlRow();
+
+      const row = buildTicketControlRow({}, pub);
       
       await ticketMessage.edit({ 
         embeds: [embed],
@@ -1074,15 +1124,15 @@ export async function unclaimTicket(channel, unclaimer) {
       });
     }
     
-    const claimMessage = messages.find(m => 
-      m.embeds.length > 0 && 
-      (m.embeds[0].title === 'Ticket Claimed' || m.embeds[0].title === 'Ticket Unclaimed')
+    const claimMessage = messages.find(m =>
+      m.embeds.length > 0 &&
+      CLAIM_STATUS_TITLES().has(m.embeds[0].title)
     );
-    
+
     if (claimMessage) {
       const unclaimEmbed = createEmbed({
-        title: 'Ticket Unclaimed',
-        description: `${unclaimer} unclaimed this ticket.`,
+        title: pub.t('ticket.post.unclaimedTitle'),
+        description: pub.t('ticket.post.unclaimedBody', { user: String(unclaimer) }),
         color: '#f39c12'
       });
       
@@ -1092,8 +1142,8 @@ export async function unclaimTicket(channel, unclaimer) {
       });
     } else {
       const unclaimEmbed = createEmbed({
-        title: 'Ticket Unclaimed',
-        description: `${unclaimer} unclaimed this ticket.`,
+        title: pub.t('ticket.post.unclaimedTitle'),
+        description: pub.t('ticket.post.unclaimedBody', { user: String(unclaimer) }),
         color: '#f39c12'
       });
       
@@ -1118,7 +1168,7 @@ export async function unclaimTicket(channel, unclaimer) {
     return ticketData;
     
   } catch (error) {
-    rethrowTicketError(error, 'unclaimTicket', 'Failed to unclaim ticket. Please try again in a moment.', { guildId: channel?.guild?.id, channelId: channel?.id, unclaimerId: unclaimer?.id });
+    rethrowTicketError(error, 'unclaimTicket', tr.t('ticket.service.unclaimFailed'), { guildId: channel?.guild?.id, channelId: channel?.id, unclaimerId: unclaimer?.id });
   }
 }
 
@@ -1126,15 +1176,16 @@ async function getNextTicketNumber(guildId) {
   return await incrementTicketCounter(guildId);
 }
 
-export async function updateTicketPriority(channel, priority, updater) {
+export async function updateTicketPriority(channel, priority, updater, { lang = 'en' } = {}) {
+  const tr = botText(lang);
   try {
-    const ticketData = requireTicket(await getTicketData(channel.guild.id, channel.id), channel);
-    
+    const ticketData = requireTicket(await getTicketData(channel.guild.id, channel.id), channel, tr);
+
     const priorityInfo = PRIORITY_MAP[priority];
     if (!priorityInfo) {
       ticketUserError(
       'Invalid priority level',
-      'Invalid priority level.',
+      tr.t('ticket.service.invalidPriority'),
       ErrorTypes.VALIDATION,
       { channelId: channel.id, priority, operation: 'updateTicketPriority' }
     );
@@ -1162,18 +1213,16 @@ export async function updateTicketPriority(channel, priority, updater) {
       }
     }
     
+    const pub = publicText(channel.guild);
     const messages = await channel.messages.fetch();
-    const ticketMessage = messages.find(m => 
-      m.embeds.length > 0 && 
-      m.embeds[0].title?.startsWith('Ticket #')
-    );
-    
+    const ticketMessage = messages.find(isOpeningMessage);
+
     if (ticketMessage) {
       const embed = ticketMessage.embeds[0];
-      
+
       const updatedEmbed = createEmbed({
-        title: embed.title || 'Ticket',
-        description: embed.description?.split('\n**Priority:**')[0] + `\n**Priority:** ${priorityInfo.label}`,
+        title: embed.title || pub.t('ticket.opening.fallbackTitle'),
+        description: withoutPriorityLine(embed.description) + pub.t('ticket.opening.priorityLine', { priority: priorityLabel(priority, pub) }),
         color: priorityInfo.color,
         fields: embed.fields || [],
         footer: embed.footer
@@ -1183,8 +1232,8 @@ export async function updateTicketPriority(channel, priority, updater) {
     }
     
     const updateEmbed = createEmbed({
-      title: 'Priority changed',
-      description: `${updater} set the priority to **${priorityInfo.label}**.`,
+      title: pub.t('ticket.reply.priorityChanged'),
+      description: pub.t('ticket.post.priorityBody', { user: String(updater), priority: priorityLabel(priority, pub) }),
       color: priorityInfo.color
     });
     
@@ -1210,6 +1259,6 @@ export async function updateTicketPriority(channel, priority, updater) {
     return ticketData;
     
   } catch (error) {
-    rethrowTicketError(error, 'updateTicketPriority', 'Failed to update ticket priority. Please try again in a moment.', { guildId: channel?.guild?.id, channelId: channel?.id, updaterId: updater?.id, priority });
+    rethrowTicketError(error, 'updateTicketPriority', tr.t('ticket.service.priorityFailed'), { guildId: channel?.guild?.id, channelId: channel?.id, updaterId: updater?.id, priority });
   }
 }

@@ -4,19 +4,23 @@ import { logger } from '../../../utils/logger.js';
 import { getColor } from '../../../config/bot.js';
 import { logTicketFeedback } from '../../../utils/ticket/ticketLogging.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { textForInteraction } from '../../../utils/botText.js';
 
+// Replies to the person rating (in a DM): their Discord language.
 const STAR_LABELS = {
-    '1': '1/5 - Bad',
-    '2': '2/5 - Not great',
-    '3': '3/5 - Okay',
-    '4': '4/5 - Good',
-    '5': '5/5 - Great',
+    '1': 'ticket.feedback.rating1',
+    '2': 'ticket.feedback.rating2',
+    '3': 'ticket.feedback.rating3',
+    '4': 'ticket.feedback.rating4',
+    '5': 'ticket.feedback.rating5',
 };
+const ratingText = (tr, rating) => (STAR_LABELS[String(rating)] ? tr.t(STAR_LABELS[String(rating)]) : `${rating}/5`);
 
 const feedbackHandler = {
     name: 'ticket_feedback',
 
     async execute(interaction, client, args) {
+        const tr = textForInteraction(interaction);
         
         const [guildId, channelId, ratingStr] = args;
 
@@ -24,8 +28,8 @@ const feedbackHandler = {
             await InteractionHelper.safeReply(interaction, {
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('Broken link')
-                        .setDescription('This feedback link doesn\'t work.')
+                        .setTitle(tr.t('ticket.feedback.brokenTitle'))
+                        .setDescription(tr.t('ticket.feedback.brokenLink'))
                         .setColor(getColor('error')),
                 ],
                 components: [],
@@ -51,8 +55,8 @@ const feedbackHandler = {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('Ticket not found')
-                        .setDescription('Couldn\'t find the ticket for this rating.')
+                        .setTitle(tr.t('ticket.feedback.notFoundTitle'))
+                        .setDescription(tr.t('ticket.feedback.notFoundRating'))
                         .setColor(getColor('error')),
                 ],
                 components: [],
@@ -64,8 +68,8 @@ const feedbackHandler = {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('Not your ticket')
-                        .setDescription('Only the person who opened this ticket can rate it.')
+                        .setTitle(tr.t('ticket.feedback.notYoursTitle'))
+                        .setDescription(tr.t('ticket.feedback.notYoursRating'))
                         .setColor(getColor('error')),
                 ],
                 components: [],
@@ -77,8 +81,8 @@ const feedbackHandler = {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('Already rated')
-                        .setDescription(`You already rated this ticket **${STAR_LABELS[String(ticketData.feedback.rating)]}**.`)
+                        .setTitle(tr.t('ticket.feedback.alreadyTitle'))
+                        .setDescription(tr.t('ticket.feedback.alreadyBody', { rating: ratingText(tr, ticketData.feedback.rating) }))
                         .setColor(getColor('success')),
                 ],
                 components: [],
@@ -91,8 +95,8 @@ const feedbackHandler = {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('Invalid rating')
-                        .setDescription('Pick a rating from 1 to 5.')
+                        .setTitle(tr.t('ticket.feedback.invalidTitle'))
+                        .setDescription(tr.t('ticket.feedback.invalidBody'))
                         .setColor(getColor('error')),
                 ],
                 components: [],
@@ -100,7 +104,7 @@ const feedbackHandler = {
             return;
         }
 
-        const ratingLabel = STAR_LABELS[String(rating)] ?? `${rating}/5`;
+        const ratingLabel = ratingText(tr, rating);
 
         try {
             ticketData.feedback = {
@@ -114,8 +118,8 @@ const feedbackHandler = {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('Not saved')
-                        .setDescription('Couldn\'t save your rating right now. Try again later.')
+                        .setTitle(tr.t('ticket.feedback.notSavedTitle'))
+                        .setDescription(tr.t('ticket.feedback.notSavedRating'))
                         .setColor(getColor('error')),
                 ],
                 components: [],
@@ -139,10 +143,10 @@ const feedbackHandler = {
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [
                 new EmbedBuilder()
-                    .setTitle('Rating saved')
-                    .setDescription(`You rated this ticket **${ratingLabel}**.`)
+                    .setTitle(tr.t('ticket.feedback.savedTitle'))
+                    .setDescription(tr.t('ticket.feedback.savedBody', { rating: ratingLabel }))
                     .setColor(getColor('success'))
-                    .setFooter({ text: 'Thanks for rating.' })
+                    .setFooter({ text: tr.t('ticket.feedback.savedFooter') })
                     .setTimestamp(),
             ],
             components: [],
@@ -161,14 +165,15 @@ const commentHandler = {
     name: 'ticket_feedback_comment',
 
     async execute(interaction, client, args) {
+        const tr = textForInteraction(interaction);
         const [guildId, channelId] = args;
 
         if (!guildId || !channelId) {
             await interaction.update({
                 embeds: [
                     new EmbedBuilder()
-                        .setTitle('Broken link')
-                        .setDescription('This feedback button doesn\'t work.')
+                        .setTitle(tr.t('ticket.feedback.brokenTitle'))
+                        .setDescription(tr.t('ticket.feedback.brokenButton'))
                         .setColor(getColor('error')),
                 ],
                 components: [],
@@ -178,13 +183,13 @@ const commentHandler = {
 
         const modal = new ModalBuilder()
             .setCustomId(`ticket_feedback_comment_modal:${guildId}:${channelId}`)
-            .setTitle('Ticket feedback');
+            .setTitle(tr.t('ticket.feedback.modalTitle'));
 
         const commentInput = new TextInputBuilder()
             .setCustomId('feedback_comment')
-            .setLabel('Your comment')
+            .setLabel(tr.t('ticket.feedback.modalLabel'))
             .setStyle(TextInputStyle.Paragraph)
-            .setPlaceholder('What went well, what could be better?')
+            .setPlaceholder(tr.t('ticket.feedback.modalPlaceholder'))
             .setRequired(true)
             .setMaxLength(1000);
 
@@ -198,11 +203,12 @@ const declineHandler = {
     name: 'ticket_feedback_decline',
 
     async execute(interaction) {
+        const tr = textForInteraction(interaction);
         await interaction.update({
             embeds: [
                 new EmbedBuilder()
-                    .setTitle('No problem')
-                    .setDescription('Open a new ticket any time you need help.')
+                    .setTitle(tr.t('ticket.feedback.declineTitle'))
+                    .setDescription(tr.t('ticket.feedback.declineBody'))
                     .setColor(getColor('default')),
             ],
             components: [],

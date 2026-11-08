@@ -4,6 +4,7 @@ import { logger } from '../../../utils/logger.js';
 import { getColor } from '../../../config/bot.js';
 import { logTicketFeedback } from '../../../utils/ticket/ticketLogging.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { textForInteraction } from '../../../utils/botText.js';
 
 function buildEmbed(title, description, color) {
     return new EmbedBuilder()
@@ -16,13 +17,14 @@ export default {
     name: 'ticket_feedback_comment_modal',
 
     async execute(interaction, client, args) {
+        const tr = textForInteraction(interaction);
         const [guildId, channelId] = args;
 
         if (!guildId || !channelId) {
             await InteractionHelper.safeReply(interaction, {
                 embeds: [buildEmbed(
-                    'Broken form',
-                    'This feedback form doesn\'t work.',
+                    tr.t('ticket.feedback.brokenFormTitle'),
+                    tr.t('ticket.feedback.brokenFormBody'),
                     getColor('error'),
                 )],
                 flags: MessageFlags.Ephemeral,
@@ -34,8 +36,8 @@ export default {
         if (!comment) {
             await InteractionHelper.safeReply(interaction, {
                 embeds: [buildEmbed(
-                    'Empty comment',
-                    'Type a comment first.',
+                    tr.t('ticket.feedback.emptyTitle'),
+                    tr.t('ticket.feedback.emptyBody'),
                     getColor('warning'),
                 )],
                 flags: MessageFlags.Ephemeral,
@@ -58,8 +60,8 @@ export default {
         if (!ticketData) {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [buildEmbed(
-                    'Ticket not found',
-                    'Couldn\'t find the ticket for this comment.',
+                    tr.t('ticket.feedback.notFoundTitle'),
+                    tr.t('ticket.feedback.notFoundComment'),
                     getColor('error'),
                 )],
             });
@@ -69,8 +71,8 @@ export default {
         if (interaction.user.id !== ticketData.userId) {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [buildEmbed(
-                    'Not your ticket',
-                    'Only the person who opened this ticket can comment on it.',
+                    tr.t('ticket.feedback.notYoursTitle'),
+                    tr.t('ticket.feedback.notYoursComment'),
                     getColor('error'),
                 )],
             });
@@ -89,8 +91,8 @@ export default {
             logger.error('ticketFeedbackComment: failed to save feedback', { guildId, channelId, error: err.message });
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [buildEmbed(
-                    'Not saved',
-                    'Couldn\'t save your comment right now. Try again later.',
+                    tr.t('ticket.feedback.notSavedTitle'),
+                    tr.t('ticket.feedback.notSavedComment'),
                     getColor('error'),
                 )],
             });
@@ -113,8 +115,8 @@ export default {
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [buildEmbed(
-                'Comment sent',
-                'Thanks, staff will see your comment.',
+                tr.t('ticket.feedback.sentTitle'),
+                tr.t('ticket.feedback.sentBody'),
                 getColor('success'),
             )],
         });

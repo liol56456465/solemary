@@ -1,0 +1,177 @@
+{
+    "cmd": {
+        "welcome": {
+            "description": "Begrüßung einrichten",
+            "setup": {
+                "description": "Die Begrüßungsnachricht einrichten",
+                "channel": "Der Kanal für Begrüßungsnachrichten",
+                "message": "Begrüßungsnachricht. Variablen:",
+                "image": "Bild-URL für die Nachricht",
+                "ping": "Das Mitglied in der Nachricht pingen"
+            }
+        },
+        "goodbye": {
+            "description": "Abschiedsnachrichten einrichten",
+            "setup": {
+                "description": "Die Abschiedsnachricht einrichten",
+                "channel": "Der Kanal für Abschiedsnachrichten",
+                "message": "Abschiedsnachricht. Variablen:"
+            }
+        },
+        "greet": {
+            "description": "Einstellungen für Begrüßung und Abschied verwalten",
+            "dashboard": "Die Einstellungen für Begrüßung und Abschied öffnen"
+        },
+        "autorole": {
+            "description": "Rollen verwalten, die neue Mitglieder automatisch bekommen",
+            "add": {
+                "description": "Eine Rolle hinzufügen, die neue Mitglieder automatisch bekommen",
+                "role": "Die Rolle, die hinzugefügt wird"
+            },
+            "remove": {
+                "description": "Eine Rolle aus der automatischen Vergabe entfernen",
+                "role": "Die Rolle, die entfernt wird"
+            },
+            "list": "Alle automatisch vergebenen Rollen anzeigen"
+        }
+    },
+    "manageServer": "Du brauchst die Berechtigung **Server verwalten**, um `{command}` zu nutzen.",
+    "invalidImage": "Bitte gib eine gültige Bild-URL an (sie muss mit http:// oder https:// beginnen).",
+    "setupDone": {
+        "preview": "Vorschau",
+        "ping": "Mitglied pingen",
+        "status": "Status",
+        "yes": "Ja",
+        "no": "Nein",
+        "on": "An",
+        "footer": "Mehr Optionen unter /greet dashboard"
+    },
+    "welcome": {
+        "alreadySet": "Die Begrüßung ist schon für <#{channelId}> eingerichtet. Nutze **/greet dashboard**, um Kanal, Nachricht, Ping oder Bild zu ändern.",
+        "empty": "Die Begrüßungsnachricht darf nicht leer sein",
+        "doneTitle": "Begrüßungsnachrichten eingerichtet",
+        "doneBody": "Begrüßungsnachrichten gehen nach {channel}.",
+        "failed": "Beim Einrichten der Begrüßung ist ein Fehler aufgetreten. Bitte versuche es noch einmal."
+    },
+    "goodbye": {
+        "alreadySet": "Der Abschied ist schon für <#{channelId}> eingerichtet. Nutze **/greet dashboard**, um Kanal, Nachricht, Ping oder Bild zu ändern.",
+        "empty": "Die Abschiedsnachricht darf nicht leer sein",
+        "doneTitle": "Abschiedsnachrichten eingerichtet",
+        "doneBody": "Abschiedsnachrichten gehen nach {channel}.",
+        "failed": "Beim Einrichten der Abschiedsnachrichten ist ein Fehler aufgetreten. Bitte versuche es noch einmal."
+    },
+    "autorole": {
+        "verificationConflict": "Du kannst keine Auto-Rolle hinzufügen, solange die Verifizierung oder AutoVerify an ist. Schalte sie zuerst aus.",
+        "alreadySet": "Die Rolle {role} wird schon automatisch vergeben.",
+        "changed": "Auto-Rolle zu {role} geändert. Du kannst nur eine haben.",
+        "set": "Auto-Rolle auf {role} gesetzt.",
+        "addFailed": "Beim Hinzufügen der Rolle ist ein Fehler aufgetreten. Bitte versuche es noch einmal.",
+        "notSet": "Die Rolle {role} wird nicht automatisch vergeben.",
+        "removed": "{role} wird neuen Mitgliedern nicht mehr gegeben.",
+        "removeFailed": "Beim Entfernen der Rolle ist ein Fehler aufgetreten. Bitte versuche es noch einmal.",
+        "verificationOn": "Die Verifizierung ist an",
+        "autoVerifyOn": "AutoVerify ist an",
+        "needsFixing": "\n\n**Muss behoben werden:**\n{list}",
+        "none": "Es ist keine Auto-Rolle gesetzt.",
+        "noneWorking": "Keine funktionierende Auto-Rolle gefunden. Ich habe die entfernt, die es nicht mehr gibt.",
+        "title": "Auto-Rolle",
+        "footer": "Du kannst nur eine Auto-Rolle haben.",
+        "listFailed": "Beim Anzeigen der automatisch vergebenen Rollen ist ein Fehler aufgetreten. Bitte versuche es noch einmal."
+    },
+    "greet": {
+        "failed": "Etwas ist schiefgelaufen."
+    },
+    "dashboard": {
+        "notSet": "`Nicht gesetzt`",
+        "title": "Begrüßung und Abschied",
+        "description": "Begrüßungs- und Abschiedsnachrichten für **{server}**.\nDie Knöpfe schalten beides an oder aus. Wähle im Menü eine Einstellung, um sie zu ändern.",
+        "on": "An",
+        "off": "Aus",
+        "field": {
+            "welcomeChannel": "Begrüßungskanal",
+            "welcome": "Begrüßung",
+            "welcomePing": "Ping bei Begrüßung",
+            "goodbyeChannel": "Abschiedskanal",
+            "goodbye": "Abschied",
+            "goodbyePing": "Ping bei Abschied",
+            "welcomeMessage": "Begrüßungsnachricht",
+            "goodbyeMessage": "Abschiedsnachricht"
+        },
+        "footer": "Schließt sich nach 10 Minuten ohne Nutzung",
+        "menu": {
+            "placeholder": "Wähle eine Einstellung zum Ändern",
+            "welcomeChannel": "Begrüßungskanal",
+            "welcomeChannelHint": "Wohin Begrüßungsnachrichten gehen",
+            "welcomeMessage": "Begrüßungsnachricht",
+            "welcomeMessageHint": "Was der Bot sagt, wenn jemand beitritt",
+            "welcomeImage": "Begrüßungsbild",
+            "welcomeImageHint": "Bild zur Begrüßungsnachricht",
+            "goodbyeChannel": "Abschiedskanal",
+            "goodbyeChannelHint": "Wohin Abschiedsnachrichten gehen",
+            "goodbyeMessage": "Abschiedsnachricht",
+            "goodbyeMessageHint": "Was der Bot sagt, wenn jemand geht",
+            "goodbyeImage": "Abschiedsbild",
+            "goodbyeImageHint": "Bild zur Abschiedsnachricht"
+        },
+        "button": {
+            "welcome": "Begrüßung",
+            "goodbye": "Abschied",
+            "pingWelcome": "Ping bei Begrüßung",
+            "pingGoodbye": "Ping bei Abschied"
+        },
+        "notConfigured": "Weder Begrüßung noch Abschied sind eingerichtet. Führe zuerst `/welcome setup` oder `/goodbye setup` aus.",
+        "choiceFailed": "Bei dieser Auswahl ist etwas schiefgelaufen.",
+        "saveFailed": "Beim Speichern ist etwas schiefgelaufen. Versuche es noch einmal.",
+        "openFailed": "Die Begrüßungseinstellungen konnten nicht geöffnet werden.",
+        "welcomeUpdated": "Begrüßung aktualisiert",
+        "welcomeNowOn": "Begrüßungsnachrichten sind jetzt **an**.",
+        "welcomeNowOff": "Begrüßungsnachrichten sind jetzt **aus**.",
+        "goodbyeUpdated": "Abschied aktualisiert",
+        "goodbyeNowOn": "Abschiedsnachrichten sind jetzt **an**.",
+        "goodbyeNowOff": "Abschiedsnachrichten sind jetzt **aus**.",
+        "welcomePingUpdated": "Ping bei Begrüßung aktualisiert",
+        "welcomePingOn": "Neue Mitglieder werden in der Begrüßungsnachricht gepingt.",
+        "welcomePingOff": "Neue Mitglieder werden in der Begrüßungsnachricht **nicht** gepingt.",
+        "goodbyePingUpdated": "Ping bei Abschied aktualisiert",
+        "goodbyePingOn": "Mitglieder, die gehen, werden in der Abschiedsnachricht gepingt.",
+        "goodbyePingOff": "Mitglieder, die gehen, werden in der Abschiedsnachricht **nicht** gepingt.",
+        "closedTitle": "Geschlossen",
+        "closedBody": "Nach 10 Minuten ohne Nutzung geschlossen. Führe den Befehl erneut aus, um es wieder zu öffnen.",
+        "channelPlaceholder": "Wähle einen Textkanal",
+        "welcomeChannelTitle": "Begrüßungskanal",
+        "welcomeChannelPrompt": "**Aktuell:** {current}\n\nWähle den Kanal für Begrüßungsnachrichten.",
+        "goodbyeChannelTitle": "Abschiedskanal",
+        "goodbyeChannelPrompt": "**Aktuell:** {current}\n\nWähle den Kanal für Abschiedsnachrichten.",
+        "needPermissions": "Ich brauche **Kanal ansehen**, **Nachrichten senden** und **Links einbetten** in {channel}.",
+        "channelUpdated": "Kanal aktualisiert",
+        "welcomeChannelNow": "Begrüßungsnachrichten gehen jetzt nach {channel}.",
+        "goodbyeChannelNow": "Abschiedsnachrichten gehen jetzt nach {channel}.",
+        "noChannel": "Kein Kanal gewählt, nichts geändert.",
+        "welcomeMessageTitle": "Begrüßungsnachricht",
+        "goodbyeMessageTitle": "Abschiedsnachricht",
+        "messageLabel": "Nachricht (Variablen: {user}, {server} usw.)",
+        "saved": "Gespeichert",
+        "welcomeSaved": "Begrüßungsnachricht gespeichert.",
+        "goodbyeSaved": "Abschiedsnachricht gespeichert.",
+        "imageHint": "Füge eine Bild-URL ein **oder** lade eine Datei hoch. Wenn du beides machst, zählt der Upload. Lass beides leer, um das Bild zu entfernen.",
+        "imageUrlLabel": "Bild-URL (optional)",
+        "imageUploadLabel": "Oder eine Bilddatei hochladen (optional)",
+        "imageBadProtocol": "Die Bild-URL muss mit `http://` oder `https://` beginnen.",
+        "imageBadUrl": "Diese Bild-URL sieht nicht richtig aus.",
+        "welcomeImageTitle": "Begrüßungsbild",
+        "goodbyeImageTitle": "Abschiedsbild",
+        "imageSaved": "Bild gespeichert.",
+        "imageRemoved": "Bild entfernt.",
+        "welcomeCopyKept": "\nEine Kopie liegt in <#{channelId}>. Lösch diese Nachricht nicht, die Begrüßung lädt das Bild von dort.",
+        "goodbyeCopyKept": "\nEine Kopie liegt in <#{channelId}>. Lösch diese Nachricht nicht, der Abschied lädt das Bild von dort.",
+        "copyFailed": "\nIch konnte keine Kopie behalten (ich brauche Kanal ansehen, Nachrichten senden und Dateien anhängen im Audit-Log-Kanal oder hier), daher wird das Bild in etwa einem Tag nicht mehr angezeigt."
+    },
+    "post": {
+        "defaultWelcome": "Willkommen auf {server}, {user}. Du bist Mitglied Nummer {memberCount}.",
+        "defaultGoodbye": "{user} hat den Server verlassen. Wir sind jetzt {memberCount} Mitglieder.",
+        "welcomeTitle": "Willkommen",
+        "goodbyeTitle": "Auf Wiedersehen",
+        "user": "Nutzer",
+        "memberCount": "Mitglieder"
+    }
+}

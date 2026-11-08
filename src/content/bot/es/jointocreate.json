@@ -1,0 +1,148 @@
+{
+    "cmd": {
+        "description": "Gestionar los canales de voz Join to Create",
+        "setup": {
+            "description": "Configurar un canal de voz Join to Create",
+            "category": "Categoría en la que crear el canal.",
+            "channelName": "Elige una plantilla para los nombres de los canales de voz temporales.",
+            "userLimit": "Máximo de personas en los canales temporales. (0 = sin límite)",
+            "bitrate": "Tasa de bits de los canales temporales en kbps (8-96)."
+        },
+        "dashboard": {
+            "description": "Cambiar los ajustes de Join to Create",
+            "triggerChannel": "El canal disparador de Join to Create que quieres configurar."
+        }
+    },
+    "fallbackRoomName": "Sala de voz",
+    "createFailedDm": "No pude crear tu canal de voz temporal. Avisa a un admin del servidor.",
+    "error": {
+        "adminCommand": "Necesitas el permiso **Administrador** para usar este comando.",
+        "adminControls": "Necesitas el permiso **Administrador** para usar estos botones.",
+        "adminSettings": "Necesitas el permiso **Administrador** para cambiar estos ajustes.",
+        "adminRemove": "Necesitas el permiso **Administrador** para quitar canales.",
+        "tryAgain": "Se produjo un error. Inténtalo de nuevo.",
+        "unexpected": "Se produjo un error inesperado. Inténtalo de nuevo o contacta con soporte.",
+        "occurred": "Se produjo un error.",
+        "processing": "Se produjo un error al procesar tu solicitud.",
+        "setupFailed": "No se pudo configurar Join to Create. Revisa los permisos del bot.",
+        "controlsFailed": "No se pudieron abrir los ajustes. Vuelve a ejecutar `/jointocreate dashboard`.",
+        "loadFailed": "No se pudieron cargar los ajustes.",
+        "updateSettings": "Se produjo un error al cambiar los ajustes.",
+        "updateTemplate": "Se produjo un error al cambiar la plantilla.",
+        "updateLimit": "Se produjo un error al cambiar el límite de personas.",
+        "updateBitrate": "Se produjo un error al cambiar la tasa de bits.",
+        "removeFailed": "Se produjo un error al quitar el canal."
+    },
+    "setup": {
+        "title": "Join to Create está configurado",
+        "created": "Canal Join to Create creado: {channel}",
+        "settings": "**Ajustes:**",
+        "template": "• Plantilla: `{template}`",
+        "userLimit": "• Límite de personas: {limit}",
+        "bitrate": "• Tasa de bits: {kbps} kbps",
+        "category": "• Categoría: {category}",
+        "categoryRoot": "• Categoría: ninguna (nivel principal)"
+    },
+    "limit": {
+        "unlimited": "Sin límite",
+        "users": {
+            "one": "{count} persona",
+            "many": "{count} personas",
+            "other": "{count} personas"
+        }
+    },
+    "panel": {
+        "title": "Ajustes de Join to Create",
+        "description": "Ajustes de {channel}",
+        "nameTemplate": "Plantilla del nombre del canal",
+        "userLimit": "Límite de personas",
+        "bitrate": "Tasa de bits",
+        "kbps": "{kbps} kbps",
+        "footer": "Usa los botones para cambiar los ajustes · Un canal disparador por servidor",
+        "expired": "Estos botones han caducado. Vuelve a ejecutar el comando para hacer cambios.",
+        "buttonName": "Plantilla del nombre",
+        "buttonLimit": "Límite de personas",
+        "buttonBitrate": "Tasa de bits",
+        "buttonRemove": "Quitar canal"
+    },
+    "modal": {
+        "pickTemplate": "Elige una plantilla de nombre",
+        "limitLabel": "Límite de personas (0-99, 0 = sin límite)",
+        "limitPlaceholder": "de 0 a 99",
+        "bitrateLabel": "Tasa de bits en kbps (8-384)",
+        "bitratePlaceholder": "de 8 a 384",
+        "updated": "Actualizado",
+        "templateChanged": "Plantilla del nombre del canal cambiada a `{template}`",
+        "limitChanged": "Límite de personas cambiado: {limit}",
+        "bitrateChanged": "Tasa de bits cambiada a {kbps} kbps"
+    },
+    "remove": {
+        "yes": "Sí, eliminar",
+        "cancel": "Cancelar",
+        "confirmTitle": "¿Quitar este canal?",
+        "confirmBody": "¿Quitar **{channel}** de Join to Create? No se puede deshacer.",
+        "doneTitle": "Quitado",
+        "doneBody": "**{channel}** se ha quitado de Join to Create.",
+        "cancelledTitle": "Cancelado",
+        "cancelledBody": "Se canceló la eliminación del canal."
+    },
+    "form": {
+        "invalid": "Este formulario ya no es válido. Vuelve a ejecutar /jointocreate config.",
+        "expired": "Este formulario ha caducado. Vuelve a ejecutar /jointocreate config.",
+        "notChanged": "{error} No se cambió nada.",
+        "noLongerTrigger": "<#{channelId}> ya no es un canal Join to Create. No se cambió nada.",
+        "database": "La base de datos no responde, así que no se cambió nada. Inténtalo de nuevo en un minuto.",
+        "saved": "{text} Los nuevos canales temporales de <#{channelId}> lo usarán.",
+        "name": {
+            "title": "Plantilla del nombre del canal",
+            "label": "Nueva plantilla de nombre",
+            "hint": "Hasta 100 caracteres. {username}, {display_name}, {user_tag} y {guild_name} se rellenan solos.",
+            "error": "La plantilla de nombre debe tener de 1 a {max} caracteres en una sola línea.",
+            "changed": "Plantilla del nombre del canal cambiada a `{template}`."
+        },
+        "limit": {
+            "title": "Límite de personas",
+            "label": "Personas por canal temporal",
+            "hint": "Un número entero de 0 a {max}. 0 significa sin límite.",
+            "error": "El límite de personas debe ser un número entero de 0 a {max}.",
+            "changedNone": "Límite de personas quitado (sin límite).",
+            "changed": {
+                "one": "Límite de personas cambiado a {count} persona.",
+                "many": "Límite de personas cambiado a {count} personas.",
+                "other": "Límite de personas cambiado a {count} personas."
+            }
+        },
+        "bitrate": {
+            "title": "Tasa de bits",
+            "label": "Calidad de sonido en kbps",
+            "hint": "Un número entero de {min} a {max}. 64 es normal, 96 buena, 128 alta.",
+            "error": "La tasa de bits debe ser un número entero de {min} a {max} kbps.",
+            "changed": "Tasa de bits cambiada a {kbps} kbps."
+        }
+    },
+    "service": {
+        "templateText": "La plantilla del nombre del canal debe ser un texto válido.",
+        "templateLength": "La plantilla del nombre del canal no puede superar los {max} caracteres.",
+        "templateChars": "La plantilla no puede contener @, #, : ni el acento grave (backtick).",
+        "templatePlaceholder": "Marcador desconocido: {placeholder}. Marcadores permitidos: {allowed}",
+        "bitrateNumber": "Introduce un número válido para la tasa de bits.",
+        "bitrateRange": "La tasa de bits debe estar entre 8 y 384 kbps.",
+        "limitNumber": "Introduce un número válido para el límite de personas.",
+        "limitRange": "El límite de personas debe estar entre 0 (sin límite) y 99.",
+        "systemError": "Se produjo un error del sistema. Inténtalo de nuevo.",
+        "invalidIds": "Datos del servidor o del canal no válidos.",
+        "alreadyTrigger": "Este canal ya es un disparador de Join to Create.",
+        "alreadyConfigured": "Este servidor ya tiene un canal Join to Create. Cámbialo con `/jointocreate dashboard` o quítalo antes de crear uno nuevo.",
+        "saveFailed": "No se pudo configurar Join to Create. Inténtalo de nuevo.",
+        "setupFailed": "No se pudo configurar Join to Create.",
+        "dbUnavailable": "La base de datos no está disponible ahora. Inténtalo más tarde.",
+        "notTrigger": "Este canal no es un disparador de Join to Create.",
+        "notConfigured": "Este canal no está configurado como disparador de Join to Create.",
+        "updateFailed": "No se pudieron cambiar los ajustes.",
+        "removeFailed": "No se pudo quitar el canal disparador.",
+        "readFailed": "No se pudieron leer los ajustes.",
+        "channelReadFailed": "No se pudieron leer los ajustes del canal. Inténtalo de nuevo.",
+        "alreadySetUp": "Este servidor ya tiene un canal Join to Create: {channel}\n\nCámbialo o quítalo antes de crear uno nuevo.",
+        "notCategory": "La categoría debe ser una categoría de este servidor."
+    }
+}

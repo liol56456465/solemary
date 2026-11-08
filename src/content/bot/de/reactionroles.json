@@ -1,0 +1,133 @@
+{
+    "cmd": {
+        "description": "Reaktionsrollen verwalten",
+        "setup": {
+            "description": "Ein neues Reaktionsrollen-Panel einrichten",
+            "channel": "Der Kanal, in den das Reaktionsrollen-Panel gepostet wird",
+            "title": "Titel des Reaktionsrollen-Panels",
+            "text": "Beschreibung des Reaktionsrollen-Panels",
+            "role1": "Erste Rolle",
+            "role2": "Zweite Rolle",
+            "role3": "Dritte Rolle",
+            "role4": "Vierte Rolle",
+            "role5": "Fünfte Rolle"
+        },
+        "dashboard": {
+            "description": "Deine Reaktionsrollen-Panels verwalten und einstellen",
+            "panel": "Wähle das Reaktionsrollen-Panel, das du verwalten willst"
+        }
+    },
+    "autocomplete": {
+        "roles": {
+            "one": "#{channel} · {count} Rolle",
+            "other": "#{channel} · {count} Rollen"
+        }
+    },
+    "setup": {
+        "warningTitle": "Problem mit Rollen",
+        "createdTitle": "Panel erstellt",
+        "createdText": "Reaktionsrollen-Panel in {channel} gepostet.\n\n{url}"
+    },
+    "dashboard": {
+        "title": "Reaktionsrollen-Dashboard",
+        "untitled": "Panel ohne Titel",
+        "none": "`Keine`",
+        "intro": "**Titel:** {title}\n\nWähle unten eine Option, um eine Einstellung zu ändern.",
+        "viewLink": "\n[Hier klicken, um das Panel zu sehen]({url})",
+        "fieldStatus": "Panel-Status",
+        "fieldChannel": "Kanal",
+        "channelNotFound": "`Nicht gefunden`",
+        "fieldRoles": "Rollen",
+        "fieldRoleList": "Rollenliste",
+        "footer": "Das Dashboard schließt nach 10 Minuten ohne Aktivität",
+        "repostButton": "Panel neu posten",
+        "editTextButton": "Panel-Text bearbeiten",
+        "deleteButton": "Panel löschen",
+        "actionPlaceholder": "Aktion wählen...",
+        "addRoleLabel": "Rolle hinzufügen",
+        "addRoleHint": "Eine Rolle zu diesem Panel hinzufügen (insgesamt bis zu 25)",
+        "removeRoleLabel": "Rolle entfernen",
+        "removeRoleHint": "Eine Rolle von diesem Panel entfernen",
+        "noPanels": "Keine Reaktionsrollen-Panels gefunden. Nutze zuerst `/reactroles setup`.",
+        "panelRequired": "Es gibt mehrere Panels. Wähle eins mit der Option **panel**.",
+        "repostedTitle": "Panel neu gepostet",
+        "repostedText": "Reaktionsrollen-Panel in {channel} wiederhergestellt.",
+        "channelMissing": "Der Kanal des Panels existiert nicht mehr.",
+        "noValidRoles": "Dieses Panel hat keine gültigen Rollen mehr, die neu gepostet werden können.",
+        "editModalTitle": "Panel-Text bearbeiten",
+        "editTitleLabel": "Titel",
+        "editDescriptionLabel": "Beschreibung",
+        "editModalFailed": "Das Fenster zum Bearbeiten des Panel-Texts konnte nicht geöffnet werden. Bitte versuch es noch einmal.",
+        "updatedTitle": "Panel aktualisiert",
+        "updatedText": "Titel und Beschreibung wurden aktualisiert.",
+        "addPlaceholder": "Rolle zum Hinzufügen wählen...",
+        "addTitle": "Rolle hinzufügen",
+        "addText": "**Aktuelle Rollen:** {current}/25\n\nWähle eine Rolle, die zu diesem Panel hinzugefügt werden soll.",
+        "addedTitle": "Rolle hinzugefügt",
+        "addedText": "{role} wurde zum Panel hinzugefügt.",
+        "noRoleSelected": "Keine Rolle gewählt. Es wurde nichts geändert.",
+        "rolesGone": "Die Rollen dieses Panels gibt es auf dem Server nicht mehr.",
+        "removePlaceholder": "Rolle zum Entfernen wählen...",
+        "removeTitle": "Rolle entfernen",
+        "removeText": "Wähle die Rolle, die du von diesem Panel entfernen willst.",
+        "removedTitle": "Rolle entfernt",
+        "removedLast": "Das war die letzte Rolle des Panels. Das Panel wurde gelöscht.",
+        "removedText": "{role} wurde vom Panel entfernt.",
+        "noPanelsLeft": "Es sind keine Panels mehr übrig. Erstelle mit `/reactroles setup` ein neues.",
+        "deletedOther": "Panel gelöscht. Nutze `/reactroles dashboard`, um ein anderes Panel zu verwalten.",
+        "thisPanel": "dieses Panel",
+        "deleteModalTitle": "Reaktionsrollen-Panel löschen",
+        "deleteWarning": "Du löschst gleich endgültig das Panel **{title}**. Dabei werden die Discord-Nachricht und alle zugehörigen Reaktionsrollen entfernt.",
+        "deleteConfirm": "Ich bestätige, das ist endgültig",
+        "deleteMustTick": "Setz das Häkchen zur Bestätigung, um das Panel zu löschen.",
+        "deletedTitle": "Panel gelöscht",
+        "deletedText": "**{title}** wurde gelöscht."
+    },
+    "panel": {
+        "defaultTitle": "Reaktionsrollen",
+        "defaultDescription": "Wähle deine Rollen im Menü unten.",
+        "availableRoles": "Verfügbare Rollen",
+        "placeholder": "Wähle deine Rollen",
+        "optionDescription": "Rolle {role} hinzufügen/entfernen",
+        "footer": "Wähle deine Rollen im Auswahlmenü unten"
+    },
+    "errors": {
+        "maxRoles": "Dieses Panel hat schon die höchstens möglichen {max} Rollen.",
+        "alreadyIn": "{role} ist schon in diesem Panel.",
+        "everyone": "@everyone kannst du nicht verwenden.",
+        "managed": "Verwaltete Rollen und Bot-Rollen können nicht verwendet werden.",
+        "dangerous": "Diese Rolle hat heikle Berechtigungen (Administrator, Server verwalten usw.) und kann nicht verwendet werden.",
+        "hierarchy": "Diese Rolle steht in der Rollenliste über meiner höchsten Rolle. Schieb zuerst meine Rolle darüber.",
+        "panelGone": "Dieses Reaktionsrollen-Panel gibt es nicht mehr.",
+        "serverNotFound": "Server nicht gefunden.",
+        "roleGone": "Diese Rolle gibt es nicht mehr.",
+        "rejectDuplicate": "**{role}** - Diese Rolle wurde mehr als einmal gewählt",
+        "rejectHierarchy": "**{role}** - Meine Bot-Rolle steht in der Rollenliste deines Servers unter dieser Rolle, daher kann ich sie nicht vergeben",
+        "rejectDangerous": "**{role}** - Diese Rolle hat gefährliche Berechtigungen (Administrator, Server verwalten usw.)",
+        "rejectManaged": "**{role}** - Das ist eine verwaltete Rolle (Integrations- oder Bot-Rolle)",
+        "rejectEveryone": "**{role}** - Die Rolle @everyone kann nicht verwendet werden",
+        "rejectMissing": "`{roleId}` - Diese Rolle gibt es nicht mehr",
+        "titleLength": "Der Titel muss 1–{max} Zeichen lang sein.",
+        "descriptionLength": "Die Beschreibung muss 1–{max} Zeichen lang sein.",
+        "channelType": "Bitte wähle einen Text- oder Ankündigungskanal.",
+        "manageRoles": "Ich brauche die Berechtigung „Rollen verwalten“, um Reaktionsrollen einzurichten.",
+        "sendMessages": "Ich darf in <#{channelId}> keine Nachrichten (mit Embeds) senden.",
+        "panelLimit": "Dein Server hat schon die höchstens möglichen {max} Reaktionsrollen-Panels. Lösch ein Panel, um ein neues zu erstellen.",
+        "cannotAdd": "Diese Rollen können nicht hinzugefügt werden:\n{list}",
+        "atLeastOne": "Du musst mindestens eine gültige Rolle angeben."
+    },
+    "select": {
+        "outsideGuild": "Dieses Reaktionsrollen-Menü funktioniert nur auf einem Server.",
+        "inactive": "Diese Reaktionsrollen-Nachricht ist nicht mehr aktiv.",
+        "cannotVerify": "Ich konnte meine Server-Berechtigungen nicht prüfen. Bitte versuch es noch einmal.",
+        "noManageRoles": "Ich habe auf diesem Server keine Berechtigung, Rollen zu verwalten.",
+        "updated": "Deine Rollen sind aktualisiert.",
+        "added": "**Hinzugefügt:** {roles}",
+        "removed": "**Entfernt:** {roles}",
+        "nothing": "Nichts geändert.",
+        "skipped": {
+            "one": "**Übersprungen:** {count} Rolle (mir fehlt die Berechtigung)",
+            "other": "**Übersprungen:** {count} Rollen (mir fehlt die Berechtigung)"
+        }
+    }
+}

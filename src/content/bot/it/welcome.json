@@ -1,0 +1,177 @@
+{
+    "cmd": {
+        "welcome": {
+            "description": "Configura i messaggi di benvenuto",
+            "setup": {
+                "description": "Imposta il messaggio di benvenuto",
+                "channel": "Il canale in cui inviare i messaggi di benvenuto",
+                "message": "Messaggio di benvenuto. Variabili:",
+                "image": "URL di un'immagine da aggiungere al messaggio",
+                "ping": "Menziona il membro nel messaggio"
+            }
+        },
+        "goodbye": {
+            "description": "Configura i messaggi di addio",
+            "setup": {
+                "description": "Imposta il messaggio di addio",
+                "channel": "Il canale in cui inviare i messaggi di addio",
+                "message": "Messaggio di addio. Variabili:"
+            }
+        },
+        "greet": {
+            "description": "Gestisci le impostazioni di benvenuto e addio",
+            "dashboard": "Apri le impostazioni di benvenuto e addio"
+        },
+        "autorole": {
+            "description": "Gestisci i ruoli dati automaticamente ai nuovi membri",
+            "add": {
+                "description": "Aggiungi un ruolo da dare automaticamente ai nuovi membri",
+                "role": "Il ruolo da aggiungere"
+            },
+            "remove": {
+                "description": "Togli un ruolo dall'assegnazione automatica",
+                "role": "Il ruolo da togliere"
+            },
+            "list": "Mostra tutti i ruoli assegnati automaticamente"
+        }
+    },
+    "manageServer": "Ti serve il permesso **Gestisci server** per usare `{command}`.",
+    "invalidImage": "Inserisci un URL di immagine valido (deve iniziare con http:// o https://).",
+    "setupDone": {
+        "preview": "Anteprima",
+        "ping": "Menziona il membro",
+        "status": "Stato",
+        "yes": "Sì",
+        "no": "No",
+        "on": "Attivo",
+        "footer": "Altre opzioni in /greet dashboard"
+    },
+    "welcome": {
+        "alreadySet": "Il benvenuto è già impostato per <#{channelId}>. Usa **/greet dashboard** per cambiare canale, messaggio, menzione o immagine.",
+        "empty": "Il messaggio di benvenuto non può essere vuoto",
+        "doneTitle": "Messaggi di benvenuto impostati",
+        "doneBody": "I messaggi di benvenuto andranno in {channel}.",
+        "failed": "Si è verificato un errore durante la configurazione del benvenuto. Riprova."
+    },
+    "goodbye": {
+        "alreadySet": "L'addio è già impostato per <#{channelId}>. Usa **/greet dashboard** per cambiare canale, messaggio, menzione o immagine.",
+        "empty": "Il messaggio di addio non può essere vuoto",
+        "doneTitle": "Messaggi di addio impostati",
+        "doneBody": "I messaggi di addio andranno in {channel}.",
+        "failed": "Si è verificato un errore durante la configurazione dell'addio. Riprova."
+    },
+    "autorole": {
+        "verificationConflict": "Non puoi aggiungere un ruolo automatico mentre la verifica o AutoVerify è attivo. Disattivali prima.",
+        "alreadySet": "Il ruolo {role} è già assegnato automaticamente.",
+        "changed": "Ruolo automatico cambiato in {role}. Puoi averne solo uno.",
+        "set": "Ruolo automatico impostato su {role}.",
+        "addFailed": "Si è verificato un errore durante l'aggiunta del ruolo. Riprova.",
+        "notSet": "Il ruolo {role} non è assegnato automaticamente.",
+        "removed": "{role} non viene più dato ai nuovi membri.",
+        "removeFailed": "Si è verificato un errore durante la rimozione del ruolo. Riprova.",
+        "verificationOn": "La verifica è attiva",
+        "autoVerifyOn": "AutoVerify è attivo",
+        "needsFixing": "\n\n**Da sistemare:**\n{list}",
+        "none": "Nessun ruolo automatico impostato.",
+        "noneWorking": "Nessun ruolo automatico valido trovato. Ho tolto quello che non esiste più.",
+        "title": "Ruolo automatico",
+        "footer": "Puoi avere un solo ruolo automatico.",
+        "listFailed": "Si è verificato un errore durante l'elenco dei ruoli automatici. Riprova."
+    },
+    "greet": {
+        "failed": "Qualcosa è andato storto."
+    },
+    "dashboard": {
+        "notSet": "`Non impostato`",
+        "title": "Benvenuto e addio",
+        "description": "Messaggi di benvenuto e addio per **{server}**.\nI pulsanti attivano o disattivano ciascuno. Scegli un'impostazione nel menu per cambiarla.",
+        "on": "Attivo",
+        "off": "Disattivo",
+        "field": {
+            "welcomeChannel": "Canale di benvenuto",
+            "welcome": "Benvenuto",
+            "welcomePing": "Menzione di benvenuto",
+            "goodbyeChannel": "Canale di addio",
+            "goodbye": "Addio",
+            "goodbyePing": "Menzione di addio",
+            "welcomeMessage": "Messaggio di benvenuto",
+            "goodbyeMessage": "Messaggio di addio"
+        },
+        "footer": "Si chiude dopo 10 minuti senza uso",
+        "menu": {
+            "placeholder": "Scegli un'impostazione da cambiare",
+            "welcomeChannel": "Canale di benvenuto",
+            "welcomeChannelHint": "Dove vanno i messaggi di benvenuto",
+            "welcomeMessage": "Messaggio di benvenuto",
+            "welcomeMessageHint": "Cosa dice il bot quando qualcuno entra",
+            "welcomeImage": "Immagine di benvenuto",
+            "welcomeImageHint": "Immagine mostrata con il messaggio di benvenuto",
+            "goodbyeChannel": "Canale di addio",
+            "goodbyeChannelHint": "Dove vanno i messaggi di addio",
+            "goodbyeMessage": "Messaggio di addio",
+            "goodbyeMessageHint": "Cosa dice il bot quando qualcuno esce",
+            "goodbyeImage": "Immagine di addio",
+            "goodbyeImageHint": "Immagine mostrata con il messaggio di addio"
+        },
+        "button": {
+            "welcome": "Benvenuto",
+            "goodbye": "Addio",
+            "pingWelcome": "Menziona al benvenuto",
+            "pingGoodbye": "Menziona all'addio"
+        },
+        "notConfigured": "Né il benvenuto né l'addio sono ancora impostati. Esegui prima `/welcome setup` o `/goodbye setup`.",
+        "choiceFailed": "Qualcosa è andato storto con questa scelta.",
+        "saveFailed": "Qualcosa è andato storto durante il salvataggio. Riprova.",
+        "openFailed": "Impossibile aprire le impostazioni di benvenuto.",
+        "welcomeUpdated": "Benvenuto aggiornato",
+        "welcomeNowOn": "I messaggi di benvenuto ora sono **attivi**.",
+        "welcomeNowOff": "I messaggi di benvenuto ora sono **disattivi**.",
+        "goodbyeUpdated": "Addio aggiornato",
+        "goodbyeNowOn": "I messaggi di addio ora sono **attivi**.",
+        "goodbyeNowOff": "I messaggi di addio ora sono **disattivi**.",
+        "welcomePingUpdated": "Menzione di benvenuto aggiornata",
+        "welcomePingOn": "I nuovi membri saranno menzionati nel messaggio di benvenuto.",
+        "welcomePingOff": "I nuovi membri **non** saranno menzionati nel messaggio di benvenuto.",
+        "goodbyePingUpdated": "Menzione di addio aggiornata",
+        "goodbyePingOn": "I membri che escono saranno menzionati nel messaggio di addio.",
+        "goodbyePingOff": "I membri che escono **non** saranno menzionati nel messaggio di addio.",
+        "closedTitle": "Chiuso",
+        "closedBody": "Chiuso dopo 10 minuti senza uso. Esegui di nuovo il comando per riaprirlo.",
+        "channelPlaceholder": "Scegli un canale testuale",
+        "welcomeChannelTitle": "Canale di benvenuto",
+        "welcomeChannelPrompt": "**Attuale:** {current}\n\nScegli il canale per i messaggi di benvenuto.",
+        "goodbyeChannelTitle": "Canale di addio",
+        "goodbyeChannelPrompt": "**Attuale:** {current}\n\nScegli il canale per i messaggi di addio.",
+        "needPermissions": "Mi servono **Visualizza canale**, **Invia messaggi** e **Incorpora link** in {channel}.",
+        "channelUpdated": "Canale aggiornato",
+        "welcomeChannelNow": "I messaggi di benvenuto ora vanno in {channel}.",
+        "goodbyeChannelNow": "I messaggi di addio ora vanno in {channel}.",
+        "noChannel": "Nessun canale scelto, non è cambiato nulla.",
+        "welcomeMessageTitle": "Messaggio di benvenuto",
+        "goodbyeMessageTitle": "Messaggio di addio",
+        "messageLabel": "Messaggio (variabili: {user}, {server}, ecc.)",
+        "saved": "Salvato",
+        "welcomeSaved": "Messaggio di benvenuto salvato.",
+        "goodbyeSaved": "Messaggio di addio salvato.",
+        "imageHint": "Incolla un URL di immagine **oppure** carica un file. Se fai entrambe le cose, vince il file. Lascia entrambi vuoti per togliere l'immagine.",
+        "imageUrlLabel": "URL dell'immagine (facoltativo)",
+        "imageUploadLabel": "Oppure carica un'immagine (facoltativo)",
+        "imageBadProtocol": "L'URL dell'immagine deve iniziare con `http://` o `https://`.",
+        "imageBadUrl": "Questo URL di immagine non sembra corretto.",
+        "welcomeImageTitle": "Immagine di benvenuto",
+        "goodbyeImageTitle": "Immagine di addio",
+        "imageSaved": "Immagine salvata.",
+        "imageRemoved": "Immagine tolta.",
+        "welcomeCopyKept": "\nUna copia è conservata in <#{channelId}>. Non eliminare quel messaggio, il benvenuto carica l'immagine da lì.",
+        "goodbyeCopyKept": "\nUna copia è conservata in <#{channelId}>. Non eliminare quel messaggio, l'addio carica l'immagine da lì.",
+        "copyFailed": "\nNon sono riuscito a conservare una copia (mi servono Visualizza canale, Invia messaggi e Allega file nel canale del registro attività o qui), quindi questa immagine smetterà di comparire tra circa un giorno."
+    },
+    "post": {
+        "defaultWelcome": "Benvenuto su {server}, {user}. Sei il membro numero {memberCount}.",
+        "defaultGoodbye": "{user} ha lasciato il server. Ora siamo {memberCount} membri.",
+        "welcomeTitle": "Benvenuto",
+        "goodbyeTitle": "Arrivederci",
+        "user": "Utente",
+        "memberCount": "Numero di membri"
+    }
+}

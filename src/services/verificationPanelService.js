@@ -10,6 +10,7 @@ import { getWelcomeConfig } from '../utils/database.js';
 import { getVerificationPanelStatus } from '../utils/panelStatus.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { logger } from '../utils/logger.js';
+import { botText, textForGuild } from '../utils/botText.js';
 
 const PANEL_PERMISSIONS = [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks];
 
@@ -17,53 +18,68 @@ function refused(message, type = ErrorTypes.CONFIGURATION) {
     return createError(message, type, message, { expected: true, suppressErrorLog: true });
 }
 
-/** The panel message (embed + "verify_user" button) for the stored settings. */
-export function buildVerificationPanelPayload(cfg = {}) {
+/** The language of a panel posted in `guild`: the server's (a public post). */
+export function panelLanguage(guild) {
+    return textForGuild(guild?.id ?? null, { purpose: 'public' }).lang;
+}
+
+/**
+ * The panel message (embed + "verify_user" button) for the stored settings, in `lang` (the
+ * server's language). An admin's own message / button text is shown as written; the bot's
+ * defaults (nothing stored, or the stored English default from /verification setup) are translated.
+ */
+export function buildVerificationPanelPayload(cfg = {}, { lang } = {}) {
+    const tr = botText(lang);
+    const defaults = botConfig.verification || {};
+    const message = cfg.message && cfg.message !== defaults.defaultMessage ? cfg.message : tr.t('verification.panel.defaultMessage');
+    const button = cfg.buttonText && cfg.buttonText !== defaults.defaultButtonText ? cfg.buttonText : tr.t('verification.panel.defaultButton');
     return {
         embeds: [new EmbedBuilder()
-            .setTitle('Server verification')
-            .setDescription(cfg.message || botConfig.verification?.defaultMessage || 'Press the button below to get access to the rest of the server.')
+            .setTitle(tr.t('verification.panel.title'))
+            .setDescription(message)
             .setColor(getColor('success'))],
         components: [new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId('verify_user')
-                .setLabel(cfg.buttonText || botConfig.verification?.defaultButtonText || 'Verify')
+                .setLabel(button)
                 .setStyle(ButtonStyle.Success),
         )],
     };
 }
 
-function assertCanPost(guild, channel) {
+function assertCanPost(guild, channel, lang) {
     const me = guild?.members?.me;
     const granted = me && typeof channel?.permissionsFor === 'function' ? channel.permissionsFor(me) : null;
     if (!PANEL_PERMISSIONS.every((perm) => granted?.has?.(perm))) {
-        throw refused('I need **View Channel**, **Send Messages**, and **Embed Links** in the verification channel.', ErrorTypes.PERMISSION);
+        throw refused(botText(lang).t('verification.errors.panelPerms'), ErrorTypes.PERMISSION);
     }
 }
 
 /**
  * Checks /verification setup does before posting: the bot's permissions in the channel
  * and Manage Roles, an assignable verified role (not @everyone, not managed, below my
- * highest role), and no AutoVerify / AutoRole configured. Throws with the message.
+ * highest role), and no AutoVerify / AutoRole configured. Throws with the message (in `lang`,
+ * the admin's language; default English, e.g. for the web dashboard).
  */
-export async function checkVerificationSetup(client, guild, { channel, role }) {
+export async function checkVerificationSetup(client, guild, { channel, role, lang }) {
+    const tr = botText(lang);
     const me = guild.members?.me;
-    if (!me) throw refused('I could not verify my permissions in this server. Please try again in a moment.');
-    assertCanPost(guild, channel);
+    if (!me) throw refused(tr.t('verification.errors.permsUnknown'));
+    assertCanPost(guild, channel, lang);
     if (!me.permissions?.has?.(PermissionFlagsBits.ManageRoles)) {
-        throw refused("I need the 'Manage Roles' permission to give verified roles.", ErrorTypes.PERMISSION);
+        throw refused(tr.t('verification.errors.needManageRoles'), ErrorTypes.PERMISSION);
     }
     if (!role || role.id === guild.id || role.managed) {
-        throw refused('Please choose a normal assignable role (not @everyone or an integration-managed role).', ErrorTypes.VALIDATION);
+        throw refused(tr.t('verification.errors.badRole'), ErrorTypes.VALIDATION);
     }
     if (role.position >= (me.roles?.highest?.position ?? 0)) {
-        throw refused('The verified role must be below my highest role in the server role hierarchy.', ErrorTypes.PERMISSION);
+        throw refused(tr.t('verification.errors.roleTooHigh'), ErrorTypes.PERMISSION);
     }
     const [guildConfig, welcomeConfig] = await Promise.all([getGuildConfig(client, guild.id), getWelcomeConfig(client, guild.id)]);
     const autoVerify = Boolean(guildConfig.verification?.autoVerify?.enabled);
     const autoRole = Boolean(guildConfig.autoRole) || (Array.isArray(welcomeConfig?.roleIds) && welcomeConfig.roleIds.length > 0);
     if (autoVerify || autoRole) {
-        throw refused('You cannot enable the verification system while **AutoVerify** or **AutoRole** is configured. Disable those first.');
+        throw refused(tr.t('verification.errors.conflict'));
     }
 }
 
@@ -71,13 +87,13 @@ export async function checkVerificationSetup(client, guild, { channel, role }) {
  * /verification setup: checks, posts the panel and saves the settings (enabled).
  * Resolves { message, settings }.
  */
-export async function setupVerification(client, guild, { channel, role, message, buttonText }) {
-    await checkVerificationSetup(client, guild, { channel, role });
+export async function setupVerification(client, guild, { channel, role, message, buttonText, lang }) {
+    await checkVerificationSetup(client, guild, { channel, role, lang });
     const cfg = {
         message: message || botConfig.verification?.defaultMessage,
         buttonText: buttonText || botConfig.verification?.defaultButtonText,
     };
-    const sent = await channel.send(buildVerificationPanelPayload(cfg));
+    const sent = await channel.send(buildVerificationPanelPayload(cfg, { lang: panelLanguage(guild) }));
     const settings = {
         enabled: true,
         channelId: channel.id,
@@ -96,7 +112,7 @@ export async function repostVerificationPanel(client, guild, cfg = null) {
     const channel = settings.channelId ? await guild.channels.fetch(settings.channelId).catch(() => null) : null;
     if (!channel) throw refused('The configured verification channel no longer exists. Set a new channel first.');
     assertCanPost(guild, channel);
-    const sent = await channel.send(buildVerificationPanelPayload(settings));
+    const sent = await channel.send(buildVerificationPanelPayload(settings, { lang: panelLanguage(guild) }));
     if (client?.db) await updateVerificationSettings(client, guild.id, { messageId: sent.id });
     settings.messageId = sent.id;
     return sent;
@@ -110,7 +126,7 @@ export async function refreshVerificationPanel(guild, cfg) {
         if (!channel) return false;
         const msg = await channel.messages.fetch(cfg.messageId).catch(() => null);
         if (!msg) return false;
-        await msg.edit(buildVerificationPanelPayload(cfg));
+        await msg.edit(buildVerificationPanelPayload(cfg, { lang: panelLanguage(guild) }));
         return true;
     } catch (error) {
         logger.warn('Could not update live verification panel:', error.message);
@@ -130,7 +146,7 @@ export async function publishVerificationPanel(client, guild) {
         if (status.recoveredId && status.recoveredId !== settings.messageId) {
             await updateVerificationSettings(client, guild.id, { messageId: status.recoveredId });
         }
-        await status.message.edit(buildVerificationPanelPayload(settings));
+        await status.message.edit(buildVerificationPanelPayload(settings, { lang: panelLanguage(guild) }));
         return { action: 'updated' };
     }
     const message = await repostVerificationPanel(client, guild, settings);

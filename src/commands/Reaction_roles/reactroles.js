@@ -15,6 +15,9 @@ import {
 } from '../../utils/panelStatus.js';
 import { startDashboardSession } from '../../utils/dashboardSession.js';
 import { getReactionRoleKey } from '../../utils/database/keys.js';
+import { textForGuild, textForInteraction } from '../../utils/botText.js';
+import { descriptionLocalizations as localizations } from '../../utils/commandLocalizations.js';
+import { buildReactionRolePanelPayload, panelFieldsWithRoles } from '../../services/reactionRoleService.js';
 
 const DASHBOARD_EPHEMERAL = MessageFlags.Ephemeral;
 const SELECT_OPTION_LABEL_LIMIT = 100;
@@ -29,50 +32,60 @@ export default {
     data: new SlashCommandBuilder()
         .setName('reactroles')
         .setDescription('Manage reaction role assignments')
+        .setDescriptionLocalizations(localizations('reactionroles.cmd.description'))
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addSubcommand(subcommand =>
             subcommand
                 .setName('setup')
                 .setDescription('Set up a new reaction role panel')
+                .setDescriptionLocalizations(localizations('reactionroles.cmd.setup.description'))
                 .addChannelOption(option => 
                     option.setName('channel')
                         .setDescription('The channel to send the reaction role message to')
+                        .setDescriptionLocalizations(localizations('reactionroles.cmd.setup.channel'))
                         .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
                         .setRequired(true)
                 )
                 .addStringOption(option =>
                     option.setName('title')
                         .setDescription('Title for the reaction role panel')
+                        .setDescriptionLocalizations(localizations('reactionroles.cmd.setup.title'))
                         .setRequired(true)
                 )
                 .addStringOption(option =>
                     option.setName('description')
                         .setDescription('Description for the reaction role panel')
+                        .setDescriptionLocalizations(localizations('reactionroles.cmd.setup.text'))
                         .setRequired(true)
                 )
                 .addRoleOption(option =>
                     option.setName('role1')
                         .setDescription('First role to add')
+                        .setDescriptionLocalizations(localizations('reactionroles.cmd.setup.role1'))
                         .setRequired(true)
                 )
                 .addRoleOption(option =>
                     option.setName('role2')
                         .setDescription('Second role to add')
+                        .setDescriptionLocalizations(localizations('reactionroles.cmd.setup.role2'))
                         .setRequired(false)
                 )
                 .addRoleOption(option =>
                     option.setName('role3')
                         .setDescription('Third role to add')
+                        .setDescriptionLocalizations(localizations('reactionroles.cmd.setup.role3'))
                         .setRequired(false)
                 )
                 .addRoleOption(option =>
                     option.setName('role4')
                         .setDescription('Fourth role to add')
+                        .setDescriptionLocalizations(localizations('reactionroles.cmd.setup.role4'))
                         .setRequired(false)
                 )
                 .addRoleOption(option =>
                     option.setName('role5')
                         .setDescription('Fifth role to add')
+                        .setDescriptionLocalizations(localizations('reactionroles.cmd.setup.role5'))
                         .setRequired(false)
                 )
         )
@@ -80,10 +93,12 @@ export default {
             subcommand
                 .setName('dashboard')
                 .setDescription('Manage and configure your reaction role panels')
+                .setDescriptionLocalizations(localizations('reactionroles.cmd.dashboard.description'))
                 .addStringOption(option =>
                     option
                         .setName('panel')
                         .setDescription('Select a reaction role panel to manage')
+                        .setDescriptionLocalizations(localizations('reactionroles.cmd.dashboard.panel'))
                         .setRequired(false)
                         .setAutocomplete(true)
                 )
@@ -124,6 +139,7 @@ export default {
                 return;
             }
 
+            const tr = textForInteraction(interaction);
             const choices = [];
             for (const panel of panels) {
                 if (!panel.messageId || !panel.channelId) continue;
@@ -135,7 +151,7 @@ export default {
                 const roleCount = Array.isArray(panel.roles) ? panel.roles.length : 0;
                 const label = cachedTitle
                     ? `${cachedTitle} (#${channel.name})`
-                    : `#${channel.name} · ${roleCount} role${roleCount === 1 ? '' : 's'}`;
+                    : tr.tp('reactionroles.autocomplete.roles', roleCount, { channel: channel.name });
 
                 choices.push({ name: label.substring(0, 100), value: panel.messageId });
                 if (choices.length >= 25) break;
@@ -151,6 +167,7 @@ export default {
 async function handleSetup(interaction) {
     const deferSuccess = await InteractionHelper.safeDefer(interaction);
     if (!deferSuccess) return;
+    const tr = textForInteraction(interaction);
 
     logger.info(`Reaction role setup initiated by ${interaction.user.tag} in guild ${interaction.guild.name}`);
 
@@ -162,18 +179,18 @@ async function handleSetup(interaction) {
     // Every check (channel, bot permissions, panel limit, role safety), posting, saving
     // and logging: services/reactionRoleService.js (shared with the web dashboard).
     const { message, rejected } = await createReactionRolePanel(interaction.client, interaction.guild, {
-        channel, title, description, roleIds, actorId: interaction.user.id, actorTag: interaction.user.tag,
+        channel, title, description, roleIds, actorId: interaction.user.id, actorTag: interaction.user.tag, lang: tr.lang,
     });
 
     if (rejected.length > 0) {
         await interaction.followUp({
-            embeds: [warningEmbed('Role validation warning', `The following roles cannot be added:\n${rejected.join('\n')}`)],
+            embeds: [warningEmbed(tr.t('reactionroles.setup.warningTitle'), tr.t('reactionroles.errors.cannotAdd', { list: rejected.join('\n') }))],
             flags: MessageFlags.Ephemeral
         });
     }
 
     await InteractionHelper.safeEditReply(interaction, {
-        embeds: [successEmbed('Panel created', `Reaction role panel posted in ${channel}.\n\n${message.url}`)]
+        embeds: [successEmbed(tr.t('reactionroles.setup.createdTitle'), tr.t('reactionroles.setup.createdText', { channel: String(channel), url: message.url }))]
     });
 }
 
@@ -188,6 +205,7 @@ async function fetchPanelDiscordMessage(guild, panelData) {
 }
 
 async function showPanelDashboard(interaction, panelData, discordMsg, guildId, guild, client, panelStatus = null) {
+    const tr = textForInteraction(interaction);
     if (!panelStatus && client) {
         panelStatus = await getReactionRolePanelStatus(client, guild, panelData);
         if (panelStatus.recoveredId) {
@@ -196,34 +214,34 @@ async function showPanelDashboard(interaction, panelData, discordMsg, guildId, g
         }
     }
 
-    const payload = buildReactionRoleDashboardPayload(panelData, discordMsg, guildId, guild, panelStatus);
+    const payload = buildReactionRoleDashboardPayload(panelData, discordMsg, guildId, guild, panelStatus, tr);
     await InteractionHelper.safeEditReply(interaction, { ...payload, flags: DASHBOARD_EPHEMERAL });
 }
 
-function buildReactionRoleDashboardPayload(panelData, discordMsg, guildId, guild, panelStatus = null) {
+function buildReactionRoleDashboardPayload(panelData, discordMsg, guildId, guild, panelStatus = null, tr = textForInteraction(null)) {
     const channel = guild.channels.cache.get(panelData.channelId);
-    const title = discordMsg?.embeds?.[0]?.title ?? 'Untitled Panel';
+    const title = discordMsg?.embeds?.[0]?.title ?? tr.t('reactionroles.dashboard.untitled');
     const roleList =
         panelData.roles.length > 0
             ? panelData.roles.map(id => `<@&${id}>`).join(',')
-            : '`None`';
+            : tr.t('reactionroles.dashboard.none');
 
     const showRepost = panelStatus?.exists === false && panelStatus?.reason === 'panel_deleted';
 
     const embed = new EmbedBuilder()
-        .setTitle('Reaction roles dashboard')
+        .setTitle(tr.t('reactionroles.dashboard.title'))
         .setDescription(
-            `**Title:** ${title}\n\nSelect an option below to modify a setting.${discordMsg ? `\n[Click Here to View Panel](${discordMsg.url})` : ''}`,
+            tr.t('reactionroles.dashboard.intro', { title }) + (discordMsg ? tr.t('reactionroles.dashboard.viewLink', { url: discordMsg.url }) : ''),
         )
         .setColor(getColor('info'))
         .addFields(
-            { name: 'Panel status', value: formatPanelStatusField(panelStatus), inline: false },
-            { name: 'Channel', value: channel ? `<#${channel.id}>` : '`Not found`', inline: true },
-            { name: 'Roles', value: `\`${panelData.roles.length} / 25\``, inline: true },
+            { name: tr.t('reactionroles.dashboard.fieldStatus'), value: formatPanelStatusField(panelStatus), inline: false },
+            { name: tr.t('reactionroles.dashboard.fieldChannel'), value: channel ? `<#${channel.id}>` : tr.t('reactionroles.dashboard.channelNotFound'), inline: true },
+            { name: tr.t('reactionroles.dashboard.fieldRoles'), value: `\`${panelData.roles.length} / 25\``, inline: true },
             { name: '\u200B', value: '\u200B', inline: true },
-            { name: 'Role list', value: roleList, inline: false },
+            { name: tr.t('reactionroles.dashboard.fieldRoleList'), value: roleList, inline: false },
         )
-        .setFooter({ text: 'Dashboard closes after 10 minutes of inactivity' })
+        .setFooter({ text: tr.t('reactionroles.dashboard.footer') })
         .setTimestamp();
 
     const buttons = [];
@@ -232,7 +250,7 @@ function buildReactionRoleDashboardPayload(panelData, discordMsg, guildId, guild
         buttons.push(
             new ButtonBuilder()
                 .setCustomId(`rr_repost_${guildId}`)
-                .setLabel('Repost panel')
+                .setLabel(tr.t('reactionroles.dashboard.repostButton'))
                 .setStyle(ButtonStyle.Primary),
         );
     }
@@ -240,27 +258,27 @@ function buildReactionRoleDashboardPayload(panelData, discordMsg, guildId, guild
     buttons.push(
         new ButtonBuilder()
             .setCustomId(`rr_edit_text_${guildId}`)
-            .setLabel('Edit panel text')
+            .setLabel(tr.t('reactionroles.dashboard.editTextButton'))
             .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
             .setCustomId(`rr_delete_${guildId}`)
-            .setLabel('Delete panel')
+            .setLabel(tr.t('reactionroles.dashboard.deleteButton'))
             .setStyle(ButtonStyle.Danger),
     );
 
     const optionsSelect = new StringSelectMenuBuilder()
         .setCustomId(`rr_opts_${guildId}`)
-        .setPlaceholder('Select an action...')
+        .setPlaceholder(tr.t('reactionroles.dashboard.actionPlaceholder'))
         .addOptions(
             new StringSelectMenuOptionBuilder()
-                .setLabel('Add role')
-                .setDescription('Add a role to this panel (up to 25 total)')
+                .setLabel(tr.t('reactionroles.dashboard.addRoleLabel'))
+                .setDescription(tr.t('reactionroles.dashboard.addRoleHint'))
                 .setValue('add_role'),
             ...(panelData.roles.length > 0
                 ? [
                       new StringSelectMenuOptionBuilder()
-                          .setLabel('Remove role')
-                          .setDescription('Remove a role from this panel')
+                          .setLabel(tr.t('reactionroles.dashboard.removeRoleLabel'))
+                          .setDescription(tr.t('reactionroles.dashboard.removeRoleHint'))
                           .setValue('remove_role'),
                   ]
                 : []),
@@ -283,13 +301,13 @@ async function migrateReactionRoleMessageId(client, guildId, panelData, newMessa
     await client.db.delete(oldKey).catch(() => {});
 }
 
-async function repostReactionRolePanel(guild, panelData, client, guildId, fallbackEmbed = null) {
+async function repostReactionRolePanel(guild, panelData, client, guildId, fallbackEmbed = null, tr = textForInteraction(null)) {
     const channel = await guild.channels.fetch(panelData.channelId).catch(() => null);
     if (!channel) {
         throw createError(
             'Panel channel missing',
             ErrorTypes.CONFIGURATION,
-            'The configured panel channel no longer exists.',
+            tr.t('reactionroles.dashboard.channelMissing'),
         );
     }
 
@@ -298,38 +316,21 @@ async function repostReactionRolePanel(guild, panelData, client, guildId, fallba
         throw createError(
             'No valid roles',
             ErrorTypes.VALIDATION,
-            'This panel has no valid roles left to repost.',
+            tr.t('reactionroles.dashboard.noValidRoles'),
         );
     }
 
-    const title = fallbackEmbed?.title || 'Reaction Roles';
-    const description = fallbackEmbed?.description || 'Select your roles using the menu below.';
+    // A post in the channel: the server's language. The title and description are the admin's
+    // own text (kept from the old message); only the bot's fallbacks are translated.
+    const panelTr = textForGuild(guildId, { purpose: 'public' });
+    const title = fallbackEmbed?.title || panelTr.t('reactionroles.panel.defaultTitle');
+    const description = fallbackEmbed?.description || panelTr.t('reactionroles.panel.defaultDescription');
 
-    const panelEmbed = new EmbedBuilder()
-        .setTitle(title)
-        .setDescription(description)
-        .setColor(getColor('info'))
-        .addFields({
-            name: 'Available Roles',
-            value: roleObjects.map(role => `• ${role}`).join('\n'),
-        });
+    // Same layout as before (no footer on a repost): embed + role list + select menu.
+    const { embeds, components } = buildReactionRolePanelPayload(title, description, roleObjects, { lang: panelTr.lang });
+    const panelEmbed = EmbedBuilder.from(embeds[0]).setFooter(null);
 
-    const row = new ActionRowBuilder().addComponents(
-        new StringSelectMenuBuilder()
-            .setCustomId('reaction_roles')
-            .setPlaceholder('Select your roles')
-            .setMinValues(0)
-            .setMaxValues(roleObjects.length)
-            .addOptions(
-                roleObjects.map(role => ({
-                    label: role.name.substring(0, 100),
-                    description: `Add/remove the ${role.name} role`.substring(0, 100),
-                    value: role.id,
-                })),
-            ),
-    );
-
-    const sent = await channel.send({ embeds: [panelEmbed], components: [row] });
+    const sent = await channel.send({ embeds: [panelEmbed], components });
     await migrateReactionRoleMessageId(client, guildId, panelData, sent.id);
     return sent;
 }
@@ -341,13 +342,14 @@ async function handleDashboard(interaction, selectedPanelId) {
     const client = interaction.client;
     const guildId = interaction.guild.id;
     const guild = interaction.guild;
+    const tr = textForInteraction(interaction);
 
     const panels = await getAllReactionRoleMessages(client, guildId);
     if (!panels?.length) {
         throw createError(
             'No panels',
             ErrorTypes.CONFIGURATION,
-            'No reaction role panels found. Use `/reactroles setup` first.',
+            tr.t('reactionroles.dashboard.noPanels'),
         );
     }
 
@@ -359,7 +361,7 @@ async function handleDashboard(interaction, selectedPanelId) {
             throw createError(
                 'Panel required',
                 ErrorTypes.VALIDATION,
-                'Multiple panels exist. Choose one using the **panel** option.',
+                tr.t('reactionroles.dashboard.panelRequired'),
             );
         }
     }
@@ -371,7 +373,7 @@ async function handleDashboard(interaction, selectedPanelId) {
     }
 
     const discordMsg = panelStatus.message || (await fetchPanelDiscordMessage(guild, panelData));
-    const payload = buildReactionRoleDashboardPayload(panelData, discordMsg, guildId, guild, panelStatus);
+    const payload = buildReactionRoleDashboardPayload(panelData, discordMsg, guildId, guild, panelStatus, tr);
 
     await startDashboardSession({
         interaction,
@@ -400,9 +402,10 @@ async function handleDashboard(interaction, selectedPanelId) {
                     client,
                     guildId,
                     fallbackEmbed,
+                    tr,
                 );
                 await btnInteraction.followUp({
-                    embeds: [successEmbed('Panel reposted', `Reaction role panel restored in ${newMsg.channel}.`)],
+                    embeds: [successEmbed(tr.t('reactionroles.dashboard.repostedTitle'), tr.t('reactionroles.dashboard.repostedText', { channel: String(newMsg.channel) }))],
                     flags: MessageFlags.Ephemeral,
                 });
                 await showPanelDashboard(
@@ -430,6 +433,7 @@ async function handleDashboard(interaction, selectedPanelId) {
 }
 
 async function handleEditText(buttonInteraction, rootInteraction, panelData, guildId, guild, client) {
+    const tr = textForInteraction(buttonInteraction);
     const channel = guild.channels.cache.get(panelData.channelId);
     const discordMsg = channel
         ? await channel.messages.fetch(panelData.messageId).catch(() => null)
@@ -440,12 +444,12 @@ async function handleEditText(buttonInteraction, rootInteraction, panelData, gui
 
     const modal = new ModalBuilder()
         .setCustomId('rr_edit_text')
-        .setTitle('Edit panel text')
+        .setTitle(tr.t('reactionroles.dashboard.editModalTitle'))
         .addComponents(
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
                     .setCustomId('panel_title')
-                    .setLabel('Title')
+                    .setLabel(tr.t('reactionroles.dashboard.editTitleLabel'))
                     .setStyle(TextInputStyle.Short)
                     .setValue(currentTitle)
                     .setMaxLength(256)
@@ -455,7 +459,7 @@ async function handleEditText(buttonInteraction, rootInteraction, panelData, gui
             new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
                     .setCustomId('panel_description')
-                    .setLabel('Description')
+                    .setLabel(tr.t('reactionroles.dashboard.editDescriptionLabel'))
                     .setStyle(TextInputStyle.Paragraph)
                     .setValue(currentDesc)
                     .setMaxLength(2048)
@@ -470,7 +474,7 @@ async function handleEditText(buttonInteraction, rootInteraction, panelData, gui
         logger.error('Error showing edit text modal:', error);
         await replyUserError(buttonInteraction, {
             type: ErrorTypes.UNKNOWN,
-            message: 'Failed to show the edit panel text modal. Please try again.',
+            message: tr.t('reactionroles.dashboard.editModalFailed'),
         }).catch(() => {});
         return;
     }
@@ -495,21 +499,14 @@ async function handleEditText(buttonInteraction, rootInteraction, panelData, gui
             .setTitle(newTitle)
             .setDescription(newDescription);
         if (roleObjects.length > 0) {
-            const fields = discordMsg.embeds[0].fields?.map(f => ({ name: f.name, value: f.value, inline: f.inline })) || [];
-            const roleFieldIdx = fields.findIndex(f => f.name === 'Available Roles');
-            const newRoleValue = roleObjects.map(r => `• ${r}`).join('\n');
-            if (roleFieldIdx !== -1) {
-                fields[roleFieldIdx] = { name: 'Available Roles', value: newRoleValue, inline: false };
-            } else {
-                fields.push({ name: 'Available Roles', value: newRoleValue, inline: false });
-            }
-            updatedEmbed.setFields(fields);
+            // The panel itself is public: its role list follows the server's language.
+            updatedEmbed.setFields(panelFieldsWithRoles(discordMsg.embeds[0].fields, roleObjects, textForGuild(guildId, { purpose: 'public' })));
         }
         await discordMsg.edit({ embeds: [updatedEmbed] }).catch(() => {});
     }
 
     await submitted.reply({
-        embeds: [successEmbed('Panel updated', 'The title and description have been updated.')],
+        embeds: [successEmbed(tr.t('reactionroles.dashboard.updatedTitle'), tr.t('reactionroles.dashboard.updatedText'))],
         flags: MessageFlags.Ephemeral,
     });
 
@@ -521,8 +518,9 @@ async function handleEditText(buttonInteraction, rootInteraction, panelData, gui
 
 async function handleAddRole(selectInteraction, rootInteraction, panelData, guildId, guild, client) {
     await selectInteraction.deferUpdate();
+    const tr = textForInteraction(selectInteraction);
 
-    const limitProblem = getPanelRoleProblem(guild, null, panelData);
+    const limitProblem = getPanelRoleProblem(guild, null, panelData, { lang: tr.lang });
     if (limitProblem) {
         await replyUserError(selectInteraction, {
             type: ErrorTypes.VALIDATION,
@@ -533,15 +531,15 @@ async function handleAddRole(selectInteraction, rootInteraction, panelData, guil
 
     const roleSelect = new RoleSelectMenuBuilder()
         .setCustomId('rr_add_role_pick')
-        .setPlaceholder('Select a role to add...')
+        .setPlaceholder(tr.t('reactionroles.dashboard.addPlaceholder'))
         .setMaxValues(1);
 
     await selectInteraction.followUp({
         embeds: [
             new EmbedBuilder()
-                .setTitle('Add role')
+                .setTitle(tr.t('reactionroles.dashboard.addTitle'))
                 .setDescription(
-                    `**Current roles:** ${panelData.roles.length}/25\n\nSelect a role to add to this panel.`,
+                    tr.t('reactionroles.dashboard.addText', { current: panelData.roles.length }),
                 )
                 .setColor(getColor('info')),
         ],
@@ -562,7 +560,7 @@ async function handleAddRole(selectInteraction, rootInteraction, panelData, guil
         const role = roleInteraction.roles.first();
 
         try {
-            const { panel } = await addPanelRole(client, guildId, panelData.messageId, role.id);
+            const { panel } = await addPanelRole(client, guildId, panelData.messageId, role.id, { lang: tr.lang });
             Object.assign(panelData, panel);
         } catch (error) {
             if (!(error instanceof TitanBotError) || !error.userMessage) throw error;
@@ -571,7 +569,7 @@ async function handleAddRole(selectInteraction, rootInteraction, panelData, guil
         }
 
         await roleInteraction.followUp({
-            embeds: [successEmbed('Role added', `${role} has been added to the panel.`)],
+            embeds: [successEmbed(tr.t('reactionroles.dashboard.addedTitle'), tr.t('reactionroles.dashboard.addedText', { role: String(role) }))],
             flags: MessageFlags.Ephemeral,
         });
 
@@ -586,7 +584,7 @@ async function handleAddRole(selectInteraction, rootInteraction, panelData, guil
         if (reason === 'time' && collected.size === 0) {
             replyUserError(selectInteraction, {
                 type: ErrorTypes.RATE_LIMIT,
-                message: 'No role selected. Nothing was changed.',
+                message: tr.t('reactionroles.dashboard.noRoleSelected'),
             }).catch(() => {});
         }
     });
@@ -594,6 +592,7 @@ async function handleAddRole(selectInteraction, rootInteraction, panelData, guil
 
 async function handleRemoveRole(selectInteraction, rootInteraction, panelData, panels, guildId, guild, client) {
     await selectInteraction.deferUpdate();
+    const tr = textForInteraction(selectInteraction);
 
     const roleOptions = panelData.roles
         .map(id => {
@@ -605,14 +604,14 @@ async function handleRemoveRole(selectInteraction, rootInteraction, panelData, p
     if (roleOptions.length === 0) {
         await replyUserError(selectInteraction, {
             type: ErrorTypes.USER_INPUT,
-            message: 'The roles on this panel no longer exist in the server.',
+            message: tr.t('reactionroles.dashboard.rolesGone'),
         });
         return;
     }
 
     const removeSelect = new StringSelectMenuBuilder()
         .setCustomId('rr_remove_role_pick')
-        .setPlaceholder('Select a role to remove...')
+        .setPlaceholder(tr.t('reactionroles.dashboard.removePlaceholder'))
         .setMaxValues(1)
         .addOptions(
             roleOptions.map(r =>
@@ -623,8 +622,8 @@ async function handleRemoveRole(selectInteraction, rootInteraction, panelData, p
     await selectInteraction.followUp({
         embeds: [
             new EmbedBuilder()
-                .setTitle('Remove role')
-                .setDescription('Select the role you want to remove from this panel.')
+                .setTitle(tr.t('reactionroles.dashboard.removeTitle'))
+                .setDescription(tr.t('reactionroles.dashboard.removeText'))
                 .setColor(getColor('info')),
         ],
         components: [new ActionRowBuilder().addComponents(removeSelect)],
@@ -646,7 +645,7 @@ async function handleRemoveRole(selectInteraction, rootInteraction, panelData, p
 
         let deletedPanel;
         try {
-            const result = await removePanelRole(client, guildId, panelData.messageId, roleId);
+            const result = await removePanelRole(client, guildId, panelData.messageId, roleId, { lang: tr.lang });
             Object.assign(panelData, result.panel);
             deletedPanel = result.deletedPanel;
         } catch (error) {
@@ -659,8 +658,8 @@ async function handleRemoveRole(selectInteraction, rootInteraction, panelData, p
             await removeInteraction.followUp({
                 embeds: [
                     successEmbed(
-                        'Role removed',
-                        'That was the last role on the panel. The panel has been deleted.',
+                        tr.t('reactionroles.dashboard.removedTitle'),
+                        tr.t('reactionroles.dashboard.removedLast'),
                     ),
                 ],
                 flags: MessageFlags.Ephemeral,
@@ -675,8 +674,8 @@ async function handleRemoveRole(selectInteraction, rootInteraction, panelData, p
                 await InteractionHelper.safeEditReply(rootInteraction, {
                     embeds: [
                         new EmbedBuilder()
-                            .setTitle('Reaction roles dashboard')
-                            .setDescription('No panels remain. Use `/reactroles setup` to create one.')
+                            .setTitle(tr.t('reactionroles.dashboard.title'))
+                            .setDescription(tr.t('reactionroles.dashboard.noPanelsLeft'))
                             .setColor(getColor('info')),
                     ],
                     components: [],
@@ -687,8 +686,8 @@ async function handleRemoveRole(selectInteraction, rootInteraction, panelData, p
                 await InteractionHelper.safeEditReply(rootInteraction, {
                     embeds: [
                         new EmbedBuilder()
-                            .setTitle('Reaction roles dashboard')
-                            .setDescription('Panel deleted. Run `/reactroles dashboard` to manage another panel.')
+                            .setTitle(tr.t('reactionroles.dashboard.title'))
+                            .setDescription(tr.t('reactionroles.dashboard.deletedOther'))
                             .setColor(getColor('success')),
                     ],
                     components: [],
@@ -699,8 +698,8 @@ async function handleRemoveRole(selectInteraction, rootInteraction, panelData, p
             await removeInteraction.followUp({
                 embeds: [
                     successEmbed(
-                        'Role removed',
-                        `${role ? role.toString() :`<@&${roleId}>`} has been removed from the panel.`,
+                        tr.t('reactionroles.dashboard.removedTitle'),
+                        tr.t('reactionroles.dashboard.removedText', { role: role ? role.toString() : `<@&${roleId}>` }),
                     ),
                 ],
                 flags: MessageFlags.Ephemeral,
@@ -718,32 +717,33 @@ async function handleRemoveRole(selectInteraction, rootInteraction, panelData, p
         if (reason === 'time' && collected.size === 0) {
             replyUserError(selectInteraction, {
                 type: ErrorTypes.RATE_LIMIT,
-                message: 'No role selected. Nothing was changed.',
+                message: tr.t('reactionroles.dashboard.noRoleSelected'),
             }).catch(() => {});
         }
     });
 }
 
 async function handleDeletePanel(btnInteraction, rootInteraction, panelData, panels, guildId, guild, client) {
+    const tr = textForInteraction(btnInteraction);
     const channel = guild.channels.cache.get(panelData.channelId);
     const discordMsg = channel
         ? await channel.messages.fetch(panelData.messageId).catch(() => null)
         : null;
-    const title = discordMsg?.embeds?.[0]?.title ?? 'this panel';
+    const title = discordMsg?.embeds?.[0]?.title ?? tr.t('reactionroles.dashboard.thisPanel');
 
     const deleteModal = new ModalBuilder()
         .setCustomId('rr_delete_confirm_modal')
-        .setTitle('Delete reaction role panel');
+        .setTitle(tr.t('reactionroles.dashboard.deleteModalTitle'));
 
     const deleteWarningText = new TextDisplayBuilder()
-        .setContent(`You are about to permanently delete the panel **${title}**. This will remove the Discord message and all associated reaction role assignments.`);
+        .setContent(tr.t('reactionroles.dashboard.deleteWarning', { title }));
 
     const deleteCheckbox = new CheckboxBuilder()
         .setCustomId('delete_confirmation')
         .setDefault(false);
 
     const deleteCheckboxLabel = new LabelBuilder()
-        .setLabel('I confirm, this cannot be undone')
+        .setLabel(tr.t('reactionroles.dashboard.deleteConfirm'))
         .setCheckboxComponent(deleteCheckbox);
 
     deleteModal
@@ -767,7 +767,7 @@ async function handleDeletePanel(btnInteraction, rootInteraction, panelData, pan
     const confirmed = submitted.fields.getCheckbox('delete_confirmation');
 
     if (!confirmed) {
-        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: 'You must tick the confirmation checkbox to delete the panel.' });
+        await replyUserError(submitted, { type: ErrorTypes.VALIDATION, message: tr.t('reactionroles.dashboard.deleteMustTick') });
         await showPanelDashboard(rootInteraction, panelData, discordMsg, guildId, guild, client);
         return;
     }
@@ -784,7 +784,7 @@ async function handleDeletePanel(btnInteraction, rootInteraction, panelData, pan
     }
 
     await submitted.followUp({
-        embeds: [successEmbed('Panel deleted', `**${title}** has been deleted.`)],
+        embeds: [successEmbed(tr.t('reactionroles.dashboard.deletedTitle'), tr.t('reactionroles.dashboard.deletedText', { title }))],
         flags: MessageFlags.Ephemeral,
     });
 
@@ -797,8 +797,8 @@ async function handleDeletePanel(btnInteraction, rootInteraction, panelData, pan
         await InteractionHelper.safeEditReply(rootInteraction, {
             embeds: [
                 new EmbedBuilder()
-                    .setTitle('Reaction roles dashboard')
-                    .setDescription('No panels remain. Use `/reactroles setup` to create one.')
+                    .setTitle(tr.t('reactionroles.dashboard.title'))
+                    .setDescription(tr.t('reactionroles.dashboard.noPanelsLeft'))
                     .setColor(getColor('info')),
             ],
             components: [],
@@ -808,8 +808,8 @@ async function handleDeletePanel(btnInteraction, rootInteraction, panelData, pan
         await InteractionHelper.safeEditReply(rootInteraction, {
             embeds: [
                 new EmbedBuilder()
-                    .setTitle('Reaction roles dashboard')
-                    .setDescription('Panel deleted. Run `/reactroles dashboard` to manage another panel.')
+                    .setTitle(tr.t('reactionroles.dashboard.title'))
+                    .setDescription(tr.t('reactionroles.dashboard.deletedOther'))
                     .setColor(getColor('success')),
             ],
             components: [],

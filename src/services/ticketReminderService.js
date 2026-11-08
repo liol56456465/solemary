@@ -11,6 +11,7 @@ import { logger } from '../utils/logger.js';
 import { getGuildConfig } from './config/guildConfig.js';
 import { getTicketData, saveTicketData } from '../utils/database.js';
 import { query, T, isEnforcementDbAvailable } from './enforcement/db.js';
+import { textForGuild } from '../utils/botText.js';
 
 const UNANSWERED_MS = 30 * 60 * 1000;
 const INACTIVE_MS = 24 * 60 * 60 * 1000;
@@ -46,11 +47,13 @@ async function checkTicket(client, guildId, channelId) {
     const staffReplied = human.some((m) => isStaffAuthor(m, staffRoleId, ticket.userId));
     const now = Date.now();
     let changed = false;
+    // Posted in the ticket channel: the server's language.
+    const tr = textForGuild(guildId, { purpose: 'public' });
 
     const openedAt = new Date(ticket.createdAt || channel.createdTimestamp).getTime();
     if (!ticket.claimedBy && !staffReplied && !ticket.remindedUnansweredAt && now - openedAt >= UNANSWERED_MS) {
         await channel.send({
-            content: `${staffRoleId ? `<@&${staffRoleId}> ` : ''}This ticket has been waiting ${Math.round((now - openedAt) / 60000)} minutes without a reply. Could someone pick it up?`,
+            content: `${staffRoleId ? `<@&${staffRoleId}> ` : ''}${tr.tp('ticket.reminder.unanswered', Math.round((now - openedAt) / 60000))}`,
             allowedMentions: { roles: staffRoleId ? [staffRoleId] : [] },
         }).catch(() => {});
         ticket.remindedUnansweredAt = new Date().toISOString();
@@ -61,7 +64,7 @@ async function checkTicket(client, guildId, channelId) {
     if (last && isStaffAuthor(last, staffRoleId, ticket.userId)) {
         if (now - last.createdTimestamp >= INACTIVE_MS && ticket.remindedInactiveFor !== last.id) {
             await channel.send({
-                content: `<@${ticket.userId}> hasn't replied for 24 hours. Staff can close this ticket if the issue is solved.`,
+                content: tr.t('ticket.reminder.inactive', { userId: ticket.userId }),
                 allowedMentions: { parse: [] },
             }).catch(() => {});
             ticket.remindedInactiveFor = last.id;

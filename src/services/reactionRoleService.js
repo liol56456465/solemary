@@ -7,11 +7,47 @@ import { logEvent, EVENT_TYPES } from './loggingService.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { getReactionRoleKey, getReactionRolesPrefix } from '../utils/database/keys.js';
 import { getDangerousPermissions, hasDangerousPermissions } from '../utils/roleSafety.js';
+import { BOT_CATALOG, LANG_CODES, botText, textForGuild } from '../utils/botText.js';
 
 // Re-exported for reactroles.js, which imports it from here.
 export { hasDangerousPermissions };
 
 const MAX_ROLES_PER_MESSAGE = 25;
+
+// Panel texts are posted in the server's language (Dashboard → Bot language). A panel posted
+// earlier in another language keeps working: its role field is found by any language's name.
+const AVAILABLE_ROLES_NAMES = new Set(LANG_CODES.map((code) => BOT_CATALOG.translate(code, 'reactionroles.panel.availableRoles')));
+
+/** True when an embed field is a panel's role list (its name in any of the 8 languages). */
+export function isAvailableRolesField(field) {
+    return AVAILABLE_ROLES_NAMES.has(field?.name);
+}
+
+/** The select-menu row of a panel, in the server's language (tr). */
+export function panelSelectRow(roles, tr) {
+    return new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+            .setCustomId('reaction_roles')
+            .setPlaceholder(tr.t('reactionroles.panel.placeholder'))
+            .setMinValues(0)
+            .setMaxValues(roles.length)
+            .addOptions(roles.map((role) => ({
+                label: String(role.name).substring(0, 100),
+                description: tr.t('reactionroles.panel.optionDescription', { role: role.name }).substring(0, 100),
+                value: role.id,
+            }))),
+    );
+}
+
+/** A panel's embed fields with the role list replaced (or added) for these roles. */
+export function panelFieldsWithRoles(fields, roles, tr) {
+    const out = (fields || []).map((f) => ({ name: f.name, value: f.value, inline: f.inline }));
+    const idx = out.findIndex(isAvailableRolesField);
+    const field = { name: tr.t('reactionroles.panel.availableRoles'), value: roles.map((r) => `• ${r}`).join('\n'), inline: false };
+    if (idx !== -1) out[idx] = field;
+    else out.push(field);
+    return out;
+}
 
 
 function validateGuildId(guildId) {
@@ -479,27 +515,28 @@ export async function reconcileReactionRoleMessages(client, guildId = null, { qu
 // edits can't drop each other's roles.
 
 /** { type, message } for the first reason the role can't go on the panel, or null. */
-function panelRoleCheck(guild, role, panel) {
+function panelRoleCheck(guild, role, panel, lang) {
+    const { t } = botText(lang);
     const roles = Array.isArray(panel?.roles) ? panel.roles : [];
     if (roles.length >= MAX_ROLES_PER_MESSAGE) {
-        return { type: ErrorTypes.VALIDATION, message: `This panel already has the maximum of ${MAX_ROLES_PER_MESSAGE} roles.` };
+        return { type: ErrorTypes.VALIDATION, message: t('reactionroles.errors.maxRoles', { max: MAX_ROLES_PER_MESSAGE }) };
     }
     if (!role) return null;
     if (roles.includes(role.id)) {
-        return { type: ErrorTypes.VALIDATION, message: `${role} is already in this panel.` };
+        return { type: ErrorTypes.VALIDATION, message: t('reactionroles.errors.alreadyIn', { role: String(role) }) };
     }
     if (role.id === guild?.id) {
-        return { type: ErrorTypes.VALIDATION, message: 'You cannot use @everyone.' };
+        return { type: ErrorTypes.VALIDATION, message: t('reactionroles.errors.everyone') };
     }
     if (role.managed) {
-        return { type: ErrorTypes.VALIDATION, message: 'Managed/bot roles cannot be used.' };
+        return { type: ErrorTypes.VALIDATION, message: t('reactionroles.errors.managed') };
     }
     if (hasDangerousPermissions(role)) {
-        return { type: ErrorTypes.PERMISSION, message: 'That role has sensitive permissions (Administrator, Manage Server, etc.) and cannot be used.' };
+        return { type: ErrorTypes.PERMISSION, message: t('reactionroles.errors.dangerous') };
     }
     const botHighest = guild?.members?.me?.roles?.highest;
     if (!botHighest || role.position >= botHighest.position) {
-        return { type: ErrorTypes.PERMISSION, message: 'That role is above my highest role in the hierarchy. Move my role above it first.' };
+        return { type: ErrorTypes.PERMISSION, message: t('reactionroles.errors.hierarchy') };
     }
     return null;
 }
@@ -507,24 +544,25 @@ function panelRoleCheck(guild, role, panel) {
 /**
  * Why `role` can't be added to `panel` (a user-facing sentence), or null when it
  * can. With role = null only the panel itself is checked (the 25-role limit).
+ * The sentence is in `lang` (default English; /reactroles passes the user's language).
  */
-export function getPanelRoleProblem(guild, role, panel) {
-    return panelRoleCheck(guild, role, panel)?.message ?? null;
+export function getPanelRoleProblem(guild, role, panel, { lang } = {}) {
+    return panelRoleCheck(guild, role, panel, lang)?.message ?? null;
 }
 
-function panelNotFound(guildId, messageId) {
+function panelNotFound(guildId, messageId, lang) {
     return createError(
         `Reaction role panel not found: ${messageId}`,
         ErrorTypes.VALIDATION,
-        'That reaction role panel no longer exists.',
+        botText(lang).t('reactionroles.errors.panelGone'),
         { guildId, messageId, expected: true },
     );
 }
 
-async function resolveGuild(client, guildId) {
+async function resolveGuild(client, guildId, lang) {
     const guild = client.guilds?.cache?.get(guildId) || await client.guilds?.fetch?.(guildId).catch(() => null);
     if (!guild) {
-        throw createError(`Guild not found: ${guildId}`, ErrorTypes.VALIDATION, 'Server not found.', { guildId, expected: true });
+        throw createError(`Guild not found: ${guildId}`, ErrorTypes.VALIDATION, botText(lang).t('reactionroles.errors.serverNotFound'), { guildId, expected: true });
     }
     return guild;
 }
@@ -554,32 +592,9 @@ export async function rebuildLivePanelMessage(guild, panel) {
 
         if (roleObjects.length === 0) return;
 
-        const currentEmbed = msg.embeds[0];
-        const updatedEmbed = EmbedBuilder.from(currentEmbed);
-        const fields = currentEmbed.fields.map(f => ({ name: f.name, value: f.value, inline: f.inline }));
-        const roleFieldIdx = fields.findIndex(f => f.name === 'Available Roles');
-        const newRoleValue = roleObjects.map(r => `• ${r}`).join('\n');
-        if (roleFieldIdx !== -1) {
-            fields[roleFieldIdx] = { name: 'Available Roles', value: newRoleValue, inline: false };
-        } else {
-            fields.push({ name: 'Available Roles', value: newRoleValue, inline: false });
-        }
-        updatedEmbed.setFields(fields);
-
-        const selectRow = new ActionRowBuilder().addComponents(
-            new StringSelectMenuBuilder()
-                .setCustomId('reaction_roles')
-                .setPlaceholder('Select your roles')
-                .setMinValues(0)
-                .setMaxValues(roleObjects.length)
-                .addOptions(
-                    roleObjects.map(r => ({
-                        label: r.name.substring(0, 100),
-                        description: `Add/remove the ${r.name} role`.substring(0, 100),
-                        value: r.id,
-                    })),
-                ),
-        );
+        const tr = textForGuild(guild.id, { purpose: 'public' });
+        const updatedEmbed = EmbedBuilder.from(msg.embeds[0]).setFields(panelFieldsWithRoles(msg.embeds[0].fields, roleObjects, tr));
+        const selectRow = panelSelectRow(roleObjects, tr);
 
         await msg.edit({ embeds: [updatedEmbed], components: [selectRow] });
     } catch (error) {
@@ -590,21 +605,21 @@ export async function rebuildLivePanelMessage(guild, panel) {
 /**
  * Adds a role to a panel (checked with getPanelRoleProblem against the panel as
  * stored, under the lock) and rebuilds the live message. Resolves { panel }.
- * Throws a TitanBotError with a userMessage when refused or the panel is gone.
+ * Throws a TitanBotError with a userMessage (in `lang`, default English) when refused or the panel is gone.
  */
-export async function addPanelRole(client, guildId, messageId, roleId) {
+export async function addPanelRole(client, guildId, messageId, roleId, { lang } = {}) {
     validateGuildId(guildId);
     validateMessageId(messageId);
     validateRoleId(roleId);
-    const guild = await resolveGuild(client, guildId);
+    const guild = await resolveGuild(client, guildId, lang);
     const role = guild.roles.cache.get(roleId) || await guild.roles.fetch(roleId).catch(() => null);
     if (!role) {
-        throw createError(`Role not found: ${roleId}`, ErrorTypes.VALIDATION, 'That role no longer exists.', { guildId, roleId, expected: true });
+        throw createError(`Role not found: ${roleId}`, ErrorTypes.VALIDATION, botText(lang).t('reactionroles.errors.roleGone'), { guildId, roleId, expected: true });
     }
 
     const panel = await client.db.update(getReactionRoleKey(guildId, messageId), (current) => {
-        if (!current || !Array.isArray(current.roles)) throw panelNotFound(guildId, messageId);
-        const problem = panelRoleCheck(guild, role, current);
+        if (!current || !Array.isArray(current.roles)) throw panelNotFound(guildId, messageId, lang);
+        const problem = panelRoleCheck(guild, role, current, lang);
         if (problem) {
             throw createError(`Reaction role refused: ${problem.message}`, problem.type, problem.message, { guildId, messageId, roleId, expected: true });
         }
@@ -619,16 +634,16 @@ export async function addPanelRole(client, guildId, messageId, roleId) {
 /**
  * Removes a role from a panel and rebuilds the live message. When it was the last
  * role, the panel message and its data are deleted. Resolves { panel, deletedPanel }.
- * Throws a TitanBotError (userMessage) when the panel is gone.
+ * Throws a TitanBotError (userMessage in `lang`, default English) when the panel is gone.
  */
-export async function removePanelRole(client, guildId, messageId, roleId) {
+export async function removePanelRole(client, guildId, messageId, roleId, { lang } = {}) {
     validateGuildId(guildId);
     validateMessageId(messageId);
     validateRoleId(roleId);
-    const guild = await resolveGuild(client, guildId);
+    const guild = await resolveGuild(client, guildId, lang);
 
     const panel = await client.db.update(getReactionRoleKey(guildId, messageId), (current) => {
-        if (!current || !Array.isArray(current.roles)) throw panelNotFound(guildId, messageId);
+        if (!current || !Array.isArray(current.roles)) throw panelNotFound(guildId, messageId, lang);
         return { ...current, roles: current.roles.filter(id => id !== roleId) };
     }, null);
 
@@ -648,36 +663,32 @@ export const PANEL_TITLE_MAX = 256;
 export const PANEL_DESCRIPTION_MAX = 4000;
 
 /** Why `role` can't be on a new panel (a line for the "cannot be added" list), or null. */
-function newPanelRoleProblem(guild, role, seen) {
-    if (seen.has(role.id)) return `**${role.name}** - This role was selected more than once`;
+function newPanelRoleProblem(guild, role, seen, t) {
+    const p = { role: role.name };
+    if (seen.has(role.id)) return t('reactionroles.errors.rejectDuplicate', p);
     if (role.position >= (guild.members.me?.roles?.highest?.position ?? 0)) {
-        return `**${role.name}** - My bot's role is positioned lower than this role in your server's role hierarchy and cannot assign it`;
+        return t('reactionroles.errors.rejectHierarchy', p);
     }
-    if (hasDangerousPermissions(role)) return `**${role.name}** - This role has dangerous permissions (Administrator, Manage Server, etc.)`;
-    if (role.managed) return `**${role.name}** - This is a managed role (integration/bot role)`;
-    if (role.id === guild.id) return `**${role.name}** - Cannot use the @everyone role`;
+    if (hasDangerousPermissions(role)) return t('reactionroles.errors.rejectDangerous', p);
+    if (role.managed) return t('reactionroles.errors.rejectManaged', p);
+    if (role.id === guild.id) return t('reactionroles.errors.rejectEveryone', p);
     return null;
 }
 
-/** The panel message (embed + select menu) for a title, description and roles. */
-export function buildReactionRolePanelPayload(title, description, roles) {
-    const select = new StringSelectMenuBuilder()
-        .setCustomId('reaction_roles')
-        .setPlaceholder('Select your roles')
-        .setMinValues(0)
-        .setMaxValues(roles.length)
-        .addOptions(roles.map((role) => ({
-            label: String(role.name).substring(0, 100),
-            description: `Add/remove the ${role.name} role`.substring(0, 100),
-            value: role.id,
-        })));
+/**
+ * The panel message (embed + select menu) for a title, description and roles. The title and
+ * description are the admin's own text (never translated); the bot's labels are in `lang`
+ * (the server's language when posting; default English).
+ */
+export function buildReactionRolePanelPayload(title, description, roles, { lang } = {}) {
+    const tr = botText(lang);
     const embed = new EmbedBuilder()
         .setTitle(title)
         .setDescription(description)
         .setColor(getColor('info'))
-        .addFields({ name: 'Available Roles', value: roles.map((role) => `• ${role}`).join('\n') })
-        .setFooter({ text: 'Select roles from the dropdown menu below' });
-    return { embeds: [embed], components: [new ActionRowBuilder().addComponents(select)] };
+        .addFields({ name: tr.t('reactionroles.panel.availableRoles'), value: roles.map((role) => `• ${role}`).join('\n') })
+        .setFooter({ text: tr.t('reactionroles.panel.footer') });
+    return { embeds: [embed], components: [panelSelectRow(roles, tr)] };
 }
 
 /**
@@ -687,31 +698,34 @@ export function buildReactionRolePanelPayload(title, description, roles) {
  * Refused roles are skipped and listed; with no valid role at all it throws. Posts the
  * panel, saves it (deleting the message again when saving fails) and logs
  * REACTION_ROLE_CREATE. Resolves { message, panel, roles, rejected }.
+ * Refusals and the rejected lines are in `lang` (default English; /reactroles passes the user's
+ * language); the posted panel is in the server's language.
  */
-export async function createReactionRolePanel(client, guild, { channel, title, description, roleIds, actorId = null, actorTag = null }) {
+export async function createReactionRolePanel(client, guild, { channel, title, description, roleIds, actorId = null, actorTag = null, lang }) {
+    const { t } = botText(lang);
     const cleanTitle = String(title ?? '').trim();
     const cleanDescription = String(description ?? '').trim();
     if (!cleanTitle || cleanTitle.length > PANEL_TITLE_MAX) {
-        throw createError('Bad panel title', ErrorTypes.VALIDATION, `The title must be 1–${PANEL_TITLE_MAX} characters.`, { expected: true });
+        throw createError('Bad panel title', ErrorTypes.VALIDATION, t('reactionroles.errors.titleLength', { max: PANEL_TITLE_MAX }), { expected: true });
     }
     if (!cleanDescription || cleanDescription.length > PANEL_DESCRIPTION_MAX) {
-        throw createError('Bad panel description', ErrorTypes.VALIDATION, `The description must be 1–${PANEL_DESCRIPTION_MAX} characters.`, { expected: true });
+        throw createError('Bad panel description', ErrorTypes.VALIDATION, t('reactionroles.errors.descriptionLength', { max: PANEL_DESCRIPTION_MAX }), { expected: true });
     }
     if (!channel || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
-        throw createError(`Invalid channel type: ${channel?.type}`, ErrorTypes.VALIDATION, 'Please select a text or announcement channel.', { channelType: channel?.type, expected: true });
+        throw createError(`Invalid channel type: ${channel?.type}`, ErrorTypes.VALIDATION, t('reactionroles.errors.channelType'), { channelType: channel?.type, expected: true });
     }
     const me = guild.members.me;
     if (!me?.permissions?.has?.(PermissionFlagsBits.ManageRoles)) {
-        throw createError('Bot missing ManageRoles permission', ErrorTypes.PERMISSION, 'I need the "Manage Roles" permission to set up reaction roles.', { permission: 'ManageRoles', expected: true });
+        throw createError('Bot missing ManageRoles permission', ErrorTypes.PERMISSION, t('reactionroles.errors.manageRoles'), { permission: 'ManageRoles', expected: true });
     }
     if (!channel.permissionsFor(me)?.has?.([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks])) {
-        throw createError(`Bot cannot send messages in ${channel.name}`, ErrorTypes.PERMISSION, `I don't have permission to send messages (with embeds) in <#${channel.id}>.`, { channelId: channel.id, expected: true });
+        throw createError(`Bot cannot send messages in ${channel.name}`, ErrorTypes.PERMISSION, t('reactionroles.errors.sendMessages', { channelId: channel.id }), { channelId: channel.id, expected: true });
     }
     const existing = await getAllReactionRoleMessages(client, guild.id);
     const panelCount = existing ? (existing.storedCount ?? existing.length) : 0;
     if (panelCount >= MAX_PANELS_PER_GUILD) {
         throw createError('Panel limit reached', ErrorTypes.VALIDATION,
-            `Your guild has reached the maximum of ${MAX_PANELS_PER_GUILD} reaction role panels. Delete an existing panel to create a new one.`,
+            t('reactionroles.errors.panelLimit', { max: MAX_PANELS_PER_GUILD }),
             { maxPanels: MAX_PANELS_PER_GUILD, currentPanels: panelCount, expected: true });
     }
 
@@ -721,10 +735,10 @@ export async function createReactionRolePanel(client, guild, { channel, title, d
     for (const roleId of (roleIds || []).slice(0, MAX_ROLES_PER_MESSAGE)) {
         const role = guild.roles.cache.get(roleId);
         if (!role) {
-            rejected.push(`\`${roleId}\` - This role no longer exists`);
+            rejected.push(t('reactionroles.errors.rejectMissing', { roleId }));
             continue;
         }
-        const problem = newPanelRoleProblem(guild, role, seen);
+        const problem = newPanelRoleProblem(guild, role, seen, t);
         if (problem) {
             rejected.push(problem);
             continue;
@@ -734,12 +748,13 @@ export async function createReactionRolePanel(client, guild, { channel, title, d
     }
     if (roles.length === 0) {
         const message = rejected.length
-            ? `The following roles cannot be added:\n${rejected.join('\n')}`
-            : 'You must provide at least one valid role.';
+            ? t('reactionroles.errors.cannotAdd', { list: rejected.join('\n') })
+            : t('reactionroles.errors.atLeastOne');
         throw createError('No valid roles provided', ErrorTypes.VALIDATION, message, { errors: rejected, expected: true });
     }
 
-    const message = await channel.send(buildReactionRolePanelPayload(cleanTitle, cleanDescription, roles));
+    const panelLang = textForGuild(guild.id, { purpose: 'public' }).lang;
+    const message = await channel.send(buildReactionRolePanelPayload(cleanTitle, cleanDescription, roles, { lang: panelLang }));
     let panel;
     try {
         panel = await createReactionRoleMessage(client, guild.id, channel.id, message.id, roles.map((role) => role.id));

@@ -7,20 +7,23 @@ import { MessageFlags } from 'discord.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
 import { handleInteractionError } from '../utils/errorHandler.js';
 import { logger } from '../utils/logger.js';
+import { textForInteraction } from '../utils/botText.js';
 import {
-    NOT_YOUR_QUIZ_MESSAGE, expiredPayload, failedPayload, parseQuizButtonArgs, questionPayload, quizStore, rulesLocation,
+    expiredPayload, failedPayload, notYourQuizMessage, parseQuizButtonArgs, questionPayload, quizStore, rulesLocation,
 } from '../services/verificationQuiz.js';
 import { continueVerification } from './verificationButtons.js';
 
 export async function handleQuizButton(interaction, client, args, { store = quizStore, proceed = continueVerification } = {}) {
     try {
+        // Every answer here is ephemeral: the clicking member's Discord language.
+        const { lang } = textForInteraction(interaction);
         const parsed = parseQuizButtonArgs(args);
         if (!parsed || !interaction.guild) {
             await interaction.deferUpdate();
-            return await InteractionHelper.safeEditReply(interaction, expiredPayload());
+            return await InteractionHelper.safeEditReply(interaction, expiredPayload({ lang }));
         }
         if (parsed.userId !== interaction.user.id) {
-            return await interaction.reply({ content: NOT_YOUR_QUIZ_MESSAGE, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+            return await interaction.reply({ content: notYourQuizMessage({ lang }), flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
         }
         await interaction.deferUpdate();
 
@@ -29,10 +32,10 @@ export async function handleQuizButton(interaction, client, args, { store = quiz
         switch (result.status) {
             case 'stale':
             case 'next':
-                return await InteractionHelper.safeEditReply(interaction, questionPayload(result.attempt));
+                return await InteractionHelper.safeEditReply(interaction, questionPayload(result.attempt, { lang }));
             case 'failed':
                 logger.info('Rules quiz failed', { guildId, userId: parsed.userId });
-                return await InteractionHelper.safeEditReply(interaction, failedPayload(result.attempt.cooldownMinutes, rulesLocation(interaction.guild)));
+                return await InteractionHelper.safeEditReply(interaction, failedPayload(result.attempt.cooldownMinutes, rulesLocation(interaction.guild, process.env, { lang }), { lang }));
             case 'passed':
                 logger.info('Rules quiz passed', { guildId, userId: parsed.userId });
                 try {
@@ -43,7 +46,7 @@ export async function handleQuizButton(interaction, client, args, { store = quiz
                     throw error;
                 }
             default:
-                return await InteractionHelper.safeEditReply(interaction, expiredPayload());
+                return await InteractionHelper.safeEditReply(interaction, expiredPayload({ lang }));
         }
     } catch (error) {
         logger.error('Error in rules quiz button handler', { error: error.message, guildId: interaction.guild?.id, userId: interaction.user?.id });

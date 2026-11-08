@@ -1,0 +1,177 @@
+{
+    "cmd": {
+        "welcome": {
+            "description": "Skonfiguruj powitania",
+            "setup": {
+                "description": "Ustaw wiadomość powitalną",
+                "channel": "Kanał na wiadomości powitalne",
+                "message": "Wiadomość powitalna. Zmienne:",
+                "image": "URL obrazka dodanego do wiadomości",
+                "ping": "Oznacz członka w wiadomości"
+            }
+        },
+        "goodbye": {
+            "description": "Skonfiguruj pożegnania",
+            "setup": {
+                "description": "Ustaw wiadomość pożegnalną",
+                "channel": "Kanał na wiadomości pożegnalne",
+                "message": "Wiadomość pożegnalna. Zmienne:"
+            }
+        },
+        "greet": {
+            "description": "Zarządzaj ustawieniami powitań i pożegnań",
+            "dashboard": "Otwórz ustawienia powitań i pożegnań"
+        },
+        "autorole": {
+            "description": "Zarządzaj rolami nadawanymi automatycznie nowym członkom",
+            "add": {
+                "description": "Dodaj rolę nadawaną automatycznie nowym członkom",
+                "role": "Rola do dodania"
+            },
+            "remove": {
+                "description": "Usuń rolę z automatycznego nadawania",
+                "role": "Rola do usunięcia"
+            },
+            "list": "Pokaż wszystkie role nadawane automatycznie"
+        }
+    },
+    "manageServer": "Aby użyć `{command}`, potrzebujesz uprawnienia **Zarządzanie serwerem**.",
+    "invalidImage": "Podaj prawidłowy URL obrazka (musi zaczynać się od http:// lub https://).",
+    "setupDone": {
+        "preview": "Podgląd",
+        "ping": "Oznaczanie członka",
+        "status": "Status",
+        "yes": "Tak",
+        "no": "Nie",
+        "on": "Włączone",
+        "footer": "Więcej opcji w /greet dashboard"
+    },
+    "welcome": {
+        "alreadySet": "Powitania są już ustawione dla <#{channelId}>. Użyj **/greet dashboard**, aby zmienić kanał, wiadomość, oznaczanie lub obrazek.",
+        "empty": "Wiadomość powitalna nie może być pusta",
+        "doneTitle": "Powitania ustawione",
+        "doneBody": "Wiadomości powitalne będą trafiać na {channel}.",
+        "failed": "Podczas konfiguracji powitań wystąpił błąd. Spróbuj ponownie."
+    },
+    "goodbye": {
+        "alreadySet": "Pożegnania są już ustawione dla <#{channelId}>. Użyj **/greet dashboard**, aby zmienić kanał, wiadomość, oznaczanie lub obrazek.",
+        "empty": "Wiadomość pożegnalna nie może być pusta",
+        "doneTitle": "Pożegnania ustawione",
+        "doneBody": "Wiadomości pożegnalne będą trafiać na {channel}.",
+        "failed": "Podczas konfiguracji pożegnań wystąpił błąd. Spróbuj ponownie."
+    },
+    "autorole": {
+        "verificationConflict": "Nie możesz dodać autoroli, gdy weryfikacja lub AutoVerify jest włączone. Najpierw je wyłącz.",
+        "alreadySet": "Rola {role} jest już nadawana automatycznie.",
+        "changed": "Autorola zmieniona na {role}. Możesz mieć tylko jedną.",
+        "set": "Autorola ustawiona na {role}.",
+        "addFailed": "Podczas dodawania roli wystąpił błąd. Spróbuj ponownie.",
+        "notSet": "Rola {role} nie jest nadawana automatycznie.",
+        "removed": "{role} nie jest już nadawana nowym członkom.",
+        "removeFailed": "Podczas usuwania roli wystąpił błąd. Spróbuj ponownie.",
+        "verificationOn": "Weryfikacja jest włączona",
+        "autoVerifyOn": "AutoVerify jest włączone",
+        "needsFixing": "\n\n**Do poprawy:**\n{list}",
+        "none": "Nie ustawiono autoroli.",
+        "noneWorking": "Nie znaleziono działającej autoroli. Usunąłem tę, która już nie istnieje.",
+        "title": "Autorola",
+        "footer": "Możesz mieć tylko jedną autorolę.",
+        "listFailed": "Podczas wyświetlania autoroli wystąpił błąd. Spróbuj ponownie."
+    },
+    "greet": {
+        "failed": "Coś poszło nie tak."
+    },
+    "dashboard": {
+        "notSet": "`Nie ustawiono`",
+        "title": "Powitania i pożegnania",
+        "description": "Wiadomości powitalne i pożegnalne dla **{server}**.\nPrzyciski włączają i wyłączają każdą z nich. Wybierz ustawienie w menu, aby je zmienić.",
+        "on": "Wł.",
+        "off": "Wył.",
+        "field": {
+            "welcomeChannel": "Kanał powitań",
+            "welcome": "Powitanie",
+            "welcomePing": "Oznaczanie w powitaniu",
+            "goodbyeChannel": "Kanał pożegnań",
+            "goodbye": "Pożegnanie",
+            "goodbyePing": "Oznaczanie w pożegnaniu",
+            "welcomeMessage": "Wiadomość powitalna",
+            "goodbyeMessage": "Wiadomość pożegnalna"
+        },
+        "footer": "Zamyka się po 10 minutach bez użycia",
+        "menu": {
+            "placeholder": "Wybierz ustawienie do zmiany",
+            "welcomeChannel": "Kanał powitań",
+            "welcomeChannelHint": "Gdzie trafiają wiadomości powitalne",
+            "welcomeMessage": "Wiadomość powitalna",
+            "welcomeMessageHint": "Co bot pisze, gdy ktoś dołącza",
+            "welcomeImage": "Obrazek powitalny",
+            "welcomeImageHint": "Obrazek pokazany z wiadomością powitalną",
+            "goodbyeChannel": "Kanał pożegnań",
+            "goodbyeChannelHint": "Gdzie trafiają wiadomości pożegnalne",
+            "goodbyeMessage": "Wiadomość pożegnalna",
+            "goodbyeMessageHint": "Co bot pisze, gdy ktoś odchodzi",
+            "goodbyeImage": "Obrazek pożegnalny",
+            "goodbyeImageHint": "Obrazek pokazany z wiadomością pożegnalną"
+        },
+        "button": {
+            "welcome": "Powitanie",
+            "goodbye": "Pożegnanie",
+            "pingWelcome": "Oznaczaj przy powitaniu",
+            "pingGoodbye": "Oznaczaj przy pożegnaniu"
+        },
+        "notConfigured": "Ani powitania, ani pożegnania nie są jeszcze ustawione. Najpierw uruchom `/welcome setup` lub `/goodbye setup`.",
+        "choiceFailed": "Coś poszło nie tak z tym wyborem.",
+        "saveFailed": "Coś poszło nie tak podczas zapisywania. Spróbuj ponownie.",
+        "openFailed": "Nie udało się otworzyć ustawień powitań.",
+        "welcomeUpdated": "Powitanie zaktualizowane",
+        "welcomeNowOn": "Wiadomości powitalne są teraz **włączone**.",
+        "welcomeNowOff": "Wiadomości powitalne są teraz **wyłączone**.",
+        "goodbyeUpdated": "Pożegnanie zaktualizowane",
+        "goodbyeNowOn": "Wiadomości pożegnalne są teraz **włączone**.",
+        "goodbyeNowOff": "Wiadomości pożegnalne są teraz **wyłączone**.",
+        "welcomePingUpdated": "Oznaczanie w powitaniu zaktualizowane",
+        "welcomePingOn": "Nowi członkowie będą oznaczani w wiadomości powitalnej.",
+        "welcomePingOff": "Nowi członkowie **nie** będą oznaczani w wiadomości powitalnej.",
+        "goodbyePingUpdated": "Oznaczanie w pożegnaniu zaktualizowane",
+        "goodbyePingOn": "Osoby, które odchodzą, będą oznaczane w wiadomości pożegnalnej.",
+        "goodbyePingOff": "Osoby, które odchodzą, **nie** będą oznaczane w wiadomości pożegnalnej.",
+        "closedTitle": "Zamknięte",
+        "closedBody": "Zamknięte po 10 minutach bez użycia. Uruchom polecenie ponownie, aby je otworzyć.",
+        "channelPlaceholder": "Wybierz kanał tekstowy",
+        "welcomeChannelTitle": "Kanał powitań",
+        "welcomeChannelPrompt": "**Obecnie:** {current}\n\nWybierz kanał na wiadomości powitalne.",
+        "goodbyeChannelTitle": "Kanał pożegnań",
+        "goodbyeChannelPrompt": "**Obecnie:** {current}\n\nWybierz kanał na wiadomości pożegnalne.",
+        "needPermissions": "Potrzebuję uprawnień **Wyświetlanie kanału**, **Wysyłanie wiadomości** i **Osadzanie linków** na {channel}.",
+        "channelUpdated": "Kanał zaktualizowany",
+        "welcomeChannelNow": "Wiadomości powitalne trafiają teraz na {channel}.",
+        "goodbyeChannelNow": "Wiadomości pożegnalne trafiają teraz na {channel}.",
+        "noChannel": "Nie wybrano kanału, nic nie zmieniono.",
+        "welcomeMessageTitle": "Wiadomość powitalna",
+        "goodbyeMessageTitle": "Wiadomość pożegnalna",
+        "messageLabel": "Treść (zmienne: {user}, {server} itd.)",
+        "saved": "Zapisano",
+        "welcomeSaved": "Wiadomość powitalna zapisana.",
+        "goodbyeSaved": "Wiadomość pożegnalna zapisana.",
+        "imageHint": "Wklej URL obrazka **albo** prześlij plik. Jeśli zrobisz oba, wygrywa plik. Zostaw oba puste, aby usunąć obrazek.",
+        "imageUrlLabel": "URL obrazka (opcjonalnie)",
+        "imageUploadLabel": "Albo prześlij plik obrazka (opcjonalnie)",
+        "imageBadProtocol": "URL obrazka musi zaczynać się od `http://` lub `https://`.",
+        "imageBadUrl": "Ten URL obrazka wygląda na nieprawidłowy.",
+        "welcomeImageTitle": "Obrazek powitalny",
+        "goodbyeImageTitle": "Obrazek pożegnalny",
+        "imageSaved": "Obrazek zapisany.",
+        "imageRemoved": "Obrazek usunięty.",
+        "welcomeCopyKept": "\nKopia jest przechowywana na <#{channelId}>. Nie usuwaj tej wiadomości, powitanie ładuje z niej obrazek.",
+        "goodbyeCopyKept": "\nKopia jest przechowywana na <#{channelId}>. Nie usuwaj tej wiadomości, pożegnanie ładuje z niej obrazek.",
+        "copyFailed": "\nNie udało mi się zachować kopii (potrzebuję Wyświetlania kanału, Wysyłania wiadomości i Załączania plików na kanale dziennika zdarzeń lub tutaj), więc ten obrazek przestanie się wyświetlać za około dzień."
+    },
+    "post": {
+        "defaultWelcome": "Witaj na {server}, {user}. Jesteś członkiem numer {memberCount}.",
+        "defaultGoodbye": "{user} opuścił(a) serwer. Liczba członków: {memberCount}.",
+        "welcomeTitle": "Witaj",
+        "goodbyeTitle": "Do widzenia",
+        "user": "Użytkownik",
+        "memberCount": "Liczba członków"
+    }
+}
