@@ -18,5 +18,12 @@
   },
   "saved": {
     "done": "Mewvo używa teraz na tym serwerze języka: {language}."
+  },
+  "roles": {
+    "title": "Role językowe",
+    "help": "Jedna rola na język. Członek z jedną z tych ról dostaje wiadomości do siebie (odpowiedzi, wiadomości prywatne, nowe poziomy, komunikat gry w liczenie) w tym języku; bez roli obowiązują zasady poniżej. Członkowie wybierają rolę przez /language set lub panel z /language panel. Każdą rolę musi dać się bezpiecznie nadawać (bez uprawnień administracji, poniżej roli Mewvo).",
+    "none": "Brak roli",
+    "duplicate": "{first} i {second} mają tę samą rolę. Każdy język potrzebuje własnej roli.",
+    "saved": "Role językowe zapisane."
   }
 }

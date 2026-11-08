@@ -1,0 +1,36 @@
+{
+    "cmd": {
+        "desc": "Escolha o idioma que o Mewvo usa com você",
+        "set": "Escolha seu idioma: o Mewvo o usa nas mensagens para você",
+        "panel": "Publicar um painel onde os membros escolhem o idioma",
+        "channel": "Onde publicar o painel (padrão: este canal)"
+    },
+    "pick": {
+        "title": "Seu idioma",
+        "text": "Escolha o idioma que o Mewvo deve usar nas mensagens para você. Você recebe o cargo correspondente; seus outros cargos de idioma são removidos.",
+        "placeholder": "Escolha um idioma"
+    },
+    "panel": {
+        "title": "Escolha seu idioma",
+        "text": "Clique no seu idioma. O Mewvo passa a usá-lo nas mensagens para você (respostas, DMs, subidas de nível). Clique em outro para trocar.",
+        "posted": "Painel de idiomas publicado em {channel}.",
+        "noPerms": "Não consigo publicar em {channel}: preciso de \"Ver canal\", \"Enviar mensagens\" e \"Inserir links\" lá.",
+        "textOnly": "Escolha um canal de texto para o painel."
+    },
+    "notSetUp": "Este servidor ainda não tem cargos de idioma. Um admin pode defini-los no painel de controle (Idioma do bot).",
+    "notYours": "Este menu é de outra pessoa. Use /language set você mesmo.",
+    "done": "Pronto. Agora o Mewvo usa {language} nas mensagens para você.",
+    "already": "Você já tem {language}.",
+    "error": {
+        "unknown": "Esse idioma não está disponível.",
+        "notOffered": "{language} ainda não tem cargo neste servidor.",
+        "memberMissing": "Não encontrei você neste servidor.",
+        "noManageRoles": "Preciso da permissão \"Gerenciar cargos\" para mudar os cargos de idioma. Peça a um admin.",
+        "roleMissing": "O cargo de {language} não existe mais. Peça a um admin para escolhê-lo de novo no painel de controle.",
+        "managed": "O cargo **{role}** é gerenciado por uma integração, então não posso dá-lo nem removê-lo.",
+        "dangerous": "O cargo **{role}** tem permissões de equipe, então não o distribuo. Peça a um admin para escolher outro cargo de idioma.",
+        "hierarchy": "O cargo **{role}** não está abaixo do meu cargo mais alto, então não posso dá-lo nem removê-lo. Peça a um admin para subir meu cargo.",
+        "failed": "O Discord recusou a mudança de cargo. Tente de novo daqui a pouco.",
+        "dbDown": "As configurações não podem ser lidas agora (o banco de dados não responde). Nada foi alterado."
+    }
+}

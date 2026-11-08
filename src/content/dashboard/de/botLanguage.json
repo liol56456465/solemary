@@ -18,5 +18,12 @@
   },
   "saved": {
     "done": "Mewvo benutzt auf diesem Server jetzt {language} für Beiträge und DMs."
+  },
+  "roles": {
+    "title": "Sprachrollen",
+    "help": "Eine Rolle pro Sprache. Ein Mitglied mit einer dieser Rollen bekommt Nachrichten, die für es bestimmt sind (Antworten, DMs, Level-ups, den Hinweis im Zählspiel), in dieser Sprache; ohne Rolle gelten die Regeln unten. Mitglieder wählen ihre Rolle mit /language set oder dem Panel aus /language panel. Jede Rolle muss sicher vergeben werden können (keine Team-Berechtigungen, unter Mewvos Rolle).",
+    "none": "Keine Rolle",
+    "duplicate": "{first} und {second} haben dieselbe Rolle. Jede Sprache braucht eine eigene Rolle.",
+    "saved": "Sprachrollen gespeichert."
   }
 }

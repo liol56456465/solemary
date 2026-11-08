@@ -58,7 +58,8 @@
         "leaderboardTitle": "Ranking do jogo de contagem",
         "leaderboardEmpty": "Ninguém contou ainda.",
         "invalidAction": "Escolha uma ação válida do jogo de contagem.",
-        "failed": "Algo deu errado ao gerenciar o jogo de contagem."
+        "failed": "Algo deu errado ao gerenciar o jogo de contagem.",
+        "broke": "{user} quebrou a contagem. Recomecem do **1**."
     },
     "slash": {
         "fun": {

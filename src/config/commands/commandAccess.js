@@ -51,6 +51,8 @@ export const EVERYONE_COMMANDS = new Set([
   'avatar', 'firstmsg', 'serverinfo', 'userinfo', 'weather', 'report file',
   // Self-cooldown: a timeout on yourself only (services/members/selfCooldownService.js)
   'cooldown',
+  // Your own language role (/language panel stays admin: it posts as the bot)
+  'language set',
   'todo add', 'todo list', 'todo complete', 'todo remove',
   'todo share create', 'todo share add', 'todo share view', 'todo share addtask', 'todo share remove',
 

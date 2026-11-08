@@ -117,6 +117,24 @@ export const RULES_POST_DEFAULT = Object.freeze({
 // The bot's languages (the same 8 as the website; registry stays free of the i18n module).
 export const BOT_LANGUAGE_CODES = Object.freeze(['en', 'ru', 'de', 'fr', 'it', 'pl', 'es', 'pt-BR']);
 
+// Language roles: { en: roleId, de: roleId, … }; a language may be left out or null. One role
+// per language (two languages on the same role could never tell the member's choice apart).
+const languageRoles = z.object(Object.fromEntries(BOT_LANGUAGE_CODES.map((code) => [code, optionalId.optional()]))).strict()
+    .refine((map) => {
+        const ids = Object.values(map).filter(Boolean);
+        return new Set(ids).size === ids.length;
+    }, 'each language needs its own role');
+// The owner's roles in the main server (owner, 2026-11-08). fr: not set (it was given the de role's id).
+export const LANGUAGE_ROLE_HOME_DEFAULT = Object.freeze({
+    en: '1569098172578402344',
+    ru: '1569098415282069544',
+    de: '1569099080125259776',
+    it: '1569099182042648727',
+    pl: '1569099300103786708',
+    es: '1569099459923677337',
+    'pt-BR': '1569099585551601764',
+});
+
 export const SETTING_KINDS = ['channel', 'category', 'role', 'number', 'duration', 'string', 'url', 'boolean', 'list', 'json'];
 
 /** @type {ReadonlyArray<object>} */
@@ -353,6 +371,17 @@ export const SETTINGS = Object.freeze([
     {
         key: 'botLanguage', module: 'botLanguage', kind: 'string', guild: 'main', label: 'Bot language', env: null,
         fallback: 'en', schema: z.enum(BOT_LANGUAGE_CODES),
+    },
+    {
+        // A member's own language (utils/botText.js resolveBotLanguage, first step): language
+        // code → a role of this server; /language and its panel hand them out. Every server can
+        // set its own (guild 'main', not homeOnly); the home default seeds the owner's roles in
+        // the main server (prodOnly: never in test mode, never in another server). French was
+        // given the German role id by mistake, so it is left unset until the owner names its role.
+        key: 'languageRoles', module: 'botLanguage', kind: 'json', guild: 'main', label: 'Language roles', env: null,
+        fallback: LANGUAGE_ROLE_HOME_DEFAULT, prodOnly: true, prodFallbackEmpty: Object.freeze({}),
+        schema: languageRoles,
+        describe: (value) => `${Object.values(value || {}).filter(Boolean).length} of ${BOT_LANGUAGE_CODES.length} set`,
     },
     // ── Server rules ──
     {

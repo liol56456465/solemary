@@ -58,7 +58,8 @@
         "leaderboardTitle": "Ranking gry w liczenie",
         "leaderboardEmpty": "Nikt jeszcze nie liczył.",
         "invalidAction": "Wybierz prawidłową akcję gry w liczenie.",
-        "failed": "Coś poszło nie tak podczas zarządzania grą w liczenie."
+        "failed": "Coś poszło nie tak podczas zarządzania grą w liczenie.",
+        "broke": "{user} przerwał(a) liczenie. Zaczynamy od nowa od **1**."
     },
     "slash": {
         "fun": {

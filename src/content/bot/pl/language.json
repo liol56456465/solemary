@@ -1,0 +1,36 @@
+{
+    "cmd": {
+        "desc": "Wybierz język, którego Mewvo używa dla ciebie",
+        "set": "Wybierz swój język: Mewvo użyje go w wiadomościach do ciebie",
+        "panel": "Opublikuj panel, w którym członkowie wybierają język",
+        "channel": "Gdzie opublikować panel (domyślnie: ten kanał)"
+    },
+    "pick": {
+        "title": "Twój język",
+        "text": "Wybierz język, którego Mewvo ma używać w wiadomościach do ciebie. Dostaniesz pasującą rolę; twoje inne role językowe zostaną usunięte.",
+        "placeholder": "Wybierz język"
+    },
+    "panel": {
+        "title": "Wybierz swój język",
+        "text": "Kliknij swój język. Mewvo będzie go używać w wiadomościach do ciebie (odpowiedzi, wiadomości prywatne, nowe poziomy). Kliknij inny, aby zmienić.",
+        "posted": "Panel języków opublikowany w {channel}.",
+        "noPerms": "Nie mogę pisać w {channel}: potrzebuję tam uprawnień „Wyświetlanie kanału”, „Wysyłanie wiadomości” i „Osadzanie linków”.",
+        "textOnly": "Wybierz kanał tekstowy dla panelu."
+    },
+    "notSetUp": "Ten serwer nie ma jeszcze ról językowych. Administrator może je ustawić w panelu (Język bota).",
+    "notYours": "To menu należy do kogoś innego. Użyj /language set samodzielnie.",
+    "done": "Gotowe. Mewvo używa teraz języka {language} w wiadomościach do ciebie.",
+    "already": "Masz już język {language}.",
+    "error": {
+        "unknown": "Ten język nie jest dostępny.",
+        "notOffered": "Język {language} nie ma jeszcze roli na tym serwerze.",
+        "memberMissing": "Nie mogę cię znaleźć na tym serwerze.",
+        "noManageRoles": "Potrzebuję uprawnienia „Zarządzanie rolami”, aby zmieniać role językowe. Poproś administratora.",
+        "roleMissing": "Rola dla języka {language} już nie istnieje. Poproś administratora, aby wybrał ją ponownie w panelu.",
+        "managed": "Rolą **{role}** zarządza integracja, więc nie mogę jej nadać ani zabrać.",
+        "dangerous": "Rola **{role}** ma uprawnienia administracji, więc jej nie nadaję. Poproś administratora o wybór innej roli językowej.",
+        "hierarchy": "Rola **{role}** nie jest poniżej mojej najwyższej roli, więc nie mogę jej nadać ani zabrać. Poproś administratora o przesunięcie mojej roli wyżej.",
+        "failed": "Discord odrzucił zmianę roli. Spróbuj ponownie za chwilę.",
+        "dbDown": "Nie można teraz odczytać ustawień (baza danych nie odpowiada). Nic nie zostało zmienione."
+    }
+}

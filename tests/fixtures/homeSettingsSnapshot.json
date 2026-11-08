@@ -1,5 +1,5 @@
 {
-  "_comment": "Resolved settings of the home servers with no database row and no env overrides, captured from getSetting() at a607e88 (before B0a). resolveSetting/settingsFor must return exactly these. Keys added later (botLanguage, appealsHome, appealsInvite) carry their registry fallback.",
+  "_comment": "Resolved settings of the home servers with no database row and no env overrides, captured from getSetting() at a607e88 (before B0a). resolveSetting/settingsFor must return exactly these. Keys added later (botLanguage, languageRoles, appealsHome, appealsInvite) carry their registry fallback.",
   "production": {
     "main": {
       "adminRequestChannelId": "1527697155643408442",
@@ -48,6 +48,15 @@
       "enforcementTemplates": [],
       "catName": "Mewvo",
       "botLanguage": "en",
+      "languageRoles": {
+        "en": "1569098172578402344",
+        "ru": "1569098415282069544",
+        "de": "1569099080125259776",
+        "it": "1569099182042648727",
+        "pl": "1569099300103786708",
+        "es": "1569099459923677337",
+        "pt-BR": "1569099585551601764"
+      },
       "catAnnounce": true,
       "serverRules": {
         "rules": [],
@@ -113,6 +122,15 @@
       "enforcementTemplates": [],
       "catName": "Mewvo",
       "botLanguage": "en",
+      "languageRoles": {
+        "en": "1569098172578402344",
+        "ru": "1569098415282069544",
+        "de": "1569099080125259776",
+        "it": "1569099182042648727",
+        "pl": "1569099300103786708",
+        "es": "1569099459923677337",
+        "pt-BR": "1569099585551601764"
+      },
       "catAnnounce": true,
       "serverRules": {
         "rules": [],
@@ -176,6 +194,7 @@
       "enforcementTemplates": [],
       "catName": "Mewvo",
       "botLanguage": "en",
+      "languageRoles": {},
       "catAnnounce": true,
       "serverRules": {
         "rules": [],
@@ -237,6 +256,7 @@
       "enforcementTemplates": [],
       "catName": "Mewvo",
       "botLanguage": "en",
+      "languageRoles": {},
       "catAnnounce": true,
       "serverRules": {
         "rules": [],

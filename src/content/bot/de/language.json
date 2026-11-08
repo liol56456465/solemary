@@ -1,0 +1,36 @@
+{
+    "cmd": {
+        "desc": "Wähle die Sprache, die Mewvo für dich benutzt",
+        "set": "Wähle deine Sprache: Mewvo benutzt sie für Nachrichten an dich",
+        "panel": "Ein Panel posten, in dem Mitglieder ihre Sprache wählen",
+        "channel": "Wo das Panel gepostet wird (Standard: dieser Kanal)"
+    },
+    "pick": {
+        "title": "Deine Sprache",
+        "text": "Wähle die Sprache, die Mewvo für Nachrichten an dich benutzen soll. Du bekommst die passende Rolle; deine anderen Sprachrollen werden entfernt.",
+        "placeholder": "Sprache wählen"
+    },
+    "panel": {
+        "title": "Wähle deine Sprache",
+        "text": "Klicke auf deine Sprache. Mewvo benutzt sie dann für Nachrichten an dich (Antworten, DMs, Level-ups). Klicke auf eine andere, um zu wechseln.",
+        "posted": "Sprach-Panel in {channel} gepostet.",
+        "noPerms": "Ich kann in {channel} nicht posten: Ich brauche dort „Kanal ansehen“, „Nachrichten senden“ und „Links einbetten“.",
+        "textOnly": "Wähle einen Textkanal für das Panel."
+    },
+    "notSetUp": "Dieser Server hat noch keine Sprachrollen. Ein Admin kann sie im Dashboard festlegen (Bot-Sprache).",
+    "notYours": "Dieses Menü gehört jemand anderem. Benutze /language set selbst.",
+    "done": "Erledigt. Mewvo benutzt jetzt {language} für Nachrichten an dich.",
+    "already": "Du hast schon {language}.",
+    "error": {
+        "unknown": "Diese Sprache gibt es nicht.",
+        "notOffered": "{language} hat auf diesem Server noch keine Rolle.",
+        "memberMissing": "Ich konnte dich auf diesem Server nicht finden.",
+        "noManageRoles": "Ich brauche die Berechtigung „Rollen verwalten“, um Sprachrollen zu ändern. Frag einen Admin.",
+        "roleMissing": "Die Rolle für {language} gibt es nicht mehr. Bitte einen Admin, sie im Dashboard neu zu wählen.",
+        "managed": "Die Rolle **{role}** wird von einer Integration verwaltet, daher kann ich sie weder geben noch entfernen.",
+        "dangerous": "Die Rolle **{role}** hat Team-Berechtigungen, daher vergebe ich sie nicht. Bitte einen Admin, eine andere Sprachrolle zu wählen.",
+        "hierarchy": "Die Rolle **{role}** liegt nicht unter meiner höchsten Rolle, daher kann ich sie weder geben noch entfernen. Bitte einen Admin, meine Rolle höher zu schieben.",
+        "failed": "Discord hat die Rollenänderung abgelehnt. Versuch es gleich noch einmal.",
+        "dbDown": "Die Einstellungen können gerade nicht gelesen werden (Datenbank antwortet nicht). Nichts wurde geändert."
+    }
+}

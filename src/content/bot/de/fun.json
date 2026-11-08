@@ -58,7 +58,8 @@
         "leaderboardTitle": "Bestenliste des Zählspiels",
         "leaderboardEmpty": "Noch hat niemand gezählt.",
         "invalidAction": "Wähle eine gültige Aktion für das Zählspiel.",
-        "failed": "Beim Verwalten des Zählspiels ist etwas schiefgelaufen."
+        "failed": "Beim Verwalten des Zählspiels ist etwas schiefgelaufen.",
+        "broke": "{user} hat die Zählung unterbrochen. Fangt wieder bei **1** an."
     },
     "slash": {
         "fun": {

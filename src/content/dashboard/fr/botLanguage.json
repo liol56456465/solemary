@@ -18,5 +18,12 @@
   },
   "saved": {
     "done": "Mewvo utilise maintenant {language} pour les messages et les MP sur ce serveur."
+  },
+  "roles": {
+    "title": "Rôles de langue",
+    "help": "Un rôle par langue. Un membre qui a l'un de ces rôles reçoit les messages qui lui sont destinés (réponses, MP, passages de niveau, l'avis du jeu de comptage) dans cette langue ; sans rôle, les règles ci-dessous s'appliquent. Les membres choisissent leur rôle avec /language set ou le panneau de /language panel. Chaque rôle doit pouvoir être distribué sans risque (pas de permissions de staff, sous le rôle de Mewvo).",
+    "none": "Aucun rôle",
+    "duplicate": "{first} et {second} ont le même rôle. Chaque langue a besoin de son propre rôle.",
+    "saved": "Rôles de langue enregistrés."
   }
 }

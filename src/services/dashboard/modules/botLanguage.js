@@ -4,15 +4,25 @@
 // Stored as the registry setting `botLanguage` (guild_settings, saved through the settings
 // service: validated, row-locked, one dashboard_audit row per change). Page text:
 // src/content/dashboard/<lang>/botLanguage.json.
+//
+// Language roles card: one role per language (setting `languageRoles`); a member with one of
+// them gets messages meant for them in that language, and /language hands them out. Saving
+// roles that the bot gives to anyone who asks is Administrator-only (`admin: true`); each role
+// must be safe to hand out (autoRoleField: no staff permissions, below the bot's role), and two
+// languages cannot share a role.
 
 import { html } from '../html.js';
-import { choiceField, postForm, selectInput } from '../forms.js';
+import { InputError, autoRoleField, choiceField, postForm, rolePicker, selectInput } from '../forms.js';
 import { textFor } from '../language.js';
 import { LANGUAGES, LANG_CODES } from '../../site/i18n.js';
-import { registryValue, saveRegistry, section } from './common.js';
+import { changedOnly, registryValue, saveRegistry, section } from './common.js';
 import { managerActions } from './serverScope.js';
 
 const languageName = (code) => LANGUAGES.find((l) => l.code === code)?.name || code;
+/** The form field of a language's role ('pt-BR' → role_pt_BR). */
+export const roleFieldName = (code) => `role_${code.replace('-', '_')}`;
+/** Only the languages with a role, in the fixed order (so a stored null or key order is no change). */
+const setRoles = (map) => Object.fromEntries(LANG_CODES.filter((code) => map?.[code]).map((code) => [code, map[code]]));
 
 export default {
     key: 'bot-language',
@@ -21,14 +31,18 @@ export default {
 
     async load(ctx) {
         const value = registryValue(ctx, 'botLanguage');
-        return { language: LANG_CODES.includes(value) ? value : 'en' };
+        const roles = registryValue(ctx, 'languageRoles');
+        return { language: LANG_CODES.includes(value) ? value : 'en', roles: roles && typeof roles === 'object' ? roles : {} };
     },
 
-    render(ctx, { language }) {
+    render(ctx, { language, roles = {} }) {
         const tr = textFor(ctx);
         const form = postForm(ctx, 'bot-language', 'language', selectInput('botLanguage', language,
             LANGUAGES.map((l) => [l.code, l.name]), { label: tr.t('botLanguage.form.label'), help: tr.t('botLanguage.form.help') }));
         return html`${section(tr.t('botLanguage.card.title'), form, tr.t('botLanguage.card.help'), { key: 'language' })}
+${section(tr.t('botLanguage.roles.title'), postForm(ctx, 'bot-language', 'language-roles', LANGUAGES.map((l) => rolePicker(ctx.guild, roleFieldName(l.code), roles[l.code] || null, {
+            label: l.name, autoAssign: true, noneLabel: tr.t('botLanguage.roles.none'),
+        })), { canEdit: ctx.canEdit && ctx.canAct }), tr.t('botLanguage.roles.help'), { key: 'language-roles' })}
 ${section(tr.t('botLanguage.rule.title'), html`<ul><li>${tr.t('botLanguage.rule.public')}</li><li>${tr.t('botLanguage.rule.private')}</li><li>${tr.t('botLanguage.rule.done')}</li></ul>`, '', { key: 'rule' })}`;
     },
 
@@ -40,6 +54,26 @@ ${section(tr.t('botLanguage.rule.title'), html`<ul><li>${tr.t('botLanguage.rule.
             if (botLanguage === registryValue(ctx, 'botLanguage')) return { changes: [] };
             const result = await saveRegistry(ctx, { botLanguage }, 'botLanguage');
             return { ...result, message: tr.t('botLanguage.saved.done', { language: languageName(botLanguage) }) };
+        },
+        // Role-granting: Administrator-only (tests/helpers/privilegedActions.js).
+        'language-roles': {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const next = {};
+                const seen = new Map();
+                for (const { code, name } of LANGUAGES) {
+                    const field = roleFieldName(code);
+                    const roleId = autoRoleField(ctx.guild, form, field, { optional: true, label: name });
+                    if (!roleId) continue;
+                    if (seen.has(roleId)) throw new InputError(tr.t('botLanguage.roles.duplicate', { first: seen.get(roleId), second: name }), 400, field);
+                    seen.set(roleId, name);
+                    next[code] = roleId;
+                }
+                if (!Object.keys(changedOnly({ languageRoles: next }, { languageRoles: setRoles(registryValue(ctx, 'languageRoles')) })).length) return { changes: [] };
+                const result = await saveRegistry(ctx, { languageRoles: next }, 'botLanguage');
+                return { ...result, message: tr.t('botLanguage.roles.saved') };
+            },
         },
     }),
 };
