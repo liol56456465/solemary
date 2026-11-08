@@ -292,7 +292,7 @@
         },
         "memberTools": {
           "term": "Strumenti per i membri",
-          "text": "Liste di cose da fare (anche condivise), una calcolatrice e convertitori, meteo, informazioni su server e utenti, e /wipedata per eliminare i tuoi livelli, il saldo, lo stato AFK, il compleanno e la lista di cose da fare."
+          "text": "Liste di cose da fare (anche condivise), una calcolatrice e convertitori, meteo, informazioni su server e utenti, e /wipedata per eliminare i tuoi livelli, il compleanno e la lista di cose da fare."
         }
       }
     }

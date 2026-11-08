@@ -292,7 +292,7 @@
         },
         "memberTools": {
           "term": "Werkzeuge für Mitglieder",
-          "text": "To-do-Listen (auch gemeinsame), ein Rechner und Umrechner, Wetter, Server- und Benutzerinfos und /wipedata, um deine eigenen Level, dein Guthaben, deinen AFK-Status, Geburtstag und deine To-do-Liste zu löschen."
+          "text": "To-do-Listen (auch gemeinsame), ein Rechner und Umrechner, Wetter, Server- und Benutzerinfos und /wipedata, um deine eigenen Level, deinen Geburtstag und deine To-do-Liste zu löschen."
         }
       }
     }

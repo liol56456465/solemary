@@ -292,7 +292,7 @@
         },
         "memberTools": {
           "term": "Outils pour les membres",
-          "text": "Listes de tâches (aussi partagées), une calculatrice et des convertisseurs, la météo, des infos sur le serveur et les utilisateurs, et /wipedata pour supprimer tes propres niveaux, ton solde, ton statut AFK, ton anniversaire et ta liste de tâches."
+          "text": "Listes de tâches (aussi partagées), une calculatrice et des convertisseurs, la météo, des infos sur le serveur et les utilisateurs, et /wipedata pour supprimer tes propres niveaux, ton anniversaire et ta liste de tâches."
         }
       }
     }

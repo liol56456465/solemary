@@ -292,7 +292,7 @@
         },
         "memberTools": {
           "term": "Member tools",
-          "text": "To-do lists (also shared), a calculator and converters, weather, server and user info, and /wipedata to delete your own levels, balance, AFK status, birthday and to-do list."
+          "text": "To-do lists (also shared), a calculator and converters, weather, server and user info, and /wipedata to delete your own levels, birthday and to-do list."
         }
       }
     }

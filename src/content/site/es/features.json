@@ -292,7 +292,7 @@
         },
         "memberTools": {
           "term": "Herramientas para miembros",
-          "text": "Listas de tareas (también compartidas), una calculadora y conversores, el tiempo, información del servidor y de usuarios, y /wipedata para borrar tus propios niveles, saldo, estado AFK, cumpleaños y lista de tareas."
+          "text": "Listas de tareas (también compartidas), una calculadora y conversores, el tiempo, información del servidor y de usuarios, y /wipedata para borrar tus propios niveles, cumpleaños y lista de tareas."
         }
       }
     }

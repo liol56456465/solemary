@@ -56,7 +56,7 @@
     "title": "Daten und Kontakt",
     "stored": {
       "q": "Welche Daten speichert Mewvo?",
-      "a": "Discord-IDs, deine Level und XP, Moderationsfälle, Einsprüche und was du in Formulare oder Tickets schreibst, sowie ein paar Dinge, die du selbst speicherst, etwa einen Geburtstag. Der Bot fragt nie nach einer E-Mail oder einem Passwort. Wenn du auf dieser Website ein Mewvo-Konto anlegst, speichert es einen Benutzernamen und einen nicht umkehrbaren scrypt-Hash deines Passworts (nie das Passwort selbst), auch dann keine E-Mail. Nichts wird je verkauft. Die [Datenschutzseite](/privacy) hat die vollständige Liste, und `/wipedata` löscht deine Level, dein Guthaben, deinen AFK-Status und deinen Geburtstag auf diesem Server, dazu deine To-do-Liste, Erinnerungen und den gespeicherten Discord-Login. Moderationsakten bleiben; warum, steht auf der Datenschutzseite."
+      "a": "Discord-IDs, deine Level und XP, Moderationsfälle, Einsprüche und was du in Formulare oder Tickets schreibst, sowie ein paar Dinge, die du selbst speicherst, etwa einen Geburtstag. Der Bot fragt nie nach einer E-Mail oder einem Passwort. Wenn du auf dieser Website ein Mewvo-Konto anlegst, speichert es einen Benutzernamen und einen nicht umkehrbaren scrypt-Hash deines Passworts (nie das Passwort selbst), auch dann keine E-Mail. Nichts wird je verkauft. Die [Datenschutzseite](/privacy) hat die vollständige Liste, und `/wipedata` löscht deine Level und deinen Geburtstag auf diesem Server, dazu deine To-do-Liste, Erinnerungen und den gespeicherten Discord-Login. Moderationsakten bleiben; warum, steht auf der Datenschutzseite."
     },
     "reachStaff": {
       "q": "Wie erreiche ich das Team?",

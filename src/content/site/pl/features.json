@@ -292,7 +292,7 @@
         },
         "memberTools": {
           "term": "Narzędzia dla członków",
-          "text": "Listy zadań (także wspólne), kalkulator i przeliczniki, pogoda, informacje o serwerze i użytkowniku oraz /wipedata, aby usunąć własne poziomy, saldo, status AFK, urodziny i listę zadań."
+          "text": "Listy zadań (także wspólne), kalkulator i przeliczniki, pogoda, informacje o serwerze i użytkowniku oraz /wipedata, aby usunąć własne poziomy, urodziny i listę zadań."
         }
       }
     }

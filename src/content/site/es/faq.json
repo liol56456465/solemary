@@ -56,7 +56,7 @@
     "title": "Datos y contacto",
     "stored": {
       "q": "¿Qué datos guarda Mewvo?",
-      "a": "ID de Discord, tus niveles y XP, casos de moderación, apelaciones y lo que escribes en formularios o tickets, además de algunas cosas que decides guardar, como un cumpleaños. El bot nunca pide un correo electrónico ni una contraseña. Si creas una cuenta de Mewvo en esta web, guarda un nombre de usuario y un hash scrypt de un solo sentido de tu contraseña (nunca la contraseña), y tampoco correo. Nunca se vende nada. La [página de privacidad](/privacy) tiene la lista completa, y `/wipedata` borra tus niveles, saldo, estado AFK y cumpleaños en ese servidor, además de tu lista de tareas, recordatorios y el inicio de sesión de Discord guardado. Los registros de moderación se quedan; la página de privacidad explica por qué."
+      "a": "ID de Discord, tus niveles y XP, casos de moderación, apelaciones y lo que escribes en formularios o tickets, además de algunas cosas que decides guardar, como un cumpleaños. El bot nunca pide un correo electrónico ni una contraseña. Si creas una cuenta de Mewvo en esta web, guarda un nombre de usuario y un hash scrypt de un solo sentido de tu contraseña (nunca la contraseña), y tampoco correo. Nunca se vende nada. La [página de privacidad](/privacy) tiene la lista completa, y `/wipedata` borra tus niveles y cumpleaños en ese servidor, además de tu lista de tareas, recordatorios y el inicio de sesión de Discord guardado. Los registros de moderación se quedan; la página de privacidad explica por qué."
     },
     "reachStaff": {
       "q": "¿Cómo contacto con el staff?",

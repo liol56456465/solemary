@@ -56,7 +56,7 @@
     "title": "Data and contact",
     "stored": {
       "q": "What data does Mewvo store?",
-      "a": "Discord IDs, your levels and XP, moderation cases, appeals and what you write in forms or tickets, and a few things you choose to save, such as a birthday. The bot never asks for an email or a password. If you create a Mewvo account on this website, it stores a username and a one-way scrypt hash of your password (never the password itself), still no email. Nothing is ever sold. The [privacy page](/privacy) has the full list, and `/wipedata` deletes your levels, balance, AFK status and birthday in that server, plus your to-do list, reminders and stored Discord login. Moderation records stay; see the privacy page for why."
+      "a": "Discord IDs, your levels and XP, moderation cases, appeals and what you write in forms or tickets, and a few things you choose to save, such as a birthday. The bot never asks for an email or a password. If you create a Mewvo account on this website, it stores a username and a one-way scrypt hash of your password (never the password itself), still no email. Nothing is ever sold. The [privacy page](/privacy) has the full list, and `/wipedata` deletes your levels and birthday in that server, plus your to-do list, reminders and stored Discord login. Moderation records stay; see the privacy page for why."
     },
     "reachStaff": {
       "q": "How do I reach the staff?",
