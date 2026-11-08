@@ -26,35 +26,31 @@ Single choice. One answer per language, each giving its language role (the same 
 as not required if members may skip it. Mewvo reads the role, so Onboarding, `/language` and the panel all work
 together; `/language` cleans up a second language role if a member ends up with two.
 
-## Proposal (not built): re-edit DMs of the last 30 days
+## Re-edit DMs of the last 30 days (built, schema v13; owner OK 2026-11-08)
 
-When a member changes language, the bot DMs it sent them in the last 30 days are edited into the new language.
-This needs a DM log = a **schema change** (needs the owner's OK and `/schema-change`).
+When a member changes language, the bot DMs it sent them about that server in the last 30 days are edited
+into the new language. Code: `src/services/botDm/` (`dmRenderers.js`, `dmLog.js`, `dmRelang.js`).
 
-**Table `bot_dm_log`** (schema v13):
+**Table `bot_dm_log`** (v13, additive): `id`, `guild_id`, `user_id`, `channel_id` (the DM channel), `message_id`
+(unique), `template_key`, `params` (jsonb), `lang` (the language the DM is in now), `created_at`. Indexes
+`(user_id, created_at desc)` and `(created_at)`.
 
-| column | type | note |
-| --- | --- | --- |
-| `id` | bigserial PK | |
-| `guild_id` | text not null | the server the DM is about |
-| `user_id` | text not null | recipient |
-| `channel_id` | text not null | the DM channel |
-| `message_id` | text not null unique | |
-| `kind` | text not null | template name: `ban`, `kick`, `mute`, `warn`, `unban`, `unmute`, `caseVoided`, `appealAccepted`, `appealDenied`, … |
-| `params` | jsonb not null | what the template needs to re-render (case code, reason key, times, invite) — no free-text secrets; a custom reason is stored as given to the DM already |
-| `lang` | text not null | language it was sent in |
-| `sent_at` | timestamptz not null default now() | |
-
-Index `(guild_id, user_id, sent_at desc)`.
-
-**Retention:** rows older than 30 days are deleted by the existing once-a-minute expiry cron (batched delete,
-`WHERE sent_at < now() - interval '30 days'`); also covered by `/wipedata` and the privacy export.
-
-**What gets re-edited:** only DMs from a template the bot can render again in another language (enforcement DMs,
-appeal results, ticket/modmail system notices). Never: messages with staff-written text other than the reason,
-messages older than 30 days, messages whose invite has expired (the invite stays the same link, it is not renewed).
-Edits run in the background with a rate limit (Discord: ~5 edits/5 s per channel) after a language switch; a failed
-edit (DM closed, message deleted) is skipped and logged at debug level. The member gets no new DM.
-
-**Open questions for the owner:** keep 30 days? Store `params` (more data at rest) or only re-edit what can be
-rebuilt from `mod_cases` by case code (less data, fewer DM kinds)?
+- **Sending:** `sendLoggedDm(user, { key, params, guildId, member, components, files })` renders the template in the
+  member's language (language role, else the server's), sends it with `allowedMentions: { parse: [] }` and logs it.
+  Logged only for a server that has language roles, with the database up; a failed log write never undoes a
+  delivered DM (that DM is just never re-edited).
+- **Templates** (`dmRenderers.js`): `enf.ban|kick|mute|warn|banEnded|muteEnded|appealAccepted|appealDenied|caseVoided`,
+  `ticket.closed|feedback|transcript`, `application.result`, `verification.approved|denied`, `suggestion.status`,
+  `premium.gift`. Params hold only what the DM showed: the case fields the DM reads (no internal notes, no staff or
+  target ids), and staff/member text (reason, note, suggestion, gift note) exactly as shown. A re-edit renders only
+  our text again.
+- **Trigger:** `guildMemberUpdate` when a language role was added or removed (Onboarding, staff, `/language`), and
+  the `/language` handlers. Debounced 60 s per server + member (two changes within a minute: one run, final
+  language); a newer change stops a run at its next DM.
+- **Run:** at most 50 DMs (newest first, only those not in that language yet), one edit every 1.5 s for the whole
+  bot, one run at a time. A deleted DM or DM channel (10008/10003) loses its row; an answered feedback survey (its
+  buttons gone) is not put back and loses its row. Components are replaced only when the template renders them
+  (the feedback buttons); attachments and embed timestamps stay. The member gets no new DM. Current settings apply
+  on a re-edit (appeal invite, PUBLIC_URL links), as they would for a new DM.
+- **Retention:** rows older than 30 days go in the daily retention job (`privacy/retentionService.js`, rule
+  `bot_dm_log`). `/wipedata` deletes the member's rows (all servers).

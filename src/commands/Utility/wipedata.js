@@ -10,7 +10,7 @@ import { localized, replyText } from '../Core/modules/commandText.js';
 /** The catalog label of each wipe item (one literal key per WIPE_ITEMS id; legacy items are never shown). */
 const ITEM_KEYS = Object.freeze({
     levels: 'utility.wipedata.item.levels', birthday: 'utility.wipedata.item.birthday', todo: 'utility.wipedata.item.todo',
-    reminders: 'utility.wipedata.item.reminders', oauth: 'utility.wipedata.item.oauth',
+    reminders: 'utility.wipedata.item.reminders', oauth: 'utility.wipedata.item.oauth', dmlog: 'utility.wipedata.item.dmlog',
 });
 
 /** A wipe item's label in a language (an id without a catalog key: the service's English label, else the id). */

@@ -69,6 +69,7 @@ const configuredTables = {
     site_content_history: 'site_content_history',
     site_images: 'site_images',
     error_events: 'error_events',
+    bot_dm_log: 'bot_dm_log',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -138,6 +139,7 @@ const allowedTableIdentifiers = new Set([
     'site_content_history',
     'site_images',
     'error_events',
+    'bot_dm_log',
 ]);
 
 const validatedTables = Object.fromEntries(

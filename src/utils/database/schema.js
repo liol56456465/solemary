@@ -909,6 +909,25 @@ export const tableStatements = [
         trace_id VARCHAR(16),
         message VARCHAR(300) NOT NULL DEFAULT ''
     )`,
+    // Bot DM log (schema v13, services/botDm/): one row per bot DM built from catalog keys
+    // (enforcement, appeal results, case-removed notices, ticket, application, verification,
+    // suggestion and premium-gift DMs) in a server that has language roles, so a language change
+    // can edit those DMs into the new language. template_key names the renderer
+    // (services/botDm/dmRenderers.js); params is what it needs to render the DM again: only what the
+    // DM itself showed (staff- or member-written text, e.g. a reason, is stored as shown). lang =
+    // the language it is in now. Kept 30 days (privacy/retentionService.js); /wipedata deletes a
+    // member's rows.
+    `CREATE TABLE IF NOT EXISTS ${t.bot_dm_log} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        user_id VARCHAR(20) NOT NULL,
+        channel_id VARCHAR(20) NOT NULL,
+        message_id VARCHAR(20) NOT NULL UNIQUE,
+        template_key VARCHAR(64) NOT NULL,
+        params JSONB NOT NULL DEFAULT '{}'::jsonb,
+        lang VARCHAR(8) NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )`,
 ];
 
 export const indexStatements = [
@@ -981,6 +1000,8 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_premium_subscriptions_expires ON ${t.premium_subscriptions}(expires_at)`,
     `CREATE INDEX IF NOT EXISTS idx_site_content_history_key ON ${t.site_content_history}(lang, key, changed_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_error_events_trace ON ${t.error_events}(trace_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_bot_dm_log_user ON ${t.bot_dm_log}(user_id, created_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_bot_dm_log_created ON ${t.bot_dm_log}(created_at)`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `

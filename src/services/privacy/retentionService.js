@@ -17,6 +17,8 @@
 //                       data goes; batches of BATCH_LIMIT, at most KV_MAX_BATCHES per run.
 //                       ticket_data is NOT pruned: ticket reads ignore expires_at, so an expired
 //                       ticket row is still live data there.
+//   bot_dm_log    the bot DM log (schema v13; botDm/dmLog.js): rows older than 30 days. The
+//                 language-change re-edit only looks at the last 30 days, so nothing it needs goes.
 // With the bot client (runRetention's first argument), CLIENT_RETENTION_RULES also run:
 //   applications  submitted applications past the server's own retention (pending /
 //                 reviewed days, Applications settings); moved here from the read path, so
@@ -35,6 +37,7 @@ import { logger } from '../../utils/logger.js';
 import { query as dbQuery } from '../enforcement/db.js';
 import { IP_RETENTION_MS, pruneVerificationIpHashes } from '../verificationGuard.js';
 import { cleanupExpiredApplications } from '../../utils/database.js';
+import { DM_LOG_DAYS, pruneDmLog } from '../botDm/dmLog.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const YEAR_MS = 365 * DAY_MS;
@@ -50,6 +53,7 @@ export const RETENTION_DAYS = Object.freeze({
     oauth_verified_guilds: 1,
     expired_temp_data: 1,
     expired_cache_data: 1,
+    bot_dm_log: DM_LOG_DAYS,
 });
 
 /** Expired key-value rows: up to this many batches of BATCH_LIMIT per run. */
@@ -151,6 +155,11 @@ export async function pruneExpiredCacheData({ query = dbQuery, tables = pgConfig
     return pruneExpiredKeyValues(tables.cache_data, { query, limit });
 }
 
+/** bot_dm_log: DMs logged for a language change, older than 30 days. */
+export async function pruneBotDmLog({ query = dbQuery, tables = pgConfig.tables, now = Date.now(), limit = BATCH_LIMIT } = {}) {
+    return pruneDmLog({ query, tables, now, limit });
+}
+
 export const RETENTION_RULES = Object.freeze([
     ['watchlist', pruneWatchlist],
     ['no_contact', pruneNoContactOrders],
@@ -160,6 +169,7 @@ export const RETENTION_RULES = Object.freeze([
     ['oauth_verified_guilds', pruneOAuthVerifiedGuilds],
     ['expired_temp_data', pruneExpiredTempData],
     ['expired_cache_data', pruneExpiredCacheData],
+    ['bot_dm_log', pruneBotDmLog],
 ]);
 
 /**

@@ -8,7 +8,8 @@ import { MessageFlags } from 'discord.js';
 import { successEmbed } from '../utils/embeds.js';
 import { ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
-import { isAdministrator, sendDm } from '../services/enforcement/enforcementService.js';
+import { isAdministrator } from '../services/enforcement/enforcementService.js';
+import { sendLoggedDm } from '../services/botDm/dmLog.js';
 import { verifyUser } from '../services/verificationService.js';
 import { markVerifiedIn } from '../services/oauthVerification.js';
 import { closeCard } from '../services/automod/reviewCards.js';
@@ -35,16 +36,20 @@ export async function handleVerificationReview(interaction, client, args) {
     const guild = client.guilds.cache.get(guildId);
     const admin = interaction.user;
     await noteStaffReview(interaction.guildId, admin.id);
-    const dmText = textForGuild(guildId, { userId, purpose: 'dm' });
     const cardText = textForGuild(interaction.guildId, { purpose: 'public' });
-    const serverName = guild?.name || dmText.t('verification.review.theServer');
+    // The DM: the member's language role, else the server's (botDm/dmRenderers.js; logged for a
+    // language change). No server name known: "the server" in the DM's language.
+    const sendResult = (key) => (user ? sendLoggedDm(user, {
+        key, params: { serverName: guild?.name || null }, guildId,
+        member: guild?.members?.cache?.get?.(userId) ?? null, label: key,
+    }) : false);
     const delivered = (dm) => (dm ? cardText.t('verification.review.dmDelivered') : cardText.t('verification.review.dmNotDelivered'));
 
     if (decision === 'approve') {
         const result = await verifyUser(client, guildId, userId, { source: 'staff_approval', moderatorId: admin.id, lang: tr.lang });
         // Held verifications come from "Verify with Discord": now they count for a member restore into this server.
         await markVerifiedIn(userId, guildId).catch((error) => logger.warn(`Could not record the approved verification of ${userId} in ${guildId}: ${error.message}`));
-        const dm = user ? await sendDm(user, dmText.t('verification.review.dmApproved', { server: serverName })) : false;
+        const dm = await sendResult('verification.approved');
         const outcome = result.status === 'already_verified'
             ? cardText.t('verification.review.cardApprovedAlready', { admin: admin.username, dm: delivered(dm) })
             : cardText.t('verification.review.cardApproved', { admin: admin.username, dm: delivered(dm) });
@@ -52,7 +57,7 @@ export async function handleVerificationReview(interaction, client, args) {
         return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed(tr.t('verification.review.approvedTitle'), tr.t('verification.review.approvedText', { user: user?.username || userId, role: result.roleName }))] });
     }
 
-    const dm = user ? await sendDm(user, dmText.t('verification.review.dmDenied', { server: serverName })) : false;
+    const dm = await sendResult('verification.denied');
     await closeCard(interaction.message, cardText.t('verification.review.cardDenied', { admin: admin.username, dm: delivered(dm) }),
         { status: 'denied', by: admin.username });
     return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed(tr.t('verification.review.deniedTitle'), tr.t('verification.review.deniedText', { user: user?.username || userId }))] });

@@ -6,6 +6,7 @@
 import { createEmbed } from '../utils/embeds.js';
 import { logger } from '../utils/logger.js';
 import { botText, textForInteraction } from '../utils/botText.js';
+import { scheduleDmRelang } from '../services/botDm/dmRelang.js';
 import {
     LanguageRoleError, NO_MENTIONS, languageErrorText, languageRolesFor, nativeLanguageName, switchLanguageRole,
 } from '../services/languageRoleService.js';
@@ -34,6 +35,9 @@ export async function applyLanguageChoice(interaction, lang, deps = {}) {
         const result = await switchLanguageRole({ guild: interaction.guild, member, lang, map });
         const language = nativeLanguageName(lang);
         if (!result.added && !result.removed.length) return answer(tr.t('language.already', { language }), 'info');
+        // The bot's DMs of the last 30 days follow (services/botDm/dmRelang.js; debounced, so the
+        // guildMemberUpdate this role change also causes runs together with it).
+        (deps.scheduleRelang || scheduleDmRelang)(interaction.client, interaction.guildId, interaction.user?.id);
         const done = botText(lang);
         return answer(done.t('language.done', { language }), 'success', done.t('language.pick.title'));
     } catch (error) {

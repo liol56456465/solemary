@@ -4,13 +4,13 @@
 // on approval. Shared by /app-admin review and the web dashboard (Applications page).
 
 import { EmbedBuilder } from 'discord.js';
-import { createEmbed } from '../utils/embeds.js';
 import { getApplicationStatusColor } from '../config/bot.js';
 import { logger } from '../utils/logger.js';
 import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { getApplication } from '../utils/database.js';
 import ApplicationService from './applicationService.js';
-import { botText, textForGuild } from '../utils/botText.js';
+import { botText } from '../utils/botText.js';
+import { sendLoggedDm } from './botDm/dmLog.js';
 
 export const REVIEW_NOTE_MAX = 500;
 const NO_REASON = 'No reason provided.';
@@ -51,15 +51,16 @@ export async function reviewApplicationAndNotify(client, guild, applicationId, {
     let dmDelivered = false;
     try {
         const user = await client.users.fetch(application.userId);
-        // A DM to the applicant: the server's language. The stored note stays as written.
-        const tr = textForGuild(guild.id, { userId: application.userId, purpose: 'dm' });
-        const params = { name: application.roleName, note: note === NO_REASON ? tr.t('community.apply.dm.noReason') : note, id: applicationId };
-        const dmEmbed = createEmbed({
-            title: isApprove ? tr.t('community.apply.dm.approvedTitle') : tr.t('community.apply.dm.deniedTitle'),
-            description: isApprove ? tr.t('community.apply.dm.approvedBody', params) : tr.t('community.apply.dm.deniedBody', params),
-        }).setColor(getApplicationStatusColor(status));
-        await user.send({ embeds: [dmEmbed] });
-        dmDelivered = true;
+        // A DM to the applicant: their language role, else the server's language (botDm/dmRenderers.js
+        // 'application.result'; logged for a language change). The stored note stays as written.
+        dmDelivered = await sendLoggedDm(user, {
+            key: 'application.result',
+            params: { approved: isApprove, roleName: application.roleName, note: note === NO_REASON ? null : note, id: applicationId },
+            guildId: guild.id,
+            member: guild.members?.cache?.get?.(application.userId) ?? null,
+            label: 'application result',
+        });
+        if (!dmDelivered) throw new Error('DM not delivered');
     } catch (error) {
         logger.warn('Failed to send DM to user for application review', { error: error.message, userId: application.userId, applicationId });
     }

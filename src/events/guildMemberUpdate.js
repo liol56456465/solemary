@@ -6,6 +6,7 @@ import { checkImpersonation } from '../services/automod/memberChecks.js';
 import { endTempRoles } from '../services/members/tempRoleService.js';
 import { applyRoleRulesToMember } from '../services/members/roleRuleService.js';
 import { isEnforcementDbAvailable } from '../services/enforcement/db.js';
+import { onMemberRolesChanged } from '../services/botDm/dmRelang.js';
 
 export default {
   name: Events.GuildMemberUpdate,
@@ -38,6 +39,10 @@ export default {
           logger.warn(`Role rules not applied to ${newMember.id}: ${error.message}`);
         });
       }
+
+      // A language role changed (Onboarding, a staff change, /language): the bot's DMs to this
+      // member from the last 30 days are edited into the new language (debounced, in the background).
+      if (rolesChanged) onMemberRolesChanged(oldMember, newMember);
 
       if (oldMember.nickname !== newMember.nickname) {
         await checkImpersonation(newMember);

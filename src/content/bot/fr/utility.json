@@ -118,7 +118,8 @@
             "birthday": "Anniversaire",
             "todo": "Liste de tâches personnelle",
             "reminders": "Rappels",
-            "oauth": "Jeton de connexion Discord enregistré (de « Vérifier avec Discord »)"
+            "oauth": "Jeton de connexion Discord enregistré (de « Vérifier avec Discord »)",
+            "dmlog": "Copies enregistrées des MP du bot (pour les retraduire quand vous changez de langue)"
         },
         "partialTitle": "Tout n'a pas été supprimé",
         "partialFailed": "La base de données n'a pas répondu pour : {items}. ",

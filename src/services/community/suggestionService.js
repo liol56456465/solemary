@@ -14,6 +14,7 @@ import { createEmbed } from '../../utils/embeds.js';
 import { CT, query, withTransaction, userError } from './db.js';
 import { getCommunitySettings } from './settingsService.js';
 import { botText, textForGuild } from '../../utils/botText.js';
+import { sendLoggedDm } from '../botDm/dmLog.js';
 
 export const SUGGESTION_MAX_LENGTH = 1500;
 export const SUGGESTION_REASON_MAX = 500;
@@ -202,21 +203,42 @@ export async function refreshSuggestionMessage(client, row) {
     }
 }
 
-/** DMs the author about a status change (the server's language); true when delivered. */
+/**
+ * The author's status DM in a language (botDm/dmRenderers.js 'suggestion.status'). `p`: id,
+ * serverName, status, content (the suggestion as the DM shows it: at most 1000 characters),
+ * statusReason (staff-written, as given). Pure.
+ */
+export function suggestionDmPayload(p, lang = 'en') {
+    const tr = botText(lang);
+    return {
+        embeds: [createEmbed({
+            title: tr.t('community.suggest.dmTitle', { id: p.id, server: p.serverName, status: statusLabel(tr, p.status) }),
+            description: p.content,
+            color: STATUS_COLOR[p.status],
+            fields: p.statusReason ? [{ name: tr.t('community.suggest.reason'), value: p.statusReason }] : [],
+        })],
+    };
+}
+
+/**
+ * DMs the author about a status change (their language role, else the server's language; logged
+ * for a language change, botDm/dmLog.js); true when delivered.
+ */
 export async function notifySuggestionAuthor(client, row, guildName) {
     try {
         const user = await client.users.fetch(row.user_id);
-        const tr = textForGuild(row.guild_id, { userId: row.user_id, purpose: 'dm' });
-        await user.send({
-            embeds: [createEmbed({
-                title: tr.t('community.suggest.dmTitle', { id: row.id, server: guildName, status: statusLabel(tr, row.status) }),
-                description: row.content.length > 1000 ? `${row.content.slice(0, 999)}…` : row.content,
-                color: STATUS_COLOR[row.status],
-                fields: row.status_reason ? [{ name: tr.t('community.suggest.reason'), value: row.status_reason }] : [],
-            })],
-            allowedMentions: { parse: [] },
+        const content = String(row.content ?? '');
+        return await sendLoggedDm(user, {
+            key: 'suggestion.status',
+            params: {
+                id: row.id, serverName: guildName, status: row.status,
+                content: content.length > 1000 ? `${content.slice(0, 999)}…` : content,
+                statusReason: row.status_reason || null,
+            },
+            guildId: row.guild_id,
+            member: client.guilds?.cache?.get?.(String(row.guild_id))?.members?.cache?.get?.(row.user_id) ?? null,
+            label: 'suggestion status',
         });
-        return true;
     } catch (error) {
         logger.info(`Suggestion DM to ${row.user_id} failed: ${error.message}`);
         return false;

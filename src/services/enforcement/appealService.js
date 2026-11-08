@@ -17,14 +17,14 @@ import { query, withTransaction, T, isUniqueViolation } from './db.js';
 import { getCaseByCode, getCaseByCodeAnyServer, listCasesForUser, setEndDmDelivered, OPEN_STATUSES } from './caseService.js';
 import { getGuildConfig } from '../config/guildConfig.js';
 import {
-    createRejoinInvite, getLadder, liftLadderBanForWarn, logEnforcement, postModLog, revokeWarn, sendDm,
+    createRejoinInvite, getLadder, liftLadderBanForWarn, logEnforcement, postModLog, revokeWarn, sendCaseDm,
 } from './enforcementService.js';
 import { syncWarnRolesQuietly } from './warnRoleService.js';
 import { generateTranscript } from '../ticket.js';
 import { removeMutedRole } from './muteService.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
-import { appealAcceptedDm, appealDeniedDm, durationIn } from './dmTemplates.js';
-import { botText, resolveBotLanguage, textForGuild } from '../../utils/botText.js';
+import { durationIn } from './dmTemplates.js';
+import { botText, textForGuild } from '../../utils/botText.js';
 import { LADDER_STAGE_BANS, dateStamp, ladderStage, ladderStageShort, stamp, truncate } from './format.js';
 import { evidenceDisplay } from './evidenceService.js';
 import { SECOND_REVIEWER_MESSAGE, checkAppealReviewer, needsSecondReviewer } from './appealReviewer.js';
@@ -1050,10 +1050,9 @@ async function decideAppealLocked({ client, admin, caseCode, decision, note, rec
             const invite = mainGuild ? await createRejoinInvite(mainGuild, `Appeal accepted for ${caseCode}`) : null;
             // Another server's DM names that server and the case; without an invite it never points to Mewvo Support.
             if (appellant) {
-                dmDelivered = await sendDm(appellant, appealAcceptedDm(admin.username, invite, {
-                    rec: record, guildId: record.guild_id, serverName: mainGuild?.name,
-                    lang: resolveBotLanguage({ guildId: record.guild_id, userId: record.target_user_id, purpose: 'dm' }),
-                }));
+                dmDelivered = await sendCaseDm(appellant, 'enf.appealAccepted', record, {
+                    guild: mainGuild ?? null, guildId: record.guild_id, adminUsername: admin.username, invite,
+                });
             }
             // The acceptance DM is also the "ban/mute ended" notice: no second DM.
             if (!record.is_test && (record.type === 'ban' || record.type === 'mute') && isStillInEffect(record)) {
@@ -1067,7 +1066,7 @@ async function decideAppealLocked({ client, admin, caseCode, decision, note, rec
                     await db.query(`UPDATE ${T.cases} SET unappealable = TRUE WHERE id = $1`, [record.id]);
                 }
             });
-            if (appellant) dmDelivered = await sendDm(appellant, appealDeniedDm({ guildId: record.guild_id, lang: resolveBotLanguage({ guildId: record.guild_id, userId: record.target_user_id, purpose: 'dm' }) }));
+            if (appellant) dmDelivered = await sendCaseDm(appellant, 'enf.appealDenied', null, { guild: mainGuild ?? null, guildId: record.guild_id });
         }
 
         await query(

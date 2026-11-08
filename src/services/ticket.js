@@ -19,6 +19,7 @@ import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { ensureTypedServiceError, wrapServiceBoundary } from '../utils/serviceErrorBoundary.js';
 import { PRIORITY_MAP } from '../utils/helpers.js';
 import { LANG_CODES, botText, textForGuild } from '../utils/botText.js';
+import { sendLoggedDm } from './botDm/dmLog.js';
 const TICKET_DELETE_DELAY_MS = 3000;
 const TICKET_DELETE_DELAY_SECONDS = Math.floor(TICKET_DELETE_DELAY_MS / 1000);
 const TICKET_SERVICE = 'ticketService';
@@ -31,7 +32,6 @@ function ticketUserError(message, userMessage, type = ErrorTypes.VALIDATION, con
 // their language (`{ lang }` from the caller, default English); posts in the ticket channel and
 // DMs to the ticket creator are in the server's language.
 const publicText = (guild) => textForGuild(guild?.id ?? null, { purpose: 'public' });
-const dmText = (guild, userId) => textForGuild(guild?.id ?? null, { purpose: 'dm', userId });
 
 // The same text in every language: the ticket's own messages are found again by their title or
 // field name, also when they were posted in another language (before the server switched).
@@ -370,61 +370,30 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
       logger.warn(`Could not fetch ticket creator ${ticketData.userId}: ${dmError.message}`);
     }
 
-    // DMs to the ticket creator and posts in the ticket channel: the server's language.
-    const dm = dmText(channel.guild, ticketData.userId);
+    // DMs to the ticket creator (their language role, else the server's language; logged so a
+    // language change can edit them: services/botDm/) and posts in the ticket channel (the server's).
     const pub = publicText(channel.guild);
+    const creatorMember = channel.guild.members?.cache?.get?.(ticketData.userId) ?? null;
     if (dmOnClose && ticketCreator) {
-      const dmEmbed = createEmbed({
-        title: dm.t('ticket.dm.closedTitle'),
-        description: dm.t('ticket.dm.closedBody', { channel: channel.name, reason, closer: closer.tag, time: Math.floor(Date.now() / 1000) }),
-        color: '#e74c3c',
-        footer: { text: dm.t('ticket.post.ticketId', { id: ticketData.id }) }
+      closeNotificationSent = await sendLoggedDm(ticketCreator, {
+        key: 'ticket.closed',
+        params: { channelName: channel.name, reason, closer: closer.tag, time: Math.floor(Date.now() / 1000), ticketId: ticketData.id },
+        guildId: channel.guild.id, member: creatorMember, label: 'ticket closure',
+      }).catch((error) => {
+        logger.warn(`Ticket DM to ${ticketData.userId} not built: ${error.message}`);
+        return false;
       });
-
-      try {
-        await ticketCreator.send({ embeds: [dmEmbed] });
-        closeNotificationSent = true;
-      } catch (dmError) {
-        logger.warn(`Could not send ticket closure DM to ${ticketData.userId}: ${dmError.message}`);
-      }
     }
 
     if (ticketCreator) {
-      try {
-        const feedbackEmbed = createEmbed({
-          title: dm.t('ticket.dm.feedbackTitle'),
-          description: dm.t('ticket.dm.feedbackBody', { channel: channel.name }),
-          color: '#F1C40F',
-          footer: { text: dm.t('ticket.dm.feedbackFooter') },
-        });
-
-        const base = `ticket_feedback:${channel.guild.id}:${channel.id}`;
-        const starsRow = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId(`${base}:1`).setLabel('1').setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder().setCustomId(`${base}:2`).setLabel('2').setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder().setCustomId(`${base}:3`).setLabel('3').setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder().setCustomId(`${base}:4`).setLabel('4').setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder().setCustomId(`${base}:5`).setLabel('5').setStyle(ButtonStyle.Primary),
-        );
-        const declineRow = new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId(`ticket_feedback_comment:${channel.guild.id}:${channel.id}`)
-            .setLabel(dm.t('ticket.dm.feedbackComment'))
-            .setStyle(ButtonStyle.Secondary),
-          new ButtonBuilder()
-            .setCustomId(`ticket_feedback_decline:${channel.guild.id}:${channel.id}`)
-            .setLabel(dm.t('ticket.dm.feedbackDecline'))
-            .setStyle(ButtonStyle.Secondary),
-        );
-
-        await ticketCreator.send({
-          embeds: [feedbackEmbed],
-          components: [starsRow, declineRow],
-        });
-        feedbackSurveySent = true;
-      } catch (feedbackError) {
-        logger.warn(`Could not send feedback survey to ticket creator ${ticketData.userId}: ${feedbackError.message}`);
-      }
+      feedbackSurveySent = await sendLoggedDm(ticketCreator, {
+        key: 'ticket.feedback',
+        params: { channelName: channel.name, guildId: channel.guild.id, channelId: channel.id },
+        guildId: channel.guild.id, member: creatorMember, label: 'ticket feedback survey',
+      }).catch((error) => {
+        logger.warn(`Ticket DM to ${ticketData.userId} not built: ${error.message}`);
+        return false;
+      });
     } else {
       logger.warn(`Could not deliver feedback survey; ticket creator ${ticketData.userId} could not be fetched`);
     }
@@ -937,19 +906,14 @@ async function deliverTicketTranscript(channel, ticketData, executor, { persist 
     try {
       const ticketCreator = await channel.client.users.fetch(ticketData.userId).catch(() => null);
       if (ticketCreator) {
-        const dm = dmText(channel.guild, ticketData.userId);
-        await ticketCreator.send({
-          embeds: [
-            createEmbed({
-              title: dm.t('ticket.dm.transcriptTitle'),
-              description: dm.t('ticket.dm.transcriptBody', { channel: channel.name }),
-              color: '#3498db',
-              footer: { text: dm.t('ticket.post.ticketId', { id: ticketData.id }) },
-            }),
-          ],
+        dmSent = await sendLoggedDm(ticketCreator, {
+          key: 'ticket.transcript',
+          params: { channelName: channel.name, ticketId: ticketData.id },
+          guildId: channel.guild.id,
+          member: channel.guild.members?.cache?.get?.(ticketData.userId) ?? null,
           files: [buildTranscriptAttachment(transcript)],
+          label: 'ticket transcript',
         });
-        dmSent = true;
       }
     } catch (error) {
       logger.warn('Could not DM ticket transcript to creator', {
