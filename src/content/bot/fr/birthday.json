@@ -1,0 +1,108 @@
+{
+    "cmd": {
+        "birthday": "Commandes des anniversaires",
+        "set": "Enregistrer ton anniversaire",
+        "month": "Mois de naissance (1-12)",
+        "day": "Jour de naissance (1-31)",
+        "info": "Voir un anniversaire",
+        "infoUser": "Le membre dont tu veux voir l'anniversaire",
+        "list": "Lister tous les anniversaires du serveur",
+        "remove": "Supprimer ton anniversaire",
+        "next": "Voir les prochains anniversaires",
+        "setchannel": "Choisir ou désactiver le salon des annonces d'anniversaire. (Administrateur)",
+        "channel": "Le salon textuel des annonces. Laisse vide pour désactiver.",
+        "timezone": "Fuseau horaire du serveur pour les anniversaires, ex. Europe/Paris (par défaut UTC)"
+    },
+    "unknownSubcommand": "Sous-commande inconnue",
+    "month": {
+        "january": "janvier",
+        "february": "février",
+        "march": "mars",
+        "april": "avril",
+        "may": "mai",
+        "june": "juin",
+        "july": "juillet",
+        "august": "août",
+        "september": "septembre",
+        "october": "octobre",
+        "november": "novembre",
+        "december": "décembre",
+        "invalid": "mois invalide"
+    },
+    "date": "{day} {month}",
+    "info": {
+        "noneTitle": "Pas d'anniversaire enregistré",
+        "noneSelf": "Tu n'as pas encore enregistré ton anniversaire. Utilise `/birthday set` pour l'ajouter.",
+        "noneOther": "{name} n'a pas encore enregistré son anniversaire.",
+        "title": "Anniversaire",
+        "text": "**Date :** {date}\n**Membre :** {user}"
+    },
+    "list": {
+        "noneTitle": "Pas d'anniversaires",
+        "none": "Aucun anniversaire n'a encore été enregistré sur ce serveur.",
+        "noneMembers": "Aucun membre actuel du serveur n'a enregistré d'anniversaire.",
+        "header": {
+            "one": "**{count} anniversaire sur {server}**",
+            "many": "**{count} anniversaires sur {server}**",
+            "other": "**{count} anniversaires sur {server}**"
+        },
+        "more": {
+            "one": "…et {count} autre",
+            "many": "…et {count} autres",
+            "other": "…et {count} autres"
+        },
+        "title": "Anniversaires"
+    },
+    "remove": {
+        "noneTitle": "Pas d'anniversaire enregistré",
+        "none": "Tu n'as pas d'anniversaire enregistré à supprimer.",
+        "title": "Anniversaire supprimé",
+        "text": "Ton anniversaire est supprimé."
+    },
+    "set": {
+        "title": "Anniversaire enregistré",
+        "text": "Ton anniversaire est le **{date}**."
+    },
+    "setchannel": {
+        "notAllowedTitle": "Pas autorisé",
+        "notAllowed": "Tu as besoin de la permission **Administrateur** pour configurer le salon des anniversaires.",
+        "unknownTzTitle": "Fuseau horaire inconnu",
+        "unknownTz": "`{input}` n'est pas un fuseau horaire connu. Utilise un nom IANA comme `Europe/London`, `America/New_York` ou `UTC` (la liste propose des noms pendant que tu tapes).",
+        "timezoneLine": "Les anniversaires suivent la date de **{timezone}** (on y est actuellement le {date}). Les annonces partent une fois par jour local.",
+        "onTitle": "Annonces d'anniversaire activées",
+        "on": "Les annonces d'anniversaire seront maintenant publiées dans {channel}.",
+        "tzTitle": "Fuseau horaire mis à jour",
+        "offTitle": "Annonces d'anniversaire désactivées",
+        "off": "Aucun salon indiqué, les annonces d'anniversaire sont donc désactivées.",
+        "failTitle": "Pas enregistré",
+        "fail": "Le salon des anniversaires n'a pas été enregistré. Réessaie dans un instant."
+    },
+    "next": {
+        "noneTitle": "Pas encore d'anniversaires",
+        "none": "Personne ici n'a enregistré d'anniversaire. Utilise `/birthday set` pour ajouter le tien.",
+        "noUpcomingTitle": "Pas d'anniversaires à venir",
+        "noUpcoming": "Aucun des anniversaires enregistrés n'appartient à quelqu'un qui est encore sur le serveur.",
+        "intro": "Prochains anniversaires sur {server} :",
+        "footer": "Ajoute le tien avec /birthday set.",
+        "title": "Anniversaires à venir",
+        "today": "**Aujourd'hui**",
+        "tomorrow": "**Demain**",
+        "inDays": {
+            "one": "Dans {count} jour",
+            "many": "Dans {count} jours",
+            "other": "Dans {count} jours"
+        }
+    },
+    "announce": {
+        "title": "Joyeux anniversaire",
+        "text": "Joyeux anniversaire {members}, passez une super journée !"
+    },
+    "errors": {
+        "notNumbers": "Le mois et le jour doivent être des nombres",
+        "month": "Le mois doit être entre 1 et 12",
+        "day": "Le jour doit être entre 1 et 31",
+        "invalidDate": "Date invalide. Vérifie le mois et le jour (par ex. le 29 février n'existe que les années bissextiles)",
+        "saveFailed": "Ton anniversaire n'a pas pu être enregistré. Réessaie plus tard.",
+        "removeFailed": "Ton anniversaire n'a pas pu être supprimé. Réessaie."
+    }
+}

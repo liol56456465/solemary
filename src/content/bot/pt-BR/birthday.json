@@ -1,0 +1,108 @@
+{
+    "cmd": {
+        "birthday": "Comandos de aniversário",
+        "set": "Salvar seu aniversário",
+        "month": "Mês de nascimento (1-12)",
+        "day": "Dia de nascimento (1-31)",
+        "info": "Ver um aniversário",
+        "infoUser": "O membro cujo aniversário você quer ver",
+        "list": "Todos os aniversários do servidor",
+        "remove": "Remover seu aniversário",
+        "next": "Ver os próximos aniversários",
+        "setchannel": "Definir ou desligar o canal de anúncios de aniversário. (Administrador)",
+        "channel": "O canal de texto para os anúncios. Deixe vazio para desligar.",
+        "timezone": "Fuso horário do servidor para aniversários, ex. America/Sao_Paulo (padrão UTC)"
+    },
+    "unknownSubcommand": "Subcomando desconhecido",
+    "month": {
+        "january": "janeiro",
+        "february": "fevereiro",
+        "march": "março",
+        "april": "abril",
+        "may": "maio",
+        "june": "junho",
+        "july": "julho",
+        "august": "agosto",
+        "september": "setembro",
+        "october": "outubro",
+        "november": "novembro",
+        "december": "dezembro",
+        "invalid": "mês inválido"
+    },
+    "date": "{day} de {month}",
+    "info": {
+        "noneTitle": "Nenhum aniversário salvo",
+        "noneSelf": "Você ainda não salvou seu aniversário. Use `/birthday set` para adicionar.",
+        "noneOther": "{name} ainda não salvou o aniversário.",
+        "title": "Aniversário",
+        "text": "**Data:** {date}\n**Membro:** {user}"
+    },
+    "list": {
+        "noneTitle": "Nenhum aniversário",
+        "none": "Ninguém salvou um aniversário neste servidor ainda.",
+        "noneMembers": "Nenhum membro atual do servidor salvou um aniversário.",
+        "header": {
+            "one": "**{count} aniversário em {server}**",
+            "many": "**{count} aniversários em {server}**",
+            "other": "**{count} aniversários em {server}**"
+        },
+        "more": {
+            "one": "…e mais {count}",
+            "many": "…e mais {count}",
+            "other": "…e mais {count}"
+        },
+        "title": "Aniversários"
+    },
+    "remove": {
+        "noneTitle": "Nenhum aniversário salvo",
+        "none": "Você não tem um aniversário salvo para remover.",
+        "title": "Aniversário removido",
+        "text": "Seu aniversário foi removido."
+    },
+    "set": {
+        "title": "Aniversário salvo",
+        "text": "Seu aniversário é em **{date}**."
+    },
+    "setchannel": {
+        "notAllowedTitle": "Não permitido",
+        "notAllowed": "Você precisa da permissão **Administrador** para configurar o canal de aniversários.",
+        "unknownTzTitle": "Fuso horário desconhecido",
+        "unknownTz": "`{input}` não é um fuso horário conhecido. Use um nome IANA como `Europe/London`, `America/New_York` ou `UTC` (a lista sugere nomes enquanto você digita).",
+        "timezoneLine": "Os aniversários seguem a data de **{timezone}** (lá agora é {date}). Os anúncios saem uma vez por dia local.",
+        "onTitle": "Anúncios de aniversário ligados",
+        "on": "Os anúncios de aniversário agora serão publicados em {channel}.",
+        "tzTitle": "Fuso horário atualizado",
+        "offTitle": "Anúncios de aniversário desligados",
+        "off": "Nenhum canal informado, então os anúncios de aniversário estão desligados.",
+        "failTitle": "Não foi salvo",
+        "fail": "O canal de aniversários não foi salvo. Tente de novo em instantes."
+    },
+    "next": {
+        "noneTitle": "Nenhum aniversário ainda",
+        "none": "Ninguém aqui salvou um aniversário. Use `/birthday set` para adicionar o seu.",
+        "noUpcomingTitle": "Nenhum aniversário próximo",
+        "noUpcoming": "Nenhum dos aniversários salvos é de alguém que ainda está no servidor.",
+        "intro": "Próximos aniversários em {server}:",
+        "footer": "Adicione o seu com /birthday set.",
+        "title": "Próximos aniversários",
+        "today": "**Hoje**",
+        "tomorrow": "**Amanhã**",
+        "inDays": {
+            "one": "Em {count} dia",
+            "many": "Em {count} dias",
+            "other": "Em {count} dias"
+        }
+    },
+    "announce": {
+        "title": "Feliz aniversário",
+        "text": "Feliz aniversário, {members}! Tenham um ótimo dia."
+    },
+    "errors": {
+        "notNumbers": "O mês e o dia precisam ser números",
+        "month": "O mês precisa estar entre 1 e 12",
+        "day": "O dia precisa estar entre 1 e 31",
+        "invalidDate": "Data inválida. Confira o mês e o dia (por exemplo, 29 de fevereiro só existe em anos bissextos)",
+        "saveFailed": "Não foi possível salvar seu aniversário. Tente de novo mais tarde.",
+        "removeFailed": "Não foi possível remover seu aniversário. Tente de novo."
+    }
+}

@@ -1,0 +1,553 @@
+{
+    "cmd": {
+        "community": {
+            "desc": "Angeheftete Nachrichten, Vorschläge, Starboard und Feeds einrichten",
+            "channel": "Kanal",
+            "sticky": {
+                "desc": "Nachrichten, die unten im Kanal bleiben",
+                "set": "Angeheftete Nachricht eines Kanals setzen (oder ersetzen)",
+                "message": "Der Text, der unten bleiben soll",
+                "remove": "Angeheftete Nachricht eines Kanals entfernen",
+                "list": "Angeheftete Nachrichten anzeigen"
+            },
+            "suggestions": {
+                "desc": "Vorschläge von Mitgliedern (/suggest)",
+                "channel": "Vorschlagskanal festlegen (leer lassen schaltet Vorschläge aus)"
+            },
+            "starboard": {
+                "desc": "Beliebte Nachrichten in einen Starboard-Kanal kopieren",
+                "set": "Starboard einschalten oder ändern",
+                "channel": "Starboard-Kanal",
+                "emoji": "Reaktion, die zählt (Standard ⭐)",
+                "threshold": "Benötigte Reaktionen (Standard 3)",
+                "off": "Starboard ausschalten"
+            },
+            "feed": {
+                "desc": "Neue YouTube-Videos oder Twitch-Livestreams in einem Kanal posten",
+                "add": "Einem YouTube- oder Twitch-Kanal folgen",
+                "source": "YouTube: Kanal-ID (UC…) oder /channel/-Link. Twitch: Login oder twitch.tv-Link",
+                "channel": "Wo gepostet wird",
+                "platform": "YouTube (Standard) oder Twitch",
+                "message": "Nachricht mit {title} {url} {author} ({game} bei Twitch); darf eine Rolle erwähnen",
+                "remove": "Einem YouTube- oder Twitch-Kanal nicht mehr folgen",
+                "id": "Feed-Nummer (#) aus /community feed list",
+                "list": "Feeds anzeigen"
+            }
+        },
+        "cat": {
+            "desc": "Die Serverkatze, die wächst, wenn Mitglieder chatten",
+            "view": "Serverkatze ansehen: Stimmung und wie bald sie wächst",
+            "name": "Serverkatze umbenennen (Administratoren)",
+            "newName": "Der neue Name"
+        },
+        "tag": {
+            "desc": "Gespeicherte Antworten, die alle posten können, optional automatisch bei einem Stichwort",
+            "name": "Tag-Name",
+            "triggerKind": "Diesen Tag automatisch posten, wenn eine Nachricht passt",
+            "trigger": "Wort/Satz oder Regex (Groß-/Kleinschreibung egal)",
+            "allowChannels": "Nur in diesen Kanälen auslösen (#Erwähnungen; \"none\" leert)",
+            "denyChannels": "Nie in diesen Kanälen auslösen (#Erwähnungen; \"none\" leert)",
+            "cooldown": "Sekunden zwischen automatischen Posts pro Kanal (Standard 60)",
+            "show": "Einen Tag in diesem Kanal posten",
+            "for": "Ein Mitglied damit erwähnen",
+            "list": "Tags anzeigen",
+            "create": "Einen Tag erstellen",
+            "newName": "Kurzer Name: Kleinbuchstaben, Ziffern, - und _",
+            "content": "Der Text",
+            "edit": "Einen Tag ändern (nur die angegebenen Optionen)",
+            "newContent": "Neuer Text",
+            "delete": "Einen Tag löschen"
+        },
+        "suggest": {
+            "desc": "Etwas für den Server vorschlagen oder (Admins) auf einen Vorschlag antworten",
+            "new": "Einen Vorschlag posten, über den Mitglieder abstimmen",
+            "text": "Dein Vorschlag",
+            "status": "Vorschlag annehmen, ablehnen oder als „wird geprüft“ markieren",
+            "id": "Vorschlagsnummer (#)",
+            "statusOption": "Neuer Status",
+            "reason": "Steht beim Vorschlag und geht an die Person, die ihn gemacht hat"
+        },
+        "apply": {
+            "description": "Bewerbungen für Rollen verwalten",
+            "submit": {
+                "description": "Eine Bewerbung für eine Rolle abschicken",
+                "application": "Die Bewerbung, die du abschicken möchtest"
+            },
+            "status": {
+                "description": "Den Stand deiner Bewerbung ansehen",
+                "id": "Bewerbungs-ID (leer lassen, um alle zu sehen)"
+            },
+            "list": {
+                "description": "Offene Bewerbungen anzeigen, für die du dich bewerben kannst"
+            }
+        },
+        "appAdmin": {
+            "description": "Bewerbungen für das Team verwalten",
+            "setup": {
+                "description": "Eine neue Bewerbung einrichten"
+            },
+            "review": {
+                "description": "Eine Bewerbung annehmen oder ablehnen",
+                "id": "Die Bewerbungs-ID"
+            },
+            "list": {
+                "description": "Alle Bewerbungen anzeigen",
+                "status": "Nach Status filtern",
+                "choice": {
+                    "pending": "Wartend",
+                    "approved": "Angenommen",
+                    "denied": "Abgelehnt"
+                },
+                "role": "Nach Rollen-ID filtern",
+                "user": "Nach Mitglied filtern",
+                "limit": "Wie viele Bewerbungen höchstens angezeigt werden (Standard: 10)"
+            },
+            "dashboard": {
+                "description": "Die Einstellungen für Bewerbungen öffnen",
+                "application": "Die Bewerbung, die du einstellen möchtest"
+            }
+        }
+    },
+    "sticky": {
+        "savedTitle": "Angeheftete Nachricht gespeichert",
+        "posted": "Sie bleibt jetzt unten in {channel} und wird neu gepostet, wenn Mitglieder dort schreiben (höchstens alle 15 Sekunden).",
+        "notPosted": "Gespeichert, aber ich konnte nicht in {channel} posten. Prüfe, ob ich den Kanal sehen, Nachrichten senden und Links einbetten darf.",
+        "removed": "Angeheftete Nachricht aus {channel} entfernt.",
+        "none": "{channel} hat keine angeheftete Nachricht.",
+        "listTitle": "Angeheftete Nachrichten ({count})",
+        "listEmpty": "Keine. Füge eine mit `/community sticky set` hinzu.",
+        "footer": "Angeheftete Nachricht",
+        "empty": "Die angeheftete Nachricht darf nicht leer sein.",
+        "tooLong": "Angeheftete Nachrichten dürfen höchstens {max} Zeichen lang sein."
+    },
+    "suggestions": {
+        "channelSet": "Vorschläge aus `/suggest new` landen jetzt in {channel}. Achte darauf, dass ich dort Nachrichten und Embeds senden darf.",
+        "off": "Vorschläge sind ausgeschaltet (kein Kanal)."
+    },
+    "starboard": {
+        "onTitle": "Starboard an",
+        "onLine": "Nachrichten mit **{threshold}** {emoji}-Reaktionen werden nach {channel} kopiert.",
+        "rules": "Die eigene Reaktion der Person und Bots zählen nicht; Bot-Nachrichten kommen nie aufs Starboard.",
+        "offDone": "Starboard ausgeschaltet. Bisherige Starboard-Posts bleiben, wo sie sind.",
+        "emojiInvalid": "Nimm ein Emoji: ein normales wie ⭐ oder ein eigenes Emoji dieses Servers.",
+        "thresholdRange": "threshold muss zwischen 1 und {max} liegen.",
+        "noText": "*(kein Text)*",
+        "attachments": "Anhänge: {count}",
+        "source": "Quelle",
+        "jump": "[Zur Nachricht springen]({url})"
+    },
+    "feed": {
+        "addedTitle": "Feed #{id} hinzugefügt",
+        "twitchWatch": "Ich poste in {channel}, wenn **{author}** auf Twitch live geht (Prüfung alle 2 Minuten).",
+        "liveNow": "Gerade läuft ein Stream: dieser wird nicht angekündigt, der nächste schon.",
+        "previewTwitch": "\n**Vorschau** ({source}, nicht gepostet):\n{preview}",
+        "withCurrent": "mit dem aktuellen Stream",
+        "withExample": "mit einem Beispiel-Stream",
+        "youtubeWatch": "Neue Videos von **{author}** werden in {channel} gepostet (Prüfung alle 15 Minuten).",
+        "previewYoutube": "\n**Vorschau** (mit dem neuesten Video, nicht gepostet):\n{preview}",
+        "noVideos": "\nDer Kanal hat noch keine Videos.",
+        "removed": "Feed #{id} entfernt.",
+        "notFound": "Es gibt keinen Feed #{id}. Siehe `/community feed list`.",
+        "listTitle": "Feeds ({count})",
+        "listEmpty": "Keine. Füge einen mit `/community feed add` hinzu.",
+        "exampleTitle": "Beispiel-Streamtitel",
+        "defaultYoutube": "**{author}** hat ein neues Video gepostet: **{title}**\n{url}",
+        "defaultTwitch": "**{author}** ist live auf Twitch: **{title}**\n{url}",
+        "youtubeIdInvalid": "Gib die YouTube-Kanal-ID an (beginnt mit UC, 24 Zeichen) oder einen youtube.com/channel/UC…-Link. @Handles gehen nicht: Öffne den Kanal, dann Teilen → Kanal-ID kopieren.",
+        "twitchLoginInvalid": "Gib den Twitch-Login an (der Name in twitch.tv/<name>) oder einen twitch.tv/<name>-Link.",
+        "tooLong": "Die Nachricht darf höchstens {max} Zeichen lang sein.",
+        "twitchDuplicate": "Dieser Twitch-Kanal wird schon in diesem Discord-Kanal gepostet.",
+        "youtubeDuplicate": "Dieser YouTube-Kanal wird schon in diesem Discord-Kanal gepostet.",
+        "choosePlatform": "Wähle YouTube oder Twitch.",
+        "youtubeNoChannel": "YouTube hat keinen Kanal mit dieser ID.",
+        "youtubeUnreachable": "YouTube war nicht erreichbar, um den Kanal zu prüfen ({error}). Versuch es später noch einmal.",
+        "twitchOff": "Twitch-Benachrichtigungen sind auf diesem Bot noch nicht eingerichtet.",
+        "twitchUnreachable": "Twitch war nicht erreichbar, um den Kanal zu prüfen ({error}). Versuch es später noch einmal.",
+        "twitchNoChannel": "Twitch hat keinen Kanal mit diesem Namen."
+    },
+    "tag": {
+        "uses": "**Verwendet:** {uses}",
+        "createdBy": "**Erstellt von:** <@{userId}>",
+        "trigger": "**Auslöser:** {kind} `{trigger}`{disabled}",
+        "disabled": " (deaktiviert)",
+        "cooldown": "**Pause:** {seconds} s pro Kanal",
+        "onlyIn": "**Nur in:** {channels}",
+        "neverIn": "**Nie in:** {channels}",
+        "channelsUnreadable": "Aus {option} konnte ich keine Kanäle lesen; erwähne sie wie #general oder schreib \"none\".",
+        "notFound": "Es gibt keinen Tag namens **{name}**. Siehe `/tag list`.",
+        "missing": "Es gibt keinen Tag namens **{name}**.",
+        "listLine": "`{name}`{auto} · {uses}× verwendet",
+        "auto": " · automatisch: {kind}",
+        "listTitle": "Tags ({count})",
+        "listEmpty": "Noch keine Tags.",
+        "deleted": "Tag **{name}** gelöscht.",
+        "needTrigger": "Gib auch den Auslösetext an.",
+        "createdTitle": "Tag {name} erstellt",
+        "updatedTitle": "Tag {name} geändert",
+        "textEmpty": "Der Tag-Text darf nicht leer sein.",
+        "textTooLong": "Der Tag-Text darf höchstens {max} Zeichen lang sein.",
+        "kindInvalid": "trigger_kind muss none, word oder regex sein.",
+        "noTrigger": "Dieser Tag hat keinen Auslöser; setze trigger_kind (word oder regex) zusammen mit trigger.",
+        "cooldownRange": "cooldown muss 0–86400 Sekunden sein.",
+        "cooldownMin": "Tags mit Auslöser brauchen eine Pause von mindestens {seconds} Sekunden.",
+        "nameInvalid": "Tag-Namen bestehen aus Kleinbuchstaben, Ziffern, - und _ (bis zu 32).",
+        "exists": "Es gibt schon einen Tag namens **{name}**. Ändere ihn mit `/tag edit`.",
+        "nothingToChange": "Gib mindestens eine Änderung an."
+    },
+    "cat": {
+        "dbDown": "Die Datenbank antwortet gerade nicht, deshalb konnte die Katze nicht geladen werden. Versuch es gleich noch einmal.",
+        "nameInvalid": "Nimm Buchstaben, Zahlen und Leerzeichen für den Namen.",
+        "notSaved": "Die Datenbank antwortet gerade nicht, deshalb wurde nichts geändert.",
+        "renamedTitle": "Katze umbenannt",
+        "renamed": "Die Serverkatze heißt jetzt {name}.",
+        "stageField": "Stufe",
+        "moodField": "Stimmung",
+        "messagesField": "Gezählte Nachrichten",
+        "nextField": "Nächste Stufe",
+        "toNext": "{bar}\nNoch {left} Nachrichten bis {stage}.",
+        "fullyGrown": "Ausgewachsen. Das ist die letzte Stufe.",
+        "footer": "Die Katze wächst mit jeder Nachricht, die Mitglieder hier schreiben.",
+        "grewTitle": "{name} ist gewachsen: jetzt {stage}",
+        "grewText": "Danke an alle, die hier chatten. Nach {total} Nachrichten ist {name} jetzt {stage}.",
+        "stage": {
+            "kitten": "Kätzchen",
+            "young": "Junge Katze",
+            "cat": "Katze",
+            "big": "Große Katze",
+            "legend": "Legende"
+        },
+        "mood": {
+            "scared": "verängstigt",
+            "proud": "stolz",
+            "happy": "glücklich",
+            "sleepy": "schläfrig"
+        },
+        "sentence": {
+            "scared": "{name} hat Angst: Der Server ist wegen eines Raids gesperrt.",
+            "proud": "{name} ist stolz: heute eine Stufe weitergewachsen.",
+            "happy": "{name} ist glücklich: Auf dem Server war diese Woche mehr los.",
+            "sleepy": "{name} ist schläfrig: Auf dem Server war diese Woche weniger los."
+        }
+    },
+    "suggest": {
+        "postedTitle": "Vorschlag #{id} gepostet",
+        "postedText": "Mitglieder können hier abstimmen: {url}",
+        "notFound": "Auf diesem Server gibt es keinen Vorschlag #{id}.",
+        "decidedTitle": "Vorschlag #{id}: {status}",
+        "edited": "Die Vorschlagsnachricht wurde aktualisiert.",
+        "notEdited": "Die Vorschlagsnachricht konnte nicht aktualisiert werden (gelöscht oder kein Zugriff).",
+        "dmed": "Die Person wurde per DM informiert.",
+        "notDmed": "Die Person konnte keine DM bekommen.",
+        "statusWord": {
+            "approved": "angenommen",
+            "denied": "abgelehnt",
+            "considering": "wird geprüft"
+        },
+        "label": {
+            "pending": "Abstimmung läuft",
+            "approved": "Angenommen",
+            "denied": "Abgelehnt",
+            "considering": "Wird geprüft"
+        },
+        "empty": "Der Vorschlag darf nicht leer sein.",
+        "tooLong": "Vorschläge dürfen höchstens {max} Zeichen lang sein.",
+        "notSetUp": "Vorschläge sind auf diesem Server noch nicht eingerichtet (ein Admin kann `/community suggestions channel` nutzen).",
+        "cooldown": "Du kannst in {seconds} Sekunden einen weiteren Vorschlag posten.",
+        "postFailed": "Ich konnte nicht in {channel} posten. Bitte einen Admin, meine Berechtigungen dort zu prüfen.",
+        "closed": "Die Abstimmung über diesen Vorschlag ist beendet.",
+        "statusInvalid": "Der Status muss approved, denied oder considering sein.",
+        "votes": "Stimmen",
+        "status": "Status",
+        "reasonStaff": "Grund (Team)",
+        "reason": "Grund",
+        "title": "Vorschlag #{id}",
+        "member": "Mitglied {userId}",
+        "footer": "Schlag etwas vor mit /suggest new",
+        "dmTitle": "Dein Vorschlag #{id} in {server}: {status}",
+        "vote": {
+            "invalid": "Dieser Button ist ungültig.",
+            "gone": "Diesen Vorschlag gibt es nicht mehr.",
+            "up": "Du hast mit 👍 gestimmt.",
+            "down": "Du hast mit 👎 gestimmt.",
+            "removed": "Deine Stimme wurde entfernt.",
+            "hint": "{note} Klick den anderen Button, um sie zu ändern, oder denselben, um sie zurückzuziehen."
+        }
+    },
+    "apply": {
+        "serverOnly": "Diesen Befehl kannst du nur auf einem Server nutzen.",
+        "disabled": "Bewerbungen sind auf diesem Server gerade ausgeschaltet.",
+        "configNotFound": "Die Einstellungen dieser Bewerbung wurden nicht gefunden.",
+        "closed": "Die Bewerbung **{name}** ist gerade geschlossen.",
+        "roleNotFound": "Rolle nicht gefunden.",
+        "questionsChanged": "Die Fragen dieser Bewerbung wurden geändert, während du das Formular ausgefüllt hast. Öffne es bitte noch einmal mit `/apply submit`.",
+        "sent": {
+            "title": "Bewerbung abgeschickt",
+            "body": "Deine Bewerbung für **{name}** wurde an das Team geschickt."
+        },
+        "saved": {
+            "title": "Bewerbung gespeichert",
+            "body": "Deine Bewerbung für **{name}** wurde gespeichert, konnte aber nicht für das Team gepostet werden (kein Bewerbungskanal eingerichtet, oder der Bot darf dort nicht schreiben). Sag bitte jemandem aus dem Team Bescheid."
+        },
+        "idLine": "Bewerbungs-ID: `{id}`",
+        "statusHint": "Den Stand siehst du mit `/apply status id:{id}`",
+        "statusLabel": {
+            "pending": "In Bearbeitung",
+            "approved": "Angenommen",
+            "denied": "Abgelehnt",
+            "unknown": "Unbekannt"
+        },
+        "list": {
+            "none": "Gerade gibt es keine offenen Bewerbungen.",
+            "title": "Offene Bewerbungen",
+            "description": "Für diese Rollen kannst du dich bewerben:",
+            "entry": "**Rolle:** {role}\n**Bewerben mit:** `/apply submit application:\"{name}\"`",
+            "roleMissing": "Rolle nicht gefunden",
+            "footer": "Mit /apply submit application:<Name> bewirbst du dich für eine dieser Rollen.",
+            "loadFailed": "Die Bewerbungen konnten nicht geladen werden. Versuch es bitte später noch einmal."
+        },
+        "submit": {
+            "notFound": "Mit `/apply list` siehst du die offenen Bewerbungen.",
+            "closed": "Die Bewerbung **{name}** ist gerade geschlossen. Mit `/apply list` siehst du die offenen.",
+            "pending": "Du hast schon eine wartende Bewerbung. Bitte warte, bis sie geprüft wurde.",
+            "roleGone": "Die Rolle dieser Bewerbung gibt es nicht mehr.",
+            "modalTitle": "Bewerbung für {name}"
+        },
+        "status": {
+            "notFound": "Bewerbung nicht gefunden, oder du darfst sie nicht ansehen.",
+            "unknownDate": "Unbekanntes Datum",
+            "unknownRole": "Unbekannte Rolle",
+            "oneTitle": "Bewerbung #{id} - {role}",
+            "oneBody": "**Bewerbungs-ID:** `{id}`\n**Status:** {status}\n**Abgeschickt:** {date}",
+            "none": "Du hast noch keine Bewerbung abgeschickt.",
+            "allTitle": "Deine Bewerbungen",
+            "allDescription": {
+                "one": "{count} neueste Bewerbung.",
+                "other": "Die {count} neuesten Bewerbungen."
+            },
+            "fieldName": "{role} ({status})",
+            "fieldValue": "**ID:** `{id}`\n**Status:** {status}\n**Abgeschickt:** {date}",
+            "footer": {
+                "one": "Die neuesten {shown} von {count} Bewerbung.",
+                "other": "Die neuesten {shown} von {count} Bewerbungen."
+            }
+        },
+        "dm": {
+            "approvedTitle": "Bewerbung angenommen",
+            "deniedTitle": "Bewerbung abgelehnt",
+            "approvedBody": "Deine Bewerbung für **{name}** wurde **angenommen**\n**Notiz:** {note}\n\nMit `/apply status id:{id}` siehst du die Details.",
+            "deniedBody": "Deine Bewerbung für **{name}** wurde **abgelehnt**\n**Notiz:** {note}\n\nMit `/apply status id:{id}` siehst du die Details.",
+            "noReason": "Kein Grund angegeben."
+        }
+    },
+    "appAdmin": {
+        "alreadyProcessed": "Diese Aktion wurde schon bearbeitet. Führ den Befehl bitte noch einmal aus.",
+        "questionRequired": "Frage {number} (Pflicht)",
+        "questionOptional": "Frage {number} (optional)",
+        "setup": {
+            "modalTitle": "Neue Bewerbung einrichten",
+            "rolePlaceholder": "Wähl die Rolle, für die man sich bewirbt",
+            "roleLabel": "Rolle der Bewerbung",
+            "roleDescription": "Die Rolle, für die sich Mitglieder bewerben",
+            "namePlaceholder": "z. B. Moderator, Helfer, Entwickler",
+            "nameLabel": "Name der Bewerbung",
+            "q1Placeholder": "Warum möchtest du diese Rolle?",
+            "q2Placeholder": "Welche Erfahrung hast du?",
+            "noRole": "Du musst eine Rolle für die Bewerbung auswählen.",
+            "roleNotFound": "Die gewählte Rolle wurde nicht gefunden.",
+            "createdTitle": "Bewerbung erstellt",
+            "createdBody": "Die Bewerbung **{name}** wurde für {role} erstellt.\n\nLog-Kanal, Verwalterrollen, Fragen und Aufbewahrungsdauer kannst du in den Einstellungen ändern."
+        },
+        "review": {
+            "notFound": "Bewerbung nicht gefunden.",
+            "processed": "Diese Bewerbung wurde schon bearbeitet.",
+            "title": "Bewerbung prüfen",
+            "body": "**Mitglied:** <@{userId}>\n**Bewerbung:** {name}\n**Bewerbungs-ID:** `{id}`",
+            "question": "F{number}: {question}",
+            "noAnswer": "*Keine Antwort*",
+            "approve": "Annehmen",
+            "deny": "Ablehnen",
+            "approveTitle": "Bewerbung annehmen - Grund",
+            "denyTitle": "Bewerbung ablehnen - Grund",
+            "reasonLabel": "Grund (optional)",
+            "reasonPlaceholder": "Schreib einen Grund für diese Entscheidung...",
+            "approvedTitle": "Bewerbung angenommen",
+            "approvedBody": "Die Bewerbung wurde **angenommen**.",
+            "deniedTitle": "Bewerbung abgelehnt",
+            "deniedBody": "Die Bewerbung wurde **abgelehnt**.",
+            "failed": "Beim Prüfen der Bewerbung ist ein Fehler aufgetreten.",
+            "timeoutTitle": "Zeit abgelaufen",
+            "timeoutBody": "Die Prüf-Buttons sind abgelaufen."
+        },
+        "list": {
+            "noneTitle": "Keine Bewerbungen gefunden",
+            "noneDescription": "Keine eingegangenen Bewerbungen passen zu diesen Filtern.\n\nDiese Bewerbungsrollen sind aber eingerichtet:",
+            "roleEntry": "**Rolle:** {role}\n**Offen für Bewerbungen:** Ja",
+            "footer": "Mitglieder bewerben sich mit /apply submit und sehen die Rollen mit /apply list",
+            "noneConfigured": "Keine Bewerbungen gefunden und keine Bewerbungsrollen eingerichtet.\nRichte zuerst mit `/app-admin setup` eine Bewerbungsrolle ein.",
+            "title": "Eingegangene Bewerbungen",
+            "description": {
+                "one": "{count} Bewerbung.",
+                "other": "{count} Bewerbungen."
+            },
+            "unknownUser": "Unbekanntes Mitglied",
+            "entry": "**ID:** `{id}`\n**Status:** {status}\n**Datum:** {date}"
+        }
+    },
+    "appDashboard": {
+        "notSet": "`Nicht festgelegt`",
+        "noneConfigured": "`Keine eingerichtet`",
+        "noRoles": "`Keine Bewerbungsrollen eingerichtet`",
+        "title": "Bewerbungen: Einstellungen",
+        "description": "Bewerbungseinstellungen für **{server}**.\nWähl unten aus, was du ändern möchtest.",
+        "enabled": "An",
+        "disabled": "Aus",
+        "field": {
+            "status": "Bewerbungen",
+            "logChannel": "Log-Kanal",
+            "managerRoles": "Verwalterrollen",
+            "questions": "Fragen",
+            "roles": "Bewerbungsrollen",
+            "retention": "Aufbewahrung",
+            "role": "Rolle"
+        },
+        "questionsValue": "{count} eingerichtet, erste: {first}",
+        "retentionValue": "Wartend: **{pending} T.** · Entschieden: **{reviewed} T.**",
+        "footer15": "Schließt sich nach 15 Minuten ohne Aktivität",
+        "footer10": "Schließt sich nach 10 Minuten ohne Aktivität",
+        "menu": {
+            "placeholder": "Wähl eine Einstellung aus...",
+            "logChannel": "Log-Kanal",
+            "logChannelHelp": "Der Kanal, in dem neue Bewerbungen gepostet werden",
+            "roleLogChannelHelp": "Der Kanal, in dem Bewerbungen gepostet werden",
+            "managerRoles": "Verwalterrollen",
+            "managerRolesHelp": "Eine Rolle hinzufügen oder entfernen, die Bewerbungen verwalten darf",
+            "questions": "Fragen bearbeiten",
+            "questionsHelp": "Die Fragen im Bewerbungsformular anpassen",
+            "roleAdd": "Bewerbungsrolle hinzufügen",
+            "roleAddHelp": "Eine Rolle hinzufügen, für die sich Mitglieder bewerben können",
+            "roleRemove": "Bewerbungsrolle entfernen",
+            "roleRemoveHelp": "Eine Rolle aus der Bewerbungsliste entfernen",
+            "retention": "Aufbewahrungsdauer",
+            "retentionHelp": "Wie lange wartende und entschiedene Bewerbungen behalten werden"
+        },
+        "toggleButton": "Bewerbungen",
+        "notSetUp": "Bewerbungen sind noch nicht eingerichtet. Erstelle mit `/app-admin setup` deine erste Bewerbung.",
+        "openFailed": "Die Bewerbungseinstellungen konnten nicht geöffnet werden.",
+        "selector": {
+            "placeholder": "Wähl eine Bewerbung aus...",
+            "option": "Die Bewerbung {name} einstellen",
+            "title": "Bewerbung auswählen",
+            "description": "Wähl die Bewerbungsrolle, die du einstellen möchtest.",
+            "noSelection": "Es wurde nichts ausgewählt. Die Einstellungen wurden geschlossen."
+        },
+        "role": {
+            "inheritsLog": "`Nutzt den allgemeinen Log-Kanal`",
+            "minChars": " (mind. {min} Zeichen)",
+            "inheritsQuestions": "`Nutzt die Standardfragen`",
+            "title": "Bewerbung: Einstellungen",
+            "description": "Einstellungen für **{name}**",
+            "disableButton": "Bewerbung ausschalten",
+            "enableButton": "Bewerbung einschalten",
+            "deleteButton": "Bewerbung löschen"
+        },
+        "selectionFailed": "Beim Bearbeiten deiner Auswahl ist ein Fehler aufgetreten.",
+        "unexpected": "Beim Speichern der Einstellungen ist ein unerwarteter Fehler aufgetreten.",
+        "timedOutTitle": "Einstellungen geschlossen",
+        "timedOutBody": "Die Einstellungen wurden wegen Inaktivität geschlossen. Führ den Befehl bitte noch einmal aus.",
+        "system": {
+            "offTitle": "Bewerbungen ausgeschaltet",
+            "offBody": "Bewerbungen sind jetzt **aus**.\n\nMitglieder können sich nicht mehr für Rollen bewerben.",
+            "onTitle": "Bewerbungen eingeschaltet",
+            "onBody": "Bewerbungen sind jetzt **an**.\n\nMitglieder können sich jetzt für Rollen bewerben."
+        },
+        "toggleFailed": "Beim Umschalten der Bewerbungen ist ein Fehler aufgetreten.",
+        "configTimeoutTitle": "Zeit abgelaufen",
+        "configTimeoutBody": "Die Einstellungen wurden nach 10 Minuten ohne Aktivität geschlossen.\n\nFühr den Befehl bitte noch einmal aus, um weiterzumachen.",
+        "roleNotFound": "Bewerbungsrolle nicht gefunden.",
+        "roleToggle": {
+            "offTitle": "Bewerbung ausgeschaltet",
+            "offBody": "Die Bewerbung **{name}** ist jetzt **aus**.\n\nSie erscheint nicht mehr bei `/apply submit`.",
+            "onTitle": "Bewerbung eingeschaltet",
+            "onBody": "Die Bewerbung **{name}** ist jetzt **an**.\n\nSie erscheint jetzt bei `/apply submit`."
+        },
+        "delete": {
+            "thisApplication": "diese Bewerbung",
+            "modalTitle": "Bewerbung wirklich löschen?",
+            "warning": "Du löschst **{name}** endgültig. Alle gespeicherten Bewerbungen und Einstellungen für diese Rolle werden entfernt und lassen sich nicht wiederherstellen.",
+            "checkbox": "Ja, das lässt sich nicht rückgängig machen",
+            "modalFailed": "Die Bestätigung konnte nicht angezeigt werden. Versuch es bitte noch einmal.",
+            "cancelled": "Das Löschen der Bewerbung wurde abgebrochen.",
+            "mustTick": "Setz das Häkchen zur Bestätigung, um die Bewerbung zu löschen.",
+            "failed": "Beim Löschen der Bewerbung ist ein Fehler aufgetreten.",
+            "failedRetry": "Beim Löschen der Bewerbung ist ein Fehler aufgetreten. Versuch es bitte noch einmal.",
+            "doneTitle": "Bewerbung gelöscht",
+            "doneBody": "Die Bewerbung für <@&{roleId}> (**{name}**) wurde endgültig gelöscht.",
+            "doneCount": {
+                "one": "Gelöscht: **{count}** Bewerbung",
+                "other": "Gelöscht: **{count}** Bewerbungen"
+            }
+        },
+        "logChannel": {
+            "modalTitle": "Log-Kanal festlegen",
+            "placeholder": "Wähl einen Textkanal...",
+            "labelHelp": "Der Kanal, in dem neue Bewerbungen gepostet werden",
+            "updatedTitle": "Log-Kanal geändert",
+            "updatedBody": "Bewerbungen werden jetzt in {channel} gepostet.\nDas kannst du auch unter `/logging dashboard` ändern.",
+            "failed": "Beim Ändern des Log-Kanals ist ein Fehler aufgetreten."
+        },
+        "managers": {
+            "modalTitle": "Verwalterrollen festlegen",
+            "placeholder": "Wähl Rollen, die Bewerbungen verwalten dürfen...",
+            "labelHelp": "Gewählte Rollen werden als Verwalterrolle an- oder ausgeschaltet",
+            "none": "`Keine`",
+            "updatedTitle": "Verwalterrollen geändert",
+            "updatedBody": "Aktuelle Verwalterrollen: {roles}",
+            "failed": "Beim Ändern der Verwalterrollen ist ein Fehler aufgetreten."
+        },
+        "questions": {
+            "minTagHint": "Mit [min:10] am Ende verlangst du Antworten mit mindestens 10 Zeichen",
+            "modalTitle": "Bewerbungsfragen bearbeiten",
+            "needOne": "Mindestens eine Frage ist nötig.",
+            "updatedTitle": "Fragen geändert",
+            "saved": {
+                "one": "{count} Frage gespeichert.",
+                "other": "{count} Fragen gespeichert."
+            }
+        },
+        "roleAdd": {
+            "placeholder": "Wähl die Rolle, für die man sich bewerben kann...",
+            "labelHelp": "Die Discord-Rolle, für die sich Mitglieder bewerben",
+            "nameLabel": "Anzeigename (leer = Name der Rolle)",
+            "exists": "{role} ist schon eine Bewerbungsrolle.",
+            "addedTitle": "Rolle hinzugefügt",
+            "addedBody": "{role} wurde als **{name}** hinzugefügt.",
+            "failed": "Beim Hinzufügen der Bewerbungsrolle ist ein Fehler aufgetreten."
+        },
+        "roleRemove": {
+            "none": "Es gibt keine Bewerbungsrollen zum Entfernen.",
+            "placeholder": "Wähl die Rolle, die entfernt werden soll...",
+            "labelHelp": "Die Rolle, die aus der Bewerbungsliste entfernt wird",
+            "notInList": "<@&{roleId}> ist keine Bewerbungsrolle.",
+            "removedTitle": "Rolle entfernt",
+            "removedBody": "<@&{roleId}> wurde aus den Bewerbungsrollen entfernt.",
+            "failed": "Beim Entfernen der Bewerbungsrolle ist ein Fehler aufgetreten."
+        },
+        "retention": {
+            "modalTitle": "Aufbewahrung der Bewerbungen",
+            "info": "**Wartend**: wie lange unbeantwortete Bewerbungen behalten werden, bevor sie automatisch gelöscht werden.\n**Entschieden**: wie lange angenommene oder abgelehnte Bewerbungen behalten werden.\n-# Gib eine ganze Zahl von 1 bis 3650 ein (höchstens 10 Jahre).",
+            "pendingLabel": "Wartende behalten (Tage)",
+            "reviewedLabel": "Entschiedene behalten (Tage)",
+            "pendingInvalid": "Die Aufbewahrung wartender Bewerbungen muss eine ganze Zahl von **1** bis **3650** Tagen sein.",
+            "reviewedInvalid": "Die Aufbewahrung entschiedener Bewerbungen muss eine ganze Zahl von **1** bis **3650** Tagen sein.",
+            "updatedTitle": "Aufbewahrung geändert",
+            "pendingKept": {
+                "one": "Wartende Bewerbungen werden **{count} Tag** behalten.",
+                "other": "Wartende Bewerbungen werden **{count} Tage** behalten."
+            },
+            "reviewedKept": {
+                "one": "Entschiedene Bewerbungen werden **{count} Tag** behalten.",
+                "other": "Entschiedene Bewerbungen werden **{count} Tage** behalten."
+            }
+        }
+    }
+}

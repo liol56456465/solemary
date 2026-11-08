@@ -11,6 +11,7 @@ import { CT, query, isCommunityDbAvailable, isUniqueViolation, userError } from 
 import { channelAllowed, compileTrigger, matchFirst, onCooldown } from './tagMatcher.js';
 import { limitMessage, planLimit } from '../billing/premiumEffects.js';
 import { featureAvailable } from '../../config/intents.js';
+import { botText } from '../../utils/botText.js';
 
 export const TAG_NAME = /^[a-z0-9_-]{1,32}$/;
 export const TAG_CONTENT_MAX = 2000;
@@ -170,18 +171,19 @@ export async function respondToTags(message) {
     }
 }
 
-function normalizeFields(fields, existing = null) {
+// tr: the language of the errors (the admin's). compileTrigger's regex checks stay English.
+function normalizeFields(fields, existing = null, tr = botText('en')) {
     const out = {};
     if (fields.content !== undefined) {
         const content = String(fields.content ?? '').trim();
-        if (!content) throw userError('The tag text cannot be empty.');
-        if (content.length > TAG_CONTENT_MAX) throw userError(`Tag text is limited to ${TAG_CONTENT_MAX} characters.`);
+        if (!content) throw userError(tr.t('community.tag.textEmpty'));
+        if (content.length > TAG_CONTENT_MAX) throw userError(tr.t('community.tag.textTooLong', { max: TAG_CONTENT_MAX }));
         out.content = content;
     }
     const kind = fields.triggerKind ?? existing?.triggerKind ?? 'none';
-    if (!TRIGGER_KINDS.includes(kind)) throw userError('trigger_kind must be none, word or regex.');
+    if (!TRIGGER_KINDS.includes(kind)) throw userError(tr.t('community.tag.kindInvalid'));
     if (kind === 'none' && fields.triggerKind === undefined && fields.trigger) {
-        throw userError('This tag has no trigger; set trigger_kind (word or regex) along with the trigger.');
+        throw userError(tr.t('community.tag.noTrigger'));
     }
     if (fields.triggerKind !== undefined || fields.trigger !== undefined) {
         const trigger = kind === 'none' ? null : String(fields.trigger ?? existing?.trigger ?? '').trim();
@@ -199,23 +201,24 @@ function normalizeFields(fields, existing = null) {
     if (fields.denyChannels !== undefined) out.deny_channels = fields.denyChannels;
     if (fields.cooldownS !== undefined && fields.cooldownS !== null) {
         const cooldown = Number(fields.cooldownS);
-        if (!Number.isInteger(cooldown) || cooldown < 0 || cooldown > 86400) throw userError('cooldown must be 0–86400 seconds.');
+        if (!Number.isInteger(cooldown) || cooldown < 0 || cooldown > 86400) throw userError(tr.t('community.tag.cooldownRange'));
         out.cooldown_s = cooldown;
     }
     // A trigger without a cooldown could answer every single message.
     const finalKind = out.trigger_kind ?? existing?.triggerKind ?? 'none';
     const finalCooldown = out.cooldown_s ?? existing?.cooldownS ?? TAG_DEFAULT_COOLDOWN_S;
     if (finalKind !== 'none' && finalCooldown < TAG_MIN_TRIGGER_COOLDOWN_S) {
-        throw userError(`Tags with a trigger need a cooldown of at least ${TAG_MIN_TRIGGER_COOLDOWN_S} seconds.`);
+        throw userError(tr.t('community.tag.cooldownMin', { seconds: TAG_MIN_TRIGGER_COOLDOWN_S }));
     }
     return out;
 }
 
 /** Creates a tag; returns the cached tag. */
-export async function createTag({ guildId, name, content, triggerKind = 'none', trigger = null, allowChannels = [], denyChannels = [], cooldownS = null, createdBy }) {
+export async function createTag({ guildId, name, content, triggerKind = 'none', trigger = null, allowChannels = [], denyChannels = [], cooldownS = null, createdBy, lang = 'en' }) {
+    const tr = botText(lang);
     const key = String(name ?? '').trim().toLowerCase();
-    if (!TAG_NAME.test(key)) throw userError('Tag names use lowercase letters, digits, - and _ (up to 32).');
-    const fields = normalizeFields({ content, triggerKind, trigger, allowChannels, denyChannels, cooldownS: cooldownS ?? TAG_DEFAULT_COOLDOWN_S });
+    if (!TAG_NAME.test(key)) throw userError(tr.t('community.tag.nameInvalid'));
+    const fields = normalizeFields({ content, triggerKind, trigger, allowChannels, denyChannels, cooldownS: cooldownS ?? TAG_DEFAULT_COOLDOWN_S }, null, tr);
     const { rows: [{ count }] } = await query(`SELECT COUNT(*)::int AS count FROM ${CT.tags} WHERE guild_id = $1`, [guildId]);
     if (count >= planLimit(guildId, 'tags')) throw userError(limitMessage(guildId, 'tags', 'tags'));
     try {
@@ -225,7 +228,7 @@ export async function createTag({ guildId, name, content, triggerKind = 'none', 
             [guildId, key, fields.content, fields.trigger_kind, fields.trigger, fields.allow_channels, fields.deny_channels, fields.cooldown_s, createdBy]
         );
     } catch (error) {
-        if (isUniqueViolation(error)) throw userError(`There is already a tag called **${key}**. Use \`/tag edit\` to change it.`);
+        if (isUniqueViolation(error)) throw userError(tr.t('community.tag.exists', { name: key }));
         throw error;
     }
     await reloadQuietly(guildId);
@@ -233,12 +236,13 @@ export async function createTag({ guildId, name, content, triggerKind = 'none', 
 }
 
 /** Changes the given fields of a tag; returns the cached tag, or null when there is none. */
-export async function editTag({ guildId, name, ...changes }) {
+export async function editTag({ guildId, name, lang = 'en', ...changes }) {
+    const tr = botText(lang);
     const key = String(name ?? '').trim().toLowerCase();
     const existing = getTag(guildId, key);
-    const fields = normalizeFields(changes, existing || { triggerKind: 'none', cooldownS: TAG_DEFAULT_COOLDOWN_S });
+    const fields = normalizeFields(changes, existing || { triggerKind: 'none', cooldownS: TAG_DEFAULT_COOLDOWN_S }, tr);
     const columns = Object.keys(fields);
-    if (!columns.length) throw userError('Give at least one thing to change.');
+    if (!columns.length) throw userError(tr.t('community.tag.nothingToChange'));
     const sets = columns.map((column, i) => `${column} = $${i + 3}`);
     const { rowCount } = await query(
         `UPDATE ${CT.tags} SET ${sets.join(', ')}, updated_at = NOW() WHERE guild_id = $1 AND name = $2`,

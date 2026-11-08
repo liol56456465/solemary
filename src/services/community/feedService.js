@@ -26,6 +26,7 @@ import { logger } from '../../utils/logger.js';
 import { CT, query, isCommunityDbAvailable, isUniqueViolation, userError } from './db.js';
 import { limitMessage, planLimit } from '../billing/premiumEffects.js';
 import { getTwitchClient, parseTwitchLogin } from './twitchService.js';
+import { botText, textForGuild } from '../../utils/botText.js';
 
 // Free's limit; a server owner's plan raises it (planLimit, plans.js).
 export const FEED_MAX_PER_GUILD = 20;
@@ -46,13 +47,13 @@ const YOUTUBE_CHANNEL_ID = /^UC[\w-]{22}$/;
 let feeds = []; // [{ id, guildId, kind, sourceId, channelId, template, lastItemId }]
 let loaded = false;
 
-/** A YouTube channel id from an id or a /channel/ URL; throws a user error otherwise; pure. */
-export function parseYoutubeChannelId(input) {
+/** A YouTube channel id from an id or a /channel/ URL; throws a user error (in `lang`) otherwise; pure. */
+export function parseYoutubeChannelId(input, { lang = 'en' } = {}) {
     const text = String(input ?? '').trim();
     const fromUrl = /youtube\.com\/channel\/(UC[\w-]{22})/i.exec(text);
     const id = fromUrl ? fromUrl[1] : text;
     if (YOUTUBE_CHANNEL_ID.test(id)) return id;
-    throw userError('Give the YouTube channel id (starts with UC, 24 characters), or a youtube.com/channel/UC… link. @handles are not supported: open the channel, then Share → Copy channel ID.');
+    throw userError(botText(lang).t('community.feed.youtubeIdInvalid'));
 }
 
 const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
@@ -111,15 +112,23 @@ export function selectNewEntries(entries, lastId, max = FEED_MAX_POSTS_PER_POLL)
     return { toPost: entries.slice(0, index).slice(0, max).reverse(), marker: newest };
 }
 
-/** The default message of a feed kind; pure. */
-export function defaultTemplate(kind) {
-    return kind === 'twitch' ? DEFAULT_TWITCH_TEMPLATE : DEFAULT_FEED_TEMPLATE;
+// The catalog's default messages keep their {author} {title} {url} tokens for renderFeedMessage to fill.
+const TEMPLATE_TOKENS = { author: '{author}', title: '{title}', url: '{url}' };
+
+/** The default message of a feed kind (English: DEFAULT_FEED_TEMPLATE / DEFAULT_TWITCH_TEMPLATE); pure. */
+export function defaultTemplate(kind, { lang = 'en' } = {}) {
+    if (lang === 'en') return kind === 'twitch' ? DEFAULT_TWITCH_TEMPLATE : DEFAULT_FEED_TEMPLATE;
+    const tr = botText(lang);
+    return kind === 'twitch' ? tr.t('community.feed.defaultTwitch', TEMPLATE_TOKENS) : tr.t('community.feed.defaultYoutube', TEMPLATE_TOKENS);
 }
 
-/** Fills a template's {title} {url} {author} {game} placeholders; pure. */
-export function renderFeedMessage(template, entry, kind = 'youtube') {
+/**
+ * Fills a template's {title} {url} {author} {game} placeholders; pure. An admin's template is used as
+ * written; without one the default message is in `lang` (the server's: a public post).
+ */
+export function renderFeedMessage(template, entry, kind = 'youtube', { lang = 'en' } = {}) {
     const values = { title: entry.title, url: entry.url, author: entry.author, channel: entry.author, game: entry.game || '' };
-    return String(template || defaultTemplate(kind))
+    return String(template || defaultTemplate(kind, { lang }))
         .replace(/\{(title|url|author|channel|game)\}/g, (match, key) => values[key] ?? '')
         .slice(0, 2000);
 }
@@ -179,15 +188,15 @@ export function listFeeds(guildId) {
     return feeds.filter((feed) => feed.guildId === guildId);
 }
 
-function checkNewFeed(guildId, template) {
+function checkNewFeed(guildId, template, tr) {
     const text = template == null ? null : String(template).trim() || null;
-    if (text && text.length > FEED_TEMPLATE_MAX) throw userError(`The message is limited to ${FEED_TEMPLATE_MAX} characters.`);
+    if (text && text.length > FEED_TEMPLATE_MAX) throw userError(tr.t('community.feed.tooLong', { max: FEED_TEMPLATE_MAX }));
     // YouTube and Twitch feeds share one per-server limit.
     if (listFeeds(guildId).length >= planLimit(guildId, 'feeds')) throw userError(limitMessage(guildId, 'feeds', 'feeds (YouTube and Twitch together)'));
     return text;
 }
 
-async function insertFeed({ guildId, kind, sourceId, channelId, text, lastItemId, createdBy }) {
+async function insertFeed({ guildId, kind, sourceId, channelId, text, lastItemId, createdBy }, tr) {
     let row;
     try {
         ({ rows: [row] } = await query(
@@ -198,8 +207,8 @@ async function insertFeed({ guildId, kind, sourceId, channelId, text, lastItemId
     } catch (error) {
         if (isUniqueViolation(error)) {
             throw userError(kind === 'twitch'
-                ? 'That Twitch channel is already posted to that Discord channel.'
-                : 'That YouTube channel is already posted to that Discord channel.');
+                ? tr.t('community.feed.twitchDuplicate')
+                : tr.t('community.feed.youtubeDuplicate'));
         }
         throw error;
     }
@@ -212,42 +221,44 @@ async function insertFeed({ guildId, kind, sourceId, channelId, text, lastItemId
  * Adds a feed after checking the source exists. YouTube: records its newest video.
  * Twitch: records the stream that is live right now, if any. Returns { feed, latest }.
  */
-export async function addFeed({ guildId, platform = 'youtube', sourceInput, channelId, template = null, createdBy }, fetchImpl = fetch, { twitch = getTwitchClient() } = {}) {
-    if (platform === 'twitch') return addTwitchFeed({ guildId, sourceInput, channelId, template, createdBy }, twitch);
-    if (platform !== 'youtube') throw userError('Choose YouTube or Twitch.');
-    const sourceId = parseYoutubeChannelId(sourceInput);
-    const text = checkNewFeed(guildId, template);
+// lang: the language of the errors and of the preview's example stream (the admin's).
+export async function addFeed({ guildId, platform = 'youtube', sourceInput, channelId, template = null, createdBy, lang = 'en' }, fetchImpl = fetch, { twitch = getTwitchClient() } = {}) {
+    const tr = botText(lang);
+    if (platform === 'twitch') return addTwitchFeed({ guildId, sourceInput, channelId, template, createdBy }, twitch, tr);
+    if (platform !== 'youtube') throw userError(tr.t('community.feed.choosePlatform'));
+    const sourceId = parseYoutubeChannelId(sourceInput, { lang: tr.lang });
+    const text = checkNewFeed(guildId, template, tr);
     let entries;
     try {
         entries = await fetchYoutubeFeed(sourceId, fetchImpl);
     } catch (error) {
-        if (error.status === 404) throw userError('YouTube has no channel with that id.');
-        throw userError(`Could not reach YouTube to check that channel (${error.message}). Try again later.`);
+        if (error.status === 404) throw userError(tr.t('community.feed.youtubeNoChannel'));
+        throw userError(tr.t('community.feed.youtubeUnreachable', { error: error.message }));
     }
-    const feed = await insertFeed({ guildId, kind: 'youtube', sourceId, channelId, text, lastItemId: entries[0]?.id ?? null, createdBy });
+    const feed = await insertFeed({ guildId, kind: 'youtube', sourceId, channelId, text, lastItemId: entries[0]?.id ?? null, createdBy }, tr);
     return { feed, latest: entries[0] || null };
 }
 
-async function addTwitchFeed({ guildId, sourceInput, channelId, template, createdBy }, twitch) {
-    if (!twitch?.configured) throw userError('Twitch alerts are not set up on this bot yet.');
-    const login = parseTwitchLogin(sourceInput);
-    const text = checkNewFeed(guildId, template);
+async function addTwitchFeed({ guildId, sourceInput, channelId, template, createdBy }, twitch, tr) {
+    if (!twitch?.configured) throw userError(tr.t('community.feed.twitchOff'));
+    const login = parseTwitchLogin(sourceInput, { lang: tr.lang });
+    const text = checkNewFeed(guildId, template, tr);
     let user;
     let live;
     try {
         user = await twitch.getUser(login);
         live = user ? (await twitch.getLiveStreams([user.login])).get(user.login) || null : null;
     } catch (error) {
-        throw userError(`Could not reach Twitch to check that channel (${error.message}). Try again later.`);
+        throw userError(tr.t('community.feed.twitchUnreachable', { error: error.message }));
     }
-    if (!user) throw userError('Twitch has no channel with that name.');
-    const feed = await insertFeed({ guildId, kind: 'twitch', sourceId: user.login, channelId, text, lastItemId: live?.id ?? null, createdBy });
+    if (!user) throw userError(tr.t('community.feed.twitchNoChannel'));
+    const feed = await insertFeed({ guildId, kind: 'twitch', sourceId: user.login, channelId, text, lastItemId: live?.id ?? null, createdBy }, tr);
     return {
         feed,
         user,
         live,
         // For the preview: the live stream, or a sample built from the channel name.
-        latest: live || { id: null, title: 'Example stream title', url: `https://www.twitch.tv/${user.login}`, author: user.displayName, game: 'Just Chatting' },
+        latest: live || { id: null, title: tr.t('community.feed.exampleTitle'), url: `https://www.twitch.tv/${user.login}`, author: user.displayName, game: 'Just Chatting' },
     };
 }
 
@@ -267,7 +278,7 @@ async function postEntries(client, feed, entries) {
     let posted = 0;
     for (const entry of entries) {
         const ok = await channel.send({
-            content: renderFeedMessage(feed.template, entry, feed.kind),
+            content: renderFeedMessage(feed.template, entry, feed.kind, { lang: textForGuild(feed.guildId, { purpose: 'public' }).lang }),
             allowedMentions: { parse: [], roles: templateRoleIds(feed.template) },
         }).then(() => true).catch((error) => {
             logger.warn(`Feed #${feed.id}: could not post in ${feed.channelId}: ${error.message}`);

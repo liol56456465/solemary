@@ -1,11 +1,14 @@
 import { EmbedBuilder } from 'discord.js';
-import { getAllBirthdays, filterPresentBirthdays, fitLines } from '../../../services/birthdayService.js';
+import { getAllBirthdays, filterPresentBirthdays, fitLines, birthdayDateText } from '../../../services/birthdayService.js';
 import { logger } from '../../../utils/logger.js';
+import { textForInteraction } from '../../../utils/botText.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 export default {
     async execute(interaction, config, client) {
         await InteractionHelper.safeDefer(interaction);
+        // A public reply (posted in the channel): the server's language.
+        const tr = textForInteraction(interaction, { purpose: 'public' });
 
         const guildId = interaction.guildId;
 
@@ -14,8 +17,8 @@ export default {
         if (sortedBirthdays.length === 0) {
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
-                .setTitle('No birthdays')
-                .setDescription('No birthdays have been set in this server yet.');
+                .setTitle(tr.t('birthday.list.noneTitle'))
+                .setDescription(tr.t('birthday.list.none'));
             return await InteractionHelper.safeEditReply(interaction, {
                 embeds: [embed]
             });
@@ -27,21 +30,21 @@ export default {
         if (present.length === 0) {
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
-                .setTitle('No birthdays')
-                .setDescription('No birthdays have been set by current server members.');
+                .setTitle(tr.t('birthday.list.noneTitle'))
+                .setDescription(tr.t('birthday.list.noneMembers'));
             return await InteractionHelper.safeEditReply(interaction, {
                 embeds: [embed]
             });
         }
 
-        const header = `**${present.length} birthday${present.length !== 1 ? 's' : ''} in ${interaction.guild.name}**\n\n`;
-        const lines = present.map((birthday, index) => `${index + 1}. <@${birthday.userId}> - ${birthday.monthName} ${birthday.day}`);
+        const header = `${tr.tp('birthday.list.header', present.length, { server: interaction.guild.name })}\n\n`;
+        const lines = present.map((birthday, index) => `${index + 1}. <@${birthday.userId}> - ${birthdayDateText(birthday.month, birthday.day, { lang: tr.lang })}`);
         // Embed descriptions stop at 4096 characters: a long list ends with "…and N more".
-        const { text } = fitLines(lines, { maxLength: 3800 - header.length });
+        const { text } = fitLines(lines, { maxLength: 3800 - header.length, more: (n) => tr.tp('birthday.list.more', n) });
 
         const embed = new EmbedBuilder()
             .setColor(0x00FF00)
-            .setTitle('Birthdays')
+            .setTitle(tr.t('birthday.list.title'))
             .setDescription(`${header}${text}`);
 
         await InteractionHelper.safeEditReply(interaction, {

@@ -4,22 +4,19 @@ import { logger } from '../../../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { endGiveawayNow } from '../../../services/giveawayService.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { textForInteraction } from '../../../utils/botText.js';
+import { describe } from '../../../utils/commandLocalizations.js';
 
 export default {
-    data: new SlashCommandBuilder()
-        .setName("gend")
-        .setDescription(
-            "End a giveaway now and pick the winners",
-        )
+    data: describe(new SlashCommandBuilder().setName("gend"), 'giveaway.cmd.gend')
         .addStringOption((option) =>
-            option
-                .setName("messageid")
-                .setDescription("Message ID of the giveaway")
+            describe(option.setName("messageid"), 'giveaway.cmd.messageId')
                 .setRequired(true),
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
     async execute(interaction) {
+        const tr = textForInteraction(interaction);
         // Defer up front: channel/message fetches, edits, the winner ping and logging
         // routinely take longer than Discord's 3-second window.
         await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
@@ -28,7 +25,7 @@ export default {
             throw new TitanBotError(
                 'Giveaway command used outside guild',
                 ErrorTypes.VALIDATION,
-                'This command can only be used in a server.',
+                tr.t('giveaway.guildOnly'),
                 { userId: interaction.user.id }
             );
         }
@@ -37,7 +34,7 @@ export default {
             throw new TitanBotError(
                 'User lacks ManageGuild permission',
                 ErrorTypes.PERMISSION,
-                "You need the 'Manage Server' permission to end a giveaway.",
+                tr.t('giveaway.needManageServer.end'),
                 { userId: interaction.user.id, guildId: interaction.guildId }
             );
         }
@@ -51,6 +48,7 @@ export default {
             interaction.guildId,
             messageId,
             interaction.user.id,
+            { lang: tr.lang },
         );
         const channel = `<#${channelId}>`;
 
@@ -59,8 +57,8 @@ export default {
         return InteractionHelper.safeReply(interaction, {
             embeds: [
                 successEmbed(
-                    "Giveaway ended",
-                    `Ended **${updatedGiveaway.prize}** in ${channel}. Picked ${winners.length} winner(s) from ${participantCount} entries.`,
+                    tr.t('giveaway.ended.title'),
+                    tr.tp('giveaway.ended.text', winners.length, { prize: updatedGiveaway.prize, channel, entries: participantCount }),
                 ),
             ],
             flags: MessageFlags.Ephemeral,

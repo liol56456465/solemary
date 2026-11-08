@@ -1,11 +1,14 @@
 import { EmbedBuilder } from 'discord.js';
-import { getUserBirthday } from '../../../services/birthdayService.js';
+import { getUserBirthday, birthdayDateText } from '../../../services/birthdayService.js';
 import { logger } from '../../../utils/logger.js';
+import { textForInteraction } from '../../../utils/botText.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 export default {
     async execute(interaction, config, client) {
         await InteractionHelper.safeDefer(interaction);
+        // A public reply (posted in the channel): the server's language.
+        const tr = textForInteraction(interaction, { purpose: 'public' });
 
         const targetUser = interaction.options.getUser("user") || interaction.user;
         const userId = targetUser.id;
@@ -16,10 +19,10 @@ export default {
         if (!birthdayData) {
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
-                .setTitle('No birthday set')
-                .setDescription(targetUser.id === interaction.user.id 
-                    ? "You haven't set your birthday yet. Use `/birthday set` to add it."
-                    : `${targetUser.username} hasn't set their birthday yet.`);
+                .setTitle(tr.t('birthday.info.noneTitle'))
+                .setDescription(targetUser.id === interaction.user.id
+                    ? tr.t('birthday.info.noneSelf')
+                    : tr.t('birthday.info.noneOther', { name: targetUser.username }));
             return await InteractionHelper.safeEditReply(interaction, {
                 embeds: [embed]
             });
@@ -27,8 +30,8 @@ export default {
 
         const embed = new EmbedBuilder()
             .setColor(0x00FF00)
-            .setTitle('Birthday')
-            .setDescription(`**Date:** ${birthdayData.monthName} ${birthdayData.day}\n**User:** ${targetUser.toString()}`);
+            .setTitle(tr.t('birthday.info.title'))
+            .setDescription(tr.t('birthday.info.text', { date: birthdayDateText(birthdayData.month, birthdayData.day, { lang: tr.lang }), user: targetUser.toString() }));
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [embed]

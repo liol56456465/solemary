@@ -10,40 +10,53 @@ import { handleDelete } from './modules/serverstats_delete.js';
 
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
+import { textForInteraction } from '../../utils/botText.js';
+import { descriptionLocalizations, englishDescription } from '../../utils/commandLocalizations.js';
+
+const CHOICE_KEYS = {
+    members: 'serverstats.cmd.choice.members',
+    membersOnly: 'serverstats.cmd.choice.membersOnly',
+    bots: 'serverstats.cmd.choice.bots',
+    voice: 'serverstats.cmd.choice.voice',
+    text: 'serverstats.cmd.choice.text',
+};
+/** A choice with its English name and the 7 other languages (value unchanged). */
+const choice = (key, value) => ({ name: englishDescription(CHOICE_KEYS[key]), name_localizations: descriptionLocalizations(CHOICE_KEYS[key]), value });
+
 export default {
     data: new SlashCommandBuilder()
         .setName("serverstats")
-        .setDescription("Manage server statistics that track member counts and channel data")
+        .setDescription(englishDescription('serverstats.cmd.root')).setDescriptionLocalizations(descriptionLocalizations('serverstats.cmd.root'))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
         .addSubcommand(subcommand =>
             subcommand
                 .setName("create")
-                .setDescription("Create a new statistics tracker channel in a category")
+                .setDescription(englishDescription('serverstats.cmd.create.desc')).setDescriptionLocalizations(descriptionLocalizations('serverstats.cmd.create.desc'))
                 .addStringOption(option =>
                     option
                         .setName("type")
-                        .setDescription("The type of statistics to track")
+                        .setDescription(englishDescription('serverstats.cmd.create.type')).setDescriptionLocalizations(descriptionLocalizations('serverstats.cmd.create.type'))
                         .setRequired(true)
                         .addChoices(
-                            { name: "members + bots", value: "members" },
-                            { name: "members only", value: "members_only" },
-                            { name: "bots only", value: "bots" }
+                            choice('members', "members"),
+                            choice('membersOnly', "members_only"),
+                            choice('bots', "bots")
                         )
                 )
                 .addStringOption(option =>
                     option
                         .setName("channel_type")
-                        .setDescription("The channel type to create for this tracker")
+                        .setDescription(englishDescription('serverstats.cmd.create.channelType')).setDescriptionLocalizations(descriptionLocalizations('serverstats.cmd.create.channelType'))
                         .setRequired(true)
                         .addChoices(
-                            { name: "voice channel (recommended)", value: "voice" },
-                            { name: "text channel", value: "text" }
+                            choice('voice', "voice"),
+                            choice('text', "text")
                         )
                 )
                 .addChannelOption(option =>
                     option
                         .setName("category")
-                        .setDescription("The category where the statistics tracker channel will be created")
+                        .setDescription(englishDescription('serverstats.cmd.create.category')).setDescriptionLocalizations(descriptionLocalizations('serverstats.cmd.create.category'))
                         .setRequired(true)
                         .addChannelTypes(ChannelType.GuildCategory)
                 )
@@ -51,38 +64,38 @@ export default {
         .addSubcommand(subcommand =>
             subcommand
                 .setName("list")
-                .setDescription("List all statistics trackers for this server")
+                .setDescription(englishDescription('serverstats.cmd.list.desc')).setDescriptionLocalizations(descriptionLocalizations('serverstats.cmd.list.desc'))
         )
         .addSubcommand(subcommand =>
             subcommand
                 .setName("update")
-                .setDescription("Update an existing statistics tracker")
+                .setDescription(englishDescription('serverstats.cmd.update.desc')).setDescriptionLocalizations(descriptionLocalizations('serverstats.cmd.update.desc'))
                 .addStringOption(option =>
                     option
                         .setName("counter-id")
-                        .setDescription("The ID of the tracker to update")
+                        .setDescription(englishDescription('serverstats.cmd.update.counterId')).setDescriptionLocalizations(descriptionLocalizations('serverstats.cmd.update.counterId'))
                         .setRequired(true)
                 )
                 .addStringOption(option =>
                     option
                         .setName("type")
-                        .setDescription("The new tracker type")
+                        .setDescription(englishDescription('serverstats.cmd.update.type')).setDescriptionLocalizations(descriptionLocalizations('serverstats.cmd.update.type'))
                         .setRequired(false)
                         .addChoices(
-                            { name: "members + bots", value: "members" },
-                            { name: "members only", value: "members_only" },
-                            { name: "bots only", value: "bots" }
+                            choice('members', "members"),
+                            choice('membersOnly', "members_only"),
+                            choice('bots', "bots")
                         )
                 )
         )
         .addSubcommand(subcommand =>
             subcommand
                 .setName("delete")
-                .setDescription("Delete an existing statistics tracker")
+                .setDescription(englishDescription('serverstats.cmd.delete.desc')).setDescriptionLocalizations(descriptionLocalizations('serverstats.cmd.delete.desc'))
                 .addStringOption(option =>
                     option
                         .setName("counter-id")
-                        .setDescription("The ID of the tracker to delete")
+                        .setDescription(englishDescription('serverstats.cmd.delete.counterId')).setDescriptionLocalizations(descriptionLocalizations('serverstats.cmd.delete.counterId'))
                         .setRequired(true)
                 )
         ),
@@ -104,7 +117,7 @@ export default {
                 await handleDelete(interaction, client);
                 break;
             default:
-                await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: 'Unknown subcommand.' });
+                await replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: textForInteraction(interaction).t('serverstats.unknownSubcommand') });
         }
     }
 };

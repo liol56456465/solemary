@@ -22,6 +22,7 @@ import { isSettingsUnavailable, noteSettingsUnavailable } from '../settings/guil
 import { pendingMessages, takeActiveGuilds } from '../stats/activityService.js';
 import { GUILD_SQL, guildIdsFromSql } from '../scheduling/guildScan.js';
 import { logger } from '../../utils/logger.js';
+import { botText, textForGuild } from '../../utils/botText.js';
 import {
     CAT_DEFAULT_NAME, CAT_STAGES, catImageFile, catMood, catProgressLine, growthAction, moodSentence, sanitizeCatName,
     shownStage, stageIndexFor, stageProgress,
@@ -120,32 +121,49 @@ export function catAttachment(cat) {
     return new AttachmentBuilder(fileURLToPath(new URL(cat.image, IMG_DIR)), { name: cat.image });
 }
 
-const formatNumber = (n) => (Number(n) || 0).toLocaleString('en-US');
+const formatNumber = (n, lang = 'en') => (Number(n) || 0).toLocaleString(lang === 'en' ? 'en-US' : lang);
 
-/** The /cat view embed (plain text, the image as attachment://<file>). */
-export function catEmbed(cat) {
+// Stage names, moods and mood sentences in the bot catalog (English = catModel's text).
+const STAGE_KEYS = {
+    kitten: 'community.cat.stage.kitten', young: 'community.cat.stage.young', cat: 'community.cat.stage.cat',
+    big: 'community.cat.stage.big', legend: 'community.cat.stage.legend',
+};
+const MOOD_KEYS = { scared: 'community.cat.mood.scared', proud: 'community.cat.mood.proud', happy: 'community.cat.mood.happy', sleepy: 'community.cat.mood.sleepy' };
+const SENTENCE_KEYS = {
+    scared: 'community.cat.sentence.scared', proud: 'community.cat.sentence.proud',
+    happy: 'community.cat.sentence.happy', sleepy: 'community.cat.sentence.sleepy',
+};
+const stageName = (tr, stage) => (STAGE_KEYS[stage?.key] ? tr.t(STAGE_KEYS[stage.key]) : stage?.name);
+const moodName = (tr, mood) => (MOOD_KEYS[mood] ? tr.t(MOOD_KEYS[mood]) : mood);
+const moodText = (tr, cat) => (SENTENCE_KEYS[cat.mood] ? tr.t(SENTENCE_KEYS[cat.mood], { name: cat.name }) : cat.sentence);
+
+/** The /cat view embed (plain text, the image as attachment://<file>). lang: a public post, the server's. */
+export function catEmbed(cat, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     const next = cat.progress.next
-        ? `${catProgressLine(cat.progress.fraction)}\n${formatNumber(cat.progress.toNext)} more messages to ${cat.progress.next.name}.`
-        : 'Fully grown. This is the last stage.';
+        ? tr.t('community.cat.toNext', { bar: catProgressLine(cat.progress.fraction), left: formatNumber(cat.progress.toNext, tr.lang), stage: stageName(tr, cat.progress.next) })
+        : tr.t('community.cat.fullyGrown');
     return new EmbedBuilder()
         .setTitle(cat.name)
-        .setDescription(cat.sentence)
+        .setDescription(moodText(tr, cat))
         .addFields(
-            { name: 'Stage', value: cat.stage.name, inline: true },
-            { name: 'Mood', value: cat.mood, inline: true },
-            { name: 'Messages counted', value: formatNumber(cat.total), inline: true },
-            { name: 'Next stage', value: next, inline: false },
+            { name: tr.t('community.cat.stageField'), value: stageName(tr, cat.stage), inline: true },
+            { name: tr.t('community.cat.moodField'), value: moodName(tr, cat.mood), inline: true },
+            { name: tr.t('community.cat.messagesField'), value: formatNumber(cat.total, tr.lang), inline: true },
+            { name: tr.t('community.cat.nextField'), value: next, inline: false },
         )
         .setImage(`attachment://${cat.image}`)
-        .setFooter({ text: 'The cat grows with every message members send here.' })
+        .setFooter({ text: tr.t('community.cat.footer') })
         .setColor(0xf2b84b);
 }
 
-/** The growth announcement message. */
-export function growthMessage(cat) {
+/** The growth announcement message (a public post: the server's language). */
+export function growthMessage(cat, { lang = 'en' } = {}) {
+    const tr = botText(lang);
+    const stage = stageName(tr, cat.stage);
     const embed = new EmbedBuilder()
-        .setTitle(`${cat.name} grew into a ${cat.stage.name}`)
-        .setDescription(`Thanks to everyone who chats here. ${cat.name} is now a ${cat.stage.name} after ${formatNumber(cat.total)} messages.`)
+        .setTitle(tr.t('community.cat.grewTitle', { name: cat.name, stage }))
+        .setDescription(tr.t('community.cat.grewText', { name: cat.name, stage, total: formatNumber(cat.total, tr.lang) }))
         .setImage(`attachment://${cat.image}`)
         .setColor(0xf2b84b);
     return { embeds: [embed], files: [catAttachment(cat)], allowedMentions: { parse: [] } };
@@ -193,7 +211,7 @@ export async function checkGuildCatGrowth(guild, { client, getLevelingConfig, ge
         return 'recorded';
     }
     try {
-        await channel.send(growthMessage(shown));
+        await channel.send(growthMessage(shown, { lang: textForGuild(guild.id, { purpose: 'public' }).lang }));
     } catch (error) {
         logger.warn(`Server cat: growth announcement in ${guild.id} failed (retried next run): ${error.message}`);
         return 'failed';

@@ -1,0 +1,105 @@
+{
+    "cmd": {
+        "birthday": "Birthday system commands",
+        "set": "Set your birthday",
+        "month": "Birth month (1-12)",
+        "day": "Birth day (1-31)",
+        "info": "View birthday information",
+        "infoUser": "User to check birthday for",
+        "list": "List all birthdays in the server",
+        "remove": "Remove your birthday",
+        "next": "Show upcoming birthdays",
+        "setchannel": "Set or disable the channel for birthday announcements. (Administrator)",
+        "channel": "The text channel for announcements. Leave empty to disable.",
+        "timezone": "Server time zone for birthdays, e.g. Europe/London (default UTC)"
+    },
+    "unknownSubcommand": "Unknown subcommand",
+    "month": {
+        "january": "January",
+        "february": "February",
+        "march": "March",
+        "april": "April",
+        "may": "May",
+        "june": "June",
+        "july": "July",
+        "august": "August",
+        "september": "September",
+        "october": "October",
+        "november": "November",
+        "december": "December",
+        "invalid": "Invalid Month"
+    },
+    "date": "{month} {day}",
+    "info": {
+        "noneTitle": "No birthday set",
+        "noneSelf": "You haven't set your birthday yet. Use `/birthday set` to add it.",
+        "noneOther": "{name} hasn't set their birthday yet.",
+        "title": "Birthday",
+        "text": "**Date:** {date}\n**User:** {user}"
+    },
+    "list": {
+        "noneTitle": "No birthdays",
+        "none": "No birthdays have been set in this server yet.",
+        "noneMembers": "No birthdays have been set by current server members.",
+        "header": {
+            "one": "**{count} birthday in {server}**",
+            "other": "**{count} birthdays in {server}**"
+        },
+        "more": {
+            "one": "…and {count} more",
+            "other": "…and {count} more"
+        },
+        "title": "Birthdays"
+    },
+    "remove": {
+        "noneTitle": "No birthday set",
+        "none": "You don't have a birthday set to remove.",
+        "title": "Birthday removed",
+        "text": "Your birthday is removed."
+    },
+    "set": {
+        "title": "Birthday saved",
+        "text": "Your birthday is set to **{date}**."
+    },
+    "setchannel": {
+        "notAllowedTitle": "Not allowed",
+        "notAllowed": "You need the **Administrator** permission to configure the birthday channel.",
+        "unknownTzTitle": "Unknown time zone",
+        "unknownTz": "`{input}` is not a known time zone. Use an IANA name such as `Europe/London`, `America/New_York` or `UTC` (the list suggests names as you type).",
+        "timezoneLine": "Birthdays follow the **{timezone}** date (it is currently {date} there). Announcements go out once per local day.",
+        "onTitle": "Birthday announcements on",
+        "on": "Birthday announcements will now be posted in {channel}.",
+        "tzTitle": "Time zone updated",
+        "offTitle": "Birthday announcements off",
+        "off": "No channel given, so birthday announcements are turned off.",
+        "failTitle": "Couldn't save",
+        "fail": "The birthday channel wasn't saved. Try again in a moment."
+    },
+    "next": {
+        "noneTitle": "No birthdays yet",
+        "none": "Nobody here has set a birthday. Use `/birthday set` to add yours.",
+        "noUpcomingTitle": "No upcoming birthdays",
+        "noUpcoming": "None of the saved birthdays belong to someone who's still in the server.",
+        "intro": "Next birthdays in {server}:",
+        "footer": "Add yours with /birthday set.",
+        "title": "Upcoming birthdays",
+        "today": "**Today**",
+        "tomorrow": "**Tomorrow**",
+        "inDays": {
+            "one": "In {count} day",
+            "other": "In {count} days"
+        }
+    },
+    "announce": {
+        "title": "Happy birthday",
+        "text": "Happy birthday {members}, have a good one."
+    },
+    "errors": {
+        "notNumbers": "Month and day must be numbers",
+        "month": "Month must be between 1 and 12",
+        "day": "Day must be between 1 and 31",
+        "invalidDate": "Invalid date. Please check the month and day combination (e.g., February 29th only exists in leap years)",
+        "saveFailed": "Failed to set your birthday. Please try again later.",
+        "removeFailed": "Failed to remove your birthday. Please try again."
+    }
+}

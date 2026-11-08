@@ -1,0 +1,120 @@
+{
+    "cmd": {
+        "root": "Gérer les statistiques du serveur : compteurs de membres et de bots",
+        "create": {
+            "desc": "Créer un nouveau salon compteur dans une catégorie",
+            "type": "Ce que le compteur compte",
+            "channelType": "Le type de salon pour ce compteur",
+            "category": "La catégorie où le salon compteur sera créé"
+        },
+        "list": {
+            "desc": "Afficher tous les compteurs de ce serveur"
+        },
+        "update": {
+            "desc": "Modifier un compteur existant",
+            "counterId": "L’ID du compteur à modifier",
+            "type": "Le nouveau type de compteur"
+        },
+        "delete": {
+            "desc": "Supprimer un compteur existant",
+            "counterId": "L’ID du compteur à supprimer"
+        },
+        "choice": {
+            "members": "membres + bots",
+            "membersOnly": "membres seulement",
+            "bots": "bots seulement",
+            "voice": "salon vocal (recommandé)",
+            "text": "salon textuel"
+        }
+    },
+    "type": {
+        "members": {
+            "label": "Membres + bots",
+            "channelName": "Membres & bots"
+        },
+        "membersOnly": {
+            "label": "Membres seulement",
+            "channelName": "Membres"
+        },
+        "bots": {
+            "label": "Bots seulement",
+            "channelName": "Bots"
+        },
+        "unknown": {
+            "label": "Inconnu",
+            "channelName": "Compteur"
+        }
+    },
+    "success": "C’est fait",
+    "unknownSubcommand": "Sous-commande inconnue.",
+    "noAdmin": {
+        "create": "Tu as besoin de la permission **Administrateur** pour créer des compteurs.",
+        "view": "Tu as besoin de la permission **Administrateur** pour voir les compteurs.",
+        "update": "Tu as besoin de la permission **Administrateur** pour modifier des compteurs.",
+        "delete": "Tu as besoin de la permission **Administrateur** pour supprimer des compteurs."
+    },
+    "error": {
+        "unknownType": "Type de compteur inconnu.",
+        "notCategory": "Choisis une catégorie pour le salon compteur.",
+        "typeInUse": "Un compteur **{type}** existe déjà sur ce serveur. Supprime-le d’abord avant d’en créer un autre.",
+        "typeInUseIn": "Un compteur **{type}** existe déjà sur ce serveur dans {channel}. Supprime-le d’abord avant d’en créer un autre.",
+        "typeInUseReuse": "Un compteur **{type}** existe déjà sur ce serveur. Supprime-le d’abord avant de réutiliser ce type.",
+        "typeInUseReuseIn": "Un compteur **{type}** existe déjà sur ce serveur dans {channel}. Supprime-le d’abord avant de réutiliser ce type.",
+        "saveFailed": "Impossible d’enregistrer le compteur. Réessaie.",
+        "deleteFailed": "Impossible de supprimer le compteur. Réessaie.",
+        "notFound": "Le compteur avec l’ID `{id}` est introuvable.",
+        "notFoundList": "Le compteur avec l’ID `{id}` est introuvable. Utilise `/serverstats list` pour voir tous les compteurs.",
+        "channelMissing": "Le salon de ce compteur n’existe plus. Tu ne peux pas modifier le compteur d’un salon supprimé.",
+        "createFailed": "Un problème est survenu pendant la création du compteur. Réessaie.",
+        "updateFailed": "Un problème est survenu pendant la modification du compteur. Réessaie.",
+        "loadFailed": "Impossible de charger les compteurs. Réessaie.",
+        "noType": "Indique un nouveau type de compteur pour le modifier.",
+        "noneToDelete": "Aucun compteur à supprimer.",
+        "serverOnly": "Cette action ne fonctionne que sur un serveur.",
+        "actionMissing": "Il manque les données pour supprimer le compteur.",
+        "notYours": "Seule la personne qui a lancé ceci peut utiliser ces boutons.",
+        "unknownAction": "Action de suppression de compteur inconnue."
+    },
+    "create": {
+        "notRenamed": "Compteur créé, mais je n’ai pas encore pu renommer le salon. Il sera mis à jour au prochain passage.",
+        "done": "**Compteur créé**\n\n**Type :** {type}\n**Type de salon :** {channelType}\n**Catégorie :** {category}\n**Salon :** {channel}\n**Nom du salon :** {channelName}\n**ID du compteur :** `{id}`\n\nIl est mis à jour toutes les 15 minutes. `/serverstats list` affiche tous les compteurs.",
+        "voice": "vocal",
+        "text": "textuel"
+    },
+    "update": {
+        "notRenamed": "Compteur modifié, mais je n’ai pas encore pu renommer le salon. Il sera mis à jour au prochain passage.",
+        "done": "**Compteur modifié**\n\n**ID du compteur :** `{id}`\n**Type :** {oldType} → {newType}\n**Salon :** {channel}\n**Nom du salon :** {channelName}\n\nIl est mis à jour toutes les 15 minutes."
+    },
+    "delete": {
+        "title": "Supprimer le compteur et le salon",
+        "confirm": "Supprimer ce compteur et son salon ?\n\n**ID :** `{id}`\n**Type :** {type}\n**Salon :** {channel}\n\n**Le salon est supprimé définitivement.**",
+        "alreadyDeleted": "déjà supprimé",
+        "button": "Supprimer",
+        "cancel": "Annuler",
+        "cancelledTitle": "Annulé",
+        "cancelledBody": "Rien n’a été supprimé.",
+        "done": "**Compteur supprimé**\n\n**ID :** `{id}`\n**Type :** {type}",
+        "channelDeleted": "\n**Salon :** {name} (supprimé)",
+        "channelFailed": "\n**Salon :** {name} (échec de la suppression)",
+        "channelGone": "\n**Salon :** Déjà supprimé"
+    },
+    "list": {
+        "title": "Compteurs du serveur",
+        "empty": "Il n’y a encore aucun compteur.\n\nUtilise `/serverstats create` pour en ajouter un.",
+        "typesName": "Types de compteurs",
+        "typesValue": "**Membres + bots** : tout le monde\n**Membres seulement** : les personnes, sans les bots\n**Bots seulement** : juste les bots",
+        "examplesName": "Exemples",
+        "examplesValue": "`/serverstats create type:members channel_type:voice category:Stats`\n`/serverstats create type:bots channel_type:text category:Infos serveur`\n`/serverstats list`",
+        "footer": "Les compteurs sont mis à jour toutes les 15 minutes",
+        "titleCount": "Compteurs du serveur ({count})",
+        "description": "Tous les compteurs de ce serveur. Ils sont mis à jour toutes les 15 minutes.",
+        "upToDate": "À jour",
+        "notUpdated": "Pas encore mis à jour",
+        "counterName": "Compteur n°{number} · {channelName}",
+        "counterValue": "**ID :** `{id}`\n**Type :** {type}\n**Salon :** {channel}\n**Valeur :** {count}\n**État :** {status}\n**Créé le :** {created}",
+        "totalsName": "Totaux",
+        "totalsValue": "**Compteurs :** {counters}\n**À jour :** {upToDate}\n**Prochaine mise à jour :** <t:{next}:R>",
+        "commandsName": "Commandes",
+        "commandsValue": "`/serverstats create` : ajouter un compteur\n`/serverstats update` : modifier un compteur\n`/serverstats delete` : supprimer un compteur"
+    }
+}

@@ -7,20 +7,16 @@ import { createEmbed } from '../../../utils/embeds.js';
 import { roleSyncNote, syncLevelRolesForMember } from '../../../services/leveling/levelRoleSyncService.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { textForInteraction } from '../../../utils/botText.js';
+import { describe } from '../../../utils/commandLocalizations.js';
 export default {
-  data: new SlashCommandBuilder()
-    .setName('leveladd')
-    .setDescription('Add levels to a user')
+  data: describe(new SlashCommandBuilder().setName('leveladd'), 'leveling.cmd.leveladd.description')
     .addUserOption((option) =>
-      option
-        .setName('user')
-        .setDescription('The user to add levels to')
+      describe(option.setName('user'), 'leveling.cmd.leveladd.user')
         .setRequired(true)
     )
     .addIntegerOption((option) =>
-      option
-        .setName('levels')
-        .setDescription('Number of levels to add')
+      describe(option.setName('levels'), 'leveling.cmd.leveladd.levels')
         .setRequired(true)
         .setMinValue(1)
     )
@@ -30,11 +26,14 @@ export default {
 
   async execute(interaction, config, client) {
     await InteractionHelper.safeDefer(interaction);
+    // The result is posted in the channel (server language); refusals go to the user (their language).
+    const tr = textForInteraction(interaction);
+    const pub = textForInteraction(interaction, { purpose: 'public' });
 
     const hasPermission = await checkUserPermissions(
       interaction,
       PermissionFlagsBits.ManageGuild,
-      'You need ManageGuild permission to use this command.'
+      tr.t('leveling.change.manageGuild')
     );
     if (!hasPermission) return;
 
@@ -44,7 +43,7 @@ export default {
         embeds: [
           new EmbedBuilder()
             .setColor('#f1c40f')
-            .setDescription('The leveling system is currently disabled on this server.')
+            .setDescription(pub.t('leveling.disabled'))
         ],
         flags: MessageFlags.Ephemeral
       });
@@ -59,7 +58,7 @@ export default {
       throw new TitanBotError(
         `User ${targetUser.id} not found in this guild`,
         ErrorTypes.USER_INPUT,
-        'The specified user is not in this server.'
+        tr.t('leveling.notInServer')
       );
     }
 
@@ -74,13 +73,13 @@ export default {
       logger.warn(`Level reward roles not synced for ${targetUser.id} in guild ${interaction.guildId}: ${error.message}`);
       return { added: [], removed: [], skipped: [], errors: 1 };
     });
-    const roleNote = roleSyncNote(roleSync);
+    const roleNote = roleSyncNote(roleSync, { lang: pub.lang });
 
     await InteractionHelper.safeEditReply(interaction, {
       embeds: [
         createEmbed({
-          title: 'Levels added',
-          description: `Added ${levelsToAdd} levels to ${targetUser.tag}.\n**New level:** ${userData.level}${roleNote ? `\n${roleNote}` : ''}`,
+          title: pub.t('leveling.change.addedTitle'),
+          description: `${pub.t('leveling.change.added', { levels: levelsToAdd, user: targetUser.tag, level: userData.level })}${roleNote ? `\n${roleNote}` : ''}`,
           color: 'success'
         })
       ]

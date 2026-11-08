@@ -4,20 +4,19 @@ import { logger } from '../../../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { rerollGiveaway } from '../../../services/giveawayService.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
+import { textForInteraction } from '../../../utils/botText.js';
+import { describe } from '../../../utils/commandLocalizations.js';
 
 export default {
-    data: new SlashCommandBuilder()
-        .setName("greroll")
-        .setDescription("Pick new winners for an ended giveaway")
+    data: describe(new SlashCommandBuilder().setName("greroll"), 'giveaway.cmd.greroll')
         .addStringOption((option) =>
-            option
-                .setName("messageid")
-                .setDescription("Message ID of the giveaway")
+            describe(option.setName("messageid"), 'giveaway.cmd.messageId')
                 .setRequired(true),
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
     async execute(interaction) {
+        const tr = textForInteraction(interaction);
         // Defer up front: message lookups, edits and logging can exceed the 3s window
         await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
 
@@ -25,7 +24,7 @@ export default {
             throw new TitanBotError(
                 'Giveaway command used outside guild',
                 ErrorTypes.VALIDATION,
-                'This command can only be used in a server.',
+                tr.t('giveaway.guildOnly'),
                 { userId: interaction.user.id }
             );
         }
@@ -34,7 +33,7 @@ export default {
             throw new TitanBotError(
                 'User lacks ManageGuild permission',
                 ErrorTypes.PERMISSION,
-                "You need the 'Manage Server' permission to reroll a giveaway.",
+                tr.t('giveaway.needManageServer.reroll'),
                 { userId: interaction.user.id, guildId: interaction.guildId }
             );
         }
@@ -48,14 +47,15 @@ export default {
             interaction.guildId,
             messageId,
             interaction.user.id,
+            { lang: tr.lang },
         );
 
         if (!channelId) {
             return InteractionHelper.safeReply(interaction, {
                 embeds: [
                     successEmbed(
-                        "Reroll Complete",
-                        "The new winners have been selected and saved to the database. Could not find channel to announce.",
+                        tr.t('giveaway.reroll.completeTitle'),
+                        tr.t('giveaway.reroll.noChannel'),
                     ),
                 ],
                 flags: MessageFlags.Ephemeral,
@@ -68,8 +68,8 @@ export default {
             return InteractionHelper.safeReply(interaction, {
                 embeds: [
                     successEmbed(
-                        "Reroll Complete",
-                        `The new winners have been announced in ${channel}. (Original message not found).`,
+                        tr.t('giveaway.reroll.completeTitle'),
+                        tr.t('giveaway.reroll.noMessage', { channel }),
                     ),
                 ],
                 flags: MessageFlags.Ephemeral,
@@ -79,8 +79,8 @@ export default {
         return InteractionHelper.safeReply(interaction, {
             embeds: [
                 successEmbed(
-                    "Rerolled",
-                    `Picked ${newWinners.length} new winner(s) for **${giveaway.prize}** in ${channel}.`,
+                    tr.t('giveaway.reroll.title'),
+                    tr.tp('giveaway.reroll.text', newWinners.length, { prize: giveaway.prize, channel }),
                 ),
             ],
             flags: MessageFlags.Ephemeral,

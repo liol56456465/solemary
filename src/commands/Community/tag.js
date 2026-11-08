@@ -6,37 +6,40 @@ import {
     createTag, deleteTag, editTag, listTags, useTag, TAG_CONTENT_MAX,
 } from '../../services/community/tagService.js';
 import { parseChannelList, REGEX_TRIGGER_MAX } from '../../services/community/tagMatcher.js';
+import { textForInteraction } from '../../utils/botText.js';
+import { describe } from '../../utils/commandLocalizations.js';
 
 function truncate(text, max) {
     const value = String(text ?? '');
     return value.length > max ? `${value.slice(0, max - 1)}…` : value;
 }
 
-const nameOption = (option) => option.setName('name').setDescription('Tag name').setRequired(true).setAutocomplete(true).setMaxLength(32);
+const nameOption = (option) => describe(option.setName('name'), 'community.cmd.tag.name').setRequired(true).setAutocomplete(true).setMaxLength(32);
 const triggerOptions = (sub, { kindChoices }) => sub
-    .addStringOption((option) => option.setName('trigger_kind').setDescription('Post this tag automatically when a message matches')
+    // Choice names stay as typed (none / word / regex): replies and errors name them the same way.
+    .addStringOption((option) => describe(option.setName('trigger_kind'), 'community.cmd.tag.triggerKind')
         .addChoices(...kindChoices.map((kind) => ({ name: kind, value: kind }))))
-    .addStringOption((option) => option.setName('trigger').setDescription('Word/phrase, or regex (case-insensitive)').setMaxLength(REGEX_TRIGGER_MAX))
-    .addStringOption((option) => option.setName('allow_channels').setDescription('Only trigger in these channels (#mentions; "none" clears)').setMaxLength(1000))
-    .addStringOption((option) => option.setName('deny_channels').setDescription('Never trigger in these channels (#mentions; "none" clears)').setMaxLength(1000))
-    .addIntegerOption((option) => option.setName('cooldown').setDescription('Seconds between auto-posts per channel (default 60)').setMinValue(0).setMaxValue(86400));
+    .addStringOption((option) => describe(option.setName('trigger'), 'community.cmd.tag.trigger').setMaxLength(REGEX_TRIGGER_MAX))
+    .addStringOption((option) => describe(option.setName('allow_channels'), 'community.cmd.tag.allowChannels').setMaxLength(1000))
+    .addStringOption((option) => describe(option.setName('deny_channels'), 'community.cmd.tag.denyChannels').setMaxLength(1000))
+    .addIntegerOption((option) => describe(option.setName('cooldown'), 'community.cmd.tag.cooldown').setMinValue(0).setMaxValue(86400));
 
-function describeTag(tag) {
-    const lines = [`**Uses:** ${tag.uses}`, `**Created by:** <@${tag.createdBy}>`];
+function describeTag(tag, tr) {
+    const lines = [tr.t('community.tag.uses', { uses: tag.uses }), tr.t('community.tag.createdBy', { userId: tag.createdBy })];
     if (tag.triggerKind !== 'none') {
-        lines.push(`**Trigger:** ${tag.triggerKind} \`${truncate(tag.trigger, 100)}\`${tag.pattern ? '' : ' (disabled)'}`);
-        lines.push(`**Cooldown:** ${tag.cooldownS}s per channel`);
-        if (tag.allowChannels.length) lines.push(`**Only in:** ${tag.allowChannels.map((id) => `<#${id}>`).join(' ')}`);
-        if (tag.denyChannels.length) lines.push(`**Never in:** ${tag.denyChannels.map((id) => `<#${id}>`).join(' ')}`);
+        lines.push(tr.t('community.tag.trigger', { kind: tag.triggerKind, trigger: truncate(tag.trigger, 100), disabled: tag.pattern ? '' : tr.t('community.tag.disabled') }));
+        lines.push(tr.t('community.tag.cooldown', { seconds: tag.cooldownS }));
+        if (tag.allowChannels.length) lines.push(tr.t('community.tag.onlyIn', { channels: tag.allowChannels.map((id) => `<#${id}>`).join(' ') }));
+        if (tag.denyChannels.length) lines.push(tr.t('community.tag.neverIn', { channels: tag.denyChannels.map((id) => `<#${id}>`).join(' ') }));
     }
     return lines.join('\n');
 }
 
-function readChannels(interaction, name) {
+function readChannels(interaction, name, tr) {
     const raw = interaction.options.getString(name);
     if (raw == null) return undefined;
     const ids = parseChannelList(raw);
-    if (!ids.length && !/^\s*(none|-)\s*$/i.test(raw)) throw userError(`Could not read any channels from ${name}; mention them like #general, or write "none".`);
+    if (!ids.length && !/^\s*(none|-)\s*$/i.test(raw)) throw userError(tr.t('community.tag.channelsUnreadable', { option: name }));
     return ids;
 }
 
@@ -44,21 +47,20 @@ export default {
     // show/list: everyone (commandAccess.js). create/edit/delete: admin-only.
     slashOnly: true,
     category: 'Community',
-    data: new SlashCommandBuilder()
-        .setName('tag')
-        .setDescription('Saved answers anyone can post, optionally sent automatically on a keyword')
-        .addSubcommand((sub) => sub.setName('show').setDescription('Post a tag in this channel').addStringOption(nameOption)
-            .addUserOption((option) => option.setName('for').setDescription('Mention a member with it')))
-        .addSubcommand((sub) => sub.setName('list').setDescription('List the tags'))
-        .addSubcommand((sub) => triggerOptions(sub.setName('create').setDescription('Create a tag')
-            .addStringOption((option) => option.setName('name').setDescription('Short name: lowercase letters, digits, - and _').setRequired(true).setMaxLength(32))
-            .addStringOption((option) => option.setName('content').setDescription('The text').setRequired(true).setMaxLength(TAG_CONTENT_MAX)),
+    data: describe(new SlashCommandBuilder()
+        .setName('tag'), 'community.cmd.tag.desc')
+        .addSubcommand((sub) => describe(sub.setName('show'), 'community.cmd.tag.show').addStringOption(nameOption)
+            .addUserOption((option) => describe(option.setName('for'), 'community.cmd.tag.for')))
+        .addSubcommand((sub) => describe(sub.setName('list'), 'community.cmd.tag.list'))
+        .addSubcommand((sub) => triggerOptions(describe(sub.setName('create'), 'community.cmd.tag.create')
+            .addStringOption((option) => describe(option.setName('name'), 'community.cmd.tag.newName').setRequired(true).setMaxLength(32))
+            .addStringOption((option) => describe(option.setName('content'), 'community.cmd.tag.content').setRequired(true).setMaxLength(TAG_CONTENT_MAX)),
         { kindChoices: ['word', 'regex'] }))
-        .addSubcommand((sub) => triggerOptions(sub.setName('edit').setDescription('Change a tag (only the options you give)')
+        .addSubcommand((sub) => triggerOptions(describe(sub.setName('edit'), 'community.cmd.tag.edit')
             .addStringOption(nameOption)
-            .addStringOption((option) => option.setName('content').setDescription('New text').setMaxLength(TAG_CONTENT_MAX)),
+            .addStringOption((option) => describe(option.setName('content'), 'community.cmd.tag.newContent').setMaxLength(TAG_CONTENT_MAX)),
         { kindChoices: ['none', 'word', 'regex'] }))
-        .addSubcommand((sub) => sub.setName('delete').setDescription('Delete a tag').addStringOption(nameOption))
+        .addSubcommand((sub) => describe(sub.setName('delete'), 'community.cmd.tag.delete').addStringOption(nameOption))
         .setDMPermission(false),
 
     async autocomplete(interaction) {
@@ -70,10 +72,11 @@ export default {
     async execute(interaction) {
         const sub = interaction.options.getSubcommand();
         const name = interaction.options.getString('name')?.trim().toLowerCase();
+        const tr = textForInteraction(interaction);
 
         if (sub === 'show') {
             const tag = useTag(interaction.guildId, name);
-            if (!tag) throw userError(`There is no tag called **${name}**. See \`/tag list\`.`);
+            if (!tag) throw userError(tr.t('community.tag.notFound', { name }));
             const target = interaction.options.getUser('for');
             return InteractionHelper.safeReply(interaction, {
                 content: target ? `${target}\n${tag.content}`.slice(0, 2000) : tag.content,
@@ -86,11 +89,13 @@ export default {
 
         if (sub === 'list') {
             const tags = listTags(interaction.guildId);
-            const lines = tags.map((tag) => `\`${tag.name}\`${tag.triggerKind !== 'none' ? ` · auto: ${tag.triggerKind}` : ''} · ${tag.uses} uses`);
+            const lines = tags.map((tag) => tr.t('community.tag.listLine', {
+                name: tag.name, auto: tag.triggerKind !== 'none' ? tr.t('community.tag.auto', { kind: tag.triggerKind }) : '', uses: tag.uses,
+            }));
             return InteractionHelper.safeEditReply(interaction, {
                 embeds: [createEmbed({
-                    title: `Tags (${tags.length})`,
-                    description: truncate(lines.join('\n') || 'No tags yet.', 4096),
+                    title: tr.t('community.tag.listTitle', { count: tags.length }),
+                    description: truncate(lines.join('\n') || tr.t('community.tag.listEmpty'), 4096),
                     color: 'primary',
                 })],
             });
@@ -98,7 +103,7 @@ export default {
 
         if (sub === 'delete') {
             const removed = await deleteTag(interaction.guildId, name);
-            return InteractionHelper.safeEditReply(interaction, { content: removed ? `Deleted tag **${name}**.` : `There is no tag called **${name}**.` });
+            return InteractionHelper.safeEditReply(interaction, { content: removed ? tr.t('community.tag.deleted', { name }) : tr.t('community.tag.missing', { name }) });
         }
 
         const fields = {
@@ -107,14 +112,15 @@ export default {
             content: interaction.options.getString('content') ?? undefined,
             triggerKind: interaction.options.getString('trigger_kind') ?? undefined,
             trigger: interaction.options.getString('trigger') ?? undefined,
-            allowChannels: readChannels(interaction, 'allow_channels'),
-            denyChannels: readChannels(interaction, 'deny_channels'),
+            allowChannels: readChannels(interaction, 'allow_channels', tr),
+            denyChannels: readChannels(interaction, 'deny_channels', tr),
             cooldownS: interaction.options.getInteger('cooldown') ?? undefined,
+            lang: tr.lang,
         };
 
         if (sub === 'create') {
             if (fields.trigger && !fields.triggerKind) fields.triggerKind = 'word';
-            if (fields.triggerKind && !fields.trigger) throw userError('Give the trigger text too.');
+            if (fields.triggerKind && !fields.trigger) throw userError(tr.t('community.tag.needTrigger'));
             const tag = await createTag({
                 ...fields,
                 triggerKind: fields.triggerKind ?? 'none',
@@ -123,13 +129,13 @@ export default {
                 cooldownS: fields.cooldownS ?? null,
                 createdBy: interaction.user.id,
             });
-            return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed(`Tag ${tag.name} created`, describeTag(tag))] });
+            return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed(tr.t('community.tag.createdTitle', { name: tag.name }), describeTag(tag, tr))] });
         }
 
         if (sub === 'edit') {
             const tag = await editTag(fields);
-            if (!tag) throw userError(`There is no tag called **${name}**.`);
-            return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed(`Tag ${tag.name} updated`, describeTag(tag))] });
+            if (!tag) throw userError(tr.t('community.tag.missing', { name }));
+            return InteractionHelper.safeEditReply(interaction, { embeds: [successEmbed(tr.t('community.tag.updatedTitle', { name: tag.name }), describeTag(tag, tr))] });
         }
     },
 };

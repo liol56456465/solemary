@@ -1,0 +1,560 @@
+{
+    "cmd": {
+        "community": {
+            "desc": "Imposta messaggi fissi, suggerimenti, starboard e feed",
+            "channel": "Canale",
+            "sticky": {
+                "desc": "Messaggi tenuti in fondo a un canale",
+                "set": "Imposta (o sostituisci) il messaggio fisso di un canale",
+                "message": "Il testo da tenere in fondo",
+                "remove": "Rimuovi il messaggio fisso di un canale",
+                "list": "Elenca i messaggi fissi"
+            },
+            "suggestions": {
+                "desc": "Suggerimenti dei membri (/suggest)",
+                "channel": "Imposta il canale dei suggerimenti (vuoto per disattivarli)"
+            },
+            "starboard": {
+                "desc": "Copia i messaggi popolari in un canale starboard",
+                "set": "Attiva o modifica la starboard",
+                "channel": "Canale della starboard",
+                "emoji": "Reazione che conta (predefinita ⭐)",
+                "threshold": "Reazioni necessarie (predefinito 3)",
+                "off": "Disattiva la starboard"
+            },
+            "feed": {
+                "desc": "Pubblica nuovi video YouTube o live Twitch in un canale",
+                "add": "Segui un canale YouTube o Twitch",
+                "source": "YouTube: ID canale (UC…) o link /channel/. Twitch: login o link twitch.tv",
+                "channel": "Dove pubblicare",
+                "platform": "YouTube (predefinito) o Twitch",
+                "message": "Messaggio con {title} {url} {author} ({game} su Twitch); può menzionare un ruolo",
+                "remove": "Smetti di seguire un canale YouTube o Twitch",
+                "id": "Numero del feed (#) da /community feed list",
+                "list": "Elenca i feed"
+            }
+        },
+        "cat": {
+            "desc": "Il gatto del server, che cresce mentre i membri chattano",
+            "view": "Guarda il gatto del server, il suo umore e quanto manca alla crescita",
+            "name": "Rinomina il gatto del server (amministratori)",
+            "newName": "Il nuovo nome"
+        },
+        "tag": {
+            "desc": "Risposte salvate che chiunque può pubblicare, anche in automatico su una parola chiave",
+            "name": "Nome del tag",
+            "triggerKind": "Pubblica questo tag in automatico quando un messaggio corrisponde",
+            "trigger": "Parola/frase o regex (maiuscole e minuscole uguali)",
+            "allowChannels": "Attiva solo in questi canali (#menzioni; \"none\" svuota)",
+            "denyChannels": "Non attivare mai in questi canali (#menzioni; \"none\" svuota)",
+            "cooldown": "Secondi tra le pubblicazioni automatiche per canale (predefinito 60)",
+            "show": "Pubblica un tag in questo canale",
+            "for": "Menziona un membro con il tag",
+            "list": "Elenca i tag",
+            "create": "Crea un tag",
+            "newName": "Nome breve: lettere minuscole, cifre, - e _",
+            "content": "Il testo",
+            "edit": "Modifica un tag (solo le opzioni indicate)",
+            "newContent": "Nuovo testo",
+            "delete": "Elimina un tag"
+        },
+        "suggest": {
+            "desc": "Suggerisci qualcosa per il server o (admin) rispondi a un suggerimento",
+            "new": "Pubblica un suggerimento su cui i membri possono votare",
+            "text": "Il tuo suggerimento",
+            "status": "Approva, rifiuta o segna un suggerimento come in valutazione",
+            "id": "Numero del suggerimento (#)",
+            "statusOption": "Nuovo stato",
+            "reason": "Mostrato sul suggerimento e inviato all'autore"
+        },
+        "apply": {
+            "description": "Gestisci le candidature per i ruoli",
+            "submit": {
+                "description": "Invia una candidatura per un ruolo",
+                "application": "La candidatura che vuoi inviare"
+            },
+            "status": {
+                "description": "Controlla lo stato della tua candidatura",
+                "id": "ID della candidatura (lascia vuoto per vederle tutte)"
+            },
+            "list": {
+                "description": "Mostra le candidature aperte"
+            }
+        },
+        "appAdmin": {
+            "description": "Gestisci le candidature per lo staff",
+            "setup": {
+                "description": "Crea una nuova candidatura"
+            },
+            "review": {
+                "description": "Approva o rifiuta una candidatura",
+                "id": "L'ID della candidatura"
+            },
+            "list": {
+                "description": "Mostra tutte le candidature",
+                "status": "Filtra per stato",
+                "choice": {
+                    "pending": "In attesa",
+                    "approved": "Approvate",
+                    "denied": "Rifiutate"
+                },
+                "role": "Filtra per ID del ruolo",
+                "user": "Filtra per membro",
+                "limit": "Numero massimo di candidature da mostrare (predefinito: 10)"
+            },
+            "dashboard": {
+                "description": "Apri le impostazioni delle candidature",
+                "application": "La candidatura da configurare"
+            }
+        }
+    },
+    "sticky": {
+        "savedTitle": "Messaggio fisso salvato",
+        "posted": "Ora resta in fondo a {channel} e viene ripubblicato dopo che i membri scrivono lì (al massimo ogni 15 secondi).",
+        "notPosted": "Salvato, ma non sono riuscito a pubblicare in {channel}. Controlla che io possa vedere il canale, inviare messaggi e incorporare link.",
+        "removed": "Messaggio fisso rimosso da {channel}.",
+        "none": "{channel} non ha un messaggio fisso.",
+        "listTitle": "Messaggi fissi ({count})",
+        "listEmpty": "Nessuno. Aggiungine uno con `/community sticky set`.",
+        "footer": "Messaggio fisso",
+        "empty": "Il messaggio fisso non può essere vuoto.",
+        "tooLong": "I messaggi fissi possono avere al massimo {max} caratteri."
+    },
+    "suggestions": {
+        "channelSet": "I suggerimenti da `/suggest new` ora arrivano in {channel}. Assicurati che io possa inviare messaggi ed embed lì.",
+        "off": "I suggerimenti sono disattivati (nessun canale)."
+    },
+    "starboard": {
+        "onTitle": "Starboard attiva",
+        "onLine": "I messaggi con **{threshold}** reazioni {emoji} vengono copiati in {channel}.",
+        "rules": "La reazione dell'autore e quelle dei bot non contano; i messaggi dei bot non finiscono mai nella starboard.",
+        "offDone": "Starboard disattivata. I post già pubblicati restano dove sono.",
+        "emojiInvalid": "Usa una sola emoji: una standard come ⭐ o un'emoji personalizzata di questo server.",
+        "thresholdRange": "threshold deve essere tra 1 e {max}.",
+        "noText": "*(nessun testo)*",
+        "attachments": "Allegati: {count}",
+        "source": "Origine",
+        "jump": "[Vai al messaggio]({url})"
+    },
+    "feed": {
+        "addedTitle": "Feed #{id} aggiunto",
+        "twitchWatch": "Pubblicherò in {channel} quando **{author}** va in live su Twitch (controllo ogni 2 minuti).",
+        "liveNow": "È in live proprio ora: questa live non viene annunciata, la prossima sì.",
+        "previewTwitch": "\n**Anteprima** ({source}, non pubblicata):\n{preview}",
+        "withCurrent": "con la live attuale",
+        "withExample": "con una live di esempio",
+        "youtubeWatch": "I nuovi video di **{author}** verranno pubblicati in {channel} (controllo ogni 15 minuti).",
+        "previewYoutube": "\n**Anteprima** (con l'ultimo video, non pubblicata):\n{preview}",
+        "noVideos": "\nIl canale non ha ancora video.",
+        "removed": "Feed #{id} rimosso.",
+        "notFound": "Non esiste il feed #{id}. Vedi `/community feed list`.",
+        "listTitle": "Feed ({count})",
+        "listEmpty": "Nessuno. Aggiungine uno con `/community feed add`.",
+        "exampleTitle": "Titolo di una live di esempio",
+        "defaultYoutube": "**{author}** ha pubblicato un nuovo video: **{title}**\n{url}",
+        "defaultTwitch": "**{author}** è in live su Twitch: **{title}**\n{url}",
+        "youtubeIdInvalid": "Indica l'ID del canale YouTube (inizia con UC, 24 caratteri) o un link youtube.com/channel/UC…. Gli @handle non sono supportati: apri il canale, poi Condividi → Copia ID canale.",
+        "twitchLoginInvalid": "Indica il login Twitch (il nome in twitch.tv/<name>) o un link twitch.tv/<name>.",
+        "tooLong": "Il messaggio può avere al massimo {max} caratteri.",
+        "twitchDuplicate": "Questo canale Twitch viene già pubblicato in quel canale Discord.",
+        "youtubeDuplicate": "Questo canale YouTube viene già pubblicato in quel canale Discord.",
+        "choosePlatform": "Scegli YouTube o Twitch.",
+        "youtubeNoChannel": "YouTube non ha nessun canale con questo ID.",
+        "youtubeUnreachable": "Non riesco a raggiungere YouTube per controllare il canale ({error}). Riprova più tardi.",
+        "twitchOff": "Gli avvisi Twitch non sono ancora configurati su questo bot.",
+        "twitchUnreachable": "Non riesco a raggiungere Twitch per controllare il canale ({error}). Riprova più tardi.",
+        "twitchNoChannel": "Twitch non ha nessun canale con questo nome."
+    },
+    "tag": {
+        "uses": "**Usi:** {uses}",
+        "createdBy": "**Creato da:** <@{userId}>",
+        "trigger": "**Attivazione:** {kind} `{trigger}`{disabled}",
+        "disabled": " (disattivata)",
+        "cooldown": "**Attesa:** {seconds} s per canale",
+        "onlyIn": "**Solo in:** {channels}",
+        "neverIn": "**Mai in:** {channels}",
+        "channelsUnreadable": "Non riesco a leggere nessun canale da {option}; menzionali come #general o scrivi \"none\".",
+        "notFound": "Non esiste un tag chiamato **{name}**. Vedi `/tag list`.",
+        "missing": "Non esiste un tag chiamato **{name}**.",
+        "listLine": "`{name}`{auto} · usi: {uses}",
+        "auto": " · auto: {kind}",
+        "listTitle": "Tag ({count})",
+        "listEmpty": "Ancora nessun tag.",
+        "deleted": "Tag **{name}** eliminato.",
+        "needTrigger": "Indica anche il testo di attivazione.",
+        "createdTitle": "Tag {name} creato",
+        "updatedTitle": "Tag {name} modificato",
+        "textEmpty": "Il testo del tag non può essere vuoto.",
+        "textTooLong": "Il testo di un tag può avere al massimo {max} caratteri.",
+        "kindInvalid": "trigger_kind deve essere none, word o regex.",
+        "noTrigger": "Questo tag non ha un'attivazione; imposta trigger_kind (word o regex) insieme a trigger.",
+        "cooldownRange": "cooldown deve essere tra 0 e 86400 secondi.",
+        "cooldownMin": "I tag con attivazione hanno bisogno di un'attesa di almeno {seconds} secondi.",
+        "nameInvalid": "I nomi dei tag usano lettere minuscole, cifre, - e _ (fino a 32).",
+        "exists": "Esiste già un tag chiamato **{name}**. Usa `/tag edit` per modificarlo.",
+        "nothingToChange": "Indica almeno una cosa da cambiare."
+    },
+    "cat": {
+        "dbDown": "Il database non risponde in questo momento, quindi non è stato possibile caricare il gatto. Riprova tra poco.",
+        "nameInvalid": "Usa lettere, numeri e spazi per il nome.",
+        "notSaved": "Il database non risponde in questo momento, quindi non è stato cambiato nulla.",
+        "renamedTitle": "Gatto rinominato",
+        "renamed": "Il gatto del server ora si chiama {name}.",
+        "stageField": "Stadio",
+        "moodField": "Umore",
+        "messagesField": "Messaggi contati",
+        "nextField": "Stadio successivo",
+        "toNext": "{bar}\nAncora {left} messaggi allo stadio {stage}.",
+        "fullyGrown": "Cresciuto del tutto. Questo è l'ultimo stadio.",
+        "footer": "Il gatto cresce con ogni messaggio che i membri inviano qui.",
+        "grewTitle": "{name} è cresciuto: ora è {stage}",
+        "grewText": "Grazie a tutti quelli che chattano qui. Dopo {total} messaggi, {name} ora è allo stadio {stage}.",
+        "stage": {
+            "kitten": "Gattino",
+            "young": "Giovane gatto",
+            "cat": "Gatto",
+            "big": "Gattone",
+            "legend": "Leggenda"
+        },
+        "mood": {
+            "scared": "spaventato",
+            "proud": "orgoglioso",
+            "happy": "felice",
+            "sleepy": "assonnato"
+        },
+        "sentence": {
+            "scared": "{name} ha paura: il server è in blocco per un raid.",
+            "proud": "{name} è orgoglioso: oggi è cresciuto di uno stadio.",
+            "happy": "{name} è felice: questa settimana il server è stato più attivo.",
+            "sleepy": "{name} ha sonno: questa settimana il server è stato più tranquillo."
+        }
+    },
+    "suggest": {
+        "postedTitle": "Suggerimento #{id} pubblicato",
+        "postedText": "I membri possono votarlo qui: {url}",
+        "notFound": "Non esiste il suggerimento #{id} in questo server.",
+        "decidedTitle": "Suggerimento #{id}: {status}",
+        "edited": "Il messaggio del suggerimento è stato aggiornato.",
+        "notEdited": "Non è stato possibile aggiornare il messaggio del suggerimento (eliminato o senza accesso).",
+        "dmed": "L'autore è stato avvisato in DM.",
+        "notDmed": "Non è stato possibile inviare un DM all'autore.",
+        "statusWord": {
+            "approved": "approvato",
+            "denied": "rifiutato",
+            "considering": "in valutazione"
+        },
+        "label": {
+            "pending": "Votazione aperta",
+            "approved": "Approvato",
+            "denied": "Rifiutato",
+            "considering": "In valutazione"
+        },
+        "empty": "Il suggerimento non può essere vuoto.",
+        "tooLong": "I suggerimenti possono avere al massimo {max} caratteri.",
+        "notSetUp": "I suggerimenti non sono ancora configurati in questo server (un admin può usare `/community suggestions channel`).",
+        "cooldown": "Puoi pubblicare un altro suggerimento tra {seconds} secondi.",
+        "postFailed": "Non sono riuscito a pubblicare in {channel}. Chiedi a un admin di controllare i miei permessi lì.",
+        "closed": "La votazione su questo suggerimento è chiusa.",
+        "statusInvalid": "Lo stato deve essere approved, denied o considering.",
+        "votes": "Voti",
+        "status": "Stato",
+        "reasonStaff": "Motivo (staff)",
+        "reason": "Motivo",
+        "title": "Suggerimento #{id}",
+        "member": "Membro {userId}",
+        "footer": "Suggerisci qualcosa con /suggest new",
+        "dmTitle": "Il tuo suggerimento #{id} in {server}: {status}",
+        "vote": {
+            "invalid": "Questo pulsante non è valido.",
+            "gone": "Questo suggerimento non esiste più.",
+            "up": "Hai votato 👍.",
+            "down": "Hai votato 👎.",
+            "removed": "Il tuo voto è stato rimosso.",
+            "hint": "{note} Clicca l'altro pulsante per cambiarlo, o lo stesso per ritirarlo."
+        }
+    },
+    "apply": {
+        "serverOnly": "Questo comando si può usare solo in un server.",
+        "disabled": "Le candidature sono disattivate in questo server al momento.",
+        "configNotFound": "Impostazioni della candidatura non trovate.",
+        "closed": "La candidatura **{name}** è chiusa al momento.",
+        "roleNotFound": "Ruolo non trovato.",
+        "questionsChanged": "Le domande di questa candidatura sono cambiate mentre compilavi il modulo. Riaprilo con `/apply submit`.",
+        "sent": {
+            "title": "Candidatura inviata",
+            "body": "La tua candidatura per **{name}** è stata inviata allo staff."
+        },
+        "saved": {
+            "title": "Candidatura salvata",
+            "body": "La tua candidatura per **{name}** è stata salvata, ma non è stato possibile pubblicarla per lo staff (nessun canale per le candidature impostato, o il bot non può scriverci). Avvisa un membro dello staff."
+        },
+        "idLine": "ID della candidatura: `{id}`",
+        "statusHint": "Puoi controllare lo stato con `/apply status id:{id}`",
+        "statusLabel": {
+            "pending": "In corso",
+            "approved": "Accettata",
+            "denied": "Rifiutata",
+            "unknown": "Sconosciuto"
+        },
+        "list": {
+            "none": "Al momento non ci sono candidature aperte.",
+            "title": "Candidature aperte",
+            "description": "Ecco i ruoli per cui puoi candidarti:",
+            "entry": "**Ruolo:** {role}\n**Candidati con:** `/apply submit application:\"{name}\"`",
+            "roleMissing": "Ruolo non trovato",
+            "footer": "Usa /apply submit application:<nome> per candidarti a uno di questi ruoli.",
+            "loadFailed": "Impossibile caricare le candidature. Riprova più tardi."
+        },
+        "submit": {
+            "notFound": "Usa `/apply list` per vedere le candidature aperte.",
+            "closed": "La candidatura **{name}** è chiusa al momento. Usa `/apply list` per vedere quelle aperte.",
+            "pending": "Hai già una candidatura in attesa. Aspetta che venga esaminata.",
+            "roleGone": "Il ruolo di questa candidatura non esiste più.",
+            "modalTitle": "Candidatura: {name}"
+        },
+        "status": {
+            "notFound": "Candidatura non trovata, oppure non hai il permesso di vederla.",
+            "unknownDate": "Data sconosciuta",
+            "unknownRole": "Ruolo sconosciuto",
+            "oneTitle": "Candidatura #{id} - {role}",
+            "oneBody": "**ID della candidatura:** `{id}`\n**Stato:** {status}\n**Inviata:** {date}",
+            "none": "Non hai ancora inviato candidature.",
+            "allTitle": "Le tue candidature",
+            "allDescription": {
+                "one": "{count} candidatura recente.",
+                "many": "{count} candidature recenti.",
+                "other": "{count} candidature recenti."
+            },
+            "fieldName": "{role} ({status})",
+            "fieldValue": "**ID:** `{id}`\n**Stato:** {status}\n**Inviata:** {date}",
+            "footer": {
+                "one": "Le {shown} più recenti su {count} candidatura.",
+                "many": "Le {shown} più recenti su {count} candidature.",
+                "other": "Le {shown} più recenti su {count} candidature."
+            }
+        },
+        "dm": {
+            "approvedTitle": "Candidatura accettata",
+            "deniedTitle": "Candidatura rifiutata",
+            "approvedBody": "La tua candidatura per **{name}** è stata **approvata**\n**Nota:** {note}\n\nUsa `/apply status id:{id}` per vedere i dettagli.",
+            "deniedBody": "La tua candidatura per **{name}** è stata **rifiutata**\n**Nota:** {note}\n\nUsa `/apply status id:{id}` per vedere i dettagli.",
+            "noReason": "Nessun motivo indicato."
+        }
+    },
+    "appAdmin": {
+        "alreadyProcessed": "Questa azione è già stata elaborata. Riprova il comando.",
+        "questionRequired": "Domanda {number} (obbligatoria)",
+        "questionOptional": "Domanda {number} (facoltativa)",
+        "setup": {
+            "modalTitle": "Crea una nuova candidatura",
+            "rolePlaceholder": "Scegli il ruolo per cui ci si candida",
+            "roleLabel": "Ruolo della candidatura",
+            "roleDescription": "Il ruolo per cui i membri si candidano",
+            "namePlaceholder": "es. Moderatore, Aiutante, Sviluppatore",
+            "nameLabel": "Nome della candidatura",
+            "q1Placeholder": "Perché vuoi questo ruolo?",
+            "q2Placeholder": "Che esperienza hai?",
+            "noRole": "Devi scegliere un ruolo per la candidatura.",
+            "roleNotFound": "Il ruolo scelto non è stato trovato.",
+            "createdTitle": "Candidatura creata",
+            "createdBody": "La candidatura **{name}** è stata creata per {role}.\n\nPuoi cambiare canale di log, ruoli gestori, domande e tempo di conservazione nelle impostazioni."
+        },
+        "review": {
+            "notFound": "Candidatura non trovata.",
+            "processed": "Questa candidatura è già stata elaborata.",
+            "title": "Esamina la candidatura",
+            "body": "**Membro:** <@{userId}>\n**Candidatura:** {name}\n**ID della candidatura:** `{id}`",
+            "question": "D{number}: {question}",
+            "noAnswer": "*Nessuna risposta*",
+            "approve": "Approva",
+            "deny": "Rifiuta",
+            "approveTitle": "Approva candidatura - motivo",
+            "denyTitle": "Rifiuta candidatura - motivo",
+            "reasonLabel": "Motivo (facoltativo)",
+            "reasonPlaceholder": "Indica un motivo per questa decisione...",
+            "approvedTitle": "Candidatura approvata",
+            "approvedBody": "La candidatura è stata **approvata**.",
+            "deniedTitle": "Candidatura rifiutata",
+            "deniedBody": "La candidatura è stata **rifiutata**.",
+            "failed": "Si è verificato un errore durante l'esame della candidatura.",
+            "timeoutTitle": "Tempo scaduto",
+            "timeoutBody": "I pulsanti per l'esame sono scaduti."
+        },
+        "list": {
+            "noneTitle": "Nessuna candidatura trovata",
+            "noneDescription": "Nessuna candidatura inviata corrisponde a questi filtri.\n\nPerò sono configurati questi ruoli di candidatura:",
+            "roleEntry": "**Ruolo:** {role}\n**Aperto alle candidature:** Sì",
+            "footer": "I membri si candidano con /apply submit e vedono i ruoli con /apply list",
+            "noneConfigured": "Nessuna candidatura trovata e nessun ruolo di candidatura configurato.\nUsa prima `/app-admin setup` per configurare un ruolo di candidatura.",
+            "title": "Candidature inviate",
+            "description": {
+                "one": "{count} candidatura.",
+                "many": "{count} candidature.",
+                "other": "{count} candidature."
+            },
+            "unknownUser": "Membro sconosciuto",
+            "entry": "**ID:** `{id}`\n**Stato:** {status}\n**Data:** {date}"
+        }
+    },
+    "appDashboard": {
+        "notSet": "`Non impostato`",
+        "noneConfigured": "`Nessuno configurato`",
+        "noRoles": "`Nessun ruolo di candidatura configurato`",
+        "title": "Impostazioni delle candidature",
+        "description": "Impostazioni delle candidature per **{server}**.\nScegli qui sotto cosa vuoi modificare.",
+        "enabled": "Attive",
+        "disabled": "Disattivate",
+        "field": {
+            "status": "Candidature",
+            "logChannel": "Canale di log",
+            "managerRoles": "Ruoli gestori",
+            "questions": "Domande",
+            "roles": "Ruoli di candidatura",
+            "retention": "Conservazione",
+            "role": "Ruolo"
+        },
+        "questionsValue": "{count} configurate, prima: {first}",
+        "retentionValue": "In attesa: **{pending} g** · Decise: **{reviewed} g**",
+        "footer15": "Si chiude dopo 15 minuti di inattività",
+        "footer10": "Si chiude dopo 10 minuti di inattività",
+        "menu": {
+            "placeholder": "Scegli un'impostazione...",
+            "logChannel": "Canale di log",
+            "logChannelHelp": "Il canale dove vengono pubblicate le nuove candidature",
+            "roleLogChannelHelp": "Il canale dove vengono pubblicate le candidature",
+            "managerRoles": "Ruoli gestori",
+            "managerRolesHelp": "Aggiungi o togli un ruolo che può gestire le candidature",
+            "questions": "Modifica le domande",
+            "questionsHelp": "Personalizza le domande del modulo di candidatura",
+            "roleAdd": "Aggiungi ruolo di candidatura",
+            "roleAddHelp": "Aggiungi un ruolo per cui i membri possono candidarsi",
+            "roleRemove": "Togli ruolo di candidatura",
+            "roleRemoveHelp": "Togli un ruolo dall'elenco delle candidature",
+            "retention": "Tempo di conservazione",
+            "retentionHelp": "Per quanto tenere le candidature in attesa e decise"
+        },
+        "toggleButton": "Candidature",
+        "notSetUp": "Le candidature non sono ancora configurate. Usa `/app-admin setup` per creare la tua prima candidatura.",
+        "openFailed": "Impossibile aprire le impostazioni delle candidature.",
+        "selector": {
+            "placeholder": "Scegli una candidatura...",
+            "option": "Configura la candidatura {name}",
+            "title": "Scegli candidatura",
+            "description": "Scegli il ruolo di candidatura che vuoi configurare.",
+            "noSelection": "Non è stato scelto nulla. Le impostazioni sono state chiuse."
+        },
+        "role": {
+            "inheritsLog": "`Canale di log generale`",
+            "minChars": " (min. {min} caratteri)",
+            "inheritsQuestions": "`Domande predefinite`",
+            "title": "Impostazioni della candidatura",
+            "description": "Impostazioni per **{name}**",
+            "disableButton": "Disattiva candidatura",
+            "enableButton": "Attiva candidatura",
+            "deleteButton": "Elimina candidatura"
+        },
+        "selectionFailed": "Si è verificato un errore durante l'elaborazione della tua scelta.",
+        "unexpected": "Si è verificato un errore imprevisto durante il salvataggio delle impostazioni.",
+        "timedOutTitle": "Impostazioni chiuse",
+        "timedOutBody": "Le impostazioni sono state chiuse per inattività. Riprova il comando per continuare.",
+        "system": {
+            "offTitle": "Candidature disattivate",
+            "offBody": "Le candidature ora sono **disattivate**.\n\nI membri non possono più candidarsi per i ruoli.",
+            "onTitle": "Candidature attivate",
+            "onBody": "Le candidature ora sono **attive**.\n\nI membri possono candidarsi per i ruoli."
+        },
+        "toggleFailed": "Si è verificato un errore durante il cambio di stato delle candidature.",
+        "configTimeoutTitle": "Tempo scaduto",
+        "configTimeoutBody": "Le impostazioni sono state chiuse dopo 10 minuti di inattività.\n\nRiprova il comando per continuare.",
+        "roleNotFound": "Ruolo di candidatura non trovato.",
+        "roleToggle": {
+            "offTitle": "Candidatura disattivata",
+            "offBody": "La candidatura **{name}** ora è **disattivata**.\n\nNon compare più in `/apply submit`.",
+            "onTitle": "Candidatura attivata",
+            "onBody": "La candidatura **{name}** ora è **attiva**.\n\nOra compare in `/apply submit`."
+        },
+        "delete": {
+            "thisApplication": "questa candidatura",
+            "modalTitle": "Eliminare la candidatura?",
+            "warning": "Stai per eliminare definitivamente **{name}**. Tutte le candidature e le impostazioni salvate per questo ruolo verranno rimosse e non si potranno recuperare.",
+            "checkbox": "Confermo, non si può annullare",
+            "modalFailed": "Impossibile mostrare la conferma. Riprova.",
+            "cancelled": "L'eliminazione della candidatura è stata annullata.",
+            "mustTick": "Spunta la casella di conferma per eliminare la candidatura.",
+            "failed": "Si è verificato un errore durante l'eliminazione della candidatura.",
+            "failedRetry": "Si è verificato un errore durante l'eliminazione della candidatura. Riprova.",
+            "doneTitle": "Candidatura eliminata",
+            "doneBody": "La candidatura per <@&{roleId}> (**{name}**) è stata eliminata definitivamente.",
+            "doneCount": {
+                "one": "Eliminata: **{count}** candidatura",
+                "many": "Eliminate: **{count}** candidature",
+                "other": "Eliminate: **{count}** candidature"
+            }
+        },
+        "logChannel": {
+            "modalTitle": "Canale di log",
+            "placeholder": "Scegli un canale testuale...",
+            "labelHelp": "Il canale dove verranno pubblicate le nuove candidature",
+            "updatedTitle": "Canale di log aggiornato",
+            "updatedBody": "Le candidature ora verranno pubblicate in {channel}.\nPuoi gestirlo anche da `/logging dashboard`.",
+            "failed": "Si è verificato un errore durante l'aggiornamento del canale di log."
+        },
+        "managers": {
+            "modalTitle": "Ruoli gestori",
+            "placeholder": "Scegli i ruoli che gestiscono le candidature...",
+            "labelHelp": "I ruoli scelti vengono aggiunti o tolti dai ruoli gestori",
+            "none": "`Nessuno`",
+            "updatedTitle": "Ruoli gestori aggiornati",
+            "updatedBody": "Ruoli gestori attuali: {roles}",
+            "failed": "Si è verificato un errore durante l'aggiornamento dei ruoli gestori."
+        },
+        "questions": {
+            "minTagHint": "Termina con [min:10] per chiedere risposte di almeno 10 caratteri",
+            "modalTitle": "Domande della candidatura",
+            "needOne": "Serve almeno una domanda.",
+            "updatedTitle": "Domande aggiornate",
+            "saved": {
+                "one": "{count} domanda salvata.",
+                "many": "{count} domande salvate.",
+                "other": "{count} domande salvate."
+            }
+        },
+        "roleAdd": {
+            "placeholder": "Scegli il ruolo per cui ci si può candidare...",
+            "labelHelp": "Il ruolo Discord per cui i membri si candidano",
+            "nameLabel": "Nome mostrato (vuoto = nome del ruolo)",
+            "exists": "{role} è già un ruolo di candidatura.",
+            "addedTitle": "Ruolo aggiunto",
+            "addedBody": "{role} aggiunto come **{name}**.",
+            "failed": "Si è verificato un errore durante l'aggiunta del ruolo di candidatura."
+        },
+        "roleRemove": {
+            "none": "Non ci sono ruoli di candidatura da togliere.",
+            "placeholder": "Scegli il ruolo da togliere...",
+            "labelHelp": "Il ruolo da togliere dall'elenco delle candidature",
+            "notInList": "<@&{roleId}> non è nell'elenco dei ruoli di candidatura.",
+            "removedTitle": "Ruolo tolto",
+            "removedBody": "<@&{roleId}> è stato tolto dai ruoli di candidatura.",
+            "failed": "Si è verificato un errore durante la rimozione del ruolo di candidatura."
+        },
+        "retention": {
+            "modalTitle": "Conservazione delle candidature",
+            "info": "**In attesa**: per quanto tenere le candidature senza decisione prima che vengano rimosse automaticamente.\n**Decise**: per quanto tenere le candidature approvate o rifiutate.\n-# Inserisci un numero intero tra 1 e 3650 (massimo 10 anni).",
+            "pendingLabel": "Conserva in attesa (giorni)",
+            "reviewedLabel": "Conserva decise (giorni)",
+            "pendingInvalid": "La conservazione delle candidature in attesa deve essere un numero intero tra **1** e **3650** giorni.",
+            "reviewedInvalid": "La conservazione delle candidature decise deve essere un numero intero tra **1** e **3650** giorni.",
+            "updatedTitle": "Conservazione aggiornata",
+            "pendingKept": {
+                "one": "Le candidature in attesa verranno tenute per **{count} giorno**.",
+                "many": "Le candidature in attesa verranno tenute per **{count} giorni**.",
+                "other": "Le candidature in attesa verranno tenute per **{count} giorni**."
+            },
+            "reviewedKept": {
+                "one": "Le candidature decise verranno tenute per **{count} giorno**.",
+                "many": "Le candidature decise verranno tenute per **{count} giorni**.",
+                "other": "Le candidature decise verranno tenute per **{count} giorni**."
+            }
+        }
+    }
+}

@@ -12,6 +12,7 @@ import { hasOwnerPower } from '../utils/ownerPower.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
 import { noteOwnerOverride } from '../services/ownerOverride.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
+import { textForGuild, textForInteraction } from '../utils/botText.js';
 import { 
     isUserRateLimited,
     recordUserInteraction,
@@ -24,10 +25,12 @@ import {
 export const giveawayJoinHandler = {
     customId: 'giveaway_join',
     async execute(interaction, client) {
+        // Replies to the member: their Discord language. The giveaway message: the server's.
+        const tr = textForInteraction(interaction);
         try {
             
             if (isUserRateLimited(interaction.user.id, interaction.message.id)) {
-                return replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: 'Slow down a bit, then try again.' });
+                return replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: tr.t('giveaway.button.slowDown') });
             }
 
             await recordUserInteraction(interaction.user.id, interaction.message.id);
@@ -47,7 +50,7 @@ export const giveawayJoinHandler = {
                     throw new TitanBotError(
                         'Giveaway not found in database',
                         ErrorTypes.VALIDATION,
-                        'This giveaway is no longer active.',
+                        tr.t('giveaway.button.notActive'),
                         { messageId: interaction.message.id, guildId: interaction.guildId }
                     );
                 }
@@ -56,14 +59,14 @@ export const giveawayJoinHandler = {
                 const endedByFlag = giveaway.ended || giveaway.isEnded;
 
                 if (endedByTime || endedByFlag) {
-                    return replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This giveaway has already ended.' });
+                    return replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('giveaway.button.alreadyEnded') });
                 }
 
                 const participants = giveaway.participants || [];
                 const userId = interaction.user.id;
 
                 if (participants.includes(userId)) {
-                    return replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: "You're already in this giveaway." });
+                    return replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('giveaway.button.alreadyIn') });
                 }
 
                 participants.push(userId);
@@ -73,8 +76,9 @@ export const giveawayJoinHandler = {
 
                 logger.debug(`User ${interaction.user.tag} joined giveaway ${interaction.message.id}`);
 
-                const updatedEmbed = createGiveawayEmbed(giveaway, 'active');
-                const updatedRow = createGiveawayButtons(false);
+                const postLang = textForGuild(interaction.guildId, { purpose: 'public' }).lang;
+                const updatedEmbed = createGiveawayEmbed(giveaway, 'active', [], { lang: postLang });
+                const updatedRow = createGiveawayButtons(false, { lang: postLang });
 
                 await interaction.message.edit({
                     embeds: [updatedEmbed],
@@ -84,8 +88,8 @@ export const giveawayJoinHandler = {
                 await InteractionHelper.safeEditReply(interaction, {
                     embeds: [
                         successEmbed(
-                            "You're in",
-                            `Good luck. ${participants.length === 1 ? '1 person has' : `${participants.length} people have`} entered so far.`
+                            tr.t('giveaway.button.joinedTitle'),
+                            tr.tp('giveaway.button.joined', participants.length)
                         )
                     ],
                 });
@@ -104,20 +108,21 @@ export const giveawayJoinHandler = {
 export const giveawayEndHandler = {
     customId: 'giveaway_end',
     async execute(interaction, client) {
+        const tr = textForInteraction(interaction);
         try {
             
             if (!interaction.inGuild()) {
                 throw new TitanBotError(
                     'Button used outside guild',
                     ErrorTypes.VALIDATION,
-                    'This button can only be used in a server.',
+                    tr.t('giveaway.button.guildOnly'),
                     { userId: interaction.user.id }
                 );
             }
 
             // Ending or rerolling decides who wins: Administrator only (access model), like the commands.
             if (!hasOwnerPower(interaction.user.id, interaction.guildId) && !isAdministrator(interaction.member)) {
-                return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the Administrator role to end a giveaway.' });
+                return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('giveaway.button.needAdminEnd') });
             }
             if (!isAdministrator(interaction.member)) {
                 noteOwnerOverride({ client, guildId: interaction.guildId, userId: interaction.user.id, username: interaction.user.username, action: 'giveaway end', via: 'button' });
@@ -135,8 +140,8 @@ export const giveawayEndHandler = {
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     successEmbed(
-                        'Giveaway ended',
-                        winners.length > 0 ? `Picked ${winners.length} winner${winners.length === 1 ? '' : 's'}.` : 'Nobody entered, so there is no winner.'
+                        tr.t('giveaway.button.endedTitle'),
+                        winners.length > 0 ? tr.tp('giveaway.button.picked', winners.length) : tr.t('giveaway.button.nobodyEntered')
                     )
                 ],
             });
@@ -155,19 +160,20 @@ export const giveawayEndHandler = {
 export const giveawayRerollHandler = {
     customId: 'giveaway_reroll',
     async execute(interaction, client) {
+        const tr = textForInteraction(interaction);
         try {
             
             if (!interaction.inGuild()) {
                 throw new TitanBotError(
                     'Button used outside guild',
                     ErrorTypes.VALIDATION,
-                    'This button can only be used in a server.',
+                    tr.t('giveaway.button.guildOnly'),
                     { userId: interaction.user.id }
                 );
             }
 
             if (!hasOwnerPower(interaction.user.id, interaction.guildId) && !isAdministrator(interaction.member)) {
-                return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the Administrator role to reroll a giveaway.' });
+                return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('giveaway.button.needAdminReroll') });
             }
             if (!isAdministrator(interaction.member)) {
                 noteOwnerOverride({ client, guildId: interaction.guildId, userId: interaction.user.id, username: interaction.user.username, action: 'giveaway reroll', via: 'button' });
@@ -183,7 +189,7 @@ export const giveawayRerollHandler = {
             logger.info(`Giveaway rerolled via button by ${interaction.user.tag}: ${interaction.message.id}`);
 
             await InteractionHelper.safeEditReply(interaction, {
-                embeds: [successEmbed('Giveaway rerolled', 'New winners picked.')],
+                embeds: [successEmbed(tr.t('giveaway.button.rerolledTitle'), tr.t('giveaway.button.rerolledText'))],
             });
 
         } catch (error) {
@@ -200,12 +206,13 @@ export const giveawayRerollHandler = {
 export const giveawayViewHandler = {
     customId: 'giveaway_view',
     async execute(interaction, client) {
+        const tr = textForInteraction(interaction);
         try {
             if (!interaction.inGuild()) {
                 throw new TitanBotError(
                     'Button used outside guild',
                     ErrorTypes.VALIDATION,
-                    'This button can only be used in a server.',
+                    tr.t('giveaway.button.guildOnly'),
                     { userId: interaction.user.id }
                 );
             }
@@ -217,24 +224,24 @@ export const giveawayViewHandler = {
                 throw new TitanBotError(
                     'Giveaway not found in database',
                     ErrorTypes.VALIDATION,
-                    'This giveaway could not be found.',
+                    tr.t('giveaway.button.notFound'),
                     { messageId: interaction.message.id, guildId: interaction.guildId }
                 );
             }
 
             if (!giveaway.ended && !giveaway.isEnded && !isGiveawayEnded(giveaway)) {
-                return replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This giveaway has not ended yet, so winners are not available.' });
+                return replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('giveaway.button.notEndedYet') });
             }
 
             const winnerIds = Array.isArray(giveaway.winnerIds) ? giveaway.winnerIds : [];
             const winnerMentions = winnerIds.length > 0
                 ? winnerIds.map(id => `<@${id}>`).join(', ')
-                : 'Nobody won this one.';
+                : tr.t('giveaway.button.nobodyWon');
 
             await interaction.reply({
                 embeds: [
                     successEmbed(
-                        `Winners: ${giveaway.prize || 'giveaway'}`,
+                        tr.t('giveaway.button.winnersTitle', { prize: giveaway.prize || tr.t('giveaway.button.giveawayWord') }),
                         winnerMentions
                     )
                 ],

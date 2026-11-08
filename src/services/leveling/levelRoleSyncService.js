@@ -4,6 +4,7 @@ import { fetchAllMembers } from '../../utils/memberFetchGate.js';
 import { getLevelingConfig, getUserLevelData, setLevelRoleReward } from './leveling.js';
 import { planRewardRoles, rewardModeOf, sortedRewards } from './levelBoosts.js';
 import { getRoleAssignmentProblem } from '../../utils/roleSafety.js';
+import { botText } from '../../utils/botText.js';
 
 import { getUserLevelPrefix } from '../../utils/database/keys.js';
 
@@ -144,15 +145,17 @@ function logRoleSyncSummary(summary, details) {
 }
 
 /** One short line for a command reply or dashboard message; '' when nothing happened. */
-export function roleSyncNote(summary) {
+export function roleSyncNote(summary, { lang = 'en' } = {}) {
     if (!summary) return '';
-    const parts = [];
-    if (summary.added.length) parts.push(`gave ${summary.added.length} reward role${summary.added.length === 1 ? '' : 's'}`);
-    if (summary.removed.length) parts.push(`took off ${summary.removed.length} reward role${summary.removed.length === 1 ? '' : 's'}`);
-    let note = parts.length ? `Mewvo ${parts.join(' and ')}.` : '';
+    const tr = botText(lang);
+    const gave = summary.added.length ? tr.tp('leveling.roleSync.gave', summary.added.length) : null;
+    const tookOff = summary.removed.length ? tr.tp('leveling.roleSync.tookOff', summary.removed.length) : null;
+    let note = '';
+    if (gave && tookOff) note = tr.t('leveling.roleSync.both', { gave, tookOff });
+    else if (gave || tookOff) note = tr.t('leveling.roleSync.single', { action: gave || tookOff });
     if (summary.skipped.length || summary.errors) {
         const first = summary.skipped[0]?.problem;
-        note += `${note ? ' ' : ''}Some reward roles could not be changed${first ? ` (${first})` : ''}. See the bot log.`;
+        note += `${note ? ' ' : ''}${first ? tr.t('leveling.roleSync.problemWith', { problem: first }) : tr.t('leveling.roleSync.problem')}`;
     }
     return note;
 }

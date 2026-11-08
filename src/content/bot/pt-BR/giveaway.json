@@ -1,0 +1,147 @@
+{
+    "cmd": {
+        "giveaway": "Crie e gerencie sorteios",
+        "create": "Começar um sorteio novo em um canal",
+        "end": "Encerrar agora um sorteio em andamento e escolher os vencedores",
+        "reroll": "Escolher novos vencedores para um sorteio encerrado",
+        "delete": "Apagar um sorteio e a mensagem dele",
+        "gcreate": "Começar um sorteio",
+        "duration": "Quanto tempo dura, por exemplo 30m, 1h ou 5d",
+        "winners": "Quantos vencedores",
+        "prize": "O que os vencedores ganham",
+        "channel": "Onde publicar (padrão: este canal)",
+        "gdelete": "Apaga a mensagem de um sorteio e o remove do banco de dados.",
+        "gend": "Encerrar um sorteio agora e escolher os vencedores",
+        "greroll": "Escolher novos vencedores para um sorteio encerrado",
+        "messageId": "ID da mensagem do sorteio"
+    },
+    "unknownSubcommand": "Subcomando desconhecido.",
+    "guildOnly": "Este comando só pode ser usado em um servidor.",
+    "needManageServer": {
+        "create": "Você precisa da permissão Gerenciar servidor para começar um sorteio.",
+        "delete": "Você precisa da permissão Gerenciar servidor para apagar um sorteio.",
+        "end": "Você precisa da permissão Gerenciar servidor para encerrar um sorteio.",
+        "reroll": "Você precisa da permissão Gerenciar servidor para sortear de novo."
+    },
+    "created": {
+        "title": "Sorteio começou",
+        "text": "**{prize}** está valendo em {channel}. Termina em **{duration}**."
+    },
+    "deleted": {
+        "title": "Sorteio apagado",
+        "withMessage": "**{prize}** apagado, e a mensagem dele removida de #{channel}.",
+        "withoutMessage": "**{prize}** apagado, mas não encontrei a mensagem dele (já sumiu, ou não consigo ver o canal).",
+        "hadWinners": {
+            "one": "Ele já tinha {count} vencedor.",
+            "many": "Ele já tinha {count} vencedores.",
+            "other": "Ele já tinha {count} vencedores."
+        },
+        "endedNoWinner": "Ele tinha terminado sem vencedor.",
+        "noWinner": "Nenhum vencedor foi escolhido."
+    },
+    "ended": {
+        "title": "Sorteio encerrado",
+        "text": {
+            "one": "**{prize}** em {channel} foi encerrado. {count} vencedor escolhido entre {entries} participantes.",
+            "many": "**{prize}** em {channel} foi encerrado. {count} vencedores escolhidos entre {entries} participantes.",
+            "other": "**{prize}** em {channel} foi encerrado. {count} vencedores escolhidos entre {entries} participantes."
+        }
+    },
+    "reroll": {
+        "completeTitle": "Novo sorteio feito",
+        "noChannel": "Os novos vencedores foram escolhidos e salvos no banco de dados. Não encontrei o canal para anunciar.",
+        "noMessage": "Os novos vencedores foram anunciados em {channel}. (Mensagem original não encontrada.)",
+        "title": "Sorteado de novo",
+        "text": {
+            "one": "{count} novo vencedor escolhido para **{prize}** em {channel}.",
+            "many": "{count} novos vencedores escolhidos para **{prize}** em {channel}.",
+            "other": "{count} novos vencedores escolhidos para **{prize}** em {channel}."
+        }
+    },
+    "button": {
+        "slowDown": "Vai com calma e tente de novo.",
+        "notActive": "Este sorteio não está mais ativo.",
+        "alreadyEnded": "Este sorteio já foi encerrado.",
+        "alreadyIn": "Você já está participando deste sorteio.",
+        "joinedTitle": "Você está participando",
+        "joined": {
+            "one": "Boa sorte. Até agora {count} pessoa participou.",
+            "many": "Boa sorte. Até agora {count} pessoas participaram.",
+            "other": "Boa sorte. Até agora {count} pessoas participaram."
+        },
+        "guildOnly": "Este botão só pode ser usado em um servidor.",
+        "needAdminEnd": "Você precisa do cargo de Administrador para encerrar um sorteio.",
+        "needAdminReroll": "Você precisa do cargo de Administrador para sortear de novo.",
+        "endedTitle": "Sorteio encerrado",
+        "picked": {
+            "one": "{count} vencedor escolhido.",
+            "many": "{count} vencedores escolhidos.",
+            "other": "{count} vencedores escolhidos."
+        },
+        "nobodyEntered": "Ninguém participou, então não há vencedor.",
+        "rerolledTitle": "Sorteado de novo",
+        "rerolledText": "Novos vencedores escolhidos.",
+        "notFound": "Este sorteio não foi encontrado.",
+        "notEndedYet": "Este sorteio ainda não terminou, então ainda não há vencedores.",
+        "nobodyWon": "Ninguém ganhou desta vez.",
+        "winnersTitle": "Vencedores: {prize}",
+        "giveawayWord": "sorteio"
+    },
+    "embed": {
+        "ended": "Este sorteio foi encerrado.",
+        "clickJoin": "Clique em Participar para entrar.",
+        "host": "Organizador",
+        "winners": "Vencedores",
+        "entries": "Participantes",
+        "wonBy": "Ganho por",
+        "nobodyEntered": "Ninguém participou",
+        "ends": "Termina"
+    },
+    "buttons": {
+        "reroll": "Sortear de novo",
+        "winners": "Vencedores",
+        "join": "Participar",
+        "end": "Encerrar"
+    },
+    "post": {
+        "newGiveaway": "**Novo sorteio**",
+        "ended": "**Sorteio encerrado**",
+        "rerolled": "**Sorteado de novo**",
+        "won": "**{prize}** vai para {winners}. Mande mensagem para <@{hostId}> para receber o prêmio.",
+        "theGiveaway": "o sorteio",
+        "noWinner": "O sorteio de **{prize}** terminou. Ninguém participou, então não há vencedor.",
+        "rerolledWon": "Novo sorteio: agora **{prize}** vai para {winners}. Mande mensagem para <@{hostId}> para receber o prêmio.",
+        "rerolledShort": "Novo sorteio de **{prize}**: {winners}"
+    },
+    "errors": {
+        "durationMissing": "Informe uma duração válida (por exemplo 1h, 30m, 5d, 10s).",
+        "durationFormat": "Formato de duração inválido. Use: 1h, 30m, 5d, 10s (mín.: 10s, máx.: 30d)",
+        "durationAmount": "O número da duração precisa estar entre 1 e 999.",
+        "durationUnit": "Use s (segundos), m (minutos), h (horas) ou d (dias).",
+        "durationMax": {
+            "one": "A duração máxima é {count} dia.",
+            "many": "A duração máxima é {count} dias.",
+            "other": "A duração máxima é {count} dias."
+        },
+        "durationMin": {
+            "one": "A duração mínima é {count} segundo.",
+            "many": "A duração mínima é {count} segundos.",
+            "other": "A duração mínima é {count} segundos."
+        },
+        "prizeMissing": "Informe uma descrição válida do prêmio.",
+        "prizeLength": "O prêmio precisa ter entre 1 e 256 caracteres.",
+        "winnerCount": "O número de vencedores precisa estar entre {min} e {max}.",
+        "endMissing": "Não dá para encerrar um sorteio que não existe.",
+        "alreadyEnded": "Este sorteio já foi encerrado.",
+        "endFailed": "Ocorreu um erro ao encerrar o sorteio.",
+        "badMessageId": "Informe um ID de mensagem válido.",
+        "notFound": "Não há nenhum sorteio com esse ID de mensagem no banco de dados.",
+        "channelGone": "Não encontrei o canal do sorteio. O estado do sorteio foi atualizado.",
+        "messageGone": "Não encontrei a mensagem do sorteio. O estado do sorteio foi atualizado.",
+        "stillActive": "Este sorteio ainda está ativo. Encerre-o primeiro com `/giveaway end`.",
+        "notEnoughEntries": "Não há participantes suficientes para escolher o número de vencedores pedido.",
+        "notTextChannel": "O canal precisa ser um canal de texto.",
+        "missingPermissions": "Preciso de Ver canal, Enviar mensagens e Inserir links em <#{channelId}> para publicar o sorteio.",
+        "deleteFailed": "Não foi possível remover o sorteio do banco de dados. Tente de novo."
+    }
+}

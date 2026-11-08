@@ -1,0 +1,147 @@
+{
+    "cmd": {
+        "giveaway": "Crea e gestisci i giveaway",
+        "create": "Avvia un nuovo giveaway in un canale",
+        "end": "Chiudi ora un giveaway in corso ed estrai i vincitori",
+        "reroll": "Estrai nuovi vincitori per un giveaway chiuso",
+        "delete": "Elimina un giveaway e il suo messaggio",
+        "gcreate": "Avvia un giveaway",
+        "duration": "Quanto dura, per esempio 30m, 1h o 5d",
+        "winners": "Quanti vincitori",
+        "prize": "Cosa vincono",
+        "channel": "Dove pubblicarlo (predefinito: questo canale)",
+        "gdelete": "Elimina il messaggio di un giveaway e lo rimuove dal database.",
+        "gend": "Chiudi ora un giveaway ed estrai i vincitori",
+        "greroll": "Estrai nuovi vincitori per un giveaway chiuso",
+        "messageId": "ID del messaggio del giveaway"
+    },
+    "unknownSubcommand": "Sottocomando sconosciuto.",
+    "guildOnly": "Questo comando si può usare solo in un server.",
+    "needManageServer": {
+        "create": "Ti serve il permesso Gestisci server per avviare un giveaway.",
+        "delete": "Ti serve il permesso Gestisci server per eliminare un giveaway.",
+        "end": "Ti serve il permesso Gestisci server per chiudere un giveaway.",
+        "reroll": "Ti serve il permesso Gestisci server per riestrarre un giveaway."
+    },
+    "created": {
+        "title": "Giveaway avviato",
+        "text": "**{prize}** è in palio in {channel}. Finisce tra **{duration}**."
+    },
+    "deleted": {
+        "title": "Giveaway eliminato",
+        "withMessage": "**{prize}** eliminato e il suo messaggio rimosso da #{channel}.",
+        "withoutMessage": "**{prize}** eliminato, ma il suo messaggio non è stato trovato (già sparito, oppure non vedo il canale).",
+        "hadWinners": {
+            "one": "Aveva già {count} vincitore.",
+            "many": "Aveva già {count} vincitori.",
+            "other": "Aveva già {count} vincitori."
+        },
+        "endedNoWinner": "Si era chiuso senza vincitori.",
+        "noWinner": "Non era stato estratto nessun vincitore."
+    },
+    "ended": {
+        "title": "Giveaway chiuso",
+        "text": {
+            "one": "**{prize}** in {channel} è chiuso. Estratto {count} vincitore su {entries} partecipanti.",
+            "many": "**{prize}** in {channel} è chiuso. Estratti {count} vincitori su {entries} partecipanti.",
+            "other": "**{prize}** in {channel} è chiuso. Estratti {count} vincitori su {entries} partecipanti."
+        }
+    },
+    "reroll": {
+        "completeTitle": "Nuova estrazione fatta",
+        "noChannel": "I nuovi vincitori sono stati estratti e salvati nel database. Non ho trovato il canale per annunciarli.",
+        "noMessage": "I nuovi vincitori sono stati annunciati in {channel}. (Messaggio originale non trovato.)",
+        "title": "Riestratto",
+        "text": {
+            "one": "Estratto {count} nuovo vincitore per **{prize}** in {channel}.",
+            "many": "Estratti {count} nuovi vincitori per **{prize}** in {channel}.",
+            "other": "Estratti {count} nuovi vincitori per **{prize}** in {channel}."
+        }
+    },
+    "button": {
+        "slowDown": "Rallenta un attimo, poi riprova.",
+        "notActive": "Questo giveaway non è più attivo.",
+        "alreadyEnded": "Questo giveaway è già chiuso.",
+        "alreadyIn": "Partecipi già a questo giveaway.",
+        "joinedTitle": "Sei dentro",
+        "joined": {
+            "one": "Buona fortuna. Finora ha partecipato {count} persona.",
+            "many": "Buona fortuna. Finora hanno partecipato {count} persone.",
+            "other": "Buona fortuna. Finora hanno partecipato {count} persone."
+        },
+        "guildOnly": "Questo pulsante si può usare solo in un server.",
+        "needAdminEnd": "Ti serve il ruolo Amministratore per chiudere un giveaway.",
+        "needAdminReroll": "Ti serve il ruolo Amministratore per riestrarre un giveaway.",
+        "endedTitle": "Giveaway chiuso",
+        "picked": {
+            "one": "Estratto {count} vincitore.",
+            "many": "Estratti {count} vincitori.",
+            "other": "Estratti {count} vincitori."
+        },
+        "nobodyEntered": "Non ha partecipato nessuno, quindi non c'è un vincitore.",
+        "rerolledTitle": "Giveaway riestratto",
+        "rerolledText": "Nuovi vincitori estratti.",
+        "notFound": "Questo giveaway non è stato trovato.",
+        "notEndedYet": "Questo giveaway non è ancora chiuso, quindi i vincitori non ci sono ancora.",
+        "nobodyWon": "Questa volta non ha vinto nessuno.",
+        "winnersTitle": "Vincitori: {prize}",
+        "giveawayWord": "giveaway"
+    },
+    "embed": {
+        "ended": "Questo giveaway è chiuso.",
+        "clickJoin": "Clicca su Partecipa per entrare.",
+        "host": "Organizzatore",
+        "winners": "Vincitori",
+        "entries": "Partecipanti",
+        "wonBy": "Vinto da",
+        "nobodyEntered": "Non ha partecipato nessuno",
+        "ends": "Finisce"
+    },
+    "buttons": {
+        "reroll": "Riestrai",
+        "winners": "Vincitori",
+        "join": "Partecipa",
+        "end": "Chiudi"
+    },
+    "post": {
+        "newGiveaway": "**Nuovo giveaway**",
+        "ended": "**Giveaway chiuso**",
+        "rerolled": "**Giveaway riestratto**",
+        "won": "**{prize}** va a {winners}. Scrivi a <@{hostId}> per ricevere il premio.",
+        "theGiveaway": "il giveaway",
+        "noWinner": "Il giveaway per **{prize}** è chiuso. Non ha partecipato nessuno, quindi non c'è un vincitore.",
+        "rerolledWon": "Nuova estrazione: **{prize}** va invece a {winners}. Scrivi a <@{hostId}> per ricevere il premio.",
+        "rerolledShort": "Nuova estrazione per **{prize}**: {winners}"
+    },
+    "errors": {
+        "durationMissing": "Indica una durata valida (per esempio 1h, 30m, 5d, 10s).",
+        "durationFormat": "Formato della durata non valido. Usa: 1h, 30m, 5d, 10s (min: 10s, max: 30d)",
+        "durationAmount": "Il numero della durata deve essere tra 1 e 999.",
+        "durationUnit": "Usa s (secondi), m (minuti), h (ore) o d (giorni).",
+        "durationMax": {
+            "one": "La durata massima è {count} giorno.",
+            "many": "La durata massima è {count} giorni.",
+            "other": "La durata massima è {count} giorni."
+        },
+        "durationMin": {
+            "one": "La durata minima è {count} secondo.",
+            "many": "La durata minima è {count} secondi.",
+            "other": "La durata minima è {count} secondi."
+        },
+        "prizeMissing": "Indica una descrizione valida del premio.",
+        "prizeLength": "Il premio deve avere tra 1 e 256 caratteri.",
+        "winnerCount": "Il numero di vincitori deve essere tra {min} e {max}.",
+        "endMissing": "Non si può chiudere un giveaway che non esiste.",
+        "alreadyEnded": "Questo giveaway è già chiuso.",
+        "endFailed": "Si è verificato un errore durante la chiusura del giveaway.",
+        "badMessageId": "Indica un ID messaggio valido.",
+        "notFound": "Nel database non c'è nessun giveaway con questo ID messaggio.",
+        "channelGone": "Il canale del giveaway non è stato trovato. Lo stato del giveaway è stato aggiornato.",
+        "messageGone": "Il messaggio del giveaway non è stato trovato. Lo stato del giveaway è stato aggiornato.",
+        "stillActive": "Questo giveaway è ancora in corso. Chiudilo prima con `/giveaway end`.",
+        "notEnoughEntries": "Non ci sono abbastanza partecipanti per estrarre il numero di vincitori richiesto.",
+        "notTextChannel": "Il canale deve essere un canale testuale.",
+        "missingPermissions": "Mi servono Visualizza canale, Invia messaggi e Incorpora link in <#{channelId}> per pubblicare il giveaway.",
+        "deleteFailed": "Non è stato possibile rimuovere il giveaway dal database. Riprova."
+    }
+}

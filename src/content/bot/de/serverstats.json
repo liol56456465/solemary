@@ -1,0 +1,120 @@
+{
+    "cmd": {
+        "root": "Server-Statistik verwalten: Zähler für Mitglieder und Bots",
+        "create": {
+            "desc": "Einen neuen Zählerkanal in einer Kategorie erstellen",
+            "type": "Was der Zähler zählt",
+            "channelType": "Die Kanalart für diesen Zähler",
+            "category": "Die Kategorie, in der der Zählerkanal erstellt wird"
+        },
+        "list": {
+            "desc": "Alle Zähler dieses Servers anzeigen"
+        },
+        "update": {
+            "desc": "Einen bestehenden Zähler ändern",
+            "counterId": "Die ID des Zählers, den du ändern willst",
+            "type": "Die neue Art des Zählers"
+        },
+        "delete": {
+            "desc": "Einen bestehenden Zähler löschen",
+            "counterId": "Die ID des Zählers, den du löschen willst"
+        },
+        "choice": {
+            "members": "Mitglieder + Bots",
+            "membersOnly": "nur Mitglieder",
+            "bots": "nur Bots",
+            "voice": "Sprachkanal (empfohlen)",
+            "text": "Textkanal"
+        }
+    },
+    "type": {
+        "members": {
+            "label": "Mitglieder + Bots",
+            "channelName": "Mitglieder & Bots"
+        },
+        "membersOnly": {
+            "label": "Nur Mitglieder",
+            "channelName": "Mitglieder"
+        },
+        "bots": {
+            "label": "Nur Bots",
+            "channelName": "Bots"
+        },
+        "unknown": {
+            "label": "Unbekannt",
+            "channelName": "Zähler"
+        }
+    },
+    "success": "Erledigt",
+    "unknownSubcommand": "Unbekannter Unterbefehl.",
+    "noAdmin": {
+        "create": "Du brauchst die Berechtigung **Administrator**, um Zähler zu erstellen.",
+        "view": "Du brauchst die Berechtigung **Administrator**, um Zähler anzusehen.",
+        "update": "Du brauchst die Berechtigung **Administrator**, um Zähler zu ändern.",
+        "delete": "Du brauchst die Berechtigung **Administrator**, um Zähler zu löschen."
+    },
+    "error": {
+        "unknownType": "Unbekannte Zählerart.",
+        "notCategory": "Wähle eine Kategorie für den Zählerkanal.",
+        "typeInUse": "Auf diesem Server gibt es schon einen Zähler **{type}**. Lösche ihn zuerst, bevor du einen neuen erstellst.",
+        "typeInUseIn": "Auf diesem Server gibt es schon einen Zähler **{type}** in {channel}. Lösche ihn zuerst, bevor du einen neuen erstellst.",
+        "typeInUseReuse": "Auf diesem Server gibt es schon einen Zähler **{type}**. Lösche ihn zuerst, bevor du diese Art noch mal nutzt.",
+        "typeInUseReuseIn": "Auf diesem Server gibt es schon einen Zähler **{type}** in {channel}. Lösche ihn zuerst, bevor du diese Art noch mal nutzt.",
+        "saveFailed": "Der Zähler konnte nicht gespeichert werden. Versuch es noch mal.",
+        "deleteFailed": "Der Zähler konnte nicht gelöscht werden. Versuch es noch mal.",
+        "notFound": "Der Zähler mit der ID `{id}` wurde nicht gefunden.",
+        "notFoundList": "Der Zähler mit der ID `{id}` wurde nicht gefunden. Mit `/serverstats list` siehst du alle Zähler.",
+        "channelMissing": "Der Kanal dieses Zählers existiert nicht mehr. Einen Zähler für einen gelöschten Kanal kannst du nicht ändern.",
+        "createFailed": "Beim Erstellen des Zählers ist etwas schiefgegangen. Versuch es noch mal.",
+        "updateFailed": "Beim Ändern des Zählers ist etwas schiefgegangen. Versuch es noch mal.",
+        "loadFailed": "Die Zähler konnten nicht geladen werden. Versuch es noch mal.",
+        "noType": "Gib eine neue Zählerart an, um den Zähler zu ändern.",
+        "noneToDelete": "Es gibt keine Zähler zum Löschen.",
+        "serverOnly": "Das geht nur auf einem Server.",
+        "actionMissing": "Die Daten zum Löschen des Zählers fehlen.",
+        "notYours": "Nur die Person, die das gestartet hat, kann diese Buttons nutzen.",
+        "unknownAction": "Unbekannte Aktion beim Löschen des Zählers."
+    },
+    "create": {
+        "notRenamed": "Zähler erstellt, aber ich konnte den Kanal noch nicht umbenennen. Er wird beim nächsten Durchlauf aktualisiert.",
+        "done": "**Zähler erstellt**\n\n**Art:** {type}\n**Kanalart:** {channelType}\n**Kategorie:** {category}\n**Kanal:** {channel}\n**Kanalname:** {channelName}\n**Zähler-ID:** `{id}`\n\nEr wird alle 15 Minuten aktualisiert. `/serverstats list` zeigt alle Zähler.",
+        "voice": "Sprachkanal",
+        "text": "Textkanal"
+    },
+    "update": {
+        "notRenamed": "Zähler geändert, aber ich konnte den Kanal noch nicht umbenennen. Er wird beim nächsten Durchlauf aktualisiert.",
+        "done": "**Zähler geändert**\n\n**Zähler-ID:** `{id}`\n**Art:** {oldType} → {newType}\n**Kanal:** {channel}\n**Kanalname:** {channelName}\n\nEr wird alle 15 Minuten aktualisiert."
+    },
+    "delete": {
+        "title": "Zähler und Kanal löschen",
+        "confirm": "Diesen Zähler und seinen Kanal löschen?\n\n**ID:** `{id}`\n**Art:** {type}\n**Kanal:** {channel}\n\n**Der Kanal wird endgültig gelöscht.**",
+        "alreadyDeleted": "schon gelöscht",
+        "button": "Löschen",
+        "cancel": "Abbrechen",
+        "cancelledTitle": "Abgebrochen",
+        "cancelledBody": "Es wurde nichts gelöscht.",
+        "done": "**Zähler gelöscht**\n\n**ID:** `{id}`\n**Art:** {type}",
+        "channelDeleted": "\n**Kanal:** {name} (gelöscht)",
+        "channelFailed": "\n**Kanal:** {name} (konnte nicht gelöscht werden)",
+        "channelGone": "\n**Kanal:** Schon gelöscht"
+    },
+    "list": {
+        "title": "Server-Zähler",
+        "empty": "Es gibt noch keine Zähler.\n\nMit `/serverstats create` fügst du einen hinzu.",
+        "typesName": "Zählerarten",
+        "typesValue": "**Mitglieder + Bots**: alle\n**Nur Mitglieder**: Menschen, keine Bots\n**Nur Bots**: nur Bots",
+        "examplesName": "Beispiele",
+        "examplesValue": "`/serverstats create type:members channel_type:voice category:Statistik`\n`/serverstats create type:bots channel_type:text category:Server-Info`\n`/serverstats list`",
+        "footer": "Zähler werden alle 15 Minuten aktualisiert",
+        "titleCount": "Server-Zähler ({count})",
+        "description": "Alle Zähler auf diesem Server. Sie werden alle 15 Minuten aktualisiert.",
+        "upToDate": "Aktuell",
+        "notUpdated": "Noch nicht aktualisiert",
+        "counterName": "Zähler #{number} · {channelName}",
+        "counterValue": "**ID:** `{id}`\n**Art:** {type}\n**Kanal:** {channel}\n**Stand:** {count}\n**Status:** {status}\n**Erstellt:** {created}",
+        "totalsName": "Gesamt",
+        "totalsValue": "**Zähler:** {counters}\n**Aktuell:** {upToDate}\n**Nächste Aktualisierung:** <t:{next}:R>",
+        "commandsName": "Befehle",
+        "commandsValue": "`/serverstats create`: Zähler hinzufügen\n`/serverstats update`: Zähler ändern\n`/serverstats delete`: Zähler entfernen"
+    }
+}

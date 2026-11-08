@@ -1,0 +1,567 @@
+{
+    "cmd": {
+        "community": {
+            "desc": "Ustaw przyklejone wiadomości, propozycje, starboard i powiadomienia",
+            "channel": "Kanał",
+            "sticky": {
+                "desc": "Wiadomości trzymane na dole kanału",
+                "set": "Ustaw (lub zastąp) przyklejoną wiadomość kanału",
+                "message": "Tekst, który ma zostać na dole",
+                "remove": "Usuń przyklejoną wiadomość kanału",
+                "list": "Lista przyklejonych wiadomości"
+            },
+            "suggestions": {
+                "desc": "Propozycje członków (/suggest)",
+                "channel": "Ustaw kanał propozycji (zostaw puste, by wyłączyć propozycje)"
+            },
+            "starboard": {
+                "desc": "Kopiuj popularne wiadomości na kanał starboard",
+                "set": "Włącz lub zmień starboard",
+                "channel": "Kanał starboard",
+                "emoji": "Reakcja, która się liczy (domyślnie ⭐)",
+                "threshold": "Potrzebne reakcje (domyślnie 3)",
+                "off": "Wyłącz starboard"
+            },
+            "feed": {
+                "desc": "Publikuj nowe filmy z YouTube lub starty transmisji na Twitchu na kanale",
+                "add": "Obserwuj kanał YouTube lub Twitch",
+                "source": "YouTube: ID kanału (UC…) lub link /channel/. Twitch: login lub link twitch.tv",
+                "channel": "Gdzie publikować",
+                "platform": "YouTube (domyślnie) lub Twitch",
+                "message": "Wiadomość z {title} {url} {author} ({game} na Twitchu); może oznaczyć rolę",
+                "remove": "Przestań obserwować kanał YouTube lub Twitch",
+                "id": "Numer powiadomienia (#) z /community feed list",
+                "list": "Lista powiadomień"
+            }
+        },
+        "cat": {
+            "desc": "Kot serwera, który rośnie, gdy członkowie piszą",
+            "view": "Zobacz kota serwera, jego nastrój i ile brakuje mu do wzrostu",
+            "name": "Zmień imię kota serwera (administratorzy)",
+            "newName": "Nowe imię"
+        },
+        "tag": {
+            "desc": "Zapisane odpowiedzi, które każdy może wysłać, opcjonalnie automatycznie na słowo kluczowe",
+            "name": "Nazwa tagu",
+            "triggerKind": "Wysyłaj ten tag automatycznie, gdy wiadomość pasuje",
+            "trigger": "Słowo/fraza lub regex (bez rozróżniania wielkości liter)",
+            "allowChannels": "Uruchamiaj tylko na tych kanałach (#oznaczenia; \"none\" czyści)",
+            "denyChannels": "Nigdy nie uruchamiaj na tych kanałach (#oznaczenia; \"none\" czyści)",
+            "cooldown": "Sekundy między automatycznymi wpisami na kanał (domyślnie 60)",
+            "show": "Wyślij tag na tym kanale",
+            "for": "Oznacz członka razem z tagiem",
+            "list": "Lista tagów",
+            "create": "Utwórz tag",
+            "newName": "Krótka nazwa: małe litery, cyfry, - i _",
+            "content": "Tekst",
+            "edit": "Zmień tag (tylko podane opcje)",
+            "newContent": "Nowy tekst",
+            "delete": "Usuń tag"
+        },
+        "suggest": {
+            "desc": "Zaproponuj coś dla serwera lub (admini) odpowiedz na propozycję",
+            "new": "Opublikuj propozycję, na którą członkowie mogą głosować",
+            "text": "Twoja propozycja",
+            "status": "Przyjmij, odrzuć lub oznacz propozycję jako rozważaną",
+            "id": "Numer propozycji (#)",
+            "statusOption": "Nowy status",
+            "reason": "Widoczny przy propozycji i wysyłany autorowi"
+        },
+        "apply": {
+            "description": "Podania o role",
+            "submit": {
+                "description": "Wyślij podanie o rolę",
+                "application": "Podanie, które chcesz wysłać"
+            },
+            "status": {
+                "description": "Sprawdź status swojego podania",
+                "id": "ID podania (zostaw puste, aby zobaczyć wszystkie)"
+            },
+            "list": {
+                "description": "Pokaż otwarte podania, które możesz złożyć"
+            }
+        },
+        "appAdmin": {
+            "description": "Zarządzaj podaniami do zespołu",
+            "setup": {
+                "description": "Utwórz nowe podanie"
+            },
+            "review": {
+                "description": "Przyjmij lub odrzuć podanie",
+                "id": "ID podania"
+            },
+            "list": {
+                "description": "Pokaż wszystkie podania",
+                "status": "Filtruj według statusu",
+                "choice": {
+                    "pending": "Czekające",
+                    "approved": "Przyjęte",
+                    "denied": "Odrzucone"
+                },
+                "role": "Filtruj według ID roli",
+                "user": "Filtruj według członka",
+                "limit": "Ile podań pokazać najwyżej (domyślnie: 10)"
+            },
+            "dashboard": {
+                "description": "Otwórz ustawienia podań",
+                "application": "Podanie do ustawienia"
+            }
+        }
+    },
+    "sticky": {
+        "savedTitle": "Przyklejona wiadomość zapisana",
+        "posted": "Jest teraz trzymana na dole {channel} i publikowana ponownie, gdy członkowie tam piszą (najwyżej co 15 sekund).",
+        "notPosted": "Zapisano, ale nie mogłem napisać na {channel}. Sprawdź, czy widzę kanał, mogę wysyłać wiadomości i osadzać linki.",
+        "removed": "Usunięto przyklejoną wiadomość z {channel}.",
+        "none": "{channel} nie ma przyklejonej wiadomości.",
+        "listTitle": "Przyklejone wiadomości ({count})",
+        "listEmpty": "Brak. Dodaj jedną przez `/community sticky set`.",
+        "footer": "Przyklejona wiadomość",
+        "empty": "Przyklejona wiadomość nie może być pusta.",
+        "tooLong": "Przyklejone wiadomości mogą mieć najwyżej {max} znaków."
+    },
+    "suggestions": {
+        "channelSet": "Propozycje z `/suggest new` trafiają teraz na {channel}. Upewnij się, że mogę tam wysyłać wiadomości i embedy.",
+        "off": "Propozycje są wyłączone (brak kanału)."
+    },
+    "starboard": {
+        "onTitle": "Starboard włączony",
+        "onLine": "Wiadomości z **{threshold}** reakcjami {emoji} są kopiowane na {channel}.",
+        "rules": "Reakcja autora i botów się nie liczy; wiadomości botów nigdy nie trafiają na starboard.",
+        "offDone": "Starboard wyłączony. Istniejące wpisy zostają na miejscu.",
+        "emojiInvalid": "Użyj jednego emoji: standardowego jak ⭐ albo własnego emoji tego serwera.",
+        "thresholdRange": "threshold musi być od 1 do {max}.",
+        "noText": "*(brak tekstu)*",
+        "attachments": "Załączniki: {count}",
+        "source": "Źródło",
+        "jump": "[Przejdź do wiadomości]({url})"
+    },
+    "feed": {
+        "addedTitle": "Powiadomienie #{id} dodane",
+        "twitchWatch": "Napiszę na {channel}, gdy **{author}** zacznie transmisję na Twitchu (sprawdzam co 2 minuty).",
+        "liveNow": "Transmisja trwa teraz: ta nie zostanie ogłoszona, następna tak.",
+        "previewTwitch": "\n**Podgląd** ({source}, nie opublikowano):\n{preview}",
+        "withCurrent": "z obecną transmisją",
+        "withExample": "z przykładową transmisją",
+        "youtubeWatch": "Nowe filmy od **{author}** będą publikowane na {channel} (sprawdzam co 15 minut).",
+        "previewYoutube": "\n**Podgląd** (z najnowszym filmem, nie opublikowano):\n{preview}",
+        "noVideos": "\nKanał nie ma jeszcze filmów.",
+        "removed": "Usunięto powiadomienie #{id}.",
+        "notFound": "Nie ma powiadomienia #{id}. Zobacz `/community feed list`.",
+        "listTitle": "Powiadomienia ({count})",
+        "listEmpty": "Brak. Dodaj przez `/community feed add`.",
+        "exampleTitle": "Przykładowy tytuł transmisji",
+        "defaultYoutube": "**{author}** opublikował nowy film: **{title}**\n{url}",
+        "defaultTwitch": "**{author}** nadaje na żywo na Twitchu: **{title}**\n{url}",
+        "youtubeIdInvalid": "Podaj ID kanału YouTube (zaczyna się od UC, 24 znaki) lub link youtube.com/channel/UC…. @nazwy nie są obsługiwane: otwórz kanał, potem Udostępnij → Skopiuj identyfikator kanału.",
+        "twitchLoginInvalid": "Podaj login Twitcha (nazwę w twitch.tv/<name>) lub link twitch.tv/<name>.",
+        "tooLong": "Wiadomość może mieć najwyżej {max} znaków.",
+        "twitchDuplicate": "Ten kanał Twitcha jest już publikowany na tym kanale Discorda.",
+        "youtubeDuplicate": "Ten kanał YouTube jest już publikowany na tym kanale Discorda.",
+        "choosePlatform": "Wybierz YouTube lub Twitch.",
+        "youtubeNoChannel": "YouTube nie ma kanału o tym ID.",
+        "youtubeUnreachable": "Nie udało się połączyć z YouTube, by sprawdzić kanał ({error}). Spróbuj później.",
+        "twitchOff": "Powiadomienia z Twitcha nie są jeszcze skonfigurowane w tym bocie.",
+        "twitchUnreachable": "Nie udało się połączyć z Twitchem, by sprawdzić kanał ({error}). Spróbuj później.",
+        "twitchNoChannel": "Twitch nie ma kanału o tej nazwie."
+    },
+    "tag": {
+        "uses": "**Użycia:** {uses}",
+        "createdBy": "**Autor:** <@{userId}>",
+        "trigger": "**Wyzwalacz:** {kind} `{trigger}`{disabled}",
+        "disabled": " (wyłączony)",
+        "cooldown": "**Przerwa:** {seconds} s na kanał",
+        "onlyIn": "**Tylko na:** {channels}",
+        "neverIn": "**Nigdy na:** {channels}",
+        "channelsUnreadable": "Nie udało się odczytać kanałów z {option}; oznacz je jak #general albo wpisz \"none\".",
+        "notFound": "Nie ma tagu **{name}**. Zobacz `/tag list`.",
+        "missing": "Nie ma tagu **{name}**.",
+        "listLine": "`{name}`{auto} · użycia: {uses}",
+        "auto": " · auto: {kind}",
+        "listTitle": "Tagi ({count})",
+        "listEmpty": "Jeszcze nie ma tagów.",
+        "deleted": "Usunięto tag **{name}**.",
+        "needTrigger": "Podaj też tekst wyzwalacza.",
+        "createdTitle": "Tag {name} utworzony",
+        "updatedTitle": "Tag {name} zmieniony",
+        "textEmpty": "Tekst tagu nie może być pusty.",
+        "textTooLong": "Tekst tagu może mieć najwyżej {max} znaków.",
+        "kindInvalid": "trigger_kind musi być none, word lub regex.",
+        "noTrigger": "Ten tag nie ma wyzwalacza; ustaw trigger_kind (word lub regex) razem z trigger.",
+        "cooldownRange": "cooldown musi wynosić 0–86400 sekund.",
+        "cooldownMin": "Tagi z wyzwalaczem potrzebują przerwy co najmniej {seconds} s.",
+        "nameInvalid": "Nazwy tagów to małe litery, cyfry, - i _ (do 32).",
+        "exists": "Tag **{name}** już istnieje. Zmień go przez `/tag edit`.",
+        "nothingToChange": "Podaj co najmniej jedną zmianę."
+    },
+    "cat": {
+        "dbDown": "Baza danych teraz nie odpowiada, więc nie udało się wczytać kota. Spróbuj ponownie za chwilę.",
+        "nameInvalid": "Użyj liter, cyfr i spacji w imieniu.",
+        "notSaved": "Baza danych teraz nie odpowiada, więc nic nie zostało zmienione.",
+        "renamedTitle": "Zmieniono imię kota",
+        "renamed": "Kot serwera nazywa się teraz {name}.",
+        "stageField": "Etap",
+        "moodField": "Nastrój",
+        "messagesField": "Policzone wiadomości",
+        "nextField": "Następny etap",
+        "toNext": "{bar}\nDo etapu {stage} brakuje wiadomości: {left}.",
+        "fullyGrown": "W pełni dorosły. To ostatni etap.",
+        "footer": "Kot rośnie z każdą wiadomością, którą członkowie tu wysyłają.",
+        "grewTitle": "{name} urósł: teraz {stage}",
+        "grewText": "Dzięki wszystkim, którzy tu piszą. Po {total} wiadomościach {name} jest teraz na etapie {stage}.",
+        "stage": {
+            "kitten": "Kociak",
+            "young": "Młody kot",
+            "cat": "Kot",
+            "big": "Duży kot",
+            "legend": "Legenda"
+        },
+        "mood": {
+            "scared": "przestraszony",
+            "proud": "dumny",
+            "happy": "szczęśliwy",
+            "sleepy": "śpiący"
+        },
+        "sentence": {
+            "scared": "{name} się boi: serwer jest zablokowany z powodu rajdu.",
+            "proud": "{name} jest dumny: dziś wszedł na kolejny etap.",
+            "happy": "{name} jest szczęśliwy: w tym tygodniu na serwerze było więcej ruchu.",
+            "sleepy": "{name} jest śpiący: w tym tygodniu na serwerze było spokojniej."
+        }
+    },
+    "suggest": {
+        "postedTitle": "Propozycja #{id} opublikowana",
+        "postedText": "Członkowie mogą głosować tutaj: {url}",
+        "notFound": "Na tym serwerze nie ma propozycji #{id}.",
+        "decidedTitle": "Propozycja #{id}: {status}",
+        "edited": "Wiadomość z propozycją została zaktualizowana.",
+        "notEdited": "Nie udało się zaktualizować wiadomości z propozycją (usunięta lub brak dostępu).",
+        "dmed": "Autor dostał wiadomość prywatną.",
+        "notDmed": "Nie udało się wysłać wiadomości prywatnej do autora.",
+        "statusWord": {
+            "approved": "przyjęta",
+            "denied": "odrzucona",
+            "considering": "rozważana"
+        },
+        "label": {
+            "pending": "Głosowanie otwarte",
+            "approved": "Przyjęta",
+            "denied": "Odrzucona",
+            "considering": "Rozważana"
+        },
+        "empty": "Propozycja nie może być pusta.",
+        "tooLong": "Propozycje mogą mieć najwyżej {max} znaków.",
+        "notSetUp": "Propozycje nie są jeszcze ustawione na tym serwerze (admin może użyć `/community suggestions channel`).",
+        "cooldown": "Następną propozycję możesz wysłać za {seconds} s.",
+        "postFailed": "Nie mogłem napisać na {channel}. Poproś admina, by sprawdził tam moje uprawnienia.",
+        "closed": "Głosowanie nad tą propozycją jest zamknięte.",
+        "statusInvalid": "Status musi być approved, denied lub considering.",
+        "votes": "Głosy",
+        "status": "Status",
+        "reasonStaff": "Powód (zespół)",
+        "reason": "Powód",
+        "title": "Propozycja #{id}",
+        "member": "Członek {userId}",
+        "footer": "Zaproponuj coś przez /suggest new",
+        "dmTitle": "Twoja propozycja #{id} na {server}: {status}",
+        "vote": {
+            "invalid": "Ten przycisk jest nieprawidłowy.",
+            "gone": "Ta propozycja już nie istnieje.",
+            "up": "Zagłosowano 👍.",
+            "down": "Zagłosowano 👎.",
+            "removed": "Twój głos został usunięty.",
+            "hint": "{note} Kliknij drugi przycisk, by go zmienić, albo ten sam, by go wycofać."
+        }
+    },
+    "apply": {
+        "serverOnly": "Tej komendy można użyć tylko na serwerze.",
+        "disabled": "Podania są obecnie wyłączone na tym serwerze.",
+        "configNotFound": "Nie znaleziono ustawień tego podania.",
+        "closed": "Podanie **{name}** jest obecnie zamknięte.",
+        "roleNotFound": "Nie znaleziono roli.",
+        "questionsChanged": "Pytania tego podania zmieniły się w trakcie wypełniania formularza. Otwórz go ponownie przez `/apply submit`.",
+        "sent": {
+            "title": "Podanie wysłane",
+            "body": "Twoje podanie o **{name}** zostało wysłane do zespołu."
+        },
+        "saved": {
+            "title": "Podanie zapisane",
+            "body": "Twoje podanie o **{name}** zostało zapisane, ale nie udało się go opublikować dla zespołu (nie ustawiono kanału podań albo bot nie może tam pisać). Daj znać komuś z zespołu."
+        },
+        "idLine": "ID podania: `{id}`",
+        "statusHint": "Status sprawdzisz przez `/apply status id:{id}`",
+        "statusLabel": {
+            "pending": "W trakcie",
+            "approved": "Przyjęte",
+            "denied": "Odrzucone",
+            "unknown": "Nieznany"
+        },
+        "list": {
+            "none": "Obecnie nie ma otwartych podań.",
+            "title": "Otwarte podania",
+            "description": "O te role możesz złożyć podanie:",
+            "entry": "**Rola:** {role}\n**Złóż podanie:** `/apply submit application:\"{name}\"`",
+            "roleMissing": "Nie znaleziono roli",
+            "footer": "Użyj /apply submit application:<nazwa>, aby złożyć podanie o jedną z tych ról.",
+            "loadFailed": "Nie udało się wczytać podań. Spróbuj ponownie później."
+        },
+        "submit": {
+            "notFound": "Użyj `/apply list`, aby zobaczyć otwarte podania.",
+            "closed": "Podanie **{name}** jest obecnie zamknięte. Użyj `/apply list`, aby zobaczyć otwarte.",
+            "pending": "Masz już czekające podanie. Poczekaj, aż zostanie rozpatrzone.",
+            "roleGone": "Rola tego podania już nie istnieje.",
+            "modalTitle": "Podanie: {name}"
+        },
+        "status": {
+            "notFound": "Nie znaleziono podania lub nie masz uprawnień, aby je zobaczyć.",
+            "unknownDate": "Nieznana data",
+            "unknownRole": "Nieznana rola",
+            "oneTitle": "Podanie #{id} - {role}",
+            "oneBody": "**ID podania:** `{id}`\n**Status:** {status}\n**Wysłane:** {date}",
+            "none": "Nie masz jeszcze żadnego wysłanego podania.",
+            "allTitle": "Twoje podania",
+            "allDescription": {
+                "one": "{count} ostatnie podanie.",
+                "few": "{count} ostatnie podania.",
+                "many": "{count} ostatnich podań.",
+                "other": "{count} ostatniego podania."
+            },
+            "fieldName": "{role} ({status})",
+            "fieldValue": "**ID:** `{id}`\n**Status:** {status}\n**Wysłane:** {date}",
+            "footer": {
+                "one": "Ostatnie {shown} z {count} podania.",
+                "few": "Ostatnie {shown} z {count} podań.",
+                "many": "Ostatnie {shown} z {count} podań.",
+                "other": "Ostatnie {shown} z {count} podania."
+            }
+        },
+        "dm": {
+            "approvedTitle": "Podanie przyjęte",
+            "deniedTitle": "Podanie odrzucone",
+            "approvedBody": "Twoje podanie o **{name}** zostało **przyjęte**\n**Notatka:** {note}\n\nSzczegóły zobaczysz przez `/apply status id:{id}`.",
+            "deniedBody": "Twoje podanie o **{name}** zostało **odrzucone**\n**Notatka:** {note}\n\nSzczegóły zobaczysz przez `/apply status id:{id}`.",
+            "noReason": "Nie podano powodu."
+        }
+    },
+    "appAdmin": {
+        "alreadyProcessed": "Ta akcja została już obsłużona. Uruchom komendę ponownie.",
+        "questionRequired": "Pytanie {number} (wymagane)",
+        "questionOptional": "Pytanie {number} (opcjonalne)",
+        "setup": {
+            "modalTitle": "Nowe podanie",
+            "rolePlaceholder": "Wybierz rolę, o którą składa się podanie",
+            "roleLabel": "Rola podania",
+            "roleDescription": "Rola, o którą członkowie składają podanie",
+            "namePlaceholder": "np. Moderator, Pomocnik, Programista",
+            "nameLabel": "Nazwa podania",
+            "q1Placeholder": "Dlaczego chcesz tę rolę?",
+            "q2Placeholder": "Jakie masz doświadczenie?",
+            "noRole": "Musisz wybrać rolę dla podania.",
+            "roleNotFound": "Nie znaleziono wybranej roli.",
+            "createdTitle": "Podanie utworzone",
+            "createdBody": "Podanie **{name}** zostało utworzone dla {role}.\n\nKanał dziennika, role zarządzające, pytania i czas przechowywania zmienisz w ustawieniach."
+        },
+        "review": {
+            "notFound": "Nie znaleziono podania.",
+            "processed": "To podanie zostało już rozpatrzone.",
+            "title": "Rozpatrz podanie",
+            "body": "**Członek:** <@{userId}>\n**Podanie:** {name}\n**ID podania:** `{id}`",
+            "question": "P{number}: {question}",
+            "noAnswer": "*Brak odpowiedzi*",
+            "approve": "Przyjmij",
+            "deny": "Odrzuć",
+            "approveTitle": "Przyjmij podanie - powód",
+            "denyTitle": "Odrzuć podanie - powód",
+            "reasonLabel": "Powód (opcjonalnie)",
+            "reasonPlaceholder": "Podaj powód tej decyzji...",
+            "approvedTitle": "Podanie przyjęte",
+            "approvedBody": "Podanie zostało **przyjęte**.",
+            "deniedTitle": "Podanie odrzucone",
+            "deniedBody": "Podanie zostało **odrzucone**.",
+            "failed": "Podczas rozpatrywania podania wystąpił błąd.",
+            "timeoutTitle": "Czas minął",
+            "timeoutBody": "Przyciski rozpatrywania wygasły."
+        },
+        "list": {
+            "noneTitle": "Nie znaleziono podań",
+            "noneDescription": "Żadne wysłane podanie nie pasuje do tych filtrów.\n\nUstawione są jednak takie role podań:",
+            "roleEntry": "**Rola:** {role}\n**Przyjmuje podania:** Tak",
+            "footer": "Członkowie składają podania przez /apply submit, a role widzą przez /apply list",
+            "noneConfigured": "Nie znaleziono podań i nie ustawiono ról podań.\nNajpierw ustaw rolę podania przez `/app-admin setup`.",
+            "title": "Wysłane podania",
+            "description": {
+                "one": "{count} podanie.",
+                "few": "{count} podania.",
+                "many": "{count} podań.",
+                "other": "{count} podania."
+            },
+            "unknownUser": "Nieznany członek",
+            "entry": "**ID:** `{id}`\n**Status:** {status}\n**Data:** {date}"
+        }
+    },
+    "appDashboard": {
+        "notSet": "`Nie ustawiono`",
+        "noneConfigured": "`Brak`",
+        "noRoles": "`Nie ustawiono ról podań`",
+        "title": "Ustawienia podań",
+        "description": "Ustawienia podań na **{server}**.\nWybierz poniżej, co chcesz zmienić.",
+        "enabled": "Włączone",
+        "disabled": "Wyłączone",
+        "field": {
+            "status": "Podania",
+            "logChannel": "Kanał dziennika",
+            "managerRoles": "Role zarządzające",
+            "questions": "Pytania",
+            "roles": "Role podań",
+            "retention": "Przechowywanie",
+            "role": "Rola"
+        },
+        "questionsValue": "Ustawione: {count}, pierwsze: {first}",
+        "retentionValue": "Czekające: **{pending} dni** · Rozpatrzone: **{reviewed} dni**",
+        "footer15": "Zamyka się po 15 minutach bezczynności",
+        "footer10": "Zamyka się po 10 minutach bezczynności",
+        "menu": {
+            "placeholder": "Wybierz ustawienie...",
+            "logChannel": "Kanał dziennika",
+            "logChannelHelp": "Kanał, na który trafiają nowe podania",
+            "roleLogChannelHelp": "Kanał, na który trafiają podania",
+            "managerRoles": "Role zarządzające",
+            "managerRolesHelp": "Dodaj lub usuń rolę, która może zarządzać podaniami",
+            "questions": "Edytuj pytania",
+            "questionsHelp": "Dostosuj pytania w formularzu podania",
+            "roleAdd": "Dodaj rolę podania",
+            "roleAddHelp": "Dodaj rolę, o którą członkowie mogą składać podania",
+            "roleRemove": "Usuń rolę podania",
+            "roleRemoveHelp": "Usuń rolę z listy podań",
+            "retention": "Czas przechowywania",
+            "retentionHelp": "Jak długo przechowywać czekające i rozpatrzone podania"
+        },
+        "toggleButton": "Podania",
+        "notSetUp": "Podania nie są jeszcze ustawione. Utwórz pierwsze podanie przez `/app-admin setup`.",
+        "openFailed": "Nie udało się otworzyć ustawień podań.",
+        "selector": {
+            "placeholder": "Wybierz podanie...",
+            "option": "Ustaw podanie {name}",
+            "title": "Wybierz podanie",
+            "description": "Wybierz rolę podania, którą chcesz ustawić.",
+            "noSelection": "Nic nie wybrano. Ustawienia zostały zamknięte."
+        },
+        "role": {
+            "inheritsLog": "`Ogólny kanał dziennika`",
+            "minChars": " (min. {min} znaków)",
+            "inheritsQuestions": "`Domyślne pytania`",
+            "title": "Ustawienia podania",
+            "description": "Ustawienia dla **{name}**",
+            "disableButton": "Wyłącz podanie",
+            "enableButton": "Włącz podanie",
+            "deleteButton": "Usuń podanie"
+        },
+        "selectionFailed": "Podczas obsługi wyboru wystąpił błąd.",
+        "unexpected": "Podczas zapisywania ustawień wystąpił nieoczekiwany błąd.",
+        "timedOutTitle": "Ustawienia zamknięte",
+        "timedOutBody": "Ustawienia zostały zamknięte z powodu bezczynności. Uruchom komendę ponownie, aby kontynuować.",
+        "system": {
+            "offTitle": "Podania wyłączone",
+            "offBody": "Podania są teraz **wyłączone**.\n\nCzłonkowie nie mogą już składać podań o role.",
+            "onTitle": "Podania włączone",
+            "onBody": "Podania są teraz **włączone**.\n\nCzłonkowie mogą składać podania o role."
+        },
+        "toggleFailed": "Podczas przełączania podań wystąpił błąd.",
+        "configTimeoutTitle": "Czas minął",
+        "configTimeoutBody": "Ustawienia zostały zamknięte po 10 minutach bezczynności.\n\nUruchom komendę ponownie, aby kontynuować.",
+        "roleNotFound": "Nie znaleziono roli podania.",
+        "roleToggle": {
+            "offTitle": "Podanie wyłączone",
+            "offBody": "Podanie **{name}** jest teraz **wyłączone**.\n\nNie pojawia się już w `/apply submit`.",
+            "onTitle": "Podanie włączone",
+            "onBody": "Podanie **{name}** jest teraz **włączone**.\n\nPojawia się teraz w `/apply submit`."
+        },
+        "delete": {
+            "thisApplication": "to podanie",
+            "modalTitle": "Usunąć podanie?",
+            "warning": "Na zawsze usuwasz **{name}**. Wszystkie zapisane podania i ustawienia tej roli zostaną usunięte i nie da się ich odzyskać.",
+            "checkbox": "Potwierdzam, nie da się tego cofnąć",
+            "modalFailed": "Nie udało się pokazać potwierdzenia. Spróbuj ponownie.",
+            "cancelled": "Usuwanie podania zostało anulowane.",
+            "mustTick": "Zaznacz pole potwierdzenia, aby usunąć podanie.",
+            "failed": "Podczas usuwania podania wystąpił błąd.",
+            "failedRetry": "Podczas usuwania podania wystąpił błąd. Spróbuj ponownie.",
+            "doneTitle": "Podanie usunięte",
+            "doneBody": "Podanie dla <@&{roleId}> (**{name}**) zostało usunięte na zawsze.",
+            "doneCount": {
+                "one": "Usunięto: **{count}** podanie",
+                "few": "Usunięto: **{count}** podania",
+                "many": "Usunięto: **{count}** podań",
+                "other": "Usunięto: **{count}** podania"
+            }
+        },
+        "logChannel": {
+            "modalTitle": "Kanał dziennika",
+            "placeholder": "Wybierz kanał tekstowy...",
+            "labelHelp": "Kanał, na który będą trafiać nowe podania",
+            "updatedTitle": "Kanał dziennika zmieniony",
+            "updatedBody": "Podania będą teraz trafiać na {channel}.\nMożesz to też zmienić w `/logging dashboard`.",
+            "failed": "Podczas zmiany kanału dziennika wystąpił błąd."
+        },
+        "managers": {
+            "modalTitle": "Role zarządzające",
+            "placeholder": "Wybierz role, które zarządzają podaniami...",
+            "labelHelp": "Wybrane role są włączane lub wyłączane jako role zarządzające",
+            "none": "`Brak`",
+            "updatedTitle": "Role zarządzające zmienione",
+            "updatedBody": "Obecne role zarządzające: {roles}",
+            "failed": "Podczas zmiany ról zarządzających wystąpił błąd."
+        },
+        "questions": {
+            "minTagHint": "Dodaj [min:10] na końcu, aby wymagać odpowiedzi z co najmniej 10 znakami",
+            "modalTitle": "Pytania podania",
+            "needOne": "Potrzebne jest co najmniej jedno pytanie.",
+            "updatedTitle": "Pytania zmienione",
+            "saved": {
+                "one": "Zapisano {count} pytanie.",
+                "few": "Zapisano {count} pytania.",
+                "many": "Zapisano {count} pytań.",
+                "other": "Zapisano {count} pytania."
+            }
+        },
+        "roleAdd": {
+            "placeholder": "Wybierz rolę, o którą można złożyć podanie...",
+            "labelHelp": "Rola Discord, o którą członkowie składają podanie",
+            "nameLabel": "Nazwa (puste = nazwa roli)",
+            "exists": "{role} już jest rolą podania.",
+            "addedTitle": "Rola dodana",
+            "addedBody": "Dodano {role} jako **{name}**.",
+            "failed": "Podczas dodawania roli podania wystąpił błąd."
+        },
+        "roleRemove": {
+            "none": "Nie ma ról podań do usunięcia.",
+            "placeholder": "Wybierz rolę do usunięcia...",
+            "labelHelp": "Rola, która zostanie usunięta z listy podań",
+            "notInList": "<@&{roleId}> nie ma na liście ról podań.",
+            "removedTitle": "Rola usunięta",
+            "removedBody": "<@&{roleId}> została usunięta z ról podań.",
+            "failed": "Podczas usuwania roli podania wystąpił błąd."
+        },
+        "retention": {
+            "modalTitle": "Przechowywanie podań",
+            "info": "**Czekające**: jak długo przechowywać podania bez decyzji, zanim zostaną automatycznie usunięte.\n**Rozpatrzone**: jak długo przechowywać przyjęte lub odrzucone podania.\n-# Wpisz liczbę całkowitą od 1 do 3650 (najwyżej 10 lat).",
+            "pendingLabel": "Przechowuj czekające (dni)",
+            "reviewedLabel": "Przechowuj rozpatrzone (dni)",
+            "pendingInvalid": "Czas przechowywania czekających podań musi być liczbą całkowitą od **1** do **3650** dni.",
+            "reviewedInvalid": "Czas przechowywania rozpatrzonych podań musi być liczbą całkowitą od **1** do **3650** dni.",
+            "updatedTitle": "Przechowywanie zmienione",
+            "pendingKept": {
+                "one": "Czekające podania będą przechowywane przez **{count} dzień**.",
+                "few": "Czekające podania będą przechowywane przez **{count} dni**.",
+                "many": "Czekające podania będą przechowywane przez **{count} dni**.",
+                "other": "Czekające podania będą przechowywane przez **{count} dnia**."
+            },
+            "reviewedKept": {
+                "one": "Rozpatrzone podania będą przechowywane przez **{count} dzień**.",
+                "few": "Rozpatrzone podania będą przechowywane przez **{count} dni**.",
+                "many": "Rozpatrzone podania będą przechowywane przez **{count} dni**.",
+                "other": "Rozpatrzone podania będą przechowywane przez **{count} dnia**."
+            }
+        }
+    }
+}

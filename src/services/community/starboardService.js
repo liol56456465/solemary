@@ -19,6 +19,7 @@ import { Mutex } from '../../utils/mutex.js';
 import { BoundedMap, BoundedSet } from '../../utils/boundedMap.js';
 import { CT, query, isCommunityDbAvailable, userError } from './db.js';
 import { getCommunitySettings } from './settingsService.js';
+import { botText, textForGuild } from '../../utils/botText.js';
 
 export const STARBOARD_MAX_THRESHOLD = 100;
 const UNKNOWN_MESSAGE = 10008;
@@ -34,15 +35,15 @@ const noPost = new BoundedSet(20_000);
 
 const CUSTOM_EMOJI = /^<a?:\w{2,32}:(\d{17,20})>$/;
 
-/** Validates an emoji typed by an admin; returns the string to store; throws a user error. */
-export function normalizeStarEmoji(input) {
+/** Validates an emoji typed by an admin; returns the string to store; throws a user error (in `lang`). */
+export function normalizeStarEmoji(input, { lang = 'en' } = {}) {
     const text = String(input ?? '').trim();
     if (!text) return '⭐';
     if (CUSTOM_EMOJI.test(text)) return text;
     if (text.length <= 16 && !/\s/.test(text) && /\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(text) && !/[A-Za-z0-9]/.test(text)) {
         return text;
     }
-    throw userError('Use one emoji: a standard one like ⭐ or a custom emoji from this server.');
+    throw userError(botText(lang).t('community.starboard.emojiInvalid'));
 }
 
 /** Comparable key for a stored emoji: the id of a custom emoji, else the text without variation selectors; pure. */
@@ -78,16 +79,20 @@ function firstImage(message) {
     return embedImage?.image?.url || embedImage?.thumbnail?.url || null;
 }
 
-/** The starboard post for a message; pure apart from reading the message. */
-export function buildStarPost(message, count, emoji) {
+/**
+ * The starboard post for a message; pure apart from reading the message. lang: the server's (a
+ * public post); by default the message's server language.
+ */
+export function buildStarPost(message, count, emoji, { lang = message?.guildId ? textForGuild(message.guildId, { purpose: 'public' }).lang : 'en' } = {}) {
+    const tr = botText(lang);
     const author = message.author;
     const name = message.member?.displayName || author?.username || 'Unknown';
-    const attachmentsNote = message.attachments?.size && !firstImage(message) ? `\n\n${message.attachments.size} attachment(s)` : '';
+    const attachmentsNote = message.attachments?.size && !firstImage(message) ? `\n\n${tr.t('community.starboard.attachments', { count: message.attachments.size })}` : '';
     const embed = createEmbed({
-        description: `${message.content || ''}${attachmentsNote}`.trim() || '*(no text)*',
+        description: `${message.content || ''}${attachmentsNote}`.trim() || tr.t('community.starboard.noText'),
         color: 'warning',
         author: { name, ...(author?.displayAvatarURL ? { iconURL: author.displayAvatarURL() } : {}) },
-        fields: [{ name: 'Source', value: `[Jump to message](${message.url})` }],
+        fields: [{ name: tr.t('community.starboard.source'), value: tr.t('community.starboard.jump', { url: message.url }) }],
         footer: { text: `${message.id}` },
         image: firstImage(message),
         timestamp: message.createdAt instanceof Date ? message.createdAt : true,
@@ -330,13 +335,13 @@ export async function handleStarMessageDelete(message) {
     }
 }
 
-/** Validates starboard settings from the command; returns the patch for updateCommunitySettings. */
-export function starboardSettingsPatch({ channelId, emoji, threshold }) {
+/** Validates starboard settings from the command; returns the patch for updateCommunitySettings. lang: the errors' language. */
+export function starboardSettingsPatch({ channelId, emoji, threshold }, { lang = 'en' } = {}) {
     const value = threshold ?? 3;
     if (!Number.isInteger(value) || value < 1 || value > STARBOARD_MAX_THRESHOLD) {
-        throw userError(`threshold must be between 1 and ${STARBOARD_MAX_THRESHOLD}.`);
+        throw userError(botText(lang).t('community.starboard.thresholdRange', { max: STARBOARD_MAX_THRESHOLD }));
     }
-    return { starboardChannelId: channelId, starboardEmoji: normalizeStarEmoji(emoji), starboardThreshold: value };
+    return { starboardChannelId: channelId, starboardEmoji: normalizeStarEmoji(emoji, { lang }), starboardThreshold: value };
 }
 
 /** For tests. */

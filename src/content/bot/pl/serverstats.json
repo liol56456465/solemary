@@ -1,0 +1,120 @@
+{
+    "cmd": {
+        "root": "Zarządzaj statystykami serwera: liczniki członków i botów",
+        "create": {
+            "desc": "Utwórz nowy kanał-licznik w kategorii",
+            "type": "Co ma liczyć licznik",
+            "channelType": "Rodzaj kanału dla tego licznika",
+            "category": "Kategoria, w której powstanie kanał-licznik"
+        },
+        "list": {
+            "desc": "Pokaż wszystkie liczniki tego serwera"
+        },
+        "update": {
+            "desc": "Zmień istniejący licznik",
+            "counterId": "ID licznika do zmiany",
+            "type": "Nowy rodzaj licznika"
+        },
+        "delete": {
+            "desc": "Usuń istniejący licznik",
+            "counterId": "ID licznika do usunięcia"
+        },
+        "choice": {
+            "members": "członkowie + boty",
+            "membersOnly": "tylko członkowie",
+            "bots": "tylko boty",
+            "voice": "kanał głosowy (zalecany)",
+            "text": "kanał tekstowy"
+        }
+    },
+    "type": {
+        "members": {
+            "label": "Członkowie + boty",
+            "channelName": "Członkowie i boty"
+        },
+        "membersOnly": {
+            "label": "Tylko członkowie",
+            "channelName": "Członkowie"
+        },
+        "bots": {
+            "label": "Tylko boty",
+            "channelName": "Boty"
+        },
+        "unknown": {
+            "label": "Nieznany",
+            "channelName": "Licznik"
+        }
+    },
+    "success": "Gotowe",
+    "unknownSubcommand": "Nieznana podkomenda.",
+    "noAdmin": {
+        "create": "Aby tworzyć liczniki, potrzebujesz uprawnienia **Administrator**.",
+        "view": "Aby zobaczyć liczniki, potrzebujesz uprawnienia **Administrator**.",
+        "update": "Aby zmieniać liczniki, potrzebujesz uprawnienia **Administrator**.",
+        "delete": "Aby usuwać liczniki, potrzebujesz uprawnienia **Administrator**."
+    },
+    "error": {
+        "unknownType": "Nieznany rodzaj licznika.",
+        "notCategory": "Wybierz kategorię dla kanału-licznika.",
+        "typeInUse": "Na tym serwerze jest już licznik **{type}**. Najpierw go usuń, zanim utworzysz kolejny.",
+        "typeInUseIn": "Na tym serwerze jest już licznik **{type}** w {channel}. Najpierw go usuń, zanim utworzysz kolejny.",
+        "typeInUseReuse": "Na tym serwerze jest już licznik **{type}**. Najpierw go usuń, zanim znów użyjesz tego rodzaju.",
+        "typeInUseReuseIn": "Na tym serwerze jest już licznik **{type}** w {channel}. Najpierw go usuń, zanim znów użyjesz tego rodzaju.",
+        "saveFailed": "Nie udało się zapisać licznika. Spróbuj ponownie.",
+        "deleteFailed": "Nie udało się usunąć licznika. Spróbuj ponownie.",
+        "notFound": "Nie znaleziono licznika o ID `{id}`.",
+        "notFoundList": "Nie znaleziono licznika o ID `{id}`. Użyj `/serverstats list`, aby zobaczyć wszystkie liczniki.",
+        "channelMissing": "Kanał tego licznika już nie istnieje. Nie możesz zmienić licznika usuniętego kanału.",
+        "createFailed": "Coś poszło nie tak podczas tworzenia licznika. Spróbuj ponownie.",
+        "updateFailed": "Coś poszło nie tak podczas zmiany licznika. Spróbuj ponownie.",
+        "loadFailed": "Nie udało się wczytać liczników. Spróbuj ponownie.",
+        "noType": "Podaj nowy rodzaj licznika, aby go zmienić.",
+        "noneToDelete": "Nie ma liczników do usunięcia.",
+        "serverOnly": "Ta akcja działa tylko na serwerze.",
+        "actionMissing": "Brakuje danych do usunięcia licznika.",
+        "notYours": "Tylko osoba, która to rozpoczęła, może używać tych przycisków.",
+        "unknownAction": "Nieznana akcja usuwania licznika."
+    },
+    "create": {
+        "notRenamed": "Licznik utworzony, ale nie udało mi się jeszcze zmienić nazwy kanału. Zaktualizuje się przy następnym przebiegu.",
+        "done": "**Licznik utworzony**\n\n**Rodzaj:** {type}\n**Rodzaj kanału:** {channelType}\n**Kategoria:** {category}\n**Kanał:** {channel}\n**Nazwa kanału:** {channelName}\n**ID licznika:** `{id}`\n\nAktualizuje się co 15 minut. `/serverstats list` pokazuje wszystkie liczniki.",
+        "voice": "głosowy",
+        "text": "tekstowy"
+    },
+    "update": {
+        "notRenamed": "Licznik zmieniony, ale nie udało mi się jeszcze zmienić nazwy kanału. Zaktualizuje się przy następnym przebiegu.",
+        "done": "**Licznik zmieniony**\n\n**ID licznika:** `{id}`\n**Rodzaj:** {oldType} → {newType}\n**Kanał:** {channel}\n**Nazwa kanału:** {channelName}\n\nAktualizuje się co 15 minut."
+    },
+    "delete": {
+        "title": "Usuń licznik i kanał",
+        "confirm": "Usunąć ten licznik i jego kanał?\n\n**ID:** `{id}`\n**Rodzaj:** {type}\n**Kanał:** {channel}\n\n**Kanał zostanie usunięty na zawsze.**",
+        "alreadyDeleted": "już usunięty",
+        "button": "Usuń",
+        "cancel": "Anuluj",
+        "cancelledTitle": "Anulowano",
+        "cancelledBody": "Nic nie zostało usunięte.",
+        "done": "**Licznik usunięty**\n\n**ID:** `{id}`\n**Rodzaj:** {type}",
+        "channelDeleted": "\n**Kanał:** {name} (usunięty)",
+        "channelFailed": "\n**Kanał:** {name} (nie udało się usunąć)",
+        "channelGone": "\n**Kanał:** Już usunięty"
+    },
+    "list": {
+        "title": "Liczniki serwera",
+        "empty": "Nie ma jeszcze liczników.\n\nUżyj `/serverstats create`, aby dodać licznik.",
+        "typesName": "Rodzaje liczników",
+        "typesValue": "**Członkowie + boty**: wszyscy\n**Tylko członkowie**: ludzie, bez botów\n**Tylko boty**: same boty",
+        "examplesName": "Przykłady",
+        "examplesValue": "`/serverstats create type:members channel_type:voice category:Statystyki`\n`/serverstats create type:bots channel_type:text category:Info o serwerze`\n`/serverstats list`",
+        "footer": "Liczniki aktualizują się co 15 minut",
+        "titleCount": "Liczniki serwera ({count})",
+        "description": "Wszystkie liczniki na tym serwerze. Aktualizują się co 15 minut.",
+        "upToDate": "Aktualny",
+        "notUpdated": "Jeszcze nie zaktualizowany",
+        "counterName": "Licznik nr {number} · {channelName}",
+        "counterValue": "**ID:** `{id}`\n**Rodzaj:** {type}\n**Kanał:** {channel}\n**Stan:** {count}\n**Status:** {status}\n**Utworzono:** {created}",
+        "totalsName": "Podsumowanie",
+        "totalsValue": "**Liczniki:** {counters}\n**Aktualne:** {upToDate}\n**Następna aktualizacja:** <t:{next}:R>",
+        "commandsName": "Komendy",
+        "commandsValue": "`/serverstats create`: dodaj licznik\n`/serverstats update`: zmień licznik\n`/serverstats delete`: usuń licznik"
+    }
+}

@@ -8,11 +8,13 @@ import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { hasAdminAccess } from '../../../utils/commandGate.js';
+import { textForInteraction } from '../../../utils/botText.js';
 export async function handleCreate(interaction, client) {
     const guild = interaction.guild;
     const type = interaction.options.getString("type");
     const channelType = interaction.options.getString("channel_type");
     const category = interaction.options.getChannel("category");
+    const tr = textForInteraction(interaction); // ephemeral: the admin's Discord language
 
     try {
         await InteractionHelper.safeDefer(interaction);
@@ -22,14 +24,14 @@ export async function handleCreate(interaction, client) {
     }
 
     if (!hasAdminAccess(interaction)) {
-        await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the **Administrator** permission to create counters.' }).catch(logger.error);
+        await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('serverstats.noAdmin.create') }).catch(logger.error);
         return;
     }
 
     try {
         let result;
         try {
-            result = await createServerCounter(client, guild, { type, channelType, category, actorTag: interaction.user.tag });
+            result = await createServerCounter(client, guild, { type, channelType, category, actorTag: interaction.user.tag, lang: tr.lang });
         } catch (error) {
             if (error.userMessage && error.type === ErrorTypes.USER_INPUT) {
                 await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: error.userMessage }).catch(logger.error);
@@ -39,16 +41,23 @@ export async function handleCreate(interaction, client) {
         }
         const { counter: newCounter, channel: targetChannel, renamed } = result;
         if (!renamed) {
-            await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Counter created, but I couldn\'t rename the channel yet. It will update on the next run.' }).catch(logger.error);
+            await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('serverstats.create.notRenamed') }).catch(logger.error);
             return;
         }
 
         await InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed(`**Counter created**\n\n**Type:** ${getCounterTypeLabel(type)}\n**Channel Type:** ${targetChannel.type === ChannelType.GuildVoice ? 'voice' : 'text'}\n**Category:** ${category}\n**Channel:** ${targetChannel}\n**Channel Name:** ${targetChannel.name}\n**Counter ID:** \`${newCounter.id}\`\n\nIt updates every 15 minutes. \`/serverstats list\` shows all counters.`)]
+            embeds: [successEmbed(tr.t('serverstats.success'), tr.t('serverstats.create.done', {
+                type: getCounterTypeLabel(type, { lang: tr.lang }),
+                channelType: targetChannel.type === ChannelType.GuildVoice ? tr.t('serverstats.create.voice') : tr.t('serverstats.create.text'),
+                category: String(category),
+                channel: String(targetChannel),
+                channelName: targetChannel.name,
+                id: newCounter.id,
+            }))]
         }).catch(logger.error);
 
     } catch (error) {
         logger.error("Error creating counter:", error);
-        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Something went wrong while creating the counter. Try again.' }).catch(logger.error);
+        await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('serverstats.error.createFailed') }).catch(logger.error);
     }
 }

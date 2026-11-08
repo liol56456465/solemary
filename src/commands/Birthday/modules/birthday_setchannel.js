@@ -4,14 +4,17 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { logger } from '../../../utils/logger.js';
 import { canonicalTimeZone, localDateKey } from '../../../utils/timezone.js';
 import { hasAdminAccess } from '../../../utils/commandGate.js';
+import { textForInteraction } from '../../../utils/botText.js';
 
 export default {
     async execute(interaction, config, client) {
+        // Ephemeral answers: the admin's own Discord language.
+        const tr = textForInteraction(interaction);
         if (!hasAdminAccess(interaction)) {
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
-                .setTitle('Not allowed')
-                .setDescription('You need the **Administrator** permission to configure the birthday channel.');
+                .setTitle(tr.t('birthday.setchannel.notAllowedTitle'))
+                .setDescription(tr.t('birthday.setchannel.notAllowed'));
             return InteractionHelper.safeReply(interaction, {
                 embeds: [embed],
                 flags: MessageFlags.Ephemeral,
@@ -29,8 +32,8 @@ export default {
                 if (!timezone) {
                     const embed = new EmbedBuilder()
                         .setColor(0xFF0000)
-                        .setTitle('Unknown time zone')
-                        .setDescription(`\`${timezoneInput}\` is not a known time zone. Use an IANA name such as \`Europe/London\`, \`America/New_York\` or \`UTC\` (the list suggests names as you type).`);
+                        .setTitle(tr.t('birthday.setchannel.unknownTzTitle'))
+                        .setDescription(tr.t('birthday.setchannel.unknownTz', { input: timezoneInput }));
                     return InteractionHelper.safeReply(interaction, {
                         embeds: [embed],
                         flags: MessageFlags.Ephemeral,
@@ -39,7 +42,7 @@ export default {
             }
 
             const timezoneLine = timezone
-                ? `\nBirthdays follow the **${timezone}** date (it is currently ${localDateKey(new Date(), timezone)} there). Announcements go out once per local day.`
+                ? `\n${tr.t('birthday.setchannel.timezoneLine', { timezone, date: localDateKey(new Date(), timezone) })}`
                 : '';
 
             if (channel) {
@@ -49,8 +52,8 @@ export default {
                 });
                 const embed = new EmbedBuilder()
                     .setColor(0x00FF00)
-                    .setTitle('Birthday announcements on')
-                    .setDescription(`Birthday announcements will now be posted in ${channel}.${timezoneLine}`);
+                    .setTitle(tr.t('birthday.setchannel.onTitle'))
+                    .setDescription(`${tr.t('birthday.setchannel.on', { channel: String(channel) })}${timezoneLine}`);
                 return InteractionHelper.safeReply(interaction, {
                     embeds: [embed],
                     flags: MessageFlags.Ephemeral,
@@ -60,7 +63,7 @@ export default {
                 await updateBirthdaySettings(client, guildId, { timezone });
                 const embed = new EmbedBuilder()
                     .setColor(0x00FF00)
-                    .setTitle('Time zone updated')
+                    .setTitle(tr.t('birthday.setchannel.tzTitle'))
                     .setDescription(timezoneLine.trim());
                 return InteractionHelper.safeReply(interaction, {
                     embeds: [embed],
@@ -70,8 +73,8 @@ export default {
                 await updateBirthdaySettings(client, guildId, { channelId: null });
                 const embed = new EmbedBuilder()
                     .setColor(0xFFFF00)
-                    .setTitle('Birthday announcements off')
-                    .setDescription('No channel given, so birthday announcements are turned off.');
+                    .setTitle(tr.t('birthday.setchannel.offTitle'))
+                    .setDescription(tr.t('birthday.setchannel.off'));
                 return InteractionHelper.safeReply(interaction, {
                     embeds: [embed],
                     flags: MessageFlags.Ephemeral,
@@ -81,8 +84,8 @@ export default {
             logger.error('birthday_setchannel error:', error);
             const embed = new EmbedBuilder()
                 .setColor(0xFF0000)
-                .setTitle("Couldn't save")
-                .setDescription("The birthday channel wasn't saved. Try again in a moment.");
+                .setTitle(tr.t('birthday.setchannel.failTitle'))
+                .setDescription(tr.t('birthday.setchannel.fail'));
             return InteractionHelper.safeReply(interaction, {
                 embeds: [embed],
                 flags: MessageFlags.Ephemeral,

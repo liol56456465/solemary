@@ -1,0 +1,140 @@
+{
+    "cmd": {
+        "giveaway": "Gewinnspiele starten und verwalten",
+        "create": "Ein neues Gewinnspiel in einem Kanal starten",
+        "end": "Ein laufendes Gewinnspiel jetzt beenden und die Gewinner wählen",
+        "reroll": "Neue Gewinner für ein beendetes Gewinnspiel auslosen",
+        "delete": "Ein Gewinnspiel und seine Nachricht löschen",
+        "gcreate": "Ein Gewinnspiel starten",
+        "duration": "Wie lange es läuft, z. B. 30m, 1h oder 5d",
+        "winners": "Wie viele Gewinner",
+        "prize": "Was die Gewinner bekommen",
+        "channel": "Wo es gepostet wird (Standard: dieser Kanal)",
+        "gdelete": "Löscht eine Gewinnspiel-Nachricht und entfernt das Gewinnspiel aus der Datenbank.",
+        "gend": "Ein Gewinnspiel jetzt beenden und die Gewinner wählen",
+        "greroll": "Neue Gewinner für ein beendetes Gewinnspiel auslosen",
+        "messageId": "Nachrichten-ID des Gewinnspiels"
+    },
+    "unknownSubcommand": "Unbekannter Unterbefehl.",
+    "guildOnly": "Dieser Befehl geht nur auf einem Server.",
+    "needManageServer": {
+        "create": "Um ein Gewinnspiel zu starten, brauchst du die Berechtigung „Server verwalten“.",
+        "delete": "Um ein Gewinnspiel zu löschen, brauchst du die Berechtigung „Server verwalten“.",
+        "end": "Um ein Gewinnspiel zu beenden, brauchst du die Berechtigung „Server verwalten“.",
+        "reroll": "Um ein Gewinnspiel neu auszulosen, brauchst du die Berechtigung „Server verwalten“."
+    },
+    "created": {
+        "title": "Gewinnspiel gestartet",
+        "text": "**{prize}** läuft jetzt in {channel}. Es endet in **{duration}**."
+    },
+    "deleted": {
+        "title": "Gewinnspiel gelöscht",
+        "withMessage": "**{prize}** gelöscht und die Nachricht aus #{channel} entfernt.",
+        "withoutMessage": "**{prize}** gelöscht, aber die Nachricht wurde nicht gefunden (schon weg, oder ich sehe den Kanal nicht).",
+        "hadWinners": {
+            "one": "Es hatte schon {count} Gewinner.",
+            "other": "Es hatte schon {count} Gewinner."
+        },
+        "endedNoWinner": "Es war ohne Gewinner beendet.",
+        "noWinner": "Es wurde kein Gewinner gewählt."
+    },
+    "ended": {
+        "title": "Gewinnspiel beendet",
+        "text": {
+            "one": "**{prize}** in {channel} beendet. {count} Gewinner aus {entries} Teilnahmen gewählt.",
+            "other": "**{prize}** in {channel} beendet. {count} Gewinner aus {entries} Teilnahmen gewählt."
+        }
+    },
+    "reroll": {
+        "completeTitle": "Neu ausgelost",
+        "noChannel": "Die neuen Gewinner sind gewählt und in der Datenbank gespeichert. Der Kanal für die Ankündigung wurde nicht gefunden.",
+        "noMessage": "Die neuen Gewinner wurden in {channel} verkündet. (Die ursprüngliche Nachricht wurde nicht gefunden.)",
+        "title": "Neu ausgelost",
+        "text": {
+            "one": "{count} neuer Gewinner für **{prize}** in {channel} ausgelost.",
+            "other": "{count} neue Gewinner für **{prize}** in {channel} ausgelost."
+        }
+    },
+    "button": {
+        "slowDown": "Etwas langsamer, dann versuch es noch einmal.",
+        "notActive": "Dieses Gewinnspiel läuft nicht mehr.",
+        "alreadyEnded": "Dieses Gewinnspiel ist schon beendet.",
+        "alreadyIn": "Du nimmst schon an diesem Gewinnspiel teil.",
+        "joinedTitle": "Du bist dabei",
+        "joined": {
+            "one": "Viel Glück. Bisher hat {count} Person teilgenommen.",
+            "other": "Viel Glück. Bisher haben {count} Personen teilgenommen."
+        },
+        "guildOnly": "Dieser Button geht nur auf einem Server.",
+        "needAdminEnd": "Um ein Gewinnspiel zu beenden, brauchst du die Rolle Administrator.",
+        "needAdminReroll": "Um ein Gewinnspiel neu auszulosen, brauchst du die Rolle Administrator.",
+        "endedTitle": "Gewinnspiel beendet",
+        "picked": {
+            "one": "{count} Gewinner gewählt.",
+            "other": "{count} Gewinner gewählt."
+        },
+        "nobodyEntered": "Niemand hat teilgenommen, also gibt es keinen Gewinner.",
+        "rerolledTitle": "Gewinnspiel neu ausgelost",
+        "rerolledText": "Neue Gewinner gewählt.",
+        "notFound": "Dieses Gewinnspiel wurde nicht gefunden.",
+        "notEndedYet": "Dieses Gewinnspiel ist noch nicht beendet, daher gibt es noch keine Gewinner.",
+        "nobodyWon": "Diesmal hat niemand gewonnen.",
+        "winnersTitle": "Gewinner: {prize}",
+        "giveawayWord": "Gewinnspiel"
+    },
+    "embed": {
+        "ended": "Dieses Gewinnspiel ist beendet.",
+        "clickJoin": "Klicke auf Teilnehmen, um mitzumachen.",
+        "host": "Veranstalter",
+        "winners": "Gewinner",
+        "entries": "Teilnahmen",
+        "wonBy": "Gewonnen von",
+        "nobodyEntered": "Niemand hat teilgenommen",
+        "ends": "Endet"
+    },
+    "buttons": {
+        "reroll": "Neu auslosen",
+        "winners": "Gewinner",
+        "join": "Teilnehmen",
+        "end": "Beenden"
+    },
+    "post": {
+        "newGiveaway": "**Neues Gewinnspiel**",
+        "ended": "**Gewinnspiel beendet**",
+        "rerolled": "**Gewinnspiel neu ausgelost**",
+        "won": "**{prize}** geht an {winners}. Schreib <@{hostId}>, um deinen Preis zu bekommen.",
+        "theGiveaway": "das Gewinnspiel",
+        "noWinner": "Das Gewinnspiel um **{prize}** ist beendet. Niemand hat teilgenommen, also gibt es keinen Gewinner.",
+        "rerolledWon": "Neu ausgelost: **{prize}** geht stattdessen an {winners}. Schreib <@{hostId}>, um deinen Preis zu bekommen.",
+        "rerolledShort": "**{prize}** neu ausgelost: {winners}"
+    },
+    "errors": {
+        "durationMissing": "Gib eine gültige Dauer an (z. B. 1h, 30m, 5d, 10s).",
+        "durationFormat": "Ungültige Dauer. Nutze: 1h, 30m, 5d, 10s (mindestens 10s, höchstens 30d)",
+        "durationAmount": "Die Zahl der Dauer muss zwischen 1 und 999 liegen.",
+        "durationUnit": "Nutze s (Sekunden), m (Minuten), h (Stunden) oder d (Tage).",
+        "durationMax": {
+            "one": "Die längste Dauer ist {count} Tag.",
+            "other": "Die längste Dauer ist {count} Tage."
+        },
+        "durationMin": {
+            "one": "Die kürzeste Dauer ist {count} Sekunde.",
+            "other": "Die kürzeste Dauer ist {count} Sekunden."
+        },
+        "prizeMissing": "Gib einen gültigen Preis an.",
+        "prizeLength": "Der Preis muss zwischen 1 und 256 Zeichen lang sein.",
+        "winnerCount": "Die Zahl der Gewinner muss zwischen {min} und {max} liegen.",
+        "endMissing": "Ein Gewinnspiel, das es nicht gibt, kann nicht beendet werden.",
+        "alreadyEnded": "Dieses Gewinnspiel ist schon beendet.",
+        "endFailed": "Beim Beenden des Gewinnspiels ist ein Fehler aufgetreten.",
+        "badMessageId": "Gib eine gültige Nachrichten-ID an.",
+        "notFound": "Zu dieser Nachrichten-ID wurde kein Gewinnspiel in der Datenbank gefunden.",
+        "channelGone": "Der Kanal des Gewinnspiels wurde nicht gefunden. Der Stand des Gewinnspiels wurde gespeichert.",
+        "messageGone": "Die Gewinnspiel-Nachricht wurde nicht gefunden. Der Stand des Gewinnspiels wurde gespeichert.",
+        "stillActive": "Dieses Gewinnspiel läuft noch. Beende es zuerst mit `/giveaway end`.",
+        "notEnoughEntries": "Es gibt nicht genug Teilnahmen für die nötige Zahl an Gewinnern.",
+        "notTextChannel": "Der Kanal muss ein Textkanal sein.",
+        "missingPermissions": "Ich brauche „Kanal ansehen“, „Nachrichten senden“ und „Links einbetten“ in <#{channelId}>, um das Gewinnspiel zu posten.",
+        "deleteFailed": "Das Gewinnspiel konnte nicht aus der Datenbank entfernt werden. Versuch es noch einmal."
+    }
+}
