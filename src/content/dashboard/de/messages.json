@@ -1,12 +1,12 @@
 {
   "page": {
-    "help": "Poste eine Nachricht als Mewvo: eine Ankündigung jetzt oder später, eine Nachricht, die sich wiederholt, eine Umfrage oder einen Countdown. Was du hier tippst, pingt niemanden an. Für alles hier brauchst du die Berechtigung Administrator auf diesem Server."
+    "help": "Poste eine Nachricht als Mewvo: eine Ankündigung jetzt oder später, eine Nachricht, die sich wiederholt, eine Umfrage oder einen Countdown. Was du hier tippst, pingt niemanden an; nur eine Rolle oder alle, die du auswählst, bekommen eine Benachrichtigung. Für alles hier brauchst du die Berechtigung Administrator auf diesem Server."
   },
   "adminNote": "Zum Posten brauchst du die Berechtigung Administrator auf diesem Server.",
   "fields": {
     "channel": "Kanal",
     "content": "Nachrichtentext",
-    "contentHelp": "Der normale Text der Nachricht. Du kannst ihn leer lassen, wenn du die Box unten ausfüllst. Erwähnungen erscheinen als Namen, pingen aber niemanden an. @everyone, @here, Rollen und Mitglieder bekommen keine Benachrichtigung.",
+    "contentHelp": "Der normale Text der Nachricht. Du kannst ihn leer lassen, wenn du die Box unten ausfüllst. Erwähnungen, die du tippst, erscheinen als Namen, pingen aber niemanden an. Nur die Rolle oder alle, die unter Ping ausgewählt sind, bekommen eine Benachrichtigung.",
     "title": "Box-Titel",
     "titleHelp": "Ein Embed ist eine Nachrichtenbox mit farbigem Rand, fettem Titel und Text. Fülle diese Felder aus, um eins zu senden. Lass sie leer für eine einfache Nachricht.",
     "description": "Box-Text",
@@ -18,7 +18,23 @@
     "imageUrl": "Bildlink",
     "imageUrlHelp": "Optional. Ein Link, der mit https:// beginnt und ein Bild öffnet. Es wird groß in der Box gezeigt.",
     "footer": "Box-Fußzeile",
-    "footerHelp": "Optionaler kleiner Text unten in der Box."
+    "footerHelp": "Optionaler kleiner Text unten in der Box.",
+    "format": "Format",
+    "formatEmbed": "Embed (eine Box mit farbigem Rand)",
+    "formatText": "Nur Text",
+    "formatHelp": "Bei Nur Text kommen Titel, Text, Bildlink und Fußzeile der Box in den Nachrichtentext statt in eine Box.",
+    "pingRole": "Rolle anpingen",
+    "pingRoleHelp": "Optional. Mitglieder mit dieser Rolle bekommen eine Benachrichtigung. Nur diese Rolle wird angepingt, auch wenn der Text andere erwähnt.",
+    "pingNone": "Niemand",
+    "pingEveryone": "Alle anpingen (@everyone)",
+    "pingEveryoneHelp": "Nur wenn angehakt. Alle, die den Kanal sehen, bekommen eine Benachrichtigung.",
+    "buttons": "Link-Buttons",
+    "buttonsHelp": "Optional, bis zu {max} Buttons unter der Nachricht, die einen Link öffnen. Jeder braucht eine Beschriftung und einen Link, der mit https:// beginnt.",
+    "buttonLabel": "Button {n}: Beschriftung",
+    "buttonUrl": "Button {n}: Link",
+    "mods": "Neue Moderatoren",
+    "modsHelp": "Wähle die neuen Moderatoren. Ihre Erwähnungen ersetzen {token} im Text, und nur sie (und der Ping oben) bekommen eine Benachrichtigung.",
+    "mod": "Moderator {n}"
   },
   "colour": {
     "primary": "Mewvo-Blau",
@@ -36,7 +52,15 @@
     "filled": "Die Vorlage „{name}“ ist unten eingetragen, in „Nachricht senden“ und in „Nachricht planen“. Ersetze die Teile in [eckigen Klammern], prüfe den Text und poste oder plane ihn dann. Es wird nichts gepostet, bevor du den Button drückst.",
     "label": "Vorlage",
     "hint": "Fertige Texte für häufige Ankündigungen. Wo ein Text den Server nennt, ist der Name dieses Servers eingetragen. Teile in [eckigen Klammern] füllst du selbst aus.",
-    "use": "Diese Vorlage nutzen"
+    "use": "Diese Vorlage nutzen",
+    "language": "Sprache der Vorlage",
+    "languageHint": "Mewvos eigene Vorlagen gibt es in allen 8 Sprachen, die anderen auf Englisch. Text, den du bearbeitest, wird genau so gepostet, wie du ihn getippt hast.",
+    "filledLang": "Sprache: {language}.",
+    "noTranslation": "Diese Vorlage hat keinen Text auf {language}, deshalb wurde der englische Text eingefüllt.",
+    "homeOnly": "Diese Vorlage gibt es nur auf Mewvos eigenen Servern. Wähle eine aus der Liste.",
+    "changelogTitle": "Änderungen, die rein sollen",
+    "changelogHint": "Die neuesten Einträge der Änderungen auf der Website, in der Sprache der Vorlage. Hake die gewünschten an und drücke den Button; das Formular unten wird neu ausgefüllt.",
+    "changelogUse": "Mit diesen Änderungen ausfüllen"
   },
   "send": {
     "title": "Nachricht senden",
@@ -119,7 +143,9 @@
   "preview": {
     "title": "Vorschau",
     "image": "Bild: {url}",
-    "note": "So angezeigt, wie du es getippt hast. Discord macht beim Posten aus **fett**, Links und Erwähnungen Formatierung. Erwähnungen pingen nie."
+    "note": "So angezeigt, wie du es getippt hast. Discord macht beim Posten aus **fett**, Links und Erwähnungen Formatierung. Getippte Erwähnungen pingen nie; nur der ausgewählte Ping.",
+    "ping": "Pings: {who}",
+    "buttons": "Buttons: {list}"
   },
   "poll": {
     "title": "Umfrage starten",
@@ -197,7 +223,16 @@
     "pollLink": "Link zur Umfrage-Nachricht: Füge den Link aus Nachrichtenlink kopieren in Discord ein, etwa https://discord.com/channels/...",
     "pollOtherServer": "Link zur Umfrage-Nachricht: Diese Nachricht ist auf einem anderen Server.",
     "countdownShort": "Dauer: Der Countdown braucht mindestens 1 Sekunde.",
-    "countdownLong": "Dauer: Ein Countdown kann nicht länger als 24 Stunden sein."
+    "countdownLong": "Dauer: Ein Countdown kann nicht länger als 24 Stunden sein.",
+    "homeOnly": "Diese Vorlage gibt es nur auf Mewvos eigenen Servern. Es wurde nichts gepostet.",
+    "usersNotAllowed": "Mitglieder können nur mit der Vorlage Neue Moderatoren angepingt werden, über Nachricht senden.",
+    "modsMissing": "Wähle mindestens einen Moderator für {token} oder entferne {token} aus dem Text. Moderatoren kann man nur unter Nachricht senden auswählen.",
+    "modId": "Moderator {n}: das ist kein Mitglied. Wähle eins über Mitglied finden oder füge eine ID oder @Erwähnung ein.",
+    "buttonHalf": "Button {n} braucht eine Beschriftung und einen Link.",
+    "buttonUrl": "Button {n}: der Link muss ein vollständiger https://-Link sein.",
+    "buttonLabel": "Button {n}: die Beschriftung darf höchstens {max} Zeichen haben.",
+    "textTooLong": "Nachrichtentext: mit den Pings davor sind es {length} Zeichen, höchstens {max} passen.",
+    "format": "Format: wähle Embed oder Nur Text."
   },
   "action": {
     "posted": "In #{channel} gepostet.",
@@ -219,5 +254,20 @@
     "pollPosted": "Umfrage in #{channel} gepostet. Sie endet {time}.",
     "pollEnded": "Umfrage in #{channel} beendet. Die Endergebnisse sind jetzt darauf zu sehen.",
     "countdownStarted": "Countdown in #{channel} gestartet: {duration}."
+  },
+  "ping": {
+    "nobody": "Niemand (kein Ping)"
+  },
+  "confirm": {
+    "heading": "Bestätigen: in #{channel} posten",
+    "channel": "Kanal",
+    "ping": "Bekommt eine Benachrichtigung",
+    "format": "Format",
+    "buttons": "Buttons",
+    "noButtons": "Keine",
+    "message": "Nachricht",
+    "submit": "Jetzt posten",
+    "everyoneNoPerm": "Mewvo fehlt die Berechtigung Alle erwähnen in #{channel}, deshalb benachrichtigt @everyone niemanden.",
+    "roleNotMentionable": "@{role} ist nicht erwähnbar und Mewvo fehlt Alle erwähnen in #{channel}, deshalb bekommt die Rolle keine Benachrichtigung. Die Nachricht wird trotzdem gepostet."
   }
 }

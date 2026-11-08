@@ -23,7 +23,7 @@ import { createError, ErrorTypes } from '../utils/errorHandler.js';
 import { logger } from '../utils/logger.js';
 import { pgConfig } from '../config/database/postgres.js';
 import { canonicalTimeZone } from '../utils/timezone.js';
-import { postBotMessage } from './botMessageService.js';
+import { cleanLinkButtons, cleanPing, isEmptyPing, postBotMessage } from './botMessageService.js';
 import { limitMessage, planLimit } from './billing/premiumEffects.js';
 
 // Free's limit; a server owner's plan raises it (planLimit, plans.js).
@@ -316,14 +316,24 @@ const storeOf = (store) => store || (defaultStore ||= createScheduledMessageStor
 
 // ── Payload ──────────────────────────────────────────────────────────────
 
-/** { content, embed } kept for the post: only the fields postBotMessage reads. */
-export function cleanPayload({ content = '', embed = null } = {}) {
+/**
+ * { content, embed, ping?, buttons? } kept for the post: only the fields postBotMessage reads.
+ * ping (a role or "everyone", see botMessageService.cleanPing) and link buttons are kept only
+ * when set, so older rows and plain messages stay { content, embed }.
+ */
+export function cleanPayload({ content = '', embed = null, ping = null, buttons = null } = {}) {
     const e = embed ? {
         title: String(embed.title || ''), description: String(embed.description || ''), imageUrl: String(embed.imageUrl || ''),
         footer: String(embed.footer || ''), colour: Number.isInteger(embed.colour) ? embed.colour : null,
     } : null;
-    return { content: String(content || ''), embed: e };
+    const out = { content: String(content || ''), embed: e };
+    if (ping && !isEmptyPing(ping)) out.ping = cleanPing(ping);
+    if (Array.isArray(buttons) && buttons.length) out.buttons = cleanLinkButtons(buttons);
+    return out;
 }
+
+/** What postBotMessage gets from a stored row. */
+const postFields = (payload) => ({ content: payload?.content || '', embed: payload?.embed || null, ping: payload?.ping || null, buttons: payload?.buttons || [] });
 
 function errorText(error) {
     return String(error?.userMessage || error?.message || 'Unknown error').replace(/\s+/g, ' ').slice(0, ERROR_MAX);
@@ -404,7 +414,7 @@ export async function runScheduledMessageNow(guild, id, { store, now = Date.now(
     if (!row) throw userError(`There is no scheduled message #${id}.`);
     try {
         const channel = await resolveChannel(guild, row.channelId);
-        const { message } = await post(guild, { channel, content: row.payload?.content || '', embed: row.payload?.embed || null });
+        const { message } = await post(guild, { channel, ...postFields(row.payload) });
         await s.recordSuccess(row.id, now, message?.id || null);
         if (row.schedule?.kind === 'once') await s.setPaused(guild.id, row.id, false, null);
         return { row, message, channel };
@@ -452,7 +462,7 @@ export async function runDueScheduledMessages(client, { store, now = Date.now(),
         try {
             const guild = client.guilds?.cache?.get(row.guildId);
             const channel = await resolveChannel(guild, row.channelId);
-            const { message } = await post(guild, { channel, content: row.payload?.content || '', embed: row.payload?.embed || null });
+            const { message } = await post(guild, { channel, ...postFields(row.payload) });
             await s.recordSuccess(row.id, now, message?.id || null);
             summary.posted += 1;
         } catch (error) {

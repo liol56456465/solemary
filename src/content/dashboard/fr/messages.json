@@ -1,12 +1,12 @@
 {
   "page": {
-    "help": "Publie un message en tant que Mewvo : une annonce maintenant ou plus tard, un message qui se répète, un sondage ou un compte à rebours. Le texte que tu tapes ici ne mentionne jamais personne. Tout ici demande la permission Administrateur sur ce serveur."
+    "help": "Publie un message en tant que Mewvo : une annonce maintenant ou plus tard, un message qui se répète, un sondage ou un compte à rebours. Le texte que tu tapes ici ne mentionne jamais personne ; seuls le rôle, ou tout le monde, que tu choisis reçoivent une notification. Tout ici demande la permission Administrateur sur ce serveur."
   },
   "adminNote": "Pour publier, il te faut la permission Administrateur sur ce serveur.",
   "fields": {
     "channel": "Salon",
     "content": "Texte du message",
-    "contentHelp": "Le texte normal du message. Tu peux le laisser vide si tu remplis l’encadré ci-dessous. Les mentions s’affichent comme des noms mais ne notifient personne. @everyone, @here, les rôles et les membres ne reçoivent aucune notification.",
+    "contentHelp": "Le texte normal du message. Tu peux le laisser vide si tu remplis l’encadré ci-dessous. Les mentions que tu tapes s’affichent comme des noms mais ne notifient personne. Seuls le rôle, ou tout le monde, choisis sous Mention reçoivent une notification.",
     "title": "Titre de l’encadré",
     "titleHelp": "Un embed est un encadré de message avec un bord coloré, un titre en gras et du texte. Remplis ces champs pour en envoyer un. Laisse-les vides pour un message simple.",
     "description": "Texte de l’encadré",
@@ -18,7 +18,23 @@
     "imageUrl": "Lien de l’image",
     "imageUrlHelp": "Facultatif. Un lien qui commence par https:// et ouvre une image. Elle s’affiche en grand dans l’encadré.",
     "footer": "Pied de l’encadré",
-    "footerHelp": "Petit texte facultatif en bas de l’encadré."
+    "footerHelp": "Petit texte facultatif en bas de l’encadré.",
+    "format": "Format",
+    "formatEmbed": "Embed (un encadré avec un bord coloré)",
+    "formatText": "Texte simple",
+    "formatHelp": "En texte simple, le titre, le texte, le lien d’image et le pied de l’encadré vont dans le texte du message au lieu d’un encadré.",
+    "pingRole": "Mentionner un rôle",
+    "pingRoleHelp": "Facultatif. Les membres avec ce rôle reçoivent une notification. Seul ce rôle est mentionné, même si le texte en cite d’autres.",
+    "pingNone": "Personne",
+    "pingEveryone": "Mentionner tout le monde (@everyone)",
+    "pingEveryoneHelp": "Seulement si coché. Tous ceux qui voient le salon reçoivent une notification.",
+    "buttons": "Boutons de lien",
+    "buttonsHelp": "Facultatif, jusqu’à {max} boutons sous le message qui ouvrent un lien. Chacun a besoin d’un libellé et d’un lien qui commence par https://.",
+    "buttonLabel": "Bouton {n} : libellé",
+    "buttonUrl": "Bouton {n} : lien",
+    "mods": "Nouveaux modérateurs",
+    "modsHelp": "Choisis les nouveaux modérateurs. Leurs mentions remplacent {token} dans le texte, et seuls eux (et la mention ci-dessus) reçoivent une notification.",
+    "mod": "Modérateur {n}"
   },
   "colour": {
     "primary": "Bleu Mewvo",
@@ -36,7 +52,15 @@
     "filled": "Le modèle « {name} » est rempli ci-dessous, dans « Envoyer un message » et dans « Programmer un message ». Remplace les parties entre [crochets], vérifie le texte, puis publie-le ou programme-le. Rien n’est publié tant que tu n’as pas appuyé sur le bouton.",
     "label": "Modèle",
     "hint": "Des textes tout prêts pour les annonces courantes. Quand un texte nomme le serveur, le nom de ce serveur y est mis. Les parties entre [crochets] sont à remplir par toi.",
-    "use": "Utiliser ce modèle"
+    "use": "Utiliser ce modèle",
+    "language": "Langue du modèle",
+    "languageHint": "Les modèles de Mewvo existent dans les 8 langues ; les autres sont en anglais. Le texte que tu modifies est publié exactement comme tu l’as tapé.",
+    "filledLang": "Langue : {language}.",
+    "noTranslation": "Ce modèle n’a pas de texte en {language}, le texte anglais a donc été rempli.",
+    "homeOnly": "Ce modèle est réservé aux serveurs de Mewvo. Choisis-en un dans la liste.",
+    "changelogTitle": "Changements à inclure",
+    "changelogHint": "Les dernières entrées des nouveautés du site, dans la langue du modèle. Coche celles à inclure et appuie sur le bouton ; le formulaire ci-dessous est rempli de nouveau.",
+    "changelogUse": "Remplir avec ces changements"
   },
   "send": {
     "title": "Envoyer un message",
@@ -123,7 +147,9 @@
   "preview": {
     "title": "Aperçu",
     "image": "Image : {url}",
-    "note": "Affiché tel que tu l’as tapé. Discord transforme **gras**, les liens et les mentions en mise en forme à la publication. Les mentions ne notifient jamais."
+    "note": "Affiché tel que tu l’as tapé. Discord transforme **gras**, les liens et les mentions en mise en forme à la publication. Les mentions tapées ne notifient jamais ; seule la mention choisie le fait.",
+    "ping": "Mentions : {who}",
+    "buttons": "Boutons : {list}"
   },
   "poll": {
     "title": "Lancer un sondage",
@@ -202,7 +228,16 @@
     "pollLink": "Lien du message du sondage : colle le lien obtenu avec Copier le lien du message sur Discord, comme https://discord.com/channels/...",
     "pollOtherServer": "Lien du message du sondage : ce message est sur un autre serveur.",
     "countdownShort": "Durée : le compte à rebours doit durer au moins 1 seconde.",
-    "countdownLong": "Durée : un compte à rebours ne peut pas durer plus de 24 heures."
+    "countdownLong": "Durée : un compte à rebours ne peut pas durer plus de 24 heures.",
+    "homeOnly": "Ce modèle est réservé aux serveurs de Mewvo. Rien n’a été publié.",
+    "usersNotAllowed": "Des membres ne peuvent être mentionnés qu’avec le modèle Nouveaux modérateurs, depuis Envoyer un message.",
+    "modsMissing": "Choisis au moins un modérateur pour {token}, ou retire {token} du texte. Les modérateurs se choisissent seulement dans Envoyer un message.",
+    "modId": "Modérateur {n} : ce n’est pas un membre. Choisis-en un avec Trouver un membre, ou colle un ID ou une @mention.",
+    "buttonHalf": "Le bouton {n} a besoin d’un libellé et d’un lien.",
+    "buttonUrl": "Bouton {n} : le lien doit être un lien https:// complet.",
+    "buttonLabel": "Bouton {n} : le libellé fait au plus {max} caractères.",
+    "textTooLong": "Texte du message : avec les mentions devant, il fait {length} caractères, {max} au plus.",
+    "format": "Format : choisis Embed ou Texte simple."
   },
   "action": {
     "posted": "Publié dans #{channel}.",
@@ -225,5 +260,20 @@
     "pollPosted": "Sondage publié dans #{channel}. Il se ferme le {time}.",
     "pollEnded": "Sondage terminé dans #{channel}. Les résultats finaux y sont maintenant affichés.",
     "countdownStarted": "Compte à rebours lancé dans #{channel} : {duration}."
+  },
+  "ping": {
+    "nobody": "Personne (aucune mention)"
+  },
+  "confirm": {
+    "heading": "Confirmer : publier dans #{channel}",
+    "channel": "Salon",
+    "ping": "Reçoit une notification",
+    "format": "Format",
+    "buttons": "Boutons",
+    "noButtons": "Aucun",
+    "message": "Message",
+    "submit": "Publier maintenant",
+    "everyoneNoPerm": "Mewvo n’a pas la permission Mentionner tout le monde dans #{channel}, donc @everyone ne notifiera personne.",
+    "roleNotMentionable": "@{role} n’est pas mentionnable et Mewvo n’a pas Mentionner tout le monde dans #{channel}, donc le rôle ne recevra pas de notification. Le message est quand même publié."
   }
 }

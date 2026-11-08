@@ -13,14 +13,33 @@
 // (?template=<id>, no script: CSP). The chosen template fills the Send and Schedule forms
 // (box title, box text, colour, {server} = the server name); nothing is posted until the
 // admin presses Post or Schedule, so posting goes through the same checks as typed text.
+// The template's language can be chosen (?lang=) when it has translations (Mewvo's own
+// templates); edited text is posted exactly as typed, never translated.
+//
+// Announcement choices (Send, Schedule, Edit): embed or plain text, colour, image, up to
+// LINK_BUTTON_MAX link buttons (https only), and an explicit ping: one role and/or a ticked
+// "ping everyone". allowedMentions lets through exactly that (botMessageService.announcementMentions);
+// mentions typed in the text never ping. "Post message" shows a preview first (the confirm
+// page, routes.js `confirm`): nothing is posted until the admin presses Post now.
+//
+// Home-only templates (config/mewvoTemplates.js) are listed and accepted only in Mewvo's own
+// servers (isHomeScope → isMewvoServer); elsewhere ?template=<id> and a posted `template` id
+// are refused. "New moderators" adds member pickers (Send only): {mods} becomes their
+// mentions and only they are pinged. "Changelog" fills {changes} from the website changelog
+// (the admin ticks which entries); "Mewvo now in N servers" fills {count} from the guild cache.
 
-import { html, path, raw, timeTag } from '../html.js';
-import { fillTemplate, messageTemplate, templatesByGroup } from '../../../config/messageTemplates.js';
+import { PermissionFlagsBits } from 'discord.js';
+import { html, path, queryString, raw, timeTag } from '../html.js';
+import { fillTemplate, isHomeTemplate, messageTemplate, templateLanguages, templatesByGroup } from '../../../config/messageTemplates.js';
+import { CHANGELOG, changelogKey } from '../../../config/site/changelog.js';
+import { LANGUAGES, LANG_CODES, translator } from '../../site/i18n.js';
+import { memberField, parseUserRef, pickedFromQuery } from '../memberSearch.js';
 import {
     InputError, PERMS, boolField, buttonForm, channelField, channelName, channelPicker, channelWarnings, checkbox, missingChannelPerms, checkboxInput, choiceField, intField, numberInput,
-    isSnowflake, pill, postForm, selectInput, switchInput, text, textArea, textInput,
+    isSnowflake, pill, postForm, roleField, rolePicker, selectInput, switchInput, text, textArea, textInput,
 } from '../forms.js';
-import { section, table } from './common.js';
+import { registryValue, section, table } from './common.js';
+import { isHomeScope } from './serverScope.js';
 import { currentText, textFor } from '../language.js';
 import { planLimit } from '../../billing/premiumEffects.js';
 import { DEFAULT_TIMEZONE, canonicalTimeZone } from '../../../utils/timezone.js';
@@ -29,8 +48,8 @@ import {
 } from '../../scheduledMessageService.js';
 import {
     COUNTDOWN_MAX_SECONDS, COUNTDOWN_TITLE_MAX, EMBED_COLOURS, EMBED_DESCRIPTION_MAX, EMBED_FOOTER_MAX, EMBED_TITLE_MAX, EMBED_TOTAL_MAX,
-    IMAGE_URL_MAX, MESSAGE_CONTENT_MAX, NATIVE_POLL_ANSWER_MAX, NATIVE_POLL_DEFAULT_HOURS, NATIVE_POLL_MAX_HOURS, NATIVE_POLL_MIN_HOURS, NATIVE_POLL_QUESTION_MAX,
-    POLL_MAX_OPTIONS, POLL_OPTION_MAX, POLL_QUESTION_MAX, buildMessageEmbed, colourFromKey, isEmbedImageUrl, noMentions, parseHexColour, parseMessageLink,
+    IMAGE_URL_MAX, LINK_BUTTON_LABEL_MAX, LINK_BUTTON_MAX, LINK_BUTTON_URL_MAX, MESSAGE_CONTENT_MAX, NATIVE_POLL_ANSWER_MAX, NATIVE_POLL_DEFAULT_HOURS, NATIVE_POLL_MAX_HOURS, NATIVE_POLL_MIN_HOURS, NATIVE_POLL_QUESTION_MAX,
+    PING_USERS_MAX, POLL_MAX_OPTIONS, POLL_OPTION_MAX, POLL_QUESTION_MAX, buildMessageEmbed, colourFromKey, isEmbedImageUrl, isLinkButtonUrl, linkButtonRows, noMentions, parseHexColour, parseMessageLink, pingLine,
 } from '../../botMessageService.js';
 
 // Words: src/content/dashboard/<lang>/messages.json. Helpers without a ctx (form parsing) use the
@@ -106,30 +125,100 @@ function pollOptions(form, max = POLL_OPTION_MAX) {
     return options;
 }
 
-/** The "Send a message" fields, prefilled from a stored payload (or empty). */
-function messageFields(tr, g, { channelId = null, payload = null } = {}) {
+const FORMATS = ['embed', 'text'];
+const MODS_TOKEN = '{mods}';
+
+/**
+ * The member pickers of the "New moderators" template (Send only): mod1..modN, prefilled
+ * from ?mod1=… (the "Find a member" page sends the picked ID back that way).
+ */
+function modFields(tr, g, query = {}, back = path('/messages')) {
+    return html`<fieldset class="wide"><legend>${tr.tx('messages.fields.mods')}</legend><p class="hint">${tr.tx('messages.fields.modsHelp', { token: MODS_TOKEN })}</p><div class="grid">${Array.from({ length: PING_USERS_MAX }, (_, i) => {
+        const name = `mod${i + 1}`;
+        return memberField({ name, label: tr.t('messages.fields.mod', { n: i + 1 }), value: pickedFromQuery(query, name), pick: name, back, anchor: 'send-a-message', guild: g });
+    })}</div></fieldset>`;
+}
+
+/** The "Send a message" fields, prefilled from a stored payload (or empty). `mods` adds the member pickers (New moderators). */
+function messageFields(tr, g, { channelId = null, payload = null, mods = null } = {}) {
     const e = payload?.embed || {};
     const hex = Number.isInteger(e.colour) ? `#${e.colour.toString(16).padStart(6, '0').toUpperCase()}` : '';
     const known = hex ? EMBED_COLOURS.find(([, , h]) => h.toUpperCase() === hex) : EMBED_COLOURS[0];
     // A plain message needs no Embed Links; with a box filled in, the post itself checks it.
     const colourName = (key, label) => (tr.has(`messages.colour.${key}`) ? tr.t(`messages.colour.${key}`) : label);
+    const buttons = Array.isArray(payload?.buttons) ? payload.buttons : [];
     return html`${channelPicker(g, 'channelId', channelId, { label: tr.t('messages.fields.channel'), perms: PERMS.text, optional: false })}
+${selectInput('format', 'embed', [['embed', tr.t('messages.fields.formatEmbed')], ['text', tr.t('messages.fields.formatText')]], { label: tr.t('messages.fields.format'), help: tr.t('messages.fields.formatHelp') })}
+${rolePicker(g, 'pingRole', payload?.ping?.roleIds?.[0] || '', { label: tr.t('messages.fields.pingRole'), help: tr.t('messages.fields.pingRoleHelp'), noneLabel: tr.t('messages.fields.pingNone') })}
+${checkboxInput('pingEveryone', payload?.ping?.everyone === true, { label: tr.t('messages.fields.pingEveryone'), help: tr.t('messages.fields.pingEveryoneHelp') })}
+${mods ? modFields(tr, g, mods.query, mods.back) : ''}
 ${textArea('content', payload?.content || '', { label: tr.t('messages.fields.content'), max: MESSAGE_CONTENT_MAX, rows: 4, help: tr.t('messages.fields.contentHelp') })}
 ${textInput('title', e.title || '', { label: tr.t('messages.fields.title'), max: EMBED_TITLE_MAX, help: tr.t('messages.fields.titleHelp') })}
 ${textArea('description', e.description || '', { label: tr.t('messages.fields.description'), max: EMBED_DESCRIPTION_MAX, rows: 6, help: tr.t('messages.fields.descriptionHelp', { max: tr.fmtNumber(EMBED_TOTAL_MAX) }) })}
 ${selectInput('colour', known ? known[0] : 'primary', EMBED_COLOURS.map(([key, label, h]) => [key, `${colourName(key, label)} (${h})`]), { label: tr.t('messages.fields.colour') })}
 ${textInput('hex', known ? '' : hex, { label: tr.t('messages.fields.hex'), max: 7, placeholder: '#9B59B6', help: tr.t('messages.fields.hexHelp') })}
 ${textInput('imageUrl', e.imageUrl || '', { label: tr.t('messages.fields.imageUrl'), max: IMAGE_URL_MAX, type: 'url', placeholder: 'https://…', help: tr.t('messages.fields.imageUrlHelp') })}
-${textInput('footer', e.footer || '', { label: tr.t('messages.fields.footer'), max: EMBED_FOOTER_MAX, help: tr.t('messages.fields.footerHelp') })}`;
+${textInput('footer', e.footer || '', { label: tr.t('messages.fields.footer'), max: EMBED_FOOTER_MAX, help: tr.t('messages.fields.footerHelp') })}
+<fieldset class="wide"><legend>${tr.tx('messages.fields.buttons')}</legend><p class="hint">${tr.tx('messages.fields.buttonsHelp', { max: tr.fmtNumber(LINK_BUTTON_MAX) })}</p><div class="grid">${Array.from({ length: LINK_BUTTON_MAX }, (_, i) => html`${textInput(`button${i + 1}Label`, buttons[i]?.label || '', { label: tr.t('messages.fields.buttonLabel', { n: i + 1 }), max: LINK_BUTTON_LABEL_MAX })}
+${textInput(`button${i + 1}Url`, buttons[i]?.url || '', { label: tr.t('messages.fields.buttonUrl', { n: i + 1 }), max: LINK_BUTTON_URL_MAX, type: 'url', placeholder: 'https://…' })}`)}</div></fieldset>`;
+}
+
+/** Up to LINK_BUTTON_MAX link buttons: label and https link both filled, or both empty. */
+function buttonsFromForm(form) {
+    const tr = mt();
+    const out = [];
+    for (let i = 1; i <= LINK_BUTTON_MAX; i += 1) {
+        const rawLabel = typeof form?.[`button${i}Label`] === 'string' ? form[`button${i}Label`].trim() : '';
+        if (rawLabel.length > LINK_BUTTON_LABEL_MAX) throw new InputError(tr.t('messages.error.buttonLabel', { n: i, max: tr.fmtNumber(LINK_BUTTON_LABEL_MAX) }), 400, `button${i}Label`);
+        const url = typeof form?.[`button${i}Url`] === 'string' ? form[`button${i}Url`].trim() : '';
+        if (!rawLabel && !url) continue;
+        if (!rawLabel || !url) throw new InputError(tr.t('messages.error.buttonHalf', { n: i }), 400, rawLabel ? `button${i}Url` : `button${i}Label`);
+        if (!isLinkButtonUrl(url)) throw new InputError(tr.t('messages.error.buttonUrl', { n: i }), 400, `button${i}Url`);
+        out.push({ label: rawLabel, url });
+    }
+    return out;
+}
+
+/** The picked moderators (mod1..modN) of the New moderators template: user IDs, no repeats. */
+function modsFromForm(form) {
+    const ids = [];
+    for (let i = 1; i <= PING_USERS_MAX; i += 1) {
+        const raw = typeof form?.[`mod${i}`] === 'string' ? form[`mod${i}`].trim() : '';
+        if (!raw) continue;
+        const id = parseUserRef(raw);
+        if (!id) throw new InputError(mt().t('messages.error.modId', { n: i }), 400, `mod${i}`);
+        if (!ids.includes(id)) ids.push(id);
+    }
+    return ids;
 }
 
 /**
- * The posted message: { channel, content, embed (with colour) | null, audit }. Refuses an
- * empty message, a footer-only embed, a non-https image and a channel the bot cannot post in.
+ * The template a posted form came from (hidden `template`), checked for this server: a
+ * home-only id outside Mewvo's own servers is refused (403); an unknown id counts as none.
  */
-function messageFromForm(g, form) {
+function postedTemplate(form, home) {
+    const id = typeof form?.template === 'string' ? form.template.trim().slice(0, 60) : '';
+    if (!id) return null;
+    if (isHomeTemplate(id) && !home) throw new InputError(mt().t('messages.error.homeOnly'), 403, 'template');
+    return messageTemplate(id, { home });
+}
+
+/**
+ * The posted message: { channel, content, embed (with colour) | null, ping, buttons, format,
+ * audit }. Refuses an empty message, a footer-only embed, a non-https image or button link, a
+ * home-only template outside Mewvo's servers, members to ping without the New moderators
+ * template (`allowMembers`: Send only), and a channel the bot cannot post in.
+ *
+ * Plain text (format=text) puts the box parts into the message text: **title**, text, image
+ * link, footer as small text. The ping is one picked role and/or a ticked "ping everyone"
+ * (plus the picked moderators): exactly what allowedMentions lets through.
+ */
+function messageFromForm(g, form, { home = true, allowMembers = false } = {}) {
     const tr = mt();
-    const content = longText(form, 'content', MESSAGE_CONTENT_MAX, tr.t('messages.fields.content'));
+    const template = postedTemplate(form, home);
+    const format = text(form, 'format', 10) || 'embed';
+    if (!FORMATS.includes(format)) throw new InputError(tr.t('messages.error.format'), 400, 'format');
+    let content = longText(form, 'content', MESSAGE_CONTENT_MAX, tr.t('messages.fields.content'));
     const embed = {
         title: text(form, 'title', EMBED_TITLE_MAX),
         description: longText(form, 'description', EMBED_DESCRIPTION_MAX, tr.t('messages.fields.embedDescription')),
@@ -139,47 +228,185 @@ function messageFromForm(g, form) {
     if (embed.imageUrl && !isEmbedImageUrl(embed.imageUrl)) {
         throw new InputError(tr.t('messages.error.imageUrl'), 400, 'imageUrl');
     }
-    const hasEmbed = Boolean(embed.title || embed.description || embed.imageUrl || embed.footer);
+    // Members are pinged only with the New moderators template (and only on Send).
+    const userIds = modsFromForm(form);
+    if (userIds.length && !(allowMembers && template?.members)) throw new InputError(tr.t('messages.error.usersNotAllowed'), 400, 'mod1');
+    const fillMods = (value) => (value.includes(MODS_TOKEN) ? value.replaceAll(MODS_TOKEN, userIds.map((id) => `<@${id}>`).join(', ')) : value);
+    if ([content, embed.title, embed.description, embed.footer].some((v) => v.includes(MODS_TOKEN)) && !userIds.length) {
+        throw new InputError(tr.t('messages.error.modsMissing', { token: MODS_TOKEN }), 400, allowMembers ? 'mod1' : 'description');
+    }
+    content = fillMods(content);
+    embed.title = fillMods(embed.title);
+    embed.description = fillMods(embed.description);
+    embed.footer = fillMods(embed.footer);
+
+    let hasEmbed = Boolean(embed.title || embed.description || embed.imageUrl || embed.footer);
+    if (hasEmbed && format === 'embed' && !embed.title && !embed.description && !embed.imageUrl) {
+        throw new InputError(tr.t('messages.error.footerOnly'), 400, 'title');
+    }
+    if (format === 'text' && hasEmbed) {
+        content = [content, embed.title ? `**${embed.title}**` : '', embed.description, embed.imageUrl, embed.footer ? `-# ${embed.footer}` : ''].filter(Boolean).join('\n\n');
+        hasEmbed = false;
+    }
     // Embed Links only when a box is sent: plain text needs View Channel + Send Messages.
     const channel = postChannel(g, form, hasEmbed ? PERMS.post : PERMS.text);
     if (!content && !hasEmbed) throw new InputError(tr.t('messages.error.empty'), 400, 'content');
-    if (hasEmbed && !embed.title && !embed.description && !embed.imageUrl) {
-        throw new InputError(tr.t('messages.error.footerOnly'), 400, 'title');
-    }
-    if (embed.title.length + embed.description.length + embed.footer.length > EMBED_TOTAL_MAX) {
+    if (hasEmbed && embed.title.length + embed.description.length + embed.footer.length > EMBED_TOTAL_MAX) {
         throw new InputError(tr.t('messages.error.boxTooLong', { max: tr.fmtNumber(EMBED_TOTAL_MAX) }), 400, 'description');
     }
+    const roleId = roleField(g, form, 'pingRole', { optional: true, label: tr.t('messages.fields.pingRole') });
+    const ping = { everyone: checkbox(form, 'pingEveryone'), roleIds: roleId ? [roleId] : [], userIds };
+    const line = pingLine(ping);
+    const total = (line ? line.length + 1 : 0) + content.length;
+    if (total > MESSAGE_CONTENT_MAX) {
+        throw new InputError(tr.t('messages.error.textTooLong', { max: tr.fmtNumber(MESSAGE_CONTENT_MAX), length: tr.fmtNumber(total) }), 400, 'content');
+    }
+    const buttons = buttonsFromForm(form);
     const colour = colourField(form);
+    const cleanPingOut = line ? ping : null;
     return {
-        channel, content, embed: hasEmbed ? { ...embed, colour } : null,
-        audit: { channelId: channel.id, content: content || null, embed: hasEmbed ? { ...embed, colour: `#${colour.toString(16).padStart(6, '0')}` } : null },
+        channel, content, embed: hasEmbed ? { ...embed, colour } : null, ping: cleanPingOut, buttons, format, template,
+        audit: {
+            channelId: channel.id, content: content || null, embed: hasEmbed ? { ...embed, colour: `#${colour.toString(16).padStart(6, '0')}` } : null,
+            ...(cleanPingOut ? { ping: cleanPingOut } : {}), ...(buttons.length ? { buttons } : {}), ...(template ? { template: template.id } : {}),
+        },
     };
+}
+
+/** The payload stored for a scheduled message (botMessageService/scheduledMessageService read it). */
+const payloadOf = ({ content, embed, ping, buttons }) => ({ content, embed, ...(ping ? { ping } : {}), ...(buttons?.length ? { buttons } : {}) });
+
+/** Who gets a notification, in words: "@everyone, @Role, @Ann" or "Nobody". */
+function pingWords(tr, g, ping) {
+    if (!ping) return tr.t('messages.ping.nobody');
+    const parts = [
+        ping.everyone ? '@everyone' : '',
+        ...(ping.roleIds || []).map((id) => `@${g?.roles?.cache?.get(id)?.name || id}`),
+        ...(ping.userIds || []).map((id) => {
+            const m = g?.members?.cache?.get(id);
+            return `@${m?.displayName || m?.user?.username || id}`;
+        }),
+    ].filter(Boolean);
+    return parts.length ? parts.join(', ') : tr.t('messages.ping.nobody');
+}
+
+/**
+ * Notes for the preview when a picked ping will not notify anyone: Discord only pings a role
+ * that is mentionable, and @everyone, when the bot has Mention Everyone in the channel.
+ */
+function pingNotes(tr, g, channel, ping) {
+    if (!ping) return [];
+    const me = g?.members?.me;
+    const perms = channel?.permissionsFor?.(me) ?? (me?.permissionsIn ? me.permissionsIn(channel) : null);
+    const canMentionAll = Boolean(perms?.has?.(PermissionFlagsBits.MentionEveryone));
+    const notes = [];
+    if (ping.everyone && !canMentionAll) notes.push(tr.t('messages.confirm.everyoneNoPerm', { channel: channel.name }));
+    for (const id of ping.roleIds || []) {
+        const role = g?.roles?.cache?.get(id);
+        if (role && !role.mentionable && !canMentionAll) notes.push(tr.t('messages.confirm.roleNotMentionable', { role: role.name, channel: channel.name }));
+    }
+    return notes;
 }
 
 // ── Templates ─────────────────────────────────────────────────────────────
 
-/**
- * The template asked for in ?template=, filled for this server: { template, payload } or
- * null. An unknown id gives { unknown: true } so the page can say so (nothing is filled).
- */
-export function chosenTemplate(query, serverName) {
-    const id = typeof query?.template === 'string' ? query.template.trim().slice(0, 60) : '';
-    if (!id) return null;
-    const template = messageTemplate(id);
-    if (!template) return { unknown: true };
-    const filled = fillTemplate(template, { server: serverName });
-    return { template, payload: { content: '', embed: { title: filled.title, description: filled.text, colour: colourFromKey(filled.colour) } } };
+/** How many of the newest website changelog entries the Changelog template offers. */
+export const CHANGELOG_CHOICES = 20;
+
+/** The newest changelog entries: [{ key: 'date:item', date, item }], newest first, at most `max`. */
+export function changelogChoices(max = CHANGELOG_CHOICES, entries = CHANGELOG) {
+    const out = [];
+    for (const entry of entries) {
+        for (const item of entry.items) {
+            if (out.length >= max) return out;
+            out.push({ key: `${entry.date}:${item}`, date: entry.date, item });
+        }
+    }
+    return out;
 }
 
-/** The grouped template list (a GET form, no script) and, when one is chosen, what to do next. */
-function templatePicker(tr, chosen) {
+/** The entries ticked in ?entry= (one or several; unknown ones ignored). None ticked → the newest day's entries. */
+export function pickedChangelog(query, choices = changelogChoices()) {
+    const raw = query?.entry;
+    const wanted = new Set((Array.isArray(raw) ? raw : [raw]).filter((v) => typeof v === 'string'));
+    const picked = choices.filter((c) => wanted.has(c.key));
+    return picked.length ? picked : choices.filter((c) => c.date === choices[0]?.date);
+}
+
+/** The {changes} text in `lang`: per day the date in bold, then one "- " line per entry (the website's text). */
+export function changelogText(picked, lang = 'en') {
+    const t = translator(lang);
+    const days = [];
+    for (const c of picked) {
+        let day = days.find((d) => d.date === c.date);
+        if (!day) days.push(day = { date: c.date, items: [] });
+        day.items.push(t.t(changelogKey(c.date, c.item)));
+    }
+    return days.map((d) => `**${t.fmtDate(new Date(`${d.date}T00:00:00Z`))}**\n${d.items.map((i) => `- ${i}`).join('\n')}`).join('\n\n');
+}
+
+/** A language code from ?lang= (one of the 8), else `fallback`. */
+function queryLang(query, fallback = 'en') {
+    const value = typeof query?.lang === 'string' ? query.lang.trim() : '';
+    return LANG_CODES.includes(value) ? value : (LANG_CODES.includes(fallback) ? fallback : 'en');
+}
+
+/**
+ * The template asked for in ?template=, filled for this server: { template, payload, lang,
+ * wanted, changelog } or null. An unknown id gives { unknown: true }; a home-only id outside
+ * Mewvo's own servers { homeOnly: true } (nothing is filled either way).
+ * options: home (isHomeScope), lang (default language: the server's bot language), serverCount.
+ */
+export function chosenTemplate(query, serverName, { home = false, lang = 'en', serverCount = null } = {}) {
+    const id = typeof query?.template === 'string' ? query.template.trim().slice(0, 60) : '';
+    if (!id) return null;
+    if (isHomeTemplate(id) && !home) return { homeOnly: true };
+    const template = messageTemplate(id, { home });
+    if (!template) return { unknown: true };
+    const wanted = queryLang(query, lang);
+    const used = templateLanguages(template).includes(wanted) ? wanted : 'en';
+    const choices = template.changelog ? changelogChoices() : null;
+    const picked = choices ? pickedChangelog(query, choices) : null;
+    const count = template.serverCount && Number.isInteger(serverCount) ? translator(used).fmtNumber(serverCount) : null;
+    const filled = fillTemplate(template, { server: serverName, lang: used, count, changes: picked ? changelogText(picked, used) : null });
+    return {
+        template, lang: filled.lang, wanted, changelog: choices ? { choices, picked } : null,
+        payload: { content: '', embed: { title: filled.title, description: filled.text.slice(0, EMBED_DESCRIPTION_MAX), colour: colourFromKey(filled.colour) } },
+    };
+}
+
+const languageName = (code) => LANGUAGES.find((l) => l.code === code)?.name || code;
+
+/** The Changelog template's entry list: a GET form of tick boxes (no script), back to the same template. */
+function changelogPicker(tr, chosen) {
+    const t = translator(chosen.lang);
+    const picked = new Set(chosen.changelog.picked.map((c) => c.key));
+    const shorten = (s) => (s.length > 140 ? `${s.slice(0, 139)}…` : s);
+    return html`<form method="get" action="${path('/messages')}#s-send-a-message" class="settings-form"><input type="hidden" name="template" value="${chosen.template.id}"><input type="hidden" name="lang" value="${chosen.wanted}">
+<fieldset class="wide"><legend>${tr.tx('messages.template.changelogTitle')}</legend><p class="hint">${tr.tx('messages.template.changelogHint')}</p>
+${chosen.changelog.choices.map((c) => html`<label class="check"><input type="checkbox" name="entry" value="${c.key}"${picked.has(c.key) ? raw(' checked') : ''}> <b>${c.date}</b> ${shorten(t.t(changelogKey(c.date, c.item)))}</label>`)}</fieldset>
+<div class="form-actions"><button type="submit" class="secondary">${tr.tx('messages.template.changelogUse')}</button></div></form>`;
+}
+
+/** The grouped template list and its language (a GET form, no script) and, when one is chosen, what to do next. */
+function templatePicker(tr, chosen, { home = false, lang = 'en' } = {}) {
     const current = chosen?.template?.id || '';
-    const note = chosen?.unknown
-        ? html`<p class="warn">${tr.tx('messages.template.unknown')}</p>`
-        : chosen ? html`<p class="ok">${tr.tx('messages.template.filled', { name: chosen.template.name })}</p>` : '';
+    const wanted = chosen?.wanted || lang;
+    const langNote = chosen?.template
+        ? (chosen.lang === chosen.wanted
+            ? tr.tx('messages.template.filledLang', { language: languageName(chosen.lang) })
+            : tr.tx('messages.template.noTranslation', { language: languageName(chosen.wanted) }))
+        : '';
+    const note = chosen?.homeOnly
+        ? html`<p class="warn">${tr.tx('messages.template.homeOnly')}</p>`
+        : chosen?.unknown
+            ? html`<p class="warn">${tr.tx('messages.template.unknown')}</p>`
+            : chosen ? html`<p class="ok">${tr.tx('messages.template.filled', { name: chosen.template.name })} ${langNote}</p>` : '';
     return html`${note}<form method="get" action="${path('/messages')}#s-send-a-message" class="settings-form"><div class="grid">
-<label>${tr.tx('messages.template.label')}<select name="template">${templatesByGroup().map((g) => html`<optgroup label="${g.label}">${g.templates.map((t) => html`<option value="${t.id}"${t.id === current ? raw(' selected') : ''}>${t.name}</option>`)}</optgroup>`)}</select><span class="hint">${tr.tx('messages.template.hint')}</span></label></div>
-<div class="form-actions"><button type="submit" class="secondary">${tr.tx('messages.template.use')}</button></div></form>`;
+<label>${tr.tx('messages.template.label')}<select name="template">${templatesByGroup({ home }).map((g) => html`<optgroup label="${g.label}">${g.templates.map((t) => html`<option value="${t.id}"${t.id === current ? raw(' selected') : ''}>${t.name}</option>`)}</optgroup>`)}</select><span class="hint">${tr.tx('messages.template.hint')}</span></label>
+${selectInput('lang', wanted, LANGUAGES.map((l) => [l.code, l.name]), { label: tr.t('messages.template.language'), help: tr.t('messages.template.languageHint') })}</div>
+<div class="form-actions"><button type="submit" class="secondary">${tr.tx('messages.template.use')}</button></div></form>
+${chosen?.changelog ? changelogPicker(tr, chosen) : ''}`;
 }
 
 // ── Scheduling ────────────────────────────────────────────────────────────
@@ -276,8 +503,11 @@ function lastResult(tr, m) {
 export function messagePreview(payload) {
     const e = payload?.embed;
     const tr = mt();
-    return html`<div class="msg-preview"><p class="muted">${tr.t('messages.preview.title')}</p>${payload?.content ? html`<p class="msg-text">${payload.content}</p>` : ''}${e && (e.title || e.description || e.imageUrl || e.footer)
+    const line = payload?.ping ? pingLine(payload.ping) : '';
+    const buttons = Array.isArray(payload?.buttons) ? payload.buttons : [];
+    return html`<div class="msg-preview"><p class="muted">${tr.t('messages.preview.title')}</p>${line ? html`<p class="muted">${tr.tx('messages.preview.ping', { who: line })}</p>` : ''}${payload?.content ? html`<p class="msg-text">${payload.content}</p>` : ''}${e && (e.title || e.description || e.imageUrl || e.footer)
         ? html`<div class="msg-embed">${e.title ? html`<p><b>${e.title}</b></p>` : ''}${e.description ? html`<p class="msg-text">${e.description}</p>` : ''}${e.imageUrl ? html`<p class="muted">${tr.tx('messages.preview.image', { url: e.imageUrl })}</p>` : ''}${e.footer ? html`<p class="muted">${e.footer}</p>` : ''}</div>` : ''}
+${buttons.length ? html`<p class="muted">${tr.tx('messages.preview.buttons', { list: buttons.map((b) => `[${b.label}] ${b.url}`).join(', ') })}</p>` : ''}
 <p class="muted">${tr.tx('messages.preview.note')}</p></div>`;
 }
 
@@ -300,8 +530,10 @@ async function sendScheduledTest(client, userId, payload) {
     if (!text && !embed) throw new InputError(mt().t('messages.error.testEmpty'));
     const user = await client.users.fetch(userId).catch(() => null);
     if (!user) throw new InputError(mt().t('messages.error.testNoUser'));
+    // The link buttons come along; the ping does not (a DM test never pings anyone).
+    const components = linkButtonRows(payload?.buttons || []);
     try {
-        await user.send({ ...(text ? { content: text } : {}), ...(embed ? { embeds: [embed] } : {}), allowedMentions: noMentions() });
+        await user.send({ ...(text ? { content: text } : {}), ...(embed ? { embeds: [embed] } : {}), ...(components.length ? { components } : {}), allowedMentions: noMentions() });
     } catch {
         throw new InputError(mt().t('messages.error.testDmClosed'));
     }
@@ -364,7 +596,7 @@ function clock(tr, seconds) {
 export default {
     key: 'messages',
     label: 'Messages',
-    help: 'Post a message as Mewvo: an announcement right now or later, a message that repeats, a poll, or a countdown. Text you type here never pings anyone. Everything here needs the Administrator permission in this server.',
+    help: 'Post a message as Mewvo: an announcement right now or later, a message that repeats, a poll, or a countdown. Text you type here never pings anyone; only a role, or everyone, that you pick gets a notification. Everything here needs the Administrator permission in this server.',
 
     async load(ctx) {
         const [config, scheduled] = await Promise.all([
@@ -375,7 +607,15 @@ export default {
         const openPolls = typeof ctx.services.openPollsFor === 'function'
             ? await ctx.services.openPollsFor(ctx.guild, ctx.guildId).catch(() => null)
             : { polls: [], partial: false };
-        return { scheduled, timezone: canonicalTimeZone(config?.birthdayTimezone) || DEFAULT_TIMEZONE, openPolls };
+        // The template language defaults to the server's bot language (Bot language page). Only a
+        // default for the language picker: if it cannot be read, English is preselected (nothing is saved).
+        let botLanguage = null;
+        try {
+            botLanguage = await registryValue(ctx, 'botLanguage');
+        } catch {
+            botLanguage = null;
+        }
+        return { scheduled, timezone: canonicalTimeZone(config?.birthdayTimezone) || DEFAULT_TIMEZONE, openPolls, botLanguage: LANG_CODES.includes(botLanguage) ? botLanguage : 'en' };
     },
 
     render(ctx, data = {}) {
@@ -384,11 +624,21 @@ export default {
         const scheduled = data.scheduled || [];
         const canPost = ctx.canEdit && ctx.canAct;
         const adminNote = ctx.canAct ? '' : ` ${tr.t('messages.adminNote')}`;
-        const chosen = chosenTemplate(ctx.query, g?.name);
+        const home = isHomeScope(ctx);
+        const lang = data.botLanguage || 'en';
+        const serverCount = ctx.client?.guilds?.cache?.size;
+        const chosen = chosenTemplate(ctx.query, g?.name, { home, lang, serverCount: Number.isInteger(serverCount) ? serverCount : null });
         const prefill = chosen?.payload ? { payload: chosen.payload } : {};
-        const send = postForm(ctx, 'messages', 'send', html`<div class="grid">${messageFields(tr, g, prefill)}</div>`, { submit: tr.t('messages.send.submit'), canEdit: canPost });
+        // The template id goes along (hidden) so the server can refuse a home-only one elsewhere
+        // and allow member pings only for New moderators.
+        const hidden = chosen?.template ? { template: chosen.template.id } : {};
+        const modsBack = chosen?.template?.members
+            ? path(`/messages${queryString({ template: chosen.template.id, lang: chosen.wanted, ...Object.fromEntries(Array.from({ length: PING_USERS_MAX }, (_, i) => [`mod${i + 1}`, pickedFromQuery(ctx.query, `mod${i + 1}`)])) })}`)
+            : null;
+        const send = postForm(ctx, 'messages', 'send', html`<div class="grid">${messageFields(tr, g, { ...prefill, mods: modsBack ? { query: ctx.query, back: modsBack } : null })}</div>`,
+            { submit: tr.t('messages.send.submit'), canEdit: canPost, hidden });
         const schedule = postForm(ctx, 'messages', 'schedule', html`<div class="grid">${messageFields(tr, g, prefill)}</div>${scheduleFields(tr, null, data.timezone || DEFAULT_TIMEZONE)}`,
-            { submit: tr.t('messages.schedule.submit'), canEdit: canPost });
+            { submit: tr.t('messages.schedule.submit'), canEdit: canPost, hidden });
         const poll = postForm(ctx, 'messages', 'poll', html`<div class="grid">
 ${channelPicker(g, 'channelId', null, { label: tr.t('messages.fields.channel'), perms: PERMS.nativePoll, optional: false })}
 ${textInput('question', '', { label: tr.t('messages.poll.question'), max: NATIVE_POLL_QUESTION_MAX })}
@@ -408,7 +658,7 @@ ${textInput('title', '', { label: tr.t('messages.countdown.title'), max: COUNTDO
 ${numberInput('minutes', 5, { label: tr.t('messages.countdown.minutes'), min: 0, max: 1440, help: tr.t('messages.countdown.minutesHelp', { max: tr.fmtNumber(1440) }) })}
 ${numberInput('seconds', 0, { label: tr.t('messages.countdown.seconds'), min: 0, max: 59, help: tr.t('messages.countdown.secondsHelp') })}</div>`,
         { submit: tr.t('messages.countdown.submit'), canEdit: canPost });
-        return html`${section(tr.t('messages.template.title'), templatePicker(tr, chosen), tr.t('messages.template.help'), { key: 'start-from-a-template' })}
+        return html`${section(tr.t('messages.template.title'), templatePicker(tr, chosen, { home, lang }), tr.t('messages.template.help'), { key: 'start-from-a-template' })}
 ${section(tr.t('messages.send.title'), send, `${tr.t('messages.send.help')}${adminNote}`, { key: 'send-a-message' })}
 ${section(tr.t('messages.schedule.title'), schedule, `${tr.tp('messages.schedule.help', FAILURE_LIMIT, { limit: tr.fmtNumber(planLimit(ctx.guildId, 'scheduled')) })}${adminNote}`, { key: 'schedule-a-message' })}
 ${section(tr.t('messages.scheduled.title'), scheduledSection(ctx, scheduled, data.timezone || DEFAULT_TIMEZONE), tr.t('messages.scheduled.help'), { key: 'scheduled-messages' })}
@@ -421,10 +671,30 @@ ${section(tr.t('messages.countdown.sectionTitle'), countdown, `${tr.t('messages.
     actions: {
         send: {
             admin: true,
+            // Two steps (routes.js): confirm() checks the form and shows the preview (channel,
+            // who gets pinged, format, buttons, the message); run() gets the stored form back
+            // with the one-time token and checks everything again before posting.
+            async confirm(ctx, form) {
+                const tr = textFor(ctx);
+                const g = ctx.guild;
+                const msg = messageFromForm(g, form, { home: isHomeScope(ctx), allowMembers: true });
+                return {
+                    heading: tr.t('messages.confirm.heading', { channel: msg.channel.name }),
+                    rows: [
+                        { label: tr.t('messages.confirm.channel'), value: `#${msg.channel.name}` },
+                        { label: tr.t('messages.confirm.ping'), value: pingWords(tr, g, msg.ping) },
+                        { label: tr.t('messages.confirm.format'), value: tr.t(msg.embed ? 'messages.fields.formatEmbed' : 'messages.fields.formatText') },
+                        { label: tr.t('messages.confirm.buttons'), value: msg.buttons.length ? msg.buttons.map((b) => `${b.label} (${b.url})`).join(', ') : tr.t('messages.confirm.noButtons') },
+                        { label: tr.t('messages.confirm.message'), value: messagePreview(payloadOf(msg)) },
+                    ],
+                    notes: pingNotes(tr, g, msg.channel, msg.ping),
+                    submit: tr.t('messages.confirm.submit'),
+                };
+            },
             async run(ctx, form) {
                 const g = ctx.guild;
-                const { channel, content, embed, audit } = messageFromForm(g, form);
-                const { message } = await ctx.services.postBotMessage(g, { channel, content, embed });
+                const { channel, content, embed, ping, buttons, audit } = messageFromForm(g, form, { home: isHomeScope(ctx), allowMembers: true });
+                const { message } = await ctx.services.postBotMessage(g, { channel, content, embed, ping, buttons });
                 return {
                     changes: [{ key: `message.${message.id}`, old: null, new: audit }],
                     message: textFor(ctx).t('messages.action.posted', { channel: channel.name }),
@@ -434,10 +704,11 @@ ${section(tr.t('messages.countdown.sectionTitle'), countdown, `${tr.t('messages.
         schedule: {
             admin: true,
             async run(ctx, form) {
-                const { channel, content, embed } = messageFromForm(ctx.guild, form);
+                const msg = messageFromForm(ctx.guild, form, { home: isHomeScope(ctx) });
+                const { channel } = msg;
                 const { schedule, timezone } = scheduleFromForm(form);
                 const row = await ctx.services.createScheduledMessage({
-                    guildId: ctx.guildId, channelId: channel.id, payload: { content, embed }, schedule, timezone, createdBy: ctx.actor.userId,
+                    guildId: ctx.guildId, channelId: channel.id, payload: payloadOf(msg), schedule, timezone, createdBy: ctx.actor.userId,
                 });
                 return {
                     changes: [{ key: `scheduled.${row.id}`, old: null, new: auditOf(row) }],
@@ -450,9 +721,10 @@ ${section(tr.t('messages.countdown.sectionTitle'), countdown, `${tr.t('messages.
             async run(ctx, form) {
                 const id = idField(form);
                 findScheduled(await ctx.services.listScheduledMessages(ctx.guildId), id);
-                const { channel, content, embed } = messageFromForm(ctx.guild, form);
+                const msg = messageFromForm(ctx.guild, form, { home: isHomeScope(ctx) });
+                const { channel } = msg;
                 const { schedule, timezone } = scheduleFromForm(form);
-                const { before, after } = await ctx.services.updateScheduledMessage(ctx.guildId, id, { channelId: channel.id, payload: { content, embed }, schedule, timezone });
+                const { before, after } = await ctx.services.updateScheduledMessage(ctx.guildId, id, { channelId: channel.id, payload: payloadOf(msg), schedule, timezone });
                 return {
                     changes: [{ key: `scheduled.${id}`, old: auditOf(before), new: auditOf(after) }],
                     message: after.paused ? textFor(ctx).t('messages.action.editedPaused', { id })
