@@ -17,7 +17,7 @@
   },
   "cases": {
     "invalidFilter": "Ungültiger Filter.",
-    "exportAdmin": "Fälle zu exportieren braucht Administrator auf dem Hauptserver.",
+    "exportAdmin": "Fälle zu exportieren braucht Administrator auf diesem Server.",
     "exportFree": "Nicht im Free-Tarif",
     "exportFreeText": "Der Fall-Export gehört zu Mewvo Normal (letzte 90 Tage) und Pro oder Max (ganze Geschichte), im Tarif des Server-Inhabers.",
     "notFound": "Fall nicht gefunden",
@@ -38,5 +38,9 @@
     "inbox": "Posteingang (Antworten, Schließen)",
     "members": "Mitglieder",
     "rolerules": "Rollenregeln"
+  },
+  "access": {
+    "levelManager": "Server verwalten",
+    "managerOnly": "Dafür brauchst du Administrator auf diesem Server. Mit „Server verwalten“ kannst du die Einstellungsseiten ändern und diese Seiten ansehen, aber nicht moderieren: Übersicht, Mitglieder, Gebannt, Fälle, Einsprüche, Auseinanderhalten."
   }
 }

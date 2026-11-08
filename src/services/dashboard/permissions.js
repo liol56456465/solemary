@@ -1,11 +1,17 @@
 // permissions.js — the dashboard's staff access levels: ONE table for every page and action.
 //
 // Levels (access.js decides which one a user has, re-checked on every request):
-//   admin      Administrator in the main server: everything (unchanged).
-//   owner      OWNER_IDS without Administrator: view + settings (unchanged; enforcement
-//              actions still refused by canAct downstream). The table does not restrict them.
+//   admin      Administrator in this server: everything (unchanged).
+//   owner      OWNER_IDS with owner power here (Mewvo's own servers) but without
+//              Administrator: view + settings (enforcement actions still refused by canAct
+//              downstream). The table does not restrict them.
+//   manager    Manage Server without Administrator: the settings pages (MANAGER_PAGES) and
+//              `settings.edit`, plus the MODERATOR pages except the Inbox; never a POST other
+//              than settings and logout. Watchlist and staff discipline are ADMIN keys, so out.
+//              Form actions marked `admin: true` are refused by canAct (routes.js).
 //   moderator  a member with the configured moderator role (the Commands page "Moderator
-//              role", guild config `modRole`): only the entries marked MODERATOR below.
+//              role", guild config `modRole`): only the entries marked MODERATOR below; with
+//              Manage Server too (decision.manager) also the manager's keys.
 //
 // Every route (routes.js registerDashboard) maps to a key with ROUTES; requireUser refuses a
 // moderator with 403 when the key is not MODERATOR. Unknown keys, unknown paths and new pages
@@ -15,6 +21,7 @@
 
 export const ADMIN = 'admin';
 export const MODERATOR = 'moderator';
+export const MANAGER = 'manager';
 /** Route key for the Owner area: skipped here, checked by requireOwner. */
 export const OWNER_AREA = 'owner-area';
 
@@ -211,18 +218,48 @@ export function requiredLevel(key) {
 }
 
 /**
+ * The settings pages Manage Server opens (module pages and the setup/help around them).
+ * Not here: the moderation and staff pages (staff, activity, incidents, channel tools), the
+ * audit log and the settings backup (restores role and safety settings; also needs canAct).
+ * A new module page is not listed until someone decides, so it stays Administrator-only.
+ */
+export const MANAGER_PAGES = new Set([
+    'page:setup', 'page:modules', 'page:help',
+    'page:tickets', 'page:welcome', 'page:leveling', 'page:reaction-roles', 'page:messages', 'page:giveaways',
+    'page:birthdays', 'page:applications', 'page:community', 'page:join-to-create', 'page:automod',
+    'page:enforcement', 'page:logging', 'page:verification', 'page:counters', 'page:support', 'page:rules',
+    'page:commands', 'page:appearance', 'page:bot-language',
+]);
+
+/** MODERATOR pages a manager does not see: the Inbox lists staff reports (complaints about staff). */
+const MANAGER_HIDDEN = new Set(['page:inbox']);
+
+/** May the Manage Server level use `key`? */
+export function managerAllows(key) {
+    if (key === 'settings.edit' || key === 'session.logout') return true;
+    if (typeof key !== 'string' || !key.startsWith('page:')) return false;
+    if (MANAGER_PAGES.has(key)) return true;
+    return requiredLevel(key) === MODERATOR && !MANAGER_HIDDEN.has(key);
+}
+
+/**
  * May this access decision (access.js) use `key`? Administrators and bot owners are not
- * restricted by the table (their existing checks apply as before); moderators only where the
- * table says MODERATOR; anyone else never.
+ * restricted by the table (their existing checks apply as before); managers per
+ * managerAllows; moderators only where the table says MODERATOR (plus the manager's keys when
+ * they also have Manage Server); anyone else never.
  */
 export function allows(decision, key) {
     if (!decision?.allowed) return false;
     if (decision.role === 'admin' || decision.role === 'owner') return true;
-    if (decision.role === MODERATOR) return requiredLevel(key) === MODERATOR;
+    if (decision.role === MANAGER) return managerAllows(key);
+    if (decision.role === MODERATOR) return requiredLevel(key) === MODERATOR || (decision.manager === true && managerAllows(key));
     return false;
 }
 
-/** May this decision RUN `key` (a POST)? Admins yes; moderators per the table; owners no (canAct). */
+/**
+ * May this decision RUN `key` (an enforcement POST)? Admins yes; moderators per the table;
+ * owners and managers no (canAct). Settings forms use allows(…, 'settings.edit') instead.
+ */
 export function mayRun(decision, key) {
     if (decision?.canAct) return true;
     return decision?.role === MODERATOR && requiredLevel(key) === MODERATOR;
@@ -236,6 +273,7 @@ export function moderatorActionTypes() {
 /** The level shown in the account menu. */
 export function levelLabel(decision) {
     if (decision?.role === MODERATOR) return 'Moderator';
+    if (decision?.role === MANAGER) return 'Manage Server';
     if (decision && !decision.canAct) return 'View and settings (bot owner)';
     return 'Administrator';
 }

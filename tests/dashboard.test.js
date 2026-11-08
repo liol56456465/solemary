@@ -187,22 +187,23 @@ test('access facts: Administrator in MAIN_GUILD_ID only, OWNER_IDS from config',
     const guild = { members: { fetch: async ({ user }) => (user === ADMIN ? member(true) : user === STRANGER ? member(false) : null) } };
     const client = { guilds: { cache: new Map([[GUILD, guild]]) } };
     const noConfig = async () => ({});
-    assert.deepEqual(await memberFacts(client, ADMIN, GUILD, [], noConfig), { inGuild: true, isAdmin: true, isOwnerId: false, isModerator: false });
-    assert.deepEqual(await memberFacts(client, STRANGER, GUILD, [STRANGER], noConfig), { inGuild: true, isAdmin: false, isOwnerId: true, isModerator: false });
-    assert.deepEqual(await memberFacts(client, ADMIN, '999999999999999999', [], noConfig), { inGuild: false, isAdmin: false, isOwnerId: false, isModerator: false }, 'other guilds are never consulted');
+    const home = { isHome: (id) => id === GUILD };
+    assert.deepEqual(await memberFacts(client, ADMIN, GUILD, [], noConfig, home), { inGuild: true, isAdmin: true, isOwnerId: false, isManager: false, isModerator: false });
+    assert.deepEqual(await memberFacts(client, STRANGER, GUILD, [STRANGER], noConfig, home), { inGuild: true, isAdmin: false, isOwnerId: true, isManager: false, isModerator: false });
+    assert.deepEqual(await memberFacts(client, ADMIN, '999999999999999999', [], noConfig, home), { inGuild: false, isAdmin: false, isOwnerId: false, isManager: false, isModerator: false }, 'a server the bot does not see');
 });
 
-test('access checks are cached for 60 seconds', async () => {
+test('access checks are cached for 30 seconds', async () => {
     let calls = 0;
     let admin = true;
     const checker = createAccessChecker({}, { facts: async () => { calls += 1; return { inGuild: true, isAdmin: admin }; } });
     assert.equal((await checker.check(ADMIN, 0)).allowed, true);
     admin = false;
-    assert.equal((await checker.check(ADMIN, 30_000)).allowed, true, 'cached');
+    assert.equal((await checker.check(ADMIN, 29_000)).allowed, true, 'cached');
     assert.equal(calls, 1);
-    assert.equal((await checker.check(ADMIN, 61_000)).allowed, false, 're-checked after 60 s');
+    assert.equal((await checker.check(ADMIN, 31_000)).allowed, false, 're-checked after 30 s');
     checker.forget(ADMIN);
-    await checker.check(ADMIN, 61_001);
+    await checker.check(ADMIN, 31_001);
     assert.equal(calls, 3);
 });
 

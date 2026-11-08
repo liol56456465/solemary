@@ -29,6 +29,7 @@ import { giveStaffWarning, listRemovedStaffRoles, listStaffWarnings, restoreStaf
 import { getGuildConfig } from '../config/guildConfig.js';
 import { removeVerification } from '../verificationService.js';
 import { isBotOwner } from '../../config/bot.js';
+import { hasOwnerPower } from '../../utils/ownerPower.js';
 
 export const defaultEnforcement = {
     // members and standing
@@ -48,5 +49,7 @@ export const defaultEnforcement = {
     listActiveWatches, endWatch,
     // staff
     listMassActionBlocks, clearMassActionBlock, loadCoverageCounts, getGuildConfig, isBotOwner,
+    // OWNER_IDS override per server: only in Mewvo's own servers (utils/ownerPower.js)
+    hasOwnerPower: (userId, guildId) => hasOwnerPower(userId, guildId),
     staffActivityForWeek, giveStaffWarning, listStaffWarnings, restoreStaffRoles, listRemovedStaffRoles,
 };

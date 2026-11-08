@@ -17,7 +17,7 @@
   },
   "cases": {
     "invalidFilter": "Filtro non valido.",
-    "exportAdmin": "Esportare i casi richiede Amministratore nel server principale.",
+    "exportAdmin": "Esportare i casi richiede Amministratore in questo server.",
     "exportFree": "Non incluso nel piano Free",
     "exportFreeText": "L’esportazione dei casi è inclusa in Mewvo Normal (ultimi 90 giorni) e Pro o Max (tutto lo storico), nel piano del proprietario del server.",
     "notFound": "Caso non trovato",
@@ -38,5 +38,9 @@
     "inbox": "Posta in arrivo (risposte, chiusure)",
     "members": "Membri",
     "rolerules": "Regole dei ruoli"
+  },
+  "access": {
+    "levelManager": "Gestire il server",
+    "managerOnly": "Serve Amministratore in questo server. Con Gestire il server puoi modificare le pagine delle impostazioni e vedere queste pagine, ma non moderare: Panoramica, Membri, Bannati, Casi, Ricorsi, Tenere separati."
   }
 }

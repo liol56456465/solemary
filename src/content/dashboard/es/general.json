@@ -17,7 +17,7 @@
   },
   "cases": {
     "invalidFilter": "Filtro no válido.",
-    "exportAdmin": "Exportar casos requiere Administrador en el servidor principal.",
+    "exportAdmin": "Exportar casos requiere Administrador en este servidor.",
     "exportFree": "No incluido en el plan Free",
     "exportFreeText": "La exportación de casos viene con Mewvo Normal (últimos 90 días) y Pro o Max (todo el historial), según el plan del propietario del servidor.",
     "notFound": "Caso no encontrado",
@@ -38,5 +38,9 @@
     "inbox": "Bandeja de entrada (respuestas, cierres)",
     "members": "Miembros",
     "rolerules": "Reglas de roles"
+  },
+  "access": {
+    "levelManager": "Administrar servidor",
+    "managerOnly": "Esto requiere Administrador en este servidor. Con Administrar servidor puedes cambiar las páginas de ajustes y ver estas páginas, pero no moderar: Vista general, Miembros, Baneados, Casos, Apelaciones, Mantener separados."
   }
 }
