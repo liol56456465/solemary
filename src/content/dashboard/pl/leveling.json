@@ -148,7 +148,8 @@
       "other": "Najwyżej {count} mnożnika dla ról."
     },
     "memberMissing": "Tego członka nie ma na serwerze.",
-    "catName": "Imię: użyj liter, cyfr i spacji."
+    "catName": "Imię: użyj liter, cyfr i spacji.",
+    "voiceMinMax": "Najmniej XP na minutę nie może być więcej niż Najwięcej XP na minutę."
   },
   "action": {
     "nothing": "Nic się nie zmieniło.",
@@ -175,6 +176,25 @@
     "rewardAdded": "Poziom {level} daje teraz tę rolę.",
     "rewardRemoved": "Usunięto nagrodę za poziom {level}.",
     "noReward": "Za ten poziom nie było nagrody.",
-    "memberDone": "{name} ma teraz poziom {level}."
+    "memberDone": "{name} ma teraz poziom {level}.",
+    "voiceSaved": "Zapisano ustawienia XP za kanały głosowe."
+  },
+  "voice": {
+    "title": "XP za kanały głosowe",
+    "help": "Członkowie zdobywają XP za czas na kanałach głosowych z innymi osobami.",
+    "more": "Minuta liczy się, gdy członek jest na kanale głosowym z wystarczającą liczbą innych osób, nie jest ogłuszony ani wyciszony przez serwer i nie jest na kanale AFK. Boosty kanałów i ról oraz lista Bez XP w działają jak na czacie. Zapisywane są tylko minuty: nigdy, kto z kim rozmawiał, nigdy dźwięk.",
+    "enabled": "Dawaj XP za czas na kanałach głosowych",
+    "enabledHelp": "Wyłączone: nikt nie zdobywa XP ani czasu na kanałach głosowych.",
+    "xpMin": "Najmniej XP na minutę",
+    "xpMinHelp": "Każda zliczona minuta daje losową liczbę XP między tymi dwiema liczbami, przed boostami.",
+    "xpMax": "Najwięcej XP na minutę",
+    "cap": "Dzienny limit (minuty)",
+    "capHelp": "Zliczone minuty na członka dziennie (UTC), które dają XP. Potem czas jest dalej liczony, ale nie daje XP. 0: kanały głosowe nie dają XP.",
+    "minHumans": "Potrzebna liczba osób na kanale",
+    "minHumansHelp": "Czas liczy się tylko, gdy na kanale jest co najmniej tyle osób (boty się nie liczą), więc nikt nie zdobywa XP sam.",
+    "requireUnmuted": "Osoby, które same się wyciszyły, się nie liczą",
+    "requireUnmutedHelp": "Wyłączone: osoby, które wyciszyły mikrofon, żeby słuchać, nadal się liczą. Wyciszeni przez serwer i ogłuszeni nigdy się nie liczą.",
+    "excluded": "Kanały bez XP za głos",
+    "excludedHelp": "Przytrzymaj Ctrl (Cmd na Macu), aby wybrać kilka. Kanały z listy Bez XP w też są pomijane."
   }
 }

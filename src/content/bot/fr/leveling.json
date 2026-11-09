@@ -7,7 +7,10 @@
         },
         "leaderboard": {
             "description": "Affiche le classement des niveaux du serveur",
-            "page": "Page à afficher (10 membres par page)"
+            "page": "Page à afficher (10 membres par page)",
+            "type": "Classer par XP ou par temps en vocal",
+            "typeXp": "XP",
+            "typeVoice": "Temps en vocal"
         },
         "profile": {
             "description": "Ton niveau, ton rang, ton anniversaire et ton offre sur une seule carte",
@@ -52,7 +55,8 @@
         "xp": "XP",
         "totalXp": "XP totale",
         "progress": "Progression vers le niveau {level}",
-        "boost": "Bonus d’XP"
+        "boost": "Bonus d’XP",
+        "voice": "Temps en vocal"
     },
     "boost": {
         "role": "rôle {name}",
@@ -69,7 +73,11 @@
         "title": "Classement des niveaux",
         "ranks": "Places {from}-{to} sur ce serveur :",
         "top": "Top 10 sur ce serveur :",
-        "rankings": "Classement"
+        "rankings": "Classement",
+        "voiceTitle": "Classement vocal",
+        "voiceLine": "**{rank}.** <@{userId}> - {time} en vocal",
+        "voiceEmpty": "Personne n’a encore de temps en vocal.",
+        "voiceOff": "L’XP vocale est désactivée sur ce serveur. Un admin peut l’activer dans les réglages de niveaux du tableau de bord."
     },
     "profile": {
         "othersAdminOnly": "Seuls les admins peuvent voir le profil de quelqu’un d’autre. Utilise `/profile` sans membre pour voir le tien.",
@@ -85,7 +93,8 @@
         "birthday": "Anniversaire",
         "plan": "Offre Mewvo",
         "joined": "Arrivée",
-        "created": "Compte créé"
+        "created": "Compte créé",
+        "voice": "Temps en vocal"
     },
     "setup": {
         "manageServer": "Tu as besoin de la permission **Gérer le serveur** pour utiliser cette commande.",
@@ -238,5 +247,9 @@
             "other": "Attente entre gains d’XP : **{count} secondes**."
         },
         "cooldownZero": "\n> Une attente de 0 veut dire que chaque message rapporte de l’XP."
+    },
+    "voiceTime": {
+        "hours": "{hours} h {minutes} min",
+        "minutes": "{minutes} min"
     }
 }

@@ -7,7 +7,10 @@
         },
         "leaderboard": {
             "description": "Zeigt die Level-Rangliste des Servers",
-            "page": "Welche Seite (10 Mitglieder pro Seite)"
+            "page": "Welche Seite (10 Mitglieder pro Seite)",
+            "type": "Nach XP oder nach Zeit im Sprachkanal sortieren",
+            "typeXp": "XP",
+            "typeVoice": "Zeit im Sprachkanal"
         },
         "profile": {
             "description": "Dein Level, Rang, Geburtstag und Plan auf einer Karte",
@@ -52,7 +55,8 @@
         "xp": "XP",
         "totalXp": "XP insgesamt",
         "progress": "Fortschritt bis Level {level}",
-        "boost": "XP-Boost"
+        "boost": "XP-Boost",
+        "voice": "Zeit im Sprachkanal"
     },
     "boost": {
         "role": "Rolle {name}",
@@ -69,7 +73,11 @@
         "title": "Level-Rangliste",
         "ranks": "Plätze {from}-{to} auf diesem Server:",
         "top": "Top 10 auf diesem Server:",
-        "rankings": "Rangliste"
+        "rankings": "Rangliste",
+        "voiceTitle": "Sprachkanal-Rangliste",
+        "voiceLine": "**{rank}.** <@{userId}> - {time} im Sprachkanal",
+        "voiceEmpty": "Noch niemand hat Zeit im Sprachkanal.",
+        "voiceOff": "Sprach-XP ist auf diesem Server aus. Ein Admin kann es in den Level-Einstellungen im Dashboard einschalten."
     },
     "profile": {
         "othersAdminOnly": "Nur Admins können das Profil anderer sehen. Nutze `/profile` ohne Mitglied für deins.",
@@ -85,7 +93,8 @@
         "birthday": "Geburtstag",
         "plan": "Mewvo-Plan",
         "joined": "Beigetreten",
-        "created": "Konto erstellt"
+        "created": "Konto erstellt",
+        "voice": "Zeit im Sprachkanal"
     },
     "setup": {
         "manageServer": "Du brauchst die Berechtigung **Server verwalten**, um diesen Befehl zu nutzen.",
@@ -235,5 +244,9 @@
             "other": "Wartezeit zwischen XP: **{count} Sekunden**."
         },
         "cooldownZero": "\n> Bei einer Wartezeit von 0 gibt jede Nachricht XP."
+    },
+    "voiceTime": {
+        "hours": "{hours} Std. {minutes} Min.",
+        "minutes": "{minutes} Min."
     }
 }

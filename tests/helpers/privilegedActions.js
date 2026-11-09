@@ -32,7 +32,7 @@ export const NOT_PRIVILEGED = new Map([
 export const MANAGER_ACTIONS = new Set([
     'welcome/welcome-enabled', 'welcome/goodbye-enabled', 'welcome/welcome', 'welcome/goodbye',
     'tickets/canned-add', 'tickets/canned-remove',
-    'leveling/enabled', 'leveling/settings', 'leveling/card',
+    'leveling/enabled', 'leveling/settings', 'leveling/card', 'leveling/voice',
     'birthdays/settings', 'birthdays/off', // the birthday role inside settings: requireCanAct (FIELD_LEVEL)
     'counters/counter-type', 'counters/counter-delete', 'counters/counting-setup', 'counters/counting-reset', 'counters/counting-off',
     'join-to-create/trigger', 'join-to-create/trigger-remove',

@@ -100,7 +100,7 @@
     "titlePaged": "Classifica, pagina {page}",
     "description": "La classifica dei livelli del server della community di Mewvo.",
     "heading": "Classifica",
-    "lead": "I membri più attivi del server della community di Mewvo per livello e XP totale. Guadagni XP chattando; chi cancella i propri dati con `/wipedata` non compare.",
+    "lead": "I membri più attivi del server della community di Mewvo per livello e XP totale. Guadagni XP chattando (e, se il server lo attiva, con il tempo nei canali vocali); chi cancella i propri dati con `/wipedata` non compare.",
     "unavailable": "Al momento non è stato possibile caricare la classifica. Non è stato modificato nulla; riprova tra un minuto.",
     "off": "I livelli sono disattivati nel server della community di Mewvo, quindi al momento non c’è una classifica.",
     "empty": {

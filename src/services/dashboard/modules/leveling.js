@@ -1,6 +1,7 @@
 // leveling.js — Leveling: on/off, XP per message and cooldown, level-up messages,
 // ignored channels/roles, XP boosts (channel and role multipliers), role rewards and the
-// reward mode, and (Administrators only) a member's level (reward roles re-synced after).
+// reward mode, Voice XP (on/off, XP per minute, daily cap, people needed, self-mute, excluded
+// channels: updateVoiceXpConfig, row-locked), and (Administrators only) a member's level (reward roles re-synced after).
 // Writes go through services/leveling/leveling.js (updateLevelingConfig /
 // setLevelRoleReward are row-locked; addLevels/removeLevels/setUserLevel are the
 // /level add|remove|set functions). The server cat's name and growth announcement are
@@ -10,7 +11,7 @@ import { html } from '../html.js';
 import {
     InputError, PERMS, autoRoleField, boolField, buttonForm, channelField, channelName, channelPicker, checkbox, decimalField, roleField,
     switchInput, choiceField, intField, numberInput, postForm, rolePicker, roleName, roleWarnings, selectInput,
-    isSnowflake, text, textArea, textInput, toggleForm, userIdField,
+    isSnowflake, list, text, textArea, textInput, toggleForm, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
 import { NOTHING, changedOnly, registryValue, saveRegistry, section, table, topic } from './common.js';
@@ -22,6 +23,9 @@ import { EMBED_COLOURS, colourFromKey, parseHexColour } from '../../botMessageSe
 import { cardAccentOf } from '../../leveling/levelCard.js';
 import { textFor } from '../language.js';
 import { managerActions } from './serverScope.js';
+import {
+    VOICE_CAP_MAX, VOICE_MAX_EXCLUDED, VOICE_MIN_HUMANS_MAX, VOICE_MIN_HUMANS_MIN, VOICE_XP_MAX, voiceConfigOf,
+} from '../../leveling/voiceConfig.js';
 
 // Words: src/content/dashboard/<lang>/leveling.json. The cat's sentence, stage and mood come from
 // community/catModel.js and the role-sync note from leveling/levelRoleSyncService.js (English).
@@ -62,6 +66,29 @@ async function ignoreChange(ctx, field, action, id, message, unchanged) {
     const { before, after, changed } = await ctx.services.updateLevelIgnoreList(ctx.client, ctx.guildId, field, action, id);
     if (!changed) return { changes: [], message: unchanged };
     return { changes: diffSnapshots(before, after, [field], AUDIT), message };
+}
+
+/** The Voice XP card: one form with every voice setting. */
+function voiceForm(ctx, cfg, tr) {
+    const voice = voiceConfigOf(cfg);
+    return postForm(ctx, 'leveling', 'voice', html`${switchInput('voiceEnabled', voice.enabled, { label: tr.t('leveling.voice.enabled'), help: tr.t('leveling.voice.enabledHelp') })}
+<div class="grid">${numberInput('voiceXpMin', voice.xpMin, { label: tr.t('leveling.voice.xpMin'), min: 1, max: VOICE_XP_MAX, help: tr.t('leveling.voice.xpMinHelp') })}
+${numberInput('voiceXpMax', voice.xpMax, { label: tr.t('leveling.voice.xpMax'), min: 1, max: VOICE_XP_MAX })}
+${numberInput('voiceCap', voice.dailyCapMinutes, { label: tr.t('leveling.voice.cap'), min: 0, max: VOICE_CAP_MAX, help: tr.t('leveling.voice.capHelp') })}
+${numberInput('voiceMinHumans', voice.minHumans, { label: tr.t('leveling.voice.minHumans'), min: VOICE_MIN_HUMANS_MIN, max: VOICE_MIN_HUMANS_MAX, help: tr.t('leveling.voice.minHumansHelp') })}</div>
+${switchInput('voiceRequireUnmuted', voice.requireUnmuted, { label: tr.t('leveling.voice.requireUnmuted'), help: tr.t('leveling.voice.requireUnmutedHelp') })}
+${channelPicker(ctx.guild, 'voiceExcluded', voice.excludedChannels, { label: tr.t('leveling.voice.excluded'), kinds: ['voice'], perms: [], multiple: true, help: tr.t('leveling.voice.excludedHelp') })}`);
+}
+
+/**
+ * The excluded voice channels from the form: each must be a voice or stage channel of the
+ * server; one that is already stored but was deleted in Discord may stay (it is shown as missing).
+ */
+function excludedFromForm(ctx, form, stored, tr) {
+    const label = tr.t('leveling.voice.excluded');
+    return list(form, 'voiceExcluded', { max: VOICE_MAX_EXCLUDED }).map((id) => (stored.includes(id) && !ctx.guild?.channels?.cache?.get(id)
+        ? id
+        : channelField(ctx.guild, { voiceExcluded: id }, 'voiceExcluded', { kinds: ['voice'], optional: false, label })));
 }
 
 async function update(ctx, patch, message) {
@@ -151,6 +178,7 @@ ${numberInput('levels', '', { label: tr.t('leveling.member.levels'), min: 0, max
         // v6: cards grouped by topic (common.js topic/section). Keys: the English titles' slugs (stable ids in every language).
         return html`${topic(tr.t('leveling.topic.earning'), tr.t('leveling.topic.earningLine'), html`${section(tr.t('leveling.xp.title'), settings, tr.t('leveling.xp.help'), { key: 'xp-and-messages' })}
 ${section(tr.t('leveling.card.title'), card, [tr.t('leveling.card.help'), tr.t('leveling.card.more')], { key: 'level-up-card' })}
+${section(tr.t('leveling.voice.title'), voiceForm(ctx, cfg, tr), [tr.t('leveling.voice.help'), tr.t('leveling.voice.more')], { key: 'voice-xp' })}
 ${section(tr.t('leveling.boosts.title'), boosts, [tr.t('leveling.boosts.help', boostRange), tr.t('leveling.boosts.more', { cap: tr.fmtNumber(TOTAL_MULTIPLIER_CAP) })], { key: 'xp-boosts', size: 'normal' })}
 ${section(tr.t('leveling.ignored.title'), ignored, tr.t('leveling.ignored.help'), { key: 'no-xp-in', size: 'normal' })}`, { key: 'earning-xp' })}
 ${topic(tr.t('leveling.topic.rewards'), tr.t('leveling.topic.rewardsLine'), html`${section(tr.t('leveling.rewards.title'), rewardTable, tr.t('leveling.rewards.help'), { key: 'role-rewards', size: 'normal' })}
@@ -158,7 +186,7 @@ ${section(tr.t('leveling.member.title'), members, tr.t('leveling.member.help'), 
 ${topic(tr.t('leveling.topic.cat'), tr.t('leveling.topic.catLine'), section(tr.t('leveling.cat.title'), catPart, [tr.t('leveling.cat.help'), tr.t('leveling.cat.more')], { key: 'server-cat', size: 'full' }), { key: 'server-cat' })}`;
     },
 
-    actions: managerActions(['enabled', 'settings', 'card'], {
+    actions: managerActions(['enabled', 'settings', 'card', 'voice'], {
         'cat-name': {
             admin: true,
             async run(ctx, form) {
@@ -211,6 +239,27 @@ ${topic(tr.t('leveling.topic.cat'), tr.t('leveling.topic.catLine'), section(tr.t
                 cardAccent: cardAccentFromForm(form, tr),
             }, { levelUpCard: cfg.levelUpCard === true, cardAccent: cardAccentOf(cfg.cardAccent) });
             return update(ctx, patch, tr.t('leveling.action.cardSaved'));
+        },
+        // Voice XP: only the changed fields are sent; they are merged under the config row lock.
+        async voice(ctx, form) {
+            const tr = textFor(ctx);
+            const current = voiceConfigOf(await ctx.services.getLevelingConfig(ctx.client, ctx.guildId));
+            const xpMin = intField(form, 'voiceXpMin', { min: 1, max: VOICE_XP_MAX, label: tr.t('leveling.voice.xpMin') });
+            const xpMax = intField(form, 'voiceXpMax', { min: 1, max: VOICE_XP_MAX, label: tr.t('leveling.voice.xpMax') });
+            if (xpMin > xpMax) throw new InputError(tr.t('leveling.error.voiceMinMax'), 400, 'voiceXpMin');
+            const patch = changedOnly({
+                enabled: checkbox(form, 'voiceEnabled'),
+                xpMin,
+                xpMax,
+                dailyCapMinutes: intField(form, 'voiceCap', { min: 0, max: VOICE_CAP_MAX, label: tr.t('leveling.voice.cap') }),
+                minHumans: intField(form, 'voiceMinHumans', { min: VOICE_MIN_HUMANS_MIN, max: VOICE_MIN_HUMANS_MAX, label: tr.t('leveling.voice.minHumans') }),
+                requireUnmuted: checkbox(form, 'voiceRequireUnmuted'),
+                excludedChannels: excludedFromForm(ctx, form, current.excludedChannels, tr),
+            }, current);
+            if (!Object.keys(patch).length) return NOTHING;
+            const { before, after } = await ctx.services.updateVoiceXpConfig(ctx.client, ctx.guildId, patch);
+            const changes = diffSnapshots(voiceConfigOf(before), voiceConfigOf(after), Object.keys(patch), `${AUDIT}voice.`);
+            return { changes, message: changes.length ? tr.t('leveling.action.voiceSaved') : tr.t('leveling.action.nothing') };
         },
         // Add / remove under the config row lock (updateLevelIgnoreList), never a cached read plus a whole-list save.
         async 'ignore-add'(ctx, form) {

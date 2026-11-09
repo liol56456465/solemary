@@ -145,7 +145,8 @@
       "other": "No máximo {count} multiplicadores de cargo."
     },
     "memberMissing": "Esse membro não está no servidor.",
-    "catName": "Nome: use letras, números e espaços."
+    "catName": "Nome: use letras, números e espaços.",
+    "voiceMinMax": "O mínimo de XP por minuto não pode ser maior que o máximo."
   },
   "action": {
     "nothing": "Nada foi alterado.",
@@ -172,6 +173,25 @@
     "rewardAdded": "O nível {level} agora dá esse cargo.",
     "rewardRemoved": "Recompensa do nível {level} removida.",
     "noReward": "Não havia recompensa para esse nível.",
-    "memberDone": "{name} agora está no nível {level}."
+    "memberDone": "{name} agora está no nível {level}.",
+    "voiceSaved": "Configurações de XP por voz salvas."
+  },
+  "voice": {
+    "title": "XP por voz",
+    "help": "Os membros ganham XP pelo tempo em canais de voz com outras pessoas.",
+    "more": "Um minuto conta quando um membro está em voz com pessoas suficientes, não está ensurdecido nem silenciado pelo servidor e não está no canal AFK. Os boosts de canal e de cargo e a lista Sem XP em valem como no chat. Só minutos são guardados: nunca quem falou com quem, nunca áudio.",
+    "enabled": "Dar XP pelo tempo em voz",
+    "enabledHelp": "Desligado: ninguém ganha XP nem tempo de voz nos canais de voz.",
+    "xpMin": "Mínimo de XP por minuto",
+    "xpMinHelp": "Cada minuto contado dá uma quantidade aleatória de XP entre estes dois números, antes dos boosts.",
+    "xpMax": "Máximo de XP por minuto",
+    "cap": "Limite diário (minutos)",
+    "capHelp": "Minutos contados por membro por dia (UTC) que dão XP. Depois disso, o tempo continua sendo contado, mas não dá XP. 0: voz não dá XP.",
+    "minHumans": "Pessoas necessárias no canal",
+    "minHumansHelp": "O tempo só conta com pelo menos este número de pessoas no canal (bots não contam), para ninguém ganhar sozinho.",
+    "requireUnmuted": "Membros que se silenciaram não contam",
+    "requireUnmutedHelp": "Desligado: membros que desligaram o microfone para ouvir continuam contando. Silenciados pelo servidor e ensurdecidos nunca contam.",
+    "excluded": "Canais sem XP por voz",
+    "excludedHelp": "Segure Ctrl (Cmd no Mac) para escolher vários. Os canais da lista Sem XP em também ficam de fora."
   }
 }

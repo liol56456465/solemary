@@ -30,6 +30,7 @@ import { purgeIncidentTimelines } from './services/automod/incidentTimeline.js';
 import { runRetention, scheduleRetention } from './services/privacy/retentionService.js';
 import { runDueDeletions as runDueServerDataDeletions } from './services/privacy/serverDataDeletion.js';
 import { checkCatGrowth } from './services/community/catService.js';
+import { runVoiceXpTick } from './services/leveling/voiceXp.js';
 import { query as enforcementQuery } from './services/enforcement/db.js';
 import { importModmailTopicsOnce } from './services/modmailLinks.js';
 import { enforcementConfig } from './config/enforcement.js';
@@ -399,6 +400,8 @@ class Mewvo extends Client {
     cron.schedule('20 4 * * *', exclusive('server_data_deletions', () => runDueServerDataDeletions(this)), { timezone: 'UTC' });
     // The server cat: posts once in the level-up channel when it grows a stage (never per message).
     cron.schedule('*/5 * * * *', exclusive('server_cat_growth', () => checkCatGrowth(this)));
+    // Voice XP: one counted minute per eligible member per tick (leveling/voiceXp.js); off per server by default.
+    cron.schedule('* * * * *', exclusive('voice_xp', () => runVoiceXpTick(this)));
     cron.schedule('* * * * *', exclusive('auto_slowmode_lift', () => liftCalmSlowmodes(this)));
     // Automod heads-up first: act on messages still breaking the rule after the 2-minute wait (headsUp.js).
     cron.schedule('* * * * *', exclusive('automod_headsup', () => runHeadsUpChecks(this)));

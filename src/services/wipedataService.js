@@ -1,6 +1,6 @@
 // wipedataService.js: what /wipedata deletes, in one place (the Privacy Policy points here).
 //
-// A member's own data in one server: levels and XP, economy balance, AFK status, birthday,
+// A member's own data in one server: levels and XP, voice time (voice_activity), economy balance, AFK status, birthday,
 // plus their personal to-do list and reminders (not per server), and the encrypted Discord
 // login token stored by "Verify with Discord" (oauth:tokens:<userId>; without it the bot can
 // no longer add them to the support server) with the list of servers it was given in
@@ -17,6 +17,11 @@ import { query } from './enforcement/db.js';
 import { pgConfig } from '../config/database/postgres.js';
 import { deleteDmLogForUser } from './botDm/dmLog.js';
 
+// Voice XP: the member's voice time in this server goes with their levels.
+async function deleteVoiceTime(guildId, userId) {
+    await query(`DELETE FROM ${pgConfig.tables.voice_activity} WHERE guild_id = $1 AND user_id = $2`, [guildId, userId]);
+}
+
 /** The member's own unsent and sent reminders (everywhere: reminders are personal). */
 async function deleteReminders(userId) {
     await query(`DELETE FROM ${pgConfig.tables.reminders} WHERE user_id = $1`, [userId]);
@@ -32,7 +37,7 @@ async function deleteVerifiedGuilds(userId) {
  * features Mewvo no longer has (economy, AFK); still deleted when present, but not listed.
  */
 export const WIPE_ITEMS = [
-    { id: 'levels', label: 'Levels and XP' },
+    { id: 'levels', label: 'Levels, XP and voice time' },
     { id: 'economy', label: 'Economy balance', legacy: true },
     { id: 'afk', label: 'AFK status', legacy: true },
     { id: 'birthday', label: 'Birthday' },
@@ -53,7 +58,7 @@ const ID = /^\d{17,20}$/;
  */
 export async function wipeMemberData(client, guildId, userId, {
     removeBirthday = deleteBirthday, removeReminders = deleteReminders, removeVerifiedGuilds = deleteVerifiedGuilds,
-    removeDmLog = deleteDmLogForUser,
+    removeDmLog = deleteDmLogForUser, removeVoiceTime = deleteVoiceTime,
 } = {}) {
     if (!ID.test(String(guildId)) || !ID.test(String(userId))) throw new Error('wipeMemberData: bad ids');
     const db = client?.db;
@@ -67,7 +72,10 @@ export async function wipeMemberData(client, guildId, userId, {
     };
 
     const steps = {
-        levels: () => deleteKey(getUserLevelKey(guildId, userId)),
+        levels: async () => {
+            await deleteKey(getUserLevelKey(guildId, userId));
+            await removeVoiceTime(guildId, userId);
+        },
         economy: () => deleteKey(getEconomyKey(guildId, userId)),
         afk: () => deleteKey(getAFKKey(guildId, userId)),
         birthday: () => removeBirthday(client, guildId, userId),

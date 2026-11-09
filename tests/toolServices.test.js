@@ -71,11 +71,13 @@ test('wipedata: deletes levels, economy, AFK, birthday and to-do; reports failur
     const reminders = [];
     const verifiedGuilds = [];
     const dmLogs = [];
+    const voiceRows = [];
     const result = await wipeMemberData({ db }, g, me, {
         removeBirthday: async (_c, guild, user) => { birthdays.push(`${guild}:${user}`); },
         removeReminders: async (user) => { reminders.push(user); },
         removeVerifiedGuilds: async (user) => { verifiedGuilds.push(user); },
         removeDmLog: async (user) => { dmLogs.push(user); },
+        removeVoiceTime: async (guild, user) => { voiceRows.push(`${guild}:${user}`); },
     });
     assert.deepEqual(result.deleted, WIPE_ITEMS.map((i) => i.id));
     assert.deepEqual(result.failed, []);
@@ -85,17 +87,21 @@ test('wipedata: deletes levels, economy, AFK, birthday and to-do; reports failur
     assert.deepEqual(reminders, [me], 'reminders too');
     assert.deepEqual(verifiedGuilds, [me], 'the servers the token was given in go with it (v12)');
     assert.deepEqual(dmLogs, [me], 'the bot DM log too (v13)');
+    assert.deepEqual(voiceRows, [`${g}:${me}`], 'voice time goes with the levels (Voice XP, v14)');
+    assert.equal(WIPE_ITEMS.find((i) => i.id === 'levels').label, 'Levels, XP and voice time');
 
     const broken = { db: { exists: async () => true, delete: async (k) => { if (k.includes('afk')) throw new Error('db down'); return true; } } };
-    const partial = await wipeMemberData(broken, g, me, { removeBirthday: async () => { throw new Error('db down'); }, removeReminders: async () => {}, removeVerifiedGuilds: async () => {}, removeDmLog: async () => {} });
+    const partial = await wipeMemberData(broken, g, me, { removeBirthday: async () => { throw new Error('db down'); }, removeReminders: async () => {}, removeVerifiedGuilds: async () => {}, removeDmLog: async () => {}, removeVoiceTime: async () => {} });
     assert.deepEqual(partial.failed.map((f) => f.id), ['afk', 'birthday']);
     assert.ok(partial.deleted.includes('levels'));
-    const silentFail = await wipeMemberData({ db: { exists: async () => true, delete: async () => false } }, g, me, { removeBirthday: async () => {}, removeReminders: async () => {}, removeVerifiedGuilds: async () => {}, removeDmLog: async () => {} });
-    const listFails = await wipeMemberData({ db }, g, me, { removeBirthday: async () => {}, removeReminders: async () => {}, removeVerifiedGuilds: async () => { throw new Error('db down'); }, removeDmLog: async () => {} });
+    const silentFail = await wipeMemberData({ db: { exists: async () => true, delete: async () => false } }, g, me, { removeBirthday: async () => {}, removeReminders: async () => {}, removeVerifiedGuilds: async () => {}, removeDmLog: async () => {}, removeVoiceTime: async () => {} });
+    const listFails = await wipeMemberData({ db }, g, me, { removeBirthday: async () => {}, removeReminders: async () => {}, removeVerifiedGuilds: async () => { throw new Error('db down'); }, removeDmLog: async () => {}, removeVoiceTime: async () => {} });
     assert.deepEqual(listFails.failed.map((f) => f.id), ['oauth'], 'a failed delete of the server list is reported, not hidden');
     assert.ok(silentFail.failed.length === 5, 'a false from delete is an error');
-    const dmLogFails = await wipeMemberData({ db }, g, me, { removeBirthday: async () => {}, removeReminders: async () => {}, removeVerifiedGuilds: async () => {}, removeDmLog: async () => { throw new Error('db down'); } });
+    const dmLogFails = await wipeMemberData({ db }, g, me, { removeBirthday: async () => {}, removeReminders: async () => {}, removeVerifiedGuilds: async () => {}, removeDmLog: async () => { throw new Error('db down'); }, removeVoiceTime: async () => {} });
     assert.deepEqual(dmLogFails.failed.map((f) => f.id), ['dmlog'], 'a failed DM log delete is reported');
+    const voiceFails = await wipeMemberData({ db }, g, me, { removeBirthday: async () => {}, removeReminders: async () => {}, removeVerifiedGuilds: async () => {}, removeDmLog: async () => {}, removeVoiceTime: async () => { throw new Error('db down'); } });
+    assert.deepEqual(voiceFails.failed.map((f) => f.id), ['levels'], 'a failed voice time delete fails the levels step (never reported as wiped)');
     await assert.rejects(wipeMemberData({ db }, 'x', me), /bad ids/);
 });
 

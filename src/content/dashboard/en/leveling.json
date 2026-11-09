@@ -142,7 +142,8 @@
       "other": "At most {count} role boosts."
     },
     "memberMissing": "That member is not in the server.",
-    "catName": "Name: use letters, numbers and spaces."
+    "catName": "Name: use letters, numbers and spaces.",
+    "voiceMinMax": "Least XP per minute cannot be more than Most XP per minute."
   },
   "action": {
     "nothing": "Nothing changed.",
@@ -169,6 +170,25 @@
     "rewardAdded": "Level {level} now gives that role.",
     "rewardRemoved": "Removed the level {level} reward.",
     "noReward": "There was no reward for that level.",
-    "memberDone": "{name} is now level {level}."
+    "memberDone": "{name} is now level {level}.",
+    "voiceSaved": "Voice XP settings saved."
+  },
+  "voice": {
+    "title": "Voice XP",
+    "help": "Members earn XP for time in voice channels with other people.",
+    "more": "A minute counts when a member is in voice with enough other people, is not deafened or server-muted and is not in the AFK channel. Channel and role boosts and the No XP in list apply as for chat. Only minutes are stored: never who talked with whom, never audio.",
+    "enabled": "Give XP for time in voice",
+    "enabledHelp": "Off: nobody earns XP or voice time in voice channels.",
+    "xpMin": "Least XP per minute",
+    "xpMinHelp": "Each counted minute gives a random amount of XP between these two numbers, before boosts.",
+    "xpMax": "Most XP per minute",
+    "cap": "Daily limit (minutes)",
+    "capHelp": "Counted minutes per member per day (UTC) that give XP. After that, time is still counted but gives no XP. 0: voice gives no XP.",
+    "minHumans": "People needed in the channel",
+    "minHumansHelp": "Time only counts with at least this many people in the channel (bots are not counted), so nobody earns alone.",
+    "requireUnmuted": "Self-muted members do not count",
+    "requireUnmutedHelp": "Off: members who muted themselves to listen still count. Server-muted and deafened members never count.",
+    "excluded": "Channels with no voice XP",
+    "excludedHelp": "Hold Ctrl (Cmd on a Mac) to pick several. Channels on the No XP in list are left out too."
   }
 }
