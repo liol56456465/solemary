@@ -31,7 +31,9 @@
         "warn": {
             "title": "**Advertência {number} de {limit} no {server}**",
             "limit": "Com {limit} advertências, você será banido por {length}.",
-            "limitPermanent": "Com {limit} advertências, você será banido permanentemente."
+            "limitPermanent": "Com {limit} advertências, você será banido permanentemente.",
+            "titleRecorded": "**Um aviso em {server}**",
+            "notCounted": "Este aviso fica no seu histórico, mas não conta para um banimento automático."
         },
         "appealAccepted": {
             "title": "**Apelação aceita**",
@@ -87,5 +89,9 @@
             "many": "{count} minutos",
             "other": "{count} minutos"
         }
+    },
+    "uncounted": {
+        "automod": "Aviso do automod — não conta para banimentos",
+        "ladderOff": "Aviso — não conta para banimentos (escada de avisos desligada)"
     }
 }

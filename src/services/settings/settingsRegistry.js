@@ -15,6 +15,8 @@
 //              (durations are stored in ms; their env vars are in minutes or days)
 //   fallback   the value used when the env var is empty (the old hardcoded default)
 //   prodOnly   the fallback points at the real Mewvo servers: never used in test mode
+//   otherFallback  the default in a server that is NOT one of Mewvo's home servers, when it
+//              differs from `fallback` (neutralValue)
 //   sensitive  never shown in full on a page or in the audit log
 //   schema     zod schema every new value must pass
 //
@@ -199,6 +201,19 @@ export const SETTINGS = Object.freeze([
         key: 'massActionBlockMs', module: 'enforcement', kind: 'duration', guild: 'main',
         label: 'Safety limit: block length', env: 'MASS_ACTION_BLOCK_MINUTES', envUnit: 'minutes',
         fallback: 60 * MINUTE, schema: int(MINUTE, 7 * DAY),
+    },
+    // Warn ladder switches (beginner audit D4; services/enforcement/ladderPolicy.js). Off: warns are
+    // still recorded, but never lead to an automatic ladder ban (manual bans are unaffected).
+    {
+        key: 'warnLadderEnabled', module: 'enforcement', kind: 'boolean', guild: 'main',
+        label: 'Warn ladder: 3 warnings lead to an automatic ban', env: null, fallback: true, schema: z.boolean(),
+    },
+    {
+        // Mewvo's own servers: on (as before). Any other server: off, so automod hits are recorded
+        // and shown but cannot add up to an automatic ban until an administrator turns this on.
+        key: 'automodWarnsCountOnLadder', module: 'enforcement', kind: 'boolean', guild: 'main',
+        label: 'Automod warnings count toward the warn ladder', env: null, fallback: true, otherFallback: false,
+        schema: z.boolean(),
     },
     // ── Appeals ──
     {
@@ -493,8 +508,10 @@ const PLACE_KINDS = new Set(['channel', 'category', 'role', 'url']);
  * the cat name, empty JSON structures) stay as they are. A copy, never the frozen fallback.
  */
 export function neutralValue(entry) {
-    // An explicit default for other servers (appealsHome: 'own'), when it differs from the home one.
+    // An explicit default for other servers when it differs from the home one
+    // (appealsHome: 'own' via `neutral`; automodWarnsCountOnLadder: false via `otherFallback`).
     if (Object.hasOwn(entry, 'neutral')) return structuredClone(entry.neutral);
+    if (entry.otherFallback !== undefined) return structuredClone(entry.otherFallback);
     if (entry.kind === 'list') return [];
     if (PLACE_KINDS.has(entry.kind)) return null;
     if (entry.prodOnly) return entry.prodFallbackEmpty !== undefined ? structuredClone(entry.prodFallbackEmpty) : null;

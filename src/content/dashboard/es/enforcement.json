@@ -205,5 +205,14 @@
     "badInvite": "Invitación a nuestro propio servidor: debe ser un enlace de invitación de discord.gg. No se ha cambiado nada.",
     "homeNote": "Esto no se aplica aquí: los miembros de los servidores propios de Mewvo siempre apelan en el servidor de soporte de Mewvo.",
     "homeOnlyAction": "Este ajuste no se aplica en los servidores propios de Mewvo. No se ha cambiado nada."
+  },
+  "ladderSettings": {
+    "title": "Ajustes de la escalera de advertencias",
+    "help": "Si las advertencias se suman hasta baneos automáticos en este servidor. Las advertencias siempre se registran y se muestran en el historial del miembro.",
+    "enabled": "Escalera de advertencias: 3 advertencias llevan a un baneo automático",
+    "enabledHelp": "Desactivado: las advertencias se siguen registrando y enviando, pero nunca banean a nadie por sí solas. Los baneos que pones a mano no cambian.",
+    "automod": "Las advertencias de automod cuentan para la escalera de advertencias",
+    "automodHelp": "Desactivado (lo predeterminado en servidores nuevos): las advertencias que automod da por sí solo se registran y se muestran como «Advertencia de automod — no cuenta para baneos». Activado: tres detecciones de automod pueden suponer un baneo automático de 7 días.",
+    "offNote": "La escalera de advertencias está desactivada: ninguna advertencia en este servidor lleva a un baneo automático, así que el ajuste de automod no tiene efecto ahora."
   }
 }

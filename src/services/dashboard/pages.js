@@ -6,6 +6,7 @@ import { SEARCH_STATUSES, SEARCH_TYPES } from '../enforcement/caseSearchService.
 import { ACTION_LABELS, countedWarnsText } from '../enforcement/flowBuilder.js';
 import { nextWarningSteps, nextWarningText } from '../enforcement/standingService.js';
 import { caseStatusCode, caseStatusLabel } from '../enforcement/caseService.js';
+import { uncountedKind } from '../enforcement/ladderPolicy.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { STATS_PERIODS } from '../staffActivityService.js';
 import { escapeHtml, formatAge, html, icon, layout, navItems, navLabel, path, queryString, raw, section, timeTag, typeBadge } from './html.js';
@@ -128,6 +129,7 @@ export function ageIn(value, now = Date.now(), tr = currentText()) {
 /** "1 of 3" / "0 (next warn bans)" (countedWarnsText) in the page's language. */
 export function countedWarnsIn(ladder, tr = currentText()) {
     if (isEnglish(tr)) return countedWarnsText(ladder);
+    if (ladder?.enabled === false) return tr.t('cases.warns.ladderOff', { n: ladder.warns_since_level });
     return ladder.level === 0
         ? tr.t('cases.warns.of', { n: ladder.warns_since_level, max: enforcementConfig.warnsPerLevel })
         : tr.t('cases.warns.nextBans', { n: ladder.warns_since_level });
@@ -137,6 +139,7 @@ export function countedWarnsIn(ladder, tr = currentText()) {
 export function nextWarningIn(ladder, tr = currentText()) {
     if (isEnglish(tr)) return nextWarningText(ladder);
     const step = nextWarningSteps(ladder);
+    if (step.ladderOff) return tr.t('cases.next.ladderOff');
     const ban = step.banMs == null ? tr.t('cases.duration.permanentLower') : durationIn(step.banMs, tr);
     if (step.escalates) return tr.t('cases.next.limit', { ban, stage: step.nextLevel });
     const after = step.left === 1 ? tr.t('cases.next.oneAfter', { ban }) : tr.tp('cases.next.moreAfter', step.left, { ban });
@@ -261,7 +264,7 @@ ${r.expires_at ? html`<dt>${t('cases.detail.ends')}</dt><dd>${d(r.expires_at)}</
 ${r.appeal_deadline ? html`<dt>${t('cases.detail.appealDeadline')}</dt><dd>${d(r.appeal_deadline)}</dd>` : ''}
 <dt>${t('cases.detail.canAppeal')}</dt><dd>${r.unappealable ? t('cases.detail.no') : t('cases.detail.yes')}</dd>
 <dt>${t('cases.detail.dmDelivered')}</dt><dd>${r.dm_delivered ? t('cases.detail.yesLower') : t('cases.detail.noLower')}</dd>
-<dt>${t('cases.detail.stageAfter')}</dt><dd>${r.ladder_level_after == null ? '-' : stageText(r.ladder_level_after, tr)}</dd>
+<dt>${t('cases.detail.stageAfter')}</dt><dd>${uncountedKind(r) ? t(`cases.detail.uncounted.${uncountedKind(r)}`) : r.ladder_level_after == null ? '-' : stageText(r.ladder_level_after, tr)}</dd>
 <dt>${t('cases.detail.tags')}</dt><dd>${r.tags?.length ? r.tags.map((tag) => html`<a class="role-chip" href="${path('/cases')}${queryString({ tag })}">#${tag}</a>`) : html`<span class="muted">${t('cases.detail.none')}</span>`}</dd>
 ${r.revoked_at ? html`<dt>${t('cases.detail.liftedEarly')}</dt><dd>${d(r.revoked_at)}${r.revoke_reason ? html`: ${r.revoke_reason}` : ''}</dd>` : ''}
 ${r.voided_at ? html`<dt>${t('cases.detail.removed')}</dt><dd>${d(r.voided_at)}${r.void_reason ? html`: ${r.void_reason}` : ''}</dd>` : ''}

@@ -82,7 +82,9 @@
         "banner": null,
         "thumbnail": null,
         "posted": null
-      }
+      },
+      "warnLadderEnabled": true,
+      "automodWarnsCountOnLadder": true
     },
     "support": {
       "adminRequestChannelId": "1527697155643408442",
@@ -165,7 +167,9 @@
         "banner": null,
         "thumbnail": null,
         "posted": null
-      }
+      },
+      "warnLadderEnabled": true,
+      "automodWarnsCountOnLadder": true
     }
   },
   "test": {
@@ -237,7 +241,9 @@
         "banner": null,
         "thumbnail": null,
         "posted": null
-      }
+      },
+      "warnLadderEnabled": true,
+      "automodWarnsCountOnLadder": true
     },
     "support": {
       "adminRequestChannelId": null,
@@ -307,7 +313,9 @@
         "banner": null,
         "thumbnail": null,
         "posted": null
-      }
+      },
+      "warnLadderEnabled": true,
+      "automodWarnsCountOnLadder": true
     }
   }
 }

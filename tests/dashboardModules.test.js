@@ -793,6 +793,8 @@ const CASES = {
         timings: { admin: true, form: { appealWindowDays: '20', appealCooldownDays: '7', rejoinInviteHours: '168', staleReportDays: '7', staleAppealReminderDays: '3' }, service: 'updateSettings',
             bad: { form: { appealWindowDays: '999', appealCooldownDays: '7', rejoinInviteHours: '1', staleReportDays: '7', staleAppealReminderDays: '3' }, message: /between 1 and 365/ } },
         'appeal-review': { form: { independentAppealReview: '1' }, service: 'updateSettings', admin: true },
+        // Warn ladder switches (D4): unchecked warnLadderEnabled = off (the home default is on).
+        'ladder-settings': { form: { automodWarnsCountOnLadder: '1' }, service: 'updateSettings', admin: true },
         // Other servers only: refused in Mewvo's own servers (the generic tests run in the main server).
         'appeals-home': { admin: true, form: { appealsHome: 'own', appealsInvite: 'https://discord.gg/ours' }, service: 'updateSettings', homeRefused: /This setting does not apply in Mewvo/ },
         'mass-action': { form: { massActionLimit: '7', massMuteLimit: '12', massActionWindowMinutes: '10', massActionBlockMinutes: '60' }, service: 'updateSettings', admin: true,

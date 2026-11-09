@@ -5,7 +5,7 @@
 
 import { executeAction, getLadder, getTargetState } from '../enforcement/enforcementService.js';
 import {
-    getAppealHistory, getCaseByCode, getCountedWarns, getLatestAppealStatuses, listCasesForUser,
+    getAppealHistory, getCaseByCode, getCountedWarns, getLatestAppealStatuses, getUncountedWarns, listCasesForUser,
 } from '../enforcement/caseService.js';
 import { editCase, voidCase } from '../enforcement/caseEditService.js';
 import { caseNotes } from '../enforcement/caseNotesService.js';
@@ -33,7 +33,7 @@ import { hasOwnerPower } from '../../utils/ownerPower.js';
 
 export const defaultEnforcement = {
     // members and standing
-    memberStandings, activeBanCases, addTempRole, endTempRole, listTempRoles, removeVerification, getTargetState, getLadder, getCountedWarns, listCasesForUser, getLatestAppealStatuses, getActiveOrdersFor,
+    memberStandings, activeBanCases, addTempRole, endTempRole, listTempRoles, removeVerification, getTargetState, getLadder, getCountedWarns, getUncountedWarns, listCasesForUser, getLatestAppealStatuses, getActiveOrdersFor,
     listNotes, addNote, removeNote, precedentHint,
     // actions (same flow builder and executeAction as the panel)
     completeFlowDetails, executeAction, attachFlowEvidence, getMassActionBlock, recentBanKickCount,

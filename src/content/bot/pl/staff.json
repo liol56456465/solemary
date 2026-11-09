@@ -54,12 +54,20 @@
             "warnsNextPermanent": "**Ostrzeżenia:** {n} — następne daje bana na stałe",
             "warnsAt": "**Ostrzeżenia:** {n} — przy {max} ban na {length}",
             "warnsAtPermanent": "**Ostrzeżenia:** {n} — przy {max} ban na stałe",
-            "warnBans": "**Dotychczasowe bany za ostrzeżenia:** {level}"
+            "warnBans": "**Dotychczasowe bany za ostrzeżenia:** {level}",
+            "warnsLadderOff": "**Ostrzeżenia:** {n} (drabinka ostrzeżeń wyłączona)",
+            "uncountedWarns": {
+                "one": "**Nieliczone:** {count} ostrzeżenie w historii, które nie liczy się do banów",
+                "few": "**Nieliczone:** {count} ostrzeżenia w historii, które nie liczą się do banów",
+                "many": "**Nieliczone:** {count} ostrzeżeń w historii, które nie liczą się do banów",
+                "other": "**Nieliczone:** {count} ostrzeżenia w historii, które nie liczą się do banów"
+            }
         },
         "keepApartLine": "z <@{otherId}> do {until} (nakaz #{id})",
         "warns": {
             "of": "{n} z {max}",
-            "nextBans": "{n} (następne ostrzeżenie banuje)"
+            "nextBans": "{n} (następne ostrzeżenie banuje)",
+            "ladderOff": "{n} (drabinka ostrzeżeń wyłączona)"
         },
         "stage": {
             "none": "0 z 3 (jeszcze bez bana za ostrzeżenia)",
@@ -141,7 +149,8 @@
         "effect": {
             "warn": "ostrzeżenie {n} z {max}.",
             "escalates": "osiąga limit ostrzeżeń → automatyczny ban na {length} (poziom ostrzeżeń {stage} z 3).",
-            "escalatesPermanent": "osiąga limit ostrzeżeń → automatyczny ban na stałe (poziom ostrzeżeń {stage} z 3)."
+            "escalatesPermanent": "osiąga limit ostrzeżeń → automatyczny ban na stałe (poziom ostrzeżeń {stage} z 3).",
+            "warnLadderOff": "tylko zapisane: drabinka ostrzeżeń jest wyłączona na tym serwerze, więc nigdy nie prowadzi do automatycznego bana."
         },
         "input": {
             "customReasonRequired": "Własny powód jest wymagany.",
@@ -222,7 +231,8 @@
                 "many": "Ten członek: {count} liczonych ostrzeżeń, {stage}; następne ostrzeżenie banuje.",
                 "other": "Ten członek: {count} liczonego ostrzeżenia, {stage}; następne ostrzeżenie banuje."
             },
-            "unavailable": "Ten członek: poziom ostrzeżeń teraz niedostępny."
+            "unavailable": "Ten członek: poziom ostrzeżeń teraz niedostępny.",
+            "ladderOff": "Ten członek: drabinka ostrzeżeń jest wyłączona na tym serwerze, więc ostrzeżenia nigdy nie prowadzą do automatycznego bana."
         },
         "confirm": {
             "title": "Potwierdź: {action}",
@@ -253,7 +263,8 @@
         "removeWarn": {
             "none": "Ten użytkownik nie ma liczonych ostrzeżeń do usunięcia.",
             "placeholder": "Wybierz ostrzeżenie do usunięcia",
-            "which": "Które ostrzeżenie usunąć?"
+            "which": "Które ostrzeżenie usunąć?",
+            "uncountedTag": "nie liczy się"
         },
         "cancelledTitle": "Anulowano",
         "cancelled": "Nic nie zmieniono. Uruchom /enforcements, aby zacząć od nowa.",

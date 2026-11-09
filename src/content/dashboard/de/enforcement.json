@@ -201,5 +201,14 @@
     "badInvite": "Einladung zu unserem eigenen Server: muss ein discord.gg-Einladungslink sein. Es wurde nichts geändert.",
     "homeNote": "Das gilt hier nicht: Mitglieder von Mewvos eigenen Servern legen immer im Mewvo-Supportserver Einspruch ein.",
     "homeOnlyAction": "Diese Einstellung gilt nicht auf Mewvos eigenen Servern. Es wurde nichts geändert."
+  },
+  "ladderSettings": {
+    "title": "Einstellungen der Verwarnungsstufen",
+    "help": "Ob sich Verwarnungen auf diesem Server zu automatischen Banns summieren. Verwarnungen werden immer vermerkt und im Verlauf des Mitglieds gezeigt.",
+    "enabled": "Verwarnungsstufen: 3 Verwarnungen führen zu einem automatischen Bann",
+    "enabledHelp": "Aus: Verwarnungen werden weiter vermerkt und verschickt, bannen aber nie von selbst. Banns, die du selbst vergibst, sind nicht betroffen.",
+    "automod": "Automod-Verwarnungen zählen für die Verwarnungsstufen",
+    "automodHelp": "Aus (Standard in neuen Servern): Verwarnungen, die Automod selbst vergibt, werden vermerkt und als „Automod-Verwarnung — zählt nicht für Banns“ gezeigt. Ein: Drei Automod-Treffer können einen automatischen 7-Tage-Bann bedeuten.",
+    "offNote": "Die Verwarnungsstufen sind aus: Keine Verwarnung auf diesem Server führt zu einem automatischen Bann, daher wirkt die Automod-Einstellung gerade nicht."
   }
 }

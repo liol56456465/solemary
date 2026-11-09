@@ -31,7 +31,9 @@
         "warn": {
             "title": "**Warning {number} of {limit} in {server}**",
             "limit": "At {limit} warnings you will be banned for {length}.",
-            "limitPermanent": "At {limit} warnings you will be banned permanently."
+            "limitPermanent": "At {limit} warnings you will be banned permanently.",
+            "titleRecorded": "**A warning in {server}**",
+            "notCounted": "This warning is on your record, but it does not count toward an automatic ban."
         },
         "appealAccepted": {
             "title": "**Appeal accepted**",
@@ -83,5 +85,9 @@
             "one": "{count} minute",
             "other": "{count} minutes"
         }
+    },
+    "uncounted": {
+        "automod": "Automod warning — doesn't count toward bans",
+        "ladderOff": "Warning — doesn't count toward bans (warn ladder off)"
     }
 }

@@ -53,12 +53,19 @@
             "warnsNextPermanent": "**Advertências:** {n} — a próxima bane permanentemente",
             "warnsAt": "**Advertências:** {n} — com {max}, banimento de {length}",
             "warnsAtPermanent": "**Advertências:** {n} — com {max}, banimento permanente",
-            "warnBans": "**Banimentos por advertência até agora:** {level}"
+            "warnBans": "**Banimentos por advertência até agora:** {level}",
+            "warnsLadderOff": "**Advertências:** {n} (escada de avisos desligada)",
+            "uncountedWarns": {
+                "one": "**Não contado:** {count} aviso no histórico que não conta para banimentos",
+                "many": "**Não contados:** {count} avisos no histórico que não contam para banimentos",
+                "other": "**Não contados:** {count} avisos no histórico que não contam para banimentos"
+            }
         },
         "keepApartLine": "com <@{otherId}> até {until} (ordem #{id})",
         "warns": {
             "of": "{n} de {max}",
-            "nextBans": "{n} (a próxima advertência bane)"
+            "nextBans": "{n} (a próxima advertência bane)",
+            "ladderOff": "{n} (escada de avisos desligada)"
         },
         "stage": {
             "none": "0 de 3 (ainda sem banimento por advertências)",
@@ -138,7 +145,8 @@
         "effect": {
             "warn": "advertência {n} de {max}.",
             "escalates": "atinge o limite de advertências → banimento automático de {length} (nível de advertência {stage} de 3).",
-            "escalatesPermanent": "atinge o limite de advertências → banimento permanente automático (nível de advertência {stage} de 3)."
+            "escalatesPermanent": "atinge o limite de advertências → banimento permanente automático (nível de advertência {stage} de 3).",
+            "warnLadderOff": "apenas registrado: a escada de avisos está desligada neste servidor, então nunca leva a um banimento automático."
         },
         "input": {
             "customReasonRequired": "É preciso um motivo personalizado.",
@@ -210,7 +218,8 @@
                 "many": "Este membro: {count} advertências contadas, {stage}; a próxima advertência bane.",
                 "other": "Este membro: {count} advertências contadas, {stage}; a próxima advertência bane."
             },
-            "unavailable": "Este membro: nível indisponível no momento."
+            "unavailable": "Este membro: nível indisponível no momento.",
+            "ladderOff": "Este membro: a escada de avisos está desligada neste servidor, então avisos nunca levam a um banimento automático."
         },
         "confirm": {
             "title": "Confirmar: {action}",
@@ -241,7 +250,8 @@
         "removeWarn": {
             "none": "Este usuário não tem advertências contadas para remover.",
             "placeholder": "Escolha a advertência a remover",
-            "which": "Qual advertência deve ser removida?"
+            "which": "Qual advertência deve ser removida?",
+            "uncountedTag": "não conta"
         },
         "cancelledTitle": "Cancelado",
         "cancelled": "Nada foi alterado. Execute /enforcements para começar de novo.",

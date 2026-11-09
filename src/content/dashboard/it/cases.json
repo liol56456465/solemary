@@ -156,7 +156,8 @@
   },
   "warns": {
     "of": "{n} su {max}",
-    "nextBans": "{n} (il prossimo avvertimento banna)"
+    "nextBans": "{n} (il prossimo avvertimento banna)",
+    "ladderOff": "{n} (scala degli avvertimenti disattivata)"
   },
   "next": {
     "would": "Sarebbe l’avvertimento {n} su {max}.",
@@ -166,7 +167,8 @@
       "other": "Altri {count} dopo significherebbero un ban automatico ({ban}).",
       "many": "Altri {count} dopo significherebbero un ban automatico ({ban})."
     },
-    "limit": "Raggiungerebbe il limite di avvertimenti: un ban automatico ({ban}, livello di avvertimento {stage} su 3)."
+    "limit": "Raggiungerebbe il limite di avvertimenti: un ban automatico ({ban}, livello di avvertimento {stage} su 3).",
+    "ladderOff": "Gli avvertimenti vengono registrati ma non portano mai a un ban automatico in questo server (la scala degli avvertimenti è disattivata)."
   },
   "settings": {
     "title": "Impostazioni",
@@ -220,7 +222,11 @@
     "filed": "Presentato",
     "decided": "Deciso",
     "note": "Nota",
-    "noAppeals": "Nessun ricorso."
+    "noAppeals": "Nessun ricorso.",
+    "uncounted": {
+      "automod": "Avvertimento automod — non conta per i ban",
+      "ladderOff": "Avvertimento — non conta per i ban (scala degli avvertimenti disattivata)"
+    }
   },
   "appeals": {
     "pageTitle": "Ricorsi",
@@ -300,7 +306,8 @@
       "mute": "Al membro viene tolto il silenziamento (se è ancora attivo), riceve un DM, e il caso viene revocato.",
       "warn": "L’avvertimento viene rimosso (il conteggio della scala scende; un ban automatico che ha causato viene revocato) e il membro riceve un DM.",
       "lifted": "Il caso viene revocato e il membro riceve un DM.",
-      "deny": "La sanzione resta. Il membro riceve un DM che il ricorso è stato respinto."
+      "deny": "La sanzione resta. Il membro riceve un DM che il ricorso è stato respinto.",
+      "warnUncounted": "L'avvertimento viene rimosso e il membro riceve un DM. Non ha mai contato per la scala degli avvertimenti, quindi nient'altro cambia."
     },
     "headingAccept": "Conferma: accetta il ricorso su {code}",
     "headingDeny": "Conferma: respingi il ricorso su {code}",

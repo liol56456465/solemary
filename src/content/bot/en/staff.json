@@ -52,12 +52,18 @@
             "warnsNextPermanent": "**Warnings:** {n} — the next one bans permanently",
             "warnsAt": "**Warnings:** {n} — at {max} they are banned for {length}",
             "warnsAtPermanent": "**Warnings:** {n} — at {max} they are banned permanently",
-            "warnBans": "**Warning bans so far:** {level}"
+            "warnBans": "**Warning bans so far:** {level}",
+            "warnsLadderOff": "**Warnings:** {n} (warn ladder off)",
+            "uncountedWarns": {
+                "one": "**Not counted:** {count} warning on record that doesn't count toward bans",
+                "other": "**Not counted:** {count} warnings on record that don't count toward bans"
+            }
         },
         "keepApartLine": "with <@{otherId}> until {until} (order #{id})",
         "warns": {
             "of": "{n} of {max}",
-            "nextBans": "{n} (next warn bans)"
+            "nextBans": "{n} (next warn bans)",
+            "ladderOff": "{n} (warn ladder off)"
         },
         "stage": {
             "none": "0 of 3 (no warning ban yet)",
@@ -135,7 +141,8 @@
         "effect": {
             "warn": "warning {n} of {max}.",
             "escalates": "reaches the warning limit → automatic {length} ban (warning stage {stage} of 3).",
-            "escalatesPermanent": "reaches the warning limit → automatic permanent ban (warning stage {stage} of 3)."
+            "escalatesPermanent": "reaches the warning limit → automatic permanent ban (warning stage {stage} of 3).",
+            "warnLadderOff": "recorded only: the warn ladder is off in this server, so it never leads to an automatic ban."
         },
         "input": {
             "customReasonRequired": "A custom reason is required.",
@@ -198,7 +205,8 @@
                 "one": "This member: {count} counted warning, {stage}; the next warning bans.",
                 "other": "This member: {count} counted warnings, {stage}; the next warning bans."
             },
-            "unavailable": "This member: ladder unavailable right now."
+            "unavailable": "This member: ladder unavailable right now.",
+            "ladderOff": "This member: the warn ladder is off in this server, so warnings never lead to an automatic ban."
         },
         "confirm": {
             "title": "Confirm: {action}",
@@ -229,7 +237,8 @@
         "removeWarn": {
             "none": "This user has no counted warnings to remove.",
             "placeholder": "Choose the warning to remove",
-            "which": "Which warning should be removed?"
+            "which": "Which warning should be removed?",
+            "uncountedTag": "doesn't count"
         },
         "cancelledTitle": "Cancelled",
         "cancelled": "Nothing was changed. Run /enforcements to start again.",

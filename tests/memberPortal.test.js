@@ -495,11 +495,11 @@ test('buildRecordView keeps only member-safe fields', () => {
     for (const c of view.cases) assert.deepEqual(Object.keys(c).sort(), [...allowed].sort());
     assert.deepEqual(view.cases.map((c) => c.code), ['wwarn2', 'bban23', 'vvoid2', 'iimp23']);
     assert.deepEqual(view.appeals.map((a) => a.code), ['bban23'], 'appeals only for this member\'s listed cases');
-    assert.deepEqual(view.warnings, { count: 1, threshold: 3 });
+    assert.deepEqual(view.warnings, { count: 1, threshold: 3, ladderOff: false });
     assert.equal(view.activeBan.code, 'bban23');
     assert.equal(view.activeMute, null);
     const level2 = buildRecordView({ standing: { ...STANDING, ladder: { level: 2, warns_since_level: 0 } }, cases: [], appeals: [] });
-    assert.deepEqual(level2.warnings, { count: 0, threshold: 1 });
+    assert.deepEqual(level2.warnings, { count: 0, threshold: 1, ladderOff: false });
 });
 
 test('appeal window and cooldown come from each case\'s own server (non-home server)', () => {

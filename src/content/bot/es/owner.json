@@ -175,6 +175,7 @@
         "appealSupport": "Apela desde el servidor de soporte con ese código.",
         "appealWithCode": "Apela con ese código (el MD dice dónde).",
         "onlyTarget": "Solo {name} puede apelarlo; ejecuta /test contigo mismo para probar la apelación.",
-        "realInvite": "La invitación que contiene es una invitación real de un solo uso a este servidor."
+        "realInvite": "La invitación que contiene es una invitación real de un solo uso a este servidor.",
+        "noteWarnLadderOff": "advertencia (escalera desactivada: solo se registra)"
     }
 }

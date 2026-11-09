@@ -389,7 +389,8 @@
     "tooManyChannels": "Pick at most {max} channels ({picked} picked).",
     "ignoredChannel": "Automod ignores #{channel}, so a test run there finds nothing. Pick another channel.",
     "offNeedsAdmin": "To turn automod off you need the Administrator permission in this server. Nothing was changed.",
-    "staffGuardOwnerOnly": "Only the server owner can turn automod off while the staff guard is on (turning automod off also stops the staff guard). Nothing was changed."
+    "staffGuardOwnerOnly": "Only the server owner can turn automod off while the staff guard is on (turning automod off also stops the staff guard). Nothing was changed.",
+    "needReviewChannel": "Pick a channel for automod review cards first (Review cards channel below, or a mod log channel on the Enforcement page)."
   },
   "action": {
     "automodOn": "Automod is now on.",
@@ -422,6 +423,14 @@
     "nativeSaved": "Discord rule \"{name}\" updated.",
     "lockdownEnded": "Lockdown ended. The verification level is back to what it was, and paused invites and DMs are resumed.",
     "probationEnded": "Extra-watch period for {member} ended early.",
-    "testRunStarted": "Test run started. Reload the page in a moment to see the progress."
+    "testRunStarted": "Test run started. Reload the page in a moment to see the progress.",
+    "startedMonitor": "It starts in Report only: Mewvo posts a review card with an Apply button and deletes nothing. Switch to On when the cards look right."
+  },
+  "notice": {
+    "title": "Before you rely on automod",
+    "noReviewChannel": "Automod is on, but there is no channel for its review cards: nobody sees what it finds. Pick a review channel below (or a mod log channel on the Enforcement page).",
+    "monitor": "Report only: Mewvo posts a review card with an Apply button and deletes nothing. Switch to On when the cards look right.",
+    "nudge": "Report only has run for a day. Looks good? Switch to On.",
+    "switchOn": "Switch to On"
   }
 }

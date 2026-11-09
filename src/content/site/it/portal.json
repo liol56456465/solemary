@@ -42,7 +42,9 @@
       "expired": "scaduto",
       "activeAppealDenied": "attivo, ricorso respinto",
       "active": "attivo"
-    }
+    },
+    "automodNotCounted": "avvertimento automod — non conta per i ban",
+    "notCounted": "nello storico, non conta per i ban"
   },
   "login": {
     "lead": "Guarda il tuo storico di moderazione in ogni server che usa Mewvo: i tuoi avvertimenti, il tuo livello, eventuali ban o silenziamenti attivi, i tuoi casi e i tuoi ricorsi.",
@@ -61,6 +63,7 @@
     "logOut": "Esci",
     "warnings": "Avvertimenti",
     "warningsCount": "{count} su {threshold}",
+    "warningsLadderOff": "{count} (scala degli avvertimenti disattivata)",
     "warningsNote": "Avvertimenti conteggiati al tuo livello. Gli avvertimenti non scadono.",
     "ladder": "Scala degli avvertimenti",
     "ladderLevel": "Livello {level} di {max}",
@@ -183,7 +186,8 @@
       "other": "Ancora {count} dopo questo porterebbero a un ban automatico ({ban})."
     },
     "limit": "Raggiungeresti il limite di avvertimenti: un ban automatico ({ban}, fase di avvertimento {level} su 3).",
-    "permanent": "permanente"
+    "permanent": "permanente",
+    "ladderOff": "Gli avvertimenti vengono registrati ma non portano mai a un ban automatico in questo server (la scala degli avvertimenti è disattivata)."
   },
   "duration": {
     "month": {

@@ -175,6 +175,7 @@
         "appealSupport": "Fai ricorso dal server di supporto con quel codice.",
         "appealWithCode": "Fai ricorso con quel codice (il DM dice dove).",
         "onlyTarget": "Solo {name} può fare ricorso; esegui /test su te stesso per provare il ricorso.",
-        "realInvite": "L'invito che contiene è un vero invito monouso a questo server."
+        "realInvite": "L'invito che contiene è un vero invito monouso a questo server.",
+        "noteWarnLadderOff": "avvertimento (scala disattivata: solo registrato)"
     }
 }

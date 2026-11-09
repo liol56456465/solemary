@@ -272,7 +272,7 @@ async function serve({ owners = [OWNER], bMembers = {}, mainMembers = {}, cases 
         recentBanKickCount: async () => 0,
         memberStandings: async () => new Map(),
         getTargetState: async (guild, userId) => ({ member: guild.members.cache.get(userId) || null, ladder: { level: 0, warnCount: 0 }, active: [], banned: false, muted: false }),
-        getLatestAppealStatuses: async () => new Map(), getCountedWarns: async () => 0, listNotes: async () => [],
+        getLatestAppealStatuses: async () => new Map(), getCountedWarns: async () => 0, getUncountedWarns: async () => [], listNotes: async () => [],
         memberTimeline: async () => [], getActiveOrdersFor: () => [], listTempRoles: async () => [],
     }, log);
     const memberTools = spyDeps('memberTools', {

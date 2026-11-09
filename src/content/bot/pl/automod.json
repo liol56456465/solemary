@@ -506,7 +506,8 @@
             "exemptOn": "Automod teraz ignoruje <#{channelId}>.",
             "exemptOff": "Automod znów sprawdza <#{channelId}>.",
             "noLockdown": "Teraz nie ma blokady.",
-            "lockdownEnded": "Blokada zakończona. Poziom weryfikacji wrócił do poprzedniego, a wstrzymane zaproszenia i DM znów działają."
+            "lockdownEnded": "Blokada zakończona. Poziom weryfikacji wrócił do poprzedniego, a wstrzymane zaproszenia i DM znów działają.",
+            "startedMonitor": "**Tylko zgłaszanie:** Mewvo publikuje kartę przeglądu z przyciskiem Zastosuj i niczego nie usuwa. Przełącz na Włączone (`/automod mode`), gdy karty będą wyglądać dobrze."
         },
         "joingate": {
             "ageNote": "Konta młodsze niż **{days} dni**. „Weryfikacja przez Discord” już zatrzymuje do akceptacji konta młodsze niż {defaultDays} dni; członkowie zweryfikowani w ten sposób nigdy nie są kontrolowani.",
@@ -621,7 +622,8 @@
             "customNewAction": "Nowa akcja",
             "customToggle": "Włącz lub wyłącz zasadę",
             "customRemove": "Usuń zasadę"
-        }
+        },
+        "needReviewChannel": "Najpierw wybierz kanał na karty przeglądu automoda: ustaw kanał przeglądu (lub kanał logów moderacji) w panelu, a potem włącz automoda."
     },
     "joinGate": {
         "check": {

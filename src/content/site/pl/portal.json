@@ -43,7 +43,9 @@
       "expired": "wygasła",
       "activeAppealDenied": "aktywna, odwołanie odrzucone",
       "active": "aktywna"
-    }
+    },
+    "automodNotCounted": "ostrzeżenie automoda — nie liczy się do banów",
+    "notCounted": "w historii, nie liczy się do banów"
   },
   "login": {
     "lead": "Zobacz własną historię moderacji ze wszystkich serwerów, które używają Mewvo: ostrzeżenia, poziom ostrzeżeń, aktywny ban lub wyciszenie, swoje sprawy i odwołania.",
@@ -62,6 +64,7 @@
     "logOut": "Wyloguj się",
     "warnings": "Ostrzeżenia",
     "warningsCount": "{count} z {threshold}",
+    "warningsLadderOff": "{count} (drabinka ostrzeżeń wyłączona)",
     "warningsNote": "Liczone ostrzeżenia na twoim poziomie. Ostrzeżenia nie wygasają.",
     "ladder": "Drabina ostrzeżeń",
     "ladderLevel": "Poziom {level} z {max}",
@@ -186,7 +189,8 @@
       "other": "Jeszcze {count} po nim oznaczałoby automatyczny ban ({ban})."
     },
     "limit": "Osiągnięto by limit ostrzeżeń: automatyczny ban ({ban}, etap ostrzeżeń {level} z 3).",
-    "permanent": "na stałe"
+    "permanent": "na stałe",
+    "ladderOff": "Ostrzeżenia są zapisywane, ale nigdy nie prowadzą do automatycznego bana na tym serwerze (drabinka ostrzeżeń wyłączona)."
   },
   "duration": {
     "month": {

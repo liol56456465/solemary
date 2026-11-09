@@ -31,7 +31,9 @@
         "warn": {
             "title": "**Avvertimento {number} di {limit} in {server}**",
             "limit": "A {limit} avvertimenti verrai bannato per {length}.",
-            "limitPermanent": "A {limit} avvertimenti verrai bannato per sempre."
+            "limitPermanent": "A {limit} avvertimenti verrai bannato per sempre.",
+            "titleRecorded": "**Un avvertimento in {server}**",
+            "notCounted": "Questo avvertimento è nel tuo storico, ma non conta per un ban automatico."
         },
         "appealAccepted": {
             "title": "**Ricorso accettato**",
@@ -87,5 +89,9 @@
             "many": "{count} minuti",
             "other": "{count} minuti"
         }
+    },
+    "uncounted": {
+        "automod": "Avvertimento automod — non conta per i ban",
+        "ladderOff": "Avvertimento — non conta per i ban (scala degli avvertimenti disattivata)"
     }
 }

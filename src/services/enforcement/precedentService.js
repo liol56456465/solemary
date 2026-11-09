@@ -208,6 +208,8 @@ export function warmPrecedent(guildId, reasonKey) {
 export function memberLadderLine(ladder, { lang = 'en' } = {}) {
     const level = Number(ladder?.level) || 0;
     const warns = Number(ladder?.warns_since_level) || 0;
+    // Warn ladder off in this server (ladderPolicy.js): no counted warns, no next-warn ban.
+    if (ladder?.enabled === false) return botText(lang).t('staff.panel.member.ladderOff');
     if (lang !== 'en') {
         const tr = botText(lang);
         const stage = ladderStageIn(level, { lang });

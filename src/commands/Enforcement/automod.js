@@ -24,6 +24,7 @@ import { planName } from '../../services/billing/premiumService.js';
 import { updateSettings } from '../../services/settings/guildSettings.js';
 import { hasRuleOverride, isRelaxableRule, ruleMode } from '../../services/automod/policy.js';
 import { snapshotOnGuardEnabled } from '../../services/structureBackupService.js';
+import { resolveChannelId } from '../../services/automod/channelRouting.js';
 import { botText, textForInteraction } from '../../utils/botText.js';
 import { DISCORD_LOCALES_BY_LANG, descriptionLocalizations } from '../../utils/commandLocalizations.js';
 import { BoundedMap } from '../../utils/boundedMap.js';
@@ -483,8 +484,12 @@ export default {
                 const current = await getAutomodSettings(guildId);
                 if (current.staffGuard) throw userError(tr.t('automod.cmd.staffGuardOwnerOnly'));
             }
-            await setAutomodEnabled(guildId, enabled);
+            // Review cards need somewhere to go (review channel, else the mod log): refuse to turn on without one.
+            if (enabled && !resolveChannelId(guildId, 'review')) throw userError(tr.t('automod.cmd.needReviewChannel'));
+            const saved = await setAutomodEnabled(guildId, enabled);
             note = tr.t('automod.cmd.note.enabled', { state: onOff(enabled, tr) });
+            // First time on in another server: Report only (automodSettings.setAutomodEnabled).
+            if (saved?.startedInMonitor) note = `${note}\n${tr.t('automod.cmd.note.startedMonitor')}`;
         } else if (sub === 'mode') {
             const mode = interaction.options.getString('mode');
             await setAutomodMode(guildId, mode);

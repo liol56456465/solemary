@@ -8,10 +8,17 @@
 //                      admins turn it on; staff guard off; the Mewvo house rules "English only"
 //                      and "Non-English characters" off unless set (DEFAULT_OFF_RULES).
 // A stored value always wins, so a server keeps exactly what it saved.
+//
+// Report only first (beginner audit 2.2): in a server that is not one of Mewvo's home servers,
+// the FIRST time automod is turned on it starts in 'monitor' (review cards with an Apply button,
+// nothing deleted). `firstEnabledAt` marks that automod was turned on once (also stamped on any
+// save while it is on), so a server that already ran it keeps its mode; `monitorSince` is when
+// the global mode last became 'monitor' (the "Looks good? Switch to On" nudge after 24 h).
 
 import { db, getFromDb, setInDb } from '../../utils/database.js';
 import { AUTOMOD_RULES, automodConfig } from '../../config/automod.js';
 import { guildSetting } from '../settings/guildScoped.js';
+import { isHomeGuild } from '../settings/guildSettings.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { BoundedMap } from '../../utils/boundedMap.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
@@ -21,6 +28,7 @@ import {
 } from './policy.js';
 
 const CACHE_TTL_MS = 30 * 1000;
+const AUTOMOD_MODES = ['enforce', 'monitor'];
 const DEFAULT_SETTINGS = Object.freeze({
     enabled: true,
     // 'enforce': act and post a review card. 'monitor': only post the card, with an Apply button.
@@ -52,7 +60,13 @@ const DEFAULT_SETTINGS = Object.freeze({
     inviteAllowlist: [],
     // Staff guard / anti-nuke (staffGuardService.js). Main server: on (as before); others: off.
     staffGuard: true,
+    // ms timestamps (see the header): first time automod was on; when the mode became 'monitor'.
+    firstEnabledAt: null,
+    monitorSince: null,
 });
+
+/** How long Report only runs before the dashboard suggests switching to On. */
+export const MONITOR_NUDGE_MS = 24 * 60 * 60 * 1000;
 
 // Mewvo's own house rules: off in other servers unless they set them (they would punish any
 // non-English community the moment automod is turned on).
@@ -67,7 +81,8 @@ export function isLegacyAutomodGuild(guildId) {
 /** The defaults of one server (no guild: the main server's, as before). */
 export function defaultsFor(guildId = null) {
     if (isLegacyAutomodGuild(guildId)) return DEFAULT_SETTINGS;
-    return { ...DEFAULT_SETTINGS, enabled: false, staffGuard: false };
+    // Not saved yet = off; in another server it will start in Report only (setAutomodEnabled).
+    return { ...DEFAULT_SETTINGS, enabled: false, staffGuard: false, ...(startsInMonitor(guildId) ? { mode: 'monitor' } : {}) };
 }
 
 const INVITE_CODE = /^[A-Za-z0-9-]{2,32}$/;
@@ -108,7 +123,29 @@ export function normalizeSettings(stored, guildId = null) {
     const panic = value.panic && typeof value.panic === 'object' ? value.panic : {};
     value.panic = { enabled: panic.enabled !== false, hours: clampPanicHours(panic.hours ?? DEFAULT_PANIC_HOURS) };
     value.joinGate = value.joinGate && typeof value.joinGate === 'object' ? { ...value.joinGate } : {};
+    value.mode = AUTOMOD_MODES.includes(value.mode) ? value.mode : defaults.mode;
+    value.firstEnabledAt = timestampOrNull(value.firstEnabledAt);
+    value.monitorSince = value.mode === 'monitor' ? timestampOrNull(value.monitorSince) : null;
     return value;
+}
+
+function timestampOrNull(value) {
+    const n = Number(value);
+    return value !== null && value !== undefined && Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/** True for a server whose first "on" starts in Report only: any server but Mewvo's home servers. */
+export function startsInMonitor(guildId) {
+    return Boolean(guildId) && !isLegacyAutomodGuild(guildId) && !isHomeGuild(guildId);
+}
+
+/**
+ * The "Looks good? Switch to On" nudge: automod on, in Report only, for at least MONITOR_NUDGE_MS.
+ * Pure (settings as getAutomodSettings returns them).
+ */
+export function shouldNudgeToEnforce(settings, now = Date.now()) {
+    return Boolean(settings?.enabled && settings.mode === 'monitor' && settings.monitorSince
+        && now - settings.monitorSince >= MONITOR_NUDGE_MS);
 }
 
 // One entry per server that sent a message in the last CACHE_TTL_MS; bounded for thousands of servers.
@@ -145,6 +182,19 @@ function storable(settings) {
     return rest;
 }
 
+/** Stamps firstEnabledAt (automod on) and monitorSince (mode became 'monitor'; cleared otherwise). */
+function withTimestamps(before, next) {
+    const now = Date.now();
+    const out = { ...next };
+    // Also when it is turned off: a server that ran automod before this marker existed keeps its mode.
+    if (!out.firstEnabledAt && (out.enabled || before.enabled)) out.firstEnabledAt = now;
+    // Report only counts from when it actually runs (on + monitor); a running one keeps its start.
+    const wasRunning = before.enabled && before.mode === 'monitor' && before.monitorSince;
+    if (out.mode !== 'monitor' || !out.enabled) out.monitorSince = null;
+    else out.monitorSince = wasRunning ? before.monitorSince : now;
+    return out;
+}
+
 /**
  * Changes the settings under a row lock. `patch` is an object merged over the
  * current settings, or a function (current settings → new settings) for nested
@@ -153,7 +203,7 @@ function storable(settings) {
 export async function updateAutomodSettings(guildId, patch) {
     const saved = await db.update(settingsKey(guildId), (current) => {
         const base = normalizeSettings(current, guildId);
-        return storable(typeof patch === 'function' ? patch(base) : { ...base, ...patch });
+        return storable(withTimestamps(base, typeof patch === 'function' ? patch(base) : { ...base, ...patch }));
     }, null);
     const value = normalizeSettings(saved, guildId);
     cache.set(guildId, { value, expiresAt: Date.now() + CACHE_TTL_MS });
@@ -196,7 +246,6 @@ export const TRUSTED_MIN_LEVEL_MAX = 1000;
 export const JOIN_GATE_DAYS_MIN = 1;
 export const JOIN_GATE_DAYS_MAX = 365;
 const SNOWFLAKE = /^\d{17,20}$/;
-const AUTOMOD_MODES = ['enforce', 'monitor'];
 
 function userError(message) {
     return createError(message, ErrorTypes.USER_INPUT, message, { expected: true });
@@ -222,9 +271,25 @@ function requireRule(ruleKey) {
     return ruleKey;
 }
 
+/**
+ * Turns automod on or off. In a server that is not one of Mewvo's home servers, the first time it
+ * is turned on (never on before: no firstEnabledAt) it starts in Report only ('monitor'); after
+ * that the stored mode is kept. Resolves the saved settings; `startedInMonitor` is true when this
+ * call switched it to Report only (the reply explains it).
+ */
 export async function setAutomodEnabled(guildId, enabled) {
     requireBoolean(enabled, 'Automod');
-    return updateAutomodSettings(guildId, { enabled });
+    let startedInMonitor = false;
+    const saved = await updateAutomodSettings(guildId, (current) => {
+        startedInMonitor = false;
+        if (enabled && !current.enabled && !current.firstEnabledAt && startsInMonitor(guildId)) {
+            startedInMonitor = true;
+            return { ...current, enabled, mode: 'monitor' };
+        }
+        return { ...current, enabled };
+    });
+    // A copy: `saved` is also the cached object.
+    return Object.defineProperty({ ...saved }, 'startedInMonitor', { value: startedInMonitor, enumerable: false });
 }
 
 /** mode: 'enforce' | 'monitor'. */

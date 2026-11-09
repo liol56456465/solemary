@@ -31,7 +31,9 @@
         "warn": {
             "title": "**Verwarnung {number} von {limit} in {server}**",
             "limit": "Bei {limit} Verwarnungen wirst du für {length} gebannt.",
-            "limitPermanent": "Bei {limit} Verwarnungen wirst du dauerhaft gebannt."
+            "limitPermanent": "Bei {limit} Verwarnungen wirst du dauerhaft gebannt.",
+            "titleRecorded": "**Eine Verwarnung in {server}**",
+            "notCounted": "Diese Verwarnung steht in deinem Verlauf, zählt aber nicht für einen automatischen Bann."
         },
         "appealAccepted": {
             "title": "**Einspruch angenommen**",
@@ -83,5 +85,9 @@
             "one": "{count} Minute",
             "other": "{count} Minuten"
         }
+    },
+    "uncounted": {
+        "automod": "Automod-Verwarnung — zählt nicht für Banns",
+        "ladderOff": "Verwarnung — zählt nicht für Banns (Verwarnungsstufen aus)"
     }
 }

@@ -421,7 +421,8 @@
     "tooManyChannels": "Wybierz najwyżej {max} kanałów (wybrano {picked}).",
     "ignoredChannel": "Automoderacja ignoruje #{channel}, więc test nic tam nie znajdzie. Wybierz inny kanał.",
     "offNeedsAdmin": "Aby wyłączyć automoderację, potrzebujesz uprawnienia Administrator na tym serwerze. Nic nie zostało zmienione.",
-    "staffGuardOwnerOnly": "Tylko właściciel serwera może wyłączyć automoderację, gdy ochrona przed ekipą jest włączona (wyłączenie automoderacji zatrzymuje też tę ochronę). Nic nie zostało zmienione."
+    "staffGuardOwnerOnly": "Tylko właściciel serwera może wyłączyć automoderację, gdy ochrona przed ekipą jest włączona (wyłączenie automoderacji zatrzymuje też tę ochronę). Nic nie zostało zmienione.",
+    "needReviewChannel": "Najpierw wybierz kanał na karty przeglądu automoda (kanał kart przeglądu poniżej albo kanał logów moderacji na stronie Kary)."
   },
   "action": {
     "automodOn": "Automoderacja jest teraz włączona.",
@@ -454,6 +455,14 @@
     "nativeSaved": "Zaktualizowano regułę Discorda „{name}”.",
     "lockdownEnded": "Blokada zakończona. Poziom weryfikacji wrócił do poprzedniego, a wstrzymane zaproszenia i wiadomości prywatne znów działają.",
     "probationEnded": "Wzmożona obserwacja dla {member} zakończona wcześniej.",
-    "testRunStarted": "Test uruchomiony. Odśwież stronę za chwilę, aby zobaczyć postęp."
+    "testRunStarted": "Test uruchomiony. Odśwież stronę za chwilę, aby zobaczyć postęp.",
+    "startedMonitor": "Zaczyna w trybie Tylko zgłaszanie: Mewvo publikuje kartę przeglądu z przyciskiem Zastosuj i niczego nie usuwa. Przełącz na Włączone, gdy karty będą wyglądać dobrze."
+  },
+  "notice": {
+    "title": "Zanim zaufasz automodowi",
+    "noReviewChannel": "Automod jest włączony, ale nie ma kanału na jego karty przeglądu: nikt nie widzi, co znajduje. Wybierz kanał przeglądu poniżej (lub kanał logów moderacji na stronie Kary).",
+    "monitor": "Tylko zgłaszanie: Mewvo publikuje kartę przeglądu z przyciskiem Zastosuj i niczego nie usuwa. Przełącz na Włączone, gdy karty będą wyglądać dobrze.",
+    "nudge": "Tylko zgłaszanie działa od doby. Wygląda dobrze? Przełącz na Włączone.",
+    "switchOn": "Przełącz na Włączone"
   }
 }

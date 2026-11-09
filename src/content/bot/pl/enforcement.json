@@ -31,7 +31,9 @@
         "warn": {
             "title": "**Ostrzeżenie {number} z {limit} na {server}**",
             "limit": "Przy {limit} ostrzeżeniach dostaniesz bana na {length}.",
-            "limitPermanent": "Przy {limit} ostrzeżeniach dostaniesz bana na stałe."
+            "limitPermanent": "Przy {limit} ostrzeżeniach dostaniesz bana na stałe.",
+            "titleRecorded": "**Ostrzeżenie na serwerze {server}**",
+            "notCounted": "To ostrzeżenie jest w twojej historii, ale nie liczy się do automatycznego bana."
         },
         "appealAccepted": {
             "title": "**Odwołanie przyjęte**",
@@ -91,5 +93,9 @@
             "many": "{count} minut",
             "other": "{count} minuty"
         }
+    },
+    "uncounted": {
+        "automod": "Ostrzeżenie automoda — nie liczy się do banów",
+        "ladderOff": "Ostrzeżenie — nie liczy się do banów (drabinka ostrzeżeń wyłączona)"
     }
 }

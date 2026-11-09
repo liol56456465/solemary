@@ -73,6 +73,8 @@ async function warnPreview({ guild, invoker, target, reason, ladder, lang, tr })
         guildId: guild.id,
         moderator: invoker, target, type: 'warn', reason, ladderLevel: step.nextLevel, extra: prebuiltReasonFields(reason),
     });
+    // Warn ladder off in this server (ladderPolicy.js): the recorded-only warn DM.
+    if (step.ladderOff) return { content: warnDm(warn, null, dm), record: warn, note: tr.t('owner.test.noteWarnLadderOff') };
     if (!step.escalates) {
         return { content: warnDm(warn, step.warnNumber, dm), record: warn, note: tr.t('owner.test.noteWarn', { number: step.warnNumber, threshold: step.threshold }) };
     }

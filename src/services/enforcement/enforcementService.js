@@ -10,7 +10,7 @@ import { Mutex } from '../../utils/mutex.js';
 import { logger } from '../../utils/logger.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { query, withTransaction, T } from './db.js';
-import { insertCase, setDmDelivered, setEndDmDelivered, getActiveCase, nextDefaultName, OPEN_STATUSES } from './caseService.js';
+import { insertCase, setDmDelivered, setEndDmDelivered, countUncountedWarns, getActiveCase, nextDefaultName, OPEN_STATUSES } from './caseService.js';
 import { ensureMutedRole, addMutedRole, removeMutedRole, findMutedRole } from './muteService.js';
 import { contestComponents } from './dmTemplates.js';
 import { addMonths, formatDuration, dateStamp, ladderStageShort } from './format.js';
@@ -25,6 +25,7 @@ import { createEmbed } from '../../utils/embeds.js';
 import { ACTION_KINDS, channelPurposeFor, formatModLogLine, resolveChannelId, staffGuildId } from '../automod/channelRouting.js';
 import { guildSetting, isSettingsUnavailable, noteSettingsUnavailable } from '../settings/guildScoped.js';
 import { alertWatched } from './watchlistService.js';
+import { isWarnLadderEnabled, warnCountsOnLadder } from './ladderPolicy.js';
 import { clearPostFailures, recordPostFailure, recordSendError } from '../automod/postFailures.js';
 import { sendLoggedDm } from '../botDm/dmLog.js';
 import { caseParams } from '../botDm/dmRenderers.js';
@@ -405,7 +406,17 @@ export async function executeAction({ guild, moderator, targetUser, flow, staffR
 export async function executeSystemAction({ guild, targetUser, flow }) {
     assertBotPermissions(guild, flow?.type);
     const moderator = guild.members.me || await guild.members.fetchMe();
-    return runAction({ guild, moderator, targetUser, flow });
+    return runAction({ guild, moderator, targetUser, flow: withSystemLadderDecision(guild.id, flow) });
+}
+
+/**
+ * Warn ladder decision for the bot's own warns (owner decision D4, ladderPolicy.js): in a server
+ * where automod warns do not count (default outside Mewvo's home servers) or the ladder is off,
+ * the warn is recorded without moving the ladder. Throws when the settings cannot be read.
+ */
+function withSystemLadderDecision(guildId, flow) {
+    if (flow?.type !== 'warn') return flow;
+    return { ...flow, countsOnLadder: warnCountsOnLadder(guildId, { system: true }) };
 }
 
 const CASE_TYPES = new Set(['ban', 'kick', 'mute', 'warn']);
@@ -602,7 +613,8 @@ export async function getLadder(guildId, userId) {
         `SELECT level, warns_since_level FROM ${T.ladder} WHERE guild_id = $1 AND user_id = $2`,
         [guildId, userId]
     );
-    return rows[0] || { level: 0, warns_since_level: 0 };
+    // enabled: false when the server turned the warn ladder off (previewWarn then never escalates).
+    return { ...(rows[0] || { level: 0, warns_since_level: 0 }), enabled: isWarnLadderEnabled(guildId) };
 }
 
 async function getLadderLevel(guildId, userId) {
@@ -621,8 +633,16 @@ async function lockLadderRow(client, guildId, userId) {
     return rows[0];
 }
 
-/** What the next warn does at this ladder state. */
+/**
+ * What the next warn does at this ladder state. A ladder with `enabled: false` (warn ladder off in
+ * that server, getLadder) never escalates: { ladderOff: true, warnNumber: null, escalates: false }.
+ */
 export function previewWarn(ladder) {
+    if (ladder?.enabled === false) {
+        return {
+            warnNumber: null, threshold: null, escalates: false, nextLevel: ladder.level, banDurationMs: null, ladderOff: true,
+        };
+    }
     const threshold = ladder.level === 0 ? enforcementConfig.warnsPerLevel : 1;
     const warnNumber = ladder.warns_since_level + 1;
     const escalates = warnNumber >= threshold;
@@ -643,8 +663,20 @@ async function doWarn({ guild, moderator, targetUser, targetMember, flow, lang =
     }
 
     const botUser = guild.client.user;
+    // D4 (ladderPolicy.js): automod warns pass the decision in (executeSystemAction); staff warns
+    // count unless the server turned the ladder off. Uncounted: counts_toward_level NULL, no step.
+    const counts = flow.countsOnLadder ?? isWarnLadderEnabled(guild.id);
     const { warnRecord, banRecord, preview } = await withTransaction(async (client) => {
         const ladder = await lockLadderRow(client, guild.id, targetUser.id);
+        if (!counts) {
+            const warn = await insertCase(client, {
+                ...baseRecord(guild, targetUser, flow, moderatorFields(moderator)),
+                type: 'warn',
+                ladderLevelAfter: ladder.level,
+                countsTowardLevel: null,
+            });
+            return { warnRecord: warn, banRecord: null, preview: { warnNumber: null, uncounted: true } };
+        }
         const step = previewWarn(ladder);
         // A warn that escalates bans: when Mewvo cannot ban this member, refuse the whole warn here
         // (the throw rolls back the warn and the ladder step), so no half-done ladder ban is recorded.
@@ -698,7 +730,8 @@ async function doWarn({ guild, moderator, targetUser, targetMember, flow, lang =
         const record = { ...warnRecord, dm_delivered: dmDelivered };
         await syncWarnRolesQuietly(guild, targetUser.id);
         await logEnforcement(guild.client, guild.id, 'warn', { record, target: targetUser, moderatorLabel: label });
-        return { record, dmDelivered, notes, warnNumber: preview.warnNumber };
+        if (preview.uncounted) notes.push('Recorded only: this warning does not count toward an automatic ban in this server (warn ladder settings).');
+        return { record, dmDelivered, notes, warnNumber: preview.warnNumber, countsOnLadder: !preview.uncounted };
     }
 
     // The escalating warn is announced by the ban DM alone (one DM, not two).
@@ -860,6 +893,8 @@ export async function revokeWarn(guildId, caseCode, revokedBy, reason) {
  * other warns of that level counted. Returns the lifted ban case, or null.
  */
 export async function liftLadderBanForWarn(guild, warn, admin, reason) {
+    // A warn that never counted toward the ladder (D4) cannot have triggered a ladder ban.
+    if (warn?.counts_toward_level === null || warn?.counts_toward_level === undefined) return null;
     const ban = await withTransaction(async (client) => {
         const { rows } = await client.query(
             `SELECT * FROM ${T.cases}
@@ -925,16 +960,18 @@ function moderatorLabel(moderator) {
 // ── Member state for the panel ─────────────────────────────────────────────
 
 export async function getTargetState(guild, userId) {
-    const [member, banned, ladder, activeBan, activeMute, role] = await Promise.all([
+    const [member, banned, ladder, activeBan, activeMute, role, uncounted] = await Promise.all([
         guild.members.fetch(userId).catch(() => null),
         isBanned(guild, userId),
         getLadder(guild.id, userId),
         getActiveCase(guild.id, userId, 'ban'),
         getActiveCase(guild.id, userId, 'mute'),
         findMutedRole(guild),
+        countUncountedWarns(guild.id, userId),
     ]);
     const hasMutedRole = Boolean(member && role && member.roles.cache.has(role.id));
-    return { member, banned, ladder, activeBan, activeMute, muted: Boolean(activeMute) || hasMutedRole };
+    // uncountedWarns: open warns that do not count toward the ladder (ladderPolicy.js, D4).
+    return { member, banned, ladder, activeBan, activeMute, muted: Boolean(activeMute) || hasMutedRole, uncountedWarns: uncounted };
 }
 
 /** Re-applies the muted role when a muted member rejoins (any server: its own mute cases and role). */

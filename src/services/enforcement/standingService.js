@@ -41,6 +41,8 @@ export async function getMemberStanding(guildId, userId) {
  */
 export function nextWarningSteps(ladder) {
     const step = previewWarn(ladder);
+    // Warn ladder off in this server (ladderPolicy.js): a warning never bans automatically.
+    if (step.ladderOff) return { escalates: false, ladderOff: true };
     if (!step.escalates) {
         return {
             escalates: false, warnNumber: step.warnNumber, threshold: step.threshold, left: step.threshold - step.warnNumber,
@@ -53,6 +55,7 @@ export function nextWarningSteps(ladder) {
 /** What the next warning would do, in plain words (English: Discord, dashboard). */
 export function nextWarningText(ladder) {
     const step = nextWarningSteps(ladder);
+    if (step.ladderOff) return LADDER_OFF_TEXT;
     if (!step.escalates) {
         return `It would be warning ${step.warnNumber} of ${step.threshold}. `
             + `${step.left === 1 ? 'The one after it' : `${step.left} more after it`} would mean an automatic ban `
@@ -60,6 +63,8 @@ export function nextWarningText(ladder) {
     }
     return `It would reach the warning limit: an automatic ban (${banLength(step.banMs)}, warning stage ${step.nextLevel} of 3).`;
 }
+
+const LADDER_OFF_TEXT = 'Warnings are recorded but never lead to an automatic ban in this server (the warn ladder is off).';
 
 function banLength(ms) {
     return ms == null ? 'permanent' : formatDuration(ms);
@@ -73,9 +78,11 @@ export function standingFields(standing) {
     const warnLines = warns.slice(0, 10).map((warn) => `\`${warn.case_code}\` · ${truncate(warn.reason, 80)} · ${day(warn.created_at)}`);
     if (warns.length > 10) warnLines.push(`…and ${warns.length - 10} more`);
     const warnsValue = [
-        ladder.warns_since_level
-            ? `**${ladder.warns_since_level}** counted (limit at this stage: ${threshold}).`
-            : 'None counted right now.',
+        ladder.enabled === false
+            ? LADDER_OFF_TEXT
+            : ladder.warns_since_level
+                ? `**${ladder.warns_since_level}** counted (limit at this stage: ${threshold}).`
+                : 'None counted right now.',
         ...warnLines,
         '-# Warnings do not expire. One stops counting when staff remove it, it is lifted on appeal, or you reach the limit (then the count starts again at the next stage).',
     ].join('\n');

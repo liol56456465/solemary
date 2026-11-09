@@ -496,7 +496,8 @@
             "exemptOn": "O automod agora ignora <#{channelId}>.",
             "exemptOff": "O automod volta a verificar <#{channelId}>.",
             "noLockdown": "Não há bloqueio agora.",
-            "lockdownEnded": "Bloqueio encerrado. O nível de verificação voltou ao que era, e convites e DMs pausados voltaram a funcionar."
+            "lockdownEnded": "Bloqueio encerrado. O nível de verificação voltou ao que era, e convites e DMs pausados voltaram a funcionar.",
+            "startedMonitor": "**Só relatar:** o Mewvo publica um cartão de revisão com um botão Aplicar e não apaga nada. Mude para Ligado (`/automod mode`) quando os cartões parecerem certos."
         },
         "joingate": {
             "ageNote": "Contas com menos de **{days} dia(s)**. \"Verificar com o Discord\" já segura para aprovação contas com menos de {defaultDays} dias; membros verificados assim nunca passam pela checagem.",
@@ -608,7 +609,8 @@
             "customNewAction": "Nova ação",
             "customToggle": "Liga ou desliga uma regra",
             "customRemove": "Remove uma regra"
-        }
+        },
+        "needReviewChannel": "Primeiro escolha um canal para os cartões de revisão do automod: defina um canal de revisão (ou um canal de registro de moderação) no painel e depois ligue o automod."
     },
     "joinGate": {
         "check": {

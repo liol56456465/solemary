@@ -46,6 +46,7 @@ import { ALL_PANEL_ACTIONS, panelAccessFor, panelActionAllowed, refusalKey, staf
 import {
     getCaseByCode,
     getCountedWarns,
+    getUncountedWarns,
     listCasesForUser,
     getLatestAppealStatuses,
     caseStatusLabel,
@@ -203,6 +204,7 @@ export function panelSummaryLines(targetUser, state, appealStatuses = new Map(),
             : tr.t('staff.panel.info.inServerNo'),
         // One plain line (audit 3.7): the count and what the next warning does, not two "of 3" numbers.
         warnStatusText(state.ladder, { lang }),
+        ...(state.uncountedWarns > 0 ? [tr.tp('staff.panel.info.uncountedWarns', state.uncountedWarns)] : []),
     ];
 
     const active = [];
@@ -830,7 +832,14 @@ async function startAction(interaction, moderatorId, targetId, action, extra = n
     }
 
     if (action === 'removewarn') {
-        const warns = await getCountedWarns(interaction.guildId, targetId, (await getTargetState(interaction.guild, targetId)).ladder.level);
+        const level = (await getTargetState(interaction.guild, targetId)).ladder.level;
+        // Counted warns first, then the ones that never counted toward the ladder (labelled; D4).
+        const [counted, uncounted] = await Promise.all([
+            getCountedWarns(interaction.guildId, targetId, level),
+            getUncountedWarns(interaction.guildId, targetId),
+        ]);
+        const uncountedTag = tr.t('staff.panel.removeWarn.uncountedTag');
+        const warns = [...counted, ...uncounted.map((warn) => ({ ...warn, tag: uncountedTag }))].slice(0, 25);
         if (warns.length === 0) {
             throw userError(tr.t('staff.panel.removeWarn.none'));
         }
@@ -841,7 +850,7 @@ async function startAction(interaction, moderatorId, targetId, action, extra = n
             .addOptions(warns.map((warn) => ({
                 label: truncate(warn.name, 100),
                 value: warn.case_code,
-                description: truncate(`${warn.case_code} · ${warn.reason}`, 100),
+                description: truncate(`${warn.case_code} · ${warn.tag ? `${warn.tag} · ` : ''}${warn.reason}`, 100),
             })));
         return InteractionHelper.safeEditReply(interaction, {
             embeds: [stepEmbed(flow, tr.t('staff.panel.removeWarn.which'), { lang })],

@@ -41,7 +41,9 @@
       "expired": "expiré",
       "activeAppealDenied": "actif, appel refusé",
       "active": "actif"
-    }
+    },
+    "automodNotCounted": "avertissement automod — ne compte pas pour les bannissements",
+    "notCounted": "dans l'historique, ne compte pas pour les bannissements"
   },
   "login": {
     "lead": "Consulte ton propre dossier de modération dans chaque serveur qui utilise Mewvo : tes avertissements, ton palier, un bannissement ou une mise en sourdine en cours, tes dossiers et tes appels.",
@@ -60,6 +62,7 @@
     "logOut": "Se déconnecter",
     "warnings": "Avertissements",
     "warningsCount": "{count} sur {threshold}",
+    "warningsLadderOff": "{count} (échelle d'avertissements désactivée)",
     "warningsNote": "Avertissements comptabilisés à ton niveau. Les avertissements n’expirent pas.",
     "ladder": "Échelle d’avertissements",
     "ladderLevel": "Niveau {level} sur {max}",
@@ -180,7 +183,8 @@
       "other": "Encore {count} après celui-ci entraîneraient un bannissement automatique ({ban})."
     },
     "limit": "Ce serait la limite d’avertissements : un bannissement automatique ({ban}, palier d’avertissement {level} sur 3).",
-    "permanent": "définitif"
+    "permanent": "définitif",
+    "ladderOff": "Les avertissements sont enregistrés mais ne mènent jamais à un bannissement automatique sur ce serveur (l'échelle d'avertissements est désactivée)."
   },
   "duration": {
     "month": {

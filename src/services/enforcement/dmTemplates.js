@@ -239,17 +239,25 @@ function muteDmText(rec, { lang, guildId, serverName: name } = {}) {
     ], tr);
 }
 
+/**
+ * `warnNumber` null: the warn does not count toward the ladder (warn ladder off in that server, or
+ * an automod warn there, ladderPolicy.js), so no "Warning X of 3" and no "you will be banned".
+ */
 function warnDmText(rec, warnNumber, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
     const limit = enforcementConfig.warnsPerLevel;
+    const counted = warnNumber !== null && warnNumber !== undefined;
+    const server = serverFor(rec, { guildId, serverName: name }, tr);
     // The ban that comes at the limit (audit 3.2): the next stage's ban length.
     const banAtLimit = enforcementConfig.ladderBans[Math.min((Number(rec.ladder_level_after) || 0) + 1, 3)];
-    const limitLine = banAtLimit != null
-        ? tr.t('enforcement.dm.warn.limit', { limit, length: durationIn(banAtLimit, tr.lang) })
-        : tr.t('enforcement.dm.warn.limitPermanent', { limit });
+    const limitLine = !counted
+        ? tr.t('enforcement.dm.warn.notCounted')
+        : banAtLimit != null
+            ? tr.t('enforcement.dm.warn.limit', { limit, length: durationIn(banAtLimit, tr.lang) })
+            : tr.t('enforcement.dm.warn.limitPermanent', { limit });
     return finish([
         ...appealLines(rec, tr, { guildId, serverName: name }).lines,
-        tr.t('enforcement.dm.warn.title', { number: warnNumber, limit, server: serverFor(rec, { guildId, serverName: name }, tr) }),
+        counted ? tr.t('enforcement.dm.warn.title', { number: warnNumber, limit, server }) : tr.t('enforcement.dm.warn.titleRecorded', { server }),
         ...common(rec, tr),
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
         limitLine,

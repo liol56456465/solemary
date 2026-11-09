@@ -405,7 +405,8 @@
     "tooManyChannels": "Scegli al massimo {max} canali ({picked} scelti).",
     "ignoredChannel": "Automod ignora #{channel}, quindi lì una prova non trova niente. Scegli un altro canale.",
     "offNeedsAdmin": "Per disattivare l'automod ti serve il permesso Amministratore in questo server. Non è stato cambiato nulla.",
-    "staffGuardOwnerOnly": "Solo il proprietario del server può disattivare l'automod mentre la protezione dello staff è attiva (disattivare l'automod ferma anche la protezione). Non è stato cambiato nulla."
+    "staffGuardOwnerOnly": "Solo il proprietario del server può disattivare l'automod mentre la protezione dello staff è attiva (disattivare l'automod ferma anche la protezione). Non è stato cambiato nulla.",
+    "needReviewChannel": "Scegli prima un canale per le schede di revisione di automod (il canale delle schede di revisione qui sotto, o un canale del registro di moderazione nella pagina Sanzioni)."
   },
   "action": {
     "automodOn": "Automod ora è attivo.",
@@ -438,6 +439,14 @@
     "nativeSaved": "Regola di Discord «{name}» aggiornata.",
     "lockdownEnded": "Blocco terminato. Il livello di verifica è tornato com'era e inviti e messaggi diretti sospesi sono ripresi.",
     "probationEnded": "Sorveglianza extra per {member} terminata in anticipo.",
-    "testRunStarted": "Prova avviata. Ricarica la pagina tra poco per vedere l'avanzamento."
+    "testRunStarted": "Prova avviata. Ricarica la pagina tra poco per vedere l'avanzamento.",
+    "startedMonitor": "Parte in Solo segnalazione: Mewvo pubblica una scheda di revisione con un pulsante Applica e non elimina nulla. Passa ad Attivo quando le schede ti sembrano giuste."
+  },
+  "notice": {
+    "title": "Prima di affidarti ad automod",
+    "noReviewChannel": "Automod è attivo, ma non c'è un canale per le sue schede di revisione: nessuno vede cosa trova. Scegli un canale di revisione qui sotto (o un canale del registro di moderazione nella pagina Sanzioni).",
+    "monitor": "Solo segnalazione: Mewvo pubblica una scheda di revisione con un pulsante Applica e non elimina nulla. Passa ad Attivo quando le schede ti sembrano giuste.",
+    "nudge": "Solo segnalazione è attivo da un giorno. Sembra a posto? Passa ad Attivo.",
+    "switchOn": "Passa ad Attivo"
   }
 }

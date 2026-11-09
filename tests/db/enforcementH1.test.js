@@ -55,6 +55,9 @@ before(async () => {
     ({ db } = await import('../../src/utils/database/wrapper.js'));
     await db.initialize();
     assert.equal(db.getConnectionType(), 'postgresql');
+    // The test server's settings row as the cache holds it after boot (getLadder reads warnLadderEnabled).
+    const { setSettingsCacheForTests } = await import('../../src/services/settings/guildSettings.js');
+    setSettingsCacheForTests(guildId, {});
 });
 
 after(async () => {
@@ -125,14 +128,14 @@ test('my standing: only own counted warns at the current level, active punishmen
     await insertAppeal(othersCase.case_code, someoneElse, 'denied');
 
     const standing = await getMemberStanding(guildId, me);
-    assert.deepEqual(standing.ladder, { level: 1, warns_since_level: 0 });
+    assert.deepEqual(standing.ladder, { level: 1, warns_since_level: 0, enabled: true });
     assert.deepEqual(standing.warns.map((row) => row.case_code), [counted.case_code]);
     assert.equal(standing.activeMute.case_code, mute.case_code);
     assert.equal(standing.activeBan, null);
     assert.deepEqual(standing.appeals.map((row) => row.case_code), [mute.case_code]);
 
     const nobody = await getMemberStanding(guildId, user(12));
-    assert.deepEqual(nobody.ladder, { level: 0, warns_since_level: 0 });
+    assert.deepEqual(nobody.ladder, { level: 0, warns_since_level: 0, enabled: true });
     assert.equal(nobody.warns.length, 0);
 });
 

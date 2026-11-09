@@ -175,6 +175,7 @@
         "appealSupport": "Odwołaj się z tym kodem na serwerze wsparcia.",
         "appealWithCode": "Odwołaj się z tym kodem (DM mówi gdzie).",
         "onlyTarget": "Odwołać się może tylko {name}; uruchom /test na sobie, aby wypróbować odwołanie.",
-        "realInvite": "Zaproszenie w nim to prawdziwe jednorazowe zaproszenie na ten serwer."
+        "realInvite": "Zaproszenie w nim to prawdziwe jednorazowe zaproszenie na ten serwer.",
+        "noteWarnLadderOff": "ostrzeżenie (drabinka wyłączona: tylko zapis)"
     }
 }

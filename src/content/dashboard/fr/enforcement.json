@@ -205,5 +205,14 @@
     "badInvite": "Invitation vers notre propre serveur : doit être un lien d’invitation discord.gg. Rien n’a été modifié.",
     "homeNote": "Cela ne s’applique pas ici : les membres des serveurs de Mewvo font toujours appel sur le serveur de support de Mewvo.",
     "homeOnlyAction": "Ce réglage ne s’applique pas aux serveurs de Mewvo. Rien n’a été modifié."
+  },
+  "ladderSettings": {
+    "title": "Réglages de l'échelle d'avertissements",
+    "help": "Si les avertissements s'additionnent jusqu'à des bannissements automatiques sur ce serveur. Les avertissements sont toujours enregistrés et affichés dans l'historique du membre.",
+    "enabled": "Échelle d'avertissements : 3 avertissements mènent à un bannissement automatique",
+    "enabledHelp": "Désactivé : les avertissements sont toujours enregistrés et envoyés, mais ne bannissent jamais personne d'eux-mêmes. Les bannissements que tu donnes à la main ne changent pas.",
+    "automod": "Les avertissements d'automod comptent pour l'échelle d'avertissements",
+    "automodHelp": "Désactivé (par défaut sur les nouveaux serveurs) : les avertissements donnés par automod lui-même sont enregistrés et affichés comme « Avertissement automod — ne compte pas pour les bannissements ». Activé : trois détections d'automod peuvent entraîner un bannissement automatique de 7 jours.",
+    "offNote": "L'échelle d'avertissements est désactivée : aucun avertissement sur ce serveur ne mène à un bannissement automatique, le réglage d'automod n'a donc aucun effet pour l'instant."
   }
 }

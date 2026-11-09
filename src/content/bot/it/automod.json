@@ -496,7 +496,8 @@
             "exemptOn": "L'automod ora ignora <#{channelId}>.",
             "exemptOff": "L'automod controlla di nuovo <#{channelId}>.",
             "noLockdown": "Al momento non c'è nessun lockdown.",
-            "lockdownEnded": "Lockdown terminato. Il livello di verifica è tornato com'era e inviti e DM sospesi sono ripresi."
+            "lockdownEnded": "Lockdown terminato. Il livello di verifica è tornato com'era e inviti e DM sospesi sono ripresi.",
+            "startedMonitor": "**Solo segnalazione:** Mewvo pubblica una scheda di revisione con un pulsante Applica e non elimina nulla. Passa ad Attivo (`/automod mode`) quando le schede ti sembrano giuste."
         },
         "joingate": {
             "ageNote": "Account più giovani di **{days} giorno/i**. \"Verifica con Discord\" trattiene già per l'approvazione gli account più giovani di {defaultDays} giorni; i membri verificati così non vengono mai controllati.",
@@ -608,7 +609,8 @@
             "customNewAction": "Nuova azione",
             "customToggle": "Attiva o disattiva una regola",
             "customRemove": "Rimuovi una regola"
-        }
+        },
+        "needReviewChannel": "Scegli prima un canale per le schede di revisione di automod: imposta un canale di revisione (o un canale del registro di moderazione) nella dashboard, poi attiva automod."
     },
     "joinGate": {
         "check": {
