@@ -15,7 +15,7 @@
 import { pgConfig } from '../../config/database/postgres.js';
 import { query as dbQuery } from '../enforcement/db.js';
 import { guildRole, resolveSetting, settingGuildId } from '../settings/guildSettings.js';
-import { INVITE_TRACKING_DEFAULT } from '../settings/settingsRegistry.js';
+import { INVITE_LIMITS, INVITE_TRACKING_DEFAULT } from '../settings/settingsRegistry.js';
 import { BoundedMap } from '../../utils/boundedMap.js';
 
 export const INVITE_SETTING_KEY = 'inviteTracking';
@@ -32,7 +32,8 @@ export function normalizeInviteSettings(value) {
     return {
         enabled: v.enabled === true,
         fakeAccountDays: num(v.fakeAccountDays, INVITE_TRACKING_DEFAULT.fakeAccountDays, 365),
-        fakeLeaveHours: num(v.fakeLeaveHours, INVITE_TRACKING_DEFAULT.fakeLeaveHours, 720),
+        // The cap inviteReconcile.js relies on (reconciled rows are never quick leaves).
+        fakeLeaveHours: num(v.fakeLeaveHours, INVITE_TRACKING_DEFAULT.fakeLeaveHours, INVITE_LIMITS.maxLeaveHours),
         milestones: Array.isArray(v.milestones)
             ? v.milestones.filter((m) => Number.isInteger(m?.count) && m.count > 0 && ID.test(String(m?.roleId || '')))
                 .map((m) => ({ count: m.count, roleId: String(m.roleId) })).sort((a, b) => a.count - b.count)

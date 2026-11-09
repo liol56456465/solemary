@@ -51,6 +51,12 @@ configurable 0–1440) · 4 self-muted counts (D) · 5 server-muted doesn't (D) 
 - **Counts:** Total = invites − left − fake + bonus. Fake = account < 7 days old OR left within 24 h,
   worked out at read time, so changing the rule recounts history. Rejoins count once per inviter.
 - **Startup:** only servers with the feature ON are warmed up (paced 250 ms, max 3 at once).
+- **Leave reconcile** (`invites/inviteReconcile.js`): a member who left while the bot was offline or the DB
+  was down kept an open row (never pruned, never "left"). Daily 05:10 UTC + once ~10 min after ready (after
+  the warm-up), servers with the feature ON, 500 ms apart: open rows older than 720 h are closed
+  (left_at = reconcile time) when the member is not in a complete member list (fetch gate; a skipped fetch,
+  error or partial cache closes nothing). The 720 h age (= max fakeLeaveHours) means a reconciled row is
+  never a "quick leave" fake, so no marker column; trade-off: younger rows wait until they are 30 days old.
 - **Commands (1 new top-level → 62 + 3):** everyone: `/invites view [user]` (counts only),
   `/invites leaderboard`. Administrator: `/invites who`, `/invites list`, `/invites bonus add|remove`,
   `/invites reset` (confirm button), `/invites setup`.

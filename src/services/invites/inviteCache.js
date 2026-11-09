@@ -135,7 +135,21 @@ const sleep = (ms) => new Promise((resolve) => {
  * at most `concurrency` loads at once. Returns { servers, ready, noPermission, errors }.
  * deps (tests): isOn(guildId), warm(guild), sleepFn, pauseMs, concurrency.
  */
-export async function warmAllInviteCaches(client, deps = {}) {
+export function warmAllInviteCaches(client, deps = {}) {
+    const run = warmAll(client, deps);
+    lastWarmUp = run.catch(() => null);
+    return run;
+}
+
+// The latest warm-up (settled, never rejects): the leave reconcile (inviteReconcile.js) waits for it.
+let lastWarmUp = Promise.resolve(null);
+
+/** Resolves once the latest warm-up has finished (success or not). */
+export function inviteWarmUpSettled() {
+    return lastWarmUp;
+}
+
+async function warmAll(client, deps) {
     const {
         isOn = (id) => inviteTrackingOn(id), warm = (guild) => warmGuild(guild), sleepFn = sleep,
         pauseMs = WARM_PAUSE_MS, concurrency = WARM_CONCURRENCY,

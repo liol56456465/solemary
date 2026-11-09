@@ -28,6 +28,7 @@ import { remindStaleAppeals } from './services/enforcement/appealStatusService.j
 import { flushActivity, pruneActivity } from './services/stats/activityService.js';
 import { purgeIncidentTimelines } from './services/automod/incidentTimeline.js';
 import { runRetention, scheduleRetention } from './services/privacy/retentionService.js';
+import { reconcileInviteLeaves, scheduleInviteLeaveReconcile } from './services/invites/inviteReconcile.js';
 import { backfillLegacyRatings } from './services/ticketRatingService.js';
 import { sweepChannelSurveyAccess } from './services/ticketRatingEffects.js';
 import { runDueDeletions as runDueServerDataDeletions } from './services/privacy/serverDataDeletion.js';
@@ -413,6 +414,15 @@ class Mewvo extends Client {
       schedule: (expression, job, options) => cron.schedule(expression, job, options),
       wrap: exclusive,
       run: () => runRetention(this),
+      whenReady: (fn) => (this.isReady() ? fn() : this.once(Events.ClientReady, () => fn())),
+    });
+    // Invite tracking: close join rows of members who left while Mewvo could not see it (offline,
+    // database down), only when the member list is complete; daily at 05:10 UTC and once ~10
+    // minutes after ready, after the invite warm-up (invites/inviteReconcile.js).
+    scheduleInviteLeaveReconcile({
+      schedule: (expression, job, options) => cron.schedule(expression, job, options),
+      wrap: exclusive,
+      run: () => reconcileInviteLeaves(this),
       whenReady: (fn) => (this.isReady() ? fn() : this.once(Events.ClientReady, () => fn())),
     });
     // Server data deletions a server owner asked for, once their 7-day grace period is over

@@ -211,3 +211,57 @@ test('cascade: deleting the server row removes its invite rows', { skip }, async
         assert.equal((await q(`SELECT COUNT(*)::int AS n FROM ${table} WHERE guild_id = $1`, [G])).rows[0].n, 0, table);
     }
 });
+
+test('leave reconcile: closes only the given open, old-enough rows of that server; counted as left (not fake); retention prunes after 365 days', { skip }, async () => {
+    const reconcile = await import('../../src/services/invites/inviteReconcile.js');
+    const G = g(11);
+    const OTHER = g(12);
+    const A = u(99);
+    for (const n of [90, 91, 92, 93]) await join(G, u(n), A);
+    await join(OTHER, u(90), A);
+    // Joined 40 days ago (the clock is the database's NOW()); u(93) only 5 days ago.
+    await q(`UPDATE invite_joins SET joined_at = NOW() - INTERVAL '40 days', account_created_at = NOW() - INTERVAL '400 days' WHERE guild_id = ANY($1)`, [[G, OTHER]]);
+    await q(`UPDATE invite_joins SET joined_at = NOW() - INTERVAL '5 days' WHERE guild_id = $1 AND user_id = $2`, [G, u(93)]);
+    // u(92) left normally 10 days ago: its left_at must stay.
+    await q(`UPDATE invite_joins SET left_at = NOW() - INTERVAL '10 days' WHERE guild_id = $1 AND user_id = $2`, [G, u(92)]);
+    const rowOf = async (guildId, userId) => (await q('SELECT id, left_at FROM invite_joins WHERE guild_id = $1 AND user_id = $2', [guildId, userId])).rows[0];
+    const before92 = (await rowOf(G, u(92))).left_at;
+
+    // listOpenJoins: open + old enough only.
+    const open = await store.listOpenJoins(G, { minAgeHours: reconcile.MIN_AGE_HOURS });
+    assert.deepEqual(open.map((r) => r.userId).sort(), [u(90), u(91)]);
+
+    // The UPDATE: ids of every kind, only the open old row of this server changes.
+    const ids = [(await rowOf(G, u(90))).id, (await rowOf(G, u(92))).id, (await rowOf(G, u(93))).id, (await rowOf(OTHER, u(90))).id];
+    assert.equal(await store.closeOpenJoins(G, ids, { minAgeHours: reconcile.MIN_AGE_HOURS }), 1);
+    assert.ok((await rowOf(G, u(90))).left_at, 'closed');
+    assert.equal((await rowOf(G, u(91))).left_at, null, 'not in the list: untouched');
+    assert.equal((await rowOf(G, u(92))).left_at.getTime(), before92.getTime(), 'already closed: left_at unchanged');
+    assert.equal((await rowOf(G, u(93))).left_at, null, 'too young: untouched');
+    assert.equal((await rowOf(OTHER, u(90))).left_at, null, 'another server: untouched');
+
+    // Through reconcileGuild with the real store: an untrusted list closes nothing; a trusted
+    // list where u(91) is present closes nothing more.
+    const untrusted = await reconcile.reconcileGuild({ id: G, memberCount: 5 }, {
+        fetchMembers: async () => ({ members: new Map(), partial: true, reason: 'too-large' }),
+    });
+    assert.equal(untrusted.closed, 0);
+    const trusted = await reconcile.reconcileGuild({ id: G, memberCount: 1 }, {
+        fetchMembers: async () => ({ members: new Map([[u(91), {}]]), partial: false, reason: 'fetched' }),
+    });
+    assert.deepEqual({ open: trusted.open, closed: trusted.closed }, { open: 1, closed: 0 });
+    assert.equal((await rowOf(G, u(91))).left_at, null);
+
+    // The reconciled leave counts as "left", never as "fake", even with the longest fake-leave window.
+    const counts = await stats.inviteCounts(G, A, { ...SETTINGS, fakeAccountDays: 0, fakeLeaveHours: reconcile.MIN_AGE_HOURS });
+    assert.equal(counts.fake, 0);
+    assert.equal(counts.left, 2, 'u(90) reconciled + u(92) normal leave');
+
+    // Retention: kept now, pruned once the reconcile time is more than 365 days ago.
+    const id90 = (await rowOf(G, u(90))).id;
+    await retention.pruneInviteJoins({ query: enforcementDb.query });
+    assert.equal((await q('SELECT 1 FROM invite_joins WHERE id = $1', [id90])).rowCount, 1, 'kept within 365 days');
+    await retention.pruneInviteJoins({ query: enforcementDb.query, now: Date.now() + 366 * DAY });
+    assert.equal((await q('SELECT 1 FROM invite_joins WHERE id = $1', [id90])).rowCount, 0, 'pruned after 365 days');
+    assert.ok(await rowOf(G, u(91)), 'open rows are never pruned');
+});
