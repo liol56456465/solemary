@@ -206,7 +206,10 @@ test('legal pages under a prefix: the English page with a note in the visitor\'s
             const res = await site.get(path);
             assert.equal(res.status, 200, path);
             assert.match(res.body, /<html lang="en">/, path);
-            assert.ok(res.body.includes('<p class="notice lang-note" lang="de">Diese Seite gibt es nur auf Englisch.</p>'), path);
+            // Privacy and Terms: a German "In short" with its own note instead (beginner audit 4.10).
+            const summary = path === '/de/privacy' || path === '/de/terms';
+            assert.equal(res.body.includes('<p class="notice lang-note" lang="de">Diese Seite gibt es nur auf Englisch.</p>'), !summary, path);
+            assert.equal(res.body.includes('<section class="notice legal-summary" lang="de"'), summary, path);
             assert.ok(res.body.includes('href="/de/features"'), `${path}: the shell keeps the language`);
         }
         assert.ok((await site.get('/de/privacy')).body.includes('<h1>Privacy Policy</h1>'));
@@ -441,9 +444,10 @@ test('number + noun sentences are plural keys (pricing, trust, portal, account, 
     assert.match(String(billingSite.checkoutPage(de, { session, choice: { planId: 'pro', period: 'monthly', kind: 'personal' } })), /30 Tage ab der Bestellung/);
 });
 
-test('home DM caption: English unchanged; translations say the bot sends the DM in English', () => {
+test('home DM caption: English unchanged; translations say the bot sends the DM in the server\'s language', () => {
     assert.match(String(homePage(en)), /Same wording as the bot\./);
-    assert.match(String(homePage(de)), /Mewvo schickt sie auf Englisch/);
-    assert.match(String(homePage(ru)), /Mewvo отправляет его на английском/);
+    // The DMs follow the server's language now (beginner wave D), no longer always English.
+    assert.match(String(homePage(de)), /Mewvo schickt sie in der Sprache deines Servers/);
+    assert.match(String(homePage(ru)), /Mewvo отправляет его на языке вашего сервера/);
     for (const { code } of LANGUAGES) assert.match(String(featuresPage(translator(code))), /Change to…</, `${code}: no doubled full stop`);
 });

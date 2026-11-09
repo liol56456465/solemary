@@ -142,7 +142,9 @@
       "users": "Membri",
       "verification": "Verifica",
       "welcome": "Benvenuto e congedo"
-    }
+    },
+    "defaultNote": "Sono mostrati i comandi che tutti possono usare.",
+    "showAll": "Mostra tutti i comandi (anche admin)"
   },
   "about": {
     "title": "Chi siamo",

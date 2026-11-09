@@ -91,7 +91,8 @@
   "faq": {
     "buyNow": {
       "q": "Puis-je acheter une formule maintenant ?",
-      "a": "Non. Pour l’instant, Mewvo ne fonctionne que sur son propre serveur. Les formules payantes commenceront quand il s’ouvrira à d’autres serveurs ; d’ici là, rien ne peut être acheté et personne n’est débité."
+      "a": "Non. Pour l’instant, Mewvo ne fonctionne que sur son propre serveur. Les formules payantes commenceront quand il s’ouvrira à d’autres serveurs ; d’ici là, rien ne peut être acheté et personne n’est débité.",
+      "aPublic": "Non. Les formules payantes ne sont pas encore en vente ; d’ici là, rien ne peut être acheté et personne n’est débité. Tout ce que Mewvo fait aujourd’hui est gratuit."
     },
     "currency": {
       "q": "Dans quelle devise sont les prix ?",

@@ -13,7 +13,9 @@ import { COMMANDS_CSP, createSite, SECURITY_HEADERS } from '../src/services/site
 import {
     ACCESS_TIERS, buildCommandCatalog, commandCatalog, commandSlug, invalidateCommandCatalog,
 } from '../src/services/site/commandCatalog.js';
-import { HAND_EXAMPLES, OPTION_TYPES, commandFilters, commandsPage, matchesFilters } from '../src/services/site/pages/commands.js';
+import {
+    DEFAULT_WHO, HAND_EXAMPLES, OPTION_TYPES, commandAnchorHref, commandFilters, commandsPage, matchesFilters, whoParam,
+} from '../src/services/site/pages/commands.js';
 
 const client = {};
 await loadCommands(client);
@@ -139,11 +141,18 @@ test('hand-written examples: about 10, each for a real command, using only its o
     }
 });
 
-test('filters: q trimmed and cut, bad cat and who ignored; who=admin includes the owner kit', () => {
+test('filters: q trimmed and cut, bad cat ignored; who defaults to everyone, who=all is every tier; who=admin includes the owner kit', () => {
     const groups = ['core', 'enforcement'];
     assert.deepEqual(commandFilters({ q: '  warn  ', cat: 'core', who: 'everyone' }, groups), { q: 'warn', cat: 'core', who: 'everyone' });
-    assert.deepEqual(commandFilters({ q: ['a', 'b'], cat: 'nope', who: 'root' }, groups), { q: 'a', cat: '', who: '' });
+    // Beginner audit 4.11: visitors start on "everyone"; an unknown who falls back to that default.
+    assert.equal(DEFAULT_WHO, 'everyone');
+    assert.deepEqual(commandFilters({}, groups), { q: '', cat: '', who: 'everyone' });
+    assert.deepEqual(commandFilters({ q: ['a', 'b'], cat: 'nope', who: 'root' }, groups), { q: 'a', cat: '', who: 'everyone' });
+    assert.deepEqual(commandFilters({ who: 'all' }, groups), { q: '', cat: '', who: '' }, 'who=all: no tier filter');
     assert.deepEqual(commandFilters({ q: { x: 1 }, cat: ['core'], who: ['ownerkit'] }, groups), { q: '', cat: 'core', who: 'ownerkit' });
+    assert.equal(whoParam('everyone'), '', 'the default has no ?who=');
+    assert.equal(whoParam(''), 'all');
+    assert.equal(whoParam('admin'), 'admin');
     assert.equal(commandFilters({ q: 'x'.repeat(500) }, groups).q.length, 100);
     const entry = { group: 'enforcement', access: 'ownerkit', search: '/enforcements open the panel' };
     assert.ok(matchesFilters(entry, { who: 'admin' }) && matchesFilters(entry, { who: 'ownerkit' }));
@@ -151,14 +160,30 @@ test('filters: q trimmed and cut, bad cat and who ignored; who=admin includes th
     assert.ok(matchesFilters(entry, { q: 'PANEL enforcements' }) && !matchesFilters(entry, { q: 'panel zzz' }));
 });
 
-test('page: all cards rendered, filtered ones hidden; who, cat and q work server-side, bad values show everything', async () => {
+test('page: all cards rendered, filtered ones hidden; who, cat and q work server-side; the default shows everyone commands', async () => {
     const site = await serve();
     try {
-        const all = cards((await site.get('/commands')).body);
-        assert.equal(all.ids.length, KEYS.length);
-        assert.equal(all.shown.length, KEYS.length);
         const entries = buildCommandCatalog(COMMANDS, 'en');
         const tier = (who) => entries.filter((e) => matchesFilters(e, { who })).map((e) => e.slug).sort();
+        // No ?who=: every card is sent, only the "everyone" ones show, with the "Show all" note.
+        const plain = (await site.get('/commands')).body;
+        const first = cards(plain);
+        assert.equal(first.ids.length, KEYS.length);
+        assert.deepEqual(first.shown.sort(), tier('everyone'), 'visitors see the everyone commands first');
+        assert.ok(first.shown.length < KEYS.length && first.shown.includes('remind-me') && !first.shown.includes('enforcements'));
+        assert.ok(plain.includes('<p class="notice cmd-default" data-cmd-default>Showing the commands everyone can use. <a href="/commands?who=all" data-cmd-all><strong>Show all commands (incl. admin)</strong></a></p>'), 'the show-all link');
+        assert.match(plain, /<option value="everyone" selected>Everyone<\/option>/);
+        assert.match(plain, /<option value="all">All<\/option>/);
+        assert.ok(plain.includes('<li><a href="/commands?who=all">All</a></li>') && plain.includes('<li><a href="/commands" aria-current="true">Everyone</a></li>'));
+        const all = cards((await site.get('/commands?who=all')).body);
+        assert.equal(all.ids.length, KEYS.length);
+        assert.equal(all.shown.length, KEYS.length, '?who=all shows every card');
+        const allBody = (await site.get('/commands?who=all')).body;
+        assert.match(allBody, /<p class="notice cmd-default" data-cmd-default hidden>/, 'no note when everything shows');
+        assert.match(allBody, /<option value="all" selected>All<\/option>/);
+        const kept = (await site.get('/commands?q=case&cat=enforcement')).body;
+        assert.ok(kept.includes('href="/commands?q=case&amp;cat=enforcement&amp;who=all" data-cmd-all'), 'show-all keeps q and cat');
+        assert.ok((await site.get('/de/commands')).body.includes('<a href="/de/commands?who=all" data-cmd-all>'), 'show-all keeps the language');
         for (const who of ACCESS_TIERS) {
             const page = cards((await site.get(`/commands?who=${who}`)).body);
             assert.equal(page.ids.length, KEYS.length, `${who}: every card is sent`);
@@ -166,8 +191,8 @@ test('page: all cards rendered, filtered ones hidden; who, cat and q work server
         }
         assert.ok(tier('admin').includes('enforcements') && !tier('everyone').includes('purge'));
         const bad = cards((await site.get('/commands?who=root&cat=%3Cscript%3E')).body);
-        assert.equal(bad.shown.length, KEYS.length, 'bad who / cat are ignored');
-        const birthday = cards((await site.get('/commands?cat=birthday')).body);
+        assert.deepEqual(bad.shown.sort(), tier('everyone'), 'bad who / cat: the default filter');
+        const birthday = cards((await site.get('/commands?cat=birthday&who=all')).body);
         assert.ok(birthday.shown.length && birthday.shown.every((s) => s.startsWith('birthday-')));
         const search = await site.get('/commands?q=%20%20remind%20');
         assert.ok(cards(search.body).shown.includes('remind-me'));
@@ -221,16 +246,18 @@ test('headers: form-action \'self\' and script-src \'self\' on /commands only; t
     } finally { await site.close(); }
 });
 
-test('/commands/<slug>: 301 to the anchor (or the command\'s first card), keeps the language; unknown → 404', async () => {
+test('/commands/<slug>: 301 to the anchor (or the command\'s first card), ?who=all for cards the default hides, keeps the language; unknown → 404', async () => {
     const site = await serve();
     try {
         const exact = await site.get('/commands/case-search');
         assert.equal(exact.status, 301);
-        assert.equal(exact.headers.get('location'), '/commands#case-search');
+        assert.equal(exact.headers.get('location'), '/commands?who=all#case-search', 'an admin card: ?who=all, or the default filter would hide it');
         const parent = await site.get('/commands/case');
         assert.equal(parent.status, 301);
-        assert.equal(parent.headers.get('location'), '/commands#case-edit');
-        assert.equal((await site.get('/de/commands/purge')).headers.get('location'), '/de/commands#purge');
+        assert.equal(parent.headers.get('location'), '/commands?who=all#case-edit');
+        assert.equal((await site.get('/de/commands/purge')).headers.get('location'), '/de/commands?who=all#purge');
+        assert.equal((await site.get('/commands/remind-me')).headers.get('location'), '/commands#remind-me', 'an everyone card: no ?who=');
+        assert.equal(commandAnchorHref(COMMANDS, 'no-such-command'), null);
         assert.equal((await site.get('/commands/no-such-command')).status, 404);
         assert.equal((await site.get('/commands/database')).status, 404, 'owner tools have no card');
     } finally { await site.close(); }

@@ -34,7 +34,7 @@
         },
         "safetyChecks": {
           "term": "Safety checks",
-          "text": "Refuses the server owner, the bot, yourself and anyone with an equal or higher role. The Administrator role is checked again on every click."
+          "text": "Refuses the server owner, the bot, yourself and anyone with an equal or higher role. Your permissions are checked again on every click."
         },
         "massActionGuard": {
           "term": "Safety limit: too many bans or kicks in 10 minutes",
@@ -60,7 +60,7 @@
     },
     "ladder": {
       "title": "Warning ladder",
-      "intro": "Escalation that is the same for everyone and visible to the member.",
+      "intro": "Each warning moves a member one step closer to a ban, the same way for everyone, and the member can see where they stand. A server can switch the automatic bans off on the dashboard.",
       "items": {
         "levels": {
           "term": "Levels",
@@ -140,7 +140,7 @@
         },
         "reviewCards": {
           "term": "Review cards",
-          "text": "Every automatic action posts a card for staff with Keep, Undo and Change to…"
+          "text": "Every automatic action posts a card, a message for staff in your review channel, so a person checks what automod did. Its buttons: Keep, Undo and Change to…"
         },
         "modes": {
           "term": "Modes",
@@ -284,7 +284,7 @@
         },
         "verification": {
           "term": "Verification",
-          "text": "A verify panel or verification on join. “Verify with Discord” can also add the member to the support server so appeal messages still reach them."
+          "text": "A verify panel or verification on join. In Mewvo’s own servers, “Verify with Discord” can also add the member to the support server so appeal messages still reach them."
         },
         "postingAsBot": {
           "term": "Posting as the bot",

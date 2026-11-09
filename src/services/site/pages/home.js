@@ -7,7 +7,7 @@
 import { html } from '../../dashboard/html.js';
 import { PLANS } from '../../../config/site/plans.js';
 import { textOf } from '../i18n.js';
-import { DASHBOARD_PATH, addButton, layout } from '../shell.js';
+import { DASHBOARD_PATH, addButton, installNote, layout } from '../shell.js';
 import { dashboardShot, ladderMock, warnDmMock } from './mockups.js';
 import { planCard } from './pricing.js';
 
@@ -19,7 +19,7 @@ export function heroActions(ctx, { how = '/docs', howLabel = null, dashboard = t
         ? html`<a class="button" href="${ctx.mainInvite || ctx.supportInvite}" rel="noopener">${t(ctx.mainInvite ? 'home.actions.joinServer' : 'home.actions.joinSupportServer')}</a>`
         : '';
     const primary = add || join;
-    return html`<p class="hero-actions">${primary}<a class="button${primary ? ' button-quiet' : ''}" href="${href(how)}">${howLabel ?? t('home.actions.readDocs')}</a></p>${dashboard && ctx.dashboardEnabled ? html`<p class="hero-more">${ti('home.actions.openDashboard', { url: DASHBOARD_PATH })}</p>` : ''}`;
+    return html`<p class="hero-actions">${primary}<a class="button${primary ? ' button-quiet' : ''}" href="${href(how)}">${howLabel ?? t('home.actions.readDocs')}</a></p>${add ? installNote(ctx) : ''}${dashboard && ctx.dashboardEnabled ? html`<p class="hero-more">${ti('home.actions.openDashboard', { url: DASHBOARD_PATH })}</p>` : ''}`;
 }
 
 /** What Mewvo does: [anchor id (also the key under home.what.items), link]. */

@@ -39,7 +39,8 @@
     "logOut": "Выйти"
   },
   "install": {
-    "addToDiscord": "Добавить в Discord"
+    "addToDiscord": "Добавить в Discord",
+    "note": "Права администратора не нужны — [узнайте, зачем Mewvo нужно каждое разрешение →]({url})"
   },
   "short": {
     "dashboard": "Панель",
@@ -55,7 +56,8 @@
       "help": "Помощь",
       "community": "Сообщество",
       "legal": "Право"
-    }
+    },
+    "legalLinePublic": "Mewvo — бот Discord, которым управляет его владелец. Не связан с Discord."
   },
   "language": {
     "label": "Язык"

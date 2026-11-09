@@ -46,7 +46,7 @@
       "logging": "Escolha um **canal de registro de moderação** que só a equipe possa ver: cada advertência, silenciamento, expulsão e banimento é anotado lá. Os outros registros (entradas, mudanças de cargos, mensagens editadas e apagadas) ficam na página **Registros**.",
       "automod": "O automod vem **desligado** em um servidor novo. Ligue-o na página **Automod** e comece com **Só avisar (não apagar)**: a equipe vê o que ele teria feito e nada acontece com ninguém. Mude uma regra para **Ativado** quando confiar nela.",
       "staffGuard": "A **proteção da equipe** também vem desligada. Ligue-a com `/automod staffguard`: um admin que bane ou expulsa em massa, ou apaga canais ou cargos em massa, perde os cargos da equipe e o dono do servidor é avisado; `/staff restore` devolve os cargos. Ela funciona enquanto o automod está ligado, e só o dono do servidor pode desligá-la.",
-      "appeals": "Publique o painel de apelações com `/setappeal` em um canal que todos os membros possam ver.",
+      "appeals": "Publique o painel de apelações (uma mensagem com o botão **Appeal**) com `/setappeal` em um canal que todos os membros possam ver.",
       "test": "Use `/test` para receber exatamente a mensagem direta que um membro receberia. Nada é feito com ninguém."
     }
   },
@@ -57,7 +57,7 @@
       "dms": "Uma mensagem direta para cada advertência, silenciamento, expulsão e banimento: o motivo, o código do caso, até quando vale e como apelar, ou que não é possível apelar.",
       "appeals": "O painel de apelações do `/setappeal`, com **Appeal** (apelar), **My appeals** (minhas apelações) e **My record** (meu histórico).",
       "record": "Os próprios casos, de todos os servidores que usam o Mewvo, em [Meu histórico](/me), neste site.",
-      "automod": "Quando o automod age sobre eles, uma mensagem direta com a regra e um botão **Contest this** (contestar). A equipe recebe um cartão de revisão, onde mantém, desfaz ou muda a ação."
+      "automod": "Quando o automod age sobre eles, uma mensagem direta com a regra e um botão **Contest this** (contestar). A equipe recebe um cartão de revisão (uma mensagem no canal de revisão), onde mantém, desfaz ou muda a ação."
     }
   },
   "appeals": {
@@ -65,7 +65,7 @@
     "who": "Os membros apelam ao servidor que os puniu, e os seus **Administradores** decidem: **Accept** (aceitar) ou **Deny** (negar) no cartão da apelação no canal da equipe, ou na página **Apelações** do painel. Uma apelação aceita retira o que ainda estiver ativo; um banimento ou uma expulsão vem com um convite de uso único para voltar.",
     "panel": "**No Discord:** o painel de apelações que você publica com `/setappeal`. Membros silenciados e advertidos o usam no seu servidor.",
     "web": "**No site:** os membros entram com o Discord em [My appeals](/me/appeals). Funciona mesmo depois de um banimento, quando eles não compartilham mais nenhum servidor com o Mewvo.",
-    "home": "Você escolhe onde a mensagem direta de punição diz para os membros apelarem: no painel, em **Punições e apelações → Onde os membros recorrem**, escolha **Suporte do Mewvo** (o servidor de suporte do Mewvo) ou **Nosso próprio servidor**, com um convite para um servidor que vocês administram."
+    "home": "Você escolhe onde a mensagem direta de punição diz para os membros apelarem: no painel, em **Punições e apelações → Onde os membros recorrem**. **Nosso próprio servidor** (o padrão) mostra um convite para um servidor que vocês administram e, quando disponível, a página de apelação do site; **Suporte do Mewvo** manda os membros para o servidor de suporte do Mewvo."
   },
   "data": {
     "title": "Dados e exclusão",
@@ -100,11 +100,11 @@
     "noDashboard": "O painel não está disponível agora. Use `/setup` no seu servidor: ele mostra o que está configurado e o que falta.",
     "firstSteps": "Primeiros passos",
     "steps": {
-      "setup": "Use `/setup` no seu servidor: ele mostra o que está configurado e o que falta.",
+      "setup": "Use `/setup` no seu servidor: ele mostra o que está configurado e o que falta, com um link para o painel, onde você muda as configurações.",
       "logging": "Escolha um **canal de registro de moderação** que só a equipe possa ver.",
       "automod": "O automod vem **desligado** em um servidor novo: ligue-o primeiro com **Só avisar (não apagar)**.",
       "staffGuard": "Ligue a **proteção da equipe** com `/automod staffguard` para proteger o servidor de um admin descontrolado.",
-      "appeals": "Publique o painel de apelações com `/setappeal`."
+      "appeals": "Publique o painel de apelações (uma mensagem com o botão **Appeal**) com `/setappeal`."
     },
     "more": "Permissões, apelações, dados e limites: [Para administradores de servidores](/admins).",
     "accessNote": "O painel confere se você pode gerenciar este servidor antes de mostrar qualquer coisa."

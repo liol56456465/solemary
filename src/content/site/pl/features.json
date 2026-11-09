@@ -34,7 +34,7 @@
         },
         "safetyChecks": {
           "term": "Kontrole bezpieczeństwa",
-          "text": "Odmawia działania wobec właściciela serwera, bota, ciebie samego i każdego z równą lub wyższą rolą. Uprawnienie Administrator jest sprawdzane ponownie przy każdym kliknięciu."
+          "text": "Odmawia działania wobec właściciela serwera, bota, ciebie samego i każdego z równą lub wyższą rolą. Twoje uprawnienia są sprawdzane ponownie przy każdym kliknięciu."
         },
         "massActionGuard": {
           "term": "Limit bezpieczeństwa: zbyt wiele banów lub wyrzuceń w 10 minut",
@@ -60,7 +60,7 @@
     },
     "ladder": {
       "title": "Drabina ostrzeżeń",
-      "intro": "Eskalacja, która jest taka sama dla wszystkich i widoczna dla członka.",
+      "intro": "Każde ostrzeżenie przybliża członka o jeden stopień do bana, tak samo dla wszystkich, a członek widzi, na którym stopniu jest. Serwer może wyłączyć automatyczne bany w panelu webowym.",
       "items": {
         "levels": {
           "term": "Poziomy",
@@ -140,7 +140,7 @@
         },
         "reviewCards": {
           "term": "Karty przeglądu",
-          "text": "Każda automatyczna akcja publikuje dla ekipy kartę z przyciskami Keep, Undo i Change to…"
+          "text": "Każda automatyczna akcja publikuje kartę, czyli wiadomość dla ekipy na twoim kanale do sprawdzania, żeby człowiek sprawdził, co zrobiła automoderacja. Jej przyciski: Keep, Undo i Change to…"
         },
         "modes": {
           "term": "Tryby",
@@ -284,7 +284,7 @@
         },
         "verification": {
           "term": "Weryfikacja",
-          "text": "Panel weryfikacji albo weryfikacja przy dołączeniu. „Verify with Discord” może też dodać członka do serwera wsparcia, aby wiadomości o odwołaniach nadal do niego docierały."
+          "text": "Panel weryfikacji albo weryfikacja przy dołączeniu. Na własnych serwerach Mewvo „Verify with Discord” może też dodać członka do serwera wsparcia, aby wiadomości o odwołaniach nadal do niego docierały."
         },
         "postingAsBot": {
           "term": "Publikowanie jako bot",

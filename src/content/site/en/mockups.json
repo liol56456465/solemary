@@ -15,7 +15,7 @@
     "by": "By: Moderator",
     "reason": "Reason: Spam in #general",
     "dateValue": "Thursday, 29 October 2026 at 14:05",
-    "limit": "At 3 warnings you will be banned."
+    "limit": "At 3 warnings you will be banned for 7 days."
   },
   "banDm": {
     "time": "Saturday at 19:40",

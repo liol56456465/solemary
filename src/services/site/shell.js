@@ -328,6 +328,17 @@ export function addButton(ctx, className = 'button') {
         : '';
 }
 
+/**
+ * The plain line right after every in-page "Add to Discord" button (beginner audit 2.11): no
+ * Administrator, and a link to the permission list on /admins#permissions. '' whenever addButton
+ * is ''. The top bar's button has no room for it (the /admins link is in the footer).
+ */
+export function installNote(ctx) {
+    if (!(ctx.publicSite && ctx.installUrl)) return '';
+    const { ti, href } = textOf(ctx);
+    return html`<p class="install-note">${ti('shell.install.note', { url: `${href('/admins')}#permissions` })}</p>`;
+}
+
 // The default share image; its alt text is shell.meta.shareImageAlt, the default description
 // shell.meta.defaultDescription.
 const DEFAULT_IMAGE = Object.freeze({ path: '/img/og.png', width: 1200, height: 630, large: true });
@@ -415,8 +426,10 @@ function englishOnlyNote(ctx) {
  * share tags when PUBLIC_URL is set. `refresh` (seconds) adds a <meta http-equiv="refresh">:
  * nothing uses it today (the status page has a Refresh link). `image` overrides the share image (shareTags).
  * `titleComplete`: the title is the whole <title> (no " · Mewvo" added; the home page).
+ * `langNote: false`: no "only in English" note on an English-only page (Privacy and Terms show a
+ * translated summary with their own note instead; pages/legal.js).
  */
-export function layout(ctx, { title, active = null, description = '', refresh = 0, path = null, image = null, titleComplete = false, body }) {
+export function layout(ctx, { title, active = null, description = '', refresh = 0, path = null, image = null, titleComplete = false, langNote = true, body }) {
     const { t, lang, href } = textOf(ctx);
     const brand = t('common.brand');
     const here = typeof path === 'string' ? path : '/';
@@ -430,10 +443,10 @@ export function layout(ctx, { title, active = null, description = '', refresh = 
 <header class="topbar ${bar.stack}"><div class="wrap topbar-inner"><a class="brand" href="${href('/')}"${active === 'home' ? raw(' aria-current="page"') : ''}>${LOGO}<span>${brand}</span></a>
 <nav class="topnav" aria-label="${t('shell.header.navLabel')}"><ul>${navLinks(ctx, active)}</ul></nav>
 <div class="topbar-actions">${bar.actions}</div></div></header>${languageSuggestion(ctx, here)}
-<main id="main" tabindex="-1">${englishOnlyNote(ctx)}${body}</main>
+<main id="main" tabindex="-1">${langNote ? englishOnlyNote(ctx) : ''}${body}</main>
 <footer class="footer"><div class="wrap"><div class="footer-top"><div><p class="footer-brand">${LOGO}<span>${brand}</span></p>
 <p class="footer-text">${t('shell.footer.tagline')}</p></div>
 <nav class="footer-nav" aria-label="${t('shell.footer.navLabel')}">${footerColumns(ctx, active)}</nav></div>
-${languagePicker(ctx, here, 'footer')}<p class="footer-legal">${t('shell.footer.legalLine')}</p></div></footer>
+${languagePicker(ctx, here, 'footer')}<p class="footer-legal">${t(ctx.publicSite ? 'shell.footer.legalLinePublic' : 'shell.footer.legalLine')}</p></div></footer>
 </body></html>`.text;
 }

@@ -49,9 +49,10 @@
     if (q) {
         const $ = (s) => ex.querySelector(s), cat = $('[data-cmd-cat]'), who = $('[data-cmd-who]'), out = $('[data-cmd-shown]'), empty = $('[data-cmd-empty]');
         const fmt = new Intl.NumberFormat(document.documentElement.lang || 'en');
+        const qs = (o) => String(new URLSearchParams(Object.entries(o).filter(([, v]) => v)));
         const apply = () => {
             const text = q.value.trim().slice(0, 100), words = text.toLowerCase().split(/\s+/).filter(Boolean);
-            const c = cat.value, w = who.value;
+            const c = cat.value, v = who.value, w = v === 'all' ? '' : v;
             let n = 0;
             for (const g of ex.querySelectorAll('[data-cmd-group]')) {
                 let any = false;
@@ -66,7 +67,10 @@
             }
             out.textContent = fmt.format(n);
             empty.hidden = n > 0;
-            const p = String(new URLSearchParams(Object.entries({ q: text, cat: c, who: w }).filter(([, v]) => v)));
+            // "everyone" (default): no ?who=, the "Show all" note.
+            $('[data-cmd-default]').hidden = v !== 'everyone';
+            $('[data-cmd-all]').search = qs({ q: text, cat: c, who: 'all' });
+            const p = qs({ q: text, cat: c, who: v === 'everyone' ? '' : v });
             history.replaceState(history.state, '', `${location.pathname}${p ? `?${p}` : ''}${location.hash}`);
         };
         q.addEventListener('input', apply);

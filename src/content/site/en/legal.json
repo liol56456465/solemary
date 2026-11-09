@@ -1,0 +1,23 @@
+{
+  "inShort": "In short",
+  "binding": "The full text below is in English; the English version is the binding one.",
+  "privacy": {
+    "short": {
+      "ids": "Mewvo works with Discord IDs (the numbers that identify accounts, servers and channels). Where a record needs a readable name, such as a moderation case, the username at that moment is saved with it.",
+      "messages": "The text of your messages is never stored. Technical logs keep only message IDs and lengths.",
+      "database": "Everything is kept in a PostgreSQL database used only by the bot.",
+      "noEmail": "The bot never asks for your email address, a password or payment details. A Mewvo account on this website never asks for an email address either: only if you choose to create one, Mewvo stores a username and a one-way hash of your password (see below).",
+      "noTracking": "This website has no analytics, no ads, no tracking and no third-party scripts or cookies."
+    }
+  },
+  "terms": {
+    "short": {
+      "age": "You can use the bot if you are allowed to use Discord (at least 13, or older where the law of your country says so) and follow Discord’s rules.",
+      "rules": "Follow the rules of the server you are in. Don’t use Mewvo to harass anyone, to spam, to share illegal content or to get around a punishment.",
+      "staffDecide": "Server staff decide warnings, mutes, kicks and bans in their server; Mewvo carries them out. Every punishment can be reviewed by a person, and the DM about it says whether and how you can appeal.",
+      "payments": "No payments are taken yet: the checkout on this website is a test and nobody is charged. A plan does not renew by itself.",
+      "withdrawal": "When you buy a paid plan, you can withdraw within 14 days without giving a reason.",
+      "law": "Lithuanian law applies, but as a consumer you keep the protection of the mandatory law of the country where you live."
+    }
+  }
+}

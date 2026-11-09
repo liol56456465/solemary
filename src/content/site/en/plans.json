@@ -91,7 +91,8 @@
   "faq": {
     "buyNow": {
       "q": "Can I buy a plan now?",
-      "a": "No. Mewvo runs only on its own server for now. Paid plans start when it opens to other servers; until then nothing can be bought and nobody is charged."
+      "a": "No. Mewvo runs only on its own server for now. Paid plans start when it opens to other servers; until then nothing can be bought and nobody is charged.",
+      "aPublic": "No. Paid plans are not on sale yet; until they are, nothing can be bought and nobody is charged. Everything Mewvo does today is free."
     },
     "currency": {
       "q": "What currency are prices in?",

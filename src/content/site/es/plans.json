@@ -91,7 +91,8 @@
   "faq": {
     "buyNow": {
       "q": "¿Puedo comprar un plan ya?",
-      "a": "No. Por ahora Mewvo solo funciona en su propio servidor. Los planes de pago empezarán cuando se abra a otros servidores; hasta entonces no se puede comprar nada y no se cobra nada a nadie."
+      "a": "No. Por ahora Mewvo solo funciona en su propio servidor. Los planes de pago empezarán cuando se abra a otros servidores; hasta entonces no se puede comprar nada y no se cobra nada a nadie.",
+      "aPublic": "No. Los planes de pago aún no están a la venta; hasta entonces no se puede comprar nada y no se cobra nada a nadie. Todo lo que Mewvo hace hoy es gratis."
     },
     "currency": {
       "q": "¿En qué moneda están los precios?",

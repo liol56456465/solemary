@@ -8,7 +8,9 @@
     "leadBilling": "Free obejmuje wszystko, co Mewvo robi dzisiaj. Płatne plany dają więcej miejsca i narzędzi; kup plan dla swojego konta albo jako klucz podarunkowy dla kogoś innego. [Masz klucz?](/me/redeem)",
     "testMode": "**Tryb testowy.** {notice}",
     "lead": "Wszystko, co Mewvo robi teraz, jest darmowe. Płatne plany ruszą, gdy Mewvo otworzy się na inne serwery; do tego czasu nie da się nic kupić.",
-    "leadSupport": "Wszystko, co Mewvo robi teraz, jest darmowe. Płatne plany ruszą, gdy Mewvo otworzy się na inne serwery; do tego czasu nie da się nic kupić. [Dołącz do serwera wsparcia]({url}), żeby dowiedzieć się pierwszy."
+    "leadSupport": "Wszystko, co Mewvo robi teraz, jest darmowe. Płatne plany ruszą, gdy Mewvo otworzy się na inne serwery; do tego czasu nie da się nic kupić. [Dołącz do serwera wsparcia]({url}), żeby dowiedzieć się pierwszy.",
+    "leadPublic": "Wszystko, co Mewvo robi teraz, jest darmowe, na każdym serwerze. Płatnych planów nie można jeszcze kupić; do tego czasu nie da się nic kupić i nikt nie jest obciążany.",
+    "leadPublicSupport": "Wszystko, co Mewvo robi teraz, jest darmowe, na każdym serwerze. Płatnych planów nie można jeszcze kupić; do tego czasu nie da się nic kupić i nikt nie jest obciążany. [Dołącz do serwera wsparcia]({url}), aby jako pierwszy dowiedzieć się, kiedy ruszą."
   },
   "plans": {
     "title": "Plany",

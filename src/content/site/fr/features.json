@@ -34,7 +34,7 @@
         },
         "safetyChecks": {
           "term": "Contrôles de sécurité",
-          "text": "Refuse d’agir contre le propriétaire du serveur, le bot, toi-même et toute personne ayant un rôle égal ou supérieur. Le rôle Administrateur est revérifié à chaque clic."
+          "text": "Refuse d’agir contre le propriétaire du serveur, le bot, toi-même et toute personne ayant un rôle égal ou supérieur. Tes permissions sont revérifiées à chaque clic."
         },
         "massActionGuard": {
           "term": "Limite de sécurité : trop de bannissements ou d’expulsions en 10 minutes",
@@ -60,7 +60,7 @@
     },
     "ladder": {
       "title": "Échelle d’avertissements",
-      "intro": "Une gradation identique pour tout le monde et visible par le membre.",
+      "intro": "Chaque avertissement rapproche le membre d’un cran d’un bannissement, de la même façon pour tout le monde, et le membre voit où il en est. Un serveur peut désactiver les bannissements automatiques dans le tableau de bord.",
       "items": {
         "levels": {
           "term": "Niveaux",
@@ -140,7 +140,7 @@
         },
         "reviewCards": {
           "term": "Cartes de vérification",
-          "text": "Chaque action automatique publie une carte pour l’équipe avec Keep, Undo et Change to…"
+          "text": "Chaque action automatique publie une carte, un message pour l’équipe dans ton salon de vérification, pour qu’une personne vérifie ce qu’a fait l’automod. Ses boutons : Keep, Undo et Change to…"
         },
         "modes": {
           "term": "Modes",
@@ -284,7 +284,7 @@
         },
         "verification": {
           "term": "Vérification",
-          "text": "Un panneau de vérification ou une vérification à l’arrivée. « Verify with Discord » peut aussi ajouter le membre au serveur d’assistance, pour que les messages d’appel lui parviennent toujours."
+          "text": "Un panneau de vérification ou une vérification à l’arrivée. Sur les serveurs de Mewvo, « Verify with Discord » peut aussi ajouter le membre au serveur d’assistance, pour que les messages d’appel lui parviennent toujours."
         },
         "postingAsBot": {
           "term": "Publier en tant que bot",

@@ -39,7 +39,8 @@
     "logOut": "Wyloguj się"
   },
   "install": {
-    "addToDiscord": "Dodaj do Discorda"
+    "addToDiscord": "Dodaj do Discorda",
+    "note": "Administrator nie jest potrzebny — [zobacz, po co Mewvo prosi o każde uprawnienie →]({url})"
   },
   "short": {
     "dashboard": "Panel",
@@ -55,7 +56,8 @@
       "help": "Pomoc",
       "community": "Społeczność",
       "legal": "Informacje prawne"
-    }
+    },
+    "legalLinePublic": "Mewvo to bot Discorda prowadzony przez swojego właściciela. Niepowiązany z Discordem."
   },
   "language": {
     "label": "Język"

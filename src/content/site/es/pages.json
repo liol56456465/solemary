@@ -142,7 +142,9 @@
       "users": "Miembros",
       "verification": "Verificación",
       "welcome": "Bienvenida y despedida"
-    }
+    },
+    "defaultNote": "Se muestran los comandos que puede usar todo el mundo.",
+    "showAll": "Mostrar todos los comandos (también de administración)"
   },
   "about": {
     "title": "Acerca de",

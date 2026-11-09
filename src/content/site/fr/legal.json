@@ -1,0 +1,23 @@
+{
+  "inShort": "En bref",
+  "binding": "Le texte complet ci-dessous est en anglais ; seule la version anglaise fait foi.",
+  "privacy": {
+    "short": {
+      "ids": "Mewvo travaille avec des identifiants Discord (les numéros qui identifient les comptes, les serveurs et les salons). Quand un enregistrement a besoin d’un nom lisible, comme un cas de modération, le nom d’utilisateur du moment est enregistré avec lui.",
+      "messages": "Le texte de tes messages n’est jamais enregistré. Les journaux techniques ne gardent que les identifiants et la longueur des messages.",
+      "database": "Tout est conservé dans une base de données PostgreSQL utilisée uniquement par le bot.",
+      "noEmail": "Le bot ne demande jamais ton adresse e-mail, un mot de passe ou des données de paiement. Un compte Mewvo sur ce site ne demande jamais d’adresse e-mail non plus : seulement si tu choisis d’en créer un, Mewvo enregistre un nom d’utilisateur et une empreinte (hachage à sens unique) de ton mot de passe (voir plus bas).",
+      "noTracking": "Ce site n’a ni statistiques, ni publicité, ni pistage, ni scripts ou cookies tiers."
+    }
+  },
+  "terms": {
+    "short": {
+      "age": "Tu peux utiliser le bot si tu as le droit d’utiliser Discord (au moins 13 ans, ou plus là où la loi de ton pays l’exige) et si tu respectes les règles de Discord.",
+      "rules": "Respecte les règles du serveur où tu te trouves. N’utilise pas Mewvo pour harceler quelqu’un, spammer, partager des contenus illégaux ou contourner une sanction.",
+      "staffDecide": "L’équipe de chaque serveur décide des avertissements, mutes, expulsions et bannissements sur son serveur ; Mewvo les exécute. Chaque sanction peut être réexaminée par une personne, et le message privé qui l’annonce dit si et comment tu peux faire appel.",
+      "payments": "Aucun paiement n’est encore accepté : l’achat sur ce site est un test et personne n’est débité. Une formule ne se renouvelle pas toute seule.",
+      "withdrawal": "Quand tu achètes une formule payante, tu peux te rétracter dans les 14 jours sans donner de motif.",
+      "law": "Le droit lituanien s’applique, mais en tant que consommateur tu gardes la protection des lois impératives du pays où tu vis."
+    }
+  }
+}

@@ -5,8 +5,10 @@
 //
 // Search and filters work without a script: GET /commands?q=&cat=&who= marks the cards that do not
 // match `hidden` (all cards are always sent, so the static script can filter live without a reload).
+// Without ?who= only the "everyone" cards show, with a "Show all commands" link (?who=all).
 // The filter form needs form-action 'self' (COMMANDS_CSP, on this page only; the rest of the site
-// keeps form-action 'none'). /commands/<slug> → 301 to the anchor (site.js).
+// keeps form-action 'none'). /commands/<slug> → 301 to the anchor, with ?who=all for a card the
+// default filter hides (site.js, commandAnchorHref).
 // Text: content/site/<lang>/pages.json → commands.*. Values are never ids: no OWNER_IDS, server or channel ids.
 
 import { html, queryString } from '../../dashboard/html.js';
@@ -31,13 +33,25 @@ export const QUERY_MAX = 100;
 
 const first = (value) => (Array.isArray(value) ? value[0] : value);
 
-/** ?q= ?cat= ?who= checked: q trimmed and cut to 100 characters, cat one of `groups`, who an access tier; anything else is ''. */
+/**
+ * Visitors first see the commands everyone can use (beginner audit 4.11); ?who=all shows every
+ * card. In the filters `who: ''` means all; in URLs the default tier has no ?who=.
+ */
+export const DEFAULT_WHO = 'everyone';
+export const ALL_WHO = 'all';
+/** The ?who= value for a filter tier ('' = all): none for the default, "all" for all. */
+export const whoParam = (who) => (who === DEFAULT_WHO ? '' : who || ALL_WHO);
+
+/**
+ * ?q= ?cat= ?who= checked: q trimmed and cut to 100 characters, cat one of `groups` (else ''),
+ * who an access tier, '' for ?who=all, and DEFAULT_WHO when missing or unknown.
+ */
 export function commandFilters(query = {}, groups = []) {
     const text = (value) => (typeof value === 'string' ? value : '');
     const q = text(first(query.q)).replace(/[\u0000-\u001f]+/g, ' ').trim().slice(0, QUERY_MAX).trim();
     const cat = text(first(query.cat));
     const who = text(first(query.who));
-    return { q, cat: groups.includes(cat) ? cat : '', who: ACCESS_TIERS.includes(who) ? who : '' };
+    return { q, cat: groups.includes(cat) ? cat : '', who: who === ALL_WHO ? '' : ACCESS_TIERS.includes(who) ? who : DEFAULT_WHO };
 }
 
 /** The tiers a card answers to: the owner kit is Administrator-only too, so ?who=admin lists it. */
@@ -93,18 +107,21 @@ export function commandsPage(ctx, query = {}) {
     }
     const filters = commandFilters(query, groups.map((g) => g.key));
     const shown = new Set(entries.filter((e) => matchesFilters(e, filters)));
-    const link = (who) => href(`/commands${queryString({ q: filters.q, cat: filters.cat, who })}`);
+    const link = (who) => href(`/commands${queryString({ q: filters.q, cat: filters.cat, who: whoParam(who) })}`);
     const whoLinks = ['', ...ACCESS_TIERS].map((who) => html`<li><a href="${link(who)}"${filters.who === who ? html` aria-current="true"` : ''}>${t(`pages.commands.who.${who || 'all'}`)}</a></li>`);
+    // Under the default filter: say so, with a plain way to every command (static/site.js keeps it in step).
+    const defaultNote = html`<p class="notice cmd-default" data-cmd-default${filters.who === DEFAULT_WHO ? '' : html` hidden`}>${t('pages.commands.defaultNote')} <a href="${link('')}" data-cmd-all><strong>${t('pages.commands.showAll')}</strong></a></p>`;
     const groupShown = (g) => g.items.some((e) => shown.has(e));
     const body = entries.length ? html`
 <form class="cmd-filter" method="get" action="${href('/commands')}" role="search" aria-label="${t('pages.commands.search.formLabel')}">
 <p class="form-field cmd-filter-q"><label for="cmd-q">${t('pages.commands.search.label')}</label><input id="cmd-q" type="search" name="q" value="${filters.q}" maxlength="${QUERY_MAX}" autocomplete="off" spellcheck="false" placeholder="${t('pages.commands.search.placeholder')}" data-cmd-q></p>
 <p class="form-field"><label for="cmd-cat">${t('pages.commands.search.category')}</label><select id="cmd-cat" name="cat" data-cmd-cat><option value="">${t('pages.commands.search.allCategories')}</option>${groups.map((g) => html`<option value="${g.key}"${filters.cat === g.key ? html` selected` : ''}>${g.label}</option>`)}</select></p>
-<p class="form-field"><label for="cmd-who">${t('pages.commands.search.who')}</label><select id="cmd-who" name="who" data-cmd-who>${['', ...ACCESS_TIERS].map((who) => html`<option value="${who}"${filters.who === who ? html` selected` : ''}>${t(`pages.commands.who.${who || 'all'}`)}</option>`)}</select></p>
+<p class="form-field"><label for="cmd-who">${t('pages.commands.search.who')}</label><select id="cmd-who" name="who" data-cmd-who>${['', ...ACCESS_TIERS].map((who) => html`<option value="${who || ALL_WHO}"${filters.who === who ? html` selected` : ''}>${t(`pages.commands.who.${who || 'all'}`)}</option>`)}</select></p>
 <p class="form-actions cmd-filter-actions"><button class="button" type="submit">${t('pages.commands.search.submit')}</button><a href="${href('/commands')}">${t('pages.commands.search.reset')}</a></p>
 </form>
 <nav class="cmd-who" aria-label="${t('pages.commands.who.label')}"><ul>${whoLinks}</ul></nav>
 <p class="cmd-count" aria-live="polite">${ti('pages.commands.search.count', { shown: html`<span data-cmd-shown>${fmtNumber(shown.size)}</span>`, total: fmtNumber(entries.length) })}</p>
+${defaultNote}
 <p class="cmd-empty" data-cmd-empty${shown.size ? html` hidden` : ''}>${t('pages.commands.search.empty')}</p>
 ${groups.length > 1 ? html`<nav class="jump" aria-label="${t('pages.commands.jumpLabel')}"><ul>${groups.map((g) => html`<li data-cmd-jump="${g.key}"${groupShown(g) ? '' : html` hidden`}><a href="#c-${g.key}">${g.label}</a></li>`)}</ul></nav>` : ''}
 ${groups.map((g) => html`<section class="cmd-group" id="c-${g.key}" aria-labelledby="h-${g.key}" data-cmd-group="${g.key}"${groupShown(g) ? '' : html` hidden`}><h2 id="h-${g.key}">${g.label}</h2>
@@ -121,9 +138,24 @@ ${groups.map((g) => html`<section class="cmd-group" id="c-${g.key}" aria-labelle
  * Where /commands/<slug> points: the card with that slug, else the first card of that command
  * (/commands/case → #case-edit); null when no card matches. Slugs are the same in every language.
  */
-export function commandAnchor(commands, slug) {
+function anchorEntry(commands, slug) {
     const value = String(slug || '').toLowerCase();
     if (!/^[a-z0-9-]{1,64}$/.test(value)) return null;
     const entries = commandCatalog(commands, 'en');
-    return (entries.find((e) => e.slug === value) || entries.find((e) => e.slug.startsWith(`${value}-`)))?.slug || null;
+    return entries.find((e) => e.slug === value) || entries.find((e) => e.slug.startsWith(`${value}-`)) || null;
+}
+
+export function commandAnchor(commands, slug) {
+    return anchorEntry(commands, slug)?.slug || null;
+}
+
+/**
+ * The redirect target for /commands/<slug> on the list page `list` ("/de/commands"): the anchor,
+ * with ?who=all when the default filter would hide that card. null when no card matches.
+ */
+export function commandAnchorHref(commands, slug, list = '/commands') {
+    const entry = anchorEntry(commands, slug);
+    if (!entry) return null;
+    const who = matchesFilters(entry, { who: DEFAULT_WHO }) ? '' : `?who=${ALL_WHO}`;
+    return `${list}${who}#${entry.slug}`;
 }

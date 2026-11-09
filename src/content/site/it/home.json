@@ -13,7 +13,7 @@
     "title": "Un bot Discord per moderazione e ricorsi",
     "lead": "Mewvo dà avvertimenti, silenzia, espelle e banna da un unico pannello. Il membro riceve un messaggio diretto con il motivo, la scadenza e come fare ricorso. Il tuo staff riceve un caso con un codice breve da ritrovare in seguito.",
     "notPublic": "Per ora Mewvo funziona solo sul server Mewvo. Non può ancora essere aggiunto ad altri server.",
-    "dmCaption": "Il messaggio diretto che un membro riceve al secondo avvertimento (Mewvo lo invia in inglese)."
+    "dmCaption": "Il messaggio diretto che un membro riceve al secondo avvertimento (Mewvo lo invia nella lingua del tuo server)."
   },
   "dashboard": {
     "title": "Tutto in un unico posto",

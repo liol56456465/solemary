@@ -46,7 +46,7 @@
       "logging": "Wybierz **kanał dziennika moderacji**, który widzi tylko ekipa: trafia tam każde ostrzeżenie, wyciszenie, wyrzucenie i ban. Pozostałe dzienniki (wejścia, zmiany ról, edytowane i usunięte wiadomości) są na stronie **Dzienniki**.",
       "automod": "Na nowym serwerze automoderacja jest **wyłączona**. Włącz ją na stronie **Automoderacja** i zacznij od trybu **Tylko zgłaszaj (nie usuwaj)**: ekipa widzi, co by zrobiła, i nikomu nic się nie dzieje. Przełącz regułę na **Wł.**, gdy zaczniesz jej ufać.",
       "staffGuard": "**Ochrona przed ekipą** też jest wyłączona. Włącz ją komendą `/automod staffguard`: administrator, który masowo banuje, wyrzuca albo usuwa kanały lub role, traci role ekipy, a właściciel serwera dostaje alert; `/staff restore` przywraca role. Ochrona działa, gdy automoderacja jest włączona, i tylko właściciel serwera może ją wyłączyć.",
-      "appeals": "Opublikuj panel odwołań komendą `/setappeal` na kanale, który widzą wszyscy członkowie.",
+      "appeals": "Opublikuj panel odwołań (wiadomość z przyciskiem **Appeal**) komendą `/setappeal` na kanale, który widzą wszyscy członkowie.",
       "test": "Wpisz `/test`, aby dostać dokładnie taką wiadomość prywatną, jaką dostałby członek. Nikomu nic się nie dzieje."
     }
   },
@@ -57,7 +57,7 @@
       "dms": "Wiadomość prywatna przy każdym ostrzeżeniu, wyciszeniu, wyrzuceniu i banie: powód, kod sprawy, do kiedy oraz jak się odwołać albo że odwołanie nie jest możliwe.",
       "appeals": "Panel odwołań z `/setappeal` z przyciskami **Appeal**, **My appeals** i **My record**.",
       "record": "Swoje sprawy z każdego serwera, który używa Mewvo, w [Mojej historii](/me) na tej stronie.",
-      "automod": "Gdy automoderacja zadziała wobec członka, dostaje on wiadomość prywatną z regułą i przyciskiem **Contest this**. Ekipa dostaje kartę do sprawdzenia, na której zostawia, cofa lub zmienia działanie."
+      "automod": "Gdy automoderacja zadziała wobec członka, dostaje on wiadomość prywatną z regułą i przyciskiem **Contest this**. Ekipa dostaje kartę do sprawdzenia (wiadomość na kanale do sprawdzania), na której zostawia, cofa lub zmienia działanie."
     }
   },
   "appeals": {
@@ -65,7 +65,7 @@
     "who": "Członkowie odwołują się do serwera, który ich ukarał, a decydują twoi **administratorzy**: **Accept** lub **Deny** na karcie odwołania na kanale ekipy albo na stronie **Odwołania** w panelu webowym. Przyjęte odwołanie zdejmuje to, co nadal obowiązuje; do bana lub wyrzucenia dołączane jest jednorazowe zaproszenie z powrotem.",
     "panel": "**Na Discordzie:** panel odwołań, który publikujesz komendą `/setappeal`. Wyciszeni i ostrzeżeni członkowie używają go na twoim serwerze.",
     "web": "**Na stronie:** członkowie logują się przez Discorda w [My appeals](/me/appeals). Działa to także po banie, gdy nie mają już wspólnego serwera z Mewvo.",
-    "home": "Ty wybierasz, gdzie wiadomość o karze kieruje członków z odwołaniem: w panelu webowym, **Kary i odwołania → Gdzie członkowie składają odwołania**, wybierz **Wsparcie Mewvo** (serwer wsparcia Mewvo) albo **Nasz własny serwer** z zaproszeniem na serwer, który prowadzisz."
+    "home": "Ty wybierasz, gdzie wiadomość o karze kieruje członków z odwołaniem: w panelu webowym, **Kary i odwołania → Gdzie członkowie składają odwołania**. **Nasz własny serwer** (domyślnie) podaje zaproszenie na serwer, który prowadzisz, i, gdy jest dostępna, stronę odwołań w sieci; **Wsparcie Mewvo** kieruje ich na serwer wsparcia Mewvo."
   },
   "data": {
     "title": "Dane i usuwanie",
@@ -100,11 +100,11 @@
     "noDashboard": "Panel webowy jest teraz niedostępny. Wpisz `/setup` na swoim serwerze: komenda pokazuje, co jest skonfigurowane, a czego brakuje.",
     "firstSteps": "Pierwsze kroki",
     "steps": {
-      "setup": "Wpisz `/setup` na swoim serwerze: komenda pokazuje, co jest skonfigurowane, a czego brakuje.",
+      "setup": "Wpisz `/setup` na swoim serwerze: komenda pokazuje, co jest skonfigurowane, a czego brakuje, i daje link do panelu webowego, gdzie zmieniasz ustawienia.",
       "logging": "Wybierz **kanał dziennika moderacji**, który widzi tylko ekipa.",
       "automod": "Na nowym serwerze automoderacja jest **wyłączona**: najpierw włącz ją w trybie **Tylko zgłaszaj (nie usuwaj)**.",
       "staffGuard": "Włącz **ochronę przed ekipą** komendą `/automod staffguard`, aby chronić serwer przed nieuczciwym administratorem.",
-      "appeals": "Opublikuj panel odwołań komendą `/setappeal`."
+      "appeals": "Opublikuj panel odwołań (wiadomość z przyciskiem **Appeal**) komendą `/setappeal`."
     },
     "more": "Uprawnienia, odwołania, dane i limity: [Dla administratorów serwerów](/admins).",
     "accessNote": "Zanim cokolwiek pokaże, panel webowy sprawdza, czy możesz zarządzać tym serwerem."

@@ -142,7 +142,9 @@
       "users": "Członkowie",
       "verification": "Weryfikacja",
       "welcome": "Powitania i pożegnania"
-    }
+    },
+    "defaultNote": "Widzisz komendy, z których może korzystać każdy.",
+    "showAll": "Pokaż wszystkie komendy (także dla adminów)"
   },
   "about": {
     "title": "O bocie",

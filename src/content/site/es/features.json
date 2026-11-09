@@ -34,7 +34,7 @@
         },
         "safetyChecks": {
           "term": "Comprobaciones de seguridad",
-          "text": "Rechaza al propietario del servidor, al bot, a ti mismo y a cualquiera con un rol igual o superior. El rol de Administrador se vuelve a comprobar en cada clic."
+          "text": "Rechaza al propietario del servidor, al bot, a ti mismo y a cualquiera con un rol igual o superior. Tus permisos se vuelven a comprobar en cada clic."
         },
         "massActionGuard": {
           "term": "Límite de seguridad: demasiados baneos o expulsiones en 10 minutos",
@@ -60,7 +60,7 @@
     },
     "ladder": {
       "title": "Escala de advertencias",
-      "intro": "Una progresión igual para todos y visible para el miembro.",
+      "intro": "Cada advertencia acerca al miembro un paso más a un baneo, igual para todos, y el miembro puede ver en qué punto está. Un servidor puede desactivar los baneos automáticos en el panel de control.",
       "items": {
         "levels": {
           "term": "Niveles",
@@ -140,7 +140,7 @@
         },
         "reviewCards": {
           "term": "Tarjetas de revisión",
-          "text": "Cada acción automática publica una tarjeta para el staff con Keep, Undo y Change to…"
+          "text": "Cada acción automática publica una tarjeta, un mensaje para el staff en tu canal de revisión, para que una persona compruebe lo que hizo el automod. Sus botones: Keep, Undo y Change to…"
         },
         "modes": {
           "term": "Modos",
@@ -284,7 +284,7 @@
         },
         "verification": {
           "term": "Verificación",
-          "text": "Un panel de verificación o verificación al entrar. «Verificar con Discord» también puede añadir al miembro al servidor de soporte para que los mensajes de las apelaciones le sigan llegando."
+          "text": "Un panel de verificación o verificación al entrar. En los servidores propios de Mewvo, «Verificar con Discord» también puede añadir al miembro al servidor de soporte para que los mensajes de las apelaciones le sigan llegando."
         },
         "postingAsBot": {
           "term": "Publicar como el bot",

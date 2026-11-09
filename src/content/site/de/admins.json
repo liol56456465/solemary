@@ -46,7 +46,7 @@
       "logging": "Wähle einen **Mod-Log-Kanal**, den nur das Team sehen kann: Jede Verwarnung, Stummschaltung, jeder Kick und Bann wird dort festgehalten. Andere Logs (Beitritte, Rollenänderungen, bearbeitete und gelöschte Nachrichten) findest du auf der Seite **Logs**.",
       "automod": "Der Automod ist auf einem neuen Server **aus**. Schalte ihn auf der Seite **Automod** ein und fang mit **Nur melden (nicht löschen)** an: Das Team sieht, was er getan hätte, und niemandem passiert etwas. Stell eine Regel auf **An**, wenn du ihr vertraust.",
       "staffGuard": "Der **Team-Schutz** ist auch aus. Schalte ihn mit `/automod staffguard` ein: Ein Admin, der massenhaft bannt, kickt oder Kanäle oder Rollen löscht, verliert seine Teamrollen, und der Serverinhaber wird alarmiert; `/staff restore` gibt die Rollen zurück. Er funktioniert, solange der Automod an ist, und nur der Serverinhaber kann ihn ausschalten.",
-      "appeals": "Poste das Einspruchs-Panel mit `/setappeal` in einem Kanal, den alle Mitglieder sehen können.",
+      "appeals": "Poste das Einspruchs-Panel (eine Nachricht mit dem Button **Appeal**) mit `/setappeal` in einem Kanal, den alle Mitglieder sehen können.",
       "test": "Führe `/test` aus, um genau die Direktnachricht zu bekommen, die ein Mitglied bekommen würde. Niemandem passiert etwas."
     }
   },
@@ -57,7 +57,7 @@
       "dms": "Eine Direktnachricht zu jeder Verwarnung, Stummschaltung, jedem Kick und Bann: der Grund, der Fallcode, bis wann, und wie man Einspruch einlegt oder dass kein Einspruch möglich ist.",
       "appeals": "Das Einspruchs-Panel von `/setappeal` mit **Appeal**, **My appeals** und **My record**.",
       "record": "Ihre eigenen Fälle aus jedem Server, der Mewvo nutzt, unter [Meine Akte](/me) auf dieser Website.",
-      "automod": "Wenn der Automod gegen sie vorgeht, eine Direktnachricht mit der Regel und einem Button **Contest this**. Das Team bekommt eine Prüfkarte, auf der es die Aktion beibehält, rückgängig macht oder ändert."
+      "automod": "Wenn der Automod gegen sie vorgeht, eine Direktnachricht mit der Regel und einem Button **Contest this**. Das Team bekommt eine Prüfkarte (eine Nachricht im Prüfkanal), auf der es die Aktion beibehält, rückgängig macht oder ändert."
     }
   },
   "appeals": {
@@ -65,7 +65,7 @@
     "who": "Mitglieder legen den Einspruch bei dem Server ein, der sie bestraft hat, und deine **Administratoren** entscheiden: **Accept** oder **Deny** auf der Einspruchskarte in deinem Teamkanal oder auf der Dashboard-Seite **Einsprüche**. Ein angenommener Einspruch hebt auf, was noch aktiv ist; bei einem Bann oder Kick gibt es eine einmalige Einladung zurück.",
     "panel": "**In Discord:** das Einspruchs-Panel, das du mit `/setappeal` postest. Stummgeschaltete und verwarnte Mitglieder nutzen es auf deinem Server.",
     "web": "**Auf der Website:** Mitglieder melden sich unter [Meine Einsprüche](/me/appeals) mit Discord an. Das funktioniert auch nach einem Bann, wenn sie keinen Server mehr mit Mewvo teilen.",
-    "home": "Du legst fest, wo Mitglieder laut der Strafnachricht Einspruch einlegen: Wähle im Dashboard unter **Strafen & Einsprüche → Wo Mitglieder Einspruch einlegen** entweder **Mewvo-Support** (den Mewvo-Support-Server) oder **Unser eigener Server** mit einer Einladung zu einem Server, den du betreibst."
+    "home": "Du legst fest, wo Mitglieder laut der Strafnachricht Einspruch einlegen: im Dashboard unter **Strafen & Einsprüche → Wo Mitglieder Einspruch einlegen**. **Unser eigener Server** (Standard) verweist auf eine Einladung zu einem Server, den du betreibst, und, wenn verfügbar, auf die Einspruchsseite im Web; **Mewvo-Support** schickt sie auf den Mewvo-Support-Server."
   },
   "data": {
     "title": "Daten und Löschung",
@@ -100,11 +100,11 @@
     "noDashboard": "Das Dashboard ist gerade nicht verfügbar. Führe `/setup` auf deinem Server aus: Es zeigt, was eingerichtet ist und was fehlt.",
     "firstSteps": "Erste Schritte",
     "steps": {
-      "setup": "Führe `/setup` auf deinem Server aus: Es zeigt, was eingerichtet ist und was fehlt.",
+      "setup": "Führe `/setup` auf deinem Server aus: Es zeigt, was eingerichtet ist und was fehlt, mit einem Link zum Dashboard, wo du die Einstellungen änderst.",
       "logging": "Wähle einen **Mod-Log-Kanal**, den nur das Team sehen kann.",
       "automod": "Der Automod ist auf einem neuen Server **aus**: Schalte ihn zuerst mit **Nur melden (nicht löschen)** ein.",
       "staffGuard": "Schalte den **Team-Schutz** mit `/automod staffguard` ein, um den Server vor einem abtrünnigen Admin zu schützen.",
-      "appeals": "Poste das Einspruchs-Panel mit `/setappeal`."
+      "appeals": "Poste das Einspruchs-Panel (eine Nachricht mit dem Button **Appeal**) mit `/setappeal`."
     },
     "more": "Berechtigungen, Einsprüche, Daten und Limits: [Für Server-Admins](/admins).",
     "accessNote": "Das Dashboard prüft, ob du diesen Server verwalten darfst, bevor es irgendetwas zeigt."
