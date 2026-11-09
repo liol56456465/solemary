@@ -70,6 +70,10 @@ const configuredTables = {
     site_images: 'site_images',
     error_events: 'error_events',
     bot_dm_log: 'bot_dm_log',
+    voice_activity: 'voice_activity',
+    invite_joins: 'invite_joins',
+    invite_inviters: 'invite_inviters',
+    ticket_ratings: 'ticket_ratings',
 };
 
 const allowedTableIdentifiers = new Set([
@@ -140,6 +144,10 @@ const allowedTableIdentifiers = new Set([
     'site_images',
     'error_events',
     'bot_dm_log',
+    'voice_activity',
+    'invite_joins',
+    'invite_inviters',
+    'ticket_ratings',
 ]);
 
 const validatedTables = Object.fromEntries(

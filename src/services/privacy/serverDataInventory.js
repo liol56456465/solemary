@@ -68,8 +68,12 @@ export const TABLES = Object.freeze([
     { key: 'afk_status', kind: 'levels', where: () => 'guild_id = $1' },
     { key: 'birthdays', kind: 'levels', where: () => 'guild_id = $1' },
     { key: 'guild_users', kind: 'levels', where: () => 'guild_id = $1' },
+    // v14: voice time and voice XP per member.
+    { key: 'voice_activity', kind: 'levels', where: () => 'guild_id = $1' },
     // ── Tickets ──
     { key: 'tickets', kind: 'tickets', where: () => 'guild_id = $1' },
+    // v14: ticket and modmail ratings.
+    { key: 'ticket_ratings', kind: 'tickets', where: () => 'guild_id = $1' },
     // ── Automod, raids, incidents ──
     { key: 'automod_native_rules', kind: 'automod', where: () => 'guild_id = $1' },
     { key: 'automod_raid_incidents', kind: 'automod', where: () => 'guild_id = $1' },
@@ -89,6 +93,9 @@ export const TABLES = Object.freeze([
     { key: 'member_role_rules', kind: 'community', where: () => 'guild_id = $1' },
     { key: 'application_roles', kind: 'community', where: () => 'guild_id = $1' },
     { key: 'invite_tracking', kind: 'community', where: () => 'guild_id = $1' },
+    // v14 invite tracking: one row per join, and the per-inviter bonus / reset.
+    { key: 'invite_joins', kind: 'community', where: () => 'guild_id = $1' },
+    { key: 'invite_inviters', kind: 'community', where: () => 'guild_id = $1' },
     // ── Verification ──
     { key: 'verification_audit', kind: 'verification', where: () => 'guild_id = $1' },
     { key: 'verification_guild_ips', kind: 'verification', where: () => 'guild_id = $1' },

@@ -928,6 +928,80 @@ export const tableStatements = [
         lang VARCHAR(8) NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`,
+    // ── Schema v14 (docs/features-v14.md) ──────────────────────────────────
+    // Voice XP (services/leveling): one row per member per server. voice_seconds / voice_xp are
+    // lifetime totals; day + day_minutes hold only today's counted minutes (for the daily cap).
+    // Never who was in the channel, no audio. Writers ensure the guilds + users rows first (like
+    // user_levels) and set updated_at themselves (no trigger, like the other TIMESTAMPTZ tables).
+    `CREATE TABLE IF NOT EXISTS ${t.voice_activity} (
+        guild_id VARCHAR(20) NOT NULL,
+        user_id VARCHAR(20) NOT NULL,
+        voice_seconds BIGINT NOT NULL DEFAULT 0 CHECK (voice_seconds >= 0),
+        voice_xp BIGINT NOT NULL DEFAULT 0 CHECK (voice_xp >= 0),
+        day DATE,
+        day_minutes SMALLINT NOT NULL DEFAULT 0 CHECK (day_minutes BETWEEN 0 AND 1440),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (guild_id, user_id),
+        FOREIGN KEY (guild_id) REFERENCES ${t.guilds}(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES ${t.users}(id) ON DELETE CASCADE
+    )`,
+    // Invite tracking (v14): invite_tracking (above) is the per-code use cache; deleted_at marks a
+    // code Discord deleted (kept so old joins still name it). Its invite_code is VARCHAR(20): longer
+    // vanity codes are recorded only in invite_joins (VARCHAR(32)); widening the column is a
+    // type change and was left for the owner to decide.
+    `ALTER TABLE ${t.invite_tracking} ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ`,
+    // One row per member join. inviter_id is NULL when the source is not 'invite' (or the inviter
+    // was blanked by /wipedata). counted = FALSE excludes a row (e.g. a repeat rejoin); "fake" is
+    // worked out at read time from account_created_at / left_at, never stored.
+    `CREATE TABLE IF NOT EXISTS ${t.invite_joins} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        user_id VARCHAR(20) NOT NULL,
+        inviter_id VARCHAR(20),
+        invite_code VARCHAR(32),
+        source VARCHAR(16) NOT NULL CHECK (source IN ('invite', 'vanity', 'widget', 'discovery', 'bot', 'ambiguous', 'unknown', 'not_ready', 'no_permission')),
+        account_created_at TIMESTAMPTZ,
+        joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        left_at TIMESTAMPTZ,
+        counted BOOLEAN NOT NULL DEFAULT TRUE,
+        FOREIGN KEY (guild_id) REFERENCES ${t.guilds}(id) ON DELETE CASCADE
+    )`,
+    // Per inviter and server: staff bonus (+/-) and the reset date (a reset never deletes joins:
+    // only joins after reset_at count).
+    `CREATE TABLE IF NOT EXISTS ${t.invite_inviters} (
+        guild_id VARCHAR(20) NOT NULL,
+        user_id VARCHAR(20) NOT NULL,
+        bonus INTEGER NOT NULL DEFAULT 0 CHECK (bonus BETWEEN -100000 AND 100000),
+        reset_at TIMESTAMPTZ,
+        updated_by VARCHAR(20),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (guild_id, user_id),
+        FOREIGN KEY (guild_id) REFERENCES ${t.guilds}(id) ON DELETE CASCADE
+    )`,
+    // Ticket / modmail ratings (v14): one prompt per closed ticket (ref_id = ticket channel id) or
+    // modmail thread (ref_id = modmail channel id). rating NULL = not rated yet; expires_at = when
+    // the rating buttons stop working. staff_id = who handled it (claimer), closer_id = who closed it.
+    `CREATE TABLE IF NOT EXISTS ${t.ticket_ratings} (
+        id BIGSERIAL PRIMARY KEY,
+        guild_id VARCHAR(20) NOT NULL,
+        kind VARCHAR(8) NOT NULL CHECK (kind IN ('ticket', 'modmail')),
+        ref_id VARCHAR(20) NOT NULL,
+        ticket_number VARCHAR(10),
+        opener_id VARCHAR(20),
+        staff_id VARCHAR(20),
+        closer_id VARCHAR(20),
+        priority VARCHAR(10),
+        prompted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        expires_at TIMESTAMPTZ NOT NULL,
+        delivery VARCHAR(8) CHECK (delivery IN ('dm', 'channel', 'failed')),
+        rating SMALLINT CHECK (rating BETWEEN 1 AND 5),
+        rated_at TIMESTAMPTZ,
+        comment TEXT,
+        comment_at TIMESTAMPTZ,
+        comment_flagged BOOLEAN NOT NULL DEFAULT FALSE,
+        UNIQUE (guild_id, kind, ref_id),
+        FOREIGN KEY (guild_id) REFERENCES ${t.guilds}(id) ON DELETE CASCADE
+    )`,
 ];
 
 export const indexStatements = [
@@ -1002,6 +1076,14 @@ export const indexStatements = [
     `CREATE INDEX IF NOT EXISTS idx_error_events_trace ON ${t.error_events}(trace_id)`,
     `CREATE INDEX IF NOT EXISTS idx_bot_dm_log_user ON ${t.bot_dm_log}(user_id, created_at DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_bot_dm_log_created ON ${t.bot_dm_log}(created_at)`,
+    // v14
+    `CREATE INDEX IF NOT EXISTS idx_voice_activity_seconds ON ${t.voice_activity}(guild_id, voice_seconds DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_invite_joins_inviter ON ${t.invite_joins}(guild_id, inviter_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_invite_joins_user ON ${t.invite_joins}(guild_id, user_id, joined_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_invite_joins_joined ON ${t.invite_joins}(joined_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_ticket_ratings_rated ON ${t.ticket_ratings}(guild_id, rated_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_ticket_ratings_staff ON ${t.ticket_ratings}(guild_id, staff_id, rated_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_ticket_ratings_open ON ${t.ticket_ratings}(expires_at) WHERE rating IS NULL`,
 ];
 
 export const UPDATE_TIMESTAMP_FUNCTION = `
