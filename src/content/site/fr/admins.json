@@ -112,7 +112,7 @@
       "logging": "Choisis un **Salon du journal de modération** que seule l’équipe peut voir : chaque avertissement, mise en sourdine, expulsion et bannissement y est consigné. Les autres journaux (arrivées, changements de rôles, messages modifiés et supprimés) sont sur la page **Journaux**.",
       "automod": "L’automod est **désactivé** sur un nouveau serveur. Active-le sur la page **Automod** et commence par **Signaler seulement (ne pas supprimer)** : l’équipe voit ce qu’il aurait fait et rien n’arrive à personne. Passe une règle sur **Activé** quand tu lui fais confiance.",
       "staffGuard": "La **protection de l’équipe** est désactivée elle aussi. Active-la avec `/automod staffguard` : un admin qui bannit ou expulse en masse, ou supprime en masse des salons ou des rôles, perd ses rôles d’équipe et le propriétaire du serveur est alerté ; `/staff restore` rend les rôles. Elle fonctionne tant que l’automod est activé, et seul le propriétaire du serveur peut la désactiver.",
-      "appeals": "Publie le panneau d’appel avec `/setappeal` dans un salon que tous les membres peuvent voir.",
+      "appeals": "Publie le panneau d’appel (un message avec un bouton **Appeal**) avec `/setappeal` dans un salon que tous les membres peuvent voir.",
       "test": "Lance `/test` pour recevoir exactement le message privé qu’un membre recevrait. Rien n’est fait à personne."
     }
   },
@@ -123,7 +123,7 @@
       "dms": "Un message privé pour chaque avertissement, mise en sourdine, expulsion et bannissement : la raison, le code du dossier, jusqu’à quand, et comment faire appel ou le fait qu’on ne peut pas faire appel.",
       "appeals": "Le panneau d’appel de `/setappeal`, avec **Appeal**, **My appeals** et **My record**.",
       "record": "Leurs propres dossiers de chaque serveur qui utilise Mewvo, sur [Mon dossier](/me), sur ce site.",
-      "automod": "Quand l’automod agit sur eux, un message privé avec la règle et un bouton **Contest this**. L’équipe reçoit une carte de vérification où elle maintient, annule ou modifie l’action."
+      "automod": "Quand l’automod agit sur eux, un message privé avec la règle et un bouton **Contest this**. L’équipe reçoit une carte de vérification (un message dans le salon de vérification) où elle maintient, annule ou modifie l’action."
     }
   },
   "appeals": {
@@ -131,7 +131,7 @@
     "who": "Les membres font appel auprès du serveur qui les a sanctionnés, et ce sont tes **administrateurs** qui décident : **Accept** ou **Deny** sur la carte d’appel dans ton salon de l’équipe, ou sur la page **Appels** du tableau de bord. Un appel accepté lève ce qui est encore en cours ; un bannissement ou une expulsion s’accompagne d’une invitation à usage unique pour revenir.",
     "panel": "**Sur Discord :** le panneau d’appel que tu publies avec `/setappeal`. Les membres en sourdine ou avertis l’utilisent sur ton serveur.",
     "web": "**Sur le site :** les membres se connectent avec Discord sur [My appeals](/me/appeals). Cela fonctionne même après un bannissement, quand ils ne partagent plus aucun serveur avec Mewvo.",
-    "home": "Tu choisis où le message privé de sanction envoie les membres pour faire appel : dans le tableau de bord, **Sanctions et appels → Où les membres font appel**, choisis **Support Mewvo** (le serveur d’assistance Mewvo) ou **Notre propre serveur** avec une invitation vers un serveur que tu gères."
+    "home": "Tu choisis où le message privé de sanction envoie les membres pour faire appel : dans le tableau de bord, **Sanctions et appels → Où les membres font appel**. **Notre propre serveur** (par défaut) leur donne une invitation vers un serveur que tu gères et, quand elle est disponible, la page d’appel du site ; **Support Mewvo** les envoie sur le serveur d’assistance Mewvo."
   },
   "data": {
     "title": "Données et suppression",
@@ -166,11 +166,11 @@
     "noDashboard": "Le tableau de bord n’est pas disponible pour le moment. Lance `/setup` sur ton serveur : il montre ce qui est configuré et ce qui manque.",
     "firstSteps": "Premiers pas",
     "steps": {
-      "setup": "Lance `/setup` sur ton serveur : il montre ce qui est configuré et ce qui manque.",
+      "setup": "Lance `/setup` sur ton serveur : il montre ce qui est configuré et ce qui manque, avec un lien vers le tableau de bord, où tu modifies les réglages.",
       "logging": "Choisis un **Salon du journal de modération** que seule l’équipe peut voir.",
       "automod": "L’automod est **désactivé** sur un nouveau serveur : active-le d’abord avec **Signaler seulement (ne pas supprimer)**.",
       "staffGuard": "Active la **protection de l’équipe** avec `/automod staffguard` pour protéger le serveur d’un admin malveillant.",
-      "appeals": "Publie le panneau d’appel avec `/setappeal`."
+      "appeals": "Publie le panneau d’appel (un message avec un bouton **Appeal**) avec `/setappeal`."
     },
     "more": "Permissions, appels, données et limites : [Pour les admins de serveur](/admins).",
     "accessNote": "Le tableau de bord vérifie que tu peux gérer ce serveur avant d’afficher quoi que ce soit."

@@ -34,7 +34,7 @@
         },
         "safetyChecks": {
           "term": "Controlli di sicurezza",
-          "text": "Rifiuta il proprietario del server, il bot, te stesso e chiunque abbia un ruolo uguale o superiore. Il ruolo Amministratore viene controllato di nuovo a ogni clic."
+          "text": "Rifiuta il proprietario del server, il bot, te stesso e chiunque abbia un ruolo uguale o superiore. I tuoi permessi vengono controllati di nuovo a ogni clic."
         },
         "massActionGuard": {
           "term": "Limite di sicurezza: troppi ban o espulsioni in 10 minuti",
@@ -60,7 +60,7 @@
     },
     "ladder": {
       "title": "Scala degli avvertimenti",
-      "intro": "Un'escalation uguale per tutti e visibile al membro.",
+      "intro": "Ogni avvertimento porta il membro un gradino più vicino a un ban, allo stesso modo per tutti, e il membro vede a che punto è. Un server può disattivare i ban automatici nella dashboard.",
       "items": {
         "levels": {
           "term": "Livelli",
@@ -140,7 +140,7 @@
         },
         "reviewCards": {
           "term": "Schede di revisione",
-          "text": "Ogni azione automatica pubblica una scheda per lo staff con Keep, Undo e Change to…"
+          "text": "Ogni azione automatica pubblica una scheda, un messaggio per lo staff nel tuo canale di revisione, così una persona controlla cosa ha fatto l'automod. I suoi pulsanti: Keep, Undo e Change to…"
         },
         "modes": {
           "term": "Modalità",
@@ -284,7 +284,7 @@
         },
         "verification": {
           "term": "Verifica",
-          "text": "Un pannello di verifica o la verifica all'ingresso. “Verifica con Discord” può anche aggiungere il membro al server di supporto, così i messaggi sui ricorsi lo raggiungono comunque."
+          "text": "Un pannello di verifica o la verifica all'ingresso. Nei server di Mewvo, “Verifica con Discord” può anche aggiungere il membro al server di supporto, così i messaggi sui ricorsi lo raggiungono comunque."
         },
         "postingAsBot": {
           "term": "Pubblicare come il bot",

@@ -39,6 +39,7 @@ function renderAll(used) {
         {},
         { supportInvite: 'https://discord.gg/abc', mainInvite: 'https://discord.gg/main' },
         { supportInvite: 'https://discord.gg/abc', publicSite: true, memberPortal: true, dashboardEnabled: true },
+        { publicSite: true },
         { billing: true, memberPortal: true, legal: { ...legal, vatRegistered: false }, origin: 'https://site.example' },
         { billing: true, memberPortal: true, legal: { ...legal, vatRegistered: true } },
     ];

@@ -8,7 +8,9 @@
     "leadBilling": "Free covers everything Mewvo does today. Paid plans add room and tools; buy one for your account or as a gift key for someone else. [Have a key?](/me/redeem)",
     "testMode": "**Test mode.** {notice}",
     "lead": "Everything Mewvo does now is free. Paid plans start when Mewvo opens to other servers; until then nothing can be bought.",
-    "leadSupport": "Everything Mewvo does now is free. Paid plans start when Mewvo opens to other servers; until then nothing can be bought. [Join the support server]({url}) to hear first."
+    "leadSupport": "Everything Mewvo does now is free. Paid plans start when Mewvo opens to other servers; until then nothing can be bought. [Join the support server]({url}) to hear first.",
+    "leadPublic": "Everything Mewvo does now is free, in every server. Paid plans are not on sale yet; until they are, nothing can be bought and nobody is charged.",
+    "leadPublicSupport": "Everything Mewvo does now is free, in every server. Paid plans are not on sale yet; until they are, nothing can be bought and nobody is charged. [Join the support server]({url}) to hear first when they start."
   },
   "plans": {
     "title": "Plans",

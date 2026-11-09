@@ -1,0 +1,23 @@
+{
+  "inShort": "Kurz gesagt",
+  "binding": "Der vollständige Text unten ist auf Englisch; verbindlich ist die englische Fassung.",
+  "privacy": {
+    "short": {
+      "ids": "Mewvo arbeitet mit Discord-IDs (den Nummern, die Konten, Server und Kanäle kennzeichnen). Braucht ein Eintrag einen lesbaren Namen, etwa ein Moderationsfall, wird der Benutzername zu diesem Zeitpunkt mit gespeichert.",
+      "messages": "Der Text deiner Nachrichten wird nie gespeichert. Technische Protokolle enthalten nur Nachrichten-IDs und -Längen.",
+      "database": "Alles liegt in einer PostgreSQL-Datenbank, die nur der Bot nutzt.",
+      "noEmail": "Der Bot fragt nie nach deiner E-Mail-Adresse, einem Passwort oder Zahlungsdaten. Auch ein Mewvo-Konto auf dieser Website fragt nie nach einer E-Mail-Adresse: Nur wenn du eines anlegst, speichert Mewvo einen Benutzernamen und einen Einweg-Hash deines Passworts (siehe unten).",
+      "noTracking": "Diese Website hat keine Analyse, keine Werbung, kein Tracking und keine Skripte oder Cookies von Dritten."
+    }
+  },
+  "terms": {
+    "short": {
+      "age": "Du darfst den Bot nutzen, wenn du Discord nutzen darfst (mindestens 13 Jahre, oder älter, wo das Recht deines Landes es verlangt), und du hältst dich an die Regeln von Discord.",
+      "rules": "Halte dich an die Regeln des Servers, auf dem du bist. Nutze Mewvo nicht, um jemanden zu belästigen, zu spammen, illegale Inhalte zu teilen oder eine Strafe zu umgehen.",
+      "staffDecide": "Über Verwarnungen, Stummschaltungen, Kicks und Banns auf einem Server entscheidet dessen Team; Mewvo führt sie aus. Jede Strafe kann von einem Menschen überprüft werden, und die Direktnachricht dazu sagt, ob und wie du Einspruch einlegen kannst.",
+      "payments": "Es werden noch keine Zahlungen angenommen: Der Kauf auf dieser Website ist ein Test, niemandem wird etwas berechnet. Ein Plan verlängert sich nicht von selbst.",
+      "withdrawal": "Wenn du einen Bezahlplan kaufst, kannst du innerhalb von 14 Tagen ohne Angabe von Gründen widerrufen.",
+      "law": "Es gilt litauisches Recht, aber als Verbraucher behältst du den Schutz der zwingenden Gesetze des Landes, in dem du lebst."
+    }
+  }
+}

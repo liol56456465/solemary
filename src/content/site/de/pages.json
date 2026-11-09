@@ -142,7 +142,9 @@
       "users": "Mitglieder",
       "verification": "Verifizierung",
       "welcome": "Willkommen & Abschied"
-    }
+    },
+    "defaultNote": "Es werden die Befehle gezeigt, die alle nutzen können.",
+    "showAll": "Alle Befehle zeigen (auch für Admins)"
   },
   "about": {
     "title": "Über uns",

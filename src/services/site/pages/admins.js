@@ -14,7 +14,7 @@
 
 import { html } from '../../dashboard/html.js';
 import { PLANS } from '../../../config/site/plans.js';
-import { DASHBOARD_PATH, INSTALL_PERMISSIONS, addButton, installPermissionBits, isSnowflakeText, layout } from '../shell.js';
+import { DASHBOARD_PATH, INSTALL_PERMISSIONS, addButton, installNote, installPermissionBits, isSnowflakeText, layout } from '../shell.js';
 import { textOf } from '../i18n.js';
 
 /** The limits shown per plan, in order: [limit key in PLANS[].limits, catalog label key]. */
@@ -95,7 +95,7 @@ export function addedPage(ctx, { state = 'unknown', guildId = null } = {}) {
     const heading = state === 'cancelled' ? t(k('cancelled.title')) : id ? t(k('added.title')) : t(k('unknown.title'));
     const lead = state === 'cancelled' ? ti(k('cancelled.lead')) : id ? ti(k('added.lead')) : ti(k('unknown.lead'));
     const actions = state === 'cancelled'
-        ? html`<p class="hero-actions">${addButton(ctx)}<a class="button button-quiet" href="${href('/admins')}">${t(k('readFirst'))}</a></p>`
+        ? html`<p class="hero-actions">${addButton(ctx)}<a class="button button-quiet" href="${href('/admins')}">${t(k('readFirst'))}</a></p>${installNote(ctx)}`
         : html`<p class="hero-actions">${ctx.dashboardEnabled ? html`<a class="button" href="${dashboardHref}">${t(id ? k('openDashboard') : k('pickServer'))}</a>` : ''}<a class="button button-quiet" href="${href('/docs/setup')}">${t(k('setupGuide'))}</a></p>
 ${ctx.dashboardEnabled ? '' : html`<p class="notice">${ti(k('noDashboard'))}</p>`}
 <h2 id="first">${t(k('firstSteps'))}</h2>

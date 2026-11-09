@@ -46,7 +46,7 @@
       "logging": "Pick a **mod log channel** that only staff can see: every warning, mute, kick and ban is written there. Other logs (joins, role changes, edited and deleted messages) are on the **Logging** page.",
       "automod": "Automod is **off** in a new server. Turn it on on the **Automod** page and start with **Report only (don't delete)**: staff see what it would have done and nothing happens to anyone. Switch a rule to **On** when you trust it.",
       "staffGuard": "The **staff guard** is off too. Turn it on with `/automod staffguard`: an admin who mass-bans, mass-kicks or mass-deletes channels or roles loses their staff roles and the server owner is alerted; `/staff restore` gives the roles back. It works while automod is on, and only the server owner can turn it off.",
-      "appeals": "Post the appeal panel with `/setappeal` in a channel every member can see.",
+      "appeals": "Post the appeal panel (a message with an **Appeal** button) with `/setappeal` in a channel every member can see.",
       "test": "Run `/test` to get the exact DM a member would get. Nothing is done to anyone."
     }
   },
@@ -57,7 +57,7 @@
       "dms": "A DM for every warning, mute, kick and ban: the reason, the case code, until when, and how to appeal or that it can't be appealed.",
       "appeals": "The appeal panel from `/setappeal`, with **Appeal**, **My appeals** and **My record**.",
       "record": "Their own cases from every server that uses Mewvo on [My record](/me), on this website.",
-      "automod": "When automod acts on them, a DM with the rule and a **Contest this** button. Staff get a review card where they keep, undo or change the action."
+      "automod": "When automod acts on them, a DM with the rule and a **Contest this** button. Staff get a review card (a message in the review channel) where they keep, undo or change the action."
     }
   },
   "appeals": {
@@ -65,7 +65,7 @@
     "who": "Members appeal to the server that punished them, and your **Administrators** decide: **Accept** or **Deny** on the appeal card in your staff channel, or on the dashboard's **Appeals** page. An accepted appeal lifts what is still active; a ban or kick comes with a one-time invite back.",
     "panel": "**In Discord:** the appeal panel you post with `/setappeal`. Muted and warned members use it in your server.",
     "web": "**On the website:** members log in with Discord on [My appeals](/me/appeals). It works even after a ban, when they share no server with Mewvo any more.",
-    "home": "You choose where the punishment DM tells members to appeal: on the dashboard, **Enforcement & appeals → Where members appeal**, pick **Mewvo support** (the Mewvo support server) or **Our own server** with an invite to a server you run."
+    "home": "You choose where the punishment DM tells members to appeal: on the dashboard, **Enforcement & appeals → Where members appeal**. **Our own server** (the default) points them to an invite to a server you run and, when it is available, the web appeal page; **Mewvo support** sends them to the Mewvo support server."
   },
   "data": {
     "title": "Data and deletion",
@@ -100,11 +100,11 @@
     "noDashboard": "The dashboard is not available right now. Run `/setup` in your server: it shows what is set up and what is missing.",
     "firstSteps": "First steps",
     "steps": {
-      "setup": "Run `/setup` in your server: it shows what is set up and what is missing.",
+      "setup": "Run `/setup` in your server: it shows what is set up and what is missing, with a link to the dashboard where you change the settings.",
       "logging": "Pick a **mod log channel** that only staff can see.",
       "automod": "Automod is **off** in a new server: turn it on with **Report only (don't delete)** first.",
       "staffGuard": "Turn on the **staff guard** with `/automod staffguard` to protect the server from a rogue admin.",
-      "appeals": "Post the appeal panel with `/setappeal`."
+      "appeals": "Post the appeal panel (a message with an **Appeal** button) with `/setappeal`."
     },
     "more": "Permissions, appeals, data and limits: [For server admins](/admins).",
     "accessNote": "The dashboard checks that you can manage this server before it shows anything."

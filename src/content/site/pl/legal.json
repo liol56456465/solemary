@@ -1,0 +1,23 @@
+{
+  "inShort": "W skrócie",
+  "binding": "Pełny tekst poniżej jest po angielsku; wiążąca jest wersja angielska.",
+  "privacy": {
+    "short": {
+      "ids": "Mewvo pracuje na identyfikatorach Discorda (numerach, które oznaczają konta, serwery i kanały). Gdy wpis potrzebuje czytelnej nazwy, na przykład sprawa moderacyjna, zapisywana jest z nim nazwa użytkownika z tamtej chwili.",
+      "messages": "Treść twoich wiadomości nigdy nie jest zapisywana. Logi techniczne zawierają tylko identyfikatory i długość wiadomości.",
+      "database": "Wszystko jest przechowywane w bazie danych PostgreSQL, z której korzysta tylko bot.",
+      "noEmail": "Bot nigdy nie prosi o twój adres e-mail, hasło ani dane płatnicze. Konto Mewvo na tej stronie też nigdy nie prosi o adres e-mail: tylko jeśli zdecydujesz się je założyć, Mewvo zapisuje nazwę użytkownika i jednokierunkowy skrót (hash) twojego hasła (zob. niżej).",
+      "noTracking": "Ta strona nie ma analityki, reklam, śledzenia ani skryptów czy plików cookie stron trzecich."
+    }
+  },
+  "terms": {
+    "short": {
+      "age": "Możesz korzystać z bota, jeśli możesz korzystać z Discorda (co najmniej 13 lat albo więcej, jeśli wymaga tego prawo twojego kraju), i przestrzegasz zasad Discorda.",
+      "rules": "Przestrzegaj zasad serwera, na którym jesteś. Nie używaj Mewvo do nękania kogokolwiek, spamowania, udostępniania nielegalnych treści ani obchodzenia kary.",
+      "staffDecide": "O ostrzeżeniach, wyciszeniach, wyrzuceniach i banach na serwerze decyduje jego ekipa; Mewvo je wykonuje. Każdą karę może sprawdzić człowiek, a wiadomość prywatna o niej mówi, czy i jak możesz się odwołać.",
+      "payments": "Płatności nie są jeszcze przyjmowane: zakup na tej stronie to test i nikt nie jest obciążany. Plan nie odnawia się sam.",
+      "withdrawal": "Gdy kupisz płatny plan, możesz odstąpić od zakupu w ciągu 14 dni bez podania przyczyny.",
+      "law": "Obowiązuje prawo litewskie, ale jako konsument zachowujesz ochronę bezwzględnie obowiązujących przepisów kraju, w którym mieszkasz."
+    }
+  }
+}

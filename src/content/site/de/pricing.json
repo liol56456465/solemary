@@ -8,7 +8,9 @@
     "leadBilling": "Free deckt alles ab, was Mewvo heute kann. Bezahlpläne bringen mehr Platz und Werkzeuge; kauf einen für dein Konto oder als Geschenk-Key für jemand anderen. [Hast du einen Key?](/me/redeem)",
     "testMode": "**Testmodus.** {notice}",
     "lead": "Alles, was Mewvo jetzt kann, ist kostenlos. Bezahlpläne starten, wenn Mewvo für andere Server geöffnet wird; bis dahin kann nichts gekauft werden.",
-    "leadSupport": "Alles, was Mewvo jetzt kann, ist kostenlos. Bezahlpläne starten, wenn Mewvo für andere Server geöffnet wird; bis dahin kann nichts gekauft werden. [Tritt dem Support-Server bei]({url}), um es als Erstes zu erfahren."
+    "leadSupport": "Alles, was Mewvo jetzt kann, ist kostenlos. Bezahlpläne starten, wenn Mewvo für andere Server geöffnet wird; bis dahin kann nichts gekauft werden. [Tritt dem Support-Server bei]({url}), um es als Erstes zu erfahren.",
+    "leadPublic": "Alles, was Mewvo jetzt kann, ist kostenlos, auf jedem Server. Bezahlpläne gibt es noch nicht zu kaufen; bis dahin kann nichts gekauft werden und niemandem wird etwas berechnet.",
+    "leadPublicSupport": "Alles, was Mewvo jetzt kann, ist kostenlos, auf jedem Server. Bezahlpläne gibt es noch nicht zu kaufen; bis dahin kann nichts gekauft werden und niemandem wird etwas berechnet. [Tritt dem Support-Server bei]({url}), um als Erstes zu erfahren, wann sie starten."
   },
   "plans": {
     "title": "Pläne",

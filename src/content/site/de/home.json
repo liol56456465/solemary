@@ -13,7 +13,7 @@
     "title": "Ein Discord-Bot für Moderation und Einsprüche",
     "lead": "Mewvo verwarnt, schaltet stumm, kickt und bannt über ein einziges Panel. Das Mitglied bekommt eine Direktnachricht mit dem Grund, dem Ende und wie es Einspruch einlegen kann. Dein Team bekommt einen Fall mit einem kurzen Code, den es später nachschlagen kann.",
     "notPublic": "Mewvo läuft vorerst nur auf dem Mewvo-Server. Zu anderen Servern kann er noch nicht hinzugefügt werden.",
-    "dmCaption": "Die Direktnachricht, die ein Mitglied bei einer zweiten Verwarnung bekommt (Mewvo schickt sie auf Englisch)."
+    "dmCaption": "Die Direktnachricht, die ein Mitglied bei einer zweiten Verwarnung bekommt (Mewvo schickt sie in der Sprache deines Servers)."
   },
   "dashboard": {
     "title": "Alles an einem Ort",

@@ -91,7 +91,8 @@
   "faq": {
     "buyNow": {
       "q": "Posso acquistare un piano adesso?",
-      "a": "No. Per ora Mewvo funziona solo sul suo server. I piani a pagamento partiranno quando si aprirà ad altri server; fino ad allora non si può acquistare nulla e a nessuno viene addebitato nulla."
+      "a": "No. Per ora Mewvo funziona solo sul suo server. I piani a pagamento partiranno quando si aprirà ad altri server; fino ad allora non si può acquistare nulla e a nessuno viene addebitato nulla.",
+      "aPublic": "No. I piani a pagamento non sono ancora in vendita; fino ad allora non si può acquistare nulla e a nessuno viene addebitato nulla. Tutto quello che Mewvo fa oggi è gratis."
     },
     "currency": {
       "q": "In che valuta sono i prezzi?",

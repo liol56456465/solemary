@@ -10,7 +10,7 @@ import {
     COMPARISON, PLANS, PRICING_FAQ, YEARLY_MONTHS_CHARGED, displayCurrencyFor, monthlyCentsIn, paymentCurrencyFor, yearlyCents,
 } from '../../../config/site/plans.js';
 import { PERIODS, WITHDRAWAL_DAYS } from '../../billing/premiumService.js';
-import { addButton, layout } from '../shell.js';
+import { addButton, installNote, layout } from '../shell.js';
 import { checkoutHref, testNotice, vatLine } from '../billing.js';
 import { textOf } from '../i18n.js';
 import { approxLocal, money, wholeMoney } from '../currency.js';
@@ -27,7 +27,7 @@ function planActions(ctx, plan) {
     if (!plan.monthlyCents) {
         // Free: add Mewvo to your server (public site with a valid CLIENT_ID); before that, the invite.
         const add = addButton(ctx, 'button button-quiet');
-        if (add) return add;
+        if (add) return html`${add}${installNote(ctx)}`;
         const invite = ctx.mainInvite || ctx.supportInvite;
         return invite
             ? html`<a class="button button-quiet" href="${invite}" rel="noopener">${ctx.mainInvite ? t('pricing.card.joinServer') : t('pricing.card.joinSupport')}</a>`
@@ -84,13 +84,25 @@ ${group.rows.map((row) => html`<tr><th scope="row">${t(`plans.comparison.${group
 </table></div>`;
 }
 
-/** The pricing questions: [question, answer] (in test checkout, "Can I buy a plan now?" gets the test answer). */
+/**
+ * The pricing questions: [question, answer]. "Can I buy a plan now?" gets the test answer in test
+ * checkout, the public-site answer (no "runs only on its own server") when PUBLIC_SITE_ENABLED is on.
+ */
 export function pricingFaq(ctx) {
     const { t } = textOf(ctx);
-    return PRICING_FAQ.map((key) => [
-        t(`plans.faq.${key}.q`),
-        ctx.billing && key === 'buyNow' ? t('pricing.faq.buyNowTest') : t(`plans.faq.${key}.a`),
-    ]);
+    const answer = (key) => {
+        if (key !== 'buyNow') return t(`plans.faq.${key}.a`);
+        if (ctx.billing) return t('pricing.faq.buyNowTest');
+        return t(ctx.publicSite ? 'plans.faq.buyNow.aPublic' : 'plans.faq.buyNow.a');
+    };
+    return PRICING_FAQ.map((key) => [t(`plans.faq.${key}.q`), answer(key)]);
+}
+
+/** The lead without test checkout: "nothing can be bought yet", worded for a public or a private site. */
+function plainLead(ctx) {
+    const { t, ti } = textOf(ctx);
+    const key = ctx.publicSite ? 'pricing.head.leadPublic' : 'pricing.head.lead';
+    return ctx.supportInvite ? ti(`${key}Support`, { url: ctx.supportInvite }) : t(key);
 }
 
 /** Under the cards: which currency you pay in, or (local amounts shown) the ECB rate date + that. */
@@ -116,7 +128,7 @@ export function pricingPage(ctx) {
 ${ctx.billing
         ? html`<p class="lead">${ti('pricing.head.leadBilling')}</p>
 <p class="test-banner" role="note">${ti('pricing.head.testMode', { notice: testNotice(ctx) })}</p>`
-        : html`<p class="lead">${ctx.supportInvite ? ti('pricing.head.leadSupport', { url: ctx.supportInvite }) : t('pricing.head.lead')}</p>`}</header>
+        : html`<p class="lead">${plainLead(ctx)}</p>`}</header>
 <section aria-labelledby="plans-title"><h2 class="visually-hidden" id="plans-title">${t('pricing.plans.title')}</h2>
 <ul class="plan-cards">${PLANS.map((plan) => planCard(ctx, plan))}</ul>
 <p class="note plans-note">${currencyNote(ctx)} ${t('pricing.plans.note')}</p>

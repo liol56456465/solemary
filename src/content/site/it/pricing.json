@@ -8,7 +8,9 @@
     "leadBilling": "Free copre tutto quello che Mewvo fa oggi. I piani a pagamento aggiungono spazio e strumenti; acquistane uno per il tuo account o come chiave regalo per qualcun altro. [Hai una chiave?](/me/redeem)",
     "testMode": "**Modalità test.** {notice}",
     "lead": "Tutto quello che Mewvo fa adesso è gratis. I piani a pagamento partiranno quando Mewvo si aprirà ad altri server; fino ad allora non si può acquistare nulla.",
-    "leadSupport": "Tutto quello che Mewvo fa adesso è gratis. I piani a pagamento partiranno quando Mewvo si aprirà ad altri server; fino ad allora non si può acquistare nulla. [Entra nel server di supporto]({url}) per saperlo per primo."
+    "leadSupport": "Tutto quello che Mewvo fa adesso è gratis. I piani a pagamento partiranno quando Mewvo si aprirà ad altri server; fino ad allora non si può acquistare nulla. [Entra nel server di supporto]({url}) per saperlo per primo.",
+    "leadPublic": "Tutto quello che Mewvo fa adesso è gratis, in ogni server. I piani a pagamento non sono ancora in vendita; fino ad allora non si può acquistare nulla e a nessuno viene addebitato nulla.",
+    "leadPublicSupport": "Tutto quello che Mewvo fa adesso è gratis, in ogni server. I piani a pagamento non sono ancora in vendita; fino ad allora non si può acquistare nulla e a nessuno viene addebitato nulla. [Entra nel server di supporto]({url}) per sapere per primo quando partono."
   },
   "plans": {
     "title": "Piani",

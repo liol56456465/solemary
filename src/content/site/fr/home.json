@@ -13,7 +13,7 @@
     "title": "Un bot Discord pour la modération et les appels",
     "lead": "Mewvo avertit, met en sourdine, expulse et bannit depuis un seul panneau. Le membre reçoit un message privé avec la raison, la date de fin et la façon de faire appel. Ton équipe obtient un dossier avec un code court à retrouver plus tard.",
     "notPublic": "Pour l’instant, Mewvo fonctionne uniquement sur le serveur Mewvo. Il ne peut pas encore être ajouté à d’autres serveurs.",
-    "dmCaption": "Le message privé qu’un membre reçoit pour un deuxième avertissement (Mewvo l’envoie en anglais)."
+    "dmCaption": "Le message privé qu’un membre reçoit pour un deuxième avertissement (Mewvo l’envoie dans la langue de ton serveur)."
   },
   "dashboard": {
     "title": "Tout au même endroit",

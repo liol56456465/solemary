@@ -1,0 +1,23 @@
+{
+  "inShort": "In breve",
+  "binding": "Il testo completo qui sotto è in inglese; fa fede la versione inglese.",
+  "privacy": {
+    "short": {
+      "ids": "Mewvo lavora con gli ID di Discord (i numeri che identificano account, server e canali). Quando un record ha bisogno di un nome leggibile, come un caso di moderazione, viene salvato con esso il nome utente di quel momento.",
+      "messages": "Il testo dei tuoi messaggi non viene mai salvato. I log tecnici conservano solo gli ID e la lunghezza dei messaggi.",
+      "database": "Tutto è conservato in un database PostgreSQL usato solo dal bot.",
+      "noEmail": "Il bot non chiede mai il tuo indirizzo email, una password o dati di pagamento. Nemmeno un account Mewvo su questo sito chiede mai un indirizzo email: solo se scegli di crearne uno, Mewvo salva un nome utente e un hash unidirezionale della tua password (vedi sotto).",
+      "noTracking": "Questo sito non ha statistiche, pubblicità, tracciamento né script o cookie di terze parti."
+    }
+  },
+  "terms": {
+    "short": {
+      "age": "Puoi usare il bot se puoi usare Discord (almeno 13 anni, o di più dove lo richiede la legge del tuo paese) e rispetti le regole di Discord.",
+      "rules": "Rispetta le regole del server in cui ti trovi. Non usare Mewvo per molestare qualcuno, fare spam, condividere contenuti illegali o aggirare una sanzione.",
+      "staffDecide": "Lo staff di ogni server decide avvertimenti, mute, espulsioni e ban nel proprio server; Mewvo li esegue. Ogni sanzione può essere riesaminata da una persona, e il messaggio diretto che la comunica dice se e come puoi fare ricorso.",
+      "payments": "Non si accettano ancora pagamenti: l’acquisto su questo sito è una prova e a nessuno viene addebitato nulla. Un piano non si rinnova da solo.",
+      "withdrawal": "Quando acquisti un piano a pagamento, puoi recedere entro 14 giorni senza indicare un motivo.",
+      "law": "Si applica la legge lituana, ma come consumatore mantieni la tutela delle norme imperative del paese in cui vivi."
+    }
+  }
+}

@@ -46,7 +46,7 @@
       "logging": "Scegli un **canale del registro di moderazione** che solo lo staff può vedere: lì viene annotato ogni avvertimento, silenziamento, espulsione e ban. Gli altri log (ingressi, modifiche ai ruoli, messaggi modificati ed eliminati) sono nella pagina **Log**.",
       "automod": "In un nuovo server l'automod è **disattivato**. Attivalo nella pagina **Automod** e inizia con **Solo segnalazione (non elimina)**: lo staff vede cosa avrebbe fatto e a nessuno succede nulla. Imposta una regola su **Attiva** quando ti fidi.",
       "staffGuard": "Anche la **protezione dello staff** è disattivata. Attivala con `/automod staffguard`: un admin che banna o espelle in massa, o elimina in massa canali o ruoli, perde i suoi ruoli dello staff e il proprietario del server viene avvisato; `/staff restore` restituisce i ruoli. Funziona finché l'automod è attivo, e solo il proprietario del server può disattivarla.",
-      "appeals": "Pubblica il pannello dei ricorsi con `/setappeal` in un canale che tutti i membri possono vedere.",
+      "appeals": "Pubblica il pannello dei ricorsi (un messaggio con il pulsante **Appeal**) con `/setappeal` in un canale che tutti i membri possono vedere.",
       "test": "Usa `/test` per ricevere esattamente il messaggio diretto che riceverebbe un membro. A nessuno succede nulla."
     }
   },
@@ -57,7 +57,7 @@
       "dms": "Un messaggio diretto per ogni avvertimento, silenziamento, espulsione e ban: il motivo, il codice caso, fino a quando, e come fare ricorso o che non si può fare ricorso.",
       "appeals": "Il pannello dei ricorsi di `/setappeal`, con **Appeal**, **My appeals** e **My record**.",
       "record": "I propri casi di ogni server che usa Mewvo su [Il mio storico](/me), su questo sito.",
-      "automod": "Quando l'automod agisce su di loro, un messaggio diretto con la regola e un pulsante **Contest this**. Lo staff riceve una scheda di revisione su cui mantiene, annulla o cambia l'azione."
+      "automod": "Quando l'automod agisce su di loro, un messaggio diretto con la regola e un pulsante **Contest this**. Lo staff riceve una scheda di revisione (un messaggio nel canale di revisione) su cui mantiene, annulla o cambia l'azione."
     }
   },
   "appeals": {
@@ -65,7 +65,7 @@
     "who": "I membri fanno ricorso al server che li ha sanzionati, e decidono i tuoi **Amministratori**: **Accept** o **Deny** sulla scheda del ricorso nel tuo canale dello staff, oppure nella pagina **Ricorsi** della dashboard. Un ricorso accolto revoca ciò che è ancora attivo; un ban o un'espulsione arriva con un invito monouso per rientrare.",
     "panel": "**Su Discord:** il pannello dei ricorsi che pubblichi con `/setappeal`. I membri silenziati e avvertiti lo usano nel tuo server.",
     "web": "**Sul sito:** i membri accedono con Discord su [I miei ricorsi](/me/appeals). Funziona anche dopo un ban, quando non condividono più alcun server con Mewvo.",
-    "home": "Scegli tu dove il messaggio di sanzione indica ai membri di fare ricorso: nella dashboard, in **Sanzioni e ricorsi → Dove i membri fanno ricorso**, scegli **Supporto Mewvo** (il server di supporto di Mewvo) o **Il nostro server** con un invito a un server che gestisci tu."
+    "home": "Scegli tu dove il messaggio di sanzione indica ai membri di fare ricorso: nella dashboard, in **Sanzioni e ricorsi → Dove i membri fanno ricorso**. **Il nostro server** (l'impostazione predefinita) indica un invito a un server che gestisci tu e, quando è disponibile, la pagina web dei ricorsi; **Supporto Mewvo** li manda al server di supporto di Mewvo."
   },
   "data": {
     "title": "Dati ed eliminazione",
@@ -100,11 +100,11 @@
     "noDashboard": "La dashboard non è disponibile in questo momento. Usa `/setup` nel tuo server: mostra cosa è configurato e cosa manca.",
     "firstSteps": "Primi passi",
     "steps": {
-      "setup": "Usa `/setup` nel tuo server: mostra cosa è configurato e cosa manca.",
+      "setup": "Usa `/setup` nel tuo server: mostra cosa è configurato e cosa manca, con un link alla dashboard dove cambi le impostazioni.",
       "logging": "Scegli un **canale del registro di moderazione** che solo lo staff può vedere.",
       "automod": "In un nuovo server l'automod è **disattivato**: attivalo prima con **Solo segnalazione (non elimina)**.",
       "staffGuard": "Attiva la **protezione dello staff** con `/automod staffguard` per proteggere il server da un admin che si comporta male.",
-      "appeals": "Pubblica il pannello dei ricorsi con `/setappeal`."
+      "appeals": "Pubblica il pannello dei ricorsi (un messaggio con il pulsante **Appeal**) con `/setappeal`."
     },
     "more": "Permessi, ricorsi, dati e limiti: [Per gli admin dei server](/admins).",
     "accessNote": "La dashboard controlla che tu possa gestire questo server prima di mostrare qualsiasi cosa."

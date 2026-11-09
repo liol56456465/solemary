@@ -142,7 +142,9 @@
       "users": "Membres",
       "verification": "Vérification",
       "welcome": "Bienvenue et au revoir"
-    }
+    },
+    "defaultNote": "Voici les commandes que tout le monde peut utiliser.",
+    "showAll": "Afficher toutes les commandes (y compris admin)"
   },
   "about": {
     "title": "À propos",

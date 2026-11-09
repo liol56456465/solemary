@@ -20,11 +20,13 @@
     "notYet": {
       "q": "Por que ainda não posso adicioná-lo ao meu servidor?",
       "a": "Por enquanto, o Mewvo é feito para o servidor Mewvo e funciona só nele. Abri-lo para outros servidores exige mais trabalho antes, como configurações e limites por servidor. Quando ele abrir, um botão para adicioná-lo ao seu servidor vai aparecer neste site, e os planos pagos da página de preços também começam nessa hora.",
-      "aPublic": "Agora você pode: use o botão Adicionar ao Discord no topo da página."
+      "aPublic": "Sim. Use o botão **Adicionar ao Discord** no topo da página. O Mewvo não precisa de Administrador; [Para administradores de servidores](/admins) explica cada permissão e os primeiros passos.",
+      "qPublic": "Posso adicionar o Mewvo ao meu servidor?"
     },
     "free": {
       "q": "É gratuito?",
-      "a": "Sim. Tudo o que ele faz hoje é gratuito. Planos pagos com limites maiores estão previstos para quando o Mewvo abrir para outros servidores; veja [Preços](/pricing)."
+      "a": "Sim. Tudo o que ele faz hoje é gratuito. Planos pagos com limites maiores estão previstos para quando o Mewvo abrir para outros servidores; veja [Preços](/pricing).",
+      "aPublic": "Sim. Tudo o que ele faz hoje é gratuito, em qualquer servidor. Planos pagos com limites maiores estão previstos, mas ainda não estão à venda; veja [Preços](/pricing)."
     }
   },
   "appeals": {

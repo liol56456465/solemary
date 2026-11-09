@@ -12,7 +12,7 @@
 //                     link; ?guild_id= is only used for the /dashboard/<id> link, nothing is stored (pages/admins.js)
 //   GET /commands     the command explorer: every command with its options, access and dashboard page,
 //                     ?q=&cat=&who= filters (pages/commands.js, commandCatalog.js; form-action 'self' here only)
-//   GET /commands/<slug>  301 to /commands#<slug> (or the command's first subcommand); unknown: 404
+//   GET /commands/<slug>  301 to /commands#<slug> (or the command's first subcommand; ?who=all for non-everyone cards); unknown: 404
 //   GET /about        who runs it
 //   GET /leaderboard  the main server's leveling leaderboard, 50 a page (?page=), with the server cat
 //                     above it (hidden when it cannot be read)
@@ -72,7 +72,7 @@ import { changelogPage } from './pages/changelog.js';
 import { LEGAL_UPDATED, contactPage, legalContact, legalNoticePage, privacyPage, termsPage } from './pages/legal.js';
 import { withdrawalPage } from './pages/withdrawal.js';
 import { addedPage, addedState, adminsPage } from './pages/admins.js';
-import { COMMANDS_CSP, commandAnchor, commandsPage } from './pages/commands.js';
+import { COMMANDS_CSP, commandAnchorHref, commandsPage } from './pages/commands.js';
 import {
     DEFAULT_LANG, LANGUAGES, isEnglishOnlyPath, isLanguage, localizePath, textOf, translator,
 } from './i18n.js';
@@ -412,15 +412,16 @@ export function createSite({
         res.set('Content-Security-Policy', COMMANDS_CSP);
         return page((ctx) => commandsPage(ctx, req.query))(req, res);
     });
-    // /commands/case → /commands#case-edit (that card's anchor, or the command's first card).
+    // /commands/case → /commands?who=all#case-edit (that card's anchor, or the command's first card;
+    // ?who=all when the default "everyone" filter would hide it).
     // Before the commands load nothing is known yet: a plain redirect to the list.
     router.get('/commands/:slug', (req, res, next) => {
         const commands = client?.commands || null;
         const list = localizePath(req.siteLang || DEFAULT_LANG, '/commands');
         if (!commands?.size) return res.redirect(302, list);
-        const slug = commandAnchor(commands, req.params.slug);
-        if (!slug) return next();
-        return res.redirect(301, `${list}#${slug}`);
+        const target = commandAnchorHref(commands, req.params.slug, list);
+        if (!target) return next();
+        return res.redirect(301, target);
     });
     router.get('/about', page(aboutPage));
     router.get('/changelog', page(changelogPage));

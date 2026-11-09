@@ -17,6 +17,38 @@
 
 import { html } from '../../dashboard/html.js';
 import { layout } from '../shell.js';
+import { DEFAULT_LANG, textOf, translatedIn, translator } from '../i18n.js';
+
+// "In short" (beginner audit 4.10): the summaries of the Privacy Policy and the Terms are in the
+// catalog (content/site/<lang>/legal.json → legal.<page>.short.<key>), so /de/privacy etc. show
+// them translated above the English text, with the note that the English version is binding.
+// The English bullets are the binding text and read exactly like the page did before.
+// OWNER REVIEW: the translations (and the new Terms summary) need a legal check.
+export const PRIVACY_SHORT = Object.freeze(['ids', 'messages', 'database', 'noEmail', 'noTracking']);
+export const TERMS_SHORT = Object.freeze(['age', 'rules', 'staffDecide', 'payments', 'withdrawal', 'law']);
+const SHORT = { privacy: PRIVACY_SHORT, terms: TERMS_SHORT };
+
+const shortList = (t, page) => html`<ul>${SHORT[page].map((key) => html`<li>${t(`legal.${page}.short.${key}`)}</li>`)}</ul>`;
+
+/** The English "In short" section (part of the binding text). */
+function inShort(ctx, page) {
+    const { t } = textOf(ctx);
+    return html`<h2>${t('legal.inShort')}</h2>
+${shortList(t, page)}`;
+}
+
+/**
+ * On /de/privacy, /de/terms …: the summary in the visitor's language, then the note that the full
+ * text below is English and binding. Nothing on the English page (or a language without the keys).
+ */
+function localSummary(ctx, page) {
+    const code = ctx.englishOnlyFor;
+    if (!code || code === DEFAULT_LANG || !translatedIn(code, 'legal.binding')) return '';
+    const { t } = translator(code);
+    return html`<section class="notice legal-summary" lang="${code}" aria-labelledby="short-local"><h2 id="short-local">${t('legal.inShort')}</h2>
+${shortList(t, page)}
+<p class="legal-binding">${t('legal.binding')}</p></section>`;
+}
 
 export const LEGAL_UPDATED = '2026-11-09';
 const UPDATED_TEXT = '9 November 2026';
@@ -81,22 +113,19 @@ function dbRegionText(ctx) {
 }
 
 export function privacyPage(ctx) {
+    const summary = localSummary(ctx, 'privacy');
     return layout(ctx, {
-        title: 'Privacy Policy', active: 'privacy', path: '/privacy',
+        title: 'Privacy Policy', active: 'privacy', path: '/privacy', langNote: !summary,
         description: 'What the Mewvo bot and website store about you, why, for how long, and your rights.',
         body: html`<div class="wrap page prose"><h1>Privacy Policy</h1>
 ${updatedLine()}
+${summary}
 <p class="lead">What Mewvo stores about you, why, for how long, who else sees it, and how to get a copy or have it deleted. Your data is never sold, never used for advertising and never used to train AI models.</p>
 
 <h2>Who is responsible</h2>
 <p>${whoLine(ctx)} To reach them about your data, ${contactLine(ctx)}. The full operator details are in the <a href="/legal">Legal notice</a>.</p>
 
-<h2>In short</h2>
-<ul><li>Mewvo works with Discord IDs (the numbers that identify accounts, servers and channels). Where a record needs a readable name, such as a moderation case, the username at that moment is saved with it.</li>
-<li>The text of your messages is never stored. Technical logs keep only message IDs and lengths.</li>
-<li>Everything is kept in a PostgreSQL database used only by the bot.</li>
-<li>The bot never asks for your email address, a password or payment details. A Mewvo account on this website never asks for an email address either: only if you choose to create one, Mewvo stores a username and a one-way hash of your password (see below).</li>
-<li>This website has no analytics, no ads, no tracking and no third-party scripts or cookies.</li></ul>
+${inShort(ctx, 'privacy')}
 
 <h2>What is stored, why, and for how long</h2>
 <div class="table-wrap" role="region" aria-labelledby="data-title" tabindex="0"><table class="legal-table">
@@ -216,12 +245,17 @@ ${ctx.memberPortal ? html`<p>You can download a copy of your data yourself: log 
 
 export function termsPage(ctx) {
     const operator = ctx.legal?.operator;
+    const summary = localSummary(ctx, 'terms');
     return layout(ctx, {
-        title: 'Terms and Conditions', active: 'terms', path: '/terms',
+        title: 'Terms and Conditions', active: 'terms', path: '/terms', langNote: !summary,
         description: 'The rules for using the Mewvo bot, its website and its plans.',
         body: html`<div class="wrap page prose"><h1>Terms and Conditions</h1>
 ${updatedLine()}
+${summary}
 <p class="lead">The rules for using the Mewvo Discord bot, this website and its plans. By using the free features you accept these terms. A paid plan needs you to accept them at checkout.</p>
+
+<!-- OWNER REVIEW: legal text (new "In short" summary of the sections below, beginner audit 4.10, 2026-11-09) -->
+${inShort(ctx, 'terms')}
 
 <h2>Who runs Mewvo</h2>
 <p>${operator ? html`Mewvo is run by ${operator}, a private individual in Lithuania.` : 'Mewvo is run by one private individual in Lithuania, its owner.'} Contact: ${contactLine(ctx)}. The full details are in the <a href="/legal">Legal notice</a>. Mewvo is not made by, affiliated with or endorsed by Discord.</p>

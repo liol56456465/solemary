@@ -9,14 +9,17 @@ import { textOf } from '../i18n.js';
 function faqItems(ctx) {
     const { t, ti } = textOf(ctx);
     const support = ctx.supportInvite ? ti('faq.support.link', { url: ctx.supportInvite }) : t('faq.support.text');
-    const qa = (group, item, answerKey = 'a') => [t(`faq.${group}.${item}.q`), html`<p>${ti(`faq.${group}.${item}.${answerKey}`, { support })}</p>`];
+    const qa = (group, item, answerKey = 'a', questionKey = 'q') => [t(`faq.${group}.${item}.${questionKey}`), html`<p>${ti(`faq.${group}.${item}.${answerKey}`, { support })}</p>`];
+    // PUBLIC_SITE_ENABLED: "Can I add it to my server?" and "free in every server" instead of the
+    // private-site texts ("Why can't I add it yet?", "plans start when Mewvo opens").
+    const pub = Boolean(ctx.publicSite);
     return [
         {
             group: t('faq.about.title'),
             items: [
                 qa('about', 'whatDoes'),
-                qa('about', 'notYet', ctx.publicSite ? 'aPublic' : 'a'),
-                qa('about', 'free'),
+                qa('about', 'notYet', pub ? 'aPublic' : 'a', pub ? 'qPublic' : 'q'),
+                qa('about', 'free', pub ? 'aPublic' : 'a'),
             ],
         },
         {

@@ -91,7 +91,8 @@
   "faq": {
     "buyNow": {
       "q": "Czy mogę teraz kupić plan?",
-      "a": "Nie. Na razie Mewvo działa tylko na własnym serwerze. Płatne plany ruszą, gdy otworzy się na inne serwery; do tego czasu nie da się nic kupić i nikt nie jest obciążany."
+      "a": "Nie. Na razie Mewvo działa tylko na własnym serwerze. Płatne plany ruszą, gdy otworzy się na inne serwery; do tego czasu nie da się nic kupić i nikt nie jest obciążany.",
+      "aPublic": "Nie. Płatnych planów nie można jeszcze kupić; do tego czasu nie da się nic kupić i nikt nie jest obciążany. Wszystko, co Mewvo robi dzisiaj, jest darmowe."
     },
     "currency": {
       "q": "W jakiej walucie są ceny?",

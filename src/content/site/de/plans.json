@@ -91,7 +91,8 @@
   "faq": {
     "buyNow": {
       "q": "Kann ich jetzt einen Plan kaufen?",
-      "a": "Nein. Mewvo läuft vorerst nur auf seinem eigenen Server. Bezahlpläne starten, wenn er für andere Server geöffnet wird; bis dahin kann nichts gekauft werden und niemandem wird etwas berechnet."
+      "a": "Nein. Mewvo läuft vorerst nur auf seinem eigenen Server. Bezahlpläne starten, wenn er für andere Server geöffnet wird; bis dahin kann nichts gekauft werden und niemandem wird etwas berechnet.",
+      "aPublic": "Nein. Bezahlpläne gibt es noch nicht zu kaufen; bis dahin kann nichts gekauft werden und niemandem wird etwas berechnet. Alles, was Mewvo heute kann, ist kostenlos."
     },
     "currency": {
       "q": "In welcher Währung sind die Preise?",

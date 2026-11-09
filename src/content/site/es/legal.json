@@ -1,0 +1,23 @@
+{
+  "inShort": "En resumen",
+  "binding": "El texto completo de abajo está en inglés; la versión en inglés es la vinculante.",
+  "privacy": {
+    "short": {
+      "ids": "Mewvo trabaja con IDs de Discord (los números que identifican cuentas, servidores y canales). Cuando un registro necesita un nombre legible, como un caso de moderación, se guarda con él el nombre de usuario de ese momento.",
+      "messages": "El texto de tus mensajes nunca se guarda. Los registros técnicos solo conservan IDs y longitudes de mensajes.",
+      "database": "Todo se guarda en una base de datos PostgreSQL que solo usa el bot.",
+      "noEmail": "El bot nunca pide tu correo electrónico, una contraseña ni datos de pago. Una cuenta de Mewvo en este sitio web tampoco pide nunca un correo: solo si decides crear una, Mewvo guarda un nombre de usuario y un hash unidireccional de tu contraseña (ver más abajo).",
+      "noTracking": "Este sitio web no tiene analíticas, ni anuncios, ni seguimiento, ni scripts o cookies de terceros."
+    }
+  },
+  "terms": {
+    "short": {
+      "age": "Puedes usar el bot si puedes usar Discord (al menos 13 años, o más donde lo exija la ley de tu país) y respetas las normas de Discord.",
+      "rules": "Respeta las normas del servidor en el que estás. No uses Mewvo para acosar a nadie, hacer spam, compartir contenido ilegal ni eludir una sanción.",
+      "staffDecide": "El staff de cada servidor decide las advertencias, silencios, expulsiones y baneos en su servidor; Mewvo los ejecuta. Cada sanción puede ser revisada por una persona, y el mensaje directo sobre ella dice si puedes apelar y cómo.",
+      "payments": "Todavía no se aceptan pagos: la compra en este sitio web es una prueba y no se cobra nada a nadie. Un plan no se renueva solo.",
+      "withdrawal": "Si compras un plan de pago, puedes desistir en un plazo de 14 días sin dar ningún motivo.",
+      "law": "Se aplica la ley lituana, pero como consumidor conservas la protección de las leyes imperativas del país donde vives."
+    }
+  }
+}
