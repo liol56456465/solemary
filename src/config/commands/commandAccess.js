@@ -73,6 +73,21 @@ export const MANAGE_SERVER_COMMANDS = new Set([
   'setup',
 ]);
 
+/**
+ * Access keys a configured Moderator role may also run, in servers that are NOT Mewvo's own
+ * (owner decision D1). The gate lets the command through; the command itself checks the role and
+ * every panel component re-checks it (services/enforcement/panelAccess.js), and the panel offers
+ * moderators only Warn, Mute, Kick, Unmute and Remove warn. Mewvo's own servers: Administrator only.
+ */
+export const MODERATOR_PANEL_COMMANDS = new Set([
+  'enforcements', 'Moderate', 'Warn for this message',
+]);
+
+/** True for the enforcement panel's entry points (see MODERATOR_PANEL_COMMANDS). */
+export function isModeratorPanelCommand(accessKey) {
+  return Boolean(accessKey) && MODERATOR_PANEL_COMMANDS.has(accessKey);
+}
+
 /** True when Administrator or Manage Server may run this access key. */
 export function isManageServerCommand(accessKey) {
   return Boolean(accessKey) && MANAGE_SERVER_COMMANDS.has(accessKey);

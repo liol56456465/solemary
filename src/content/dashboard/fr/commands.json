@@ -8,7 +8,7 @@
     "prefix": "Préfixe des commandes texte",
     "prefixHelp": "Certaines commandes fonctionnent aussi dans un message normal : tape ce signe puis le nom de la commande, au lieu d’utiliser une commande slash. De 1 à 10 caractères, sans espaces.",
     "modRole": "Rôle de modérateur",
-    "modRoleHelp": "Les membres qui ont ce rôle peuvent utiliser les commandes de modération. Ils peuvent aussi se connecter à ce tableau de bord en tant que modérateurs : ils voient les membres, les dossiers et les appels, et peuvent avertir, mettre en sourdine, retirer la sourdine, expulser et exclure temporairement. Ils ne peuvent ni bannir ni modifier les paramètres. Mewvo ne donne jamais ce rôle à personne de lui-même.",
+    "modRoleHelp": "Les membres qui ont ce rôle peuvent utiliser les commandes de modération. Ils peuvent aussi se connecter à ce tableau de bord en tant que modérateurs : ils voient les membres, les dossiers et les appels, et peuvent avertir, mettre en sourdine, retirer la sourdine, expulser et exclure temporairement. Ils ne peuvent ni bannir ni modifier les paramètres. Mewvo ne donne jamais ce rôle à personne de lui-même. Sur Discord, ils peuvent aussi utiliser /enforcements, le menu « Moderate » et « Warn for this message » pour avertir, mettre en sourdine, expulser, retirer la sourdine et retirer des avertissements (pas sur les serveurs de Mewvo) ; bannir, débannir, modifier des dossiers et les paramètres restent réservés aux administrateurs.",
     "needsAdmin": "Pour modifier les paramètres du bot et utiliser les utilitaires de cette page, il te faut la permission Administrateur sur ce serveur.",
     "saved": "Paramètres du bot enregistrés.",
     "nothing": "Rien n’a changé.",

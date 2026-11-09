@@ -76,6 +76,7 @@
     "panel": {
         "otherModerator": "Ce panneau appartient à un autre modérateur. Lance /enforcements toi-même.",
         "serverOnly": "Ce panneau ne fonctionne que sur un serveur.",
-        "noAdmin": "Tu n'as plus la permission Administrateur, ce panneau est donc fermé."
+        "noAdmin": "Tu n'as plus la permission Administrateur, ce panneau est donc fermé.",
+        "noAccess": "Tu n'as plus la permission Administrateur ni le rôle de modérateur, ce panneau est donc fermé."
     }
 }

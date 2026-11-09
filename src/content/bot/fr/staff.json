@@ -238,7 +238,10 @@
             "userId": "ID de l’utilisateur, pour les personnes qui ne sont plus sur le serveur"
         },
         "serverOnly": "Cette commande ne fonctionne que sur un serveur.",
-        "noAdmin": "Tu as besoin de la permission Administrateur pour utiliser ce panneau."
+        "noAdmin": "Tu as besoin de la permission Administrateur pour utiliser ce panneau.",
+        "noAdminOrMod": "Tu as besoin de la permission Administrateur ou du rôle de modérateur de ce serveur pour utiliser ce panneau.",
+        "modNotAllowed": "Avec le rôle de modérateur, tu peux avertir, mettre en sourdine, expulser, retirer la sourdine et retirer des avertissements. **{action}** nécessite la permission Administrateur.",
+        "accessUnavailable": "Je n'ai pas pu vérifier ton rôle de modérateur pour l'instant (la base de données ne répond pas). Rien n'a été modifié. Réessaie dans un instant."
     },
     "moderateuser": {
         "serverOnly": "Cela ne fonctionne que sur un serveur.",
@@ -249,7 +252,8 @@
         "noAdmin": "Tu as besoin de la permission Administrateur pour avertir des membres.",
         "botMessage": "On ne peut pas avertir pour des messages de bots, de webhooks ou du système.",
         "self": "Tu ne peux pas t’avertir toi-même.",
-        "notInServer": "**{name}** n’est plus sur le serveur, un avertissement ne peut donc pas l’atteindre."
+        "notInServer": "**{name}** n’est plus sur le serveur, un avertissement ne peut donc pas l’atteindre.",
+        "noAdminOrMod": "Tu as besoin de la permission Administrateur ou du rôle de modérateur de ce serveur pour avertir des membres."
     },
     "reportmessage": {
         "serverOnly": "Les signalements ne fonctionnent que sur un serveur.",
@@ -1023,7 +1027,11 @@
             "titleBans": "Limite de sécurité : trop de bannissements/expulsions en {minutes} minutes, modérateur bloqué",
             "titleMutes": "Limite de sécurité : trop de mises en sourdine en {minutes} minutes, modérateur bloqué",
             "dmBans": "**Limite de sécurité (trop de bannissements/expulsions en {minutes} minutes) dans {server}.** {summary} Son accès au panneau est bloqué jusqu'à <t:{until}:f>. Lève-le plus tôt avec `/staff restore`.",
-            "dmMutes": "**Limite de sécurité (trop de mises en sourdine en {minutes} minutes) dans {server}.** {summary} Son accès au panneau est bloqué jusqu'à <t:{until}:f>. Lève-le plus tôt avec `/staff restore`."
+            "dmMutes": "**Limite de sécurité (trop de mises en sourdine en {minutes} minutes) dans {server}.** {summary} Son accès au panneau est bloqué jusqu'à <t:{until}:f>. Lève-le plus tôt avec `/staff restore`.",
+            "liftHome": "Le propriétaire du serveur peut la lever plus tôt avec `/staff restore`.",
+            "liftOther": "Un administrateur peut la lever plus tôt avec `/staff restore`.",
+            "lastOneBans": "Attention : 1 bannissement ou expulsion de plus dans les {minutes} minutes met ton panneau en pause pendant {block} minutes.",
+            "lastOneMutes": "Attention : 1 sourdine de plus dans les {minutes} minutes met ton panneau en pause pendant {block} minutes."
         }
     },
     "modmail": {
@@ -1058,5 +1066,56 @@
         "dmFailed": "Impossible d'envoyer un MP au membre (il a quitté le serveur ou fermé ses MP).",
         "transcript": "Modmail avec <@{userId}> (`{userId}`) fermé par {closer}.",
         "transcriptReason": "Raison : {reason}"
+    },
+    "enfCheck": {
+        "perm": {
+            "BanMembers": "Bannir des membres",
+            "KickMembers": "Expulser des membres",
+            "ManageRoles": "Gérer les rôles",
+            "ManageChannels": "Gérer les salons",
+            "CreateInstantInvite": "Créer une invitation"
+        },
+        "missingPerms": "Il me manque ces permissions sur le serveur : **{list}**. Accorde-les à mon rôle dans Paramètres du serveur → Rôles, puis réessaie.",
+        "self": "Tu ne peux pas utiliser ceci sur toi-même.",
+        "bot": "Je ne peux pas agir contre moi-même.",
+        "owner": "Tu ne peux pas agir contre le propriétaire du serveur.",
+        "modTooLow": "Tu ne peux pas agir contre **{target}** : son rôle **{targetRole}** est égal ou supérieur au tien (**{yourRole}**). Dans **Paramètres du serveur → Rôles**, fais glisser ton rôle au-dessus de **{targetRole}**.",
+        "botTooLow": "Je ne peux pas agir contre **{target}** : mon rôle **{botRole}** est égal ou inférieur au sien (**{targetRole}**). Dans **Paramètres du serveur → Rôles**, place le rôle de Mewvo au-dessus de **{targetRole}**.",
+        "hierarchyUnknown": "Je n'ai pas pu lire l'ordre des rôles pour **{target}**. Vérifie que le rôle de Mewvo est configuré sur ce serveur, puis réessaie.",
+        "botNotInServer": "Mewvo n'est pas sur ce serveur.",
+        "cannotBanPerm": "Donne à Mewvo la permission **Bannir des membres** (Paramètres du serveur → Rôles → rôle de Mewvo), puis réessaie. Rien n'a été envoyé au membre.",
+        "cannotKickPerm": "Donne à Mewvo la permission **Expulser des membres** (Paramètres du serveur → Rôles → rôle de Mewvo), puis réessaie. Rien n'a été envoyé au membre.",
+        "cannotBanRole": "Mewvo ne peut pas bannir ce membre : place le rôle de Mewvo au-dessus de **{role}** dans Paramètres du serveur → Rôles, puis réessaie. Rien n'a été envoyé au membre.",
+        "cannotKickRole": "Mewvo ne peut pas expulser ce membre : place le rôle de Mewvo au-dessus de **{role}** dans Paramètres du serveur → Rôles, puis réessaie. Rien n'a été envoyé au membre.",
+        "refusedMissing": "Discord a refusé : il manque une permission à Mewvo. Donne à Mewvo la permission **{permission}** (Paramètres du serveur → Rôles), puis réessaie.",
+        "refusedMissingRole": "Discord a refusé : il manque une permission à Mewvo. Donne à Mewvo la permission **{permission}** et place le rôle de Mewvo au-dessus de **{role}** (Paramètres du serveur → Rôles), puis réessaie.",
+        "refused": {
+            "ban": "Discord a refusé le bannissement : {error}",
+            "kick": "Discord a refusé l'expulsion : {error}",
+            "mute": "Impossible d'ajouter le rôle de sourdine : {error}",
+            "unban": "Discord a refusé le débannissement : {error}",
+            "unmute": "Impossible de retirer le rôle de sourdine : {error}"
+        },
+        "alreadyBanned": "**{name}** est déjà banni.",
+        "notInServer": "**{name}** n'est pas sur le serveur.",
+        "warnNotInServer": "**{name}** n'est pas sur le serveur, un avertissement ne peut donc pas l'atteindre.",
+        "alreadyMuted": "**{name}** est déjà en sourdine. Retire d'abord la sourdine pour changer la durée.",
+        "notBanned": "**{name}** n'est pas banni.",
+        "notMuted": "**{name}** n'est pas en sourdine.",
+        "warnGone": "Cet avertissement n'est plus actif.",
+        "unknownAction": "Action inconnue : {action}",
+        "ladderNeedsAdmin": "Cet avertissement bannirait automatiquement {name} (échelle d'avertissements), il nécessite donc un administrateur.",
+        "note": {
+            "noInvite": "Aucune invitation de retour n'a pu être créée (aucun salon où je peux créer des invitations).",
+            "ladderBan": "Limite d'avertissements atteinte : bannissement automatique de {length} `{code}`. Maintenant au {stage}.",
+            "ladderBanPermanent": "Limite d'avertissements atteinte : bannissement automatique définitif `{code}`. Maintenant au {stage}.",
+            "ladderBanFailed": "Limite d'avertissements atteinte, mais le bannissement automatique a échoué : {error}. Le membre est maintenant au {stage} ; bannis-le manuellement.",
+            "lifted": "Levé : {codes}",
+            "unbanDm": "L'utilisateur a été prévenu par MP, avec une invitation pour revenir.",
+            "unbanDmFailed": "Le MP « bannissement terminé » n'a pas pu être remis.",
+            "unmuteNoRole": "L'utilisateur n'était pas sur le serveur ou n'avait plus le rôle ; le dossier a quand même été levé.",
+            "unmuteDmFailed": "Le MP « sourdine terminée » n'a pas pu être remis.",
+            "removed": "`{code}` retiré. Avertissements comptés : {count}."
+        }
     }
 }

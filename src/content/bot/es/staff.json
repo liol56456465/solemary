@@ -238,7 +238,10 @@
             "userId": "ID de usuario, para quien ya no está en el servidor"
         },
         "serverOnly": "Este comando solo funciona en un servidor.",
-        "noAdmin": "Necesitas el permiso de Administrador para usar este panel."
+        "noAdmin": "Necesitas el permiso de Administrador para usar este panel.",
+        "noAdminOrMod": "Necesitas el permiso de Administrador o el rol de moderador de este servidor para usar este panel.",
+        "modNotAllowed": "Con el rol de moderador puedes advertir, silenciar, expulsar, quitar el silencio y quitar advertencias. **{action}** necesita el permiso de Administrador.",
+        "accessUnavailable": "No pude comprobar tu rol de moderador ahora mismo (la base de datos no responde). No se cambió nada. Inténtalo de nuevo en un momento."
     },
     "moderateuser": {
         "serverOnly": "Esto solo funciona en un servidor.",
@@ -249,7 +252,8 @@
         "noAdmin": "Necesitas el permiso de Administrador para advertir a miembros.",
         "botMessage": "No se puede advertir por mensajes de bots, webhooks o del sistema.",
         "self": "No puedes advertirte a ti mismo.",
-        "notInServer": "**{name}** ya no está en el servidor, así que una advertencia no le llegaría."
+        "notInServer": "**{name}** ya no está en el servidor, así que una advertencia no le llegaría.",
+        "noAdminOrMod": "Necesitas el permiso de Administrador o el rol de moderador de este servidor para advertir a miembros."
     },
     "reportmessage": {
         "serverOnly": "Los reportes solo funcionan en un servidor.",
@@ -1023,7 +1027,11 @@
             "titleBans": "Límite de seguridad: demasiados baneos/expulsiones en {minutes} minutos, moderador bloqueado",
             "titleMutes": "Límite de seguridad: demasiados silencios en {minutes} minutos, moderador bloqueado",
             "dmBans": "**Límite de seguridad (demasiados baneos/expulsiones en {minutes} minutos) en {server}.** {summary} Su acceso al panel está bloqueado hasta <t:{until}:f>. Levántalo antes con `/staff restore`.",
-            "dmMutes": "**Límite de seguridad (demasiados silencios en {minutes} minutos) en {server}.** {summary} Su acceso al panel está bloqueado hasta <t:{until}:f>. Levántalo antes con `/staff restore`."
+            "dmMutes": "**Límite de seguridad (demasiados silencios en {minutes} minutos) en {server}.** {summary} Su acceso al panel está bloqueado hasta <t:{until}:f>. Levántalo antes con `/staff restore`.",
+            "liftHome": "El dueño del servidor puede levantarlo antes con `/staff restore`.",
+            "liftOther": "Un administrador puede levantarlo antes con `/staff restore`.",
+            "lastOneBans": "Aviso: 1 baneo o expulsión más en {minutes} minutos pausa tu panel durante {block} minutos.",
+            "lastOneMutes": "Aviso: 1 silencio más en {minutes} minutos pausa tu panel durante {block} minutos."
         }
     },
     "modmail": {
@@ -1058,5 +1066,56 @@
         "dmFailed": "No se pudo enviar el MD al miembro (salió del servidor o cerró sus MD).",
         "transcript": "Modmail con <@{userId}> (`{userId}`) cerrado por {closer}.",
         "transcriptReason": "Motivo: {reason}"
+    },
+    "enfCheck": {
+        "perm": {
+            "BanMembers": "Banear miembros",
+            "KickMembers": "Expulsar miembros",
+            "ManageRoles": "Gestionar roles",
+            "ManageChannels": "Gestionar canales",
+            "CreateInstantInvite": "Crear invitación"
+        },
+        "missingPerms": "Me faltan estos permisos del servidor: **{list}**. Dáselos a mi rol en Ajustes del servidor → Roles y vuelve a intentarlo.",
+        "self": "No puedes usar esto contigo mismo.",
+        "bot": "No puedo actuar contra mí mismo.",
+        "owner": "No puedes actuar contra el dueño del servidor.",
+        "modTooLow": "No puedes actuar contra **{target}**: su rol **{targetRole}** es igual o superior al tuyo (**{yourRole}**). En **Ajustes del servidor → Roles**, arrastra tu rol por encima de **{targetRole}**.",
+        "botTooLow": "No puedo actuar contra **{target}**: mi rol **{botRole}** es igual o inferior al suyo (**{targetRole}**). En **Ajustes del servidor → Roles**, mueve el rol de Mewvo por encima de **{targetRole}**.",
+        "hierarchyUnknown": "No pude leer el orden de roles de **{target}**. Comprueba que el rol de Mewvo esté configurado en este servidor y vuelve a intentarlo.",
+        "botNotInServer": "Mewvo no está en este servidor.",
+        "cannotBanPerm": "Dale a Mewvo el permiso **Banear miembros** (Ajustes del servidor → Roles → rol de Mewvo) y vuelve a intentarlo. No se envió nada al miembro.",
+        "cannotKickPerm": "Dale a Mewvo el permiso **Expulsar miembros** (Ajustes del servidor → Roles → rol de Mewvo) y vuelve a intentarlo. No se envió nada al miembro.",
+        "cannotBanRole": "Mewvo no puede banear a este miembro: mueve el rol de Mewvo por encima de **{role}** en Ajustes del servidor → Roles y vuelve a intentarlo. No se envió nada al miembro.",
+        "cannotKickRole": "Mewvo no puede expulsar a este miembro: mueve el rol de Mewvo por encima de **{role}** en Ajustes del servidor → Roles y vuelve a intentarlo. No se envió nada al miembro.",
+        "refusedMissing": "Discord lo rechazó: a Mewvo le falta un permiso. Dale a Mewvo el permiso **{permission}** (Ajustes del servidor → Roles) y vuelve a intentarlo.",
+        "refusedMissingRole": "Discord lo rechazó: a Mewvo le falta un permiso. Dale a Mewvo el permiso **{permission}** y mueve el rol de Mewvo por encima de **{role}** (Ajustes del servidor → Roles); luego vuelve a intentarlo.",
+        "refused": {
+            "ban": "Discord rechazó el baneo: {error}",
+            "kick": "Discord rechazó la expulsión: {error}",
+            "mute": "No se pudo añadir el rol de silenciado: {error}",
+            "unban": "Discord rechazó el desbaneo: {error}",
+            "unmute": "No se pudo quitar el rol de silenciado: {error}"
+        },
+        "alreadyBanned": "**{name}** ya está baneado.",
+        "notInServer": "**{name}** no está en el servidor.",
+        "warnNotInServer": "**{name}** no está en el servidor, así que una advertencia no le llegaría.",
+        "alreadyMuted": "**{name}** ya está silenciado. Quita primero el silencio para cambiar la duración.",
+        "notBanned": "**{name}** no está baneado.",
+        "notMuted": "**{name}** no está silenciado.",
+        "warnGone": "Esa advertencia ya no está activa.",
+        "unknownAction": "Acción desconocida: {action}",
+        "ladderNeedsAdmin": "Esta advertencia banearía automáticamente a {name} (escalera de advertencias), así que necesita un administrador.",
+        "note": {
+            "noInvite": "No se pudo crear una invitación para volver (no hay ningún canal donde pueda crear invitaciones).",
+            "ladderBan": "Límite de advertencias alcanzado: baneo automático de {length} `{code}`. Ahora en {stage}.",
+            "ladderBanPermanent": "Límite de advertencias alcanzado: baneo automático permanente `{code}`. Ahora en {stage}.",
+            "ladderBanFailed": "Límite de advertencias alcanzado, pero el baneo automático falló: {error}. El miembro está ahora en {stage}; banéalo manualmente.",
+            "lifted": "Levantado: {codes}",
+            "unbanDm": "Se avisó al usuario por MD, con una invitación para volver.",
+            "unbanDmFailed": "No se pudo entregar el MD de «baneo terminado».",
+            "unmuteNoRole": "El usuario no estaba en el servidor o ya no tenía el rol; el caso se levantó igualmente.",
+            "unmuteDmFailed": "No se pudo entregar el MD de «silencio terminado».",
+            "removed": "`{code}` quitada. Advertencias contadas: {count}."
+        }
     }
 }

@@ -180,9 +180,9 @@ export async function completeFlowDetails({ guild, moderator, targetUser, flow, 
     }
 
     try {
-        deps.assertBotPermissions(guild);
+        deps.assertBotPermissions(guild, flow.type, { lang });
         const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
-        deps.assertCanTarget(guild, moderator, targetUser.id, targetMember, flow.type);
+        deps.assertCanTarget(guild, moderator, targetUser.id, targetMember, flow.type, { lang });
     } catch (error) {
         return { patch, error: null, fatal: error.userMessage || error.message };
     }

@@ -8,6 +8,9 @@
 //    Administrator or Manage Server). OWNER_IDS is an emergency override for rule 2 only,
 //    and only in Mewvo's own servers (main + support, utils/ownerPower.js); in any other
 //    server they need Administrator (or Manage Server) like everyone else.
+//    The enforcement panel's entry points (MODERATOR_PANEL_COMMANDS) also pass for non-admins in
+//    servers that are not Mewvo's own: the command checks the configured Moderator role itself
+//    (services/enforcement/panelAccess.js; the gate has no guild config). Result: moderatorCheck.
 // Commands stay visible to everyone (no default_member_permissions), so
 // non-admins see this message instead of an empty command list.
 //
@@ -24,13 +27,13 @@
 import { PermissionFlagsBits } from 'discord.js';
 import { isBotOwner } from '../config/bot.js';
 import { enforcementConfig } from '../config/enforcement.js';
-import { isEveryoneCommand, isManageServerCommand } from '../config/commands/commandAccess.js';
+import { isEveryoneCommand, isManageServerCommand, isModeratorPanelCommand } from '../config/commands/commandAccess.js';
 import { adminCommandsRetired, isKeptAdminCommand, isOwnerKit, retiredMessage } from '../config/commands/retirement.js';
 import { BLACKLIST_MESSAGE, blacklistHit } from '../services/owner/blacklistCache.js';
 import { getStoredSetting, isHomeGuild, resolveSetting } from '../services/settings/guildSettings.js';
 import { botText } from './botText.js';
 import { ownerToolsGuildId } from '../config/ownerTools.js';
-import { hasOwnerPower } from './ownerPower.js';
+import { hasOwnerPower, isMewvoServer } from './ownerPower.js';
 
 export const OWNER_TOOLS_REFUSAL = 'This command is only for the bot owner.';
 
@@ -119,8 +122,10 @@ export function canSeeAdminCommands(interaction) {
  * @param {string} p.userId
  * @param {object|null} p.permissions  PermissionsBitField of the member in this guild
  * @param {string} [p.lang]  language of the refusal (utils/botText.js resolveBotLanguage); English by default
- * @returns {{ allowed: true, ownerOverride?: true } | { allowed: false, message: string, silent?: true }}
+ * @returns {{ allowed: true, ownerOverride?: true, moderatorCheck?: true } | { allowed: false, message: string, silent?: true }}
  *   ownerOverride: allowed only because the user is in OWNER_IDS (the caller records it).
+ *   moderatorCheck: a non-admin let through to an enforcement-panel command in another server;
+ *   the command refuses unless they hold the Moderator role.
  *   silent: a blacklisted server; the caller does not answer at all.
  */
 export function checkCommandAccess({ command, accessKey, guild, userId, permissions, lang = 'en' }) {
@@ -156,5 +161,7 @@ export function checkCommandAccess({ command, accessKey, guild, userId, permissi
     if (hasAdministrator({ guild, userId, permissions })) return { allowed: true };
     // OWNER_IDS override Administrator in Mewvo's own servers only (multi-server B1, utils/ownerPower.js).
     if (hasOwnerPower(userId, guild.id)) return { allowed: true, ownerOverride: true };
+    // Owner decision D1: other servers' Moderator role may open the panel (the command checks the role).
+    if (isModeratorPanelCommand(accessKey) && !isMewvoServer(guild.id)) return { allowed: true, moderatorCheck: true };
     return { allowed: false, message: getAdminRequiredMessage(guild.id, { lang }) };
 }

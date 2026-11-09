@@ -76,6 +76,7 @@
     "panel": {
         "otherModerator": "Este painel pertence a outro moderador. Use /enforcements você mesmo.",
         "serverOnly": "Este painel só funciona em um servidor.",
-        "noAdmin": "Você não tem mais a permissão de Administrador, então este painel foi fechado."
+        "noAdmin": "Você não tem mais a permissão de Administrador, então este painel foi fechado.",
+        "noAccess": "Você não tem mais a permissão de Administrador nem o cargo de moderador, então este painel foi fechado."
     }
 }

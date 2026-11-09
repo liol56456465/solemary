@@ -191,7 +191,7 @@ function channelName(name) {
  */
 async function createPrivateChannel(guild, name, reason, findCategory = getAppealsCategory) {
     const category = await findCategory(guild);
-    if (!category) throw configError('No category for this channel in the main server: set it in the dashboard (Enforcement & appeals) or set the /ticket category');
+    if (!category) throw configError('No category for this channel in this server: set it in the dashboard (Enforcement & appeals) or set the /ticket category');
     return guild.channels.create({
         name: channelName(name),
         type: ChannelType.GuildText,
@@ -869,7 +869,7 @@ async function liftCaseEntries(client, record, admin, { reason, via }) {
     let ladderBan = null;
 
     if (liftedBan) {
-        if (!mainGuild) throw createError('Main guild unavailable', ErrorTypes.CONFIGURATION, 'I cannot reach the main server to unban.');
+        if (!mainGuild) throw createError('Main guild unavailable', ErrorTypes.CONFIGURATION, 'I cannot reach the server of this case to unban.');
         await mainGuild.members.unban(record.target_user_id, reason).catch((error) => {
             if (error?.code !== UNKNOWN_BAN) throw error;
         });

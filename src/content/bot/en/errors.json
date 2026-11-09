@@ -76,6 +76,7 @@
     "panel": {
         "otherModerator": "This panel belongs to another moderator. Run /enforcements yourself.",
         "serverOnly": "This panel only works in a server.",
-        "noAdmin": "You no longer have the Administrator permission, so this panel is closed."
+        "noAdmin": "You no longer have the Administrator permission, so this panel is closed.",
+        "noAccess": "You no longer have the Administrator permission or the Moderator role, so this panel is closed."
     }
 }

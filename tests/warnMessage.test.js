@@ -9,7 +9,6 @@ const MAIN = process.env.MAIN_GUILD_ID;
 
 const { default: warnMessage } = await import('../src/commands/Enforcement/warnmessage.js');
 const { getFlow } = await import('../src/services/enforcement/panelState.js');
-const { REQUIRED_BOT_PERMISSIONS } = await import('../src/services/enforcement/enforcementService.js');
 
 const MOD_ID = '200000000000000001';
 const AUTHOR_ID = '200000000000000002';
@@ -82,10 +81,14 @@ test('warn for this message: refused for a message of another server, outside a 
     await assert.rejects(warnMessage.execute(world({ authorId: MOD_ID }).interaction), /warn yourself/);
 });
 
-test('warn for this message: refused when the author left, outranks the moderator, or the bot lacks permissions', async () => {
+test('warn for this message: refused when the author left or outranks the moderator; a warn needs no Ban/Kick/Roles permission (audit 3.6)', async () => {
     await assert.rejects(warnMessage.execute(world({ authorInGuild: false }).interaction), /no longer in the server/);
-    await assert.rejects(warnMessage.execute(world({ authorTop: 20 }).interaction), /You cannot warn .* equal to or above yours/);
-    await assert.rejects(warnMessage.execute(world({ botMissing: true }).interaction), new RegExp(REQUIRED_BOT_PERMISSIONS[0][1]));
+    await assert.rejects(warnMessage.execute(world({ authorTop: 20 }).interaction), /You cannot act on .* equal to or above yours/);
+    // Mewvo lacks every server permission: the warn flow still opens (nothing a warn needs is missing).
+    const bare = world({ botMissing: true });
+    await warnMessage.execute(bare.interaction);
+    assert.equal(bare.replies.length, 1);
+    assert.match(bare.replies[0].embeds[0].toJSON().title, /^Warn: kit/);
 });
 
 test('warn for this message: opens the warn flow with the message attached as evidence', async () => {
