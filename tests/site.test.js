@@ -8,10 +8,9 @@ import express from 'express';
 import { PermissionFlagsBits } from 'discord.js';
 import {
     CSS_PATH, INSTALL_PERMISSIONS, JS_PATH, LEADERBOARD_PAGE_SIZE, NOINDEX, SCRIPT, SECURITY_HEADERS, STYLESHEET, botStatus,
-    createCatReader, createLeaderboardReader, createSite, everyoneCommandGroups, installPermissionBits, installUrl, inviteOrNull,
+    COMMANDS_CSP, createCatReader, createLeaderboardReader, createSite, installPermissionBits, installUrl, inviteOrNull,
     leaderboardPage, leaderboardPageNumber, publicSiteEnabled, uptimeWords,
 } from '../src/services/site/site.js';
-import { EVERYONE_COMMANDS } from '../src/config/commands/commandAccess.js';
 
 const CLIENT_ID = '123456789012345678';
 const SUPPORT = 'https://discord.gg/7Ckv9Bt577';
@@ -121,9 +120,10 @@ test('the script is the site\'s own static file: versioned, JavaScript, cached, 
         assert.equal(res.headers.get('content-security-policy'), SECURITY_HEADERS['Content-Security-Policy']);
         assert.equal(res.body, SCRIPT);
         assert.equal(SCRIPT, readFileSync(new URL('../src/services/site/static/site.js', import.meta.url), 'utf8'));
-        assert.ok(Buffer.byteLength(SCRIPT) < 2048, 'under 2 KB');
+        // 4 KB since the command explorer's live filter (2026-11-09); 2 KB with the menus alone.
+        assert.ok(Buffer.byteLength(SCRIPT) < 4096, 'under 4 KB');
         assert.ok(!/fetch\(|XMLHttpRequest|WebSocket|sendBeacon|EventSource|localStorage|sessionStorage|indexedDB|document\.cookie|import\(|eval\(|new Function|innerHTML/.test(SCRIPT), 'no network, storage, eval or HTML injection');
-        for (const selector of ['details.lang-menu', 'details.account-menu', '.topnav a[aria-current="page"]', '.table-wrap']) assert.ok(SCRIPT.includes(selector), selector);
+        for (const selector of ['details.lang-menu', 'details.account-menu', '.topnav a[aria-current="page"]', '.table-wrap', '[data-cmd-explorer]']) assert.ok(SCRIPT.includes(selector), selector);
         assert.ok(STYLESHEET.includes('.table-wrap.can-scroll'), 'the scroll hint class has a style');
         const prefixed = await site.get('/de/site.js');
         assert.equal(prefixed.status, 404, 'only pages exist under a language prefix');
@@ -141,7 +141,8 @@ test('CSP and security headers: no unsafe-inline, scripts only from self, no fra
         for (const path of ['/', '/features', '/pricing', '/faq', '/docs', '/docs/appeals', '/commands', '/about', '/leaderboard', '/status', '/privacy', '/terms', '/robots.txt', '/img/og.png', CSS_PATH, JS_PATH, '/nope']) {
             const res = await site.get(path);
             const csp = res.headers.get('content-security-policy');
-            assert.equal(csp, SECURITY_HEADERS['Content-Security-Policy'], path);
+            // The command explorer's filter form: form-action 'self' there only (pages/commands.js).
+            assert.equal(csp, path === '/commands' ? COMMANDS_CSP : SECURITY_HEADERS['Content-Security-Policy'], path);
             assert.ok(!csp.includes('unsafe-inline') && !csp.includes('unsafe-eval'), path);
             assert.match(csp, /default-src 'none'/);
             assert.match(csp, /script-src 'self';/);
@@ -264,7 +265,7 @@ test('Log in is hidden when the dashboard is not enabled', async () => {
     try { assert.ok(!(await site.get('/')).body.includes('/dashboard')); } finally { await site.close(); }
 });
 
-test('commands page: only everyone-commands, grouped, descriptions escaped', async () => {
+test('commands page: every command grouped (admin ones too, with their tag), descriptions escaped', async () => {
     const site = await serve();
     try {
         const body = (await site.get('/commands')).body;
@@ -273,18 +274,25 @@ test('commands page: only everyone-commands, grouped, descriptions escaped', asy
         assert.ok(!body.includes('latency <b>'));
         assert.ok(body.includes('<code>/todo share view</code>'));
         assert.ok(body.includes('<code>/birthday set</code>'));
-        assert.ok(!body.includes('setchannel') && !body.includes('ADMIN ONLY'), 'admin subcommand hidden');
-        assert.ok(!body.includes('/purge') && !body.includes('ADMIN PURGE'), 'admin command hidden');
+        assert.ok(body.includes('<code>/birthday setchannel</code>') && body.includes('id="birthday-setchannel"'), 'admin subcommand listed');
+        assert.ok(body.includes('<code>/purge</code>') && body.includes('ADMIN PURGE'), 'admin command listed');
         assert.ok(body.includes('<code>Report message</code>'), 'context menu without a slash');
         assert.ok(body.includes('Ticket staff'), 'narrowed access noted');
         assert.ok(body.indexOf('id="h-core">General') < body.indexOf('id="h-utility">Utility'), 'groups in order');
+        assert.ok(body.indexOf('id="h-ticket">') < body.indexOf('id="h-moderation">'), 'staff groups after the member groups');
     } finally { await site.close(); }
 });
 
-test('commands page before the commands load: the everyone keys, nothing else', () => {
-    const groups = everyoneCommandGroups(new Map());
-    const keys = groups.flatMap((g) => g.items.map((i) => i.key)).sort();
-    assert.deepEqual(keys, [...EVERYONE_COMMANDS].sort());
+test('commands page before the commands load: a loading note, no form, no cards', async () => {
+    const site = await serve({ commands: new Map() });
+    try {
+        const body = (await site.get('/commands')).body;
+        assert.ok(body.includes('The command list is loading.'));
+        assert.ok(!body.includes('<form') && !body.includes('cmd-card'));
+        const redirect = await site.get('/commands/case');
+        assert.equal(redirect.status, 302);
+        assert.equal(redirect.headers.get('location'), '/commands');
+    } finally { await site.close(); }
 });
 
 test('pages escape values from settings (support invite is validated, never raw)', async () => {
@@ -314,19 +322,6 @@ test('health and ready stay JSON and are not shadowed by the site', async () => 
     assert.ok(health > 0 && ready > health && site2 > ready, 'order: /health, /ready, then the site');
     assert.ok(app.includes("status: 'healthy',") && app.includes('createReadyHandler(this'));
     assert.ok(!app.includes('Mewvo System Online'), 'the old JSON root is gone');
-});
-
-test('commands page from the real command files: every listed command is an everyone-command with a description', async () => {
-    const { loadCommands } = await import('../src/handlers/loaders/commandLoader.js');
-    const client = {};
-    await loadCommands(client);
-    const items = everyoneCommandGroups(client.commands).flatMap((g) => g.items);
-    assert.ok(items.length >= 40, `listed ${items.length}`);
-    for (const item of items) {
-        assert.ok(EVERYONE_COMMANDS.has(item.key), item.key);
-        assert.ok(item.description.trim(), `${item.key} has a description`);
-    }
-    assert.ok(!items.some((i) => i.key.startsWith('enforcements') || i.key === 'purge'));
 });
 
 // ── Leaderboard, status, privacy, terms ──────────────────────────────────

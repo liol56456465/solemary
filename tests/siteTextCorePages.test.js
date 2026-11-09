@@ -6,13 +6,19 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadCatalogs, translator, PLURAL_CATEGORIES, hasKey } from '../src/services/site/i18n.js';
 import {
-    aboutPage, catCard, commandsPage, everyoneCommandGroups, leaderboardPage, notFoundPage, statusPage, uptimeWords,
+    aboutPage, catCard, commandsPage, leaderboardPage, notFoundPage, statusPage, uptimeWords,
 } from '../src/services/site/site.js';
 import { rulesPage } from '../src/services/site/pages/rules.js';
 import { transparencyErrorPage, transparencyPage } from '../src/services/site/pages/transparency.js';
 import { ladderSentence, trustErrorPage, trustPage } from '../src/services/site/pages/trust.js';
 import { aggregateReport } from '../src/services/enforcement/transparencyService.js';
 import { CAT_MOODS, CAT_STAGES, moodSentence, stageProgress } from '../src/services/community/catModel.js';
+import { loadCommands } from '../src/handlers/loaders/commandLoader.js';
+import { OPTION_TYPES } from '../src/services/site/pages/commands.js';
+
+// The real commands (the explorer reads every dashboard page label, hand-written example and group from them).
+const real = {};
+await loadCommands(real);
 
 const NAMESPACES = ['pages', 'rules', 'transparency', 'trust'];
 const SUPPORT = 'https://discord.gg/7Ckv9Bt577';
@@ -34,19 +40,26 @@ function recordingContext(used, extra = {}) {
 function renderEverything(used) {
     const ctx = (extra) => recordingContext(used, extra);
     const out = [];
-    const SUB = (name, description) => ({ type: 1, name, description });
     const cmd = (json, category) => ({ category, data: { toJSON: () => json } });
-    // One everyone-command per labelled category ([category, name, subcommand]).
-    const everyone = [['Core', 'ping'], ['Community', 'suggest', 'new'], ['Leveling', 'rank'], ['Fun', 'fun', 'flip'], ['Birthday', 'birthday', 'set'],
-        ['Utility', 'todo', 'add'], ['Tools', 'tools', 'time'], ['Search', 'search', 'define'], ['Verification', 'verify'], ['Ticket', 'claim'], ['Ticket', 'close']];
-    const commands = new Map([
-        ...everyone.map(([category, name, sub]) => [name, cmd({ name, description: 'd', options: sub ? [SUB(sub, 's')] : undefined }, category)]),
+    // One command per folder (and one without), each with an option of every type, both menu kinds, the narrowed notes.
+    const folders = ['Core', 'Community', 'Leveling', 'Fun', 'Birthday', 'Utility', 'Tools', 'Search', 'Verification', 'Ticket',
+        'Enforcement', 'Moderation', 'Logging', 'Welcome', 'Giveaway', 'Reaction_roles', 'ServerStats', 'JoinToCreate', 'Owner', undefined];
+    const allTypes = Object.keys(OPTION_TYPES).map((type) => ({ type: Number(type), name: `o${type}`, description: 'd', required: true }));
+    const fakes = new Map([
+        ...folders.map((category, i) => [`c${i}`, cmd({ name: `c${i}`, description: 'd', options: allTypes }, category)]),
+        ['claim', cmd({ name: 'claim', description: 'd', options: [{ type: 3, name: 'x', description: 'd', choices: [{ name: 'a', value: 'a' }] }] }, 'Ticket')],
+        ['close', cmd({ name: 'close', description: 'd' }, 'Ticket')],
         ['Report message', cmd({ name: 'Report message', type: 3 }, undefined)],
+        ['Moderate', cmd({ name: 'Moderate', type: 2 }, undefined)],
     ]);
-    // No everyone member menu exists today; the member wording is still in the catalog for one.
-    const memberMenu = new Map([['Report message', cmd({ name: 'Report message', type: 2 }, undefined)]]);
-    out.push(commandsPage(ctx({ commands })), commandsPage(ctx({ commands: memberMenu })), commandsPage(ctx({ commands: new Map() })));
-    assert.equal(everyoneCommandGroups(commands, ctx()).length, 11, 'every labelled category + menus');
+    // The real commands' own descriptions hold {user}-style template words (welcome, level-up): rendered for
+    // the keys they read, but not checked for unfilled params below.
+    commandsPage(ctx({ commands: real.commands }));
+    commandsPage(ctx({ commands: real.commands, adminCommandsRetired: true }), { q: 'zzzz' });
+    out.push(
+        commandsPage(ctx({ commands: fakes }), { who: 'admin' }),
+        commandsPage(ctx({ commands: new Map() })),
+    );
     for (const publicSite of [false, true]) for (const supportInvite of [SUPPORT, null]) out.push(aboutPage(ctx({ publicSite, supportInvite })));
     for (const state of ['online', 'starting', 'degraded']) for (const supportInvite of [SUPPORT, null]) out.push(statusPage(ctx({ supportInvite }), { state, uptimeMs: 90_060_000 }));
     for (const ms of [0, 60_000, 120_000, 3_600_000, 7_200_000, 86_400_000, 2 * 86_400_000 + 60_000]) out.push(uptimeWords(ms, ctx()));
@@ -120,6 +133,7 @@ test('core site pages: bare contexts (tests, other callers) read English through
     assert.equal(uptimeWords(3_720_000), '1 hour, 2 minutes');
     assert.equal(ladderSentence({ warnsPerLevel: 3, ladderBans: { 1: 7 * 86_400_000, 2: null } }),
         'Warnings add up: the third warning brings a 7-day ban, and each warning after that ban brings a longer one (a permanent ban).');
-    const groups = everyoneCommandGroups(new Map([['Report message', { data: { toJSON: () => ({ name: 'Report message', type: 3 }) } }]]));
-    assert.deepEqual(groups.map((g) => [g.label, g.items[0].description]), [['Right-click menus', 'Right-click a message → Apps → Report message']]);
+    const page = String(commandsPage({ commands: new Map([['Report message', { data: { toJSON: () => ({ name: 'Report message', type: 3 }) } }]]) }));
+    assert.ok(page.includes('id="h-menus">Right-click menus</h2>'));
+    assert.ok(page.includes('Right-click a message → Apps → Report message'));
 });

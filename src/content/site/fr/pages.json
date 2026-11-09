@@ -1,9 +1,9 @@
 {
   "commands": {
     "title": "Commandes",
-    "description": "Les commandes Mewvo que chaque membre peut utiliser.",
+    "description": "Toutes les commandes de Mewvo : ce qu’elles font, leurs options, un exemple et qui peut les utiliser.",
     "heading": "Commandes",
-    "lead": "Les commandes que chaque membre peut utiliser. Les outils de l’équipe se trouvent dans le tableau de bord et nécessitent le rôle Administrateur.",
+    "lead": "Toutes les commandes de Mewvo, lues directement dans le bot : cette liste est donc toujours à jour. Cherchez-y ou filtrez par groupe et par qui peut les utiliser. Les commandes de l’équipe demandent le rôle Administrateur, et la plupart ont aussi une page dans le tableau de bord.",
     "jumpLabel": "Groupes de commandes",
     "groups": {
       "core": "Général",
@@ -17,7 +17,16 @@
       "verification": "Vérification",
       "ticket": "Tickets",
       "menus": "Menus du clic droit",
-      "other": "Autres"
+      "other": "Autres",
+      "enforcement": "Sanctions",
+      "moderation": "Modération",
+      "logging": "Journaux",
+      "welcome": "Bienvenue",
+      "giveaway": "Concours",
+      "reaction-roles": "Rôles par réaction",
+      "serverstats": "Statistiques du serveur",
+      "jointocreate": "Salons vocaux à la demande",
+      "recovery": "Récupération"
     },
     "menu": {
       "message": "Clic droit sur un message → Applications → {command}",
@@ -26,6 +35,112 @@
     "notes": {
       "ticketStaff": "Équipe des tickets",
       "ticketStaffOrOpener": "Équipe des tickets ou la personne qui a ouvert le ticket"
+    },
+    "loading": "La liste des commandes se charge. Rechargez la page dans un instant.",
+    "selfLink": "Lien vers {command}",
+    "example": "Exemple",
+    "search": {
+      "formLabel": "Chercher et filtrer les commandes",
+      "label": "Recherche",
+      "placeholder": "Une commande ou un mot, par ex. warn ou anniversaire",
+      "category": "Groupe",
+      "allCategories": "Tous les groupes",
+      "who": "Qui peut l’utiliser",
+      "submit": "Afficher",
+      "reset": "Effacer les filtres",
+      "count": "Commandes affichées : {shown} sur {total}",
+      "empty": "Aucune commande ne correspond. Essayez un autre mot ou effacez les filtres."
+    },
+    "who": {
+      "label": "Filtrer selon qui peut l’utiliser",
+      "all": "Toutes",
+      "everyone": "Tout le monde",
+      "manage": "Gérer le serveur",
+      "admin": "Administrateur",
+      "ownerkit": "Kit du propriétaire"
+    },
+    "access": {
+      "everyone": "Tout le monde",
+      "manage": "Gérer le serveur ou Administrateur",
+      "admin": "Administrateur",
+      "ownerkit": "Administrateur ; propriétaire seulement quand les commandes admin sont retirées"
+    },
+    "options": {
+      "caption": "Options de {command}",
+      "name": "Option",
+      "type": "Type",
+      "required": "Obligatoire",
+      "description": "À quoi elle sert",
+      "yes": "Oui",
+      "no": "Non",
+      "choices": "Choix : {list}"
+    },
+    "types": {
+      "text": "Texte",
+      "integer": "Nombre entier",
+      "boolean": "Vrai / Faux",
+      "member": "Membre",
+      "channel": "Salon",
+      "role": "Rôle",
+      "mentionable": "Membre ou rôle",
+      "number": "Nombre",
+      "file": "Fichier"
+    },
+    "placeholders": {
+      "text": "texte",
+      "integer": "5",
+      "boolean": "True",
+      "member": "@membre",
+      "channel": "#salon",
+      "role": "@rôle",
+      "mentionable": "@membre",
+      "number": "1.5",
+      "file": "(fichier)"
+    },
+    "dashboard": {
+      "moved": "Déplacée dans le tableau de bord : {page}",
+      "also": "Aussi dans le tableau de bord : {page}"
+    },
+    "examples": {
+      "remind-me": "/remind me in:2h text:Sortir le pain du four",
+      "todo-add": "/todo add task:Acheter des croquettes",
+      "birthday-set": "/birthday set month:7 day:14",
+      "fun-roll": "/fun roll notation:2d20 + 5",
+      "weather": "/weather city:Paris",
+      "report-file": "/report file user:@membre reason:Envoie des invitations dans tous les salons",
+      "rank": "/rank user:@membre",
+      "enforcements": "/enforcements user:@membre",
+      "case-search": "/case search member:@membre text:spam",
+      "purge": "/purge amount:20",
+      "giveaway-create": "/giveaway create duration:1d winners:1 prize:Un cadeau Nitro",
+      "poll-create": "/poll create question:Soirée film ? option1:Vendredi option2:Samedi hours:24"
+    },
+    "dashboardPages": {
+      "appeals": "Appels",
+      "applications": "Candidatures",
+      "automod": "Automod",
+      "birthdays": "Anniversaires",
+      "bot-language": "Langue du bot",
+      "cases": "Dossiers",
+      "channels": "Outils de salon",
+      "commands": "Commandes",
+      "community": "Communauté",
+      "counters": "Compteurs",
+      "enforcement": "Sanctions et appels",
+      "giveaways": "Giveaways",
+      "join-to-create": "Salons vocaux automatiques",
+      "leveling": "Niveaux",
+      "logging": "Journaux",
+      "messages": "Messages",
+      "overview": "Vue d’ensemble",
+      "reaction-roles": "Rôles par réaction",
+      "rules": "Règles",
+      "server-data": "Données du serveur",
+      "staff": "Équipe",
+      "tickets": "Tickets et modmail",
+      "users": "Membres",
+      "verification": "Vérification",
+      "welcome": "Bienvenue et au revoir"
     }
   },
   "about": {

@@ -1,9 +1,9 @@
 {
   "commands": {
     "title": "Commands",
-    "description": "The Mewvo commands every member can use.",
+    "description": "Every Mewvo command: what it does, its options, an example and who may use it.",
     "heading": "Commands",
-    "lead": "The commands every member can use. Staff tools live on the dashboard and need the Administrator role.",
+    "lead": "Every command Mewvo has, read straight from the bot, so this list is always current. Search it, or filter by group and by who may use it. Staff commands need the Administrator role, and most of them also have a dashboard page.",
     "jumpLabel": "Command groups",
     "groups": {
       "core": "General",
@@ -17,7 +17,16 @@
       "verification": "Verification",
       "ticket": "Tickets",
       "menus": "Right-click menus",
-      "other": "Other"
+      "other": "Other",
+      "enforcement": "Enforcement",
+      "moderation": "Moderation",
+      "logging": "Logging",
+      "welcome": "Welcome",
+      "giveaway": "Giveaways",
+      "reaction-roles": "Reaction roles",
+      "serverstats": "Server stats",
+      "jointocreate": "Join to create",
+      "recovery": "Recovery"
     },
     "menu": {
       "message": "Right-click a message → Apps → {command}",
@@ -26,6 +35,112 @@
     "notes": {
       "ticketStaff": "Ticket staff",
       "ticketStaffOrOpener": "Ticket staff or the ticket opener"
+    },
+    "loading": "The command list is loading. Reload the page in a moment.",
+    "selfLink": "Link to {command}",
+    "example": "Example",
+    "search": {
+      "formLabel": "Search and filter commands",
+      "label": "Search",
+      "placeholder": "A command or a word, like warn or birthday",
+      "category": "Group",
+      "allCategories": "All groups",
+      "who": "Who may use it",
+      "submit": "Show",
+      "reset": "Clear filters",
+      "count": "Commands shown: {shown} of {total}",
+      "empty": "No command matches. Try another word or clear the filters."
+    },
+    "who": {
+      "label": "Filter by who may use it",
+      "all": "All",
+      "everyone": "Everyone",
+      "manage": "Manage Server",
+      "admin": "Administrator",
+      "ownerkit": "Owner kit"
+    },
+    "access": {
+      "everyone": "Everyone",
+      "manage": "Manage Server or Administrator",
+      "admin": "Administrator",
+      "ownerkit": "Administrator; owner-only when admin commands are retired"
+    },
+    "options": {
+      "caption": "Options of {command}",
+      "name": "Option",
+      "type": "Type",
+      "required": "Required",
+      "description": "What it is for",
+      "yes": "Yes",
+      "no": "No",
+      "choices": "Choices: {list}"
+    },
+    "types": {
+      "text": "Text",
+      "integer": "Whole number",
+      "boolean": "True / False",
+      "member": "Member",
+      "channel": "Channel",
+      "role": "Role",
+      "mentionable": "Member or role",
+      "number": "Number",
+      "file": "File"
+    },
+    "placeholders": {
+      "text": "text",
+      "integer": "5",
+      "boolean": "True",
+      "member": "@member",
+      "channel": "#channel",
+      "role": "@role",
+      "mentionable": "@member",
+      "number": "1.5",
+      "file": "(file)"
+    },
+    "dashboard": {
+      "moved": "Moved to the dashboard: {page}",
+      "also": "Also on the dashboard: {page}"
+    },
+    "examples": {
+      "remind-me": "/remind me in:2h text:Take the bread out of the oven",
+      "todo-add": "/todo add task:Buy cat food",
+      "birthday-set": "/birthday set month:7 day:14",
+      "fun-roll": "/fun roll notation:2d20 + 5",
+      "weather": "/weather city:Vilnius",
+      "report-file": "/report file user:@member reason:Spamming invites in every channel",
+      "rank": "/rank user:@member",
+      "enforcements": "/enforcements user:@member",
+      "case-search": "/case search member:@member text:spam",
+      "purge": "/purge amount:20",
+      "giveaway-create": "/giveaway create duration:1d winners:1 prize:A Nitro gift",
+      "poll-create": "/poll create question:Movie night? option1:Friday option2:Saturday hours:24"
+    },
+    "dashboardPages": {
+      "appeals": "Appeals",
+      "applications": "Applications",
+      "automod": "Automod",
+      "birthdays": "Birthdays",
+      "bot-language": "Bot language",
+      "cases": "Cases",
+      "channels": "Channel tools",
+      "commands": "Commands",
+      "community": "Community",
+      "counters": "Counters",
+      "enforcement": "Enforcement & appeals",
+      "giveaways": "Giveaways",
+      "join-to-create": "Join to create",
+      "leveling": "Leveling",
+      "logging": "Logging",
+      "messages": "Messages",
+      "overview": "Overview",
+      "reaction-roles": "Reaction roles",
+      "rules": "Rules",
+      "server-data": "Server data",
+      "staff": "Staff",
+      "tickets": "Tickets & modmail",
+      "users": "Members",
+      "verification": "Verification",
+      "welcome": "Welcome & goodbye"
     }
   },
   "about": {

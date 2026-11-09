@@ -358,10 +358,43 @@ button.button { cursor: pointer; }
 .jump a:hover { background: var(--bg-alt); }
 .cmd-group { scroll-margin-top: 88px; margin-top: 56px; }
 .cmd-group h2 { font-size: clamp(1.4rem, 2.4vw, 1.6rem); letter-spacing: -0.015em; margin-bottom: 12px; }
-.cmd-list { margin: 0; border-top: 1px solid var(--border); }
-.cmd { display: grid; grid-template-columns: minmax(0, 280px) minmax(0, 1fr); gap: 4px 32px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-.cmd dt { margin: 0; overflow-wrap: anywhere; }
-.cmd dd { margin: 0; color: var(--text-muted); font-size: 15px; max-width: 64ch; }
+/* Command explorer (pages/commands.js): the filter form, "who" links, one card per command.
+   Cards that do not match carry `hidden` (server-side filter; static/site.js filters live). */
+.cmd-filter { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: end; margin: 0 0 16px; }
+.cmd-filter p { margin: 0; }
+.cmd-filter-actions { grid-column: 1 / -1; }
+.form-field select { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--bg-alt); color: var(--text); font: 16px/1.5 var(--sans); }
+.cmd-filter input { border-color: var(--border-strong); }
+.form-field select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.cmd-filter input::placeholder { color: var(--text-muted); opacity: 1; }
+.cmd-who ul { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.cmd-who a { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border: 1px solid var(--border-control); border-radius: 6px; color: var(--text); text-decoration: none; font-size: 14px; }
+.cmd-who a:hover { background: var(--bg-alt); }
+.cmd-who a[aria-current] { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+.cmd-count { margin: 0 0 16px; color: var(--text-muted); font-size: 14px; }
+.cmd-empty { margin: 24px 0; padding: 16px; border: 1px dashed var(--border-strong); border-radius: 12px; color: var(--text); }
+.cmd-cards { display: grid; gap: 12px; }
+.cmd-card { scroll-margin-top: 88px; min-width: 0; padding: 16px 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--raised); }
+.cmd-card:target { border-color: var(--accent); }
+.cmd-name { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; font-size: 17px; overflow-wrap: anywhere; }
+.cmd-name code { min-width: 0; overflow-wrap: anywhere; }
+.cmd-anchor { flex: none; color: var(--text-muted); text-decoration: none; font-weight: 400; }
+.cmd-anchor:hover { color: var(--text); }
+.cmd-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
+.tag-strong { color: var(--text); border-color: var(--border-strong); }
+.cmd-desc { margin: 0; color: var(--text-muted); font-size: 15px; max-width: 72ch; }
+.cmd-options-wrap { margin-top: 12px; background: var(--bg-alt); border-radius: 8px; }
+.cmd-options { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cmd-options caption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.cmd-options th, .cmd-options td { text-align: left; vertical-align: top; padding: 8px 12px; border-top: 1px solid var(--border); }
+.cmd-options thead th { border-top: 0; color: var(--text-muted); font-weight: 600; font-size: 13px; }
+.cmd-options tbody th { font-weight: 400; white-space: nowrap; }
+.cmd-options td:last-child { color: var(--text-muted); min-width: 180px; }
+.cmd-choices { display: block; margin-top: 2px; font-size: 13px; }
+.cmd-example { margin: 12px 0 0; font-size: 14px; overflow-wrap: anywhere; }
+.cmd-label { color: var(--text-muted); margin-right: 4px; }
+.cmd-page { margin: 8px 0 0; font-size: 14px; color: var(--text-muted); }
+.cmd-card[hidden], .cmd-group[hidden], .cmd-empty[hidden], .jump li[hidden] { display: none; }
 
 /* Leaderboard: a plain table, numbers right-aligned; scrolls sideways inside its box on phones. */
 .legal-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px; }
@@ -540,7 +573,7 @@ button.button { cursor: pointer; }
     .page { padding-top: 48px; padding-bottom: 64px; }
     .page-head { margin-bottom: 40px; }
     .lead { font-size: 17px; }
-    .ref-list > div, .cmd { grid-template-columns: minmax(0, 1fr); }
+    .ref-list > div, .cmd-filter { grid-template-columns: minmax(0, 1fr); }
     .plans { grid-template-columns: minmax(0, 1fr); }
     .footer-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .guide { grid-template-columns: minmax(0, 1fr); }
@@ -899,7 +932,7 @@ body { min-height: 100dvh; }
 }
 @media (max-width: 760px), (max-height: 500px) {
     html { scroll-padding-top: 16px; }
-    .ref-group, .rule, .cmd-group { scroll-margin-top: 16px; }
+    .ref-group, .rule, .cmd-group, .cmd-card { scroll-margin-top: 16px; }
 }
 
 /* Tap targets at least 44px high on phones and touch screens (Apple HIG, WCAG 2.5.5). Links that sit
@@ -913,6 +946,8 @@ body { min-height: 100dvh; }
     .footer-langs ul { gap: 0 16px; }
     .footer-langs a { display: inline-flex; align-items: center; min-height: 44px; }
     .jump a { min-height: 44px; }
+    .cmd-who a { min-height: 44px; }
+    .cmd-anchor { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -12px 0; }
     .index a { display: inline-flex; align-items: center; min-height: 44px; }
     .what-grid a { justify-self: start; display: inline-flex; align-items: center; min-height: 44px; margin-top: -4px; margin-bottom: -10px; }
     .trust-rules a, .back-link, .crumbs a, .account-links a, .form-actions > a:not(.button) { display: inline-block; padding: 12px 0; margin-top: -12px; margin-bottom: -12px; }

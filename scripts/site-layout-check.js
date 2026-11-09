@@ -245,7 +245,7 @@ const SITE_PAGES = [
     ['home', '/'], ['features', '/features'], ['pricing', '/pricing'], ['docs', '/docs'],
     ...GUIDES.map((g) => [`docs-${g.slug}`, `/docs/${g.slug}`]),
     ['faq', '/faq'], ['admins', '/admins'], ['added', `/added?guild_id=${GUILD}`], ['added-unknown', '/added'], ['added-cancelled', '/added?error=access_denied'],
-    ['commands', '/commands'], ['leaderboard', '/leaderboard'], ['status', '/status'], ['about', '/about'],
+    ['commands', '/commands'], ['commands-admin', '/commands?who=admin'], ['commands-none', '/commands?q=zzz'], ['leaderboard', '/leaderboard'], ['status', '/status'], ['about', '/about'],
     ['changelog', '/changelog'], ['rules', '/rules'], ['transparency', '/transparency'], ['trust', '/trust'],
     ['privacy', '/privacy'], ['terms', '/terms'], ['legal', '/legal'], ['contact', '/contact'], ['withdrawal', '/withdrawal'],
     ['not-found', '/no-such-page'],
