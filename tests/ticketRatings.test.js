@@ -463,7 +463,15 @@ test('channel survey done: decline and comment hide the ticket; the sweep picks 
     assert.equal(n, 1);
     assert.deepEqual(swept, [OPENER]);
     assert.match(sql, /delivery = 'channel'/);
-    assert.match(sql, /rating IS NOT NULL AND rated_at < \$2\) OR expires_at < \$3/);
+    assert.match(sql, /rating IS NOT NULL AND rated_at < \$2\) OR expires_at < \$3\)\s+AND id > \$4/);
     assert.equal(params[1].getTime(), now - RATED_GRACE_MS, '30 minutes to add a comment after rating');
+
+    // Paging: a full page leads to the next one from its last id, so newer rows are never starved.
+    const pages = [Array.from({ length: 500 }, (_, i) => ({ id: i + 1, guild_id: G, ref_id: C, opener_id: OPENER })), [{ id: 501, guild_id: G, ref_id: C, opener_id: OTHER }]];
+    const afters = [];
+    const paged = async (q, p) => { afters.push(p[3]); return { rows: pages.shift() ?? [] }; };
+    const all = await sweepChannelSurveyAccess({}, { query: paged, tables: { ticket_ratings: 'ticket_ratings' }, now, hide: async () => true });
+    assert.equal(all, 501);
+    assert.deepEqual(afters, [0, 500]);
     await assert.rejects(sweepChannelSurveyAccess({}, { query: async () => { throw new Error('db down'); } }), /db down/);
 });

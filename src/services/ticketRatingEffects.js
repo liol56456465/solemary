@@ -134,10 +134,11 @@ export async function hideClosedTicketFromOpener(client, guildId, channelId, ope
         const channel = client.channels?.cache?.get(channelId)
             ?? await client.channels?.fetch?.(channelId).catch(() => null);
         if (!channel?.permissionOverwrites || channel.guildId !== guildId) return false;
-        const ticket = await loadTicket(guildId, channelId).catch(() => null);
-        if (ticket?.status !== 'closed') return false;
+        // Already hidden first: repeats of the sweep then cost neither an API call nor a DB read.
         const current = channel.permissionOverwrites.cache?.get(openerId);
         if (current?.deny?.has?.('ViewChannel')) return false;
+        const ticket = await loadTicket(guildId, channelId).catch(() => null);
+        if (ticket?.status !== 'closed') return false;
         await channel.permissionOverwrites.edit(openerId, HIDDEN);
         return true;
     } catch (error) {
@@ -148,14 +149,20 @@ export async function hideClosedTicketFromOpener(client, guildId, channelId, ope
 
 /**
  * Every 10 minutes: channel surveys (O2) that are done — rated more than 30 minutes ago, or past their
- * window — lose the opener's view. Only rows from the last 40 days (window max 30 + margin); the
- * overwrite check makes repeats free of API calls. `deps`: { query, tables, now, hide }.
+ * window — lose the opener's view. Rows from the last 40 days (window max 30 + margin), walked page by
+ * page (keyset on id, at most `maxPages` x 500 per run) so a large backlog never starves newer rows; an
+ * already hidden overwrite costs no API call or DB read. `deps`: { query, tables, now, hide, maxPages }.
  */
-export async function sweepChannelSurveyAccess(client, { query, tables, now = Date.now(), hide = hideClosedTicketFromOpener, loadTicket } = {}) {
-    const rows = await channelSurveysDone({ query, tables, now, graceMs: RATED_GRACE_MS });
+export async function sweepChannelSurveyAccess(client, { query, tables, now = Date.now(), hide = hideClosedTicketFromOpener, loadTicket, maxPages = 20 } = {}) {
     let hidden = 0;
-    for (const row of rows) {
-        if (await hide(client, row.guild_id, row.ref_id, row.opener_id, loadTicket ? { loadTicket } : {})) hidden += 1;
+    let afterId = 0;
+    for (let page = 0; page < maxPages; page += 1) {
+        const batch = await channelSurveysDone({ query, tables, now, graceMs: RATED_GRACE_MS, afterId });
+        for (const row of batch) {
+            if (await hide(client, row.guild_id, row.ref_id, row.opener_id, loadTicket ? { loadTicket } : {})) hidden += 1;
+        }
+        if (batch.length < 500) break;
+        afterId = batch.at(-1).id;
     }
     return hidden;
 }
