@@ -286,8 +286,8 @@
             "userId": "ID de l’utilisateur, pour les personnes qui ne sont plus sur le serveur"
         },
         "serverOnly": "Cette commande ne fonctionne que sur un serveur.",
-        "noAdmin": "Tu as besoin de la permission Administrateur pour utiliser ce panneau.",
-        "noAdminOrMod": "Tu as besoin de la permission Administrateur ou du rôle de modérateur de ce serveur pour utiliser ce panneau.",
+        "noAdmin": "Seuls les admins du serveur peuvent utiliser ce panneau.",
+        "noAdminOrMod": "Seuls les admins du serveur et les membres ayant le rôle de modérateur de ce serveur peuvent utiliser ce panneau.",
         "modNotAllowed": "Avec le rôle de modérateur, tu peux avertir, mettre en sourdine, expulser, retirer la sourdine et retirer des avertissements. **{action}** nécessite la permission Administrateur.",
         "accessUnavailable": "Je n'ai pas pu vérifier ton rôle de modérateur pour l'instant (la base de données ne répond pas). Rien n'a été modifié. Réessaie dans un instant."
     },
@@ -297,11 +297,11 @@
     },
     "warnmessage": {
         "otherServer": "Cela ne fonctionne que sur les messages de ce serveur.",
-        "noAdmin": "Tu as besoin de la permission Administrateur pour avertir des membres.",
+        "noAdmin": "Seuls les admins du serveur peuvent avertir des membres.",
         "botMessage": "On ne peut pas avertir pour des messages de bots, de webhooks ou du système.",
         "self": "Tu ne peux pas t’avertir toi-même.",
         "notInServer": "**{name}** n’est plus sur le serveur, un avertissement ne peut donc pas l’atteindre.",
-        "noAdminOrMod": "Tu as besoin de la permission Administrateur ou du rôle de modérateur de ce serveur pour avertir des membres."
+        "noAdminOrMod": "Seuls les admins du serveur et les membres ayant le rôle de modérateur de ce serveur peuvent avertir des membres."
     },
     "reportmessage": {
         "serverOnly": "Les signalements ne fonctionnent que sur un serveur.",

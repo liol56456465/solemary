@@ -60,7 +60,7 @@
         "reason": "Powód",
         "notDelivered": "Nie udało się dostarczyć zgłoszenia: brakuje kanału zgłoszeń, logowanie jest wyłączone albo nie mam tam uprawnień do pisania. Skontaktuj się bezpośrednio z moderatorem.",
         "submittedTitle": "Zgłoszenie wysłane",
-        "submitted": "Twoje zgłoszenie dotyczące **{tag}** trafiło do moderatorów. Dzięki, że dajesz znać.",
+        "submitted": "Twoje zgłoszenie dotyczące **{tag}** trafiło do moderatorów. Sprawdzą je i zdecydują, co zrobić; możesz nie dostać informacji o wyniku. Dzięki, że dajesz znać.",
         "setchannel": {
             "noAdmin": "Aby ustawić kanał zgłoszeń, potrzebujesz uprawnienia **Administrator**.",
             "saveFailed": "Nie udało się zapisać ustawienia kanału.",
@@ -75,6 +75,7 @@
         "setTitle": "Przypomnienie ustawione",
         "deleted": "Usunięto przypomnienie `{id}`.",
         "deletedTitle": "Przypomnienie usunięte",
+        "delivered": "⏰ Przypomnienie ustawione {when}: {text}",
         "notFound": "Nie masz przypomnienia o tym numerze. Sprawdź `/remind list`.",
         "dbDown": "Baza danych nie odpowiada, więc nic nie zostało zapisane. Spróbuj ponownie za kilka minut.",
         "dbDownTitle": "Spróbuj później"
@@ -108,8 +109,8 @@
     },
     "wipedata": {
         "title": "Usunąć twoje dane?",
-        "intro": "To trwale usuwa twoje dane na tym serwerze:",
-        "body": "Twoja lista zadań, przypomnienia i zapisany token logowania są takie same na każdym serwerze, więc zostaną usunięte wszędzie. Bez tokenu logowania bot nie może już dodać cię do serwera wsparcia; „Zweryfikuj przez Discord” zapisze nowy. Wpisy moderacji, odwołań, zgłoszeń i weryfikacji zostają zachowane.",
+        "intro": "Jeśli potwierdzisz, te dane o tobie zostaną usunięte:",
+        "body": "Poziomy i urodziny są usuwane tylko na tym serwerze. Twoja lista zadań, przypomnienia i token logowania należą do ciebie, nie do serwera, więc zostaną usunięte wszędzie. (Bez tokenu Mewvo nie doda cię ponownie do swojego serwera wsparcia, dopóki znów nie użyjesz „Zweryfikuj przez Discord”.)\n\n**Co zostaje:** twoje ostrzeżenia, bany, odwołania, zgłoszenia i weryfikacje. Serwery przechowują je jako zapisy bezpieczeństwa, więc ta komenda nie może ich usunąć. Polityka prywatności wyjaśnia, jak o nie zapytać.",
         "final": "**Tego nie da się cofnąć.**",
         "confirm": "Potwierdź",
         "cancel": "Anuluj",
@@ -128,7 +129,7 @@
         "partialDeleted": "Usunięto: {items}. ",
         "partialRetry": "Uruchom /wipedata ponownie za kilka minut.",
         "doneTitle": "Twoje dane zostały usunięte",
-        "done": "Usunięto: {items}.\nPoziomy i urodziny na tym serwerze; lista zadań, przypomnienia i zapisany token logowania wszędzie.\n\nWpisy moderacji, odwołań, zgłoszeń i weryfikacji zostają zachowane, bo to zapisy bezpieczeństwa serwera. W Polityce prywatności znajdziesz, jak o nie zapytać.",
+        "done": "Usunięto: {items}.\nPoziomy i urodziny: na tym serwerze. Lista zadań, przypomnienia i token logowania: wszędzie.\n\n**Co zostaje:** twoje ostrzeżenia, bany, odwołania, zgłoszenia i weryfikacje. Serwery przechowują je jako zapisy bezpieczeństwa; Polityka prywatności wyjaśnia, jak o nie zapytać.",
         "nothingStored": "nic nie było zapisane",
         "failed": "Baza danych nie odpowiada. Możliwe, że nic nie zostało usunięte; spróbuj ponownie za kilka minut.",
         "cancelledTitle": "Nic nie zostało usunięte",

@@ -286,8 +286,8 @@
             "userId": "ID do usuário, para quem não está mais no servidor"
         },
         "serverOnly": "Este comando só funciona em um servidor.",
-        "noAdmin": "Você precisa da permissão de Administrador para usar este painel.",
-        "noAdminOrMod": "Você precisa da permissão de Administrador ou do cargo de moderador deste servidor para usar este painel.",
+        "noAdmin": "Só os admins do servidor podem usar este painel.",
+        "noAdminOrMod": "Só os admins do servidor e membros com o cargo de moderador deste servidor podem usar este painel.",
         "modNotAllowed": "Com o cargo de moderador você pode advertir, silenciar, expulsar, remover o silenciamento e remover advertências. **{action}** precisa da permissão de Administrador.",
         "accessUnavailable": "Não consegui verificar seu cargo de moderador agora (o banco de dados não está respondendo). Nada foi alterado. Tente de novo em instantes."
     },
@@ -297,11 +297,11 @@
     },
     "warnmessage": {
         "otherServer": "Isso só funciona com mensagens deste servidor.",
-        "noAdmin": "Você precisa da permissão de Administrador para advertir membros.",
+        "noAdmin": "Só os admins do servidor podem advertir membros.",
         "botMessage": "Não é possível advertir por mensagens de bots, webhooks ou do sistema.",
         "self": "Você não pode advertir a si mesmo.",
         "notInServer": "**{name}** não está mais no servidor, então uma advertência não chegaria até a pessoa.",
-        "noAdminOrMod": "Você precisa da permissão de Administrador ou do cargo de moderador deste servidor para advertir membros."
+        "noAdminOrMod": "Só os admins do servidor e membros com o cargo de moderador deste servidor podem advertir membros."
     },
     "reportmessage": {
         "serverOnly": "Denúncias só funcionam em um servidor.",

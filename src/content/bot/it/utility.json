@@ -60,7 +60,7 @@
         "reason": "Motivo",
         "notDelivered": "Non è stato possibile consegnare la tua segnalazione: il canale delle segnalazioni manca, i log sono disattivati o non ho il permesso di scrivere lì. Contatta direttamente un moderatore.",
         "submittedTitle": "Segnalazione inviata",
-        "submitted": "La tua segnalazione su **{tag}** è stata inviata ai moderatori. Grazie per averci avvisato.",
+        "submitted": "La tua segnalazione su **{tag}** è arrivata ai moderatori. La esamineranno e decideranno cosa fare; potresti non ricevere notizie sull’esito. Grazie per averci avvisato.",
         "setchannel": {
             "noAdmin": "Ti serve il permesso **Amministratore** per impostare il canale delle segnalazioni.",
             "saveFailed": "Non è stato possibile salvare l'impostazione del canale.",
@@ -75,6 +75,7 @@
         "setTitle": "Promemoria impostato",
         "deleted": "Promemoria `{id}` eliminato.",
         "deletedTitle": "Promemoria eliminato",
+        "delivered": "⏰ Promemoria che hai impostato {when}: {text}",
         "notFound": "Non hai un promemoria con quel numero. Controlla `/remind list`.",
         "dbDown": "Il database non risponde, quindi non è stato salvato nulla. Riprova tra qualche minuto.",
         "dbDownTitle": "Riprova più tardi"
@@ -108,8 +109,8 @@
     },
     "wipedata": {
         "title": "Eliminare i tuoi dati?",
-        "intro": "Questo elimina per sempre i tuoi dati in questo server:",
-        "body": "La tua lista di cose da fare, i promemoria e il token di accesso salvato sono gli stessi in ogni server, quindi vengono eliminati ovunque. Senza il token di accesso il bot non può più aggiungerti al server di supporto; \"Verifica con Discord\" ne salva uno nuovo. I registri di moderazione, ricorsi, segnalazioni e verifiche vengono conservati.",
+        "intro": "Se confermi, questi dati che ti riguardano vengono eliminati:",
+        "body": "Livelli e compleanno vengono eliminati solo in questo server. La tua lista di cose da fare, i promemoria e il token di accesso sono tuoi, non di un server, quindi vengono eliminati ovunque. (Senza il token, Mewvo non può riaggiungerti al suo server di supporto finché non usi di nuovo \"Verifica con Discord\".)\n\n**Cosa resta:** i tuoi avvertimenti, ban, ricorsi, segnalazioni e verifiche. I server li conservano come registri di sicurezza, quindi questo comando non può eliminarli. L’Informativa sulla privacy spiega come chiedere informazioni su di essi.",
         "final": "**Non si può annullare.**",
         "confirm": "Conferma",
         "cancel": "Annulla",
@@ -128,7 +129,7 @@
         "partialDeleted": "Eliminato: {items}. ",
         "partialRetry": "Usa di nuovo /wipedata tra qualche minuto.",
         "doneTitle": "I tuoi dati sono stati eliminati",
-        "done": "Eliminato: {items}.\nLivelli e compleanno in questo server; lista di cose da fare, promemoria e token di accesso salvato ovunque.\n\nI registri di moderazione, ricorsi, segnalazioni e verifiche vengono conservati, perché sono i registri di sicurezza del server. Nell'Informativa sulla privacy trovi come chiedere informazioni su di essi.",
+        "done": "Eliminato: {items}.\nLivelli e compleanno: in questo server. Lista di cose da fare, promemoria e token di accesso: ovunque.\n\n**Cosa resta:** i tuoi avvertimenti, ban, ricorsi, segnalazioni e verifiche. I server li conservano come registri di sicurezza; l’Informativa sulla privacy spiega come chiedere informazioni su di essi.",
         "nothingStored": "non c'era nulla di salvato",
         "failed": "Il database non risponde. Potrebbe non essere stato eliminato nulla; riprova tra qualche minuto.",
         "cancelledTitle": "Non è stato eliminato nulla",

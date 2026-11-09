@@ -327,7 +327,7 @@ test('the record: only the logged-in member, member-safe fields, test cases left
         assert.ok(calls.every((c) => c.userId === MEMBER), 'the user id comes from the session, never the query');
         const body = res.body;
         assert.ok(body.includes('1 of 3'), 'warnings X of 3');
-        assert.ok(body.includes('Level 0 of 3'));
+        assert.ok(body.includes('Stage 0 of 3'));
         assert.ok(body.includes('It would be warning 2 of 3.'), 'the My standing next-warning text');
         assert.ok(body.includes('Ban <code>bban23</code>: ends <time'), 'active ban with its end');
         assert.ok(body.includes('Member &lt;One&gt;'), 'name escaped');
@@ -388,7 +388,7 @@ test('My record lists every server\'s cases, grouped by server name, each with i
         assert.ok(at('Unknown server') > at('server-1'), 'a server Mewvo is not in: a neutral label');
         assert.ok(at('Other server warn') > at('server-0') && at('Other server warn') < at('server-1'), 'cases under their own server');
         assert.ok(at('Spam') > at('server-1'));
-        assert.ok(body.includes('Level 1 of 3') && body.includes('Level 0 of 3'), 'each server has its own standing');
+        assert.ok(body.includes('Stage 1 of 3') && body.includes('Stage 0 of 3'), 'each server has its own standing');
         assert.deepEqual([...standingCalls].sort(), [GUILD, OTHER_GUILD, FAR].sort(), 'standing per server that has cases');
         for (const hidden of ['ogtest', 'OTHER-SIMULATION', 'ttest2', 'NOT-MINE', 'stray2']) assert.ok(!body.includes(hidden), `hidden: ${hidden}`);
         assert.ok(/<td>Guild &lt;One&gt;<\/td><td><code>bban23<\/code>/.test(body), 'the appeals table names the server');

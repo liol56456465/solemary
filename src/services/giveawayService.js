@@ -11,6 +11,8 @@ import { Mutex } from '../utils/mutex.js';
 import { checkRateLimit, getRateLimitStatus } from '../utils/rateLimiter.js';
 import { logEvent, EVENT_TYPES } from './loggingService.js';
 import { botText, textForGuild } from '../utils/botText.js';
+import { sendLoggedDm } from './botDm/dmLog.js';
+import { safeServerName } from './enforcement/dmTemplates.js';
 
 const GIVEAWAY_CONFIG = botConfig.giveaways || {};
 const GIVEAWAY_INTERACTION_COOLDOWN = 1000;
@@ -183,6 +185,49 @@ export function createGiveawayEmbed(giveaway, status, winners = [], { lang = 'en
             { error: error.message }
         );
     }
+}
+
+const SNOWFLAKE = /^\d{17,20}$/;
+
+/**
+ * DMs each winner "You won X in Server — message the host / ask the staff" (audit 4.7), in the
+ * winner's language, with no mentions (sendLoggedDm). A DM that fails (closed DMs, unknown user)
+ * is logged and skipped: the winner announcement in the channel is what counts. Never throws.
+ * Resolves the number of DMs delivered. `send` / `fetchUser` are for tests.
+ */
+export async function dmGiveawayWinners(client, { guildId, giveaway, winners = [], channelId = null, messageId = null }, {
+    send = sendLoggedDm, fetchUser = (id) => client?.users?.fetch?.(id),
+} = {}) {
+    let delivered = 0;
+    const ids = [...new Set((winners || []).filter((id) => SNOWFLAKE.test(String(id))))];
+    if (!ids.length) return 0;
+    const guild = client?.guilds?.cache?.get?.(guildId) ?? null;
+    const params = {
+        prize: String(giveaway?.prize || '').slice(0, 256) || botText('en').t('giveaway.post.theGiveaway'),
+        serverName: safeServerName(guild?.name) || null,
+        hostId: SNOWFLAKE.test(String(giveaway?.hostId || '')) ? String(giveaway.hostId) : null,
+        url: SNOWFLAKE.test(String(guildId)) && SNOWFLAKE.test(String(channelId)) && SNOWFLAKE.test(String(messageId))
+            ? `https://discord.com/channels/${guildId}/${channelId}/${messageId}` : null,
+    };
+    for (const id of ids) {
+        try {
+            const user = await Promise.resolve(fetchUser(id)).catch(() => null);
+            if (!user) {
+                logger.info(`Giveaway ${messageId}: winner ${id} could not be fetched; no win DM`);
+                continue;
+            }
+            const member = guild?.members?.cache?.get?.(id) ?? null;
+            if (await send(user, { key: 'giveaway.won', params, guildId, member, label: 'giveaway win' })) delivered += 1;
+        } catch (error) {
+            logger.warn(`Giveaway ${messageId}: win DM to ${id} failed: ${error?.message || error}`);
+        }
+    }
+    return delivered;
+}
+
+/** dmGiveawayWinners without holding up the caller (the giveaway lock, the interaction reply). */
+function notifyWinners(client, args) {
+    dmGiveawayWinners(client, args).catch((error) => logger.warn(`Giveaway win DMs failed: ${error?.message || error}`));
 }
 
 /** The giveaway message buttons. lang: the server's language (default English). */
@@ -423,6 +468,7 @@ export async function checkGiveaways(client) {
             const winnerAnnouncement = tr.t('giveaway.post.won', { winners: winnerMentions, prize: giveaway.prize || tr.t('giveaway.post.theGiveaway'), hostId: giveaway.hostId });
             const winnerPingMsg = await channel.send({ content: winnerAnnouncement, allowedMentions: { users: [...new Set([...winners, giveaway.hostId].filter(Boolean))] } });
             giveaway.winnerPingMessageId = winnerPingMsg.id;
+            notifyWinners(client, { guildId, giveaway, winners, channelId: channel.id, messageId });
             // Only the ping id is new here; the ended state is already saved, so a failed
             // save is logged without stopping the log event below.
             const pingSaved = await markGiveawayEnded(client, giveawayId, giveaway)
@@ -572,8 +618,10 @@ export async function endGiveawayNow(client, guildId, messageId, endedBy, { lang
       const winnerMentions = winners.map((id) => `<@${id}>`).join(',');
       const winnerPingMsg = await channel.send({
         content: post.t('giveaway.post.won', { winners: winnerMentions, prize: updatedGiveaway.prize, hostId: updatedGiveaway.hostId }),
+        allowedMentions: { users: [...new Set([...winners, updatedGiveaway.hostId].filter(Boolean))] },
       });
       updatedGiveaway.winnerPingMessageId = winnerPingMsg.id;
+      notifyWinners(client, { guildId, giveaway: updatedGiveaway, winners, channelId: channel.id, messageId });
       await saveGiveaway(client, guildId, updatedGiveaway);
 
       logger.info(`Giveaway ended with ${winners.length} winner(s): ${messageId}`);
@@ -600,6 +648,7 @@ export async function endGiveawayNow(client, guildId, messageId, endedBy, { lang
     } else {
       await channel.send({
         content: post.t('giveaway.post.noWinner', { prize: updatedGiveaway.prize }),
+        allowedMentions: { parse: [] },
       });
       logger.info(`Giveaway ended with no winners: ${messageId}`);
     }
@@ -692,13 +741,15 @@ export async function rerollGiveaway(client, guildId, messageId, rerolledBy, { l
     const existingPingMsg = giveaway.winnerPingMessageId
       ? await channel.messages.fetch(giveaway.winnerPingMessageId).catch(() => null)
       : null;
+    const pingMentions = { users: [...new Set([...newWinners, giveaway.hostId].filter(Boolean))] };
     if (existingPingMsg) {
-      await existingPingMsg.edit({ content: pingContent });
+      await existingPingMsg.edit({ content: pingContent, allowedMentions: pingMentions });
     } else {
-      const newPingMsg = await channel.send({ content: pingContent });
+      const newPingMsg = await channel.send({ content: pingContent, allowedMentions: pingMentions });
       updatedGiveaway.winnerPingMessageId = newPingMsg.id;
       await saveGiveaway(client, guildId, updatedGiveaway);
     }
+    notifyWinners(client, { guildId, giveaway: updatedGiveaway, winners: newWinners, channelId: channel.id, messageId });
 
     logger.info(message
       ? `Giveaway successfully rerolled: ${messageId} with ${newWinners.length} new winners`

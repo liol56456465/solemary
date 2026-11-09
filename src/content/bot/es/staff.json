@@ -286,8 +286,8 @@
             "userId": "ID de usuario, para quien ya no está en el servidor"
         },
         "serverOnly": "Este comando solo funciona en un servidor.",
-        "noAdmin": "Necesitas el permiso de Administrador para usar este panel.",
-        "noAdminOrMod": "Necesitas el permiso de Administrador o el rol de moderador de este servidor para usar este panel.",
+        "noAdmin": "Solo los admins del servidor pueden usar este panel.",
+        "noAdminOrMod": "Solo los admins del servidor y los miembros con el rol de moderador de este servidor pueden usar este panel.",
         "modNotAllowed": "Con el rol de moderador puedes advertir, silenciar, expulsar, quitar el silencio y quitar advertencias. **{action}** necesita el permiso de Administrador.",
         "accessUnavailable": "No pude comprobar tu rol de moderador ahora mismo (la base de datos no responde). No se cambió nada. Inténtalo de nuevo en un momento."
     },
@@ -297,11 +297,11 @@
     },
     "warnmessage": {
         "otherServer": "Esto solo funciona con mensajes de este servidor.",
-        "noAdmin": "Necesitas el permiso de Administrador para advertir a miembros.",
+        "noAdmin": "Solo los admins del servidor pueden advertir a miembros.",
         "botMessage": "No se puede advertir por mensajes de bots, webhooks o del sistema.",
         "self": "No puedes advertirte a ti mismo.",
         "notInServer": "**{name}** ya no está en el servidor, así que una advertencia no le llegaría.",
-        "noAdminOrMod": "Necesitas el permiso de Administrador o el rol de moderador de este servidor para advertir a miembros."
+        "noAdminOrMod": "Solo los admins del servidor y los miembros con el rol de moderador de este servidor pueden advertir a miembros."
     },
     "reportmessage": {
         "serverOnly": "Los reportes solo funcionan en un servidor.",

@@ -273,8 +273,8 @@
             "userId": "User ID, for people no longer in the server"
         },
         "serverOnly": "This command only works in a server.",
-        "noAdmin": "You need the Administrator permission to use this panel.",
-        "noAdminOrMod": "You need the Administrator permission or this server's Moderator role to use this panel.",
+        "noAdmin": "Only server admins can use this panel.",
+        "noAdminOrMod": "Only server admins and members with this server's Moderator role can use this panel.",
         "modNotAllowed": "With the Moderator role you can warn, mute, kick, unmute and remove warnings. **{action}** needs the Administrator permission.",
         "accessUnavailable": "I could not check your Moderator role right now (the database is not responding). Nothing was changed. Try again in a moment."
     },
@@ -284,11 +284,11 @@
     },
     "warnmessage": {
         "otherServer": "This only works on messages in this server.",
-        "noAdmin": "You need the Administrator permission to warn members.",
+        "noAdmin": "Only server admins can warn members.",
         "botMessage": "Bot, webhook and system messages cannot be warned for.",
         "self": "You cannot warn yourself.",
         "notInServer": "**{name}** is no longer in the server, so a warning can't reach them.",
-        "noAdminOrMod": "You need the Administrator permission or this server's Moderator role to warn members."
+        "noAdminOrMod": "Only server admins and members with this server's Moderator role can warn members."
     },
     "reportmessage": {
         "serverOnly": "Reports only work in a server.",

@@ -107,7 +107,9 @@ test('D2: another server that never chose (no row value) appeals in its own serv
     assert.equal(appealInvite(OTHER), null);
     for (const [name, dm] of Object.entries(punishmentDms(caseOf(OTHER, { guild_name: 'Cosy Cats' })))) {
         assert.ok(!dm.includes(MEWVO_SUPPORT()) && !dm.includes('discord.gg'), name);
-        assert.ok(dm.startsWith('**To appeal:** contact the staff of Cosy Cats.'), `${name}: ${dm}`);
+        // Audit 4.1: the title comes first; the appeal path follows the reason (and duration).
+        assert.ok(/^\*\*(Banned from|Kicked from|Muted in|Warning 1 of 3 in) Cosy Cats\*\*\n/.test(dm), `${name}: title first: ${dm}`);
+        assert.ok(dm.split('\n').includes('**To appeal:** contact the staff of Cosy Cats.'), `${name}: ${dm}`);
     }
     setSettingsCacheForTests(OTHER, { appealsInvite: OWN_INVITE });
     assert.equal(appealInvite(OTHER), OWN_INVITE, 'the default is own: its invite is used');
@@ -140,9 +142,9 @@ test('DM invite, other server with appealsHome own but no invite: no invite line
     }
     assert.ok(!banDm(caseOf(MAIN)).includes('To appeal:'), 'home DMs unchanged');
     const auto = banDm(caseOf(OTHER, { is_auto: true, ladder_level_after: 3, appeal_deadline: new Date('2027-05-01T00:00:00Z') }));
-    assert.ok(!auto.includes('Appealing this code') && !auto.includes('You can appeal until'), 'no appeal promise without a place to appeal');
+    assert.ok(!auto.includes('If your appeal is accepted') && !auto.includes('You can appeal until'), 'no appeal promise without a place to appeal');
     const autoHome = banDm(caseOf(MAIN, { is_auto: true, ladder_level_after: 3, appeal_deadline: new Date('2027-05-01T00:00:00Z') }));
-    assert.ok(autoHome.includes('Appealing this code') && autoHome.includes('You can appeal until'), 'home unchanged');
+    assert.ok(autoHome.includes('If your appeal is accepted') && autoHome.includes('You can appeal until'), 'home unchanged');
     const denied = appealDeniedDm({ guildId: OTHER });
     assert.ok(denied.startsWith('**Appeal denied.**') && !denied.includes('discord.gg') && !denied.includes('undefined'), denied);
     const ended = banEndedDm(caseOf(OTHER), null);
@@ -221,7 +223,7 @@ test('rules: another server reads its own rules and links; never the main server
     assert.equal(readServerRules(process.env, OTHER).rules.length, 2);
     assert.deepEqual(ruleForReason('spam', process.env, OTHER), { id: 'cccc3333', number: 2, title: 'No spam here', consequence: '' });
     assert.equal(ruleLineFor(caseOf(OTHER)), 'Rule 2: No spam here', 'own rule, no link to Mewvo\'s /rules page');
-    assert.ok(banDm(caseOf(OTHER)).includes('\nRule 2: No spam here\n'));
+    assert.ok(banDm(caseOf(OTHER)).includes('\nReason: Spam (Rule 2: No spam here)\n'));
     // Home: unchanged (main rules, with the page link).
     assert.equal(ruleLineFor(caseOf(MAIN)), 'Rule 1: Mewvo rule, <https://mewvo.example/rules#rule-1>');
     assert.equal(ruleLineFor(caseOf(undefined)), 'Rule 1: Mewvo rule, <https://mewvo.example/rules#rule-1>');

@@ -76,7 +76,7 @@ test('warn for this message: refused for a message of another server, outside a 
     const dm = world();
     dm.interaction.guildId = null;
     await assert.rejects(warnMessage.execute(dm.interaction), /messages in this server/);
-    await assert.rejects(warnMessage.execute(world({ admin: false }).interaction), /Administrator/);
+    await assert.rejects(warnMessage.execute(world({ admin: false }).interaction), /Only server admins/);
     await assert.rejects(warnMessage.execute(world({ authorBot: true }).interaction), /Bot, webhook/);
     await assert.rejects(warnMessage.execute(world({ authorId: MOD_ID }).interaction), /warn yourself/);
 });

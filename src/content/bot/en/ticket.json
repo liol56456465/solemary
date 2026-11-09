@@ -239,14 +239,16 @@
     },
     "dm": {
         "closedTitle": "Your ticket was closed",
-        "closedBody": "Your ticket **{channel}** has been closed.\n\n**Reason:** {reason}\n**Closed by:** {closer}\n**Closed at:** <t:{time}:F>\n\nIf you need anything else, just open a new ticket.",
+        "closedBody": "Your ticket **{channel}**{where} has been closed.\n\n**Reason:** {reason}\n**Closed by:** {closer}\n**Closed at:** <t:{time}:F>\n\nIf you need anything else, just open a new ticket.",
         "feedbackTitle": "How did we do?",
-        "feedbackBody": "Rate your ticket **{channel}** from 1 to 5. Pick a number below.",
+        "feedbackBody": "Rate your ticket **{channel}**{where} from 1 to 5. Pick a number below.",
         "feedbackFooter": "This is optional.",
         "feedbackComment": "Add a comment",
         "feedbackDecline": "No thanks",
         "transcriptTitle": "Your ticket transcript",
-        "transcriptBody": "Here's the transcript for **{channel}**.",
+        "transcriptBody": "Here's the transcript for **{channel}**{where}.",
+        "inServer": " in **{server}**",
+        "transcriptAttached": "The transcript of this ticket is attached.",
         "modmailFeedbackBody": "Rate your conversation with staff from 1 to 5. Pick a number below."
     },
     "reminder": {

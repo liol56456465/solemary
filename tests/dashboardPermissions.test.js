@@ -445,9 +445,9 @@ test('executeAction (service): a non-Administrator runs only the listed types wh
     const mod = (roles) => ({ id: MOD, guild, user: { username: 'mod' }, permissions: { has: () => false }, roles: { cache: new Map(roles.map((id) => [id, { id }])) } });
     const target = { id: TARGET, username: 'target' };
     const staffRole = { roleId: MODROLE, actions: moderatorActionTypes() };
-    await assert.rejects(executeAction({ guild, moderator: mod([MODROLE]), targetUser: target, flow: { type: 'warn' } }), /Administrator/, 'no staffRole: Administrator only, as before');
-    await assert.rejects(executeAction({ guild, moderator: mod([MODROLE]), targetUser: target, flow: { type: 'ban' }, staffRole }), /Administrator/);
-    await assert.rejects(executeAction({ guild, moderator: mod([]), targetUser: target, flow: { type: 'warn' }, staffRole }), /Administrator/);
+    await assert.rejects(executeAction({ guild, moderator: mod([MODROLE]), targetUser: target, flow: { type: 'warn' } }), /Only server admins/, 'no staffRole: Administrator only, as before');
+    await assert.rejects(executeAction({ guild, moderator: mod([MODROLE]), targetUser: target, flow: { type: 'ban' }, staffRole }), /Only server admins/);
+    await assert.rejects(executeAction({ guild, moderator: mod([]), targetUser: target, flow: { type: 'warn' }, staffRole }), /Only server admins/);
 });
 
 test('moderator: a warn that would trigger the automatic ladder ban is refused (no ban by the back door)', async () => {

@@ -1,5 +1,5 @@
-import { MessageFlags } from 'discord.js';
-import { successEmbed } from '../utils/embeds.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
+import { infoEmbed, successEmbed } from '../utils/embeds.js';
 import { logger } from '../utils/logger.js';
 import { TitanBotError, ErrorTypes, handleInteractionError, replyUserError } from '../utils/errorHandler.js';
 import { 
@@ -65,8 +65,13 @@ export const giveawayJoinHandler = {
                 const participants = giveaway.participants || [];
                 const userId = interaction.user.id;
 
+                // Already in: information, not an error (audit 4.7), with a way out.
                 if (participants.includes(userId)) {
-                    return replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('giveaway.button.alreadyIn') });
+                    await InteractionHelper.safeEditReply(interaction, {
+                        embeds: [infoEmbed(tr.t('giveaway.button.alreadyInTitle'), tr.t('giveaway.button.alreadyIn'))],
+                        components: [giveawayLeaveRow(interaction.message.id, tr)],
+                    });
+                    return;
                 }
 
                 participants.push(userId);
@@ -101,6 +106,81 @@ export const giveawayJoinHandler = {
                 customId: 'giveaway_join',
                 handler: 'giveaway'
             });
+        }
+    }
+};
+
+/** The "Leave giveaway" button under the "already in" reply: giveaway_leave:<giveaway message id>. */
+export function giveawayLeaveRow(messageId, tr) {
+    return new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`giveaway_leave:${messageId}`).setLabel(tr.t('giveaway.buttons.leave')).setStyle(ButtonStyle.Secondary),
+    );
+}
+
+const MESSAGE_ID = /^\d{17,20}$/;
+
+/**
+ * Leaves a giveaway (audit 4.7). The button sits on the clicker's own ephemeral "already in"
+ * reply; the giveaway is named by the customId and looked up in this server only, and only the
+ * clicker is removed, so there is nothing else to re-check. Acknowledged at once (the lock can
+ * queue during a rush), then the same per-giveaway lock as Join.
+ */
+export const giveawayLeaveHandler = {
+    customId: 'giveaway_leave',
+    async execute(interaction, client) {
+        const tr = textForInteraction(interaction);
+        try {
+            const messageId = String(interaction.customId || '').split(':')[1] || '';
+            if (!interaction.inGuild() || !MESSAGE_ID.test(messageId)) {
+                return replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: tr.t('giveaway.button.notActive') });
+            }
+            if (isUserRateLimited(interaction.user.id, messageId)) {
+                return replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: tr.t('giveaway.button.slowDown') });
+            }
+            await recordUserInteraction(interaction.user.id, messageId);
+            if (!(await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral }))) return;
+
+            await Mutex.runExclusive(`giveaway:${messageId}`, async () => {
+                const giveaway = (await getGuildGiveaways(client, interaction.guildId)).find((g) => g.messageId === messageId);
+                if (!giveaway) {
+                    throw new TitanBotError('Giveaway not found in database', ErrorTypes.VALIDATION, tr.t('giveaway.button.notActive'),
+                        { messageId, guildId: interaction.guildId });
+                }
+                if (isGiveawayEnded(giveaway) || giveaway.ended || giveaway.isEnded) {
+                    return replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('giveaway.button.alreadyEnded') });
+                }
+                const participants = giveaway.participants || [];
+                if (!participants.includes(interaction.user.id)) {
+                    await InteractionHelper.safeEditReply(interaction, { embeds: [infoEmbed(tr.t('giveaway.button.leftTitle'), tr.t('giveaway.button.notIn'))], components: [] });
+                    return;
+                }
+                giveaway.participants = participants.filter((id) => id !== interaction.user.id);
+                await saveGiveaway(client, interaction.guildId, giveaway);
+                logger.debug(`User ${interaction.user.tag} left giveaway ${messageId}`);
+
+                // The entry count on the giveaway message; a failed edit is fixed by the next join.
+                try {
+                    const channel = await client.channels.fetch(giveaway.channelId).catch(() => null);
+                    const message = channel?.messages ? await channel.messages.fetch(messageId).catch(() => null) : null;
+                    if (message) {
+                        const postLang = textForGuild(interaction.guildId, { purpose: 'public' }).lang;
+                        await message.edit({
+                            embeds: [createGiveawayEmbed(giveaway, 'active', [], { lang: postLang })],
+                            components: [createGiveawayButtons(false, { lang: postLang })],
+                        });
+                    }
+                } catch (error) {
+                    logger.warn(`Could not update giveaway message ${messageId} after a leave: ${error.message}`);
+                }
+
+                await InteractionHelper.safeEditReply(interaction, {
+                    embeds: [successEmbed(tr.t('giveaway.button.leftTitle'), tr.t('giveaway.button.left'))],
+                    components: [],
+                });
+            });
+        } catch (error) {
+            logger.error('Error in giveaway leave handler:', error);
+            await handleInteractionError(interaction, error, { type: 'button', customId: 'giveaway_leave', handler: 'giveaway' });
         }
     }
 };

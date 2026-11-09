@@ -29,6 +29,6 @@ for (const [name, handler] of [['end', giveawayEndHandler], ['reroll', giveawayR
         await handler.execute(interaction, {});
         assert.equal(interaction.replies.length, 1);
         assert.notEqual(interaction.replies[0], 'deferred');
-        assert.match(text(interaction.replies[0]), /Administrator/);
+        assert.match(text(interaction.replies[0]), /Only server admins/);
     });
 }

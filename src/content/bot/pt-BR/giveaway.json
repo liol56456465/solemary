@@ -62,7 +62,11 @@
         "slowDown": "Vai com calma e tente de novo.",
         "notActive": "Este sorteio não está mais ativo.",
         "alreadyEnded": "Este sorteio já foi encerrado.",
-        "alreadyIn": "Você já está participando deste sorteio.",
+        "alreadyIn": "Você já está participando deste sorteio. Mudou de ideia? Toque em **Sair do sorteio** abaixo.",
+        "alreadyInTitle": "Já está participando",
+        "leftTitle": "Você saiu do sorteio",
+        "left": "Você não está mais participando. Pode entrar de novo quando quiser antes do fim.",
+        "notIn": "Você não está participando deste sorteio, então não há nada para sair.",
         "joinedTitle": "Você está participando",
         "joined": {
             "one": "Boa sorte. Até agora {count} pessoa participou.",
@@ -70,8 +74,8 @@
             "other": "Boa sorte. Até agora {count} pessoas participaram."
         },
         "guildOnly": "Este botão só pode ser usado em um servidor.",
-        "needAdminEnd": "Você precisa do cargo de Administrador para encerrar um sorteio.",
-        "needAdminReroll": "Você precisa do cargo de Administrador para sortear de novo.",
+        "needAdminEnd": "Só os admins do servidor podem encerrar um sorteio.",
+        "needAdminReroll": "Só os admins do servidor podem sortear de novo.",
         "endedTitle": "Sorteio encerrado",
         "picked": {
             "one": "{count} vencedor escolhido.",
@@ -101,7 +105,14 @@
         "reroll": "Sortear de novo",
         "winners": "Vencedores",
         "join": "Participar",
+        "leave": "Sair do sorteio",
         "end": "Encerrar"
+    },
+    "dm": {
+        "won": "🎉 Você ganhou **{prize}** no **{server}**!",
+        "claimHost": "Para receber o prêmio, mande mensagem para o anfitrião <@{hostId}> ou fale com a equipe do servidor.",
+        "claimStaff": "Para receber o prêmio, fale com a equipe do servidor.",
+        "link": "Sorteio: {url}"
     },
     "post": {
         "newGiveaway": "**Novo sorteio**",

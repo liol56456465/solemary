@@ -4,21 +4,24 @@
         "cannotAppeal": "Não é possível apelar deste banimento.",
         "by": "Por: {name}",
         "reason": "Motivo: {reason}",
+        "reasonRule": "Motivo: {reason} ({rule})",
         "rule": "Regra",
         "date": "Data: {date}",
         "duration": "Duração: {duration}, termina em {end}",
         "durationPermanent": "Duração: permanente",
         "caseCode": "Código do caso: {code}",
+        "caseCodeAppeal": "Código do caso: {code} (você precisa dele para apelar)",
         "rejoin": "Voltar: {invite}",
         "record": "Seu histórico completo: <{url}>",
         "appealWeb": "**Recorra on-line:** <{url}>",
+        "appealBoth": "**Apele aqui:** {invite} ou on-line: <{url}>",
         "appealAskStaff": "**Para apelar:** fale com a equipe de {server}.",
         "appealDeniedWeb": "Depois do tempo de espera, você pode recorrer de novo on-line: <{url}>",
         "privacy": "-# Privacidade: <{url}>",
         "thisServer": "servidor",
         "ban": {
             "title": "**Banido do {server}**",
-            "autoNote": "Apelar deste código também remove a advertência que causou este banimento.",
+            "autoNote": "Se a sua apelação for aceita, a advertência que levou a este banimento também é removida.",
             "appealUntil": "Você pode apelar até {date}."
         },
         "kick": {
@@ -26,12 +29,21 @@
             "noInvite": "Voltar: peça um convite a alguém da equipe"
         },
         "mute": {
-            "title": "**Silenciado no {server}**"
+            "title": "**Silenciado no {server}**",
+            "next": "Você ainda pode ler o servidor, mas não pode escrever, reagir nem falar até o fim."
         },
         "warn": {
             "title": "**Advertência {number} de {limit} no {server}**",
-            "limit": "Com {limit} advertências, você será banido por {length}.",
-            "limitPermanent": "Com {limit} advertências, você será banido permanentemente.",
+            "next": {
+                "one": "Advertências não expiram. Mais {count} advertência significa um banimento automático de {length}.",
+                "many": "Advertências não expiram. Mais {count} advertências significam um banimento automático de {length}.",
+                "other": "Advertências não expiram. Mais {count} advertências significam um banimento automático de {length}."
+            },
+            "nextPermanent": {
+                "one": "Advertências não expiram. Mais {count} advertência significa um banimento automático permanente.",
+                "many": "Advertências não expiram. Mais {count} advertências significam um banimento automático permanente.",
+                "other": "Advertências não expiram. Mais {count} advertências significam um banimento automático permanente."
+            },
             "titleRecorded": "**Um aviso em {server}**",
             "notCounted": "Este aviso fica no seu histórico, mas não conta para um banimento automático."
         },
@@ -46,6 +58,8 @@
             "title": "**Seu banimento do {server} terminou**",
             "early": "Um moderador o retirou antes.",
             "expired": "Ele expirou.",
+            "nextWarn": "Advertências não expiram: a sua próxima advertência aqui significa outro banimento automático, de {length}.",
+            "nextWarnPermanent": "Advertências não expiram: a sua próxima advertência aqui significa um banimento automático permanente.",
             "noInvite": "Voltar: peça um convite no servidor de suporte: {invite}"
         },
         "muteEnded": {

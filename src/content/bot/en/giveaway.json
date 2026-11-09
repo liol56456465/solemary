@@ -59,15 +59,19 @@
         "slowDown": "Slow down a bit, then try again.",
         "notActive": "This giveaway is no longer active.",
         "alreadyEnded": "This giveaway has already ended.",
-        "alreadyIn": "You're already in this giveaway.",
+        "alreadyIn": "You're already in this giveaway. Changed your mind? Press **Leave giveaway** below.",
+        "alreadyInTitle": "Already entered",
+        "leftTitle": "You left the giveaway",
+        "left": "You're no longer entered. You can join again any time before it ends.",
+        "notIn": "You're not in this giveaway, so there is nothing to leave.",
         "joinedTitle": "You're in",
         "joined": {
             "one": "Good luck. 1 person has entered so far.",
             "other": "Good luck. {count} people have entered so far."
         },
         "guildOnly": "This button can only be used in a server.",
-        "needAdminEnd": "You need the Administrator role to end a giveaway.",
-        "needAdminReroll": "You need the Administrator role to reroll a giveaway.",
+        "needAdminEnd": "Only server admins can end a giveaway.",
+        "needAdminReroll": "Only server admins can reroll a giveaway.",
         "endedTitle": "Giveaway ended",
         "picked": {
             "one": "Picked {count} winner.",
@@ -96,7 +100,14 @@
         "reroll": "Reroll",
         "winners": "Winners",
         "join": "Join",
+        "leave": "Leave giveaway",
         "end": "End"
+    },
+    "dm": {
+        "won": "🎉 You won **{prize}** in **{server}**!",
+        "claimHost": "To get your prize, message the host <@{hostId}> or ask the server's staff.",
+        "claimStaff": "To get your prize, ask the server's staff.",
+        "link": "Giveaway: {url}"
     },
     "post": {
         "newGiveaway": "**New giveaway**",

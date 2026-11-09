@@ -273,8 +273,8 @@
             "userId": "Nutzer-ID, für Leute, die nicht mehr auf dem Server sind"
         },
         "serverOnly": "Dieser Befehl funktioniert nur auf einem Server.",
-        "noAdmin": "Du brauchst die Administrator-Berechtigung, um dieses Panel zu nutzen.",
-        "noAdminOrMod": "Du brauchst die Administrator-Berechtigung oder die Moderatorrolle dieses Servers, um dieses Panel zu nutzen.",
+        "noAdmin": "Nur Server-Admins können dieses Panel nutzen.",
+        "noAdminOrMod": "Nur Server-Admins und Mitglieder mit der Moderatorrolle dieses Servers können dieses Panel nutzen.",
         "modNotAllowed": "Mit der Moderatorrolle kannst du verwarnen, stummschalten, kicken, die Stummschaltung aufheben und Verwarnungen entfernen. **{action}** braucht die Administrator-Berechtigung.",
         "accessUnavailable": "Ich konnte deine Moderatorrolle gerade nicht prüfen (die Datenbank antwortet nicht). Es wurde nichts geändert. Versuch es gleich noch einmal."
     },
@@ -284,11 +284,11 @@
     },
     "warnmessage": {
         "otherServer": "Das funktioniert nur bei Nachrichten auf diesem Server.",
-        "noAdmin": "Du brauchst die Administrator-Berechtigung, um Mitglieder zu verwarnen.",
+        "noAdmin": "Nur Server-Admins können Mitglieder verwarnen.",
         "botMessage": "Für Bot-, Webhook- und Systemnachrichten kann nicht verwarnt werden.",
         "self": "Du kannst dich nicht selbst verwarnen.",
         "notInServer": "**{name}** ist nicht mehr auf dem Server, eine Verwarnung erreicht diese Person nicht.",
-        "noAdminOrMod": "Du brauchst die Administrator-Berechtigung oder die Moderatorrolle dieses Servers, um Mitglieder zu verwarnen."
+        "noAdminOrMod": "Nur Server-Admins und Mitglieder mit der Moderatorrolle dieses Servers können Mitglieder verwarnen."
     },
     "reportmessage": {
         "serverOnly": "Meldungen funktionieren nur auf einem Server.",

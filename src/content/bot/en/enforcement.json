@@ -4,21 +4,24 @@
         "cannotAppeal": "This ban cannot be appealed.",
         "by": "By: {name}",
         "reason": "Reason: {reason}",
+        "reasonRule": "Reason: {reason} ({rule})",
         "rule": "Rule",
         "date": "Date: {date}",
         "duration": "Duration: {duration}, ends {end}",
         "durationPermanent": "Duration: Permanent",
         "caseCode": "Case code: {code}",
+        "caseCodeAppeal": "Case code: {code} (you need this to appeal)",
         "rejoin": "Rejoin: {invite}",
         "record": "Your full record: <{url}>",
         "appealWeb": "**Appeal online:** <{url}>",
+        "appealBoth": "**Appeal here:** {invite} or online: <{url}>",
         "appealAskStaff": "**To appeal:** contact the staff of {server}.",
         "appealDeniedWeb": "You can appeal again online after the waiting time: <{url}>",
         "privacy": "-# Privacy: <{url}>",
         "thisServer": "the server",
         "ban": {
             "title": "**Banned from {server}**",
-            "autoNote": "Appealing this code also removes the warning that caused this ban.",
+            "autoNote": "If your appeal is accepted, the warning that led to this ban is removed too.",
             "appealUntil": "You can appeal until {date}."
         },
         "kick": {
@@ -26,12 +29,19 @@
             "noInvite": "Rejoin: ask a staff member for an invite"
         },
         "mute": {
-            "title": "**Muted in {server}**"
+            "title": "**Muted in {server}**",
+            "next": "You can still read the server, but you can't write, react or speak until it ends."
         },
         "warn": {
             "title": "**Warning {number} of {limit} in {server}**",
-            "limit": "At {limit} warnings you will be banned for {length}.",
-            "limitPermanent": "At {limit} warnings you will be banned permanently.",
+            "next": {
+                "one": "Warnings don't expire. {count} more warning means an automatic ban for {length}.",
+                "other": "Warnings don't expire. {count} more warnings mean an automatic ban for {length}."
+            },
+            "nextPermanent": {
+                "one": "Warnings don't expire. {count} more warning means an automatic permanent ban.",
+                "other": "Warnings don't expire. {count} more warnings mean an automatic permanent ban."
+            },
             "titleRecorded": "**A warning in {server}**",
             "notCounted": "This warning is on your record, but it does not count toward an automatic ban."
         },
@@ -46,6 +56,8 @@
             "title": "**Your ban from {server} has ended**",
             "early": "A moderator lifted it early.",
             "expired": "It expired.",
+            "nextWarn": "Warnings don't expire, so your next warning here means another automatic ban, for {length}.",
+            "nextWarnPermanent": "Warnings don't expire, so your next warning here means an automatic permanent ban.",
             "noInvite": "Rejoin: ask for an invite in the support server: {invite}"
         },
         "muteEnded": {

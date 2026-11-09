@@ -59,15 +59,19 @@
         "slowDown": "Etwas langsamer, dann versuch es noch einmal.",
         "notActive": "Dieses Gewinnspiel läuft nicht mehr.",
         "alreadyEnded": "Dieses Gewinnspiel ist schon beendet.",
-        "alreadyIn": "Du nimmst schon an diesem Gewinnspiel teil.",
+        "alreadyIn": "Du nimmst schon an diesem Gewinnspiel teil. Doch nicht? Drück unten auf **Gewinnspiel verlassen**.",
+        "alreadyInTitle": "Schon dabei",
+        "leftTitle": "Du hast das Gewinnspiel verlassen",
+        "left": "Du nimmst nicht mehr teil. Bis zum Ende kannst du jederzeit wieder mitmachen.",
+        "notIn": "Du nimmst an diesem Gewinnspiel nicht teil, also gibt es nichts zu verlassen.",
         "joinedTitle": "Du bist dabei",
         "joined": {
             "one": "Viel Glück. Bisher hat {count} Person teilgenommen.",
             "other": "Viel Glück. Bisher haben {count} Personen teilgenommen."
         },
         "guildOnly": "Dieser Button geht nur auf einem Server.",
-        "needAdminEnd": "Um ein Gewinnspiel zu beenden, brauchst du die Rolle Administrator.",
-        "needAdminReroll": "Um ein Gewinnspiel neu auszulosen, brauchst du die Rolle Administrator.",
+        "needAdminEnd": "Nur Server-Admins können ein Gewinnspiel beenden.",
+        "needAdminReroll": "Nur Server-Admins können ein Gewinnspiel neu auslosen.",
         "endedTitle": "Gewinnspiel beendet",
         "picked": {
             "one": "{count} Gewinner gewählt.",
@@ -96,7 +100,14 @@
         "reroll": "Neu auslosen",
         "winners": "Gewinner",
         "join": "Teilnehmen",
+        "leave": "Gewinnspiel verlassen",
         "end": "Beenden"
+    },
+    "dm": {
+        "won": "🎉 Du hast **{prize}** in **{server}** gewonnen!",
+        "claimHost": "Um deinen Preis zu bekommen, schreib dem Host <@{hostId}> oder frag das Team des Servers.",
+        "claimStaff": "Um deinen Preis zu bekommen, frag das Team des Servers.",
+        "link": "Gewinnspiel: {url}"
     },
     "post": {
         "newGiveaway": "**Neues Gewinnspiel**",

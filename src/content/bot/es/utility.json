@@ -60,7 +60,7 @@
         "reason": "Motivo",
         "notDelivered": "No se pudo entregar tu reporte: falta el canal de reportes, el registro está desactivado o no tengo permiso para escribir ahí. Contacta directamente con un moderador.",
         "submittedTitle": "Reporte enviado",
-        "submitted": "Tu reporte sobre **{tag}** se envió a los moderadores. Gracias por avisarnos.",
+        "submitted": "Tu reporte sobre **{tag}** llegó a los moderadores. Lo revisarán y decidirán qué hacer; puede que no recibas noticias del resultado. Gracias por avisarnos.",
         "setchannel": {
             "noAdmin": "Necesitas el permiso de **Administrador** para elegir el canal de reportes.",
             "saveFailed": "No se pudo guardar la configuración del canal.",
@@ -75,6 +75,7 @@
         "setTitle": "Recordatorio creado",
         "deleted": "Recordatorio `{id}` eliminado.",
         "deletedTitle": "Recordatorio eliminado",
+        "delivered": "⏰ Recordatorio que pusiste {when}: {text}",
         "notFound": "No tienes ningún recordatorio con ese número. Revisa `/remind list`.",
         "dbDown": "La base de datos no responde, así que no se guardó nada. Inténtalo de nuevo en unos minutos.",
         "dbDownTitle": "Inténtalo más tarde"
@@ -108,8 +109,8 @@
     },
     "wipedata": {
         "title": "¿Eliminar tus datos?",
-        "intro": "Esto elimina para siempre tus datos en este servidor:",
-        "body": "Tu lista de tareas, tus recordatorios y tu token de inicio de sesión guardado son los mismos en todos los servidores, así que se eliminan en todas partes. Sin el token de inicio de sesión, el bot ya no puede añadirte al servidor de soporte; \"Verificar con Discord\" guarda uno nuevo. Los registros de moderación, apelaciones, reportes y verificación se conservan.",
+        "intro": "Si confirmas, se eliminan estos datos tuyos:",
+        "body": "Los niveles y el cumpleaños se eliminan solo en este servidor. Tu lista de tareas, tus recordatorios y tu token de inicio de sesión son tuyos, no de un servidor, así que se eliminan en todas partes. (Sin el token, Mewvo no puede volver a añadirte a su servidor de soporte hasta que uses \"Verificar con Discord\" otra vez.)\n\n**Lo que se queda:** tus advertencias, baneos, apelaciones, reportes y verificaciones. Los servidores los guardan como registros de seguridad, así que este comando no puede borrarlos. La Política de privacidad explica cómo preguntar por ellos.",
         "final": "**Esto no se puede deshacer.**",
         "confirm": "Confirmar",
         "cancel": "Cancelar",
@@ -128,7 +129,7 @@
         "partialDeleted": "Eliminado: {items}. ",
         "partialRetry": "Vuelve a usar /wipedata en unos minutos.",
         "doneTitle": "Tus datos se eliminaron",
-        "done": "Eliminado: {items}.\nNiveles y cumpleaños en este servidor; lista de tareas, recordatorios y el token de inicio de sesión guardado en todas partes.\n\nLos registros de moderación, apelaciones, reportes y verificación se conservan, porque son los registros de seguridad del servidor. En la Política de privacidad verás cómo preguntar por ellos.",
+        "done": "Eliminado: {items}.\nNiveles y cumpleaños: en este servidor. Lista de tareas, recordatorios y token de inicio de sesión: en todas partes.\n\n**Lo que se queda:** tus advertencias, baneos, apelaciones, reportes y verificaciones. Los servidores los guardan como registros de seguridad; la Política de privacidad explica cómo preguntar por ellos.",
         "nothingStored": "no había nada guardado",
         "failed": "La base de datos no responde. Puede que no se haya eliminado nada; inténtalo de nuevo en unos minutos.",
         "cancelledTitle": "No se eliminó nada",

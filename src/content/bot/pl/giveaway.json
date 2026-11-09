@@ -65,7 +65,11 @@
         "slowDown": "Trochę wolniej, potem spróbuj ponownie.",
         "notActive": "To losowanie już nie trwa.",
         "alreadyEnded": "To losowanie już się zakończyło.",
-        "alreadyIn": "Już bierzesz udział w tym losowaniu.",
+        "alreadyIn": "Już bierzesz udział w tym losowaniu. Zmiana planów? Kliknij poniżej **Opuść losowanie**.",
+        "alreadyInTitle": "Już bierzesz udział",
+        "leftTitle": "Opuszczono losowanie",
+        "left": "Już nie bierzesz udziału. Możesz dołączyć ponownie w każdej chwili przed końcem.",
+        "notIn": "Nie bierzesz udziału w tym losowaniu, więc nie ma czego opuszczać.",
         "joinedTitle": "Bierzesz udział",
         "joined": {
             "one": "Powodzenia. Na razie zgłosiła się {count} osoba.",
@@ -74,8 +78,8 @@
             "other": "Powodzenia. Na razie zgłosiło się {count} osoby."
         },
         "guildOnly": "Tego przycisku można użyć tylko na serwerze.",
-        "needAdminEnd": "Potrzebujesz roli z uprawnieniem Administrator, aby zakończyć losowanie.",
-        "needAdminReroll": "Potrzebujesz roli z uprawnieniem Administrator, aby losować ponownie.",
+        "needAdminEnd": "Tylko admini serwera mogą zakończyć losowanie.",
+        "needAdminReroll": "Tylko admini serwera mogą losować ponownie.",
         "endedTitle": "Losowanie zakończone",
         "picked": {
             "one": "Wylosowano {count} zwycięzcę.",
@@ -106,7 +110,14 @@
         "reroll": "Losuj ponownie",
         "winners": "Zwycięzcy",
         "join": "Dołącz",
+        "leave": "Opuść losowanie",
         "end": "Zakończ"
+    },
+    "dm": {
+        "won": "🎉 Wygrywasz **{prize}** na **{server}**!",
+        "claimHost": "Aby odebrać nagrodę, napisz do organizatora <@{hostId}> albo zapytaj obsługę serwera.",
+        "claimStaff": "Aby odebrać nagrodę, zapytaj obsługę serwera.",
+        "link": "Losowanie: {url}"
     },
     "post": {
         "newGiveaway": "**Nowe losowanie**",

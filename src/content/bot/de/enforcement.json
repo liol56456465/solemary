@@ -4,21 +4,24 @@
         "cannotAppeal": "Gegen diesen Bann ist kein Einspruch möglich.",
         "by": "Von: {name}",
         "reason": "Grund: {reason}",
+        "reasonRule": "Grund: {reason} ({rule})",
         "rule": "Regel",
         "date": "Datum: {date}",
         "duration": "Dauer: {duration}, endet {end}",
         "durationPermanent": "Dauer: dauerhaft",
         "caseCode": "Fallcode: {code}",
+        "caseCodeAppeal": "Fallcode: {code} (den brauchst du für einen Einspruch)",
         "rejoin": "Wieder beitreten: {invite}",
         "record": "Deine ganze Akte: <{url}>",
         "appealWeb": "**Online Einspruch einlegen:** <{url}>",
+        "appealBoth": "**Hier Einspruch einlegen:** {invite} oder online: <{url}>",
         "appealAskStaff": "**Einspruch:** wende dich an das Team von {server}.",
         "appealDeniedWeb": "Nach der Wartezeit kannst du online erneut Einspruch einlegen: <{url}>",
         "privacy": "-# Datenschutz: <{url}>",
         "thisServer": "dem Server",
         "ban": {
             "title": "**Von {server} gebannt**",
-            "autoNote": "Ein Einspruch gegen diesen Code entfernt auch die Verwarnung, die diesen Bann ausgelöst hat.",
+            "autoNote": "Wird dein Einspruch angenommen, wird auch die Verwarnung entfernt, die zu diesem Bann geführt hat.",
             "appealUntil": "Du kannst bis {date} Einspruch einlegen."
         },
         "kick": {
@@ -26,12 +29,19 @@
             "noInvite": "Wieder beitreten: Bitte ein Teammitglied um eine Einladung"
         },
         "mute": {
-            "title": "**In {server} stummgeschaltet**"
+            "title": "**In {server} stummgeschaltet**",
+            "next": "Du kannst den Server weiter lesen, aber bis zum Ende nicht schreiben, reagieren oder sprechen."
         },
         "warn": {
             "title": "**Verwarnung {number} von {limit} in {server}**",
-            "limit": "Bei {limit} Verwarnungen wirst du für {length} gebannt.",
-            "limitPermanent": "Bei {limit} Verwarnungen wirst du dauerhaft gebannt.",
+            "next": {
+                "one": "Verwarnungen laufen nicht ab. Noch {count} Verwarnung bedeutet einen automatischen Bann für {length}.",
+                "other": "Verwarnungen laufen nicht ab. Noch {count} Verwarnungen bedeuten einen automatischen Bann für {length}."
+            },
+            "nextPermanent": {
+                "one": "Verwarnungen laufen nicht ab. Noch {count} Verwarnung bedeutet einen automatischen dauerhaften Bann.",
+                "other": "Verwarnungen laufen nicht ab. Noch {count} Verwarnungen bedeuten einen automatischen dauerhaften Bann."
+            },
             "titleRecorded": "**Eine Verwarnung in {server}**",
             "notCounted": "Diese Verwarnung steht in deinem Verlauf, zählt aber nicht für einen automatischen Bann."
         },
@@ -46,6 +56,8 @@
             "title": "**Dein Bann von {server} ist vorbei**",
             "early": "Ein Moderator hat ihn früher aufgehoben.",
             "expired": "Er ist abgelaufen.",
+            "nextWarn": "Verwarnungen laufen nicht ab: Deine nächste Verwarnung hier bedeutet wieder einen automatischen Bann, für {length}.",
+            "nextWarnPermanent": "Verwarnungen laufen nicht ab: Deine nächste Verwarnung hier bedeutet einen automatischen dauerhaften Bann.",
             "noInvite": "Wieder beitreten: Frag im Support-Server nach einer Einladung: {invite}"
         },
         "muteEnded": {

@@ -90,7 +90,7 @@ test('the permission is checked again on the click: lost Administrator → denie
     assert.equal(result.outcome, 'denied');
     assert.equal(log[1][0], 'deferUpdate');
     const [, payload] = log.find(([kind]) => kind === 'click.editReply');
-    assert.match(payload.embeds[0].data.description, /Administrator[\s\S]*Nothing was deleted/);
+    assert.match(payload.embeds[0].data.description, /Only server admins[\s\S]*Nothing was deleted/);
     assert.deepEqual(payload.components, []);
     assert.equal(canDeleteTicketSystem({ user: { id: ADMIN }, guild: { ownerId: ADMIN }, memberPermissions: { has: () => false } }), true, 'the server owner counts');
 });

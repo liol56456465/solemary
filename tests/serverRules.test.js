@@ -50,12 +50,12 @@ const record = (extra = {}) => ({
 
 // ── DMs ───────────────────────────────────────────────────────────────────
 
-test('DM: a linked reason adds "Rule N: title" with the /rules#rule-N link, right after the reason, in every punishment DM', () => {
+test('DM: a linked reason adds "Rule N: title" with the /rules#rule-N link to the reason line, in every punishment DM', () => {
     useRules();
-    const line = 'Rule 2: No spam, <https://mewvo.example/rules#rule-2>';
+    // Audit 4.1: reason and rule share one line, right after the title.
+    const line = 'Reason: Spam (Rule 2: No spam, <https://mewvo.example/rules#rule-2>)';
     for (const dm of [banDm(record()), kickDm(record(), 'https://discord.gg/x'), muteDm(record()), warnDm(record(), 1)]) {
-        const lines = dm.split('\n');
-        assert.equal(lines[lines.indexOf('Reason: Spam') + 1], line, dm);
+        assert.equal(dm.split('\n')[1], line, dm);
     }
 });
 
@@ -71,7 +71,7 @@ test('DM: no rule line for an unmapped reason, a custom reason, a link to a dele
 
 test('DM: without PUBLIC_URL the line names the rule without a link; rule numbers follow the order', () => {
     useRules({ publicUrl: null });
-    assert.ok(banDm(record()).includes('\nRule 2: No spam\n'));
+    assert.ok(banDm(record()).includes('\nReason: Spam (Rule 2: No spam)\n'));
     assert.equal(rulesPageUrl(2, {}), null);
     useRules({ rules: moveRule(RULES, RULE_B, -1) });
     assert.ok(banDm(record()).includes('Rule 1: No spam, <https://mewvo.example/rules#rule-1>'));

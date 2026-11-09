@@ -14,7 +14,9 @@
 //   enf.appealAccepted / enf.appealDenied             appealService.js
 //   enf.caseVoided                                    caseEditService.js (/case remove)
 //   ticket.closed / ticket.feedback / ticket.transcript  services/ticket.js (ticket.feedback also
-//                                                     modmailService.js, kind 'modmail')
+//                                                     modmailService.js, kind 'modmail'; on close the
+//                                                     transcript rides on ticket.closed, transcript: true)
+//   giveaway.won                                      giveawayService.js (winner DMs)
 //   application.result                                applicationReviewService.js
 //   verification.approved / verification.denied       handlers/verificationReview.js
 //   suggestion.status                                 community/suggestionService.js
@@ -49,6 +51,13 @@ export function caseParams(record) {
     }
     return out;
 }
+
+/**
+ * " in **Server**" for a ticket DM (audit 4.5: the DM names the server it is about); '' for a DM
+ * logged before serverName was stored, or the survey posted in the ticket channel itself.
+ * `serverName` is stored already made safe (dmTemplates.safeServerName).
+ */
+const whereOf = (tr, p) => (p.serverName ? tr.t('ticket.dm.inServer', { server: p.serverName }) : '');
 
 const opts = (p, lang, extra = {}) => ({ guildId: p.guildId ?? undefined, serverName: p.serverName ?? undefined, lang, ...extra });
 
@@ -89,7 +98,9 @@ export const DM_RENDERERS = Object.freeze({
             const tr = botText(lang);
             return { embeds: [createEmbed({
                 title: tr.t('ticket.dm.closedTitle'),
-                description: tr.t('ticket.dm.closedBody', { channel: p.channelName, reason: p.reason, closer: p.closer, time: p.time }),
+                // transcript: the closure DM carries the transcript file (one DM instead of two, audit 4.5).
+                description: tr.t('ticket.dm.closedBody', { channel: p.channelName, where: whereOf(tr, p), reason: p.reason, closer: p.closer, time: p.time })
+                    + (p.transcript ? `\n\n${tr.t('ticket.dm.transcriptAttached')}` : ''),
                 color: '#e74c3c',
                 footer: { text: tr.t('ticket.post.ticketId', { id: p.ticketId }) },
             })] };
@@ -104,7 +115,7 @@ export const DM_RENDERERS = Object.freeze({
                     // kind 'modmail': a closed modmail conversation (modmailService.js), same buttons.
                     description: p.kind === 'modmail'
                         ? tr.t('ticket.dm.modmailFeedbackBody')
-                        : tr.t('ticket.dm.feedbackBody', { channel: p.channelName }),
+                        : tr.t('ticket.dm.feedbackBody', { channel: p.channelName, where: whereOf(tr, p) }),
                     color: '#F1C40F',
                     footer: { text: tr.t('ticket.dm.feedbackFooter') },
                 })],
@@ -122,10 +133,23 @@ export const DM_RENDERERS = Object.freeze({
             const tr = botText(lang);
             return { embeds: [createEmbed({
                 title: tr.t('ticket.dm.transcriptTitle'),
-                description: tr.t('ticket.dm.transcriptBody', { channel: p.channelName }),
+                description: tr.t('ticket.dm.transcriptBody', { channel: p.channelName, where: whereOf(tr, p) }),
                 color: '#3498db',
                 footer: { text: tr.t('ticket.post.ticketId', { id: p.ticketId }) },
             })] };
+        },
+    },
+
+    // A giveaway winner (audit 4.7). prize: the host's text as the giveaway showed it; serverName
+    // made safe; url: the giveaway message link (or null). Sent with no mentions (sendLoggedDm).
+    'giveaway.won': {
+        render: (p, lang) => {
+            const tr = botText(lang);
+            return { content: [
+                tr.t('giveaway.dm.won', { prize: p.prize, server: p.serverName || tr.t('enforcement.dm.thisServer') }),
+                p.hostId ? tr.t('giveaway.dm.claimHost', { hostId: p.hostId }) : tr.t('giveaway.dm.claimStaff'),
+                p.url ? tr.t('giveaway.dm.link', { url: p.url }) : null,
+            ].filter(Boolean).join('\n') };
         },
     },
 

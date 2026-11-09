@@ -241,14 +241,16 @@
     },
     "dm": {
         "closedTitle": "Il tuo ticket è stato chiuso",
-        "closedBody": "Il tuo ticket **{channel}** è stato chiuso.\n\n**Motivo:** {reason}\n**Chiuso da:** {closer}\n**Chiuso il:** <t:{time}:F>\n\nSe ti serve altro, apri semplicemente un nuovo ticket.",
+        "closedBody": "Il tuo ticket **{channel}**{where} è stato chiuso.\n\n**Motivo:** {reason}\n**Chiuso da:** {closer}\n**Chiuso il:** <t:{time}:F>\n\nSe ti serve altro, apri semplicemente un nuovo ticket.",
         "feedbackTitle": "Com'è andata?",
-        "feedbackBody": "Valuta il tuo ticket **{channel}** da 1 a 5. Scegli un numero qui sotto.",
+        "feedbackBody": "Valuta il tuo ticket **{channel}**{where} da 1 a 5. Scegli un numero qui sotto.",
         "feedbackFooter": "È facoltativo.",
         "feedbackComment": "Aggiungi un commento",
         "feedbackDecline": "No, grazie",
         "transcriptTitle": "Trascrizione del tuo ticket",
-        "transcriptBody": "Ecco la trascrizione di **{channel}**.",
+        "transcriptBody": "Ecco la trascrizione di **{channel}**{where}.",
+        "inServer": " in **{server}**",
+        "transcriptAttached": "La trascrizione di questo ticket è allegata.",
         "modmailFeedbackBody": "Valuta la tua conversazione con lo staff da 1 a 5. Scegli un numero qui sotto."
     },
     "reminder": {
