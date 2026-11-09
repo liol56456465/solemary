@@ -71,6 +71,13 @@ only (D) · 7 join rows kept 365 days after leaving (D).
 Unverified: [I1] OAuth re-adds need a marker in oauthVerification.js · [I3] the invites rate limit is per
 server · [I5] inviteDelete can arrive before the join for a used-up invite (handled either way).
 
+**Built (2026-11-09, all D accepted):** code in `src/services/invites/` (cache, tracker, stats, store, roles,
+page, expectedAdds), `/invites`, Dashboard → Invites, `inviteTracking` setting. [I1] done (marker set right
+before the guilds.join PUT). [I5] handled: a deleted code stays in the cache 60 s; a vanished code counts as
+used up only within 15 s of its deletion. The support server never tracks (its joins are appeals/re-adds).
+guildDelete does not drop the cache (tests/multiServerB2 forbids service imports there); the cache is bounded
+and guildCreate re-warms. Tests: tests/inviteTracking.test.js, tests/db/inviteTracking.test.js.
+
 ---
 
 ## 3. Ticket ratings (upgrade; a basic version already exists)

@@ -120,7 +120,8 @@
             "reminders": "Reminders",
             "oauth": "Stored Discord login token (from Verify with Discord)",
             "dmlog": "Saved copies of bot DMs (to re-translate them when you change language)",
-            "ticketRatings": "Ticket ratings you gave (your name and comment; the stars stay)"
+            "ticketRatings": "Ticket ratings you gave (your name and comment; the stars stay)",
+            "invites": "Invite tracking: how you joined, and your name as the inviter of others"
         },
         "partialTitle": "Not everything was deleted",
         "partialFailed": "The database did not respond for: {items}. ",

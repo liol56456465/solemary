@@ -50,6 +50,7 @@
     "support": "Gdzie zbanowani członkowie nadal mogą się odwołać.",
     "rules": "Zasady serwera, na stronie internetowej i w wiadomościach o karach.",
     "appearance": "Daj tu Mewvo własną nazwę i obrazek (Pro i Max).",
-    "commands": "Włączaj i wyłączaj pojedyncze komendy lub grupy komend."
+    "commands": "Włączaj i wyłączaj pojedyncze komendy lub grupy komend.",
+    "invites": "Zobacz, przez które zaproszenie dołączył każdy członek, z rankingiem i rolami w nagrodę."
   }
 }

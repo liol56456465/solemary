@@ -1,0 +1,91 @@
+{
+  "page": {
+    "help": "Zobacz, przez które zaproszenie dołączył każdy członek: liczniki dla zapraszających, ranking, role za liczbę zaproszeń i {inviter} w powitaniach. Domyślnie wyłączone."
+  },
+  "support": {
+    "title": "Nie na serwerze wsparcia",
+    "text": "Śledzenie zaproszeń działa na serwerze głównym i innych serwerach, ale nie na serwerze wsparcia Mewvo."
+  },
+  "permission": {
+    "title": "Mewvo potrzebuje „Zarządzanie serwerem”",
+    "text": "Bez uprawnienia „Zarządzanie serwerem” Mewvo nie może czytać listy zaproszeń, więc żadnego dołączenia nie da się przypisać do zaproszenia. Nadaj je roli Mewvo w Ustawienia serwera → Role."
+  },
+  "settings": {
+    "title": "Śledzenie zaproszeń",
+    "help": "Włącz je i zdecyduj, kiedy dołączenie liczy się jako fałszywe. Fałszywe dołączenia nie wchodzą do liczników; zmiana zasady przelicza wszystko.",
+    "enabled": "Śledź zaproszenia",
+    "enabledHelp": "Mewvo zapisuje, którego zaproszenia użył każdy nowy członek.",
+    "fakeDays": "Nowe konto: młodsze niż (dni)",
+    "fakeDaysHelp": "Członek, którego konto Discord jest przy dołączeniu młodsze, liczy się jako fałszywy. 0 wyłącza.",
+    "fakeHours": "Odszedł w ciągu (godzin)",
+    "fakeHoursHelp": "Członek, który odejdzie w tym czasie po dołączeniu, liczy się jako fałszywy. 0 wyłącza."
+  },
+  "milestones": {
+    "title": "Role za progi",
+    "help": "Nadaj rolę, gdy ktoś osiągnie liczbę zaproszeń (do 10 progów). Rola zostaje, nawet gdy licznik potem spadnie.",
+    "stack": "Zachowaj wszystkie osiągnięte role",
+    "stackHelp": "Wyłączone: zostaje tylko najwyższa osiągnięta rola.",
+    "count": "Zaproszenia dla progu {n}",
+    "role": "Rola dla progu {n}",
+    "none": "Brak roli",
+    "incomplete": "Próg {n} potrzebuje liczby i roli.",
+    "sameCount": "Dwa progi mają {count} zaproszeń. Każdy próg potrzebuje własnej liczby.",
+    "sameRole": "Dwa progi mają tę samą rolę. Każdy próg potrzebuje własnej roli."
+  },
+  "unreadable": "Nie udało się teraz odczytać (baza danych nie odpowiada).",
+  "board": {
+    "title": "Ranking",
+    "help": "Razem = dołączyli − odeszli − fałszywe + bonus. Ponowne dołączenia przez tę samą osobę liczą się raz.",
+    "rank": "#",
+    "member": "Członek",
+    "total": "Razem",
+    "invited": "Dołączyli",
+    "left": "Odeszli",
+    "fake": "Fałszywe",
+    "bonus": "Bonus",
+    "empty": "Nikt jeszcze nie ma zaproszeń.",
+    "resetAt": "Liczone od wyzerowania"
+  },
+  "recent": {
+    "title": "Ostatnie dołączenia",
+    "help": "Ostatnie 20 dołączeń i jak przyszedł każdy członek.",
+    "member": "Członek",
+    "via": "Dołączył przez",
+    "joined": "Dołączył",
+    "state": "Uwagi",
+    "fake": "fałszywe",
+    "left": "odszedł",
+    "repeat": "ponowne dołączenie, nie liczone",
+    "empty": "Nie zapisano jeszcze dołączeń."
+  },
+  "codes": {
+    "title": "Kody zaproszeń",
+    "help": "Zaproszenia serwera, najczęściej używane najpierw.",
+    "code": "Kod",
+    "creator": "Utworzył",
+    "uses": "Użycia",
+    "deleted": "(usunięte)",
+    "empty": "Nie znamy jeszcze żadnych zaproszeń.",
+    "loading": "Lista zaproszeń się ładuje. Dołączenia są teraz zapisywane jako nieznane."
+  },
+  "commands": {
+    "title": "Komendy",
+    "text": "Wszyscy: /invites view i /invites leaderboard. Administratorzy: /invites who, list, bonus add lub remove, reset (z przyciskiem potwierdzenia) i setup."
+  },
+  "saved": {
+    "on": "Śledzenie zaproszeń jest włączone.",
+    "off": "Śledzenie zaproszeń jest wyłączone.",
+    "milestones": "Role za progi zapisane."
+  },
+  "source": {
+    "invite": "zaproszenie",
+    "vanity": "własny adres serwera",
+    "widget": "widżet serwera",
+    "discovery": "Odkrywanie serwerów",
+    "bot": "Mewvo (ponownie dodany przez „Zweryfikuj przez Discord”)",
+    "ambiguous": "jedno z kilku zaproszeń",
+    "unknown": "nieznane",
+    "not_ready": "nieznane (lista się ładowała)",
+    "no_permission": "nieznane (brak „Zarządzanie serwerem”)"
+  }
+}

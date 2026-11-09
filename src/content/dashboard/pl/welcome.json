@@ -15,7 +15,8 @@
     "message": "Wiadomość powitalna",
     "messageHelp": "Na przykład: Witaj na {server}, {user}. Jesteś członkiem numer {memberCount}.",
     "dm": "Prywatna wiadomość do nowego członka",
-    "dmHelp": "Wysyłana bezpośrednio do niego (DM). Zostaw puste, żeby nic nie wysyłać."
+    "dmHelp": "Wysyłana bezpośrednio do niego (DM). Zostaw puste, żeby nic nie wysyłać.",
+    "inviteHelp": "Przy włączonych Zaproszeniach: {inviter} (oznacza zapraszającego), {inviterName} (jego nazwa), {code} (kod zaproszenia) i {invites} (liczba jego zaproszeń)."
   },
   "leave": {
     "topic": "Pożegnanie",

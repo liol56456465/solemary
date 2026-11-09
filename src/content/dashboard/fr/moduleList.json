@@ -49,6 +49,7 @@
     "support": "Là où les membres bannis peuvent quand même faire appel.",
     "rules": "Les règles de ton serveur, sur une page web et dans les messages de sanction.",
     "appearance": "Donne ici à Mewvo son propre nom et sa propre image (Pro et Max).",
-    "commands": "Activer ou désactiver des commandes seules ou des groupes de commandes."
+    "commands": "Activer ou désactiver des commandes seules ou des groupes de commandes.",
+    "invites": "Vois par quelle invitation chaque membre est arrivé, avec un classement et des rôles en récompense."
   }
 }

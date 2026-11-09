@@ -22,6 +22,25 @@ export function truncateForEmbedField(value, maxLength = 1024) {
     return text.length <= maxLength ? text : `${text.slice(0, maxLength - 1)}…`;
 }
 
+/**
+ * {inviter} (a mention), {inviter.name}, {invite.code}, {inviter.invites} from an invite
+ * attribution ({ inviterId, inviterName, code, inviterInvites }); pure.
+ */
+export function inviteTokens(invite, fallback = {}) {
+    const someone = fallback?.inviter || 'someone';
+    const aLink = fallback?.code || 'a link';
+    const inviterId = invite?.inviterId && /^\d{17,20}$/.test(String(invite.inviterId)) ? String(invite.inviterId) : null;
+    const code = typeof invite?.code === 'string' ? invite.code.replace(/[^\w-]/g, '').slice(0, 32) : '';
+    // Names in a message: no Discord markup or mentions from the name itself.
+    const name = typeof invite?.inviterName === 'string' ? invite.inviterName.replace(/[\\*_~`|<>@#{}]/g, '').slice(0, 64) : '';
+    return {
+        '{inviter}': inviterId ? `<@${inviterId}>` : someone,
+        '{inviter.name}': name || someone,
+        '{invite.code}': code || aLink,
+        '{inviter.invites}': inviterId && Number.isFinite(invite?.inviterInvites) ? String(invite.inviterInvites) : '0',
+    };
+}
+
 export function formatWelcomeMessage(message, data) {
     
     if (typeof message !== 'string') return '';
@@ -52,7 +71,11 @@ export function formatWelcomeMessage(message, data) {
         '{guild.id}': guild?.id || 'unknown',
         '{guild.memberCount}': guild?.memberCount?.toString?.() || '0',
         '{memberCount}': guild?.memberCount?.toString?.() || '0',
-        '{membercount}': guild?.memberCount?.toString?.() || '0'
+        '{membercount}': guild?.memberCount?.toString?.() || '0',
+        // Invite tracking (services/invites/inviteTracker.js; only filled where it is on). Last, so
+        // a member's name can't smuggle in another placeholder. Unknown: the caller's words for
+        // "someone" / "a link" (data.inviteFallback, in the post's language), else English.
+        ...inviteTokens(data?.invite, data?.inviteFallback)
     };
 
     let result = message;

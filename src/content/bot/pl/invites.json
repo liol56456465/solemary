@@ -1,0 +1,92 @@
+{
+    "cmd": {
+        "desc": "Śledzenie zaproszeń: kto kogo zaprosił, liczniki i ranking",
+        "view": "Pokaż liczniki zaproszeń członka (tylko liczby)",
+        "viewUser": "Czyje liczniki pokazać (domyślnie twoje)",
+        "leaderboard": "Pokaż, kto zaprosił najwięcej członków",
+        "page": "Strona rankingu (domyślnie 1)",
+        "who": "Pokaż, jak członek dołączył (ekipa)",
+        "whoUser": "Szukany członek",
+        "list": "Lista członków zaproszonych przez kogoś (ekipa)",
+        "listUser": "Zapraszający",
+        "bonus": "Zmień bonus licznika zaproszeń (ekipa)",
+        "bonusAdd": "Dodaj członkowi bonusowe zaproszenia",
+        "bonusRemove": "Odbierz członkowi bonusowe zaproszenia",
+        "bonusUser": "Członek, którego licznik się zmienia",
+        "amount": "Ile zaproszeń (od 1 do 10 000)",
+        "reset": "Wyzeruj liczniki: jednego członka lub cały serwer (ekipa)",
+        "resetUser": "Tylko ten członek (puste: cały serwer)",
+        "setup": "Gdzie ustawić śledzenie zaproszeń (link do panelu)"
+    },
+    "title": "Zaproszenia",
+    "off": "Śledzenie zaproszeń jest na tym serwerze wyłączone. Administrator może je włączyć w panelu (strona Zaproszenia).",
+    "error": {
+        "dbDown": "Baza danych teraz nie odpowiada, więc nic nie zostało odczytane ani zmienione. Spróbuj za minutę."
+    },
+    "source": {
+        "inviter": "zaproszenie od {inviter}{code}",
+        "invite": "zaproszenie{code}",
+        "vanity": "własny adres serwera{code}",
+        "widget": "widżet serwera{code}",
+        "discovery": "Odkrywanie serwerów",
+        "bot": "Mewvo (dodany ponownie przez „Zweryfikuj przez Discord”)",
+        "ambiguous": "jedno z kilku zaproszeń (nie wiadomo które)",
+        "unknown": "nieznane",
+        "not_ready": "nieznane (lista zaproszeń jeszcze się ładowała)",
+        "no_permission": "nieznane (Mewvo potrzebuje uprawnienia „Zarządzanie serwerem”)"
+    },
+    "view": {
+        "title": "Liczniki zaproszeń",
+        "text": "{user} ma zaproszeń: **{total}**.\nDołączyło przez nie: {invited} · odeszło: {left} · fałszywe: {fake} · bonus: {bonus}",
+        "bot": "Boty nie mają liczników zaproszeń."
+    },
+    "leaderboard": {
+        "title": "Ranking zaproszeń",
+        "empty": "Nikt jeszcze nie ma zaproszeń.",
+        "emptyPage": "Strona {page} jest pusta.",
+        "line": "**{rank}.** {user}: **{total}** (dołączyło {invited}, odeszło {left}, fałszywe {fake})",
+        "footer": "Strona {page} · odświeżane najwyżej raz na minutę"
+    },
+    "who": {
+        "none": "Mewvo nie ma zapisu dołączenia {user} (dołączył przed włączeniem śledzenia albo gdy Mewvo był offline).",
+        "via": "{user} dołączył przez: {via}.",
+        "joined": "Dołączył: {at}",
+        "age": "Wiek konta przy dołączeniu: {days} dni",
+        "left": "Odszedł: {at}",
+        "notCounted": "Nie liczony ponownie: dołączył już wcześniej przez tę samą osobę."
+    },
+    "list": {
+        "none": "Nikt jeszcze nie dołączył przez zaproszenia {user}.",
+        "header": "Ostatni członkowie, którzy dołączyli przez zaproszenia {user} (do {count}):",
+        "fake": "fałszywe",
+        "left": "odszedł",
+        "repeat": "ponowne dołączenie, nie liczone",
+        "beforeReset": "przed wyzerowaniem"
+    },
+    "bonus": {
+        "range": "Bonus przekroczyłby ±100 000. Nic nie zostało zmienione.",
+        "done": "Bonus {user} wynosi teraz {bonus}. Razem: **{total}**.",
+        "doneNoTotal": "Zapisano: bonus {user} wynosi teraz {bonus}. Nie udało się teraz odczytać sumy (baza danych nie odpowiada)."
+    },
+    "reset": {
+        "title": "Zerowanie liczników zaproszeń",
+        "askAll": "Wyzerować liczniki zaproszeń **wszystkich** na tym serwerze? Liczyć się będą tylko dołączenia od teraz, a każdy bonus zacznie od 0. Nic nie jest usuwane.",
+        "askUser": "Wyzerować licznik zaproszeń {user}? Liczyć się będą tylko dołączenia od teraz, a bonus zacznie od 0. Nic nie jest usuwane.",
+        "confirmButton": "Wyzeruj",
+        "cancelButton": "Anuluj",
+        "notYours": "Te przyciski należą do administratora, który użył /invites reset.",
+        "noAdmin": "Do tego potrzebne jest uprawnienie administratora. Nic nie zostało zmienione.",
+        "cancelled": "Anulowano. Nic nie zostało zmienione.",
+        "doneAll": "Gotowe. Liczniki zaproszeń całego serwera liczą się od nowa od teraz.",
+        "doneUser": "Gotowe. Licznik zaproszeń {user} liczy się od nowa od teraz."
+    },
+    "setup": {
+        "on": "Śledzenie zaproszeń jest na tym serwerze **włączone**.",
+        "off": "Śledzenie zaproszeń jest na tym serwerze **wyłączone**.",
+        "noManageServer": "Mewvo potrzebuje uprawnienia **Zarządzanie serwerem**, żeby czytać listę zaproszeń. Bez niego żadnego dołączenia nie da się przypisać do zaproszenia.",
+        "loading": "Lista zaproszeń jeszcze się ładuje; dołączenia są teraz zapisywane jako nieznane.",
+        "noManageRoles": "Role za progi są ustawione, ale Mewvo nie ma uprawnienia **Zarządzanie rolami**, więc nie może ich nadać.",
+        "link": "Ustawienia, role za progi i pełne listy: {url}",
+        "noLink": "Ustawienia i role za progi są w panelu (strona Zaproszenia)."
+    }
+}

@@ -153,6 +153,7 @@ export const NAV = [
         { key: 'applications', label: 'Applications', state: 'applications', toggle: 'enabled', keywords: 'apply, staff application, questions, managers', summary: 'Members apply for a role by answering questions.' },
         { key: 'community', label: 'Community', keywords: 'suggestions, starboard, sticky message, tags, youtube feed', summary: 'Suggestions, starboard, sticky notes, saved replies, YouTube.' },
         { key: 'join-to-create', label: 'Join to create', state: 'joinToCreate', keywords: 'temporary voice, voice channels, jtc', summary: 'Voice channels that appear when needed and go away when empty.' },
+        { key: 'invites', label: 'Invites', keywords: 'invite tracking, invited by, inviter, invite leaderboard, fake invites, milestone roles, invite rewards, vanity url, joined via', summary: 'See which invite each member joined through, with a leaderboard and reward roles.' },
     ] },
     { group: 'Server setup', items: [
         { key: 'automod', main: true, label: 'Automod', state: 'automod', toggle: 'enabled', keywords: 'spam, links, invites, bad words, raid, lockdown, panic, join gate, trusted, second chance, friendly notice, heads-up, warn privately, report only, watch only, monitor, probation, extra-watch, mood, native automod, slowmode', summary: 'Stops spam, bad words and raids by itself.' },

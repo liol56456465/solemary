@@ -78,7 +78,7 @@ test('runRetention: a failing rule is logged and the others still run; the summa
 
 test('the rules: one bounded DELETE each, cutoff and limit as parameters', async () => {
     assert.deepEqual(RETENTION_RULES.map(([name]) => name), ['watchlist', 'no_contact', 'raid_reports', 'verification_audit', 'verification_ips', 'oauth_verified_guilds', 'expired_temp_data', 'expired_cache_data', 'bot_dm_log',
-        'ticket_rating_comments', 'ticket_ratings', 'ticket_ratings_unrated']);
+        'ticket_rating_comments', 'ticket_ratings', 'ticket_ratings_unrated', 'invite_joins']);
     const now = Date.parse('2026-11-04T03:30:00Z');
     // Ticket ratings (v14): comments cleared after 180 days, rows deleted after 2 years, never-rated rows 30 days after the window.
     const expectedDays = { verification_ips: 60, oauth_verified_guilds: 1, bot_dm_log: 30, ticket_rating_comments: 180, ticket_ratings: 730, ticket_ratings_unrated: 30 };

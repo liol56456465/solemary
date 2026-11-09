@@ -1,0 +1,91 @@
+{
+  "page": {
+    "help": "Vois par quelle invitation chaque membre est arrivé : compteurs par personne, classement, rôles selon le nombre d’invitations et {inviter} dans les messages de bienvenue. Désactivé par défaut."
+  },
+  "support": {
+    "title": "Pas sur le serveur d’assistance",
+    "text": "Le suivi des invitations fonctionne sur le serveur principal et les autres serveurs, pas sur le serveur d’assistance de Mewvo."
+  },
+  "permission": {
+    "title": "Mewvo a besoin de « Gérer le serveur »",
+    "text": "Sans la permission « Gérer le serveur », Mewvo ne peut pas lire la liste des invitations, donc aucune arrivée ne peut être reliée à une invitation. Donne-la au rôle de Mewvo dans Paramètres du serveur → Rôles."
+  },
+  "settings": {
+    "title": "Suivi des invitations",
+    "help": "Active-le et choisis quand une arrivée compte comme fausse. Les fausses arrivées sont exclues des compteurs ; changer la règle recompte tout.",
+    "enabled": "Suivre les invitations",
+    "enabledHelp": "Mewvo note quelle invitation chaque nouveau membre a utilisée.",
+    "fakeDays": "Nouveau compte : moins de (jours)",
+    "fakeDaysHelp": "Un membre dont le compte Discord est plus récent que cela à l’arrivée compte comme faux. 0 désactive.",
+    "fakeHours": "Reparti dans les (heures)",
+    "fakeHoursHelp": "Un membre qui repart dans ce délai après son arrivée compte comme faux. 0 désactive."
+  },
+  "milestones": {
+    "title": "Rôles de palier",
+    "help": "Donner un rôle quand quelqu’un atteint un nombre d’invitations (jusqu’à 10). Le rôle reste même si le compteur baisse ensuite.",
+    "stack": "Garder tous les rôles atteints",
+    "stackHelp": "Désactivé : seul le rôle le plus haut atteint est gardé.",
+    "count": "Invitations pour le palier {n}",
+    "role": "Rôle pour le palier {n}",
+    "none": "Aucun rôle",
+    "incomplete": "Le palier {n} a besoin d’un nombre et d’un rôle.",
+    "sameCount": "Deux paliers utilisent {count} invitations. Chaque palier a besoin de son propre nombre.",
+    "sameRole": "Deux paliers utilisent le même rôle. Chaque palier a besoin de son propre rôle."
+  },
+  "unreadable": "Impossible à lire pour le moment (la base de données ne répond pas).",
+  "board": {
+    "title": "Classement",
+    "help": "Total = arrivés − partis − faux + bonus. Les retours par la même personne comptent une seule fois.",
+    "rank": "#",
+    "member": "Membre",
+    "total": "Total",
+    "invited": "Arrivés",
+    "left": "Partis",
+    "fake": "Faux",
+    "bonus": "Bonus",
+    "empty": "Personne n’a encore d’invitations.",
+    "resetAt": "Comptage depuis la remise à zéro du"
+  },
+  "recent": {
+    "title": "Dernières arrivées",
+    "help": "Les 20 dernières arrivées et comment chaque membre est venu.",
+    "member": "Membre",
+    "via": "Arrivé par",
+    "joined": "Arrivé",
+    "state": "Remarques",
+    "fake": "faux",
+    "left": "parti",
+    "repeat": "retour, pas compté",
+    "empty": "Aucune arrivée enregistrée pour l’instant."
+  },
+  "codes": {
+    "title": "Codes d’invitation",
+    "help": "Les invitations du serveur, les plus utilisées en premier.",
+    "code": "Code",
+    "creator": "Créée par",
+    "uses": "Utilisations",
+    "deleted": "(supprimée)",
+    "empty": "Aucune invitation connue pour l’instant.",
+    "loading": "La liste des invitations se charge. Les arrivées sont notées comme inconnues pour l’instant."
+  },
+  "commands": {
+    "title": "Commandes",
+    "text": "Tout le monde : /invites view et /invites leaderboard. Administrateurs : /invites who, list, bonus add ou remove, reset (avec bouton de confirmation) et setup."
+  },
+  "saved": {
+    "on": "Le suivi des invitations est activé.",
+    "off": "Le suivi des invitations est désactivé.",
+    "milestones": "Rôles de palier enregistrés."
+  },
+  "source": {
+    "invite": "une invitation",
+    "vanity": "l’URL personnalisée",
+    "widget": "le widget du serveur",
+    "discovery": "la découverte de serveurs",
+    "bot": "Mewvo (rajouté via « Vérifier avec Discord »)",
+    "ambiguous": "une invitation parmi plusieurs",
+    "unknown": "inconnu",
+    "not_ready": "inconnu (liste en chargement)",
+    "no_permission": "inconnu (pas de « Gérer le serveur »)"
+  }
+}

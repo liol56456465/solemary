@@ -172,6 +172,8 @@
         "welcomeTitle": "Добро пожаловать",
         "goodbyeTitle": "До свидания",
         "user": "Пользователь",
-        "memberCount": "Участников"
+        "memberCount": "Участников",
+        "inviterUnknown": "кто-то",
+        "inviteCodeUnknown": "ссылка"
     }
 }

@@ -53,6 +53,8 @@ export const EVERYONE_COMMANDS = new Set([
   'cooldown',
   // Your own language role (/language panel stays admin: it posts as the bot)
   'language set',
+  // Invite tracking: counts of anyone, the leaderboard (who/list/bonus/reset/setup stay admin)
+  'invites view', 'invites leaderboard',
   'todo add', 'todo list', 'todo complete', 'todo remove',
   'todo share create', 'todo share add', 'todo share view', 'todo share addtask', 'todo share remove',
 

@@ -1,0 +1,92 @@
+{
+    "cmd": {
+        "desc": "Einladungs-Tracking: wer wen eingeladen hat, Zähler und Bestenliste",
+        "view": "Einladungszähler eines Mitglieds zeigen (nur Zahlen)",
+        "viewUser": "Wessen Zähler (Standard: du)",
+        "leaderboard": "Zeigen, wer die meisten Mitglieder eingeladen hat",
+        "page": "Seite der Bestenliste (Standard 1)",
+        "who": "Zeigen, wie ein Mitglied beigetreten ist (Team)",
+        "whoUser": "Das gesuchte Mitglied",
+        "list": "Mitglieder auflisten, die jemand eingeladen hat (Team)",
+        "listUser": "Der Einladende",
+        "bonus": "Bonus auf den Einladungszähler ändern (Team)",
+        "bonusAdd": "Einem Mitglied Bonus-Einladungen geben",
+        "bonusRemove": "Einem Mitglied Bonus-Einladungen abziehen",
+        "bonusUser": "Das Mitglied, dessen Zähler sich ändert",
+        "amount": "Wie viele Einladungen (1 bis 10.000)",
+        "reset": "Einladungszähler zurücksetzen: ein Mitglied oder der ganze Server (Team)",
+        "resetUser": "Nur dieses Mitglied (leer: der ganze Server)",
+        "setup": "Wo man das Einladungs-Tracking einrichtet (Dashboard-Link)"
+    },
+    "title": "Einladungen",
+    "off": "Das Einladungs-Tracking ist auf diesem Server aus. Ein Admin kann es im Dashboard einschalten (Seite Einladungen).",
+    "error": {
+        "dbDown": "Die Datenbank antwortet gerade nicht, daher wurde nichts gelesen oder geändert. Versuch es in einer Minute noch einmal."
+    },
+    "source": {
+        "inviter": "die Einladung von {inviter}{code}",
+        "invite": "eine Einladung{code}",
+        "vanity": "die Vanity-URL{code}",
+        "widget": "das Server-Widget{code}",
+        "discovery": "Server-Entdeckung",
+        "bot": "Mewvo (über „Mit Discord verifizieren“ wieder hinzugefügt)",
+        "ambiguous": "eine von mehreren Einladungen (nicht eindeutig)",
+        "unknown": "unbekannt",
+        "not_ready": "unbekannt (die Einladungsliste lud noch)",
+        "no_permission": "unbekannt (Mewvo braucht „Server verwalten“)"
+    },
+    "view": {
+        "title": "Einladungszähler",
+        "text": "{user} hat **{total}** Einladungen.\nDarüber beigetreten: {invited} · gegangen: {left} · Fake: {fake} · Bonus: {bonus}",
+        "bot": "Bots haben keine Einladungszähler."
+    },
+    "leaderboard": {
+        "title": "Einladungs-Bestenliste",
+        "empty": "Noch niemand hat Einladungen.",
+        "emptyPage": "Seite {page} ist leer.",
+        "line": "**{rank}.** {user}: **{total}** (beigetreten {invited}, gegangen {left}, Fake {fake})",
+        "footer": "Seite {page} · höchstens einmal pro Minute aktualisiert"
+    },
+    "who": {
+        "none": "Mewvo hat keinen Beitrittseintrag für {user} (beigetreten, bevor das Tracking an war, oder während Mewvo offline war).",
+        "via": "{user} ist über {via} beigetreten.",
+        "joined": "Beigetreten: {at}",
+        "age": "Alter des Kontos beim Beitritt: {days} Tage",
+        "left": "Gegangen: {at}",
+        "notCounted": "Nicht erneut gezählt: war schon einmal über denselben Einladenden beigetreten."
+    },
+    "list": {
+        "none": "Über die Einladungen von {user} ist noch niemand beigetreten.",
+        "header": "Zuletzt über die Einladungen von {user} beigetreten (bis zu {count}):",
+        "fake": "Fake",
+        "left": "gegangen",
+        "repeat": "erneuter Beitritt, nicht gezählt",
+        "beforeReset": "vor dem Zurücksetzen"
+    },
+    "bonus": {
+        "range": "Der Bonus läge dann über ±100.000. Nichts wurde geändert.",
+        "done": "Der Bonus von {user} ist jetzt {bonus}. Gesamt: **{total}**.",
+        "doneNoTotal": "Gespeichert: Der Bonus von {user} ist jetzt {bonus}. Die Gesamtzahl konnte gerade nicht gelesen werden (Datenbank antwortet nicht)."
+    },
+    "reset": {
+        "title": "Einladungszähler zurücksetzen",
+        "askAll": "Die Einladungszähler **aller** auf diesem Server zurücksetzen? Nur Beitritte ab jetzt zählen, jeder Bonus beginnt wieder bei 0. Nichts wird gelöscht.",
+        "askUser": "Den Einladungszähler von {user} zurücksetzen? Nur Beitritte ab jetzt zählen, der Bonus beginnt wieder bei 0. Nichts wird gelöscht.",
+        "confirmButton": "Zurücksetzen",
+        "cancelButton": "Abbrechen",
+        "notYours": "Diese Buttons gehören dem Admin, der /invites reset ausgeführt hat.",
+        "noAdmin": "Dafür brauchst du die Administrator-Berechtigung. Nichts wurde geändert.",
+        "cancelled": "Abgebrochen. Nichts wurde geändert.",
+        "doneAll": "Erledigt. Die Einladungszähler des ganzen Servers beginnen ab jetzt neu.",
+        "doneUser": "Erledigt. Der Einladungszähler von {user} beginnt ab jetzt neu."
+    },
+    "setup": {
+        "on": "Das Einladungs-Tracking ist auf diesem Server **an**.",
+        "off": "Das Einladungs-Tracking ist auf diesem Server **aus**.",
+        "noManageServer": "Mewvo braucht die Berechtigung **Server verwalten**, um die Einladungsliste zu lesen. Ohne sie kann kein Beitritt einer Einladung zugeordnet werden.",
+        "loading": "Die Einladungsliste lädt noch; Beitritte werden gerade als unbekannt erfasst.",
+        "noManageRoles": "Meilenstein-Rollen sind eingestellt, aber Mewvo fehlt **Rollen verwalten**, daher kann es sie nicht vergeben.",
+        "link": "Einstellungen, Meilenstein-Rollen und die vollständigen Listen: {url}",
+        "noLink": "Einstellungen und Meilenstein-Rollen sind im Dashboard (Seite Einladungen)."
+    }
+}

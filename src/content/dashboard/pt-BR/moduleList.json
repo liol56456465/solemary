@@ -49,6 +49,7 @@
     "support": "Onde membros banidos ainda podem apelar.",
     "rules": "As regras do seu servidor, em uma página web e nas mensagens de punição.",
     "appearance": "Dê ao Mewvo nome e imagem próprios aqui (Pro e Max).",
-    "commands": "Ligue ou desligue comandos avulsos ou grupos de comandos."
+    "commands": "Ligue ou desligue comandos avulsos ou grupos de comandos.",
+    "invites": "Veja por qual convite cada membro entrou, com ranking e cargos de recompensa."
   }
 }

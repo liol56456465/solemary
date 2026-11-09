@@ -26,12 +26,13 @@ const TODAY = [
     GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.MessageContent, GatewayIntentBits.DirectMessages,
     GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildBans, GatewayIntentBits.AutoModerationExecution,
+    GatewayIntentBits.GuildInvites,
 ];
 const sorted = (list) => [...list].sort((a, b) => a - b);
 
 // ── the intent list ───────────────────────────────────────────────────────
 
-test('unset or empty env: the same nine intents as before (nothing changes today)', () => {
+test('unset or empty env: the same ten intents (nine + GuildInvites for invite tracking)', () => {
     assert.deepEqual(sorted(buildIntents({})), sorted(TODAY));
     assert.deepEqual(sorted(buildIntents({ ENABLE_MESSAGE_CONTENT: '', ENABLE_GUILD_MEMBERS: ' ' })), sorted(TODAY));
     assert.deepEqual(sorted(buildIntents({ ENABLE_MESSAGE_CONTENT: 'true', ENABLE_GUILD_MEMBERS: 'yes' })), sorted(TODAY));

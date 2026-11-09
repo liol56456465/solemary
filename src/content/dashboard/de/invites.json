@@ -1,0 +1,91 @@
+{
+  "page": {
+    "help": "Sieh, über welche Einladung jedes Mitglied beigetreten ist: Zähler pro Einladendem, eine Bestenliste, Rollen für eine Anzahl Einladungen und {inviter} in Willkommensnachrichten. Standardmäßig aus."
+  },
+  "support": {
+    "title": "Nicht im Support-Server",
+    "text": "Das Einladungs-Tracking läuft im Hauptserver und in anderen Servern, nicht im Support-Server von Mewvo."
+  },
+  "permission": {
+    "title": "Mewvo braucht „Server verwalten“",
+    "text": "Ohne die Berechtigung „Server verwalten“ kann Mewvo die Einladungsliste nicht lesen, also kann kein Beitritt einer Einladung zugeordnet werden. Gib Mewvos Rolle „Server verwalten“ unter Servereinstellungen → Rollen."
+  },
+  "settings": {
+    "title": "Einladungs-Tracking",
+    "help": "Schalte es ein und lege fest, wann ein Beitritt als Fake zählt. Fake-Beitritte fließen nicht in die Zähler ein; eine Änderung der Regel zählt alles neu.",
+    "enabled": "Einladungen verfolgen",
+    "enabledHelp": "Mewvo merkt sich, welche Einladung jedes neue Mitglied genutzt hat.",
+    "fakeDays": "Neues Konto: jünger als (Tage)",
+    "fakeDaysHelp": "Ein Mitglied, dessen Discord-Konto beim Beitritt jünger ist, zählt als Fake. 0 schaltet das aus.",
+    "fakeHours": "Wieder gegangen innerhalb (Stunden)",
+    "fakeHoursHelp": "Ein Mitglied, das in dieser Zeit nach dem Beitritt wieder geht, zählt als Fake. 0 schaltet das aus."
+  },
+  "milestones": {
+    "title": "Meilenstein-Rollen",
+    "help": "Eine Rolle vergeben, wenn jemand eine Anzahl Einladungen erreicht (bis zu 10). Die Rolle bleibt, auch wenn der Zähler später sinkt.",
+    "stack": "Alle erreichten Rollen behalten",
+    "stackHelp": "Aus: nur die höchste erreichte Rolle bleibt.",
+    "count": "Einladungen für Stufe {n}",
+    "role": "Rolle für Stufe {n}",
+    "none": "Keine Rolle",
+    "incomplete": "Stufe {n} braucht eine Anzahl und eine Rolle.",
+    "sameCount": "Zwei Stufen nutzen {count} Einladungen. Jede Stufe braucht ihre eigene Anzahl.",
+    "sameRole": "Zwei Stufen nutzen dieselbe Rolle. Jede Stufe braucht ihre eigene Rolle."
+  },
+  "unreadable": "Konnte gerade nicht gelesen werden (Datenbank antwortet nicht).",
+  "board": {
+    "title": "Bestenliste",
+    "help": "Gesamt = beigetreten − gegangen − Fake + Bonus. Erneute Beitritte über denselben Einladenden zählen einmal.",
+    "rank": "#",
+    "member": "Mitglied",
+    "total": "Gesamt",
+    "invited": "Beigetreten",
+    "left": "Gegangen",
+    "fake": "Fake",
+    "bonus": "Bonus",
+    "empty": "Noch niemand hat Einladungen.",
+    "resetAt": "Gezählt wird ab dem Zurücksetzen am"
+  },
+  "recent": {
+    "title": "Letzte Beitritte",
+    "help": "Die letzten 20 Beitritte und wie jedes Mitglied kam.",
+    "member": "Mitglied",
+    "via": "Beigetreten über",
+    "joined": "Beigetreten",
+    "state": "Hinweise",
+    "fake": "Fake",
+    "left": "gegangen",
+    "repeat": "erneuter Beitritt, nicht gezählt",
+    "empty": "Noch keine Beitritte erfasst."
+  },
+  "codes": {
+    "title": "Einladungscodes",
+    "help": "Die Einladungen des Servers, die meistgenutzten zuerst.",
+    "code": "Code",
+    "creator": "Erstellt von",
+    "uses": "Nutzungen",
+    "deleted": "(gelöscht)",
+    "empty": "Noch keine Einladungen bekannt.",
+    "loading": "Die Einladungsliste lädt. Beitritte werden gerade als unbekannt erfasst."
+  },
+  "commands": {
+    "title": "Befehle",
+    "text": "Alle: /invites view und /invites leaderboard. Administratoren: /invites who, list, bonus add oder remove, reset (mit Bestätigungs-Button) und setup."
+  },
+  "saved": {
+    "on": "Das Einladungs-Tracking ist an.",
+    "off": "Das Einladungs-Tracking ist aus.",
+    "milestones": "Meilenstein-Rollen gespeichert."
+  },
+  "source": {
+    "invite": "eine Einladung",
+    "vanity": "die Vanity-URL",
+    "widget": "das Server-Widget",
+    "discovery": "Server-Entdeckung",
+    "bot": "Mewvo (über „Mit Discord verifizieren“ wieder hinzugefügt)",
+    "ambiguous": "eine von mehreren Einladungen",
+    "unknown": "unbekannt",
+    "not_ready": "unbekannt (Liste lud noch)",
+    "no_permission": "unbekannt (kein „Server verwalten“)"
+  }
+}

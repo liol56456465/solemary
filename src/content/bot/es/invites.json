@@ -1,0 +1,92 @@
+{
+    "cmd": {
+        "desc": "Seguimiento de invitaciones: quién invitó a quién, contadores y ranking",
+        "view": "Ver los contadores de invitaciones de un miembro (solo números)",
+        "viewUser": "De quién ver los contadores (por defecto: tú)",
+        "leaderboard": "Ver quién invitó a más miembros",
+        "page": "Página del ranking (por defecto 1)",
+        "who": "Ver cómo entró un miembro (staff)",
+        "whoUser": "El miembro a buscar",
+        "list": "Listar los miembros que alguien invitó (staff)",
+        "listUser": "Quien invitó",
+        "bonus": "Cambiar el bonus del contador de invitaciones (staff)",
+        "bonusAdd": "Dar invitaciones bonus a un miembro",
+        "bonusRemove": "Quitar invitaciones bonus a un miembro",
+        "bonusUser": "El miembro cuyo contador cambia",
+        "amount": "Cuántas invitaciones (de 1 a 10.000)",
+        "reset": "Reiniciar contadores: un miembro o todo el servidor (staff)",
+        "resetUser": "Solo este miembro (vacío: todo el servidor)",
+        "setup": "Dónde configurar el seguimiento de invitaciones (enlace al panel)"
+    },
+    "title": "Invitaciones",
+    "off": "El seguimiento de invitaciones está desactivado en este servidor. Un admin puede activarlo en el panel (página Invitaciones).",
+    "error": {
+        "dbDown": "La base de datos no responde ahora mismo, así que no se leyó ni cambió nada. Inténtalo de nuevo en un minuto."
+    },
+    "source": {
+        "inviter": "la invitación de {inviter}{code}",
+        "invite": "una invitación{code}",
+        "vanity": "la URL personalizada{code}",
+        "widget": "el widget del servidor{code}",
+        "discovery": "Explorar servidores",
+        "bot": "Mewvo (añadido de nuevo con «Verificar con Discord»)",
+        "ambiguous": "una de varias invitaciones (no se pudo saber cuál)",
+        "unknown": "desconocido",
+        "not_ready": "desconocido (la lista de invitaciones aún se estaba cargando)",
+        "no_permission": "desconocido (Mewvo necesita «Gestionar servidor»)"
+    },
+    "view": {
+        "title": "Contadores de invitaciones",
+        "text": "{user} tiene **{total}** invitaciones.\nEntraron por ellas: {invited} · se fueron: {left} · falsas: {fake} · bonus: {bonus}",
+        "bot": "Los bots no tienen contadores de invitaciones."
+    },
+    "leaderboard": {
+        "title": "Ranking de invitaciones",
+        "empty": "Nadie tiene invitaciones todavía.",
+        "emptyPage": "La página {page} está vacía.",
+        "line": "**{rank}.** {user}: **{total}** (entraron {invited}, se fueron {left}, falsas {fake})",
+        "footer": "Página {page} · se actualiza como mucho una vez por minuto"
+    },
+    "who": {
+        "none": "Mewvo no tiene registro de entrada de {user} (entró antes de activar el seguimiento o mientras Mewvo estaba desconectado).",
+        "via": "{user} entró por {via}.",
+        "joined": "Entró: {at}",
+        "age": "Antigüedad de la cuenta al entrar: {days} días",
+        "left": "Se fue: {at}",
+        "notCounted": "No se contó otra vez: ya había entrado antes por la misma persona."
+    },
+    "list": {
+        "none": "Todavía nadie ha entrado por las invitaciones de {user}.",
+        "header": "Últimos miembros que entraron por las invitaciones de {user} (hasta {count}):",
+        "fake": "falsa",
+        "left": "se fue",
+        "repeat": "volvió a entrar, no contado",
+        "beforeReset": "antes del reinicio"
+    },
+    "bonus": {
+        "range": "El bonus pasaría de ±100.000. No se cambió nada.",
+        "done": "El bonus de {user} ahora es {bonus}. Total: **{total}**.",
+        "doneNoTotal": "Guardado: el bonus de {user} ahora es {bonus}. No se pudo leer el total ahora mismo (la base de datos no responde)."
+    },
+    "reset": {
+        "title": "Reiniciar contadores de invitaciones",
+        "askAll": "¿Reiniciar los contadores de **todos** en este servidor? Solo contarán las entradas desde ahora y cada bonus vuelve a 0. No se borra nada.",
+        "askUser": "¿Reiniciar el contador de {user}? Solo contarán las entradas desde ahora y su bonus vuelve a 0. No se borra nada.",
+        "confirmButton": "Reiniciar",
+        "cancelButton": "Cancelar",
+        "notYours": "Estos botones son del admin que usó /invites reset.",
+        "noAdmin": "Para esto necesitas el permiso de Administrador. No se cambió nada.",
+        "cancelled": "Cancelado. No se cambió nada.",
+        "doneAll": "Hecho. Los contadores de todo el servidor empiezan de nuevo desde ahora.",
+        "doneUser": "Hecho. El contador de {user} empieza de nuevo desde ahora."
+    },
+    "setup": {
+        "on": "El seguimiento de invitaciones está **activado** en este servidor.",
+        "off": "El seguimiento de invitaciones está **desactivado** en este servidor.",
+        "noManageServer": "Mewvo necesita el permiso **Gestionar servidor** para leer la lista de invitaciones. Sin él, ninguna entrada se puede asociar a una invitación.",
+        "loading": "La lista de invitaciones aún se está cargando; por ahora las entradas se registran como desconocidas.",
+        "noManageRoles": "Hay roles por metas, pero a Mewvo le falta **Gestionar roles**, así que no puede darlos.",
+        "link": "Ajustes, roles por metas y las listas completas: {url}",
+        "noLink": "Los ajustes y los roles por metas están en el panel (página Invitaciones)."
+    }
+}

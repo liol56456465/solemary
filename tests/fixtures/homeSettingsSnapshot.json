@@ -1,5 +1,5 @@
 {
-  "_comment": "Resolved settings of the home servers with no database row and no env overrides, captured from getSetting() at a607e88 (before B0a). resolveSetting/settingsFor must return exactly these. Keys added later (botLanguage, languageRoles, appealsHome, appealsInvite) carry their registry fallback.",
+  "_comment": "Resolved settings of the home servers with no database row and no env overrides, captured from getSetting() at a607e88 (before B0a). resolveSetting/settingsFor must return exactly these. Keys added later (botLanguage, languageRoles, inviteTracking, appealsHome, appealsInvite) carry their registry fallback.",
   "production": {
     "main": {
       "adminRequestChannelId": "1527697155643408442",
@@ -57,6 +57,14 @@
         "pl": "1569099300103786708",
         "es": "1569099459923677337",
         "pt-BR": "1569099585551601764"
+      },
+      "inviteTracking": {
+        "enabled": false,
+        "fakeAccountDays": 7,
+        "fakeLeaveHours": 24,
+        "milestones": [],
+        "stackRoles": true,
+        "resetAt": null
       },
       "catAnnounce": true,
       "serverRules": {
@@ -132,6 +140,14 @@
         "pl": "1569099300103786708",
         "es": "1569099459923677337",
         "pt-BR": "1569099585551601764"
+      },
+      "inviteTracking": {
+        "enabled": false,
+        "fakeAccountDays": 7,
+        "fakeLeaveHours": 24,
+        "milestones": [],
+        "stackRoles": true,
+        "resetAt": null
       },
       "catAnnounce": true,
       "serverRules": {
@@ -197,6 +213,14 @@
       "catName": "Mewvo",
       "botLanguage": "en",
       "languageRoles": {},
+      "inviteTracking": {
+        "enabled": false,
+        "fakeAccountDays": 7,
+        "fakeLeaveHours": 24,
+        "milestones": [],
+        "stackRoles": true,
+        "resetAt": null
+      },
       "catAnnounce": true,
       "serverRules": {
         "rules": [],
@@ -259,6 +283,14 @@
       "catName": "Mewvo",
       "botLanguage": "en",
       "languageRoles": {},
+      "inviteTracking": {
+        "enabled": false,
+        "fakeAccountDays": 7,
+        "fakeLeaveHours": 24,
+        "milestones": [],
+        "stackRoles": true,
+        "resetAt": null
+      },
       "catAnnounce": true,
       "serverRules": {
         "rules": [],

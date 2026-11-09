@@ -74,6 +74,16 @@ export const EXPORT_SECTIONS = [
         FROM ${t.giveaways} WHERE data->'participants' ? $1 ORDER BY created_at LIMIT ${ROW_LIMIT}`],
     // Invite codes this member created (invitees are not stored in this table).
     ['invitesCreated', (t) => `SELECT guild_id, invite_code, uses, created_at FROM ${t.invite_tracking} WHERE inviter_id = $1 ORDER BY created_at LIMIT ${ROW_LIMIT}`],
+    // Invite tracking (v14): how this member joined each server (their own join rows; the inviter is
+    // named, as on the server's join log). The members THEY invited are never listed: counts only.
+    ['invitedBy', (t) => `SELECT guild_id, inviter_id, invite_code, source, account_created_at, joined_at, left_at, counted
+        FROM ${t.invite_joins} WHERE user_id = $1 ORDER BY joined_at LIMIT ${ROW_LIMIT}`],
+    ['invitesSummary', (t) => `SELECT COALESCE(j.guild_id, i.guild_id) AS guild_id, COALESCE(j.joins, 0)::int AS members_joined_through_you,
+        COALESCE(j.left_count, 0)::int AS of_them_left, COALESCE(i.bonus, 0)::int AS staff_bonus, i.reset_at
+        FROM (SELECT guild_id, COUNT(*) FILTER (WHERE counted) AS joins, COUNT(*) FILTER (WHERE counted AND left_at IS NOT NULL) AS left_count
+              FROM ${t.invite_joins} WHERE inviter_id = $1 GROUP BY guild_id) j
+        FULL OUTER JOIN (SELECT guild_id, bonus, reset_at FROM ${t.invite_inviters} WHERE user_id = $1) i ON i.guild_id = j.guild_id
+        ORDER BY 1`],
     ['staffWarnings', (t) => `SELECT guild_id, reason, given_by_username, created_at, expires_at FROM ${t.staff_warnings} WHERE user_id = $1 ORDER BY created_at`],
     ['staffActivity', (t) => `SELECT guild_id, week_start, messages, reviews, tickets FROM ${t.staff_activity} WHERE user_id = $1 ORDER BY week_start`],
     ['dashboardChanges', (t) => `SELECT guild_id, module, key, old, new, created_at FROM ${t.dashboard_audit} WHERE user_id = $1 ORDER BY created_at`],

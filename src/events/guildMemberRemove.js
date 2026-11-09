@@ -12,6 +12,7 @@ import { keepTempRolesOnLeave } from '../services/members/tempRoleService.js';
 import { logger } from '../utils/logger.js';
 import { recordMemberEvent } from '../services/members/memberInsightsService.js';
 import { handleMemberRemove as mirrorRolesOnLeave } from '../services/homeServers/roleMirror.js';
+import { leaveLogLines, noteMemberLeft } from '../services/invites/inviteTracker.js';
 
 /**
  * A leaver that was not cached arrives as a partial member (Partials.GuildMember): only user,
@@ -62,6 +63,9 @@ export default {
         const leaver = describeLeaver(member);
         // Leaving the main server takes the mirrored roles away in support/database (never throws).
         void mirrorRolesOnLeave(member);
+        // Invite tracking: the leave time on their join row (fake / left counts, 365-day retention).
+        // Started now, awaited (2 s at most) only for the leave log's "Joined via". Never rejects.
+        const joinRowPromise = noteMemberLeft(member);
         
         const welcomeConfig = await getWelcomeConfig(member.client, guild.id);
         
@@ -138,6 +142,8 @@ export default {
                         `**ID:** \`${leaver.id}\``,
                         `**Joined:** ${leaver.joined}`,
                         `**Members:** ${guild.memberCount ?? '?'}`,
+                        // Invite tracking: how they joined (only when a join row exists).
+                        ...leaveLogLines(await joinRowPromise),
                     ],
                     quoted: false,
                     thumbnail: leaver.avatarUrl,

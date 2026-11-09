@@ -120,7 +120,8 @@
             "reminders": "Erinnerungen",
             "oauth": "Gespeichertes Discord-Login-Token (aus „Mit Discord verifizieren“)",
             "dmlog": "Gespeicherte Kopien der Bot-DMs (um sie bei einem Sprachwechsel neu zu übersetzen)",
-            "ticketRatings": "Ticket-Bewertungen, die du abgegeben hast (dein Name und Kommentar; die Sterne bleiben)"
+            "ticketRatings": "Ticket-Bewertungen, die du abgegeben hast (dein Name und Kommentar; die Sterne bleiben)",
+            "invites": "Einladungs-Tracking: wie du beigetreten bist, und dein Name als Einladender anderer"
         },
         "partialTitle": "Nicht alles wurde gelöscht",
         "partialFailed": "Die Datenbank hat nicht geantwortet für: {items}. ",

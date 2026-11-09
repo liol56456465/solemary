@@ -68,7 +68,8 @@
       "owner_erase": "Cancella un caso",
       "owner_errors": "Errori recenti",
       "owner_website": "Sito web",
-      "owner_activity": "Attività del proprietario"
+      "owner_activity": "Attività del proprietario",
+      "invites": "Inviti"
     }
   },
   "state": {

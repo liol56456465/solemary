@@ -22,6 +22,8 @@
 //   ticket_rating_comments  ticket/modmail rating comments older than 180 days are cleared (stars stay)
 //   ticket_ratings          rating rows older than 2 years are deleted
 //   ticket_ratings_unrated  never-rated rows 30 days after their window closed are deleted
+//   invite_joins  invite tracking join rows (schema v14) of members who left more than 365 days
+//                 ago (owner decision 7); members still in the server keep theirs.
 // With the bot client (runRetention's first argument), CLIENT_RETENTION_RULES also run:
 //   applications  submitted applications past the server's own retention (pending /
 //                 reviewed days, Applications settings); moved here from the read path, so
@@ -61,6 +63,7 @@ export const RETENTION_DAYS = Object.freeze({
     ticket_rating_comments: RATING_RETENTION_DAYS.comments,
     ticket_ratings: RATING_RETENTION_DAYS.rows,
     ticket_ratings_unrated: RATING_RETENTION_DAYS.unrated,
+    invite_joins: 365,
 });
 
 /** Expired key-value rows: up to this many batches of BATCH_LIMIT per run. */
@@ -167,6 +170,15 @@ export async function pruneBotDmLog({ query = dbQuery, tables = pgConfig.tables,
     return pruneDmLog({ query, tables, now, limit });
 }
 
+/** invite_joins: rows whose member left the server more than 365 days ago. */
+export async function pruneInviteJoins({ query = dbQuery, tables = pgConfig.tables, now = Date.now(), limit = BATCH_LIMIT } = {}) {
+    const t = tables.invite_joins;
+    return count(await query(
+        `DELETE FROM ${t} WHERE id IN (
+             SELECT id FROM ${t} WHERE left_at IS NOT NULL AND left_at < $1 LIMIT $2)`,
+        [cutoff(now, RETENTION_DAYS.invite_joins), limit]));
+}
+
 export const RETENTION_RULES = Object.freeze([
     ['watchlist', pruneWatchlist],
     ['no_contact', pruneNoContactOrders],
@@ -181,6 +193,7 @@ export const RETENTION_RULES = Object.freeze([
     ['ticket_rating_comments', pruneRatingComments],
     ['ticket_ratings', pruneOldRatings],
     ['ticket_ratings_unrated', pruneUnratedRatings],
+    ['invite_joins', pruneInviteJoins],
 ]);
 
 /**

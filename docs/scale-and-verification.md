@@ -27,6 +27,10 @@ Review takes days to weeks [I11], so apply at about 75.
 
 ## 2. Privileged intents: justification drafts
 
+Non-privileged intents always requested: Guilds, GuildMessages, GuildMessageReactions, DirectMessages,
+GuildVoiceStates, GuildBans, AutoModerationExecution and GuildInvites (invite tracking, v14: inviteCreate /
+inviteDelete keep the per-server invite use cache; no justification needed).
+
 Both intents are switchable: `ENABLE_MESSAGE_CONTENT` and `ENABLE_GUILD_MEMBERS` (default true,
 `src/config/intents.js`). If Discord refuses one, set it to `false` and the bot still starts; the features
 below switch off and the startup log shows one warning per disabled feature (`src/events/ready.js`).

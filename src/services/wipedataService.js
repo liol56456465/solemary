@@ -6,7 +6,9 @@
 // no longer add them to the support server) with the list of servers it was given in
 // (oauth_verified_guilds), and the log of the bot's DMs to them that a language change can
 // re-edit (bot_dm_log, every server), and the ticket ratings they gave lose their name and
-// comment (ticket_ratings, every server; the stars stay). Moderation, appeal, report and verification
+// comment (ticket_ratings, every server; the stars stay). Invite tracking in this server (owner
+// decision 4): the member's own join rows and their bonus/reset row are deleted, and they are
+// blanked as the inviter in other members' join rows and in the invite code list. Moderation, appeal, report and verification
 // records are safety records and are not touched.
 //
 // Each item is deleted on its own; the result says which ones failed, so the reply never
@@ -23,6 +25,7 @@ import { clearRatingsGivenBy } from './ticketRatingService.js';
 async function deleteVoiceTime(guildId, userId) {
     await query(`DELETE FROM ${pgConfig.tables.voice_activity} WHERE guild_id = $1 AND user_id = $2`, [guildId, userId]);
 }
+import { wipeInviteData } from './invites/inviteStore.js';
 
 /** The member's own unsent and sent reminders (everywhere: reminders are personal). */
 async function deleteReminders(userId) {
@@ -49,6 +52,7 @@ export const WIPE_ITEMS = [
     { id: 'dmlog', label: 'Saved copies of bot DMs (to re-translate them when you change language)' },
     // Every server: the stars stay (staff stats), without who gave them and without the comment.
     { id: 'ticketRatings', label: 'Ticket ratings you gave (your name and comment; the stars stay)' },
+    { id: 'invites', label: 'Invite tracking: how you joined, and your name as the inviter of others' },
 ];
 
 /** The key-value key of the member's encrypted OAuth tokens (oauthVerification.js). */
@@ -62,7 +66,7 @@ const ID = /^\d{17,20}$/;
  */
 export async function wipeMemberData(client, guildId, userId, {
     removeBirthday = deleteBirthday, removeReminders = deleteReminders, removeVerifiedGuilds = deleteVerifiedGuilds,
-    removeDmLog = deleteDmLogForUser, removeVoiceTime = deleteVoiceTime, removeTicketRatings = clearRatingsGivenBy,
+    removeDmLog = deleteDmLogForUser, removeVoiceTime = deleteVoiceTime, removeTicketRatings = clearRatingsGivenBy, removeInvites = wipeInviteData,
 } = {}) {
     if (!ID.test(String(guildId)) || !ID.test(String(userId))) throw new Error('wipeMemberData: bad ids');
     const db = client?.db;
@@ -92,6 +96,7 @@ export async function wipeMemberData(client, guildId, userId, {
         },
         dmlog: () => removeDmLog(userId),
         ticketRatings: () => removeTicketRatings(userId),
+        invites: () => removeInvites(guildId, userId),
     };
 
     const deleted = [];

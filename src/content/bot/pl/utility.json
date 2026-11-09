@@ -120,7 +120,8 @@
             "reminders": "Przypomnienia",
             "oauth": "Zapisany token logowania Discord (z „Zweryfikuj przez Discord”)",
             "dmlog": "Zapisane kopie wiadomości prywatnych bota (aby przetłumaczyć je po zmianie języka)",
-            "ticketRatings": "Twoje oceny zgłoszeń (Twoja nazwa i komentarz; gwiazdki zostają)"
+            "ticketRatings": "Twoje oceny zgłoszeń (Twoja nazwa i komentarz; gwiazdki zostają)",
+            "invites": "Śledzenie zaproszeń: jak dołączyłeś i twoje imię jako zapraszającego innych"
         },
         "partialTitle": "Nie wszystko zostało usunięte",
         "partialFailed": "Baza danych nie odpowiedziała dla: {items}. ",

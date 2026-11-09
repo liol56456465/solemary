@@ -49,6 +49,7 @@
     "support": "Donde los miembros baneados aún pueden apelar.",
     "rules": "Las reglas de tu servidor, en una página web y en los mensajes de sanción.",
     "appearance": "Dale aquí a Mewvo su propio nombre e imagen (Pro y Max).",
-    "commands": "Activa o desactiva comandos sueltos o grupos de comandos."
+    "commands": "Activa o desactiva comandos sueltos o grupos de comandos.",
+    "invites": "Mira por qué invitación entró cada miembro, con ranking y roles de premio."
   }
 }

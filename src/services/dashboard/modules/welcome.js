@@ -37,6 +37,8 @@ const DISCORD_CDN = /(^|\.)(discordapp\.(com|net)|discord\.com)$/i;
 
 // The message placeholders shown as they are typed ({user} …), not filled in by the translator.
 const TOKENS = Object.freeze({ user: '{user}', server: '{server}', memberCount: '{memberCount}' });
+// Invite tracking placeholders (utils/welcome.js inviteTokens; filled only where Invites is on).
+const INVITE_TOKENS = Object.freeze({ inviter: '{inviter}', inviterName: '{inviter.name}', code: '{invite.code}', invites: '{inviter.invites}' });
 
 // Texts that differ only by welcome / goodbye.
 const IMAGE_TEXT = {
@@ -230,7 +232,7 @@ export default {
 ${postForm(ctx, 'welcome', 'welcome', html`<div class="grid">
 ${channelPicker(g, 'channelId', w.channelId, { label: tr.t('welcome.join.channel'), perms: PERMS.postFiles, help: tr.t('welcome.join.channelHelp') })}
 ${switchInput('welcomePing', w.welcomePing, { label: tr.t('welcome.join.ping'), help: tr.t('welcome.join.pingHelp') })}
-${textArea('welcomeMessage', w.welcomeMessage, { label: tr.t('welcome.join.message'), max: 2000, help: tr.t('welcome.join.messageHelp', TOKENS) })}
+${textArea('welcomeMessage', w.welcomeMessage, { label: tr.t('welcome.join.message'), max: 2000, help: `${tr.t('welcome.join.messageHelp', TOKENS)} ${tr.t('welcome.join.inviteHelp', INVITE_TOKENS)}` })}
 ${textArea('dmMessage', w.dmMessage, { label: tr.t('welcome.join.dm'), max: 2000, help: tr.t('welcome.join.dmHelp') })}</div>`)}`;
         const goodbye = html`${toggleForm(ctx, 'welcome', 'goodbye-enabled', w.goodbyeEnabled, { label: tr.t('welcome.leave.toggle') })}
 ${postForm(ctx, 'welcome', 'goodbye', html`<div class="grid">
