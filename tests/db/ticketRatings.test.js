@@ -205,3 +205,21 @@ test('retention: comments after 180 days cleared, rows after 2 years deleted, un
     const { rows } = await q('SELECT ref_id, comment, rating FROM ticket_ratings WHERE guild_id = $1 AND ref_id = ANY($2) ORDER BY ref_id', [G, [300, 301, 302, 303, 304].map(id)]);
     assert.deepEqual(rows.map((x) => [x.ref_id, x.comment, x.rating]), [[id(300), null, 3], [id(301), 'c', 3], [id(304), null, null]]);
 });
+
+test('channel surveys done (security fix): rated > 30 min ago or past the window; DM and open ones are not', { skip }, async () => {
+    const now = Date.now();
+    const ins = (n, over) => q(
+        `INSERT INTO ticket_ratings (guild_id, kind, ref_id, opener_id, prompted_at, expires_at, delivery, rating, rated_at)
+         VALUES ($1, 'ticket', $2, $3, $4, $5, $6, $7, $8)`,
+        [G2, id(n), OPENER, over.prompted ?? new Date(now - DAY), over.expires ?? new Date(now + 6 * DAY),
+            over.delivery ?? 'channel', over.rating ?? null, over.rated ?? null]);
+    await ins(900, { rating: 5, rated: new Date(now - 60 * 60 * 1000) });     // rated an hour ago → done
+    await ins(901, { rating: 4, rated: new Date(now - 5 * 60 * 1000) });      // rated 5 min ago → still time to comment
+    await ins(902, { expires: new Date(now - 1000) });                         // window over → done
+    await ins(903, {});                                                        // waiting → keep
+    await ins(904, { delivery: 'dm', rating: 3, rated: new Date(now - 60 * 60 * 1000) }); // DM → never
+    await ins(905, { prompted: new Date(now - 50 * DAY), expires: new Date(now - 43 * DAY) }); // too old → skipped
+    const rows = await svc.channelSurveysDone({ now });
+    const mine = rows.filter((r) => r.guild_id === G2).map((r) => r.ref_id).sort();
+    assert.deepEqual(mine, [id(900), id(902)]);
+});

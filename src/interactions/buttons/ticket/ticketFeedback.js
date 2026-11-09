@@ -8,7 +8,7 @@ import { getGuildConfig } from '../../../services/config/guildConfig.js';
 import {
     COMMENT_MAX, findRating, materializeLegacyRating, ratingSettings, submitRating,
 } from '../../../services/ticketRatingService.js';
-import { afterRating } from '../../../services/ticketRatingEffects.js';
+import { afterRating, hideClosedTicketFromOpener } from '../../../services/ticketRatingEffects.js';
 
 // Ticket / modmail rating survey (ticketRatingService.js). The buttons are the ones sent since
 // before ticket_ratings existed (`ticket_feedback:<guild>:<channel>:<n>`), so old DMs keep
@@ -170,8 +170,11 @@ const commentHandler = {
     },
 };
 
-/** "No thanks". In a DM: closes the survey. In the ticket channel: only the opener can. `deps`: { find }. */
-export async function handleDecline(interaction, args = [], { find = findRating } = {}) {
+/**
+ * "No thanks". In a DM: closes the survey. In the ticket channel: only the opener can, and the
+ * closed ticket is then hidden from them (the O2 read-only view ends). `deps`: { find, hide }.
+ */
+export async function handleDecline(interaction, args = [], { find = findRating, hide = hideClosedTicketFromOpener } = {}) {
     const tr = textForInteraction(interaction);
     const declined = { embeds: [embed(tr.t('ticket.feedback.declineTitle'), tr.t('ticket.feedback.declineBody'), 'default')], components: [] };
     if (!interaction.guildId) {
@@ -205,6 +208,7 @@ export async function handleDecline(interaction, args = [], { find = findRating 
         return false;
     }
     await InteractionHelper.safeEditReply(interaction, declined);
+    if (row.kind === 'ticket') await hide(interaction.client, guildId, refId, row.opener_id);
     return true;
 }
 

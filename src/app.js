@@ -29,6 +29,7 @@ import { flushActivity, pruneActivity } from './services/stats/activityService.j
 import { purgeIncidentTimelines } from './services/automod/incidentTimeline.js';
 import { runRetention, scheduleRetention } from './services/privacy/retentionService.js';
 import { backfillLegacyRatings } from './services/ticketRatingService.js';
+import { sweepChannelSurveyAccess } from './services/ticketRatingEffects.js';
 import { runDueDeletions as runDueServerDataDeletions } from './services/privacy/serverDataDeletion.js';
 import { checkCatGrowth } from './services/community/catService.js';
 import { runVoiceXpTick } from './services/leveling/voiceXp.js';
@@ -397,6 +398,8 @@ class Mewvo extends Client {
     // Messages per server per day (Dashboard → Activity), a count only; kept 400 days.
     cron.schedule('* * * * *', exclusive('activity_flush', () => flushActivity()));
     cron.schedule('45 3 * * *', exclusive('activity_prune', () => pruneActivity()), { timezone: 'UTC' });
+    // Ticket ratings (O2): a closed ticket's opener loses the read-only view once the channel survey is done.
+    cron.schedule('*/10 * * * *', exclusive('rating_survey_access', () => sweepChannelSurveyAccess(this)));
     // Raid timeline incidents (dashboard Raid timeline) are kept 90 days after they ended.
     cron.schedule('55 3 * * *', exclusive('incident_timeline_prune', () => purgeIncidentTimelines()), { timezone: 'UTC' });
     // ECB reference rates for the approximate złoty / real prices on /pricing (payment stays EUR/USD):

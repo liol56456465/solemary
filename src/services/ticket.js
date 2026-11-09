@@ -351,7 +351,11 @@ export function ticketNumberOf(ticketData, channel) {
   return String(channel?.name ?? '').match(/ticket-(\d{1,10})/)?.[1] ?? null;
 }
 
-/** The opener's overwrite on a closed ticket: read-only while the rating survey waits there (O2), else hidden. */
+/**
+ * The opener's overwrite on a closed ticket: read-only while the rating survey waits there (O2), else
+ * hidden. The read-only view is taken away once the survey is done (ticketRatingEffects.js
+ * hideClosedTicketFromOpener + the 10-minute sweep).
+ */
 export function closedOpenerAccess(surveyInChannel) {
   return surveyInChannel
     ? { ViewChannel: true, ReadMessageHistory: true, SendMessages: false }

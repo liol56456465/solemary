@@ -1,6 +1,7 @@
 // ticketRatingEffects.js — what happens on Discord around a ticket / modmail rating
 // (ticketRatingService.js holds the data):
-//   - the survey in the ticket channel when the DM fails (O2; the opener keeps a read-only view),
+//   - the survey in the ticket channel when the DM fails (O2; the opener keeps a read-only view only
+//     until the survey is done: decline/comment at once, 30 min after a rating, or at the window end),
 //   - after a rating: the `feedback` ticket log event, a Rating field on the transcript log
 //     message (its id is saved in the ticket JSONB as transcriptLog), and the low-rating alert
 //     (≤2★, alerts channel, staff shown as text),
@@ -15,7 +16,7 @@ import { fetchStaffChannel } from './automod/channelRouting.js';
 import { getGuildConfig } from './config/guildConfig.js';
 import { renderDm } from './botDm/dmRenderers.js';
 import { textForGuild } from '../utils/botText.js';
-import { LOW_RATING_MAX, ratingSettings, starsText } from './ticketRatingService.js';
+import { LOW_RATING_MAX, channelSurveysDone, ratingSettings, starsText } from './ticketRatingService.js';
 
 export { commentFieldName, commentFieldValue } from './ticketRatingService.js';
 
@@ -104,11 +105,57 @@ export async function afterRating(client, row, deps = {}) {
     await postLowRatingAlert(client, row, deps);
 }
 
-/** After a successful comment: the log event with the comment. Never throws. */
-export async function afterComment(client, row) {
+/** After a successful comment: the log event with the comment; a channel survey is then done. Never throws. */
+export async function afterComment(client, row, deps = {}) {
     await logTicketFeedback({
         client, guildId: row.guild_id, ticketNumber: row.ticket_number, ticketChannelId: row.ref_id,
         userId: row.opener_id, rating: row.rating, comment: row.comment, flagged: row.comment_flagged,
         staffId: row.staff_id, kind: row.kind,
     }).catch((error) => logger.warn(`Ticket rating: comment log not sent: ${error.message}`));
+    if (row.kind === 'ticket' && row.delivery === 'channel') {
+        await hideClosedTicketFromOpener(client, row.guild_id, row.ref_id, row.opener_id, deps);
+    }
+}
+
+// O2 read-only view ends once the survey is answered: right after a decline or a comment, 30 minutes
+// after a rating without a comment (time to add one), and when the window closes. Staff may keep
+// writing in a closed ticket that stays undeleted, so the opener must not keep reading it.
+const HIDDEN = Object.freeze({ ViewChannel: false, SendMessages: false });
+export const RATED_GRACE_MS = 30 * 60 * 1000;
+
+/**
+ * Hides a CLOSED ticket channel from its opener. Skips a reopened ticket (the opener belongs there
+ * again), a gone channel and an overwrite that already denies View (no API call). Never throws.
+ * Returns true when it changed the overwrite. `deps`: { loadTicket }.
+ */
+export async function hideClosedTicketFromOpener(client, guildId, channelId, openerId, { loadTicket = getTicketData } = {}) {
+    if (!guildId || !channelId || !openerId) return false;
+    try {
+        const channel = client.channels?.cache?.get(channelId)
+            ?? await client.channels?.fetch?.(channelId).catch(() => null);
+        if (!channel?.permissionOverwrites || channel.guildId !== guildId) return false;
+        const ticket = await loadTicket(guildId, channelId).catch(() => null);
+        if (ticket?.status !== 'closed') return false;
+        const current = channel.permissionOverwrites.cache?.get(openerId);
+        if (current?.deny?.has?.('ViewChannel')) return false;
+        await channel.permissionOverwrites.edit(openerId, HIDDEN);
+        return true;
+    } catch (error) {
+        logger.warn(`Could not hide closed ticket ${channelId} from its opener: ${error.message}`);
+        return false;
+    }
+}
+
+/**
+ * Every 10 minutes: channel surveys (O2) that are done — rated more than 30 minutes ago, or past their
+ * window — lose the opener's view. Only rows from the last 40 days (window max 30 + margin); the
+ * overwrite check makes repeats free of API calls. `deps`: { query, tables, now, hide }.
+ */
+export async function sweepChannelSurveyAccess(client, { query, tables, now = Date.now(), hide = hideClosedTicketFromOpener, loadTicket } = {}) {
+    const rows = await channelSurveysDone({ query, tables, now, graceMs: RATED_GRACE_MS });
+    let hidden = 0;
+    for (const row of rows) {
+        if (await hide(client, row.guild_id, row.ref_id, row.opener_id, loadTicket ? { loadTicket } : {})) hidden += 1;
+    }
+    return hidden;
 }

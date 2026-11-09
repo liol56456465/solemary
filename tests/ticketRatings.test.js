@@ -12,7 +12,7 @@ import {
     cleanComment, commentFieldName, commentFieldValue, createPendingRating, handlingStaffId, isCommentFlagged,
     ratingBadge, ratingSettings, starsText, submitComment, submitRating, weeklyRatingTrend,
 } from '../src/services/ticketRatingService.js';
-import { editTranscriptLogRating, postLowRatingAlert, channelSurveyPayload } from '../src/services/ticketRatingEffects.js';
+import { afterComment, editTranscriptLogRating, hideClosedTicketFromOpener, postLowRatingAlert, channelSurveyPayload, RATED_GRACE_MS, sweepChannelSurveyAccess } from '../src/services/ticketRatingEffects.js';
 import feedbackButtons, { handleDecline, handleRatingClick } from '../src/interactions/buttons/ticket/ticketFeedback.js';
 import { handleCommentSubmit } from '../src/interactions/modals/ticket/ticketFeedbackComment.js';
 import { closedOpenerAccess, postChannelSurvey, prepareTicketRating, ticketNumberOf } from '../src/services/ticket.js';
@@ -401,4 +401,69 @@ test('low-rating alert: ≤2 stars, staff as text (no mention), no pings; off or
     } finally {
         resetSettingsCacheForTests();
     }
+});
+
+// Security review (2026-11-09): a channel survey (O2) must not leave the opener reading a closed ticket
+// that stays undeleted. The view ends after a decline, a comment, 30 min after a rating, or at the window end.
+function fakeTicketChannel({ hidden = false } = {}) {
+    const edits = [];
+    const channel = {
+        id: C, guildId: G,
+        permissionOverwrites: {
+            cache: new Map([[OPENER, { deny: { has: (bit) => hidden && bit === 'ViewChannel' } }]]),
+            edit: async (id, perms) => { edits.push({ id, perms }); },
+        },
+    };
+    const client = { channels: { cache: new Map([[C, channel]]), fetch: async () => null } };
+    return { client, edits };
+}
+
+test('closed ticket hidden from the opener: only while closed, once, never throws', async () => {
+    const closed = async () => ({ status: 'closed' });
+    const a = fakeTicketChannel();
+    assert.equal(await hideClosedTicketFromOpener(a.client, G, C, OPENER, { loadTicket: closed }), true);
+    assert.deepEqual(a.edits, [{ id: OPENER, perms: { ViewChannel: false, SendMessages: false } }]);
+
+    const reopened = fakeTicketChannel();
+    assert.equal(await hideClosedTicketFromOpener(reopened.client, G, C, OPENER, { loadTicket: async () => ({ status: 'open' }) }), false);
+    assert.equal(reopened.edits.length, 0, 'a reopened ticket keeps the opener');
+
+    const already = fakeTicketChannel({ hidden: true });
+    assert.equal(await hideClosedTicketFromOpener(already.client, G, C, OPENER, { loadTicket: closed }), false);
+    assert.equal(already.edits.length, 0, 'already hidden: no API call');
+
+    const otherGuild = fakeTicketChannel();
+    assert.equal(await hideClosedTicketFromOpener(otherGuild.client, '999999999999999999', C, OPENER, { loadTicket: closed }), false);
+    assert.equal(await hideClosedTicketFromOpener({ channels: { cache: new Map(), fetch: async () => null } }, G, C, OPENER), false, 'gone channel');
+
+    const broken = fakeTicketChannel();
+    broken.client.channels.cache.get(C).permissionOverwrites.edit = async () => { throw new Error('Missing Permissions'); };
+    assert.equal(await hideClosedTicketFromOpener(broken.client, G, C, OPENER, { loadTicket: closed }), false);
+});
+
+test('channel survey done: decline and comment hide the ticket; the sweep picks done rows only', async () => {
+    const hidden = [];
+    const hide = async (client, g, c, u) => { hidden.push(`${g}:${c}:${u}`); return true; };
+    const opener = fakeInteraction({ guildId: G });
+    assert.equal(await handleDecline(opener, [G, C], { find: async () => row(), hide }), true);
+    assert.deepEqual(hidden, [`${G}:${C}:${OPENER}`]);
+
+    const a = fakeTicketChannel();
+    await afterComment(a.client, row({ delivery: 'channel', comment: 'ok' }), { loadTicket: async () => ({ status: 'closed' }) });
+    assert.equal(a.edits.length, 1, 'a comment in the channel ends the view');
+    const dmRow = fakeTicketChannel();
+    await afterComment(dmRow.client, row({ delivery: 'dm', comment: 'ok' }), { loadTicket: async () => ({ status: 'closed' }) });
+    assert.equal(dmRow.edits.length, 0, 'a DM survey changes nothing in the channel');
+
+    let sql = null; let params = null;
+    const query = async (q, p) => { sql = q; params = p; return { rows: [{ guild_id: G, ref_id: C, opener_id: OPENER }] }; };
+    const now = Date.parse('2026-11-09T12:00:00Z');
+    const swept = [];
+    const n = await sweepChannelSurveyAccess({}, { query, tables: { ticket_ratings: 'ticket_ratings' }, now, hide: async (c, g, ch, u) => { swept.push(u); return true; } });
+    assert.equal(n, 1);
+    assert.deepEqual(swept, [OPENER]);
+    assert.match(sql, /delivery = 'channel'/);
+    assert.match(sql, /rating IS NOT NULL AND rated_at < \$2\) OR expires_at < \$3/);
+    assert.equal(params[1].getTime(), now - RATED_GRACE_MS, '30 minutes to add a comment after rating');
+    await assert.rejects(sweepChannelSurveyAccess({}, { query: async () => { throw new Error('db down'); } }), /db down/);
 });

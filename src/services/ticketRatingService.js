@@ -415,6 +415,21 @@ export async function pruneOldRatings({ query = dbQuery, tables, now = Date.now(
 }
 
 /** Retention: never-rated rows 30 days after their window closed are deleted. */
+/**
+ * Ticket surveys posted in the channel (O2) that are done: rated more than `graceMs` ago, or past the
+ * window. Rows prompted in the last 40 days only (window max 30 days). Throws on a DB error.
+ */
+export async function channelSurveysDone({ query = dbQuery, tables, now = Date.now(), graceMs = 30 * 60 * 1000, limit = 500 } = {}) {
+    const result = await query(
+        `SELECT guild_id, ref_id, opener_id FROM ${table(tables)}
+          WHERE kind = 'ticket' AND delivery = 'channel' AND opener_id IS NOT NULL
+            AND prompted_at > $1
+            AND ((rating IS NOT NULL AND rated_at < $2) OR expires_at < $3)
+          ORDER BY prompted_at LIMIT $4`,
+        [new Date(now - 40 * 86_400_000), new Date(now - graceMs), new Date(now), limit]);
+    return result?.rows ?? [];
+}
+
 export async function pruneUnratedRatings({ query = dbQuery, tables, now = Date.now(), limit = 5000 } = {}) {
     const t = table(tables);
     const result = await query(
