@@ -155,6 +155,36 @@ export async function stampLeft(guildId, userId, leftAt = new Date(), deps = {})
     return { inviterId: latest.inviter_id || null, code: latest.invite_code || null, source: latest.source, joinedAt: latest.joined_at };
 }
 
+/**
+ * Leave reconcile (inviteReconcile.js): one page of the server's open join rows (left_at IS NULL,
+ * counted or not) that joined more than `minAgeHours` ago, by id after `afterId`. [{ id, userId }].
+ */
+export async function listOpenJoins(guildId, { minAgeHours, afterId = 0, limit = 5000 } = {}, deps = {}) {
+    const { rows } = await q(deps)(
+        `SELECT id, user_id FROM ${tables().invite_joins}
+         WHERE guild_id = $1 AND left_at IS NULL AND joined_at < NOW() - make_interval(hours => $2::int) AND id > $3::bigint
+         ORDER BY id LIMIT $4`,
+        [requireId(guildId, 'guild id'), Math.max(0, Math.floor(Number(minAgeHours) || 0)), String(afterId || 0), limit]);
+    return rows.map((r) => ({ id: String(r.id), userId: r.user_id }));
+}
+
+/**
+ * Leave reconcile: stamps left_at = NOW() on the given open rows of this server (the real leave
+ * time is unknown). The age condition is repeated so a reconciled row is never a "quick leave"
+ * (see inviteReconcile.js). Returns the number of rows closed; throws on a database error.
+ */
+export async function closeOpenJoins(guildId, ids, { minAgeHours } = {}, deps = {}) {
+    const list = [...new Set((ids || []).map(String).filter((id) => /^\d{1,19}$/.test(id)))];
+    if (!list.length) return 0;
+    const result = await q(deps)(
+        `UPDATE ${tables().invite_joins} SET left_at = NOW()
+         WHERE guild_id = $1 AND id = ANY($2::bigint[]) AND left_at IS NULL
+           AND joined_at < NOW() - make_interval(hours => $3::int)`,
+        [requireId(guildId, 'guild id'), list, Math.max(0, Math.floor(Number(minAgeHours) || 0))]);
+    if (!result || typeof result.rowCount !== 'number') throw new Error('invite_joins leave reconcile: no result from the database');
+    return result.rowCount;
+}
+
 /** The member's latest join row in this server, or null. */
 export async function latestJoin(guildId, userId, deps = {}) {
     const { rows } = await q(deps)(
