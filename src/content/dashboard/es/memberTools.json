@@ -1,7 +1,7 @@
 {
   "notice": {
-    "readOnly": "Solo lectura: la edición desde el panel está desactivada (DASHBOARD_EDIT_ENABLED no es true).",
-    "viewOnly": "Solo ver: necesitas Administrador en el servidor principal para cambiar las reglas de roles."
+    "readOnly": "Solo lectura: los cambios desde el panel están desactivados en esta instancia de Mewvo.",
+    "viewOnly": "Solo ver: necesitas Administrador en este servidor para cambiar las reglas de roles."
   },
   "trigger": {
     "days_in_server": "Días en el servidor",
@@ -108,7 +108,7 @@
     "noRolesHelp": "Entraron en los últimos 30 días, hace más de 24 horas, y siguen sin rol (sin contar bots). A menudo: nunca se verificaron.",
     "joinedAt": "entró el {date}",
     "none": "Ninguno.",
-    "noGuild": "El bot no ve el servidor principal ahora mismo.",
+    "noGuild": "El bot no ve este servidor ahora mismo.",
     "offendersTitle": {
       "one": "Reincidentes (último {count} día)",
       "many": "Reincidentes (últimos {count} días)",

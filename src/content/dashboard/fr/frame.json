@@ -127,7 +127,7 @@
     "backServers": "Retour à tes serveurs"
   },
   "module": {
-    "readOnly": "Lecture seule : la modification depuis le tableau de bord est désactivée (DASHBOARD_EDIT_ENABLED n’est pas à true). Utilise les commandes du bot, ou demande au propriétaire de l’activer.",
+    "readOnly": "Lecture seule : les modifications depuis le tableau de bord sont désactivées sur cette instance de Mewvo. Utilise les commandes du bot, ou demande au propriétaire du bot de les activer.",
     "onThisPage": "Sur cette page",
     "notSaved": "Non enregistré : {message}",
     "more": "En savoir plus",

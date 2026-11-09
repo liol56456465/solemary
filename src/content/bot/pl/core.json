@@ -7,8 +7,8 @@
             "title": "Pomoc: {bot}",
             "description": "wesprzyj nas boostem",
             "gettingStarted": "Na start",
-            "adminSteps": "1. **/configwizard** ustawia rolę moderatora i kanał logów.\n2. **/commands dashboard** włącza i wyłącza kategorie.\n3. Wybierz kategorię w menu poniżej, żeby zobaczyć jej komendy.",
-            "memberSteps": "Wybierz kategorię w menu poniżej, żeby zobaczyć jej komendy.\nPotrzebujesz ekipy? Napisz do bota w DM: wiadomość trafi prywatnie do ekipy (modmail).",
+            "adminSteps": "1. **/setup** pokazuje, co jest już ustawione, z linkiem do panelu.\n2. W panelu otwórz **Konfiguracja krok po kroku** i zacznij od najważniejszych kroków.\n3. Wybierz kategorię w menu poniżej, żeby zobaczyć jej komendy.",
+            "memberSteps": "Wybierz kategorię w menu poniżej, żeby zobaczyć jej komendy.",
             "access": "Dostęp",
             "accessAdmin": "• Komendy oznaczone 🔒 wymagają uprawnienia **Administrator**; pozostałe są dla wszystkich.",
             "accessMember": "• Ta lista pokazuje komendy, których możesz używać.",
@@ -17,7 +17,9 @@
             "goodToKnow": "Warto wiedzieć",
             "goodToKnowText": "• Większość funkcji ma komendę dashboard do ustawień\n• Ustawienia są zapisywane osobno dla każdego serwera",
             "supportButton": "Serwer wsparcia",
-            "placeholder": "Wybierz kategorię"
+            "placeholder": "Wybierz kategorię",
+            "memberModmail": "Potrzebujesz ekipy? Napisz do bota w DM: wiadomość trafi prywatnie do ekipy (modmail).",
+            "descriptionNeutral": "Moderacja, automod, odwołania, tickety i więcej dla tego serwera."
         },
         "closed": {
             "title": "Menu pomocy zamknięte",
@@ -371,5 +373,26 @@
         "notRedeemedTitle": "Nie aktywowano",
         "databaseDown": "Baza danych nie odpowiada. Nic nie zostało zmienione; spróbuj ponownie za kilka minut.",
         "databaseDownTitle": "Spróbuj później"
+    },
+    "categories": {
+        "Birthday": "Urodziny",
+        "Community": "Społeczność",
+        "Core": "Podstawowe",
+        "Enforcement": "Kary",
+        "Fun": "Zabawa",
+        "Giveaway": "Konkursy",
+        "JoinToCreate": "Kanały głosowe na żądanie",
+        "Leveling": "Poziomy",
+        "Logging": "Logi",
+        "Moderation": "Moderacja",
+        "Owner": "Właściciel",
+        "Reaction_roles": "Role za reakcje",
+        "Search": "Wyszukiwanie",
+        "ServerStats": "Statystyki serwera",
+        "Ticket": "Tickety",
+        "Tools": "Narzędzia",
+        "Utility": "Przydatne",
+        "Verification": "Weryfikacja",
+        "Welcome": "Powitania"
     }
 }

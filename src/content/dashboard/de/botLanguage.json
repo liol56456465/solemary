@@ -8,7 +8,9 @@
   },
   "form": {
     "label": "Sprache für Beiträge und DMs",
-    "help": "Mitglieder bekommen DMs zu Strafen und Einsprüchen in dieser Sprache."
+    "help": "Mitglieder bekommen DMs zu Strafen und Einsprüchen in dieser Sprache.",
+    "detected": "Noch nicht gewählt: Mewvo nutzt {language}, die Sprache deines Servers in Discord. Speichere, um sie zu behalten.",
+    "notChosen": "Noch nicht gewählt: Mewvo nutzt Englisch. Wähle eine Sprache und speichere."
   },
   "rule": {
     "title": "Wer welche Sprache sieht",

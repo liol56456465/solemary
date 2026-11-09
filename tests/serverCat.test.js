@@ -21,8 +21,10 @@ const { default: catCommand, catViewReply } = await import('../src/commands/Comm
 const { catLine } = await import('../src/commands/Leveling/profile.js');
 
 const GUILD = '100000000000000777';
+// An admin turned growth announcements on (outside Mewvo's own servers they start off; beginnerFirstMinutes.test.js).
+const ANNOUNCE_ON = Object.freeze({ catAnnounce: true });
 // GUILD is not a home server: its settings are what its (here empty) row holds (multi-server B0b).
-setSettingsCacheForTests(GUILD, {});
+setSettingsCacheForTests(GUILD, ANNOUNCE_ON);
 const NOW = Date.parse('2026-11-01T12:00:00Z');
 const HOUR = 3_600_000;
 
@@ -129,7 +131,7 @@ test('getServerCat: stage, mood, sentence, image; the stored name; never shrinks
 
         await assert.rejects(() => getServerCat(GUILD, deps({ lockdown: async () => { throw new Error('db down'); } })), /db down/);
     } finally {
-        setSettingsCacheForTests(GUILD, {});
+        setSettingsCacheForTests(GUILD, ANNOUNCE_ON);
     }
     const fresh = await getServerCat(GUILD, deps());
     assert.equal(fresh.name, 'Mewvo', 'default name');
@@ -232,7 +234,7 @@ test('growth check: a failed post is not recorded (retried next run); announce o
         assert.equal(asked, false);
         assert.equal(s4.box.value.stage, 1);
     } finally {
-        setSettingsCacheForTests(GUILD, {});
+        setSettingsCacheForTests(GUILD, ANNOUNCE_ON);
     }
 });
 
@@ -268,7 +270,7 @@ test('/cat view: embed with name, stage, mood sentence, progress and total; the 
         const legend = (await catViewReply(GUILD, deps({ query: sums(400_000) }))).embeds[0].toJSON();
         assert.equal(legend.fields.find((f) => f.name === 'Next stage').value, 'Fully grown. This is the last stage.');
     } finally {
-        setSettingsCacheForTests(GUILD, {});
+        setSettingsCacheForTests(GUILD, ANNOUNCE_ON);
     }
     await assert.rejects(() => catViewReply(GUILD, deps({ query: async () => { throw new Error('db down'); } })),
         (error) => /database is not responding/.test(error.userMessage || error.context?.userMessage || error.message));

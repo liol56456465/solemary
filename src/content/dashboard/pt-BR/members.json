@@ -1,12 +1,12 @@
 {
   "back": "← Membros",
   "notice": {
-    "readOnly": "Somente leitura: a edição pelo painel está desativada (DASHBOARD_EDIT_ENABLED não é true). Use os comandos do bot.",
+    "readOnly": "Somente leitura: as alterações pelo painel estão desligadas nesta instância do Mewvo. Use os comandos do bot.",
     "viewOnly": {
-      "actions": "Só visualização: você precisa de Administrador no servidor principal para punir aqui.",
-      "cases": "Só visualização: você precisa de Administrador no servidor principal para alterar casos aqui.",
-      "appeals": "Só visualização: você precisa de Administrador no servidor principal para decidir apelações aqui.",
-      "orders": "Só visualização: você precisa de Administrador no servidor principal para iniciar ou encerrar ordens aqui."
+      "actions": "Só visualização: você precisa de Administrador neste servidor para punir aqui.",
+      "cases": "Só visualização: você precisa de Administrador neste servidor para alterar casos aqui.",
+      "appeals": "Só visualização: você precisa de Administrador neste servidor para decidir apelações aqui.",
+      "orders": "Só visualização: você precisa de Administrador neste servidor para iniciar ou encerrar ordens aqui."
     }
   },
   "form": {
@@ -68,10 +68,10 @@
     "muted": "Silenciado",
     "noMatch": "Nenhum membro corresponde a esses filtros.",
     "clearFilters": "Limpar filtros",
-    "empty": "Ainda não há membros para mostrar. A lista se preenche quando o bot carregar o servidor principal.",
+    "empty": "Ainda não há membros para mostrar. A lista se preenche quando o bot carregar este servidor.",
     "show": "Mostrar",
     "stillLoading": "Mostrando {cached} de {total} membros: a lista ainda está carregando. Recarregue em um minuto.",
-    "unavailable": "A lista de membros não está disponível agora (o bot não vê o servidor principal).",
+    "unavailable": "A lista de membros não está disponível agora (o bot não vê este servidor).",
     "search": "Buscar",
     "searchPlaceholder": "Nome, apelido ou ID de usuário",
     "role": "Cargo",
@@ -138,8 +138,8 @@
     },
     "noMatch": "Nenhum banimento corresponde.",
     "showAll": "Mostrar todos os banidos",
-    "empty": "Ninguém está banido no servidor principal.",
-    "bannedCount": "{count} banidos no servidor principal",
+    "empty": "Ninguém está banido neste servidor.",
+    "bannedCount": "{count} banidos neste servidor",
     "help": "Desbanir abre a página do membro: você vê o efeito e depois confirma. O membro recebe uma DM com um convite para voltar.",
     "searchPlaceholder": "Nome ou ID de usuário",
     "truncated": "Mostrando os primeiros {count} banimentos: a lista do Discord é maior. Abra um membro pelo ID de usuário para ver alguém que não está na lista."

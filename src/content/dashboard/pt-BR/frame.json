@@ -128,7 +128,7 @@
     "backServers": "Voltar aos seus servidores"
   },
   "module": {
-    "readOnly": "Somente leitura: a edição pelo painel está desativada (DASHBOARD_EDIT_ENABLED não é true). Use os comandos do bot ou peça ao dono que a ative.",
+    "readOnly": "Somente leitura: as alterações pelo painel estão desligadas nesta instância do Mewvo. Use os comandos do bot ou peça ao dono do bot para ligá-las.",
     "onThisPage": "Nesta página",
     "notSaved": "Não salvo: {message}",
     "more": "Saiba mais",

@@ -45,7 +45,15 @@
         },
         "language": {
             "label": "Idioma del bot",
-            "default": "Inglés (predeterminado). Elige el idioma de los mensajes y MD en el panel (Idioma del bot)."
+            "default": "Inglés (predeterminado). Elige el idioma de los mensajes y MD en el panel (Idioma del bot).",
+            "detected": "{language} (el idioma de tu servidor en Discord). Puedes cambiarlo en el panel (Idioma del bot)."
+        },
+        "rolePosition": {
+            "label": "Posición del rol de Mewvo",
+            "ok": "Por encima del rol más alto de todos los miembros (menos admins y dueño).",
+            "blocked": "Miembros que Mewvo no puede moderar: {count} (rol más alto {roles}). Arrastra el rol de Mewvo más arriba: Ajustes del servidor → Roles.",
+            "atLeast": "al menos {count}",
+            "rolesAbove": "Roles por encima del rol de Mewvo: {roles}. Mewvo no puede moderar a los miembros que los tienen. Arrastra el rol de Mewvo más arriba: Ajustes del servidor → Roles."
         }
     },
     "commandsTitle": "Todos los comandos",
@@ -61,10 +69,12 @@
     "notYours": "Este menú es de otra persona. Usa /setup para tener el tuyo.",
     "welcome": {
         "title": "¡Gracias por añadir Mewvo!",
-        "body": "Un admin puede escribir **/setup** para empezar.",
+        "body": "**Admins:** usa **/setup** o abre el panel para empezar.",
         "help": "Escribe **/help** para ver los comandos. ¿Preguntas? Pregunta en el servidor de soporte de Mewvo.",
-        "dm": "Añadiste Mewvo a **{server}**. Un admin puede escribir allí **/setup** para empezar.",
-        "dashboardButton": "Abrir el panel",
-        "supportButton": "Servidor de soporte de Mewvo"
+        "dm": "Añadiste Mewvo a **{server}**. Usa allí **/setup** o abre el panel para empezar.",
+        "dashboardButton": "Panel (para admins)",
+        "supportButton": "Servidor de soporte de Mewvo",
+        "ownerDm": "Mewvo se añadió a **{server}**, pero no puede escribir en ningún canal (necesita Ver canal, Enviar mensajes e Insertar enlaces). Usa allí **/setup** o abre el panel para empezar.",
+        "optional": "Opcional, cuando quieras: mensajes de bienvenida, tickets, verificación y niveles (los anuncios de subida de nivel siguen apagados hasta que los actives)."
     }
 }

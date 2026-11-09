@@ -41,7 +41,7 @@ export function topic(title, line, cards, { key = slug(title) } = {}) {
     const inner = String(html`${cards}`).replace(/<h2 class="card-title"([^>]*)>([\s\S]*?)<\/h2>/g, '<h3 class="card-title"$1>$2</h3>');
     return html`<section class="topic" id="g-${key}"><header class="topic-head"><h2>${title}</h2>${line ? html`<p>${line}</p>` : ''}</header><div class="card-grid">${raw(inner)}</div></section>`;
 }
-import { guildIdFor, isOtherGuild, resolveSetting, settingGuildId } from '../../settings/guildSettings.js';
+import { guildIdFor, isOtherGuild, resolveSetting, resolvedSource, settingGuildId, settingSource } from '../../settings/guildSettings.js';
 import { getSettingEntry, neutralValue } from '../../settings/settingsRegistry.js';
 import { InputError, intField } from '../forms.js';
 
@@ -132,6 +132,22 @@ export function registryValue(ctx, key) {
     if (!isOtherGuild(ctxGuildId(ctx), envOf(ctx))) return ctx.services.getSetting(guildId, key, ctx.env);
     if (!guildId) return neutralValue(getSettingEntry(key));
     return (ctx.services.resolveSetting || resolveSetting)(guildId, key, envOf(ctx));
+}
+
+/**
+ * True when this server saved `key` itself (not a default). A failed read counts as saved, so a
+ * caller falls back to its old "same value: nothing changed" rule (the save itself still checks).
+ */
+export function registrySaved(ctx, key) {
+    try {
+        const guildId = registryGuildId(ctx, key);
+        if (!guildId) return false;
+        if (ctx.services?.registrySource) return ctx.services.registrySource(guildId, key) === 'database';
+        if (!isOtherGuild(ctxGuildId(ctx), envOf(ctx))) return settingSource(guildId, key, envOf(ctx)) === 'database';
+        return resolvedSource(guildId, key, envOf(ctx)) === 'database';
+    } catch {
+        return true;
+    }
 }
 
 /** A duration field typed in `unitMs` units (days, minutes, …), returned in ms. */

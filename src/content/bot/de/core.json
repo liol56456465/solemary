@@ -7,8 +7,8 @@
             "title": "Hilfe zu {bot}",
             "description": "unterstütze uns mit einem Boost",
             "gettingStarted": "Erste Schritte",
-            "adminSteps": "1. **/configwizard** legt die Moderatorrolle und den Log-Kanal fest.\n2. **/commands dashboard** schaltet Kategorien an oder aus.\n3. Wähle unten im Menü eine Kategorie, um ihre Befehle zu sehen.",
-            "memberSteps": "Wähle unten im Menü eine Kategorie, um ihre Befehle zu sehen.\nBrauchst du das Team? Schreib dem Bot eine DM: deine Nachricht geht privat ans Team (Modmail).",
+            "adminSteps": "1. **/setup** zeigt, was hier eingerichtet ist, mit dem Link zum Dashboard.\n2. Öffne im Dashboard **Schritt-für-Schritt-Einrichtung** und erledige zuerst das Wichtigste.\n3. Wähle unten im Menü eine Kategorie, um ihre Befehle zu sehen.",
+            "memberSteps": "Wähle unten im Menü eine Kategorie, um ihre Befehle zu sehen.",
             "access": "Zugriff",
             "accessAdmin": "• Befehle mit 🔒 brauchen die Berechtigung **Administrator**; die anderen sind für alle.",
             "accessMember": "• Diese Liste zeigt die Befehle, die du nutzen kannst.",
@@ -17,7 +17,9 @@
             "goodToKnow": "Gut zu wissen",
             "goodToKnowText": "• Die meisten Funktionen haben einen dashboard-Befehl für ihre Einstellungen\n• Einstellungen werden pro Server gespeichert",
             "supportButton": "Support-Server",
-            "placeholder": "Wähle eine Kategorie"
+            "placeholder": "Wähle eine Kategorie",
+            "memberModmail": "Brauchst du das Team? Schreib dem Bot eine DM: deine Nachricht geht privat ans Team (Modmail).",
+            "descriptionNeutral": "Moderation, Automod, Einsprüche, Tickets und mehr für diesen Server."
         },
         "closed": {
             "title": "Hilfemenü geschlossen",
@@ -359,5 +361,26 @@
         "notRedeemedTitle": "Nicht eingelöst",
         "databaseDown": "Die Datenbank antwortet nicht. Es wurde nichts geändert; versuche es in ein paar Minuten noch einmal.",
         "databaseDownTitle": "Versuche es später noch einmal"
+    },
+    "categories": {
+        "Birthday": "Geburtstage",
+        "Community": "Community",
+        "Core": "Allgemein",
+        "Enforcement": "Strafen",
+        "Fun": "Spaß",
+        "Giveaway": "Gewinnspiele",
+        "JoinToCreate": "Sprachkanäle erstellen",
+        "Leveling": "Level",
+        "Logging": "Logs",
+        "Moderation": "Moderation",
+        "Owner": "Inhaber",
+        "Reaction_roles": "Reaktionsrollen",
+        "Search": "Suche",
+        "ServerStats": "Serverstatistik",
+        "Ticket": "Tickets",
+        "Tools": "Werkzeuge",
+        "Utility": "Nützliches",
+        "Verification": "Verifizierung",
+        "Welcome": "Willkommen"
     }
 }

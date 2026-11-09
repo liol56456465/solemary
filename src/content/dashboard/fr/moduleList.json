@@ -8,7 +8,7 @@
       "other": "{count} modules correspondent"
     },
     "showAll": "Tout afficher",
-    "readOnly": "Lecture seule : l’édition depuis le tableau de bord est désactivée (DASHBOARD_EDIT_ENABLED n’est pas true).",
+    "readOnly": "Lecture seule : les modifications depuis le tableau de bord sont désactivées sur cette instance de Mewvo.",
     "noMatch": "Aucun module ne correspond. Essaie un autre mot, ou parcours tous les modules.",
     "noneOn": "Aucun module n’est activé.",
     "noneOff": "Aucun module n’est désactivé."

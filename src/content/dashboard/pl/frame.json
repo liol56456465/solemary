@@ -128,7 +128,7 @@
     "backServers": "Wróć do swoich serwerów"
   },
   "module": {
-    "readOnly": "Tylko do odczytu: edytowanie w panelu jest wyłączone (DASHBOARD_EDIT_ENABLED nie ma wartości true). Użyj komend bota albo poproś właściciela, aby je włączył.",
+    "readOnly": "Tylko do odczytu: zmiany z panelu są wyłączone w tej instancji Mewvo. Użyj komend bota albo poproś właściciela bota o ich włączenie.",
     "onThisPage": "Na tej stronie",
     "notSaved": "Nie zapisano: {message}",
     "more": "Więcej o tym",

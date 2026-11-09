@@ -123,8 +123,12 @@
     "after": "Ti guida nei passaggi qui sotto, uno alla volta.",
     "words": "Cosa significano queste parole?",
     "oneStep": "Un passo alla volta",
-    "progress": "{done} di {total} completati. Ogni passaggio richiede un minuto; il link apre la pagina giusta.",
-    "done": "Completati: {list}."
+    "progress": "{done} di {total} passaggi essenziali fatti. Ogni passaggio richiede un minuto; il link apre la pagina giusta.",
+    "done": "Completati: {list}.",
+    "essentials": "Essenziali",
+    "essentialsLine": "Ciò che serve a ogni server perché Mewvo moderi in sicurezza.",
+    "optional": "Facoltativi",
+    "optionalLine": "Funzioni da aggiungere quando vuoi."
   },
   "handover": {
     "writtenBy": "Scritta da {name}, {date}",
@@ -213,6 +217,25 @@
       "post": "Pubblica i pannelli dei ricorsi",
       "postAgain": "Pubblica di nuovo i pannelli dei ricorsi",
       "confirm": "Pubblicare ora i pannelli dei ricorsi? I pannelli precedenti in questi canali vengono sostituiti."
+    },
+    "rolePosition": {
+      "label": "Posizione del ruolo di Mewvo",
+      "hint": "Mewvo può moderare solo i membri il cui ruolo più alto è sotto il suo. Ora sono tutti (tranne gli admin e il proprietario del server)."
+    },
+    "language": {
+      "label": "Lingua del bot",
+      "hint": "La lingua dei messaggi e dei DM di Mewvo qui. Inglese finché non ne scegli una.",
+      "saved": "Lingua dei messaggi e DM di Mewvo: {language}.",
+      "detected": "Mewvo usa la lingua del tuo server su Discord: {language}. Salvala per tenerla, o scegline un'altra.",
+      "english": "English"
+    },
+    "appealsHome": {
+      "label": "Dove i membri fanno ricorso",
+      "hint": "I DM delle sanzioni dicono ai membri dove chiedere di togliere una sanzione: il server di supporto di Mewvo o il tuo server."
+    },
+    "leveling": {
+      "label": "Livelli",
+      "hint": "I membri guadagnano XP e livelli scrivendo. Scegli se Mewvo annuncia i passaggi di livello, e dove."
     }
   },
   "value": {
@@ -269,6 +292,11 @@
       "ManageMessages": "Gestisci messaggi",
       "ManageGuild": "Gestisci server",
       "ViewAuditLog": "Visualizza registro attività"
-    }
+    },
+    "reach": "Membri che Mewvo non può moderare: {count}",
+    "reachFix": "Il loro ruolo più alto ({roles}) è allo stesso livello del ruolo di Mewvo o sopra. Trascina {botRole} più in alto in Impostazioni server → Ruoli.",
+    "atLeast": "almeno {count}",
+    "rolesAbove": "Ruoli sopra il ruolo di Mewvo: {roles}",
+    "rolesAboveFix": "Mewvo non può moderare i membri che li hanno (non ha ancora visto tutti i membri, quindi non può contarli). Trascina {botRole} più in alto in Impostazioni server → Ruoli."
   }
 }

@@ -8,7 +8,9 @@
   },
   "form": {
     "label": "Langue des messages et des MP",
-    "help": "Les membres reçoivent les MP de sanction et d’appel dans cette langue."
+    "help": "Les membres reçoivent les MP de sanction et d’appel dans cette langue.",
+    "detected": "Pas encore choisie : Mewvo utilise la langue de ton serveur dans Discord : {language}. Enregistre pour la garder.",
+    "notChosen": "Pas encore choisie : Mewvo utilise l’anglais. Choisis une langue et enregistre."
   },
   "rule": {
     "title": "Qui voit quelle langue",

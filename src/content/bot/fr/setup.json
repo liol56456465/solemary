@@ -45,7 +45,15 @@
         },
         "language": {
             "label": "Langue du bot",
-            "default": "Anglais (par défaut). Choisis la langue des messages et des MP sur le tableau de bord (Langue du bot)."
+            "default": "Anglais (par défaut). Choisis la langue des messages et des MP sur le tableau de bord (Langue du bot).",
+            "detected": "{language} (la langue de ton serveur dans Discord). Tu peux la changer sur le tableau de bord (Langue du bot)."
+        },
+        "rolePosition": {
+            "label": "Position du rôle de Mewvo",
+            "ok": "Au-dessus du rôle le plus haut de tous les membres (sauf admins et propriétaire).",
+            "blocked": "Membres que Mewvo ne peut pas modérer : {count} (rôle le plus haut {roles}). Remonte le rôle de Mewvo : Paramètres du serveur → Rôles.",
+            "atLeast": "au moins {count}",
+            "rolesAbove": "Rôles au-dessus du rôle de Mewvo : {roles}. Mewvo ne peut pas modérer les membres qui les ont. Remonte le rôle de Mewvo : Paramètres du serveur → Rôles."
         }
     },
     "commandsTitle": "Toutes les commandes",
@@ -61,10 +69,12 @@
     "notYours": "Ce menu appartient à quelqu’un d’autre. Lance /setup pour avoir le tien.",
     "welcome": {
         "title": "Merci d’avoir ajouté Mewvo !",
-        "body": "Un admin peut taper **/setup** pour commencer.",
+        "body": "**Admins :** lancez **/setup** ou ouvrez le tableau de bord pour commencer.",
         "help": "Tape **/help** pour voir les commandes. Des questions ? Demande sur le serveur de support Mewvo.",
-        "dm": "Tu as ajouté Mewvo à **{server}**. Un admin peut y taper **/setup** pour commencer.",
-        "dashboardButton": "Ouvrir le tableau de bord",
-        "supportButton": "Serveur de support Mewvo"
+        "dm": "Tu as ajouté Mewvo à **{server}**. Lance **/setup** là-bas ou ouvre le tableau de bord pour commencer.",
+        "dashboardButton": "Tableau de bord (admins)",
+        "supportButton": "Serveur de support Mewvo",
+        "ownerDm": "Mewvo a été ajouté à **{server}**, mais il ne peut écrire dans aucun salon (il lui faut Voir le salon, Envoyer des messages et Intégrer des liens). Lance **/setup** là-bas ou ouvre le tableau de bord pour commencer.",
+        "optional": "Facultatif, quand tu veux : messages de bienvenue, tickets, vérification et niveaux (les annonces de niveau restent désactivées tant que tu ne les actives pas)."
     }
 }

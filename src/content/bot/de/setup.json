@@ -45,7 +45,15 @@
         },
         "language": {
             "label": "Bot-Sprache",
-            "default": "Englisch (Standard). Wähle die Sprache für Beiträge und DMs im Dashboard (Bot-Sprache)."
+            "default": "Englisch (Standard). Wähle die Sprache für Beiträge und DMs im Dashboard (Bot-Sprache).",
+            "detected": "{language} (die Sprache deines Servers in Discord). Ändern kannst du sie im Dashboard (Bot-Sprache)."
+        },
+        "rolePosition": {
+            "label": "Position von Mewvos Rolle",
+            "ok": "Über der höchsten Rolle aller Mitglieder (außer Admins und Inhaber).",
+            "blocked": "Mitglieder, die Mewvo nicht moderieren kann: {count} (höchste Rolle {roles}). Zieh Mewvos Rolle höher: Servereinstellungen → Rollen.",
+            "atLeast": "mindestens {count}",
+            "rolesAbove": "Rollen über Mewvos Rolle: {roles}. Mitglieder mit diesen Rollen kann Mewvo nicht moderieren. Zieh Mewvos Rolle höher: Servereinstellungen → Rollen."
         }
     },
     "commandsTitle": "Alle Befehle",
@@ -60,10 +68,12 @@
     "notYours": "Dieses Menü gehört jemand anderem. Führe /setup aus, um dein eigenes zu bekommen.",
     "welcome": {
         "title": "Danke, dass du Mewvo hinzugefügt hast!",
-        "body": "Ein Admin kann **/setup** eingeben, um loszulegen.",
+        "body": "**Admins:** Führt **/setup** aus oder öffnet das Dashboard, um loszulegen.",
         "help": "Gib **/help** ein, um die Befehle zu sehen. Fragen? Frag im Mewvo-Support-Server.",
-        "dm": "Du hast Mewvo zu **{server}** hinzugefügt. Ein Admin kann dort **/setup** eingeben, um loszulegen.",
-        "dashboardButton": "Dashboard öffnen",
-        "supportButton": "Mewvo-Support-Server"
+        "dm": "Du hast Mewvo zu **{server}** hinzugefügt. Führe dort **/setup** aus oder öffne das Dashboard, um loszulegen.",
+        "dashboardButton": "Dashboard (für Admins)",
+        "supportButton": "Mewvo-Support-Server",
+        "ownerDm": "Mewvo wurde zu **{server}** hinzugefügt, kann dort aber in keinem Kanal schreiben (es braucht Kanal ansehen, Nachrichten senden und Links einbetten). Führe dort **/setup** aus oder öffne das Dashboard, um loszulegen.",
+        "optional": "Optional, wenn du sie willst: Willkommensnachrichten, Tickets, Verifizierung und Level (Level-up-Beiträge bleiben aus, bis du sie einschaltest)."
     }
 }

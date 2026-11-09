@@ -10,6 +10,7 @@ import { getUserLevelKey, getUserLevelPrefix } from '../../utils/database/keys.j
 import { BOOST_MAX, BOOST_MIN, MAX_BOOSTS, REWARD_MODES, isValidBoost } from './levelBoosts.js';
 import { VOICE_DEFAULTS, voiceConfigOf, voiceConfigProblems } from './voiceConfig.js';
 import { deleteVoiceActivity, topVoiceRows } from './voiceStore.js';
+import { usesHomeValues } from '../settings/guildScoped.js';
 
 const SNOWFLAKE = /^\d{17,20}$/;
 const BASE_XP = 100;
@@ -277,8 +278,11 @@ export function createLeaderboardEmbed(leaderboard, guild) {
   return embed;
 }
 
-// Leveling config as used when a guild has none saved yet.
-function defaultLevelingConfig() {
+// Leveling config as used when a guild has none saved yet. Level-up posts: on in Mewvo's own
+// servers (as before); off in any other server until an admin turns them on (owner decision D5,
+// so a new server is not flooded with public "X is now level 3" posts). A server that saved a
+// leveling config keeps what it saved: the first save stores these defaults with it.
+export function defaultLevelingConfig(guildId = null) {
   return {
     enabled: true,
     xpPerMessage: { min: 15, max: 25 },
@@ -289,7 +293,7 @@ function defaultLevelingConfig() {
     ignoredRoles: [],
     blacklistedUsers: [],
     roleRewards: {},
-    announceLevelUp: true,
+    announceLevelUp: usesHomeValues(guildId),
     // Image card with the level-up message (off until an admin turns it on); accent '#RRGGBB'.
     levelUpCard: false,
     cardAccent: null,
@@ -302,7 +306,7 @@ function defaultLevelingConfig() {
 export async function getLevelingConfig(client, guildId) {
   try {
     const guildConfig = await getGuildConfig(client, guildId);
-    return guildConfig.leveling || defaultLevelingConfig();
+    return guildConfig.leveling || defaultLevelingConfig(guildId);
   } catch (error) {
     logger.error(`Error getting leveling config for guild ${guildId}:`, error);
     throw error;
@@ -485,7 +489,7 @@ async function mutateLevelingConfig(client, guildId, change) {
   await updateGuildConfigAtomic(client, guildId, async (current) => {
     const stored = current.leveling && typeof current.leveling === 'object'
       ? current.leveling
-      : defaultLevelingConfig();
+      : defaultLevelingConfig(guildId);
     before = cloneConfig(stored);
     const next = await change(cloneConfig(stored));
     after = cloneConfig(next);

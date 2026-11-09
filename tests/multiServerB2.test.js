@@ -292,12 +292,12 @@ test('welcomeOnJoin: posts once with the /setup line, dashboard and support butt
     const saved = [];
     const now = Date.parse('2026-11-08T12:00:00Z');
     const result = await welcome.welcomeOnJoin(guild, { user: { id: BOT } }, { deps: welcomeDeps({ prefix: '!' }, saved), now });
-    assert.deepEqual(result, { posted: system.id, dm: false, skipped: null });
+    assert.deepEqual(result, { posted: system.id, dm: false, ownerDm: false, skipped: null });
     const [payload] = system.sent;
     assert.deepEqual(payload.allowedMentions, { parse: [] });
     const embed = payload.embeds[0].toJSON();
     assert.equal(embed.title, 'Thanks for adding Mewvo!');
-    assert.ok(embed.description.startsWith('An admin can type **/setup** to get started.'));
+    assert.ok(embed.description.startsWith('**Admins:** run **/setup** or open the dashboard to get started.'));
     const buttons = payload.components[0].toJSON().components;
     // B3: every server gets a link to its own dashboard, no "coming soon" line.
     assert.deepEqual(buttons.map((b) => b.url), [`https://bot.example/dashboard/${OTHER}`, 'https://discord.gg/7Ckv9Bt577']);
@@ -321,7 +321,7 @@ test('welcomeOnJoin: no repost when the bot rejoins within 24 hours; after 24 ho
     const system = fakeChannel('200000000000000001');
     const saved = [];
     const result = await welcome.welcomeOnJoin(fakeGuild({ system, audit: true }), { user: { id: BOT } }, { deps: welcomeDeps(recent, saved), now });
-    assert.deepEqual(result, { posted: null, dm: false, skipped: 'recent' });
+    assert.deepEqual(result, { posted: null, dm: false, ownerDm: false, skipped: 'recent' });
     assert.equal(system.sent.length, 0);
     assert.deepEqual(saved, [], 'nothing written, the stamp is not moved');
 
@@ -349,7 +349,7 @@ test('welcomeOnJoin: a blacklisted server gets nothing; a blacklisted adder gets
     const system = fakeChannel('200000000000000001');
     const saved = [];
     const skipped = await welcome.welcomeOnJoin(fakeGuild({ system }), { user: { id: BOT } }, { deps: welcomeDeps({}, saved, silentLog(), { guild: OTHER }) });
-    assert.deepEqual(skipped, { posted: null, dm: false, skipped: 'blacklisted' });
+    assert.deepEqual(skipped, { posted: null, dm: false, ownerDm: false, skipped: 'blacklisted' });
     assert.equal(system.sent.length, 0);
     assert.deepEqual(saved, []);
     const adder = { id: ADMIN, send: async () => assert.fail('blacklisted adder') };
@@ -364,7 +364,7 @@ test('welcomeOnJoin never throws: a failed send, DM or config read is one log li
     const guild = fakeGuild({ system: fakeChannel('200000000000000001', { fail: true }), audit: true, entries: [{ target: { id: BOT }, createdTimestamp: Date.now(), executor: { id: ADMIN, send: async () => { throw new Error('Cannot send messages to this user'); } } }] });
     const saved = [];
     const result = await welcome.welcomeOnJoin(guild, { user: { id: BOT } }, { deps: welcomeDeps(new Error('database not responding'), saved, log) });
-    assert.deepEqual(result, { posted: null, dm: false, skipped: null });
+    assert.deepEqual(result, { posted: null, dm: false, ownerDm: false, skipped: null }, 'no owner known (fake guild): no owner DM');
     assert.deepEqual(saved, [], 'the stamp write failed too (database down): logged');
     assert.equal(log.lines.filter((l) => l.level === 'warn').length, 4, 'read, stamp, post, DM');
     const none = await welcome.welcomeOnJoin(fakeGuild(), { user: { id: BOT } }, { deps: welcomeDeps({}, [], log) });
@@ -510,6 +510,6 @@ test('catalog: /setup and the welcome are in all 8 languages, English as written
         }
         assert.ok(tr.t('setup.welcome.body').includes('**/setup**'), `${lang}: /setup kept`);
     }
-    assert.equal(botText('en').t('setup.welcome.body'), 'An admin can type **/setup** to get started.');
+    assert.equal(botText('en').t('setup.welcome.body'), '**Admins:** run **/setup** or open the dashboard to get started.');
     assert.equal(botText('en').t('setup.welcome.title'), 'Thanks for adding Mewvo!');
 });

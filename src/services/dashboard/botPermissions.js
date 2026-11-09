@@ -2,6 +2,9 @@
 // server-level permissions Mewvo needs for the features that are on, each one ✓ or missing,
 // and the roles Mewvo must sit above (it cannot give or take a role at or above its own).
 //
+// memberReach(): how many members sit at or above Mewvo's role (it cannot moderate them), from
+// the member cache only.
+//
 // Read-only: it looks at guild.members.me and changes nothing. Channel overwrites are not
 // checked here (the channel pickers warn about those per channel).
 
@@ -76,6 +79,85 @@ export function botPermissionReport(guild, { moduleStates = {}, roles = [] } = {
         missing: permissions.filter((p) => !p.ok).map((p) => p.name),
         ok: permissions.every((p) => p.ok) && !tooHigh.length,
     };
+}
+
+const ROLES_SHOWN = 3;
+
+/** True when `role` sits at or above `top` in the role list (Discord's order: position, then id). */
+function atOrAbove(role, top) {
+    if (!role || !top) return false;
+    if (role.id === top.id) return true;
+    if (typeof role.comparePositionTo === 'function') {
+        try {
+            return role.comparePositionTo(top) >= 0;
+        } catch {
+            // fall through to the plain position
+        }
+    }
+    return Number(role.position) >= Number(top.position);
+}
+
+/** Administrators are staff: their roles may stay above Mewvo's (they are not who Mewvo moderates). */
+function isAdmin(member) {
+    try {
+        return Boolean(member.permissions?.has?.(PermissionFlagsBits.Administrator));
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Members Mewvo cannot moderate because their highest role is at or above Mewvo's own highest
+ * role (Discord: a bot can only ban, kick, mute or give roles to members below it). From the
+ * member cache only: never a member fetch (memberFetchGate.js is the only place that may run a
+ * full one, and this is a page view). The server owner, Administrators and bots are not counted
+ * (nobody can moderate the owner; admins are staff and may sit above Mewvo; bots are not who
+ * staff moderate).
+ *   { count, partial, roles: [{ id, name, members }] (at most 3, most members first), botRole }
+ *   partial: the cache holds fewer than 90% of the members, so `count` is "at least".
+ *   rolesAbove: [{ id, name }] roles at or above Mewvo's that ordinary members can hold (from the
+ *            complete role list), so a mostly empty cache cannot pass as "all fine".
+ * reachOk(reach): nobody blocked, and either the cache is complete or no such role exists.
+ * null when it cannot be checked (Mewvo's member or the role list unknown).
+ */
+export function memberReach(guild) {
+    const me = guild?.members?.me;
+    const top = me?.roles?.highest;
+    const members = guild?.members?.cache;
+    if (!top || !members || typeof members.values !== 'function') return null;
+    const byRole = new Map(); // role id → { id, name, members }
+    let count = 0;
+    for (const member of members.values()) {
+        if (!member || member.id === me.id || member.user?.bot || member.id === guild.ownerId || isAdmin(member)) continue;
+        const highest = member.roles?.highest;
+        if (!highest || highest.id === guild.id || !atOrAbove(highest, top)) continue;
+        count += 1;
+        const entry = byRole.get(highest.id) || { id: highest.id, name: highest.name || highest.id, members: 0 };
+        entry.members += 1;
+        byRole.set(highest.id, entry);
+    }
+    const total = Number(guild.memberCount) || 0;
+    // The role list is always complete (unlike the member cache): roles at or above Mewvo's that
+    // can hold ordinary members (not @everyone, not a bot's managed role, not an Administrator role).
+    const rolesAbove = [...(guild.roles?.cache?.values?.() || [])]
+        .filter((r) => r && r.id !== guild.id && r.id !== top.id && !r.managed && atOrAbove(r, top)
+            && !(() => { try { return r.permissions?.has?.(PermissionFlagsBits.Administrator); } catch { return false; } })())
+        .sort((a, b) => Number(b.position) - Number(a.position))
+        .slice(0, ROLES_SHOWN)
+        .map((r) => ({ id: r.id, name: r.name || r.id }));
+    return {
+        count,
+        rolesAbove,
+        partial: !(total > 0 && members.size >= total * 0.9),
+        roles: [...byRole.values()].sort((a, b) => b.members - a.members || String(a.name).localeCompare(String(b.name))).slice(0, ROLES_SHOWN),
+        botRole: top.id !== guild.id ? top.name || null : null,
+    };
+}
+
+/** True when the role position is verified fine (see memberReach). */
+export function reachOk(reach) {
+    if (!reach) return false;
+    return reach.count === 0 && (!reach.partial || !(reach.rolesAbove || []).length);
 }
 
 /** The roles whose position matters: the Muted role (configured or found) and the warning roles. */

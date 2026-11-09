@@ -3,7 +3,11 @@
 // Discord does not say which channel an invite came from, so: the server's system channel when
 // Mewvo can view it, send there and embed links; else the first text channel (by position) where
 // it can. With View Audit Log, the member who added the bot (BotAdd entry for Mewvo, at most a
-// minute old) also gets it as a DM; without it that step is skipped silently.
+// minute old) also gets it as a DM; without it that step is skipped silently. When no channel
+// took the post, the server owner gets it as a DM instead (unless the adder was the owner and
+// already has it), so somebody always hears how to start.
+// The post says what admins do first (/setup or the dashboard); the dashboard button says it is
+// for admins (members cannot open it).
 // A rejoin within 24 hours posts nothing (guild config key botWelcomeAt; data is kept after the
 // bot leaves, owner decision). Every send error is logged in one line and never fails the join.
 
@@ -57,9 +61,15 @@ export function chooseWelcomeChannel(guild) {
     return text[0] || null;
 }
 
-/** The welcome message in `tr`'s language. `dm`: the version for the member who added Mewvo. */
-export function welcomeMessage(guild, tr, { dm = false } = {}) {
-    const lines = [dm ? tr.t('setup.welcome.dm', { server: guild.name || guild.id }) : tr.t('setup.welcome.body'), '', tr.t('setup.welcome.help')];
+/**
+ * The welcome message in `tr`'s language. `dm`: the version for the member who added Mewvo;
+ * `owner`: the DM to the server owner when Mewvo could not post in any channel.
+ */
+export function welcomeMessage(guild, tr, { dm = false, owner = false } = {}) {
+    const server = guild.name || guild.id;
+    const first = owner ? tr.t('setup.welcome.ownerDm', { server })
+        : dm ? tr.t('setup.welcome.dm', { server }) : tr.t('setup.welcome.body');
+    const lines = [first, '', tr.t('setup.welcome.optional'), '', tr.t('setup.welcome.help')];
     const embed = createEmbed({ title: tr.t('setup.welcome.title'), description: lines.join('\n'), color: 'primary' });
     const buttons = [];
     const dashboard = dashboardUrlFor(guild.id);
@@ -90,6 +100,8 @@ export const defaultWelcomeDeps = {
     stampWelcome: (client, guildId, at) => updateGuildConfig(client, guildId, { [WELCOME_STAMP_KEY]: at }),
     blacklistHit,
     textFor: (guildId) => textForGuild(guildId, { purpose: 'public' }),
+    // The server owner as a member (one API call when not cached); null when unknown.
+    fetchOwner: (guild) => (typeof guild?.fetchOwner === 'function' ? guild.fetchOwner() : null),
     log: logger,
 };
 
@@ -97,11 +109,12 @@ export const defaultWelcomeDeps = {
  * The whole join step: the welcome post and DM, unless one went out in the last 24 hours or the
  * server is blacklisted (ignored silently, like every command there). Stamps the guild config
  * (which also creates a new server's row). Never throws.
- * Returns { posted: channelId | null, dm: boolean, skipped: 'recent' | 'blacklisted' | null }.
+ * Returns { posted: channelId | null, dm: boolean, ownerDm: boolean, skipped: 'recent' | 'blacklisted' | null }
+ * (+ adderId when the adder got the DM).
  */
 export async function welcomeOnJoin(guild, client, { deps = defaultWelcomeDeps, now = Date.now() } = {}) {
     const d = { ...defaultWelcomeDeps, ...deps };
-    const result = { posted: null, dm: false, skipped: null };
+    const result = { posted: null, dm: false, ownerDm: false, skipped: null };
     if (d.blacklistHit({ guildId: guild.id })?.kind === 'guild') {
         result.skipped = 'blacklisted';
         return result;
@@ -142,9 +155,23 @@ export async function welcomeOnJoin(guild, client, { deps = defaultWelcomeDeps, 
         if (adder && !d.blacklistHit({ userId: adder.id })) {
             await adder.send(welcomeMessage(guild, tr, { dm: true }));
             result.dm = true;
+            result.adderId = adder.id;
         }
     } catch (error) {
         d.log.warn(`Join welcome: no DM to the member who added Mewvo to ${guild.id}: ${error?.message || error}`);
+    }
+
+    // Nothing reached the server: tell its owner (one DM; not when the owner added Mewvo and got the DM above).
+    if (!result.posted && !(result.dm && result.adderId && result.adderId === guild.ownerId)) {
+        try {
+            const owner = await d.fetchOwner(guild);
+            if (owner?.send && !owner.user?.bot && !d.blacklistHit({ userId: owner.id })) {
+                await owner.send(welcomeMessage(guild, tr, { owner: true }));
+                result.ownerDm = true;
+            }
+        } catch (error) {
+            d.log.warn(`Join welcome: no DM to the owner of ${guild.id} either: ${error?.message || error}`);
+        }
     }
     return result;
 }

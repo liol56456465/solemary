@@ -1337,7 +1337,7 @@ test('editing off: every page says read-only and has no submit buttons; owners s
         const h = await setup({ env: { ...ENV, DASHBOARD_EDIT_ENABLED: 'false' } });
         const res = await get(h, module.key);
         assert.equal(res.statusCode, 200);
-        assert.match(res.body, /Read-only: editing from the dashboard is turned off/);
+        assert.match(res.body, /Read-only: changes from the dashboard are switched off on this Mewvo instance/);
         assert.ok(!res.body.includes('type="submit" class="primary"') && !res.body.includes('type="submit" class="danger"'), `${module.key}: no save buttons`);
         assert.ok(!res.body.includes('<fieldset>'), `${module.key}: every form fieldset disabled`);
     }
@@ -1687,7 +1687,7 @@ test('Overview checklist: progress bar, open items first, done/to-do words for s
         ],
     };
     const page = overviewPage({ session: { username: 'a', csrf: 't' }, overview: o });
-    assert.match(page, /1 of 2 done\./, 'progress in words (no ring)');
+    assert.match(page, /1 of 2 essentials done\./, 'progress in words (no ring)');
     assert.ok(!page.includes('class="ring"'));
     assert.ok(page.indexOf('Open thing') < page.indexOf('Done: Done thing'), 'open items first');
     assert.ok(page.includes('set it &lt;up&gt;'));

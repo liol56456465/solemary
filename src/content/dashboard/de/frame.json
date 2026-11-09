@@ -126,7 +126,7 @@
     "backServers": "Zurück zu deinen Servern"
   },
   "module": {
-    "readOnly": "Nur lesen: Bearbeiten im Dashboard ist ausgeschaltet (DASHBOARD_EDIT_ENABLED ist nicht true). Nutze die Befehle des Bots oder bitte den Inhaber, es einzuschalten.",
+    "readOnly": "Nur lesen: Änderungen über das Dashboard sind bei dieser Mewvo-Instanz ausgeschaltet. Nutze die Befehle des Bots oder bitte den Bot-Inhaber, sie einzuschalten.",
     "onThisPage": "Auf dieser Seite",
     "notSaved": "Nicht gespeichert: {message}",
     "more": "Mehr dazu",

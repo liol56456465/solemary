@@ -123,8 +123,12 @@
     "after": "Il passe en revue les étapes ci-dessous une par une.",
     "words": "Que veulent dire ces mots ?",
     "oneStep": "Une étape à la fois",
-    "progress": "{done} sur {total} terminées. Chaque étape prend une minute ; le lien ouvre la bonne page.",
-    "done": "Terminé : {list}."
+    "progress": "{done} sur {total} étapes essentielles faites. Chaque étape prend une minute ; le lien ouvre la bonne page.",
+    "done": "Terminé : {list}.",
+    "essentials": "L’essentiel",
+    "essentialsLine": "Ce dont chaque serveur a besoin pour que Mewvo modère en toute sécurité.",
+    "optional": "Facultatif",
+    "optionalLine": "Des fonctions à ajouter quand tu le souhaites."
   },
   "handover": {
     "writtenBy": "Écrit par {name}, {date}",
@@ -213,6 +217,25 @@
       "post": "Publier les panneaux d’appel",
       "postAgain": "Republier les panneaux d’appel",
       "confirm": "Publier les panneaux d’appel maintenant ? Les anciens panneaux d’appel de ces salons sont remplacés."
+    },
+    "rolePosition": {
+      "label": "Position du rôle de Mewvo",
+      "hint": "Mewvo ne peut modérer que les membres dont le rôle le plus haut est sous le sien. Pour l’instant, c’est tout le monde (sauf les admins et le propriétaire du serveur)."
+    },
+    "language": {
+      "label": "Langue du bot",
+      "hint": "La langue des messages et des MP de Mewvo ici. L’anglais tant que tu n’en choisis pas une.",
+      "saved": "Langue des messages et MP de Mewvo : {language}.",
+      "detected": "Mewvo utilise la langue de ton serveur dans Discord : {language}. Enregistre-la pour la garder, ou choisis-en une autre.",
+      "english": "English"
+    },
+    "appealsHome": {
+      "label": "Où les membres font appel",
+      "hint": "Les MP de sanction disent aux membres où demander la levée d’une sanction : le serveur d’assistance de Mewvo ou ton propre serveur."
+    },
+    "leveling": {
+      "label": "Niveaux",
+      "hint": "Les membres gagnent de l’XP et des niveaux en discutant. Choisis si Mewvo annonce les montées de niveau, et où."
     }
   },
   "value": {
@@ -269,6 +292,11 @@
       "ManageMessages": "Gérer les messages",
       "ManageGuild": "Gérer le serveur",
       "ViewAuditLog": "Voir les logs du serveur"
-    }
+    },
+    "reach": "Membres que Mewvo ne peut pas modérer : {count}",
+    "reachFix": "Leur rôle le plus haut ({roles}) est au niveau du rôle de Mewvo ou au-dessus. Remonte {botRole} dans Paramètres du serveur → Rôles.",
+    "atLeast": "au moins {count}",
+    "rolesAbove": "Rôles au-dessus du rôle de Mewvo : {roles}",
+    "rolesAboveFix": "Mewvo ne peut pas modérer les membres qui les ont (il n’a pas encore vu tous les membres, il ne peut donc pas les compter). Remonte {botRole} dans Paramètres du serveur → Rôles."
   }
 }

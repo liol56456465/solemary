@@ -1,12 +1,12 @@
 {
   "back": "← Mitglieder",
   "notice": {
-    "readOnly": "Nur lesen: Bearbeiten im Dashboard ist ausgeschaltet (DASHBOARD_EDIT_ENABLED ist nicht true). Nutze die Befehle des Bots.",
+    "readOnly": "Nur lesen: Änderungen über das Dashboard sind bei dieser Mewvo-Instanz ausgeschaltet. Nutze die Befehle des Bots.",
     "viewOnly": {
-      "actions": "Nur ansehen: Um hier Strafen zu vergeben, brauchst du Administrator auf dem Hauptserver.",
-      "cases": "Nur ansehen: Um hier Fälle zu ändern, brauchst du Administrator auf dem Hauptserver.",
-      "appeals": "Nur ansehen: Um hier über Einsprüche zu entscheiden, brauchst du Administrator auf dem Hauptserver.",
-      "orders": "Nur ansehen: Um hier Anordnungen zu starten oder zu beenden, brauchst du Administrator auf dem Hauptserver."
+      "actions": "Nur ansehen: Um hier Strafen zu vergeben, brauchst du Administrator auf diesem Server.",
+      "cases": "Nur ansehen: Um hier Fälle zu ändern, brauchst du Administrator auf diesem Server.",
+      "appeals": "Nur ansehen: Um hier über Einsprüche zu entscheiden, brauchst du Administrator auf diesem Server.",
+      "orders": "Nur ansehen: Um hier Anordnungen zu starten oder zu beenden, brauchst du Administrator auf diesem Server."
     }
   },
   "form": {
@@ -66,10 +66,10 @@
     "muted": "Stumm",
     "noMatch": "Kein Mitglied passt zu diesen Filtern.",
     "clearFilters": "Filter zurücksetzen",
-    "empty": "Noch keine Mitglieder zu zeigen. Die Liste füllt sich, sobald der Bot den Hauptserver geladen hat.",
+    "empty": "Noch keine Mitglieder zu zeigen. Die Liste füllt sich, sobald der Bot diesen Server geladen hat.",
     "show": "Zeigen",
     "stillLoading": "{cached} von {total} Mitgliedern werden gezeigt: Die Mitgliederliste lädt noch. Lade in einer Minute neu.",
-    "unavailable": "Die Mitgliederliste ist gerade nicht verfügbar (der Bot sieht den Hauptserver nicht).",
+    "unavailable": "Die Mitgliederliste ist gerade nicht verfügbar (der Bot sieht diesen Server nicht).",
     "search": "Suche",
     "searchPlaceholder": "Name, Nickname oder Nutzer-ID",
     "role": "Rolle",
@@ -134,8 +134,8 @@
     },
     "noMatch": "Kein Bann passt.",
     "showAll": "Alle Gebannten zeigen",
-    "empty": "Auf dem Hauptserver ist niemand gebannt.",
-    "bannedCount": "{count} gebannt auf dem Hauptserver",
+    "empty": "Auf diesem Server ist niemand gebannt.",
+    "bannedCount": "{count} gebannt auf diesem Server",
     "help": "Entbannen öffnet die Mitgliedsseite: Du siehst die Wirkung und bestätigst dann. Das Mitglied bekommt eine DM mit einer Einladung zurück.",
     "searchPlaceholder": "Name oder Nutzer-ID",
     "truncated": "Es werden die ersten {count} Banns angezeigt: Discords Bannliste ist länger. Öffne ein Mitglied über die Benutzer-ID, um jemanden zu sehen, der nicht aufgeführt ist."

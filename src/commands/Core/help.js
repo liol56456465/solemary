@@ -9,6 +9,10 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { logger } from '../../utils/logger.js';
 import { isCommandAvailableInGuild, canSeeAdminCommands } from '../../utils/commandGate.js';
 import { hasEveryoneAccess } from '../../config/commands/commandAccess.js';
+import { categoryLabel } from '../../config/commands/commandCategories.js';
+import { usesHomeValues } from '../../services/settings/guildScoped.js';
+import { isModmailSetUp } from '../../services/modmailService.js';
+import { getGuildConfig } from '../../services/config/guildConfig.js';
 import { createEmbed } from "../../utils/embeds.js";
 import { botText } from '../../utils/botText.js';
 import { localized, replyText } from '../../utils/commandLocalizations.js';
@@ -26,15 +30,33 @@ const CATEGORY_SELECT_ID = "help-category-select";
 const ALL_COMMANDS_ID = "help-all-commands";
 const HELP_MENU_TIMEOUT_MS = 5 * 60 * 1000;
 
-function formatCategoryName(rawCategory) {
-    return rawCategory
-        .replace(/_/g, '')
-        .replace(/([a-z])([A-Z])/g, '$1 $2')
-        .replace(/\b\w/g, (char) => char.toUpperCase());
+/**
+ * What the start page depends on in this server: { home, modmail }.
+ *   home     one of Mewvo's own servers (the "support us by boosting" line is only there)
+ *   modmail  the server takes modmail (modmailService.js isModmailSetUp); the member steps only
+ *            mention "DM the bot" then. Unreadable config: false (the line is left out).
+ * `config`: the guild config the dispatcher already read (saves a read).
+ */
+export async function helpMenuOptions(client, guildId, config = null, { getConfig = getGuildConfig } = {}) {
+    const home = usesHomeValues(guildId);
+    const guild = guildId ? client?.guilds?.cache?.get?.(guildId) || null : null;
+    let modmail = false;
+    if (guild) {
+        try {
+            modmail = Boolean(isModmailSetUp(guild, config || await getConfig(client, guildId)));
+        } catch (error) {
+            logger.debug(`Help: modmail state of ${guildId} unknown (${error?.message || error}); not mentioned`);
+        }
+    }
+    return { home, modmail };
 }
 
-/** The help start page. `tr`: the viewer's text functions (ephemeral menu: their Discord language). */
-export async function createInitialHelpMenu(client, guildId = null, showAdmin = true, tr = botText('en')) {
+/**
+ * The help start page. `tr`: the viewer's text functions (ephemeral menu: their Discord language).
+ * `options` from helpMenuOptions (default: home by the guild id, no modmail line).
+ */
+export async function createInitialHelpMenu(client, guildId = null, showAdmin = true, tr = botText('en'), menuOptions = {}) {
+    const { home = usesHomeValues(guildId), modmail = false } = menuOptions;
     const commandsPath = path.join(__dirname, "../../commands");
     // Only list categories with at least one command this viewer can use in this server.
     const availableCategories = new Set(
@@ -58,7 +80,7 @@ export async function createInitialHelpMenu(client, guildId = null, showAdmin = 
             value: ALL_COMMANDS_ID,
         },
         ...categoryDirs.map((category) => {
-            const categoryName = formatCategoryName(category);
+            const categoryName = categoryLabel(category, tr);
             return {
                 label: categoryName,
                 description: tr.t('core.help.menu.categoryDescription', { category: categoryName }).slice(0, 100),
@@ -70,13 +92,15 @@ export async function createInitialHelpMenu(client, guildId = null, showAdmin = 
     const botName = client?.user?.username || "Bot";
     const embed = createEmbed({
         title: tr.t('core.help.menu.title', { bot: botName }),
-        description: tr.t('core.help.menu.description'),
+        // The boosting line belongs to Mewvo's own servers; everywhere else a neutral line.
+        description: tr.t(home ? 'core.help.menu.description' : 'core.help.menu.descriptionNeutral'),
         color: 'primary',
         thumbnail: client.user?.displayAvatarURL?.({ size: 1024 }),
         fields: [
             {
                 name: tr.t('core.help.menu.gettingStarted'),
-                value: showAdmin ? tr.t('core.help.menu.adminSteps') : tr.t('core.help.menu.memberSteps'),
+                value: showAdmin ? tr.t('core.help.menu.adminSteps')
+                    : [tr.t('core.help.menu.memberSteps'), ...(modmail ? [tr.t('core.help.menu.memberModmail')] : [])].join('\n'),
                 inline: false,
             },
             {
@@ -133,7 +157,8 @@ export default {
         await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
 
         const tr = replyText(interaction);
-        const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId, canSeeAdminCommands(interaction), tr);
+        const options = await helpMenuOptions(client, interaction.guildId, guildConfig);
+        const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId, canSeeAdminCommands(interaction), tr, options);
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds,

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { Collection, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { isCommandAvailableInGuild, canSeeAdminCommands } from '../../utils/commandGate.js';
 import { isEveryoneCommand } from '../../config/commands/commandAccess.js';
+import { categoryLabel } from '../../config/commands/commandCategories.js';
 import { logger } from '../../utils/logger.js';
 import { handleInteractionError } from '../../utils/errorHandler.js';
 import { botText } from '../../utils/botText.js';
@@ -45,13 +46,6 @@ export async function getRegisteredCommands(client, { now = Date.now(), ttlMs = 
 /** For tests. */
 export function _resetCommandIdCache() {
     commandIdCache = { at: 0, commands: null };
-}
-
-function formatCategoryName(rawCategory) {
-    return rawCategory
-        .replace(/_/g, ' ')
-        .replace(/([a-z])([A-Z])/g, '$1 $2')
-        .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 // 🔒 marks admin-only entries; displayName is the command's access key.
@@ -200,7 +194,7 @@ async function loadHelpEntries(categories, guildId, showAdmin, tr) {
                 if (commandData.name === "help" || commandData.name === "commandlist") continue;
                 if (!isCommandAvailableInGuild(command, guildId)) continue;
 
-                entries.push(...visibleEntries(buildHelpEntries(command, formatCategoryName(category), tr), showAdmin));
+                entries.push(...visibleEntries(buildHelpEntries(command, categoryLabel(category, tr), tr), showAdmin));
             }
         } catch (error) {
             logger.error(
@@ -302,7 +296,7 @@ function backRow(tr) {
 }
 
 export async function createCategoryCommandsMenu(category, client, guildId = null, showAdmin = true, tr = botText('en'), page = 1) {
-    const categoryName = formatCategoryName(category);
+    const categoryName = categoryLabel(category, tr);
     // The name becomes a path: only an existing command folder is read (else the "no commands" page).
     const categoryCommands = await isHelpCategory(category) ? await loadHelpEntries([category], guildId, showAdmin, tr) : [];
     const registeredCommands = await getRegisteredCommands(client);

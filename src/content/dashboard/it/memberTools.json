@@ -1,7 +1,7 @@
 {
   "notice": {
-    "readOnly": "Sola lettura: la modifica dalla dashboard è disattivata (DASHBOARD_EDIT_ENABLED non è true).",
-    "viewOnly": "Solo visualizzazione: per cambiare le regole dei ruoli ti serve Amministratore nel server principale."
+    "readOnly": "Sola lettura: le modifiche dalla dashboard sono disattivate su questa istanza di Mewvo.",
+    "viewOnly": "Solo visualizzazione: per cambiare le regole dei ruoli ti serve Amministratore in questo server."
   },
   "trigger": {
     "days_in_server": "Giorni nel server",
@@ -108,7 +108,7 @@
     "noRolesHelp": "Entrati negli ultimi 30 giorni, più di 24 ore fa, e ancora senza ruolo (bot esclusi). Spesso: mai verificati.",
     "joinedAt": "entrato il {date}",
     "none": "Nessuno.",
-    "noGuild": "Il bot non vede il server principale in questo momento.",
+    "noGuild": "Il bot non vede questo server in questo momento.",
     "offendersTitle": {
       "one": "Recidivi (ultimo {count} giorno)",
       "many": "Recidivi (ultimi {count} giorni)",

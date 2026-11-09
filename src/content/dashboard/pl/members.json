@@ -1,12 +1,12 @@
 {
   "back": "← Członkowie",
   "notice": {
-    "readOnly": "Tylko do odczytu: edytowanie w panelu jest wyłączone (DASHBOARD_EDIT_ENABLED nie ma wartości true). Użyj komend bota.",
+    "readOnly": "Tylko do odczytu: zmiany z panelu są wyłączone w tej instancji Mewvo. Użyj komend bota.",
     "viewOnly": {
-      "actions": "Tylko podgląd: aby nakładać tu kary, potrzebujesz uprawnienia Administrator na głównym serwerze.",
-      "cases": "Tylko podgląd: aby zmieniać tu sprawy, potrzebujesz uprawnienia Administrator na głównym serwerze.",
-      "appeals": "Tylko podgląd: aby decydować tu o odwołaniach, potrzebujesz uprawnienia Administrator na głównym serwerze.",
-      "orders": "Tylko podgląd: aby zaczynać lub kończyć tu rozdzielenia, potrzebujesz uprawnienia Administrator na głównym serwerze."
+      "actions": "Tylko podgląd: aby nakładać tu kary, potrzebujesz uprawnienia Administrator na tym serwerze.",
+      "cases": "Tylko podgląd: aby zmieniać tu sprawy, potrzebujesz uprawnienia Administrator na tym serwerze.",
+      "appeals": "Tylko podgląd: aby decydować tu o odwołaniach, potrzebujesz uprawnienia Administrator na tym serwerze.",
+      "orders": "Tylko podgląd: aby zaczynać lub kończyć tu rozdzielenia, potrzebujesz uprawnienia Administrator na tym serwerze."
     }
   },
   "form": {
@@ -70,10 +70,10 @@
     "muted": "Wyciszony",
     "noMatch": "Żaden członek nie pasuje do tych filtrów.",
     "clearFilters": "Wyczyść filtry",
-    "empty": "Nie ma jeszcze kogo pokazać. Lista wypełni się, gdy bot wczyta główny serwer.",
+    "empty": "Nie ma jeszcze kogo pokazać. Lista wypełni się, gdy bot wczyta ten serwer.",
     "show": "Pokaż",
     "stillLoading": "Pokazano {cached} z {total}: lista członków jeszcze się wczytuje. Odśwież za minutę.",
-    "unavailable": "Lista członków jest teraz niedostępna (bot nie widzi głównego serwera).",
+    "unavailable": "Lista członków jest teraz niedostępna (bot nie widzi tego serwera).",
     "search": "Szukaj",
     "searchPlaceholder": "Nazwa, pseudonim lub ID użytkownika",
     "role": "Rola",
@@ -142,8 +142,8 @@
     },
     "noMatch": "Żaden ban nie pasuje.",
     "showAll": "Pokaż wszystkich zbanowanych",
-    "empty": "Na głównym serwerze nikt nie jest zbanowany.",
-    "bannedCount": "Zbanowani na głównym serwerze: {count}",
+    "empty": "Na tym serwerze nikt nie jest zbanowany.",
+    "bannedCount": "Zbanowani na tym serwerze: {count}",
     "help": "Odbanowanie otwiera stronę członka: widzisz skutek, potem potwierdzasz. Członek dostaje wiadomość prywatną z zaproszeniem z powrotem.",
     "searchPlaceholder": "Nazwa lub ID użytkownika",
     "truncated": "Pokazano pierwsze {count} banów: lista Discorda jest dłuższa. Otwórz członka po ID użytkownika, aby zobaczyć kogoś, kogo nie ma na liście."

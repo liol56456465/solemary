@@ -21,7 +21,9 @@ import { currentText, dashboardText } from './language.js';
 import { moduleEntries, setupByModule } from './modulesPage.js';
 import { valueText } from './audit.js';
 import { allows } from './permissions.js';
-import { botPermissionReport, rolesToCheck } from './botPermissions.js';
+import { botPermissionReport, memberReach, reachOk, rolesToCheck } from './botPermissions.js';
+import { LANGUAGES } from '../site/i18n.js';
+import { detectedServerLanguage } from '../../utils/botText.js';
 import { listPostFailures } from '../automod/postFailures.js';
 import { getAppealPanelPosting } from '../enforcement/appealPanelService.js';
 import { serverDataCard } from './serverDataPages.js';
@@ -125,36 +127,103 @@ export function hasSupportServer(guildId, env = process.env) {
 /** The moderator role id from the guild config (an id, or { id } from older configs). */
 const modRoleIdOf = (value) => (value && typeof value === 'object' ? value.id || null : value || null);
 
+/** The essentials of a checklist (what the progress counts). */
+export const essentialSteps = (checklist) => (checklist || []).filter((item) => item.group !== 'optional');
+/** The optional steps of a checklist (features a server may not want). */
+export const optionalSteps = (checklist) => (checklist || []).filter((item) => item.group === 'optional');
+
 /**
- * The checklist of things not set up yet: [{ key, label, done, href, hint }], label and hint in the
- * request's language (overview.setup.<key>; `tr` overrides).
+ * The checklist: [{ key, group, label, done, href, hint }], label and hint in the request's
+ * language (overview.setup.<key>; `tr` overrides). group 'essential' (what every server needs
+ * before members can be moderated safely; the progress counts only these, first) or 'optional'
+ * (features a server may not want).
+ *   reach         memberReach() result: the role position step (first); null/undefined leaves it out
  *   permissions   botPermissionReport() result; null/undefined (not checkable) leaves the step out
+ *   language      { saved, code, detected }: the bot language step; undefined leaves it out
+ *   home          one of Mewvo's own servers: appeals go to the Mewvo support server there, so the
+ *                 appeals step is the appeals category; elsewhere it is "where members appeal"
+ *                 (appealsHome chosen on Enforcement & appeals)
  *   appealPanel   the last appeal panel posting, null = never; undefined (unreadable) leaves it out
  *   supportServer hasSupportServer(): without it the banned role and appeal panel steps are left out
  */
-export function gettingStarted({ config, welcome, settings, mutedRole, permissions, appealPanel, supportServer = false }, tr = currentText()) {
+export function gettingStarted({ config, welcome, settings, mutedRole, permissions, reach, language, appealPanel, supportServer = false, home = true }, tr = currentText()) {
     const fallback = settings.modLogChannelId ? ` ${tr.t('overview.setup.fallback')}` : '';
-    const steps = [
+    const appealsCategory = ['appeals', Boolean(settings.appealsCategoryId || config?.ticketCategoryId), '/enforcement'];
+    const appealsChosen = Boolean(settings.appealsHomeSaved) && (settings.appealsHome !== 'own' || Boolean(settings.appealsInvite));
+    const essential = [
+        ...(reach ? [['rolePosition', reachOk(reach), '/setup?step=rolePosition', reachHint(reach, tr)]] : []),
         ...(permissions ? [['permissions', Boolean(permissions.ok), '/setup?step=permissions']] : []),
+        ...(language ? [['language', Boolean(language.saved), '/bot-language', languageHint(language, tr)]] : []),
         ['modLog', Boolean(settings.modLogChannelId), '/enforcement'],
         ['logChannel', Boolean(config?.logging?.channels?.audit), '/logging'],
-        ['modRole', Boolean(modRoleIdOf(config?.modRole)), '/commands'],
         ['review', Boolean(settings.reviewChannelId), '/automod', fallback],
-        ['alerts', Boolean(settings.alertsChannelId), '/automod', fallback],
-        ['muted', Boolean(settings.mutedRoleId || mutedRole), '/enforcement'],
-        ['appeals', Boolean(settings.appealsCategoryId || config?.ticketCategoryId), '/enforcement'],
+        home ? appealsCategory : ['appealsHome', appealsChosen, '/enforcement'],
         ...(supportServer && appealPanel !== undefined ? [['appealPanel', Boolean(appealPanel), '/enforcement']] : []),
-        ['ticketCategory', Boolean(config?.ticketCategoryId), '/tickets'],
-        ['ticketStaff', Boolean(config?.ticketStaffRoleId), '/tickets'],
-        ['welcome', Boolean(welcome?.enabled && welcome?.channelId), '/welcome'],
-        ['verification', Boolean(config?.verification?.enabled), '/verification'],
-        ['birthdays', Boolean(config?.birthdayChannelId), '/birthdays'],
         ...(supportServer ? [['bannedRole', Boolean(settings.bannedRoleId), '/support']] : []),
     ];
-    return steps.map(([key, done, href, more = '']) => ({
-        key, label: tr.t(`overview.setup.${key}.label`), done, href: path(href), hint: `${tr.t(`overview.setup.${key}.hint`)}${more}`,
+    const optional = [
+        // The moderator role is set with the bot settings on the Commands page (its own card).
+        ['modRole', Boolean(modRoleIdOf(config?.modRole)), '/commands#s-bot-settings'],
+        ['alerts', Boolean(settings.alertsChannelId), '/automod', fallback],
+        ['muted', Boolean(settings.mutedRoleId || mutedRole), '/enforcement'],
+        ...(home ? [] : [appealsCategory]),
+        ['welcome', Boolean(welcome?.enabled && welcome?.channelId), '/welcome'],
+        ['ticketCategory', Boolean(config?.ticketCategoryId), '/tickets'],
+        ['ticketStaff', Boolean(config?.ticketStaffRoleId), '/tickets'],
+        ['verification', Boolean(config?.verification?.enabled), '/verification'],
+        // Leveling runs by default; level-up posts wait for an admin (off outside Mewvo's own servers).
+        ['leveling', Boolean(config?.leveling), '/leveling'],
+        ['birthdays', Boolean(config?.birthdayChannelId), '/birthdays'],
+    ];
+    const item = (group) => ([key, done, href, more = '']) => ({
+        key, group, label: tr.t(`overview.setup.${key}.label`), done, href: path(href),
+        hint: more && key !== 'review' && key !== 'alerts' ? more : `${tr.t(`overview.setup.${key}.hint`)}${more}`,
         ...(key === 'permissions' ? { report: permissions } : {}),
-    }));
+        ...(key === 'rolePosition' ? { reach } : {}),
+        ...(key === 'language' ? { languageCode: language.saved ? language.code : language.detected || language.code } : {}),
+    });
+    return [...essential.map(item('essential')), ...optional.map(item('optional'))];
+}
+
+const languageNameOf = (code, tr) => LANGUAGES.find((l) => l.code === code)?.name || tr.t('overview.setup.language.english');
+
+/** The language step's line: the saved language, the detected one (not saved yet), or English. */
+function languageHint(language, tr) {
+    if (language.saved) return tr.t('overview.setup.language.saved', { language: languageNameOf(language.code, tr) });
+    if (language.detected && language.detected !== 'en') return tr.t('overview.setup.language.detected', { language: languageNameOf(language.detected, tr) });
+    return tr.t('overview.setup.language.hint');
+}
+
+/** The role position step's line: how many members Mewvo cannot moderate and which roles. */
+export function reachHint(reach, tr) {
+    if (!reach || reachOk(reach)) return tr.t('overview.setup.rolePosition.hint');
+    return `${reachTitle(reach, tr)}. ${reachFix(reach, tr)}`;
+}
+
+/**
+ * Nobody counted, but the member cache is incomplete and roles members can hold sit at or above
+ * Mewvo's: not verified, so it names those roles instead of saying "all fine".
+ */
+const rolesAboveOnly = (reach) => Boolean(reach) && reach.count === 0 && !reachOk(reach);
+
+/** "Their top role (@Members) is at or above Mewvo's role. Drag … higher in Server Settings → Roles." */
+function reachFix(reach, tr) {
+    const botRole = reach.botRole || tr.t('overview.perms.botRoleFallback');
+    if (rolesAboveOnly(reach)) return tr.t('overview.perms.rolesAboveFix', { botRole });
+    const roles = reach.roles.map((r) => `@${r.name}`).join(', ');
+    return tr.t('overview.perms.reachFix', { roles, botRole });
+}
+
+/** "12", or "at least 12" when the member cache is incomplete. */
+function reachCount(reach, tr) {
+    const n = tr.fmtNumber(reach.count);
+    return reach.partial ? tr.t('overview.perms.atLeast', { count: n }) : n;
+}
+
+/** "Members Mewvo can't moderate: 12" (the row title on the permissions card). */
+export function reachTitle(reach, tr) {
+    if (rolesAboveOnly(reach)) return tr.t('overview.perms.rolesAbove', { roles: reach.rolesAbove.map((r) => `@${r.name}`).join(', ') });
+    return tr.t('overview.perms.reach', { count: reachCount(reach, tr) });
 }
 
 /** One registry setting as the dashboard of `guildId` shows it: { guildId (whose row, or null), value, source }. */
@@ -173,19 +242,42 @@ function viewedSetting(guildId, entry, env) {
  */
 function setupSettings(guildId, env = process.env) {
     const settings = {};
-    for (const key of ['modLogChannelId', 'reviewChannelId', 'alertsChannelId', 'mutedRoleId', 'appealsCategoryId', 'bannedRoleId', 'warnRoleIds']) {
+    for (const key of ['modLogChannelId', 'reviewChannelId', 'alertsChannelId', 'mutedRoleId', 'appealsCategoryId', 'bannedRoleId', 'warnRoleIds', 'appealsInvite']) {
         settings[key] = viewedSetting(guildId, SETTINGS.find((e) => e.key === key), env).value;
     }
+    // Chosen on purpose (saved), not just the default: the "where members appeal" and language steps.
+    const appealsHome = viewedSetting(guildId, SETTINGS.find((e) => e.key === 'appealsHome'), env);
+    settings.appealsHome = appealsHome.value;
+    settings.appealsHomeSaved = appealsHome.source === 'database';
+    const language = viewedSetting(guildId, SETTINGS.find((e) => e.key === 'botLanguage'), env);
+    settings.botLanguage = language.value;
+    settings.botLanguageSaved = language.source === 'database';
     return settings;
+}
+
+/** The language step's state: saved (and which), else what Mewvo detected from the server's Discord language. */
+function languageState(guild, guildId, settings, env = process.env) {
+    const detected = isOtherGuild(guildId, env) ? detectedServerLanguage(guildId, { locale: guild?.preferredLocale ?? null }) : null;
+    return { saved: Boolean(settings.botLanguageSaved), code: settings.botLanguage || 'en', detected };
+}
+
+/** Members Mewvo cannot moderate (role position, member cache only); null = cannot be checked. */
+function reachFor(guild) {
+    try {
+        return memberReach(guild);
+    } catch {
+        return null;
+    }
 }
 
 /** Mewvo's permissions for the features that are on (botPermissions.js); null = cannot be checked. */
 function permissionsFor(guild, { config, welcome, settings, mutedRole }) {
     try {
-        return botPermissionReport(guild, {
+        const report = botPermissionReport(guild, {
             moduleStates: config ? moduleStatesFrom(config, welcome) : {},
             roles: rolesToCheck(guild, { mutedRoleId: settings.mutedRoleId, mutedRole, warnRoleIds: settings.warnRoleIds }),
         });
+        return report ? { ...report, reach: reachFor(guild) } : null;
     } catch {
         return null;
     }
@@ -212,7 +304,10 @@ export async function collectChecklist({ client, guildId, data = defaultOverview
         return null;
     }
     const permissions = permissionsFor(guild, { config, welcome, settings, mutedRole });
-    return gettingStarted({ config, welcome, settings, mutedRole, permissions, appealPanel, supportServer: hasSupportServer(guildId) });
+    return gettingStarted({
+        config, welcome, settings, mutedRole, permissions, reach: permissions?.reach, language: languageState(guild, guildId, settings),
+        appealPanel, supportServer: hasSupportServer(guildId), home: !isOtherGuild(guildId),
+    });
 }
 
 /** Everything the Overview page shows. `data` is injectable for tests. */
@@ -257,7 +352,10 @@ export async function collectOverview({ client, guildId, data = defaultOverviewD
         pendingList: pending === undefined ? undefined : pending.slice(0, 5),
         lockdown: lockdown === undefined ? undefined : { active: Boolean(lockdown?.active), since: lockdown?.startedAt || lockdown?.since || null },
         recent: recent?.rows,
-        checklist: gettingStarted({ config, welcome, settings, mutedRole, permissions, appealPanel, supportServer: hasSupportServer(guildId) }),
+        checklist: gettingStarted({
+            config, welcome, settings, mutedRole, permissions, reach: permissions?.reach, language: languageState(guild, guildId, settings),
+            appealPanel, supportServer: hasSupportServer(guildId), home: !isOtherGuild(guildId),
+        }),
         permissions,
         postFailures: Array.isArray(postFailures)
             ? postFailures.map((f) => ({ ...f, channelName: guild?.channels?.cache?.get(f.channelId)?.name || f.channelName || null }))
@@ -331,15 +429,21 @@ export function permissionsList(report, tr = currentText()) {
     const row = (p) => html`<li class="perm-row${p.ok ? ' is-ok' : ' is-missing'}">${icon(p.ok ? 'check' : 'warn')}<span class="checklist-text"><b>${name(p.name)}</b> <span class="${p.ok ? 'ok-text' : 'bad'}">${t(p.ok ? 'on' : 'missing')}</span><span class="checklist-hint">${p.ok
         ? t('usedBy', { list: features(p.features) })
         : t('fix', { role: botRole, perm: name(p.name), list: features(p.features) })}</span></span></li>`;
-    const summary = report.ok
+    // Role position: members whose top role is at or above Mewvo's (member cache only, botPermissions.js memberReach).
+    const reach = report.reach && !reachOk(report.reach) ? report.reach : null;
+    const reachRow = reach
+        ? html`<li class="perm-row is-missing">${icon('warn')}<span class="checklist-text"><b>${reachTitle(reach, tr)}</b><span class="checklist-hint">${reachFix(reach, tr)}</span></span></li>`
+        : '';
+    const allOk = report.ok && !reach;
+    const summary = allOk
         ? html`<p class="ok-text">${t('allOk')}</p>`
-        : html`<p class="bad">${t('someMissing', { count: tr.fmtNumber(missing.length + report.roles.length) })}</p>`;
+        : html`<p class="bad">${t('someMissing', { count: tr.fmtNumber(missing.length + report.roles.length + (reach ? 1 : 0)) })}</p>`;
     const intro = html`<p class="muted">${t('intro')}</p>`;
     // The problems stay in view; what is already on folds away.
     const fine = granted.length
-        ? html`<details class="sub" data-key="bot-perms"><summary>${t('showList')}</summary>${report.ok ? intro : ''}<ul class="checklist perm-list">${granted.map(row)}</ul></details>`
+        ? html`<details class="sub" data-key="bot-perms"><summary>${t('showList')}</summary>${allOk ? intro : ''}<ul class="checklist perm-list">${granted.map(row)}</ul></details>`
         : '';
-    return report.ok ? html`${summary}${fine}` : html`${summary}${intro}<ul class="checklist perm-list">${roleRows}${missing.map(row)}</ul>${fine}`;
+    return allOk ? html`${summary}${fine}` : html`${summary}${intro}<ul class="checklist perm-list">${reachRow}${roleRows}${missing.map(row)}</ul>${fine}`;
 }
 
 /** The fix page for a failed staff post's purpose (where its channel is picked). */
@@ -444,14 +548,25 @@ ${stat(t('stats.members'), num(members), o.joinedThisWeek != null ? t('stats.joi
 ${stat(t('stats.banned'), num(o.activeBans), o.activeMutes === undefined ? '' : t('stats.muted', { count: tr.fmtNumber(o.activeMutes) }), { href: path('/cases?status=active') }, tr)}
 ${stat(t('stats.appeals'), o.pendingAppeals === undefined ? undefined : pendingText, o.pendingAppeals === undefined ? '' : o.pendingAppeals ? t('stats.appealsOldest') : t('stats.appealsNone'), { href: path('/appeals') }, tr)}
 ${stat(t('stats.tickets'), num(o.openTickets), limited ? '' : t('stats.ticketsWhere'), {}, tr)}</div>`;
-    // Getting started: every setup step, numbered, open ones first, each with why it matters.
-    const done = o.checklist.filter((item) => item.done);
-    const guided = todo.length * 2 > o.checklist.length
+    // Getting started: the essentials first (the progress counts only these), then the optional
+    // features; open steps listed with why they matter, done ones in one line per group.
+    const essentials = essentialSteps(o.checklist);
+    const optional = optionalSteps(o.checklist);
+    const essentialTodo = essentials.filter((item) => !item.done);
+    const guided = essentialTodo.length * 2 > essentials.length
         ? html`<p class="setup-start">${t('start.new')} <a class="btn primary" href="${path('/setup')}">${t('start.button')}</a> ${t('start.after')} <a href="${path('/help')}">${t('start.words')}</a></p>`
         : html`<p class="muted"><a href="${path('/setup')}">${t('start.oneStep')}</a> · <a href="${path('/help')}">${t('start.words')}</a></p>`;
-    const steps = html`${guided}<p class="muted">${t('start.progress', { done: tr.fmtNumber(done.length), total: tr.fmtNumber(o.checklist.length) })}</p>
-<ol class="checklist">${todo.map((item) => html`<li><span class="checklist-text"><b>${item.label}</b><br><span class="checklist-hint">${item.hint}</span></span> <a class="setup-link btn small" href="${item.href}">${t('needs.setUp')}<span class="sr"> ${item.label}</span></a></li>`)}</ol>
-${done.length ? html`<p class="muted">${t('start.done', { list: done.map((item) => item.label).join(', ') })}</p>` : ''}`;
+    const stepList = (items) => html`<ol class="checklist">${items.map((item) => html`<li><span class="checklist-text"><b>${item.label}</b><br><span class="checklist-hint">${item.hint}</span></span> <a class="setup-link btn small" href="${item.href}">${t('needs.setUp')}<span class="sr"> ${item.label}</span></a></li>`)}</ol>`;
+    const doneLine = (items) => (items.length ? html`<p class="muted">${t('start.done', { list: items.map((item) => item.label).join(', ') })}</p>` : '');
+    const group = (title, line, items) => {
+        const open = items.filter((item) => !item.done);
+        const finished = items.filter((item) => item.done);
+        if (!items.length) return '';
+        return html`<h3 class="checklist-group">${title}</h3><p class="muted">${line}</p>${open.length ? stepList(open) : ''}${doneLine(finished)}`;
+    };
+    const steps = html`${guided}<p class="muted">${t('start.progress', { done: tr.fmtNumber(essentials.length - essentialTodo.length), total: tr.fmtNumber(essentials.length) })}</p>
+${group(t('start.essentials'), t('start.essentialsLine'), essentials)}
+${group(t('start.optional'), t('start.optionalLine'), optional)}`;
     const note = handover?.text
         ? html`<blockquote class="handover-text">${handover.text}</blockquote><p class="muted">${t('handover.writtenBy', { name: handover.byName || handover.by, date: handover.at ? tr.fmtDateTime(new Date(handover.at)) : '' })}</p>`
         : html`<p class="muted">${tr.tx('overview.handover.empty')}</p>`;
@@ -466,7 +581,7 @@ ${done.length ? html`<p class="muted">${t('start.done', { list: done.map((item) 
     // latest cases. The grid fills holes (dense), so narrow cards still pair up on two columns.
     // Mewvo's permissions (Administrator levels only: moderators cannot change roles): first when
     // something is missing, else further down.
-    const permsMissing = o.permissions ? o.permissions.missing.length + o.permissions.roles.length : 0;
+    const permsMissing = o.permissions ? o.permissions.missing.length + o.permissions.roles.length + (o.permissions.reach && !reachOk(o.permissions.reach) ? 1 : 0) : 0;
     const permsCard = limited || o.permissions === undefined ? ''
         : card(t('perms.title'), permissionsList(o.permissions, tr), { note: permsMissing ? tr.fmtNumber(permsMissing) : null, className: 'ov-wide bot-perms' });
     const body = html`${head}

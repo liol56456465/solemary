@@ -385,8 +385,10 @@ export const SETTINGS = Object.freeze([
         schema: z.string().min(1).max(CAT_NAME_MAX).refine(isCleanCatName, 'letters, numbers, spaces and \' - . ! ? only'),
     },
     {
+        // On in Mewvo's own servers; off in any other server until an admin turns it on (owner
+        // decision D5, like level-up posts). A saved value always wins.
         key: 'catAnnounce', module: 'leveling', kind: 'boolean', guild: 'main',
-        label: 'Announce when the server cat grows', env: null, fallback: true, schema: z.boolean(),
+        label: 'Announce when the server cat grows', env: null, fallback: true, otherFallback: false, schema: z.boolean(),
     },
     // ── Bot language (utils/botText.js; Dashboard → Bot language) ──
     // The language of the bot's public posts and member DMs in this server. Replies to one person
@@ -494,7 +496,8 @@ export function neutralValue(entry) {
     if (entry.kind === 'list') return [];
     if (PLACE_KINDS.has(entry.kind)) return null;
     if (entry.prodOnly) return entry.prodFallbackEmpty !== undefined ? structuredClone(entry.prodFallbackEmpty) : null;
-    const value = entry.fallback;
+    // otherFallback: a different default for servers other than Mewvo's own (e.g. catAnnounce off).
+    const value = Object.hasOwn(entry, 'otherFallback') ? entry.otherFallback : entry.fallback;
     return value !== null && typeof value === 'object' ? structuredClone(value) : value;
 }
 

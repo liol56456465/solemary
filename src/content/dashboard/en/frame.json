@@ -126,7 +126,7 @@
     "backServers": "Back to your servers"
   },
   "module": {
-    "readOnly": "Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true). Use the bot's commands, or ask the owner to turn it on.",
+    "readOnly": "Read-only: changes from the dashboard are switched off on this Mewvo instance. Use the bot's commands, or ask the bot owner to switch them on.",
     "onThisPage": "On this page",
     "notSaved": "Not saved: {message}",
     "more": "More about this",

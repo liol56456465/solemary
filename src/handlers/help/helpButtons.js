@@ -2,7 +2,7 @@ import { supportInviteUrl } from '../../commands/Core/support.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { canSeeAdminCommands } from '../../utils/commandGate.js';
 import { createAllCommandsMenu, createHelpPage, parseHelpPageId } from './helpSelectMenus.js';
-import { createInitialHelpMenu } from '../../commands/Core/help.js';
+import { createInitialHelpMenu, helpMenuOptions } from '../../commands/Core/help.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import { logger } from '../../utils/logger.js';
 import { replyText } from '../../utils/commandLocalizations.js';
@@ -19,7 +19,8 @@ export const helpBackButton = {
                 await interaction.deferUpdate();
             }
 
-            const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId, canSeeAdminCommands(interaction), replyText(interaction));
+            const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId, canSeeAdminCommands(interaction), replyText(interaction),
+                await helpMenuOptions(client, interaction.guildId));
             await interaction.editReply({
                 embeds,
                 components,
@@ -127,7 +128,7 @@ export const helpPageButton = {
             const showAdmin = canSeeAdminCommands(interaction);
             const target = parseHelpPageId(interaction.customId);
             const menu = (target && await createHelpPage(target.view, target.page, client, interaction.guildId, showAdmin, tr))
-                || await createInitialHelpMenu(client, interaction.guildId, showAdmin, tr);
+                || await createInitialHelpMenu(client, interaction.guildId, showAdmin, tr, await helpMenuOptions(client, interaction.guildId));
             await interaction.editReply({ embeds: menu.embeds, components: menu.components, allowedMentions: { parse: [] } });
         } catch (error) {
             if (error?.code === 40060 || error?.code === 10062) {

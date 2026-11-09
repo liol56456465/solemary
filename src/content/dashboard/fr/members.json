@@ -1,12 +1,12 @@
 {
   "back": "← Membres",
   "notice": {
-    "readOnly": "Lecture seule : la modification depuis le tableau de bord est désactivée (DASHBOARD_EDIT_ENABLED n’est pas à true). Utilise les commandes du bot.",
+    "readOnly": "Lecture seule : les modifications depuis le tableau de bord sont désactivées sur cette instance de Mewvo. Utilise les commandes du bot.",
     "viewOnly": {
-      "actions": "Consultation seule : il faut la permission Administrateur sur le serveur principal pour sanctionner ici.",
-      "cases": "Consultation seule : il faut la permission Administrateur sur le serveur principal pour modifier les dossiers ici.",
-      "appeals": "Consultation seule : il faut la permission Administrateur sur le serveur principal pour décider des appels ici.",
-      "orders": "Consultation seule : il faut la permission Administrateur sur le serveur principal pour lancer ou arrêter des mises à distance ici."
+      "actions": "Consultation seule : il faut la permission Administrateur sur ce serveur pour sanctionner ici.",
+      "cases": "Consultation seule : il faut la permission Administrateur sur ce serveur pour modifier les dossiers ici.",
+      "appeals": "Consultation seule : il faut la permission Administrateur sur ce serveur pour décider des appels ici.",
+      "orders": "Consultation seule : il faut la permission Administrateur sur ce serveur pour lancer ou arrêter des mises à distance ici."
     }
   },
   "form": {
@@ -68,10 +68,10 @@
     "muted": "En sourdine",
     "noMatch": "Aucun membre ne correspond à ces filtres.",
     "clearFilters": "Effacer les filtres",
-    "empty": "Aucun membre à afficher pour l’instant. La liste se remplit quand le bot a chargé le serveur principal.",
+    "empty": "Aucun membre à afficher pour l’instant. La liste se remplit quand le bot a chargé ce serveur.",
     "show": "Afficher",
     "stillLoading": "{cached} membres affichés sur {total} : la liste est encore en chargement. Recharge dans une minute.",
-    "unavailable": "La liste des membres n’est pas disponible pour le moment (le bot ne voit pas le serveur principal).",
+    "unavailable": "La liste des membres n’est pas disponible pour le moment (le bot ne voit pas ce serveur).",
     "search": "Recherche",
     "searchPlaceholder": "Nom, pseudo ou ID utilisateur",
     "role": "Rôle",
@@ -138,8 +138,8 @@
     },
     "noMatch": "Aucun bannissement ne correspond.",
     "showAll": "Afficher tous les bannis",
-    "empty": "Personne n’est banni sur le serveur principal.",
-    "bannedCount": "{count} bannis sur le serveur principal",
+    "empty": "Personne n’est banni sur ce serveur.",
+    "bannedCount": "{count} bannis sur ce serveur",
     "help": "Débannir ouvre la page du membre : tu vois l’effet, puis tu confirmes. Le membre reçoit un MP avec une invitation pour revenir.",
     "searchPlaceholder": "Nom ou ID utilisateur",
     "truncated": "Affichage des {count} premiers bannissements : la liste de Discord est plus longue. Ouvrez un membre par son ID utilisateur pour voir quelqu’un qui n’est pas listé."

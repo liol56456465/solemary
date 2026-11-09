@@ -46,12 +46,12 @@
     "warning": "Uwaga:"
   },
   "access": {
-    "needModRole": "Do tego potrzebujesz roli moderatora albo uprawnienia Administrator na głównym serwerze (mogło zostać odebrane od czasu logowania).",
-    "needAdmin": "Do tego potrzebujesz uprawnienia Administrator na głównym serwerze.",
-    "actionNeedsAdmin": "{action} wymaga uprawnienia Administrator na głównym serwerze.",
+    "needModRole": "Do tego potrzebujesz roli moderatora albo uprawnienia Administrator na tym serwerze (mogło zostać odebrane od czasu logowania).",
+    "needAdmin": "Do tego potrzebujesz uprawnienia Administrator na tym serwerze.",
+    "actionNeedsAdmin": "{action} wymaga uprawnienia Administrator na tym serwerze.",
     "thisAction": "Ta akcja",
     "ownerOnly": "To mogą tylko właściciele bota (jak /staff restore).",
-    "enforcementAdmin": "Kary wymagają uprawnienia Administrator na głównym serwerze (właściciele bota bez niego mogą tylko przeglądać)."
+    "enforcementAdmin": "Kary wymagają uprawnienia Administrator na tym serwerze (właściciele bota bez niego mogą tylko przeglądać)."
   },
   "expired": {
     "action": "To potwierdzenie wygasło albo zostało już użyte. Nic nie zrobiono; otwórz podgląd akcji jeszcze raz.",

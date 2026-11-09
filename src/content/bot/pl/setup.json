@@ -45,7 +45,15 @@
         },
         "language": {
             "label": "Język bota",
-            "default": "Angielski (domyślny). Wybierz język wiadomości i DM w panelu (Język bota)."
+            "default": "Angielski (domyślny). Wybierz język wiadomości i DM w panelu (Język bota).",
+            "detected": "{language} (język twojego serwera na Discordzie). Zmienisz go w panelu (Język bota)."
+        },
+        "rolePosition": {
+            "label": "Pozycja roli Mewvo",
+            "ok": "Nad najwyższą rolą wszystkich członków (poza adminami i właścicielem).",
+            "blocked": "Członkowie, których Mewvo nie może moderować: {count} (najwyższa rola {roles}). Przeciągnij rolę Mewvo wyżej: Ustawienia serwera → Role.",
+            "atLeast": "co najmniej {count}",
+            "rolesAbove": "Role nad rolą Mewvo: {roles}. Mewvo nie może moderować członków, którzy je mają. Przeciągnij rolę Mewvo wyżej: Ustawienia serwera → Role."
         }
     },
     "commandsTitle": "Wszystkie komendy",
@@ -62,10 +70,12 @@
     "notYours": "To menu należy do kogoś innego. Użyj /setup, aby dostać własne.",
     "welcome": {
         "title": "Dzięki za dodanie Mewvo!",
-        "body": "Administrator może wpisać **/setup**, aby zacząć.",
+        "body": "**Admini:** użyjcie **/setup** albo otwórzcie panel, żeby zacząć.",
         "help": "Wpisz **/help**, aby zobaczyć komendy. Pytania? Zapytaj na serwerze wsparcia Mewvo.",
-        "dm": "Dodano Mewvo do **{server}**. Administrator może tam wpisać **/setup**, aby zacząć.",
-        "dashboardButton": "Otwórz panel",
-        "supportButton": "Serwer wsparcia Mewvo"
+        "dm": "Dodano Mewvo do **{server}**. Użyj tam **/setup** albo otwórz panel, żeby zacząć.",
+        "dashboardButton": "Panel (dla adminów)",
+        "supportButton": "Serwer wsparcia Mewvo",
+        "ownerDm": "Mewvo został dodany do **{server}**, ale nie może pisać na żadnym kanale (potrzebuje: Wyświetlanie kanału, Wysyłanie wiadomości i Osadzanie linków). Użyj tam **/setup** albo otwórz panel, żeby zacząć.",
+        "optional": "Opcjonalnie, kiedy zechcesz: powitania, tickety, weryfikacja i poziomy (ogłoszenia awansów są wyłączone, dopóki ich nie włączysz)."
     }
 }

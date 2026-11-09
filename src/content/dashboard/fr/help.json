@@ -14,7 +14,7 @@
   "words": {
     "server": {
       "term": "Serveur",
-      "text": "Ta communauté Discord. Mewvo fonctionne sur un serveur principal et un serveur d’assistance facultatif."
+      "text": "Ta communauté Discord. Mewvo fonctionne sur chaque serveur où il est ajouté, et chaque serveur a ses propres réglages."
     },
     "channel": {
       "term": "Salon",
@@ -178,7 +178,7 @@
     },
     "supportServer": {
       "term": "Serveur d’assistance",
-      "text": "Un deuxième petit serveur où les membres bannis peuvent quand même faire appel, puisqu’ils ne voient plus le serveur principal."
+      "text": "Un deuxième petit serveur où les membres bannis peuvent quand même faire appel, puisqu’ils ne voient plus le serveur dont ils ont été bannis."
     },
     "inbox": {
       "term": "Boîte de réception",
@@ -212,7 +212,7 @@
     "pickHere": "Pas encore configuré. Choisis-le ici et enregistre.",
     "moreSettings": "Plus de paramètres : [ouvrir sa page]({href}).",
     "unreadable": "Les étapes de configuration n’ont pas pu être chargées pour le moment. Recharge la page dans une minute.",
-    "progress": "{done} étapes faites sur {total}. Suis-les dans l’ordre, ou passe celles dont tu n’as pas besoin. Tu peux revenir ici à tout moment depuis la barre latérale.",
+    "progress": "{done} sur {total} étapes essentielles faites. Fais-les dans l’ordre ; les étapes facultatives viennent ensuite, saute celles dont tu n’as pas besoin. Tu peux revenir ici à tout moment depuis la barre latérale.",
     "stepOf": "Étape {n} sur {total}",
     "back": "Retour",
     "next": "Étape suivante",
@@ -220,6 +220,7 @@
     "finish": "Terminer",
     "allSteps": "Toutes les étapes",
     "doneMark": " (fait)",
-    "newWords": "Ces mots sont nouveaux pour toi ? [Lexique]({href})."
+    "newWords": "Ces mots sont nouveaux pour toi ? [Lexique]({href}).",
+    "rolePosition": "Discord ne laisse Mewvo modérer que les membres dont le rôle le plus haut est sous le rôle de Mewvo. Dans Paramètres du serveur → Rôles, place le rôle de Mewvo au-dessus des rôles de tes membres ; les rôles des admins peuvent rester au-dessus. Le compte porte sur les membres que Mewvo a vus récemment, sans les admins, les bots et le propriétaire du serveur."
   }
 }

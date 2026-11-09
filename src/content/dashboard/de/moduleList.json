@@ -7,7 +7,7 @@
       "other": "{count} Module passen"
     },
     "showAll": "Alle zeigen",
-    "readOnly": "Nur lesen: Bearbeiten im Dashboard ist ausgeschaltet (DASHBOARD_EDIT_ENABLED ist nicht true).",
+    "readOnly": "Nur lesen: Änderungen über das Dashboard sind bei dieser Mewvo-Instanz ausgeschaltet.",
     "noMatch": "Kein Modul passt. Versuch ein anderes Wort oder sieh dir alle Module an.",
     "noneOn": "Keine Module sind an.",
     "noneOff": "Keine Module sind aus."

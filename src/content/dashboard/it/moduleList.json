@@ -8,7 +8,7 @@
       "other": "{count} moduli corrispondono"
     },
     "showAll": "Mostra tutti",
-    "readOnly": "Sola lettura: la modifica dalla dashboard è disattivata (DASHBOARD_EDIT_ENABLED non è true).",
+    "readOnly": "Sola lettura: le modifiche dalla dashboard sono disattivate su questa istanza di Mewvo.",
     "noMatch": "Nessun modulo corrisponde. Prova un’altra parola, o sfoglia tutti i moduli.",
     "noneOn": "Nessun modulo è attivo.",
     "noneOff": "Nessun modulo è disattivato."

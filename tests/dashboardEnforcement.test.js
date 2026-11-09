@@ -1310,7 +1310,7 @@ test('banned page: Discord bans joined with open cases; filters; escaped; Unban 
     ]) };
     const page = await get(h, h.d.enforcement.bans);
     assert.equal(page.statusCode, 200);
-    assert.match(page.body, /3 banned in the main server/);
+    assert.match(page.body, /3 banned in this server/);
     assert.ok(page.body.includes('target&lt;script&gt;') && page.body.includes('spam &lt;b&gt;'), 'names and reasons escaped');
     assert.ok(page.body.indexOf('ban3456') < page.body.indexOf('ban2345'), 'newest case first');
     assert.match(page.body, /Permanent <span class="muted">· Warning stage 3 of 3 \(permanent ban\)<\/span>/);

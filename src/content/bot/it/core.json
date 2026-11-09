@@ -7,8 +7,8 @@
             "title": "Guida di {bot}",
             "description": "supportaci con un boost",
             "gettingStarted": "Per iniziare",
-            "adminSteps": "1. **/configwizard** imposta il ruolo moderatore e il canale dei log.\n2. **/commands dashboard** attiva o disattiva le categorie.\n3. Scegli una categoria nel menu qui sotto per vederne i comandi.",
-            "memberSteps": "Scegli una categoria nel menu qui sotto per vederne i comandi.\nTi serve lo staff? Scrivi al bot in DM: il tuo messaggio arriva allo staff in privato (modmail).",
+            "adminSteps": "1. **/setup** mostra cosa è già configurato qui, con il link alla dashboard.\n2. Nella dashboard apri **Configurazione passo passo** e fai prima gli essenziali.\n3. Scegli una categoria nel menu qui sotto per vederne i comandi.",
+            "memberSteps": "Scegli una categoria nel menu qui sotto per vederne i comandi.",
             "access": "Accesso",
             "accessAdmin": "• I comandi con 🔒 richiedono il permesso **Amministratore**; gli altri sono per tutti.",
             "accessMember": "• Questo elenco mostra i comandi che puoi usare.",
@@ -17,7 +17,9 @@
             "goodToKnow": "Buono a sapersi",
             "goodToKnowText": "• La maggior parte delle funzioni ha un comando dashboard per le impostazioni\n• Le impostazioni sono salvate per server",
             "supportButton": "Server di supporto",
-            "placeholder": "Scegli una categoria"
+            "placeholder": "Scegli una categoria",
+            "memberModmail": "Ti serve lo staff? Scrivi al bot in DM: il tuo messaggio arriva allo staff in privato (modmail).",
+            "descriptionNeutral": "Moderazione, automod, ricorsi, ticket e altro per questo server."
         },
         "closed": {
             "title": "Menu della guida chiuso",
@@ -365,5 +367,26 @@
         "notRedeemedTitle": "Non riscattata",
         "databaseDown": "Il database non risponde. Non è cambiato niente; riprova tra qualche minuto.",
         "databaseDownTitle": "Riprova più tardi"
+    },
+    "categories": {
+        "Birthday": "Compleanni",
+        "Community": "Community",
+        "Core": "Generale",
+        "Enforcement": "Sanzioni",
+        "Fun": "Divertimento",
+        "Giveaway": "Giveaway",
+        "JoinToCreate": "Canali vocali temporanei",
+        "Leveling": "Livelli",
+        "Logging": "Log",
+        "Moderation": "Moderazione",
+        "Owner": "Proprietario",
+        "Reaction_roles": "Ruoli a reazione",
+        "Search": "Ricerca",
+        "ServerStats": "Statistiche server",
+        "Ticket": "Ticket",
+        "Tools": "Strumenti",
+        "Utility": "Utilità",
+        "Verification": "Verifica",
+        "Welcome": "Benvenuto"
     }
 }

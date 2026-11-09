@@ -8,7 +8,7 @@
       "other": "{count} módulos coinciden"
     },
     "showAll": "Mostrar todos",
-    "readOnly": "Solo lectura: la edición desde el panel está desactivada (DASHBOARD_EDIT_ENABLED no es true).",
+    "readOnly": "Solo lectura: los cambios desde el panel están desactivados en esta instancia de Mewvo.",
     "noMatch": "Ningún módulo coincide. Prueba otra palabra o mira todos los módulos.",
     "noneOn": "No hay módulos activados.",
     "noneOff": "No hay módulos desactivados."

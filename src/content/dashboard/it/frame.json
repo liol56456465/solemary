@@ -127,7 +127,7 @@
     "backServers": "Torna ai tuoi server"
   },
   "module": {
-    "readOnly": "Sola lettura: la modifica dalla dashboard è disattivata (DASHBOARD_EDIT_ENABLED non è true). Usa i comandi del bot, oppure chiedi al proprietario di attivarla.",
+    "readOnly": "Sola lettura: le modifiche dalla dashboard sono disattivate su questa istanza di Mewvo. Usa i comandi del bot, oppure chiedi al proprietario del bot di attivarle.",
     "onThisPage": "In questa pagina",
     "notSaved": "Non salvato: {message}",
     "more": "Saperne di più",

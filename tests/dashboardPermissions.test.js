@@ -361,7 +361,7 @@ test('moderator: ban, unban and remove warn are refused (403) and run nothing', 
     for (const type of ['ban', 'unban', 'removewarn']) {
         const res = await post(h, h.d.enforcement.actionPreview, `/users/${TARGET}/action/preview`, { params: { id: TARGET }, form: { type, reason: 'spam', warn: 'wrn2345' } });
         assert.equal(res.statusCode, 403, type);
-        assert.match(res.body, /needs Administrator in the main server/);
+        assert.match(res.body, /needs Administrator in this server/);
     }
     assert.equal(h.calls.filter((c) => c.name === 'executeAction' || c.name === 'completeFlowDetails').length, 0);
 });

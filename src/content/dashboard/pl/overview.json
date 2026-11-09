@@ -127,8 +127,12 @@
     "after": "Przeprowadzi cię przez poniższe kroki po kolei.",
     "words": "Co znaczą te słowa?",
     "oneStep": "Krok po kroku",
-    "progress": "Gotowe: {done} z {total}. Każdy krok zajmuje minutę; link otwiera właściwą stronę.",
-    "done": "Gotowe: {list}."
+    "progress": "Zrobione: {done} z {total} niezbędnych kroków. Każdy krok zajmuje minutę; link otwiera właściwą stronę.",
+    "done": "Gotowe: {list}.",
+    "essentials": "Najważniejsze",
+    "essentialsLine": "To, czego potrzebuje każdy serwer, żeby Mewvo mógł bezpiecznie moderować.",
+    "optional": "Opcjonalne",
+    "optionalLine": "Funkcje do dodania, kiedy zechcesz."
   },
   "handover": {
     "writtenBy": "Napisał(a) {name}, {date}",
@@ -217,6 +221,25 @@
       "post": "Opublikuj panele odwołań",
       "postAgain": "Opublikuj panele odwołań ponownie",
       "confirm": "Opublikować teraz panele odwołań? Wcześniejsze panele odwołań w tych kanałach zostaną zastąpione."
+    },
+    "rolePosition": {
+      "label": "Pozycja roli Mewvo",
+      "hint": "Mewvo może moderować tylko członków, których najwyższa rola jest pod jego własną. Teraz to wszyscy (poza adminami i właścicielem serwera)."
+    },
+    "language": {
+      "label": "Język bota",
+      "hint": "Język wiadomości i DM-ów Mewvo tutaj. Angielski, dopóki nie wybierzesz innego.",
+      "saved": "Język wiadomości i DM-ów Mewvo: {language}.",
+      "detected": "Mewvo używa języka twojego serwera na Discordzie: {language}. Zapisz go, żeby go zachować, albo wybierz inny.",
+      "english": "English"
+    },
+    "appealsHome": {
+      "label": "Gdzie członkowie się odwołują",
+      "hint": "Wiadomości DM o karach mówią członkom, gdzie poprosić o zdjęcie kary: na serwerze wsparcia Mewvo albo na twoim własnym serwerze."
+    },
+    "leveling": {
+      "label": "Poziomy",
+      "hint": "Członkowie zdobywają XP i poziomy za pisanie. Wybierz, czy i gdzie Mewvo ogłasza awanse."
     }
   },
   "value": {
@@ -274,6 +297,11 @@
       "ManageMessages": "Zarządzanie wiadomościami",
       "ManageGuild": "Zarządzanie serwerem",
       "ViewAuditLog": "Wyświetlanie dziennika zdarzeń"
-    }
+    },
+    "reach": "Członkowie, których Mewvo nie może moderować: {count}",
+    "reachFix": "Ich najwyższa rola ({roles}) jest na poziomie roli Mewvo lub wyżej. Przeciągnij {botRole} wyżej w Ustawienia serwera → Role.",
+    "atLeast": "co najmniej {count}",
+    "rolesAbove": "Role nad rolą Mewvo: {roles}",
+    "rolesAboveFix": "Mewvo nie może moderować członków, którzy je mają (nie widział jeszcze wszystkich członków, więc nie może ich policzyć). Przeciągnij {botRole} wyżej w Ustawienia serwera → Role."
   }
 }

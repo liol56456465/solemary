@@ -23,6 +23,20 @@ export function formatCategoryName(rawCategory) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+/**
+ * A command folder's name in `tr`'s language (bot catalog core.categories.<Folder>), else the
+ * folder name made readable ("Reaction_roles" → "Reaction Roles").
+ */
+export function categoryLabel(category, tr) {
+  const key = `core.categories.${category}`;
+  try {
+    if (category && tr?.has?.(key)) return tr.t(key);
+  } catch {
+    // an odd folder name is shown as it is
+  }
+  return formatCategoryName(category);
+}
+
 export function getCategoryIcon(category) {
   return CATEGORY_ICONS[category] || CATEGORY_ICONS[formatCategoryName(category)] || '';
 }
