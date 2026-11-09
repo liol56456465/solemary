@@ -3,6 +3,7 @@ import { logger, startupLog } from "../utils/logger.js";
 import config from "../config/application.js";
 import { testMode, verifyTestResources } from "../config/testMode.js";
 import { scheduleStartupJobs, STARTUP_JOB_DELAY_MS } from "../services/scheduling/startupJobs.js";
+import { warmAllInviteCaches } from "../services/invites/inviteCache.js";
 import { reconcileBannedRoles } from "../services/enforcement/bannedRoleService.js";
 import { describeAutomodReadiness } from "../services/automod/automodService.js";
 import { loadNoContactOrders } from "../services/enforcement/noContactService.js";
@@ -66,6 +67,11 @@ export default {
       // Reaction role cleanup, panel health and the level reward role sync: one paced background
       // job about 60 s from now, only for servers with panels or rules (scheduling/startupJobs.js).
       scheduleStartupJobs(client);
+      // Invite tracking: the invite use cache of servers with the feature on, paced (250 ms apart,
+      // at most 3 at once), in the background (services/invites/inviteCache.js).
+      void warmAllInviteCaches(client)
+        .then((t) => { if (t.servers) startupLog(`Invite tracking: ${t.ready} of ${t.servers} server(s) loaded, ${t.noPermission} without Manage Server, ${t.errors} failed`); })
+        .catch((error) => logger.warn(`Invite cache warm-up failed: ${error.message}`));
       startupLog(`Startup jobs (reaction roles, panel health, level roles) start in ${STARTUP_JOB_DELAY_MS / 1000} s in the background`);
 
       const bannedRoleSummary = await reconcileBannedRoles(client).catch((error) => ({ skipped: error.message }));

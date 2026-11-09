@@ -27,6 +27,7 @@ import { applyRoleRulesToMember } from '../services/members/roleRuleService.js';
 import { alertWatched } from '../services/enforcement/watchlistService.js';
 import { syncLevelRolesForMember } from '../services/leveling/levelRoleSyncService.js';
 import { handleMemberAdd as mirrorRolesOnJoin } from '../services/homeServers/roleMirror.js';
+import { awaitAttribution, joinLogLines, startInviteAttribution } from '../services/invites/inviteTracker.js';
 
 // Welcome messages keep the mentions they had before the client default dropped roles
 // (2026-11-03): users and roles from the admin-written text, never @everyone/@here.
@@ -62,6 +63,11 @@ export default {
     if (!hasIntent('GuildMembers')) return;
     try {
         const { guild, user } = member;
+
+        // Invite tracking (off by default; services/invites/): which invite this member used.
+        // Started first so the invite list is fetched before other code changes it; awaited (3 s
+        // at most) only for the welcome message and the join log below. Never rejects; null when off.
+        const invitePromise = user.bot ? null : startInviteAttribution(member);
 
         // Staff watchlist: a watched member joining/rejoining → one mod log line (memory only; never throws).
         if (!user.bot) {
@@ -137,6 +143,9 @@ export default {
         
         const welcomeChannelId = welcomeConfig?.channelId;
 
+        // The invite this member used ({inviter} … in the welcome, the join log lines). Unknown after 3 s.
+        const invite = await awaitAttribution(invitePromise);
+
         // A failed welcome send (bad image URL, perms changed mid-send, ...) must not
         // abort auto-role and the rest of the join pipeline below.
         if (welcomeConfig?.enabled && welcomeChannelId) try {
@@ -146,11 +155,15 @@ export default {
             // Skip only the welcome message if permissions are missing; the rest of the
             // join pipeline (auto-role, verification, logging, counters) must still run.
             if (permissions?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages])) {
-                const formatData = { user, guild, member };
                 // A post for this one member: the bot's own default texts in their language role's
                 // language (Onboarding may give one at join), else the server's. The admin's own
                 // message, title and footer are shown as written.
                 const tr = textForGuild(guild.id, { member, purpose: 'member' });
+                // {inviter} … placeholders: the attribution, else "someone" / "a link" in that language.
+                const formatData = {
+                    user, guild, member, invite,
+                    inviteFallback: { inviter: tr.t('welcome.post.inviterUnknown'), code: tr.t('welcome.post.inviteCodeUnknown') },
+                };
                 const welcomeMessage = defaultWelcomeText(welcomeConfig, formatData, tr);
 
                 const messageContent = welcomeConfig.welcomePing ? user.toString() : null;
@@ -239,6 +252,8 @@ export default {
                         `**ID:** \`${user.id}\``,
                         `**Created:** <t:${Math.floor(user.createdTimestamp / 1000)}:R>`,
                         `**Members:** ${guild.memberCount}`,
+                        // Invite tracking (only where it is on): "Invited by" and the account age.
+                        ...joinLogLines(invite),
                     ],
                     quoted: false,
                     thumbnail: user.displayAvatarURL({ dynamic: true }),

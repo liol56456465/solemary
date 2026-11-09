@@ -69,7 +69,8 @@
       "owner_erase": "Apagar um caso",
       "owner_errors": "Erros recentes",
       "owner_website": "Site",
-      "owner_activity": "Atividade do dono"
+      "owner_activity": "Atividade do dono",
+      "invites": "Convites"
     }
   },
   "state": {

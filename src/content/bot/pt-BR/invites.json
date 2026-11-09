@@ -1,0 +1,92 @@
+{
+    "cmd": {
+        "desc": "Rastreio de convites: quem convidou quem, contagens e ranking",
+        "view": "Ver as contagens de convites de um membro (só números)",
+        "viewUser": "De quem ver as contagens (padrão: você)",
+        "leaderboard": "Ver quem convidou mais membros",
+        "page": "Página do ranking (padrão 1)",
+        "who": "Ver como um membro entrou (equipe)",
+        "whoUser": "O membro a procurar",
+        "list": "Listar os membros que alguém convidou (equipe)",
+        "listUser": "Quem convidou",
+        "bonus": "Mudar o bônus da contagem de convites (equipe)",
+        "bonusAdd": "Dar convites bônus a um membro",
+        "bonusRemove": "Tirar convites bônus de um membro",
+        "bonusUser": "O membro cuja contagem muda",
+        "amount": "Quantos convites (de 1 a 10.000)",
+        "reset": "Zerar contagens: um membro ou o servidor todo (equipe)",
+        "resetUser": "Só este membro (vazio: o servidor todo)",
+        "setup": "Onde configurar o rastreio de convites (link do painel)"
+    },
+    "title": "Convites",
+    "off": "O rastreio de convites está desligado neste servidor. Um admin pode ligá-lo no painel (página Convites).",
+    "error": {
+        "dbDown": "O banco de dados não está respondendo agora, então nada foi lido nem alterado. Tente de novo em um minuto."
+    },
+    "source": {
+        "inviter": "o convite de {inviter}{code}",
+        "invite": "um convite{code}",
+        "vanity": "a URL personalizada{code}",
+        "widget": "o widget do servidor{code}",
+        "discovery": "Explorar servidores",
+        "bot": "Mewvo (adicionado de volta pelo «Verificar com o Discord»)",
+        "ambiguous": "um de vários convites (não deu para saber qual)",
+        "unknown": "desconhecido",
+        "not_ready": "desconhecido (a lista de convites ainda estava carregando)",
+        "no_permission": "desconhecido (o Mewvo precisa de «Gerenciar servidor»)"
+    },
+    "view": {
+        "title": "Contagens de convites",
+        "text": "{user} tem **{total}** convites.\nEntraram por eles: {invited} · saíram: {left} · falsos: {fake} · bônus: {bonus}",
+        "bot": "Bots não têm contagem de convites."
+    },
+    "leaderboard": {
+        "title": "Ranking de convites",
+        "empty": "Ninguém tem convites ainda.",
+        "emptyPage": "A página {page} está vazia.",
+        "line": "**{rank}.** {user}: **{total}** (entraram {invited}, saíram {left}, falsos {fake})",
+        "footer": "Página {page} · atualizado no máximo uma vez por minuto"
+    },
+    "who": {
+        "none": "O Mewvo não tem registro de entrada de {user} (entrou antes de o rastreio ser ligado ou enquanto o Mewvo estava offline).",
+        "via": "{user} entrou por {via}.",
+        "joined": "Entrou: {at}",
+        "age": "Idade da conta ao entrar: {days} dias",
+        "left": "Saiu: {at}",
+        "notCounted": "Não contado de novo: já tinha entrado antes pela mesma pessoa."
+    },
+    "list": {
+        "none": "Ninguém entrou pelos convites de {user} ainda.",
+        "header": "Últimos membros que entraram pelos convites de {user} (até {count}):",
+        "fake": "falso",
+        "left": "saiu",
+        "repeat": "voltou, não contado",
+        "beforeReset": "antes de zerar"
+    },
+    "bonus": {
+        "range": "O bônus passaria de ±100.000. Nada foi alterado.",
+        "done": "O bônus de {user} agora é {bonus}. Total: **{total}**.",
+        "doneNoTotal": "Salvo: o bônus de {user} agora é {bonus}. Não foi possível ler o total agora (o banco de dados não responde)."
+    },
+    "reset": {
+        "title": "Zerar contagens de convites",
+        "askAll": "Zerar as contagens de **todos** neste servidor? Só as entradas a partir de agora vão contar e todo bônus volta a 0. Nada é apagado.",
+        "askUser": "Zerar a contagem de {user}? Só as entradas a partir de agora vão contar e o bônus volta a 0. Nada é apagado.",
+        "confirmButton": "Zerar",
+        "cancelButton": "Cancelar",
+        "notYours": "Estes botões são do admin que usou /invites reset.",
+        "noAdmin": "Para isso você precisa da permissão de Administrador. Nada foi alterado.",
+        "cancelled": "Cancelado. Nada foi alterado.",
+        "doneAll": "Pronto. As contagens do servidor todo recomeçam a partir de agora.",
+        "doneUser": "Pronto. A contagem de {user} recomeça a partir de agora."
+    },
+    "setup": {
+        "on": "O rastreio de convites está **ligado** neste servidor.",
+        "off": "O rastreio de convites está **desligado** neste servidor.",
+        "noManageServer": "O Mewvo precisa da permissão **Gerenciar servidor** para ler a lista de convites. Sem ela, nenhuma entrada pode ser ligada a um convite.",
+        "loading": "A lista de convites ainda está carregando; por enquanto as entradas ficam como desconhecidas.",
+        "noManageRoles": "Há cargos por meta, mas falta ao Mewvo **Gerenciar cargos**, então ele não pode dá-los.",
+        "link": "Configurações, cargos por meta e as listas completas: {url}",
+        "noLink": "Configurações e cargos por meta estão no painel (página Convites)."
+    }
+}

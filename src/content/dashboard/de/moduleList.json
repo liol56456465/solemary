@@ -48,6 +48,7 @@
     "support": "Wo gebannte Mitglieder trotzdem Einspruch einlegen können.",
     "rules": "Deine Serverregeln, auf einer Webseite und in Strafnachrichten.",
     "appearance": "Gib Mewvo hier einen eigenen Namen und ein eigenes Bild (Pro und Max).",
-    "commands": "Einzelne Befehle oder Befehlsgruppen ein- oder ausschalten."
+    "commands": "Einzelne Befehle oder Befehlsgruppen ein- oder ausschalten.",
+    "invites": "Sieh, über welche Einladung jedes Mitglied kam, mit Bestenliste und Belohnungsrollen."
   }
 }

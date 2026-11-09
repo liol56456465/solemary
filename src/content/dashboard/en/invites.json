@@ -1,0 +1,91 @@
+{
+  "page": {
+    "help": "See which invite each member joined through: counts per inviter, a leaderboard, roles for reaching an invite count, and {inviter} in welcome messages. Off by default."
+  },
+  "support": {
+    "title": "Not in the support server",
+    "text": "Invite tracking runs in the main server and in other servers, not in Mewvo's support server."
+  },
+  "permission": {
+    "title": "Mewvo needs Manage Server",
+    "text": "Without the Manage Server permission Mewvo cannot read the invite list, so no join can be matched to an invite. Give Mewvo's role Manage Server in Server Settings → Roles."
+  },
+  "settings": {
+    "title": "Invite tracking",
+    "help": "Turn it on, and choose when a join counts as fake. Fake joins are left out of the counts; changing the rule recounts everything.",
+    "enabled": "Track invites",
+    "enabledHelp": "Mewvo notes which invite each new member used.",
+    "fakeDays": "New account: younger than (days)",
+    "fakeDaysHelp": "A member whose Discord account is younger than this when they join counts as fake. 0 turns this off.",
+    "fakeHours": "Left again within (hours)",
+    "fakeHoursHelp": "A member who leaves within this time after joining counts as fake. 0 turns this off."
+  },
+  "milestones": {
+    "title": "Milestone roles",
+    "help": "Give a role when someone reaches an invite count (up to 10). A role stays when the count drops later.",
+    "stack": "Keep every reached role",
+    "stackHelp": "Off: only the highest reached role is kept.",
+    "count": "Invites for step {n}",
+    "role": "Role for step {n}",
+    "none": "No role",
+    "incomplete": "Step {n} needs both a count and a role.",
+    "sameCount": "Two steps use {count} invites. Each step needs its own count.",
+    "sameRole": "Two steps use the same role. Each step needs its own role."
+  },
+  "unreadable": "Could not be read right now (database not responding).",
+  "board": {
+    "title": "Leaderboard",
+    "help": "Total = joined − left − fake + bonus. Rejoins through the same inviter count once.",
+    "rank": "#",
+    "member": "Member",
+    "total": "Total",
+    "invited": "Joined",
+    "left": "Left",
+    "fake": "Fake",
+    "bonus": "Bonus",
+    "empty": "Nobody has invites yet.",
+    "resetAt": "Counts start from the reset on"
+  },
+  "recent": {
+    "title": "Latest joins",
+    "help": "The last 20 joins and how each member came in.",
+    "member": "Member",
+    "via": "Joined via",
+    "joined": "Joined",
+    "state": "Notes",
+    "fake": "fake",
+    "left": "left",
+    "repeat": "rejoin, not counted",
+    "empty": "No joins recorded yet."
+  },
+  "codes": {
+    "title": "Invite codes",
+    "help": "The server's invites, most used first.",
+    "code": "Code",
+    "creator": "Created by",
+    "uses": "Uses",
+    "deleted": "(deleted)",
+    "empty": "No invites known yet.",
+    "loading": "The invite list is loading. Joins right now are recorded as unknown."
+  },
+  "commands": {
+    "title": "Commands",
+    "text": "Everyone: /invites view and /invites leaderboard. Administrators: /invites who, list, bonus add or remove, reset (with a confirm button) and setup."
+  },
+  "saved": {
+    "on": "Invite tracking is on.",
+    "off": "Invite tracking is off.",
+    "milestones": "Milestone roles saved."
+  },
+  "source": {
+    "invite": "an invite",
+    "vanity": "the vanity URL",
+    "widget": "the server widget",
+    "discovery": "Server Discovery",
+    "bot": "Mewvo (Verify with Discord re-add)",
+    "ambiguous": "one of several invites",
+    "unknown": "unknown",
+    "not_ready": "unknown (list still loading)",
+    "no_permission": "unknown (no Manage Server)"
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "page": {
+    "help": "Veja por qual convite cada membro entrou: contagens por quem convidou, um ranking, cargos por número de convites e {inviter} nas mensagens de boas-vindas. Desligado por padrão."
+  },
+  "support": {
+    "title": "Não no servidor de suporte",
+    "text": "O rastreio de convites funciona no servidor principal e em outros servidores, não no servidor de suporte do Mewvo."
+  },
+  "permission": {
+    "title": "O Mewvo precisa de «Gerenciar servidor»",
+    "text": "Sem a permissão «Gerenciar servidor», o Mewvo não consegue ler a lista de convites, então nenhuma entrada pode ser ligada a um convite. Dê ao cargo do Mewvo «Gerenciar servidor» em Configurações do servidor → Cargos."
+  },
+  "settings": {
+    "title": "Rastreio de convites",
+    "help": "Ligue e escolha quando uma entrada conta como falsa. Entradas falsas ficam fora das contagens; mudar a regra reconta tudo.",
+    "enabled": "Rastrear convites",
+    "enabledHelp": "O Mewvo anota qual convite cada membro novo usou.",
+    "fakeDays": "Conta nova: menos de (dias)",
+    "fakeDaysHelp": "Um membro cuja conta do Discord é mais nova que isso ao entrar conta como falso. 0 desliga.",
+    "fakeHours": "Saiu em até (horas)",
+    "fakeHoursHelp": "Um membro que sai nesse tempo depois de entrar conta como falso. 0 desliga."
+  },
+  "milestones": {
+    "title": "Cargos por meta",
+    "help": "Dar um cargo quando alguém chega a um número de convites (até 10). O cargo fica mesmo se a contagem cair depois.",
+    "stack": "Manter todos os cargos alcançados",
+    "stackHelp": "Desligado: fica só o cargo mais alto alcançado.",
+    "count": "Convites para a meta {n}",
+    "role": "Cargo para a meta {n}",
+    "none": "Sem cargo",
+    "incomplete": "A meta {n} precisa de um número e de um cargo.",
+    "sameCount": "Duas metas usam {count} convites. Cada meta precisa do seu próprio número.",
+    "sameRole": "Duas metas usam o mesmo cargo. Cada meta precisa do seu próprio cargo."
+  },
+  "unreadable": "Não foi possível ler agora (o banco de dados não responde).",
+  "board": {
+    "title": "Ranking",
+    "help": "Total = entraram − saíram − falsos + bônus. Voltar a entrar pela mesma pessoa conta uma vez.",
+    "rank": "#",
+    "member": "Membro",
+    "total": "Total",
+    "invited": "Entraram",
+    "left": "Saíram",
+    "fake": "Falsos",
+    "bonus": "Bônus",
+    "empty": "Ninguém tem convites ainda.",
+    "resetAt": "Contado desde o reinício em"
+  },
+  "recent": {
+    "title": "Últimas entradas",
+    "help": "As últimas 20 entradas e como cada membro chegou.",
+    "member": "Membro",
+    "via": "Entrou por",
+    "joined": "Entrou",
+    "state": "Notas",
+    "fake": "falso",
+    "left": "saiu",
+    "repeat": "voltou, não contado",
+    "empty": "Nenhuma entrada registrada ainda."
+  },
+  "codes": {
+    "title": "Códigos de convite",
+    "help": "Os convites do servidor, os mais usados primeiro.",
+    "code": "Código",
+    "creator": "Criado por",
+    "uses": "Usos",
+    "deleted": "(apagado)",
+    "empty": "Nenhum convite conhecido ainda.",
+    "loading": "A lista de convites está carregando. Por enquanto as entradas ficam como desconhecidas."
+  },
+  "commands": {
+    "title": "Comandos",
+    "text": "Todos: /invites view e /invites leaderboard. Administradores: /invites who, list, bonus add ou remove, reset (com botão de confirmação) e setup."
+  },
+  "saved": {
+    "on": "O rastreio de convites está ligado.",
+    "off": "O rastreio de convites está desligado.",
+    "milestones": "Cargos por meta salvos."
+  },
+  "source": {
+    "invite": "um convite",
+    "vanity": "a URL personalizada",
+    "widget": "o widget do servidor",
+    "discovery": "Explorar servidores",
+    "bot": "Mewvo (adicionado de volta pelo «Verificar com o Discord»)",
+    "ambiguous": "um de vários convites",
+    "unknown": "desconhecido",
+    "not_ready": "desconhecido (lista carregando)",
+    "no_permission": "desconhecido (sem «Gerenciar servidor»)"
+  }
+}

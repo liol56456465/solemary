@@ -564,6 +564,14 @@ function makeServices() {
             if (filters.roleId === ROLE_OK2) throw userErr('No users have the **Helper** role.\n\nTry adjusting your filters.', 'user_input');
             return { member: { id: MEMBER, user: { username: 'member<b>' } }, poolSize: 3 };
         },
+        // Invite tracking (Invites page): read-only cards (an escaped name, a code) and the warm-up after turning on.
+        getInvitePageData: async () => ({
+            canRead: false, cacheStatus: null,
+            leaderboard: [{ rank: 1, userId: MEMBER, invited: 3, left: 1, fake: 0, bonus: 2, total: 4 }],
+            recent: [{ userId: STRANGER, inviterId: MEMBER, code: 'abc<b>', source: 'invite', joinedAt: new Date('2026-11-01T10:00:00Z'), leftAt: null, counted: true, fake: false }],
+            codes: [{ code: 'abc', inviterId: MEMBER, uses: 3, maxUses: 0, deleted: false }],
+        }),
+        warmInviteCache: (guild) => { record('warmInviteCache', [guild?.id]); },
         shortenUrl: async (url, custom) => {
             record('shortenUrl', [url, custom]);
             if (!/^https?:\/\//.test(url)) throw userErr('Invalid URL format. Include http:// or https://', 'validation');
@@ -960,6 +968,13 @@ const CASES = {
         trigger: { form: { channelId: VOICE, nameTemplate: '{username} room', userLimit: '5', bitrateKbps: '64' }, service: 'updateChannelConfig',
             bad: { form: { channelId: VOICE, nameTemplate: 'x', userLimit: '500', bitrateKbps: '64' }, message: /between 0 and 99/ } },
         'trigger-remove': { form: { channelId: VOICE }, service: 'removeTriggerChannel', bad: { form: { channelId: 'nope' }, message: /Unknown trigger/ } },
+    },
+    // Invite tracking: both forms are Administrator-only (who invited whom, role rewards).
+    invites: {
+        settings: { admin: true, form: { enabled: '1', fakeAccountDays: '7', fakeLeaveHours: '24' }, service: 'updateSettings',
+            bad: { form: { enabled: '1', fakeAccountDays: '999', fakeLeaveHours: '24' }, message: /between 0 and 365/ } },
+        milestones: { admin: true, form: { stackRoles: '1', count_1: '5', role_1: ROLE_OK, count_2: '10', role_2: ROLE_OK2 }, service: 'updateSettings',
+            bad: { form: { count_1: '5', role_1: ROLE_DANGER }, message: /staff permissions/ } },
     },
     applications: {
         review: { form: { id: '1700000000000-abc', decision: 'approve', note: 'Welcome' }, service: 'reviewApplicationAndNotify', admin: true,

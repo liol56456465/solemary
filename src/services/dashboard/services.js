@@ -94,6 +94,8 @@ import {
 import ConfigService from '../config/configService.js';
 import { pickRandomMember } from '../randomMemberService.js';
 import { shortenUrl } from '../urlShortener.js';
+// Invite tracking (Invites page)
+import { getInvitePageData, warmInviteCache } from '../invites/invitePage.js';
 
 /** The /configwizard write (validated, history recorded): prefix, modRole, … */
 function updateConfigSetting(client, guildId, key, value, actorId) {
@@ -130,4 +132,5 @@ export const defaultServices = {
     postBotMessage, createPoll, createNativePoll, endPoll, openPollsFor, startCountdownMessage, postRulesMessages, updateRulesMessages,
     listScheduledMessages, createScheduledMessage, updateScheduledMessage, setScheduledMessagePaused, runScheduledMessageNow, deleteScheduledMessage,
     updateConfigSetting, pickRandomMember, shortenUrl,
+    getInvitePageData, warmInviteCache,
 };

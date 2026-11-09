@@ -15,7 +15,8 @@
     "message": "Willkommensnachricht",
     "messageHelp": "Zum Beispiel: Willkommen auf {server}, {user}. Du bist Mitglied Nummer {memberCount}.",
     "dm": "Private Nachricht an das neue Mitglied",
-    "dmHelp": "Wird direkt an das Mitglied geschickt (eine DM). Leer lassen, um nichts zu schicken."
+    "dmHelp": "Wird direkt an das Mitglied geschickt (eine DM). Leer lassen, um nichts zu schicken.",
+    "inviteHelp": "Mit eingeschalteten Einladungen: {inviter} (erwähnt, wer eingeladen hat), {inviterName} (der Name), {code} (der Einladungscode) und {invites} (die Zahl der Einladungen)."
   },
   "leave": {
     "topic": "Abschied",

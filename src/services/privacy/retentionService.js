@@ -19,6 +19,8 @@
 //                       ticket row is still live data there.
 //   bot_dm_log    the bot DM log (schema v13; botDm/dmLog.js): rows older than 30 days. The
 //                 language-change re-edit only looks at the last 30 days, so nothing it needs goes.
+//   invite_joins  invite tracking join rows (schema v14) of members who left more than 365 days
+//                 ago (owner decision 7); members still in the server keep theirs.
 // With the bot client (runRetention's first argument), CLIENT_RETENTION_RULES also run:
 //   applications  submitted applications past the server's own retention (pending /
 //                 reviewed days, Applications settings); moved here from the read path, so
@@ -54,6 +56,7 @@ export const RETENTION_DAYS = Object.freeze({
     expired_temp_data: 1,
     expired_cache_data: 1,
     bot_dm_log: DM_LOG_DAYS,
+    invite_joins: 365,
 });
 
 /** Expired key-value rows: up to this many batches of BATCH_LIMIT per run. */
@@ -160,6 +163,15 @@ export async function pruneBotDmLog({ query = dbQuery, tables = pgConfig.tables,
     return pruneDmLog({ query, tables, now, limit });
 }
 
+/** invite_joins: rows whose member left the server more than 365 days ago. */
+export async function pruneInviteJoins({ query = dbQuery, tables = pgConfig.tables, now = Date.now(), limit = BATCH_LIMIT } = {}) {
+    const t = tables.invite_joins;
+    return count(await query(
+        `DELETE FROM ${t} WHERE id IN (
+             SELECT id FROM ${t} WHERE left_at IS NOT NULL AND left_at < $1 LIMIT $2)`,
+        [cutoff(now, RETENTION_DAYS.invite_joins), limit]));
+}
+
 export const RETENTION_RULES = Object.freeze([
     ['watchlist', pruneWatchlist],
     ['no_contact', pruneNoContactOrders],
@@ -170,6 +182,7 @@ export const RETENTION_RULES = Object.freeze([
     ['expired_temp_data', pruneExpiredTempData],
     ['expired_cache_data', pruneExpiredCacheData],
     ['bot_dm_log', pruneBotDmLog],
+    ['invite_joins', pruneInviteJoins],
 ]);
 
 /**

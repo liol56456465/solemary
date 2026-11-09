@@ -1,0 +1,92 @@
+{
+    "cmd": {
+        "desc": "Invite tracking: who invited whom, counts and a leaderboard",
+        "view": "Show the invite counts of a member (counts only)",
+        "viewUser": "Whose counts to show (default: you)",
+        "leaderboard": "Show who invited the most members",
+        "page": "Page of the leaderboard (default 1)",
+        "who": "Show how a member joined (staff)",
+        "whoUser": "The member to look up",
+        "list": "List the members someone invited (staff)",
+        "listUser": "The inviter",
+        "bonus": "Change the bonus on a member's invite count (staff)",
+        "bonusAdd": "Add bonus invites to a member",
+        "bonusRemove": "Take bonus invites away from a member",
+        "bonusUser": "The member whose count changes",
+        "amount": "How many invites (1 to 10,000)",
+        "reset": "Reset invite counts: one member, or the whole server (staff)",
+        "resetUser": "Only this member (leave empty for the whole server)",
+        "setup": "Where to set up invite tracking (dashboard link)"
+    },
+    "title": "Invites",
+    "off": "Invite tracking is off in this server. An admin can turn it on on the dashboard (Invites page).",
+    "error": {
+        "dbDown": "The database is not responding right now, so nothing was read or changed. Try again in a minute."
+    },
+    "source": {
+        "inviter": "{inviter}'s invite{code}",
+        "invite": "an invite{code}",
+        "vanity": "the vanity URL{code}",
+        "widget": "the server widget{code}",
+        "discovery": "Server Discovery",
+        "bot": "Mewvo (added back through Verify with Discord)",
+        "ambiguous": "one of several invites (could not tell which)",
+        "unknown": "unknown",
+        "not_ready": "unknown (the invite list was still loading)",
+        "no_permission": "unknown (Mewvo needs Manage Server to track invites)"
+    },
+    "view": {
+        "title": "Invite counts",
+        "text": "{user} has **{total}** invites.\nJoined through them: {invited} · left: {left} · fake: {fake} · bonus: {bonus}",
+        "bot": "Bots have no invite counts."
+    },
+    "leaderboard": {
+        "title": "Invite leaderboard",
+        "empty": "Nobody has invites yet.",
+        "emptyPage": "Page {page} is empty.",
+        "line": "**{rank}.** {user}: **{total}** (joined {invited}, left {left}, fake {fake})",
+        "footer": "Page {page} · updated at most once a minute"
+    },
+    "who": {
+        "none": "Mewvo has no join record for {user} (they joined before invite tracking was on, or while Mewvo was offline).",
+        "via": "{user} joined through {via}.",
+        "joined": "Joined: {at}",
+        "age": "Account age when joining: {days} days",
+        "left": "Left: {at}",
+        "notCounted": "Not counted again: they had joined through the same inviter before."
+    },
+    "list": {
+        "none": "Nobody has joined through {user}'s invites yet.",
+        "header": "Latest members who joined through {user}'s invites (up to {count}):",
+        "fake": "fake",
+        "left": "left",
+        "repeat": "rejoin, not counted",
+        "beforeReset": "before the reset"
+    },
+    "bonus": {
+        "range": "That would take the bonus past ±100,000. Nothing was changed.",
+        "done": "Bonus of {user} is now {bonus}. Their total is **{total}**.",
+        "doneNoTotal": "Saved: the bonus of {user} is now {bonus}. Their total could not be read right now (database not responding)."
+    },
+    "reset": {
+        "title": "Reset invite counts",
+        "askAll": "Reset the invite counts of **everyone** in this server? Only joins from now on will count and every bonus starts again at 0. Nothing is deleted.",
+        "askUser": "Reset the invite count of {user}? Only joins from now on will count and their bonus starts again at 0. Nothing is deleted.",
+        "confirmButton": "Reset",
+        "cancelButton": "Cancel",
+        "notYours": "These buttons belong to the admin who ran /invites reset.",
+        "noAdmin": "You need the Administrator permission for this. Nothing was changed.",
+        "cancelled": "Cancelled. Nothing was changed.",
+        "doneAll": "Done. The invite counts of the whole server start again from now.",
+        "doneUser": "Done. The invite count of {user} starts again from now."
+    },
+    "setup": {
+        "on": "Invite tracking is **on** in this server.",
+        "off": "Invite tracking is **off** in this server.",
+        "noManageServer": "Mewvo needs the **Manage Server** permission to read the invite list. Without it no join can be matched to an invite.",
+        "loading": "The invite list is still loading; joins right now are recorded as unknown.",
+        "noManageRoles": "Milestone roles are set, but Mewvo lacks **Manage Roles**, so it cannot give them.",
+        "link": "Settings, milestone roles and the full lists: {url}",
+        "noLink": "Settings and milestone roles are on the dashboard (Invites page)."
+    }
+}

@@ -1,0 +1,92 @@
+{
+    "cmd": {
+        "desc": "Suivi des invitations : qui a invité qui, compteurs et classement",
+        "view": "Voir les compteurs d'invitations d'un membre (chiffres seulement)",
+        "viewUser": "Les compteurs de qui (par défaut : toi)",
+        "leaderboard": "Voir qui a invité le plus de membres",
+        "page": "Page du classement (par défaut 1)",
+        "who": "Voir comment un membre est arrivé (équipe)",
+        "whoUser": "Le membre à rechercher",
+        "list": "Lister les membres invités par quelqu'un (équipe)",
+        "listUser": "La personne qui a invité",
+        "bonus": "Modifier le bonus du compteur d'invitations (équipe)",
+        "bonusAdd": "Ajouter des invitations bonus à un membre",
+        "bonusRemove": "Retirer des invitations bonus à un membre",
+        "bonusUser": "Le membre dont le compteur change",
+        "amount": "Combien d'invitations (de 1 à 10 000)",
+        "reset": "Remettre à zéro : un membre ou tout le serveur (équipe)",
+        "resetUser": "Seulement ce membre (vide : tout le serveur)",
+        "setup": "Où configurer le suivi des invitations (lien du tableau de bord)"
+    },
+    "title": "Invitations",
+    "off": "Le suivi des invitations est désactivé sur ce serveur. Un admin peut l'activer sur le tableau de bord (page Invitations).",
+    "error": {
+        "dbDown": "La base de données ne répond pas pour le moment, rien n'a été lu ni modifié. Réessaie dans une minute."
+    },
+    "source": {
+        "inviter": "l'invitation de {inviter}{code}",
+        "invite": "une invitation{code}",
+        "vanity": "l'URL personnalisée{code}",
+        "widget": "le widget du serveur{code}",
+        "discovery": "la découverte de serveurs",
+        "bot": "Mewvo (rajouté via « Vérifier avec Discord »)",
+        "ambiguous": "une invitation parmi plusieurs (impossible de savoir laquelle)",
+        "unknown": "inconnu",
+        "not_ready": "inconnu (la liste des invitations se chargeait encore)",
+        "no_permission": "inconnu (Mewvo a besoin de « Gérer le serveur »)"
+    },
+    "view": {
+        "title": "Compteurs d'invitations",
+        "text": "{user} a **{total}** invitations.\nArrivés par ses invitations : {invited} · partis : {left} · faux : {fake} · bonus : {bonus}",
+        "bot": "Les bots n'ont pas de compteur d'invitations."
+    },
+    "leaderboard": {
+        "title": "Classement des invitations",
+        "empty": "Personne n'a encore d'invitations.",
+        "emptyPage": "La page {page} est vide.",
+        "line": "**{rank}.** {user} : **{total}** (arrivés {invited}, partis {left}, faux {fake})",
+        "footer": "Page {page} · mis à jour au plus une fois par minute"
+    },
+    "who": {
+        "none": "Mewvo n'a pas d'arrivée enregistrée pour {user} (arrivé avant l'activation du suivi, ou pendant que Mewvo était hors ligne).",
+        "via": "{user} est arrivé par {via}.",
+        "joined": "Arrivé : {at}",
+        "age": "Âge du compte à l'arrivée : {days} jours",
+        "left": "Parti : {at}",
+        "notCounted": "Pas compté une deuxième fois : déjà arrivé avant par la même personne."
+    },
+    "list": {
+        "none": "Personne n'est encore arrivé par les invitations de {user}.",
+        "header": "Derniers membres arrivés par les invitations de {user} (jusqu'à {count}) :",
+        "fake": "faux",
+        "left": "parti",
+        "repeat": "retour, pas compté",
+        "beforeReset": "avant la remise à zéro"
+    },
+    "bonus": {
+        "range": "Le bonus dépasserait ±100 000. Rien n'a été modifié.",
+        "done": "Le bonus de {user} est maintenant {bonus}. Total : **{total}**.",
+        "doneNoTotal": "Enregistré : le bonus de {user} est maintenant {bonus}. Le total n'a pas pu être lu pour le moment (la base de données ne répond pas)."
+    },
+    "reset": {
+        "title": "Remettre les invitations à zéro",
+        "askAll": "Remettre à zéro les compteurs de **tout le monde** sur ce serveur ? Seules les arrivées à partir de maintenant compteront et chaque bonus repart de 0. Rien n'est supprimé.",
+        "askUser": "Remettre à zéro le compteur de {user} ? Seules les arrivées à partir de maintenant compteront et son bonus repart de 0. Rien n'est supprimé.",
+        "confirmButton": "Remettre à zéro",
+        "cancelButton": "Annuler",
+        "notYours": "Ces boutons appartiennent à l'admin qui a lancé /invites reset.",
+        "noAdmin": "Il faut la permission Administrateur pour cela. Rien n'a été modifié.",
+        "cancelled": "Annulé. Rien n'a été modifié.",
+        "doneAll": "C'est fait. Les compteurs de tout le serveur repartent de maintenant.",
+        "doneUser": "C'est fait. Le compteur de {user} repart de maintenant."
+    },
+    "setup": {
+        "on": "Le suivi des invitations est **activé** sur ce serveur.",
+        "off": "Le suivi des invitations est **désactivé** sur ce serveur.",
+        "noManageServer": "Mewvo a besoin de la permission **Gérer le serveur** pour lire la liste des invitations. Sans elle, aucune arrivée ne peut être reliée à une invitation.",
+        "loading": "La liste des invitations se charge encore ; les arrivées sont notées comme inconnues pour l'instant.",
+        "noManageRoles": "Des rôles de palier sont réglés, mais il manque à Mewvo **Gérer les rôles**, il ne peut donc pas les donner.",
+        "link": "Réglages, rôles de palier et listes complètes : {url}",
+        "noLink": "Les réglages et les rôles de palier sont sur le tableau de bord (page Invitations)."
+    }
+}

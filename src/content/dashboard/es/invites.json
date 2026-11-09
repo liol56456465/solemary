@@ -1,0 +1,91 @@
+{
+  "page": {
+    "help": "Mira por qué invitación entró cada miembro: contadores por quien invita, un ranking, roles por número de invitaciones y {inviter} en los mensajes de bienvenida. Desactivado por defecto."
+  },
+  "support": {
+    "title": "No en el servidor de soporte",
+    "text": "El seguimiento de invitaciones funciona en el servidor principal y en otros servidores, no en el servidor de soporte de Mewvo."
+  },
+  "permission": {
+    "title": "Mewvo necesita «Gestionar servidor»",
+    "text": "Sin el permiso «Gestionar servidor», Mewvo no puede leer la lista de invitaciones, así que ninguna entrada se puede asociar a una invitación. Dáselo al rol de Mewvo en Ajustes del servidor → Roles."
+  },
+  "settings": {
+    "title": "Seguimiento de invitaciones",
+    "help": "Actívalo y elige cuándo una entrada cuenta como falsa. Las entradas falsas no entran en los contadores; cambiar la regla lo recuenta todo.",
+    "enabled": "Seguir invitaciones",
+    "enabledHelp": "Mewvo anota qué invitación usó cada miembro nuevo.",
+    "fakeDays": "Cuenta nueva: menos de (días)",
+    "fakeDaysHelp": "Un miembro cuya cuenta de Discord es más nueva que esto al entrar cuenta como falso. 0 lo desactiva.",
+    "fakeHours": "Se fue en menos de (horas)",
+    "fakeHoursHelp": "Un miembro que se va en este tiempo tras entrar cuenta como falso. 0 lo desactiva."
+  },
+  "milestones": {
+    "title": "Roles por metas",
+    "help": "Da un rol cuando alguien llega a un número de invitaciones (hasta 10). El rol se queda aunque luego baje el contador.",
+    "stack": "Mantener todos los roles alcanzados",
+    "stackHelp": "Desactivado: solo se queda el rol más alto alcanzado.",
+    "count": "Invitaciones para la meta {n}",
+    "role": "Rol para la meta {n}",
+    "none": "Sin rol",
+    "incomplete": "La meta {n} necesita un número y un rol.",
+    "sameCount": "Dos metas usan {count} invitaciones. Cada meta necesita su propio número.",
+    "sameRole": "Dos metas usan el mismo rol. Cada meta necesita su propio rol."
+  },
+  "unreadable": "No se pudo leer ahora (la base de datos no responde).",
+  "board": {
+    "title": "Ranking",
+    "help": "Total = entraron − se fueron − falsas + bonus. Volver a entrar por la misma persona cuenta una vez.",
+    "rank": "#",
+    "member": "Miembro",
+    "total": "Total",
+    "invited": "Entraron",
+    "left": "Se fueron",
+    "fake": "Falsas",
+    "bonus": "Bonus",
+    "empty": "Nadie tiene invitaciones todavía.",
+    "resetAt": "Se cuenta desde el reinicio del"
+  },
+  "recent": {
+    "title": "Últimas entradas",
+    "help": "Las últimas 20 entradas y cómo llegó cada miembro.",
+    "member": "Miembro",
+    "via": "Entró por",
+    "joined": "Entró",
+    "state": "Notas",
+    "fake": "falsa",
+    "left": "se fue",
+    "repeat": "volvió a entrar, no contado",
+    "empty": "Todavía no hay entradas registradas."
+  },
+  "codes": {
+    "title": "Códigos de invitación",
+    "help": "Las invitaciones del servidor, las más usadas primero.",
+    "code": "Código",
+    "creator": "Creada por",
+    "uses": "Usos",
+    "deleted": "(eliminada)",
+    "empty": "Todavía no se conoce ninguna invitación.",
+    "loading": "La lista de invitaciones se está cargando. Por ahora las entradas se registran como desconocidas."
+  },
+  "commands": {
+    "title": "Comandos",
+    "text": "Todos: /invites view y /invites leaderboard. Administradores: /invites who, list, bonus add o remove, reset (con botón de confirmación) y setup."
+  },
+  "saved": {
+    "on": "El seguimiento de invitaciones está activado.",
+    "off": "El seguimiento de invitaciones está desactivado.",
+    "milestones": "Roles por metas guardados."
+  },
+  "source": {
+    "invite": "una invitación",
+    "vanity": "la URL personalizada",
+    "widget": "el widget del servidor",
+    "discovery": "Explorar servidores",
+    "bot": "Mewvo (añadido de nuevo con «Verificar con Discord»)",
+    "ambiguous": "una de varias invitaciones",
+    "unknown": "desconocido",
+    "not_ready": "desconocido (lista cargando)",
+    "no_permission": "desconocido (sin «Gestionar servidor»)"
+  }
+}

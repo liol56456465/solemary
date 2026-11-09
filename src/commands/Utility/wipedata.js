@@ -11,6 +11,7 @@ import { localized, replyText } from '../../utils/commandLocalizations.js';
 const ITEM_KEYS = Object.freeze({
     levels: 'utility.wipedata.item.levels', birthday: 'utility.wipedata.item.birthday', todo: 'utility.wipedata.item.todo',
     reminders: 'utility.wipedata.item.reminders', oauth: 'utility.wipedata.item.oauth', dmlog: 'utility.wipedata.item.dmlog',
+    invites: 'utility.wipedata.item.invites',
 });
 
 /** A wipe item's label in a language (an id without a catalog key: the service's English label, else the id). */

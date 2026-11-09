@@ -32,6 +32,7 @@ const PATHS = {
     giveaways: '<rect x="3" y="9" width="18" height="4" rx="1"/><path d="M5 13v8h14v-8M12 9v12M12 9c-1.5-4-6-4-6-1.5S10 9 12 9zM12 9c1.5-4 6-4 6-1.5S14 9 12 9z"/>',
     birthdays: '<path d="M4 21h16M5 21v-7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v7"/><path d="M5 16c2 1 3-1 4.5 0s3 1 4.5 0 3-1 5 0M12 13V9M12 6.5v.01"/>',
     counters: '<path d="M9 4L7 20M17 4l-2 16M4 9h16M3 15h16"/>',
+    invites: '<path d="M4 7h16v12H4z"/><path d="M4 7l8 6 8-6"/><path d="M17 3v4M15 5h4"/>',
     'join-to-create': '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/>',
     applications: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 11h7M9 14h7M9 17h4"/>',
     community: '<path d="M4 5h11v8H8l-4 3z"/><path d="M15 9h5v8l-3-2h-6v-2"/>',

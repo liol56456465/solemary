@@ -49,6 +49,7 @@
     "support": "Dove i membri bannati possono comunque fare ricorso.",
     "rules": "Le regole del tuo server, su una pagina web e nei messaggi di punizione.",
     "appearance": "Dai qui a Mewvo un nome e un’immagine propri (Pro e Max).",
-    "commands": "Attiva o disattiva singoli comandi o gruppi di comandi."
+    "commands": "Attiva o disattiva singoli comandi o gruppi di comandi.",
+    "invites": "Vedi con quale invito è entrato ogni membro, con classifica e ruoli premio."
   }
 }

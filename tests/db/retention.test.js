@@ -81,7 +81,7 @@ const ids = async (table, column, values) => (await q(`SELECT ${column} AS id FR
 const str = (list) => list.map(String).sort();
 
 test('retention periods: 1 year for watchlist, no-contact, raid reports, verification audit; 60 days for IP hashes; 30 days for the bot DM log', { skip }, () => {
-    assert.deepEqual({ ...r.RETENTION_DAYS }, { watchlist: 365, no_contact: 365, raid_reports: 365, verification_audit: 365, verification_ips: 60, oauth_verified_guilds: 1, expired_temp_data: 1, expired_cache_data: 1, bot_dm_log: 30 });
+    assert.deepEqual({ ...r.RETENTION_DAYS }, { watchlist: 365, no_contact: 365, raid_reports: 365, verification_audit: 365, verification_ips: 60, oauth_verified_guilds: 1, expired_temp_data: 1, expired_cache_data: 1, bot_dm_log: 30, invite_joins: 365 });
 });
 
 test('watchlist: ended or run out more than a year ago → deleted; inside the window and open entries stay', { skip }, async () => {
@@ -150,7 +150,7 @@ test('runRetention: a database error in one rule does not stop the others; other
     const failing = (text, params) => (/mod_watchlist/.test(text) ? Promise.reject(new Error('relation is locked')) : query(text, params));
     const result = await r.runRetention(null, { query: failing });
     assert.deepEqual(result.failed, ['watchlist']);
-    assert.deepEqual(Object.keys(result.counts).sort(), ['bot_dm_log', 'expired_cache_data', 'expired_temp_data', 'no_contact', 'oauth_verified_guilds', 'raid_reports', 'verification_audit', 'verification_ips']);
+    assert.deepEqual(Object.keys(result.counts).sort(), ['bot_dm_log', 'expired_cache_data', 'expired_temp_data', 'invite_joins', 'no_contact', 'oauth_verified_guilds', 'raid_reports', 'verification_audit', 'verification_ips']);
     assert.deepEqual(await ids('mod_watchlist', 'id', [watch]), [String(watch)], 'the failed rule deleted nothing');
     assert.deepEqual(await ids('no_contact_orders', 'id', [nc]), []);
     assert.deepEqual(await ids('automod_raid_incidents', 'id', [raid]), []);

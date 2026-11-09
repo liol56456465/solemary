@@ -172,6 +172,8 @@
         "welcomeTitle": "Witaj",
         "goodbyeTitle": "Do widzenia",
         "user": "Użytkownik",
-        "memberCount": "Liczba członków"
+        "memberCount": "Liczba członków",
+        "inviterUnknown": "ktoś",
+        "inviteCodeUnknown": "link"
     }
 }

@@ -1,0 +1,92 @@
+{
+    "cmd": {
+        "desc": "Tracciamento inviti: chi ha invitato chi, conteggi e classifica",
+        "view": "Mostra i conteggi inviti di un membro (solo numeri)",
+        "viewUser": "Di chi mostrare i conteggi (predefinito: tu)",
+        "leaderboard": "Mostra chi ha invitato più membri",
+        "page": "Pagina della classifica (predefinita 1)",
+        "who": "Mostra come è entrato un membro (staff)",
+        "whoUser": "Il membro da cercare",
+        "list": "Elenca i membri invitati da qualcuno (staff)",
+        "listUser": "Chi ha invitato",
+        "bonus": "Cambia il bonus sul conteggio inviti (staff)",
+        "bonusAdd": "Aggiungi inviti bonus a un membro",
+        "bonusRemove": "Togli inviti bonus a un membro",
+        "bonusUser": "Il membro il cui conteggio cambia",
+        "amount": "Quanti inviti (da 1 a 10.000)",
+        "reset": "Azzera i conteggi: un membro o tutto il server (staff)",
+        "resetUser": "Solo questo membro (vuoto: tutto il server)",
+        "setup": "Dove configurare il tracciamento inviti (link alla dashboard)"
+    },
+    "title": "Inviti",
+    "off": "Il tracciamento inviti è disattivato in questo server. Un admin può attivarlo dalla dashboard (pagina Inviti).",
+    "error": {
+        "dbDown": "Il database non risponde in questo momento, quindi non è stato letto né cambiato nulla. Riprova tra un minuto."
+    },
+    "source": {
+        "inviter": "l'invito di {inviter}{code}",
+        "invite": "un invito{code}",
+        "vanity": "l'URL personalizzato{code}",
+        "widget": "il widget del server{code}",
+        "discovery": "Esplora server",
+        "bot": "Mewvo (riaggiunto tramite «Verifica con Discord»)",
+        "ambiguous": "uno di più inviti (impossibile dire quale)",
+        "unknown": "sconosciuto",
+        "not_ready": "sconosciuto (l'elenco inviti si stava ancora caricando)",
+        "no_permission": "sconosciuto (Mewvo ha bisogno di «Gestisci server»)"
+    },
+    "view": {
+        "title": "Conteggi inviti",
+        "text": "{user} ha **{total}** inviti.\nEntrati tramite loro: {invited} · usciti: {left} · falsi: {fake} · bonus: {bonus}",
+        "bot": "I bot non hanno conteggi inviti."
+    },
+    "leaderboard": {
+        "title": "Classifica inviti",
+        "empty": "Nessuno ha ancora inviti.",
+        "emptyPage": "La pagina {page} è vuota.",
+        "line": "**{rank}.** {user}: **{total}** (entrati {invited}, usciti {left}, falsi {fake})",
+        "footer": "Pagina {page} · aggiornata al massimo una volta al minuto"
+    },
+    "who": {
+        "none": "Mewvo non ha un ingresso registrato per {user} (entrato prima che il tracciamento fosse attivo, o mentre Mewvo era offline).",
+        "via": "{user} è entrato tramite {via}.",
+        "joined": "Entrato: {at}",
+        "age": "Età dell'account all'ingresso: {days} giorni",
+        "left": "Uscito: {at}",
+        "notCounted": "Non contato di nuovo: era già entrato con la stessa persona."
+    },
+    "list": {
+        "none": "Nessuno è ancora entrato con gli inviti di {user}.",
+        "header": "Ultimi membri entrati con gli inviti di {user} (fino a {count}):",
+        "fake": "falso",
+        "left": "uscito",
+        "repeat": "rientro, non contato",
+        "beforeReset": "prima dell'azzeramento"
+    },
+    "bonus": {
+        "range": "Il bonus supererebbe ±100.000. Non è stato cambiato nulla.",
+        "done": "Il bonus di {user} ora è {bonus}. Totale: **{total}**.",
+        "doneNoTotal": "Salvato: il bonus di {user} ora è {bonus}. Il totale non è leggibile in questo momento (il database non risponde)."
+    },
+    "reset": {
+        "title": "Azzera i conteggi inviti",
+        "askAll": "Azzerare i conteggi inviti di **tutti** in questo server? Conteranno solo gli ingressi da adesso e ogni bonus riparte da 0. Non viene cancellato nulla.",
+        "askUser": "Azzerare il conteggio inviti di {user}? Conteranno solo gli ingressi da adesso e il bonus riparte da 0. Non viene cancellato nulla.",
+        "confirmButton": "Azzera",
+        "cancelButton": "Annulla",
+        "notYours": "Questi pulsanti appartengono all'admin che ha usato /invites reset.",
+        "noAdmin": "Serve il permesso Amministratore. Non è stato cambiato nulla.",
+        "cancelled": "Annullato. Non è stato cambiato nulla.",
+        "doneAll": "Fatto. I conteggi inviti di tutto il server ripartono da adesso.",
+        "doneUser": "Fatto. Il conteggio inviti di {user} riparte da adesso."
+    },
+    "setup": {
+        "on": "Il tracciamento inviti è **attivo** in questo server.",
+        "off": "Il tracciamento inviti è **disattivato** in questo server.",
+        "noManageServer": "Mewvo ha bisogno del permesso **Gestisci server** per leggere l'elenco inviti. Senza, nessun ingresso può essere collegato a un invito.",
+        "loading": "L'elenco inviti si sta ancora caricando; per ora gli ingressi sono registrati come sconosciuti.",
+        "noManageRoles": "Ci sono ruoli traguardo, ma a Mewvo manca **Gestisci ruoli**, quindi non può assegnarli.",
+        "link": "Impostazioni, ruoli traguardo ed elenchi completi: {url}",
+        "noLink": "Impostazioni e ruoli traguardo sono nella dashboard (pagina Inviti)."
+    }
+}

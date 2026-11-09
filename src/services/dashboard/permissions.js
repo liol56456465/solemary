@@ -51,6 +51,8 @@ export const PERMISSIONS = Object.freeze({
     'page:applications': ADMIN,
     'page:community': ADMIN,
     'page:join-to-create': ADMIN,
+    // Invite tracking: who invited whom and role rewards; Administrator only (not in MANAGER_PAGES).
+    'page:invites': ADMIN,
     'page:automod': ADMIN,
     'page:enforcement': ADMIN,
     'page:logging': ADMIN,

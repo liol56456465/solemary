@@ -35,6 +35,9 @@ const BASE_INTENTS = Object.freeze([
     // Native Discord AutoMod executions (services/automod/nativeBridge.js); the
     // events only arrive while the bot has Manage Server.
     GatewayIntentBits.AutoModerationExecution,
+    // Invite tracking (services/invites/): inviteCreate / inviteDelete keep the per-server use
+    // cache current. Not privileged; the events only arrive while the bot has Manage Server.
+    GatewayIntentBits.GuildInvites,
 ]);
 
 /**

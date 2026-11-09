@@ -27,6 +27,7 @@ import { assessVerification, postVerificationHold } from './verificationGuard.js
 import { getGuildConfig } from './config/guildConfig.js';
 import { getConfiguredSetting, isHomeGuild, resolveSetting } from './settings/guildSettings.js';
 import { oauthVerifyPrivacyNote, privacyUrl } from '../utils/privacyNotice.js';
+import { clearExpectedBotAdd, expectBotAdd } from './invites/expectedAdds.js';
 
 const AUTHORIZE_URL = 'https://discord.com/oauth2/authorize';
 const TOKEN_KEY_PREFIX = 'oauth:tokens:';
@@ -468,7 +469,16 @@ async function usableAccessToken(userId) {
 export async function addMemberWithStoredToken(client, guildId, userId) {
     const accessToken = await getUsableAccessToken(userId);
     if (!accessToken) return 'no_token';
+    // Invite tracking: the join this causes is Mewvo's own add ('bot'), not an invite use.
+    expectBotAdd(guildId, userId);
     // discord.js REST waits out rate limits on its own. 201 = added, 204 = already a member.
-    const result = await client.rest.put(Routes.guildMember(guildId, userId), { body: { access_token: accessToken } });
+    let result;
+    try {
+        result = await client.rest.put(Routes.guildMember(guildId, userId), { body: { access_token: accessToken } });
+    } catch (error) {
+        clearExpectedBotAdd(guildId, userId);
+        throw error;
+    }
+    if (!result) clearExpectedBotAdd(guildId, userId);
     return result ? 'added' : 'already';
 }

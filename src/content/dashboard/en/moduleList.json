@@ -48,6 +48,7 @@
     "support": "Where banned members can still appeal.",
     "rules": "Your server rules, shown on a web page and in punishment messages.",
     "appearance": "Give Mewvo its own name and picture here (Pro and Max).",
-    "commands": "Turn single commands or groups of commands on or off."
+    "commands": "Turn single commands or groups of commands on or off.",
+    "invites": "See which invite each member joined through, with a leaderboard and reward roles."
   }
 }

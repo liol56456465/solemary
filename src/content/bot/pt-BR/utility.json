@@ -119,7 +119,8 @@
             "todo": "Lista de tarefas pessoal",
             "reminders": "Lembretes",
             "oauth": "Token de login do Discord salvo (de \"Verificar com o Discord\")",
-            "dmlog": "Cópias salvas das DMs do bot (para traduzi-las de novo quando você muda de idioma)"
+            "dmlog": "Cópias salvas das DMs do bot (para traduzi-las de novo quando você muda de idioma)",
+            "invites": "Rastreio de convites: como você entrou, e seu nome como quem convidou outros"
         },
         "partialTitle": "Nem tudo foi apagado",
         "partialFailed": "O banco de dados não respondeu para: {items}. ",

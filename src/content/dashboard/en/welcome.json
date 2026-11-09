@@ -15,7 +15,8 @@
     "message": "Welcome message",
     "messageHelp": "For example: Welcome to {server}, {user}. You are member number {memberCount}.",
     "dm": "Private message to the new member",
-    "dmHelp": "Sent to them directly (a DM). Leave empty to send nothing."
+    "dmHelp": "Sent to them directly (a DM). Leave empty to send nothing.",
+    "inviteHelp": "With Invites on: {inviter} (mentions who invited them), {inviterName} (their name), {code} (the invite code) and {invites} (their invite count)."
   },
   "leave": {
     "topic": "Goodbye",

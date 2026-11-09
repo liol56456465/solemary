@@ -69,7 +69,8 @@
       "owner_erase": "Usuń sprawę",
       "owner_errors": "Ostatnie błędy",
       "owner_website": "Strona",
-      "owner_activity": "Aktywność właściciela"
+      "owner_activity": "Aktywność właściciela",
+      "invites": "Zaproszenia"
     }
   },
   "state": {

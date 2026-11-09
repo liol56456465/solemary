@@ -1,0 +1,91 @@
+{
+  "page": {
+    "help": "Vedi con quale invito è entrato ogni membro: conteggi per chi invita, classifica, ruoli al raggiungimento di un numero di inviti e {inviter} nei messaggi di benvenuto. Disattivato di default."
+  },
+  "support": {
+    "title": "Non nel server di supporto",
+    "text": "Il tracciamento inviti funziona nel server principale e negli altri server, non nel server di supporto di Mewvo."
+  },
+  "permission": {
+    "title": "Mewvo ha bisogno di «Gestisci server»",
+    "text": "Senza il permesso «Gestisci server» Mewvo non può leggere l’elenco inviti, quindi nessun ingresso può essere collegato a un invito. Dai al ruolo di Mewvo «Gestisci server» in Impostazioni server → Ruoli."
+  },
+  "settings": {
+    "title": "Tracciamento inviti",
+    "help": "Attivalo e scegli quando un ingresso conta come falso. Gli ingressi falsi restano fuori dai conteggi; cambiare la regola ricalcola tutto.",
+    "enabled": "Traccia gli inviti",
+    "enabledHelp": "Mewvo annota quale invito ha usato ogni nuovo membro.",
+    "fakeDays": "Account nuovo: meno di (giorni)",
+    "fakeDaysHelp": "Un membro il cui account Discord è più giovane di così all’ingresso conta come falso. 0 lo disattiva.",
+    "fakeHours": "Uscito entro (ore)",
+    "fakeHoursHelp": "Un membro che esce entro questo tempo dall’ingresso conta come falso. 0 lo disattiva."
+  },
+  "milestones": {
+    "title": "Ruoli traguardo",
+    "help": "Dai un ruolo quando qualcuno raggiunge un numero di inviti (fino a 10). Il ruolo resta anche se il conteggio poi scende.",
+    "stack": "Tieni tutti i ruoli raggiunti",
+    "stackHelp": "Disattivato: resta solo il ruolo più alto raggiunto.",
+    "count": "Inviti per il livello {n}",
+    "role": "Ruolo per il livello {n}",
+    "none": "Nessun ruolo",
+    "incomplete": "Il livello {n} ha bisogno sia di un numero che di un ruolo.",
+    "sameCount": "Due livelli usano {count} inviti. Ogni livello ha bisogno del suo numero.",
+    "sameRole": "Due livelli usano lo stesso ruolo. Ogni livello ha bisogno del suo ruolo."
+  },
+  "unreadable": "Non leggibile in questo momento (il database non risponde).",
+  "board": {
+    "title": "Classifica",
+    "help": "Totale = entrati − usciti − falsi + bonus. I rientri con la stessa persona contano una volta.",
+    "rank": "#",
+    "member": "Membro",
+    "total": "Totale",
+    "invited": "Entrati",
+    "left": "Usciti",
+    "fake": "Falsi",
+    "bonus": "Bonus",
+    "empty": "Nessuno ha ancora inviti.",
+    "resetAt": "Conteggio dall’azzeramento del"
+  },
+  "recent": {
+    "title": "Ultimi ingressi",
+    "help": "Gli ultimi 20 ingressi e come è arrivato ogni membro.",
+    "member": "Membro",
+    "via": "Entrato tramite",
+    "joined": "Entrato",
+    "state": "Note",
+    "fake": "falso",
+    "left": "uscito",
+    "repeat": "rientro, non contato",
+    "empty": "Nessun ingresso registrato per ora."
+  },
+  "codes": {
+    "title": "Codici invito",
+    "help": "Gli inviti del server, i più usati per primi.",
+    "code": "Codice",
+    "creator": "Creato da",
+    "uses": "Utilizzi",
+    "deleted": "(eliminato)",
+    "empty": "Nessun invito conosciuto per ora.",
+    "loading": "L’elenco inviti si sta caricando. Per ora gli ingressi sono registrati come sconosciuti."
+  },
+  "commands": {
+    "title": "Comandi",
+    "text": "Tutti: /invites view e /invites leaderboard. Amministratori: /invites who, list, bonus add o remove, reset (con pulsante di conferma) e setup."
+  },
+  "saved": {
+    "on": "Il tracciamento inviti è attivo.",
+    "off": "Il tracciamento inviti è disattivato.",
+    "milestones": "Ruoli traguardo salvati."
+  },
+  "source": {
+    "invite": "un invito",
+    "vanity": "l’URL personalizzato",
+    "widget": "il widget del server",
+    "discovery": "Esplora server",
+    "bot": "Mewvo (riaggiunto con «Verifica con Discord»)",
+    "ambiguous": "uno di più inviti",
+    "unknown": "sconosciuto",
+    "not_ready": "sconosciuto (elenco in caricamento)",
+    "no_permission": "sconosciuto (manca «Gestisci server»)"
+  }
+}

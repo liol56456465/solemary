@@ -77,7 +77,7 @@ test('runRetention: a failing rule is logged and the others still run; the summa
 });
 
 test('the rules: one bounded DELETE each, cutoff and limit as parameters', async () => {
-    assert.deepEqual(RETENTION_RULES.map(([name]) => name), ['watchlist', 'no_contact', 'raid_reports', 'verification_audit', 'verification_ips', 'oauth_verified_guilds', 'expired_temp_data', 'expired_cache_data', 'bot_dm_log']);
+    assert.deepEqual(RETENTION_RULES.map(([name]) => name), ['watchlist', 'no_contact', 'raid_reports', 'verification_audit', 'verification_ips', 'oauth_verified_guilds', 'expired_temp_data', 'expired_cache_data', 'bot_dm_log', 'invite_joins']);
     const now = Date.parse('2026-11-04T03:30:00Z');
     const expectedDays = { verification_ips: 60, oauth_verified_guilds: 1, bot_dm_log: 30 };
     for (const [name, rule] of RETENTION_RULES) {

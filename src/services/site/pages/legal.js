@@ -18,8 +18,8 @@
 import { html } from '../../dashboard/html.js';
 import { layout } from '../shell.js';
 
-export const LEGAL_UPDATED = '2026-11-04';
-const UPDATED_TEXT = '4 November 2026';
+export const LEGAL_UPDATED = '2026-11-09';
+const UPDATED_TEXT = '9 November 2026';
 
 const EMAIL = /^[^\s@<>"]{1,64}@[a-z0-9.-]{1,190}\.[a-z]{2,}$/i;
 
@@ -118,7 +118,7 @@ ${row('Short automod records: a flag from the join checks, probation after a ban
 ${row('Staff only: warnings the owner gives staff, weekly activity counts (messages, reviews, tickets claimed) and staff roles removed by the safety guard', 'To keep the staff team accountable and give roles back with /staff restore.', 'As long as the server uses Mewvo; removed roles until they are given back.')}
 ${row('Tickets and modmail: who opened it, its state, which channel belongs to which member; a transcript posted to a staff channel when it closes', 'To answer you and keep a record of support conversations.', 'As long as the server uses Mewvo.')}
 ${row('Role applications: your answers, the status, the reviewer and their notes', 'To decide your application.', 'Open applications 30 days, decided ones 14 days (a server can change both).')}
-${row('Invites: which invite you joined through and who created it, and how often each invite was used', 'Invite statistics and rewards for the staff team.', 'As long as the server uses Mewvo.')}
+${row('Invites (only in servers that turn invite tracking on): which invite or link you joined through and who created it, when you joined and left, how old your Discord account was when you joined, how often each invite was used, and a bonus or reset staff gave your own invite count', 'Invite counts, the invite leaderboard and milestone roles, and spotting fake accounts (very new accounts, or members who leave within a day).', 'Your join record: 365 days after you leave the server (or until /wipedata). The invite code list: as long as the server uses Mewvo.')}
 ${row('Starboard: which messages got enough stars, and the starboard post (a copy on Discord)', 'To run the starboard.', 'Until the post is removed or the server stops using Mewvo.')}
 ${row('Things you choose to save: birthday, AFK message, suggestions and votes, giveaway entries, to-do lists (also shared ones)', 'To provide the feature you used.', 'Until you remove them, run /wipedata (where it covers them) or ask. Giveaway entries: until the giveaway is deleted.')}
 ${row('Reminders: what you asked to be reminded about, when, and the channel you set it in', 'To send the reminder (by DM, or in that channel if your DMs are closed).', 'Until it is sent, then 30 more days. Delete one any time with /remind delete.')}

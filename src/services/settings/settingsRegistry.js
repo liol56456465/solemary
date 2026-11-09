@@ -136,6 +136,28 @@ export const LANGUAGE_ROLE_HOME_DEFAULT = Object.freeze({
     'pt-BR': '1569099585551601764',
 });
 
+// Invite tracking (services/invites/; Dashboard → Invites, /invites). Off by default in every
+// server (owner decision 1). fake = account younger than fakeAccountDays at join, or left within
+// fakeLeaveHours (decision 2; worked out at read time, so a change recounts history; 0 turns that
+// test off). milestones: up to 10 { count → role } (kept when the count drops, decision 5);
+// stackRoles: keep every reached role (default) or only the highest. resetAt: a server-wide reset
+// (ISO; only joins after it count, bonuses set before it are ignored; nothing is deleted).
+export const INVITE_LIMITS = Object.freeze({ maxMilestones: 10, maxAccountDays: 365, maxLeaveHours: 720, maxCount: 100000 });
+const inviteTracking = z.object({
+    enabled: z.boolean(),
+    fakeAccountDays: int(0, INVITE_LIMITS.maxAccountDays),
+    fakeLeaveHours: int(0, INVITE_LIMITS.maxLeaveHours),
+    milestones: z.array(z.object({ count: int(1, INVITE_LIMITS.maxCount), roleId: snowflake }).strict())
+        .max(INVITE_LIMITS.maxMilestones, `at most ${INVITE_LIMITS.maxMilestones} milestone roles`)
+        .refine((list) => new Set(list.map((m) => m.count)).size === list.length, 'each milestone needs its own count')
+        .refine((list) => new Set(list.map((m) => m.roleId)).size === list.length, 'each milestone needs its own role'),
+    stackRoles: z.boolean(),
+    resetAt: z.string().refine((v) => Number.isFinite(Date.parse(v)), 'must be a date').nullable(),
+}).strict();
+export const INVITE_TRACKING_DEFAULT = Object.freeze({
+    enabled: false, fakeAccountDays: 7, fakeLeaveHours: 24, milestones: Object.freeze([]), stackRoles: true, resetAt: null,
+});
+
 export const SETTING_KINDS = ['channel', 'category', 'role', 'number', 'duration', 'string', 'url', 'boolean', 'list', 'json'];
 
 /** @type {ReadonlyArray<object>} */
@@ -383,6 +405,12 @@ export const SETTINGS = Object.freeze([
         fallback: LANGUAGE_ROLE_HOME_DEFAULT, prodOnly: true, prodFallbackEmpty: Object.freeze({}),
         schema: languageRoles,
         describe: (value) => `${Object.values(value || {}).filter(Boolean).length} of ${BOT_LANGUAGE_CODES.length} set`,
+    },
+    // ── Invite tracking (services/invites/; Dashboard → Invites) ──
+    {
+        key: 'inviteTracking', module: 'invites', kind: 'json', guild: 'main', label: 'Invite tracking', env: null,
+        fallback: INVITE_TRACKING_DEFAULT, schema: inviteTracking,
+        describe: (value) => (value?.enabled ? `on, ${value.milestones?.length || 0} milestone role(s)` : 'off'),
     },
     // ── Server rules ──
     {

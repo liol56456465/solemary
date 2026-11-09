@@ -15,7 +15,8 @@
     "message": "Mensaje de bienvenida",
     "messageHelp": "Por ejemplo: Bienvenido a {server}, {user}. Eres el miembro número {memberCount}.",
     "dm": "Mensaje privado al nuevo miembro",
-    "dmHelp": "Se le envía directamente (un MD). Déjalo vacío para no enviar nada."
+    "dmHelp": "Se le envía directamente (un MD). Déjalo vacío para no enviar nada.",
+    "inviteHelp": "Con Invitaciones activado: {inviter} (menciona a quien invitó), {inviterName} (su nombre), {code} (el código de invitación) y {invites} (su número de invitaciones)."
   },
   "leave": {
     "topic": "Despedida",
