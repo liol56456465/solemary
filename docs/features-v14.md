@@ -123,6 +123,42 @@ link = page name only (D) · O3 auto examples + ~10 hand-written (D) · O4 `form
 
 ---
 
+## 5. Voice room controls (Join-to-Create) — no schema change
+
+Room state already lives in the JTC key-value config (`temporaryChannels[id] = {ownerId, …}`,
+database.js:1020, row-locked `mutateJoinToCreateConfig` :949), so this needs no schema change.
+
+**Existing bugs to fix first (verified by Claude ✓):**
+- B1 ✓ The owner gets a member overwrite that ALLOWS Speak (joinToCreateService.js:598); member overwrites beat the
+  Muted role's deny (muteService.js MUTED_DENY) → a muted member can create a room and talk. Fix: no Speak.
+- B3 ✓ The same overwrite gives the owner MoveMembers → they can disconnect anyone, admins included. Remove it;
+  kicks go through the panel's checks.
+- B2 ✓ Transfer writes with an unlocked `client.db.set` (voiceStateUpdate.js:270), never moves the owner
+  overwrite (the old owner keeps power), and renames without the rate limit.
+- B4 User selects aren't routed (interactionCreate.js:427) → member pickers use a modal with a user select.
+
+**Panel:** one message in the room's own voice text chat, posted when the room is made. Buttons: Lock/Unlock,
+Hide/Unhide, Rename, Limit, Permit, Reject, Kick, Transfer, Claim, Settings (bitrate, region). customIds
+`vroom:<action>:<roomId>` / `vroomm:` (modals). Every click re-checks: the room still exists, the clicker is the
+owner or an Administrator (logged), Claim only when the owner left and the clicker is inside. defer first;
+modals declare opensModal.
+**Safety:** overwrites edited per target (never `.set()`), so the Muted role and staff overwrites survive; Permit
+never grants Speak/Send. Room owners can't target bots, the server owner, Administrators, OWNER_IDS, staff
+or themselves. Rename limit (Discord: 2 per 10 min) is tracked → "next rename <t:R>". Room names pass through the
+automod word/invite/URL filters (refused, no case). The bot needs Manage Permissions + Send/Embed in the room;
+without them the panel is not posted and a warning is logged. Staff guard/anti-nuke unaffected (bot actions
+ignored). Startup reconcile: gone rooms unregistered, empty rooms deleted, ownerless rooms left to Claim.
+**Dashboard:** Join-to-Create → "Room controls" (a checkbox per control, admin override).
+
+Decisions: 1 panel in the room's own chat (D) vs one interface channel · 2 admin override on, logged (D) ·
+3 staff can't be kicked/rejected by room owners (D) · 4 remove the owner's native Move Members + Speak (D) ·
+5 no waiting room in v1; bitrate + region in Settings (D) · 6 no `/room` command in v1 (D) · 7 blocked
+name = refused only, no case (D) · 8 all controls on by default (D).
+Unverified: [I1] a fitting voice/channel log event type exists · [I3] channelUpdate logging may spam for
+bot overwrite edits → skip the bot's own edits if so.
+
+---
+
 ## Build plan (after OK)
 
 - **Wave 1 (parallel, worktrees):** A schema v14 + /schema-change (all 3 tables, versions, allowlist,
