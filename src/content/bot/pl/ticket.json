@@ -249,7 +249,8 @@
         "feedbackComment": "Dodaj komentarz",
         "feedbackDecline": "Nie, dziękuję",
         "transcriptTitle": "Zapis twojego zgłoszenia",
-        "transcriptBody": "Oto zapis zgłoszenia **{channel}**."
+        "transcriptBody": "Oto zapis zgłoszenia **{channel}**.",
+        "modmailFeedbackBody": "Oceń swoją rozmowę z obsługą od 1 do 5. Wybierz liczbę poniżej."
     },
     "reminder": {
         "unanswered": {
@@ -284,7 +285,6 @@
         "notSavedComment": "Nie udało się teraz zapisać twojego komentarza. Spróbuj później.",
         "savedTitle": "Ocena zapisana",
         "savedBody": "Twoja ocena tego zgłoszenia: **{rating}**.",
-        "savedFooter": "Dziękujemy za ocenę.",
         "modalTitle": "Opinia o zgłoszeniu",
         "modalLabel": "Twój komentarz",
         "modalPlaceholder": "Co poszło dobrze, co można poprawić?",
@@ -445,5 +445,15 @@
         "blocked": "{user} nie może już używać modmaila.",
         "openStays": " Otwarta rozmowa {channel} zostaje, dopóki jej nie zamkniesz.",
         "unblocked": "{user} znów może używać modmaila."
+    },
+    "rating": {
+        "channelPrompt": "{user}, nie udało się wysłać Ci wiadomości prywatnej, więc możesz ocenić to zgłoszenie tutaj. Możesz czytać ten kanał, dopóki nie zostanie usunięty.",
+        "savedFooterComment": "Dziękujemy za ocenę. Możesz dodać jeden komentarz.",
+        "closedTitle": "Ocenianie zamknięte",
+        "closedBody": "Czas na ocenę tego zgłoszenia minął.",
+        "rateFirstTitle": "Najpierw oceń",
+        "rateFirstBody": "Najpierw wybierz liczbę gwiazdek, potem dodaj komentarz.",
+        "commentAlreadyTitle": "Komentarz już wysłany",
+        "commentAlreadyBody": "Komentarz do tego zgłoszenia został już wysłany."
     }
 }

@@ -15,6 +15,7 @@ import { isMewvoServer } from '../utils/ownerPower.js';
 import { BoundedMap } from '../utils/boundedMap.js';
 import { resolveChannelId, staffGuildId } from './automod/channelRouting.js';
 import { isSettingsUnavailable, noteSettingsUnavailable } from './settings/guildScoped.js';
+import { ratingBadge, ratingsByStaff } from './ticketRatingService.js';
 
 // Staff with fewer messages than this and no moderation work in a week are flagged.
 const INACTIVE_MESSAGE_THRESHOLD = 20;
@@ -87,7 +88,7 @@ export function noteTicketClaim(guildId, userId) {
 export async function staffActivityForWeek(guild, start) {
     const end = new Date(`${start}T00:00:00Z`);
     end.setUTCDate(end.getUTCDate() + 7);
-    const [counters, actions, appeals] = await Promise.all([
+    const [counters, actions, appeals, ratings] = await Promise.all([
         query(`SELECT user_id, messages, reviews, tickets FROM ${T.staffActivity} WHERE guild_id = $1 AND week_start = $2`, [guild.id, start]),
         query(
             `SELECT moderator_id AS user_id, COUNT(*)::int AS count FROM ${T.cases}
@@ -101,11 +102,14 @@ export async function staffActivityForWeek(guild, start) {
              WHERE guild_id = $3 AND decided_at >= $1 AND decided_at < $2 AND decided_by IS NOT NULL GROUP BY decided_by`,
             [`${start}T00:00:00Z`, end.toISOString(), guild.id]
         ),
+        // Ticket / modmail ratings given this week to tickets each staff member handled.
+        ratingsByStaff(guild.id, { since: new Date(`${start}T00:00:00Z`), until: end }, { query }),
     ]);
     const byUser = (rows) => new Map(rows.map((row) => [row.user_id, row]));
     const counterMap = byUser(counters.rows);
     const actionMap = byUser(actions.rows);
     const appealMap = byUser(appeals.rows);
+    const ratingMap = new Map(ratings.map((row) => [row.staffId, row]));
 
     const staff = [...guild.members.cache.values()].filter((member) => !member.user.bot && isStaff(member));
     return staff.map((member) => {
@@ -119,6 +123,8 @@ export async function staffActivityForWeek(guild, start) {
             tickets: c.tickets || 0,
             actions: actionMap.get(member.id)?.count || 0,
             appeals: appealMap.get(member.id)?.count || 0,
+            ratingAvg: ratingMap.get(member.id)?.avg ?? null,
+            ratingCount: ratingMap.get(member.id)?.count || 0,
         };
         row.inactive = !row.isOwner && row.actions + row.appeals + row.reviews + row.tickets === 0 && row.messages < INACTIVE_MESSAGE_THRESHOLD;
         return row;
@@ -142,7 +148,7 @@ export const STATS_PERIODS = {
 export async function staffModerationStats(guildId, botUserId, { period = '30d', moderatorId = null } = {}) {
     const days = STATS_PERIODS[period]?.days ?? null;
     const since = days ? new Date(Date.now() - days * 24 * 60 * 60 * 1000) : null;
-    const [cases, appeals] = await Promise.all([
+    const [cases, appeals, ratings] = await Promise.all([
         query(
             `SELECT moderator_id, MAX(moderator_username) AS username, type,
                     COUNT(*) FILTER (WHERE voided_at IS NULL)::int AS count,
@@ -166,6 +172,7 @@ export async function staffModerationStats(guildId, botUserId, { period = '30d',
              GROUP BY c.moderator_id`,
             [guildId, botUserId, since, moderatorId]
         ),
+        ratingsByStaff(guildId, { since, staffId: moderatorId }, { query }),
     ]);
 
     const byMod = new Map();
@@ -173,7 +180,7 @@ export async function staffModerationStats(guildId, botUserId, { period = '30d',
         if (!byMod.has(id)) {
             byMod.set(id, {
                 moderatorId: id, username, actions: { ban: 0, kick: 0, mute: 0, warn: 0 },
-                total: 0, voided: 0, appealsAccepted: 0, appealsDenied: 0,
+                total: 0, voided: 0, appealsAccepted: 0, appealsDenied: 0, ratingAvg: null, ratingCount: 0,
             });
         }
         return byMod.get(id);
@@ -189,18 +196,34 @@ export async function staffModerationStats(guildId, botUserId, { period = '30d',
         e.appealsAccepted = row.accepted;
         e.appealsDenied = row.denied;
     }
-    return [...byMod.values()].sort((a, b) => b.total - a.total || a.username.localeCompare(b.username));
+    // Staff with ticket ratings but no cases get a row too (their name is shown as a mention).
+    for (const row of ratings) {
+        const e = entry(row.staffId, byMod.get(row.staffId)?.username ?? null);
+        e.ratingAvg = row.avg;
+        e.ratingCount = row.count;
+    }
+    return [...byMod.values()].sort((a, b) => b.total - a.total || b.ratingCount - a.ratingCount
+        || String(a.username ?? a.moderatorId).localeCompare(String(b.username ?? b.moderatorId)));
 }
+
+/** " · ★4.6 (5)" for a row with ticket ratings, else ''. */
+const ratingSuffix = (row) => {
+    const badge = ratingBadge(row.ratingAvg, row.ratingCount);
+    return badge ? ` · ${badge}` : '';
+};
 
 export function formatStatsLine(row) {
     const { ban, kick, mute, warn } = row.actions;
-    return `**${row.username}**: ${row.total} actions (${ban} bans · ${kick} kicks · ${mute} mutes · ${warn} warns)`
+    // A staff member known only from ratings has no stored username: a mention (embeds never ping).
+    const name = row.username ? `**${row.username}**` : `<@${row.moderatorId}>`;
+    return `${name}: ${row.total} actions (${ban} bans · ${kick} kicks · ${mute} mutes · ${warn} warns)`
         + ` · appeals on their cases: ${row.appealsAccepted} accepted / ${row.appealsDenied} denied`
-        + (row.voided ? ` · ${row.voided} removed` : '');
+        + (row.voided ? ` · ${row.voided} removed` : '')
+        + ratingSuffix(row);
 }
 
 export function formatActivityLine(row) {
-    return `**${row.username}**${row.inactive ? ' (inactive)' : ''}: ${row.messages} msgs · ${row.actions} actions · ${row.appeals} appeals · ${row.reviews} reviews · ${row.tickets} tickets`;
+    return `**${row.username}**${row.inactive ? ' (inactive)' : ''}: ${row.messages} msgs · ${row.actions} actions · ${row.appeals} appeals · ${row.reviews} reviews · ${row.tickets} tickets${ratingSuffix(row)}`;
 }
 
 /**

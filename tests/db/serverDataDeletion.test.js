@@ -36,6 +36,9 @@ async function seed(g) {
     await q(`INSERT INTO user_levels (guild_id, user_id, xp, level) VALUES ($1, $2, 50, 2)`, [g, USER]);
     await q(`INSERT INTO birthdays (guild_id, user_id, month, day) VALUES ($1, $2, 5, 6)`, [g, USER]);
     await q(`INSERT INTO ticket_data (guild_id, channel_id, data) VALUES ($1, $2, '{}')`, [g, `9${g.slice(1)}`]);
+    // v14: a ticket rating (with a comment) of that ticket.
+    await q(`INSERT INTO ticket_ratings (guild_id, kind, ref_id, opener_id, staff_id, expires_at, rating, rated_at, comment)
+             VALUES ($1, 'ticket', $2, $3, '1', NOW() + interval '7 days', 4, NOW(), 'thanks')`, [g, `9${g.slice(1)}`, USER]);
     await q(`INSERT INTO mod_cases (guild_id, case_code, target_user_id, target_username, moderator_id, moderator_username, type, name, reason, prebuilt_or_custom, status)
              VALUES ($1, $2, $3, 'alice', '1', 'mod', 'warn', $4, 'r', 'custom', 'expired')`, [g, code, USER, `w ${code}`]);
     await q(`INSERT INTO mod_case_notes (case_code, author_id, author_username, text) VALUES ($1, '1', 'mod', 'note')`, [code]);
@@ -111,6 +114,7 @@ test('preview: counts per table and per kind for server A only (logging setup in
     assert.equal(count(p, 'incident_events'), 1);
     assert.equal(count(p, 'suggestion_votes'), 1);
     assert.equal(count(p, 'reminders'), 1);
+    assert.equal(count(p, 'ticket_ratings'), 1, 'v14 ticket ratings are counted (and deleted with the server)');
     assert.equal(p.kinds.logs, 1);
     assert.equal(p.kinds.kv, 5, 'the four feature keys + the cache key; not guild:<A>9:…, not per-case marks (counted with cases)');
     assert.equal(p.kinds.cases, 6, 'case, note, evidence, edit, ladder, contest mark');

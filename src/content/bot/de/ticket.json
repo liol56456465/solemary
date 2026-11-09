@@ -245,7 +245,8 @@
         "feedbackComment": "Kommentar hinzufügen",
         "feedbackDecline": "Nein danke",
         "transcriptTitle": "Verlauf deines Tickets",
-        "transcriptBody": "Hier ist der Verlauf von **{channel}**."
+        "transcriptBody": "Hier ist der Verlauf von **{channel}**.",
+        "modmailFeedbackBody": "Bewerte dein Gespräch mit dem Team von 1 bis 5. Wähle unten eine Zahl."
     },
     "reminder": {
         "unanswered": {
@@ -278,7 +279,6 @@
         "notSavedComment": "Dein Kommentar konnte gerade nicht gespeichert werden. Versuch es später noch einmal.",
         "savedTitle": "Bewertung gespeichert",
         "savedBody": "Du hast dieses Ticket mit **{rating}** bewertet.",
-        "savedFooter": "Danke für deine Bewertung.",
         "modalTitle": "Rückmeldung zum Ticket",
         "modalLabel": "Dein Kommentar",
         "modalPlaceholder": "Was lief gut, was könnte besser sein?",
@@ -431,5 +431,15 @@
         "blocked": "{user} kann Modmail nicht mehr nutzen.",
         "openStays": " Das offene Gespräch {channel} bleibt, bis du es schließt.",
         "unblocked": "{user} kann Modmail wieder nutzen."
+    },
+    "rating": {
+        "channelPrompt": "{user}, wir konnten dir keine DM schicken, deshalb kannst du dieses Ticket hier bewerten. Du kannst diesen Kanal weiter lesen, bis er gelöscht wird.",
+        "savedFooterComment": "Danke für deine Bewertung. Du kannst einen Kommentar hinzufügen.",
+        "closedTitle": "Bewertung geschlossen",
+        "closedBody": "Die Zeit, dieses Ticket zu bewerten, ist vorbei.",
+        "rateFirstTitle": "Zuerst bewerten",
+        "rateFirstBody": "Wähle zuerst eine Anzahl Sterne, dann füge deinen Kommentar hinzu.",
+        "commentAlreadyTitle": "Kommentar schon gesendet",
+        "commentAlreadyBody": "Du hast für dieses Ticket schon einen Kommentar gesendet."
     }
 }

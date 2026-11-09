@@ -5,7 +5,8 @@
 // login token stored by "Verify with Discord" (oauth:tokens:<userId>; without it the bot can
 // no longer add them to the support server) with the list of servers it was given in
 // (oauth_verified_guilds), and the log of the bot's DMs to them that a language change can
-// re-edit (bot_dm_log, every server). Moderation, appeal, report and verification
+// re-edit (bot_dm_log, every server), and the ticket ratings they gave lose their name and
+// comment (ticket_ratings, every server; the stars stay). Moderation, appeal, report and verification
 // records are safety records and are not touched.
 //
 // Each item is deleted on its own; the result says which ones failed, so the reply never
@@ -16,6 +17,7 @@ import { deleteBirthday } from '../utils/database.js';
 import { query } from './enforcement/db.js';
 import { pgConfig } from '../config/database/postgres.js';
 import { deleteDmLogForUser } from './botDm/dmLog.js';
+import { clearRatingsGivenBy } from './ticketRatingService.js';
 
 // Voice XP: the member's voice time in this server goes with their levels.
 async function deleteVoiceTime(guildId, userId) {
@@ -45,6 +47,8 @@ export const WIPE_ITEMS = [
     { id: 'reminders', label: 'Reminders' },
     { id: 'oauth', label: 'Stored Discord login token (from Verify with Discord)' },
     { id: 'dmlog', label: 'Saved copies of bot DMs (to re-translate them when you change language)' },
+    // Every server: the stars stay (staff stats), without who gave them and without the comment.
+    { id: 'ticketRatings', label: 'Ticket ratings you gave (your name and comment; the stars stay)' },
 ];
 
 /** The key-value key of the member's encrypted OAuth tokens (oauthVerification.js). */
@@ -58,7 +62,7 @@ const ID = /^\d{17,20}$/;
  */
 export async function wipeMemberData(client, guildId, userId, {
     removeBirthday = deleteBirthday, removeReminders = deleteReminders, removeVerifiedGuilds = deleteVerifiedGuilds,
-    removeDmLog = deleteDmLogForUser, removeVoiceTime = deleteVoiceTime,
+    removeDmLog = deleteDmLogForUser, removeVoiceTime = deleteVoiceTime, removeTicketRatings = clearRatingsGivenBy,
 } = {}) {
     if (!ID.test(String(guildId)) || !ID.test(String(userId))) throw new Error('wipeMemberData: bad ids');
     const db = client?.db;
@@ -87,6 +91,7 @@ export async function wipeMemberData(client, guildId, userId, {
             await removeVerifiedGuilds(userId);
         },
         dmlog: () => removeDmLog(userId),
+        ticketRatings: () => removeTicketRatings(userId),
     };
 
     const deleted = [];

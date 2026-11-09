@@ -62,6 +62,12 @@ export const EXPORT_SECTIONS = [
     ['tickets', (t) => `SELECT guild_id, channel_id, data->>'status' AS status, data->>'priority' AS priority, data->>'reason' AS reason,
         data->>'createdAt' AS opened_at, data->>'closedAt' AS closed_at, data->>'closeReason' AS close_reason
         FROM ${t.tickets} WHERE data->>'userId' = $1 ORDER BY created_at LIMIT ${ROW_LIMIT}`],
+    // Ticket / modmail ratings this member gave (v14): stars, comment, dates (the staff member is left out).
+    ['ticketRatingsGiven', (t) => `SELECT guild_id, kind, ticket_number, rating, comment, prompted_at, rated_at, comment_at
+        FROM ${t.ticket_ratings} WHERE opener_id = $1 ORDER BY prompted_at LIMIT ${ROW_LIMIT}`],
+    // Staff: ratings of tickets they handled: stars, date and ticket number only (not who rated, not the comment).
+    ['ticketRatingsAboutYou', (t) => `SELECT guild_id, kind, ticket_number, rating, rated_at
+        FROM ${t.ticket_ratings} WHERE staff_id = $1 AND rating IS NOT NULL ORDER BY rated_at LIMIT ${ROW_LIMIT}`],
     // Giveaways this member entered, and whether they won (no other entrants).
     ['giveawayEntries', (t) => `SELECT guild_id, message_id, data->>'prize' AS prize, ends_at, created_at,
         COALESCE(data->'winnerIds' ? $1, FALSE) AS won

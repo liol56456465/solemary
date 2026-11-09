@@ -119,7 +119,8 @@
             "todo": "Lista de tareas personal",
             "reminders": "Recordatorios",
             "oauth": "Token de inicio de sesión de Discord guardado (de \"Verificar con Discord\")",
-            "dmlog": "Copias guardadas de los MD del bot (para volver a traducirlos cuando cambias de idioma)"
+            "dmlog": "Copias guardadas de los MD del bot (para volver a traducirlos cuando cambias de idioma)",
+            "ticketRatings": "Valoraciones de tickets que diste (tu nombre y comentario; las estrellas se quedan)"
         },
         "partialTitle": "No se eliminó todo",
         "partialFailed": "La base de datos no respondió para: {items}. ",

@@ -135,6 +135,13 @@ function makeServices() {
         tickets: { ticketCategoryId: null, ticketClosedCategoryId: null, ticketStaffRoleId: null, maxTicketsPerUser: 3, dmOnClose: true, ticketLogsChannelId: null, ticketTranscriptChannelId: null, ticketPanelMessage: 'Open a ticket', ticketButtonLabel: 'Create Ticket', ticketPanelChannelId: TEXT },
         config: { modmailBlocked: [MEMBER], disabledCommands: {}, disabledCategories: {}, birthdayChannelId: null, birthdayTimezone: 'UTC', birthdayRoleId: null },
         canned: { 'appeal-received': 'built in', mine: '<img src=x onerror=1>' },
+        // Ticket ratings (v14): a member's comment is escaped like any other value.
+        ticketRatings: {
+            byStaff: [{ staffId: '300000000000000099', avg: 4.5, count: 2 }], byPriority: [{ kind: 'ticket', priority: 'high', avg: 4.5, count: 2 }],
+            trend: [{ week: '2026-11-02', avg: 4.5, count: 2 }, { week: '2026-11-09', avg: null, count: 0 }],
+            response: { prompted: 3, rated: 2, pending: 1, rate: 2 / 3 },
+            low: [{ kind: 'ticket', ticket_number: '012', staff_id: '300000000000000099', rating: 1, rated_at: new Date('2026-11-03T10:00:00Z'), comment: '<img src=x onerror=2>', comment_flagged: true }],
+        },
         leveling: { enabled: true, xpRange: { min: 15, max: 25 }, xpCooldown: 60, levelUpMessage: 'gg {user}', levelUpChannel: null, ignoredChannels: [TEXT2], ignoredRoles: [], roleRewards: { 5: ROLE_OK }, announceLevelUp: true },
         levels: { [MEMBER]: 3 },
         verification: { enabled: false, channelId: TEXT, roleId: ROLE_OK, message: 'Verify here', buttonText: 'Verify', autoVerify: { enabled: false, criteria: 'none', accountAgeDays: null, roleId: null } },
@@ -259,6 +266,7 @@ function makeServices() {
         addAutoRole: async (c, g, roleId) => { record('addAutoRole', [roleId]); const before = clone(s.welcome); const changed = !s.welcome.roleIds.includes(roleId); s.welcome.roleIds = [roleId]; return { before, after: clone(s.welcome), changed }; },
         removeAutoRole: async (c, g, roleId) => { record('removeAutoRole', [roleId]); const before = clone(s.welcome); const changed = s.welcome.roleIds.includes(roleId); s.welcome.roleIds = s.welcome.roleIds.filter((x) => x !== roleId); return { before, after: clone(s.welcome), changed }; },
         getTicketSettings: async () => clone(s.tickets),
+        ticketRatingDashboard: async () => clone(s.ticketRatings),
         updateTicketSettings: async (c, g, patch) => { record('updateTicketSettings', [patch]); return merge('tickets', patch); },
         setModmailBlocked: async (c, g, id, blocked) => { record('setModmailBlocked', [id, blocked]); s.config.modmailBlocked = blocked ? [...new Set([...s.config.modmailBlocked, id])] : s.config.modmailBlocked.filter((x) => x !== id); },
         findModmailChannel: async (guild, id) => s.modmailOpen[id] || null,
@@ -872,6 +880,9 @@ const CASES = {
         unblock: { form: { userId: MEMBER }, service: 'setModmailBlocked', bad: { form: { userId: 'me' }, message: /Discord user ID/ } },
         'canned-add': { form: { name: 'hello', text: 'Hello there' }, service: 'saveCanned', bad: { form: { name: 'Bad Name', text: 'x' }, message: /small letters, numbers and -/ } },
         'canned-remove': { form: { name: 'mine' }, service: 'removeCanned', bad: { form: { name: 'appeal-received' }, message: /built in/ } },
+        // Ratings (v14): their own form; the window is 1–30 days.
+        ratings: { form: { ticketRatingsEnabled: '1', modmailRatingsEnabled: '1', ticketRatingWindowDays: '10', ticketLowRatingAlert: '1' }, service: 'updateTicketSettings',
+            bad: { form: { ticketRatingsEnabled: '1', ticketRatingWindowDays: '45' }, message: /between 1 and 30/ } },
     },
     leveling: {
         enabled: { form: { enabled: 'false' }, service: 'updateLevelingConfig', bad: { form: { enabled: 'y' }, message: /on or off/ } },

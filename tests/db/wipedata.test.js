@@ -27,7 +27,7 @@ before(async () => {
 
 after(async () => {
     if (skip) return;
-    for (const table of ['user_levels', 'afk_status', 'birthdays', 'economy']) {
+    for (const table of ['user_levels', 'afk_status', 'birthdays', 'economy', 'ticket_ratings']) {
         await pgDb.pool.query(`DELETE FROM ${table} WHERE guild_id = $1`, [guildId]).catch(() => {});
     }
     await pgDb.disconnect();
@@ -44,9 +44,17 @@ test('wipedata: own levels, AFK, birthday and to-do are deleted; another member 
     }
     assert.equal(await db.exists(keys.getUserLevelKey(guildId, me)), true, 'level row stored');
     assert.equal(await db.exists(keys.getAFKKey(guildId, me)), true, 'AFK row stored');
+    // v14: a ticket rating each.
+    await pgDb.pool.query('INSERT INTO guilds (id) VALUES ($1) ON CONFLICT (id) DO NOTHING', [guildId]);
+    for (const [n, user] of [[1, me], [2, other]]) {
+        await pgDb.pool.query(`INSERT INTO ticket_ratings (guild_id, kind, ref_id, opener_id, expires_at, rating, rated_at, comment)
+            VALUES ($1, 'ticket', $2, $3, NOW() + interval '7 days', 4, NOW(), 'nice')`, [guildId, `9${runId}0000000${n}`, user]);
+    }
 
     const result = await wipe.wipeMemberData(client, guildId, me);
     assert.deepEqual(result.failed.map((f) => `${f.id}: ${f.error.message}`), []);
+    const { rows: ratings } = await pgDb.pool.query('SELECT opener_id, comment, rating FROM ticket_ratings WHERE guild_id = $1 ORDER BY ref_id', [guildId]);
+    assert.deepEqual(ratings.map((r) => [r.opener_id, r.comment, r.rating]), [[null, null, 4], [other, 'nice', 4]], 'my name and comment go, the stars stay; the other member keeps theirs');
 
     assert.equal(await db.exists(keys.getUserLevelKey(guildId, me)), false);
     assert.equal(await db.exists(keys.getAFKKey(guildId, me)), false);

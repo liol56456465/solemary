@@ -247,7 +247,8 @@
         "feedbackComment": "Ajouter un commentaire",
         "feedbackDecline": "Non merci",
         "transcriptTitle": "Transcription de ton ticket",
-        "transcriptBody": "Voici la transcription de **{channel}**."
+        "transcriptBody": "Voici la transcription de **{channel}**.",
+        "modmailFeedbackBody": "Notez votre conversation avec l'équipe de 1 à 5. Choisissez un chiffre ci-dessous."
     },
     "reminder": {
         "unanswered": {
@@ -281,7 +282,6 @@
         "notSavedComment": "Impossible d’enregistrer ton commentaire pour le moment. Réessaie plus tard.",
         "savedTitle": "Note enregistrée",
         "savedBody": "Tu as noté ce ticket **{rating}**.",
-        "savedFooter": "Merci pour ta note.",
         "modalTitle": "Avis sur le ticket",
         "modalLabel": "Ton commentaire",
         "modalPlaceholder": "Qu’est-ce qui s’est bien passé, qu’est-ce qui pourrait être mieux ?",
@@ -438,5 +438,15 @@
         "blocked": "{user} ne peut plus utiliser le modmail.",
         "openStays": " Sa conversation ouverte {channel} reste jusqu’à ce que tu la fermes.",
         "unblocked": "{user} peut à nouveau utiliser le modmail."
+    },
+    "rating": {
+        "channelPrompt": "{user}, nous n'avons pas pu vous envoyer de MP, vous pouvez donc noter ce ticket ici. Vous pouvez encore lire ce salon jusqu'à sa suppression.",
+        "savedFooterComment": "Merci pour votre note. Vous pouvez ajouter un commentaire.",
+        "closedTitle": "Notation fermée",
+        "closedBody": "Le délai pour noter ce ticket est passé.",
+        "rateFirstTitle": "Notez d'abord",
+        "rateFirstBody": "Choisissez d'abord un nombre d'étoiles, puis ajoutez votre commentaire.",
+        "commentAlreadyTitle": "Commentaire déjà envoyé",
+        "commentAlreadyBody": "Vous avez déjà envoyé un commentaire pour ce ticket."
     }
 }

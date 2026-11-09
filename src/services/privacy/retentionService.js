@@ -19,6 +19,9 @@
 //                       ticket row is still live data there.
 //   bot_dm_log    the bot DM log (schema v13; botDm/dmLog.js): rows older than 30 days. The
 //                 language-change re-edit only looks at the last 30 days, so nothing it needs goes.
+//   ticket_rating_comments  ticket/modmail rating comments older than 180 days are cleared (stars stay)
+//   ticket_ratings          rating rows older than 2 years are deleted
+//   ticket_ratings_unrated  never-rated rows 30 days after their window closed are deleted
 // With the bot client (runRetention's first argument), CLIENT_RETENTION_RULES also run:
 //   applications  submitted applications past the server's own retention (pending /
 //                 reviewed days, Applications settings); moved here from the read path, so
@@ -38,6 +41,7 @@ import { query as dbQuery } from '../enforcement/db.js';
 import { IP_RETENTION_MS, pruneVerificationIpHashes } from '../verificationGuard.js';
 import { cleanupExpiredApplications } from '../../utils/database.js';
 import { DM_LOG_DAYS, pruneDmLog } from '../botDm/dmLog.js';
+import { RATING_RETENTION_DAYS, pruneOldRatings, pruneRatingComments, pruneUnratedRatings } from '../ticketRatingService.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const YEAR_MS = 365 * DAY_MS;
@@ -54,6 +58,9 @@ export const RETENTION_DAYS = Object.freeze({
     expired_temp_data: 1,
     expired_cache_data: 1,
     bot_dm_log: DM_LOG_DAYS,
+    ticket_rating_comments: RATING_RETENTION_DAYS.comments,
+    ticket_ratings: RATING_RETENTION_DAYS.rows,
+    ticket_ratings_unrated: RATING_RETENTION_DAYS.unrated,
 });
 
 /** Expired key-value rows: up to this many batches of BATCH_LIMIT per run. */
@@ -170,6 +177,10 @@ export const RETENTION_RULES = Object.freeze([
     ['expired_temp_data', pruneExpiredTempData],
     ['expired_cache_data', pruneExpiredCacheData],
     ['bot_dm_log', pruneBotDmLog],
+    // Ticket ratings (v14, ticketRatingService.js).
+    ['ticket_rating_comments', pruneRatingComments],
+    ['ticket_ratings', pruneOldRatings],
+    ['ticket_ratings_unrated', pruneUnratedRatings],
 ]);
 
 /**

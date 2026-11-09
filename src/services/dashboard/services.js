@@ -30,6 +30,7 @@ import { addAutoRole, getWelcomeSettings, removeAutoRole, updateWelcomeSettings 
 import { resolveWelcomeImageUrl, storeWelcomeImage } from '../../utils/welcomeImageStore.js';
 // Tickets, modmail, canned answers
 import { getTicketSettings, updateTicketSettings } from '../ticketSettingsService.js';
+import { ratingDashboard as ticketRatingDashboard } from '../ticketRatingService.js';
 import { findModmailChannel, setModmailBlocked } from '../modmailService.js';
 import { isBuiltInCanned, listCanned, removeCanned, saveCanned } from '../cannedService.js';
 // Leveling
@@ -109,7 +110,7 @@ export const defaultServices = {
     startAutomodBacktest, getAutomodBacktest,
     getLoggingStatus, resolveLogChannel, setLogChannel, setLogChannels, setLoggingEnabled, toggleEventLogging, updateEventLogging, updateIgnoreList,
     addAutoRole, getWelcomeSettings, removeAutoRole, updateWelcomeSettings, storeWelcomeImage, resolveWelcomeImageUrl,
-    getTicketSettings, updateTicketSettings, setModmailBlocked, findModmailChannel, isBuiltInCanned, listCanned, removeCanned, saveCanned,
+    getTicketSettings, updateTicketSettings, ticketRatingDashboard, setModmailBlocked, findModmailChannel, isBuiltInCanned, listCanned, removeCanned, saveCanned,
     addLevels, getLevelingConfig, getUserLevelData, removeLevels, setLevelBoost, setLevelRoleReward, setUserLevel, updateLevelingConfig, updateLevelIgnoreList, updateVoiceXpConfig,
     syncLevelRolesForMember,
     getVerificationSettings, updateVerificationSettings, validateAutoVerifyCriteria,

@@ -124,7 +124,12 @@ async function listGuildTickets(guildId) {
     return tickets;
 }
 
-export async function getGuildTicketStats(guildId) {
+/**
+ * Open / closed counts and the average close time (from the ticket JSONB), and the ratings:
+ * from ticket_ratings (the single source of truth since schema v14) when PostgreSQL is up;
+ * on the in-memory store (no table) from the old JSONB feedback. Throws on a database error.
+ */
+export async function getGuildTicketStats(guildId, { ratingSummary = null } = {}) {
     try {
         const tickets = await listGuildTickets(guildId);
         let openCount = 0;
@@ -155,12 +160,21 @@ export async function getGuildTicketStats(guildId) {
             }
         }
 
+        let avgRating = feedbackCount > 0 ? Math.round((ratingSum / feedbackCount) * 10) / 10 : null;
+        const usePostgres = ratingSummary || (db.db?.pool && typeof db.db.isAvailable === 'function' && db.db.isAvailable());
+        if (usePostgres) {
+            const summarize = ratingSummary || (await import('../../services/ticketRatingService.js')).guildRatingSummary;
+            const summary = await summarize(guildId);
+            feedbackCount = summary.count;
+            avgRating = summary.avg;
+        }
+
         return {
             openCount,
             closedCount,
             avgCloseTimeMs: closeSamples > 0 ? Math.round(totalCloseMs / closeSamples) : null,
             feedbackCount,
-            avgRating: feedbackCount > 0 ? Math.round((ratingSum / feedbackCount) * 10) / 10 : null,
+            avgRating,
         };
     } catch (error) {
         logger.error(`Error computing ticket stats for guild ${guildId}:`, error);

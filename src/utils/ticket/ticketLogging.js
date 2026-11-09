@@ -8,6 +8,7 @@ import {
   formatRatingStars,
   resolveUserAuthor,
 } from '../logging/logEmbeds.js';
+import { commentFieldName, commentFieldValue } from '../../services/ticketRatingService.js';
 
 export async function logTicketEvent({ client, guildId, event }) {
   try {
@@ -38,7 +39,8 @@ export async function logTicketEvent({ client, guildId, event }) {
 
     const embed = await createTicketLogEmbed(guild, event);
 
-    const messageOptions = { embeds: [embed] };
+    // Log embeds name members as mentions; nothing in a log ever pings.
+    const messageOptions = { embeds: [embed], allowedMentions: { parse: [] } };
 
     if (event.attachments && event.attachments.length > 0) {
       messageOptions.files = event.attachments;
@@ -59,6 +61,9 @@ export async function logTicketFeedback({
   userId,
   rating = null,
   comment = null,
+  flagged = false,
+  staffId = null,
+  kind = 'ticket',
 }) {
   await logTicketEvent({
     client,
@@ -71,6 +76,9 @@ export async function logTicketFeedback({
       metadata: {
         rating,
         comment,
+        flagged: Boolean(flagged),
+        staffId,
+        kind,
       },
     },
   });
@@ -209,16 +217,23 @@ async function createTicketLogEmbed(guild, event) {
       const comment = event.metadata?.comment;
       const ratingDisplay = formatRatingStars(rating) || 'No rating';
 
-      author = await resolveUserAuthor(guild.client, event.userId);
+      const staffId = event.metadata?.staffId;
+      const flagged = Boolean(event.metadata?.flagged);
+
+      // A rating whose opener ran /wipedata has no user any more.
+      author = event.userId ? await resolveUserAuthor(guild.client, event.userId) : null;
       inlineFields = [
-        { name: 'Ticket', value: ticketRef, inline: true },
+        { name: event.metadata?.kind === 'modmail' ? 'Modmail' : 'Ticket', value: event.metadata?.kind === 'modmail' ? (channelMention || 'Modmail') : ticketRef, inline: true },
         { name: 'Rating', value: ratingDisplay, inline: true },
       ];
+      if (staffId) {
+        inlineFields.push({ name: 'Handled by', value: `<@${staffId}>`, inline: true });
+      }
 
       if (comment) {
         fields.push({
-          name: 'Comment',
-          value: String(comment).slice(0, 1024),
+          name: commentFieldName(flagged),
+          value: commentFieldValue(comment, flagged),
           inline: false,
         });
       }
