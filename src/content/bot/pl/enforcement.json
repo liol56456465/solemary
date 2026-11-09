@@ -12,6 +12,7 @@
         "rejoin": "Dołącz ponownie: {invite}",
         "record": "Cała twoja historia: <{url}>",
         "appealWeb": "**Odwołaj się online:** <{url}>",
+        "appealAskStaff": "**Aby się odwołać:** skontaktuj się z administracją serwera {server}.",
         "appealDeniedWeb": "Po okresie oczekiwania możesz odwołać się ponownie online: <{url}>",
         "privacy": "-# Prywatność: <{url}>",
         "thisServer": "tym serwerze",

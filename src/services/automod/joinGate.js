@@ -262,7 +262,9 @@ export async function checkJoinGate(member, { onKick = null, onFlag = null } = {
         if (action === 'off') return null;
         // Verified with "Verify with Discord" before: already passed the verification guard. Only a
         // verification in this server counts (Mewvo's two home servers count as one); one in another
-        // server never lets a member past this server's gate (multi-server B1).
+        // server never lets a member past this server's gate (multi-server B1). Since owner decision
+        // D3 a verification in a server that is not Mewvo's keeps no token and no row, so only
+        // verifications there from before that change still skip this gate.
         if (await hasVerifiedIn(user.id, verificationScope(guild.id)).catch(() => false)) return null;
 
         if (action === 'kick') {

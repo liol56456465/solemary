@@ -889,6 +889,7 @@
             "serverTitle": "Panel de apelaciones publicado",
             "serverPanel": "**Panel:** <#{channelId}>, para apelar sanciones de este servidor y reportar al equipo.",
             "category": "Cada apelación y reporte se abre en **{category}**, visible solo para administradores.",
+            "categoryCreated": "Creé la categoría privada **{category}** para apelaciones y reportes (solo la ven los administradores y Mewvo) y la guardé como categoría de apelaciones de este servidor.",
             "serverDecide": "Decide las apelaciones con los botones Aceptar / Rechazar de cada apelación.",
             "homeTitle": "Paneles de apelaciones publicados",
             "main": "**Servidor principal:** <#{channelId}>, para silencios y advertencias.",
@@ -897,7 +898,8 @@
             "homeDecide": "Revísalas y decide con **/appeals**."
         },
         "error": {
-            "noServerCategory": "No hay ninguna categoría donde abrir apelaciones y reportes. Configura primero una categoría de tickets (/ticket) y luego vuelve a usar /setappeal.",
+            "noServerCategory": "No hay ninguna categoría donde abrir apelaciones y reportes, y no pude crear una. Dale a Mewvo el permiso **Gestionar canales** (Ajustes del servidor → Roles → Mewvo) y vuelve a usar /setappeal, o elige una categoría de apelaciones en el panel (Sanciones y apelaciones).",
+            "categoryNotSaved": "No se pudo guardar la nueva categoría de apelaciones porque la base de datos no responde. Vuelve a probar /setappeal dentro de un minuto.",
             "noMainCategory": "No hay ninguna categoría donde abrir apelaciones. Configura la categoría de apelaciones en el panel (Sanciones y apelaciones), o una categoría de tickets.",
             "categoryPermissions": "Necesito «Ver canal» y «Gestionar canales» en la categoría **{category}** para abrir allí canales de apelación.",
             "channelPermissions": "Necesito «Ver canal», «Enviar mensajes» e «Insertar enlaces» en <#{channelId}> para publicar el panel de apelaciones.",

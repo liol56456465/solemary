@@ -108,7 +108,8 @@ export default {
         const adminEdit = ctx.canEdit && ctx.canAct;
         const appealsHome = home
             ? html`<p class="muted">${t('enforcement.appealsHome.homeNote')}</p>`
-            : postForm(ctx, 'enforcement', 'appeals-home', html`${radios('appealsHome', v.appealsHome === 'own' ? 'own' : 'mewvo', [['mewvo', t('enforcement.appealsHome.mewvo')], ['own', t('enforcement.appealsHome.own')]], t('enforcement.appealsHome.choice'))}
+            // Default 'own' (owner decision D2); a stored 'mewvo' stays selected.
+            : postForm(ctx, 'enforcement', 'appeals-home', html`${radios('appealsHome', v.appealsHome === 'mewvo' ? 'mewvo' : 'own', [['own', t('enforcement.appealsHome.own')], ['mewvo', t('enforcement.appealsHome.mewvo')]], t('enforcement.appealsHome.choice'))}
 ${textInput('appealsInvite', v.appealsInvite || '', { label: t('enforcement.appealsHome.invite'), max: 200, placeholder: 'https://discord.gg/…', help: t('enforcement.appealsHome.inviteHelp') })}`);
         const channels = postForm(ctx, 'enforcement', 'channels', html`<div class="grid">
 ${channelPicker(g, 'modLogChannelId', v.modLogChannelId, { label: t('enforcement.channels.modLog'), perms: PERMS.post, help: t('enforcement.channels.modLogHelp') })}
@@ -160,9 +161,10 @@ ${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE)
 </div>`, { submit: t('enforcement.templates.add') });
         const reasons = table([t('enforcement.rules.code'), t('enforcement.rules.reason'), t('enforcement.rules.serious')], ENFORCEMENT_REASONS.map((r) => [html`<code>${r.key}</code>`, r.label, r.severe ? t('enforcement.rules.yes') : t('enforcement.rules.no')]));
         const steps = table([t('enforcement.rules.rule'), t('enforcement.rules.whatHappens')], Object.values(AUTOMOD_RULES).map((r) => [r.label, r.steps.map((step) => stepText(tr, step)).join(' → ')]));
+        // Home: the main panel + Support #appeals; any other server: one panel in this server (1.1).
         const appealPanels = postForm(ctx, 'enforcement', 'appeal-panels',
-            channelPicker(g, 'channelId', null, { label: t('enforcement.panels.channel'), perms: PERMS.post, optional: false, help: t('enforcement.panels.channelHelp') }),
-            { submit: t('enforcement.panels.submit'), canEdit: ctx.canEdit && ctx.canAct, confirm: t('enforcement.panels.confirm') });
+            channelPicker(g, 'channelId', null, { label: t('enforcement.panels.channel'), perms: PERMS.post, optional: false, help: home ? t('enforcement.panels.channelHelp') : t('enforcement.panels.channelHelpServer') }),
+            { submit: home ? t('enforcement.panels.submit') : t('enforcement.panels.submitServer'), canEdit: ctx.canEdit && ctx.canAct, confirm: home ? t('enforcement.panels.confirm') : t('enforcement.panels.confirmServer') });
         // Admin-only (like the appeal panels): it publishes numbers about the server on the website.
         const transparency = toggleForm(ctx, 'enforcement', 'transparency', v.transparencyReportEnabled === true, {
             label: t('enforcement.pages.transparencyToggle'), canEdit: ctx.canEdit && ctx.canAct,
@@ -178,7 +180,7 @@ ${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE)
         const adminOnly = ctx.canAct ? '' : t('enforcement.adminOnly');
         const where = topic(t('enforcement.topic.where'), t('enforcement.topic.whereLine'), html`${section(t('enforcement.channels.title'), channels, t('enforcement.channels.help'), { key: 'channels', size: 'wide' })}
 ${section(t('enforcement.roles.title'), roles, `${t('enforcement.roles.help')}${adminOnly}`, { key: 'roles', size: 'full' })}`, { key: 'channels-and-roles' });
-        const appeals = topic(t('enforcement.topic.appeals'), t('enforcement.topic.appealsLine'), html`${section(t('enforcement.panels.title'), appealPanels, `${t('enforcement.panels.help')}${adminOnly}`, { key: 'appeal-panels' })}
+        const appeals = topic(t('enforcement.topic.appeals'), t('enforcement.topic.appealsLine'), html`${section(home ? t('enforcement.panels.title') : t('enforcement.panels.titleServer'), appealPanels, `${home ? t('enforcement.panels.help') : t('enforcement.panels.helpServer')}${adminOnly}`, { key: 'appeal-panels' })}
 ${section(t('enforcement.appealsHome.title'), appealsHome, t('enforcement.appealsHome.help'), { key: 'where-members-appeal' })}
 ${section(t('enforcement.review.title'), review, `${t('enforcement.review.help')}${adminOnly}`, { key: 'independent-appeal-review' })}
 ${section(t('enforcement.timings.title'), timings, t('enforcement.timings.help'), { key: 'appeals-and-reports', size: 'full' })}`, { key: 'appeals' });
@@ -200,7 +202,25 @@ ${section(t('enforcement.rules.stepsTitle'), steps, t('enforcement.rules.stepsHe
             async run(ctx, form) {
                 const tr = textFor(ctx);
                 const channelId = channelField(ctx.guild, form, 'channelId', { optional: false, label: tr.t('enforcement.panels.channel') });
-                const { mainChannel, supportChannel, created } = await ctx.services.postAppealPanels(ctx.client, ctx.guild, ctx.guild.channels.cache.get(channelId), { reason: `dashboard: ${ctx.actor.username}` });
+                const channel = ctx.guild.channels.cache.get(channelId);
+                const reason = `dashboard: ${ctx.actor.username}`;
+                if (!isHomeScope(ctx)) {
+                    // Any other server (1.1): its own panel only, like /setappeal there; never Mewvo's
+                    // Support server. No appeals or ticket category yet: a private one is created and saved (2.4).
+                    const { channel: posted, category, categoryCreated } = await ctx.services.postServerAppealPanel(ctx.guild, channel, {
+                        reason, lang: ctx.lang || 'en', actor: { userId: ctx.actor.userId, username: ctx.actor.username },
+                    });
+                    return {
+                        changes: [
+                            { key: 'appealPanels', old: null, new: { main: posted.id, support: null } },
+                            ...(categoryCreated ? [{ key: 'appealsCategoryId', old: null, new: category.id }] : []),
+                        ],
+                        message: categoryCreated
+                            ? tr.t('enforcement.result.panelPostedServerCreated', { channel: posted.name, category: category.name })
+                            : tr.t('enforcement.result.panelPostedServer', { channel: posted.name, category: category.name }),
+                    };
+                }
+                const { mainChannel, supportChannel, created } = await ctx.services.postAppealPanels(ctx.client, ctx.guild, channel, { reason });
                 return {
                     changes: [{ key: 'appealPanels', old: null, new: { main: mainChannel.id, support: supportChannel.id } }],
                     message: tr.t(created ? 'enforcement.result.panelsPostedCreated' : 'enforcement.result.panelsPosted', { main: mainChannel.name, support: supportChannel.name }),

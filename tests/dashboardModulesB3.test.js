@@ -177,11 +177,12 @@ test('appealsHome form: choices checked, the invite validated with inviteOrNull,
 
 test('appeals-home action: saved for another server; a bad invite saves nothing; refused in the home servers', async () => {
     const other = ctxFor(OTHER);
-    const result = await run('enforcement', 'appeals-home', other, { appealsHome: 'own', appealsInvite: '' });
-    assert.deepEqual(other.calls.map((c) => c.patch), [{ appealsHome: 'own' }], 'only the changed key (the invite stays empty)');
+    // The default is 'own' (owner decision D2): choosing Mewvo support is the change.
+    const result = await run('enforcement', 'appeals-home', other, { appealsHome: 'mewvo', appealsInvite: '' });
+    assert.deepEqual(other.calls.map((c) => c.patch), [{ appealsHome: 'mewvo' }], 'only the changed key (the invite stays empty)');
     assert.ok(result.changes.length);
     await run('enforcement', 'appeals-home', other, { appealsHome: 'own', appealsInvite: 'https://discord.gg/ours' });
-    assert.deepEqual(other.calls[1].patch, { appealsInvite: 'https://discord.gg/ours' });
+    assert.deepEqual(other.calls[1].patch, { appealsHome: 'own', appealsInvite: 'https://discord.gg/ours' });
     const unchanged = await run('enforcement', 'appeals-home', other, { appealsHome: 'own', appealsInvite: 'https://discord.gg/ours' });
     assert.equal(unchanged.changes.length, 0);
 

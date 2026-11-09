@@ -868,6 +868,7 @@
             "serverTitle": "Appeal panel posted",
             "serverPanel": "**Panel:** <#{channelId}>, for appeals of this server's punishments and staff reports.",
             "category": "Every appeal and report opens in **{category}**, visible to administrators only.",
+            "categoryCreated": "I created the private **{category}** category for appeals and reports (only administrators and Mewvo can see it) and saved it as this server's appeals category.",
             "serverDecide": "Decide appeals with the Accept / Deny buttons on each appeal.",
             "homeTitle": "Appeal panels posted",
             "main": "**Main server:** <#{channelId}>, for mutes and warns.",
@@ -876,7 +877,8 @@
             "homeDecide": "Review and decide them with **/appeals**."
         },
         "error": {
-            "noServerCategory": "There is no category to open appeals and reports in. Set a ticket category first (/ticket), then run /setappeal again.",
+            "noServerCategory": "There is no category to open appeals and reports in, and I could not create one. Give Mewvo the **Manage Channels** permission (Server Settings → Roles → Mewvo) and run /setappeal again, or pick an appeals category on the dashboard (Enforcement & appeals).",
+            "categoryNotSaved": "The new appeals category could not be saved because the database is not responding. Try /setappeal again in a minute.",
             "noMainCategory": "There is no category to open appeals in. Set the appeals category in the dashboard (Enforcement & appeals), or a ticket category.",
             "categoryPermissions": "I need View Channel and Manage Channels in the **{category}** category to open appeal channels there.",
             "channelPermissions": "I need View Channel, Send Messages and Embed Links in <#{channelId}> to post the appeal panel.",

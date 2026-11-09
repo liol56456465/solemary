@@ -130,11 +130,16 @@
   },
   "panels": {
     "title": "Appeal panels",
+    "titleServer": "Appeal panel",
     "help": "Posts the appeal panel here and in the support server, and removes the old ones. You can also do this with /setappeal in Discord.",
+    "helpServer": "Posts the appeal panel in the channel you pick and removes the old one there. Members press it to appeal a punishment from this server or to report a staff member; each appeal opens in a private channel of your appeals category. No category yet? Mewvo creates a private “Appeals” category. You can also do this with /setappeal in Discord.",
     "channel": "Channel for the appeal panel",
     "channelHelp": "The appeal panel is a message with a button members press to appeal. A second panel goes to #appeals in the support server, which Mewvo creates if it does not exist.",
+    "channelHelpServer": "The appeal panel is a message with a button members press to appeal. Pick a channel your members can read.",
     "submit": "Post the appeal panels",
-    "confirm": "Post the appeal panels now? Earlier appeal panels in these channels are replaced."
+    "submitServer": "Post the appeal panel",
+    "confirm": "Post the appeal panels now? Earlier appeal panels in these channels are replaced.",
+    "confirmServer": "Post the appeal panel now? An earlier appeal panel in this channel is replaced."
   },
   "pages": {
     "transparencyTitle": "Transparency report",
@@ -174,6 +179,8 @@
   "result": {
     "panelsPosted": "Appeal panels posted in #{main} and in #{support} of the support server.",
     "panelsPostedCreated": "Appeal panels posted in #{main} and in #{support} of the support server (created).",
+    "panelPostedServer": "Appeal panel posted in #{channel}. Appeals open in {category}.",
+    "panelPostedServerCreated": "Appeal panel posted in #{channel}. Mewvo created the private category {category} for appeals and saved it as your appeals category.",
     "templateInvalid": "That template is not valid.",
     "templateAdded": "Template \"{name}\" added.",
     "templateGone": "That template is gone already. Reload the page.",
@@ -185,12 +192,12 @@
   },
   "appealsHome": {
     "title": "Where members appeal",
-    "help": "Punishment messages (DMs) tell members where they can ask for a punishment to be lifted. Mewvo support: they appeal in the Mewvo support server. Our own server: the DM names an invite to a server you run.",
+    "help": "Punishment messages (DMs) tell members where they can ask for a punishment to be lifted. Our own server (the default): the DM names your invite below and Mewvo’s web appeal page when it is available; with neither, it tells them to contact your staff. Mewvo support: they appeal in the Mewvo support server.",
     "choice": "Members appeal in",
     "mewvo": "Mewvo support",
     "own": "Our own server",
     "invite": "Invite to our own server",
-    "inviteHelp": "A discord.gg invite that does not expire. Used only with \"Our own server\". Empty: the DM has no invite line.",
+    "inviteHelp": "A discord.gg invite that does not expire. Used only with “Our own server”. Empty: the DM has no invite line (it still links the web appeal page when available, else tells members to contact your staff).",
     "badInvite": "Invite to our own server: must be a discord.gg invite link. Nothing was changed.",
     "homeNote": "This does not apply here: members of Mewvo's own servers always appeal in the Mewvo support server.",
     "homeOnlyAction": "This setting does not apply in Mewvo's own servers. Nothing was changed."

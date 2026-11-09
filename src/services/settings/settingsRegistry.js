@@ -314,9 +314,11 @@ export const SETTINGS = Object.freeze([
         // Mewvo's own Support server (supportServerInvite of the home servers), 'own' = the server's
         // own invite (appealsInvite). Read for servers other than Mewvo's own: the home servers keep
         // supportServerInvite in their punishment DMs whatever this says (dmTemplates.js appealInvite).
+        // Owner decision D2 (2026-11-09): a server that never saved it appeals in its own server
+        // (`neutral`: what neutralValue gives other servers); a stored 'mewvo' is kept.
         key: 'appealsHome', module: 'appeals', kind: 'string', guild: 'main',
         label: 'Where members appeal (Mewvo support or our own server)', env: null,
-        fallback: 'mewvo', schema: z.enum(['mewvo', 'own']),
+        fallback: 'mewvo', neutral: 'own', schema: z.enum(['mewvo', 'own']),
     },
     {
         // The invite punishment DMs name when appealsHome is 'own'. Not set: the DM has no invite line.
@@ -491,6 +493,8 @@ const PLACE_KINDS = new Set(['channel', 'category', 'role', 'url']);
  * the cat name, empty JSON structures) stay as they are. A copy, never the frozen fallback.
  */
 export function neutralValue(entry) {
+    // An explicit default for other servers (appealsHome: 'own'), when it differs from the home one.
+    if (Object.hasOwn(entry, 'neutral')) return structuredClone(entry.neutral);
     if (entry.kind === 'list') return [];
     if (PLACE_KINDS.has(entry.kind)) return null;
     if (entry.prodOnly) return entry.prodFallbackEmpty !== undefined ? structuredClone(entry.prodFallbackEmpty) : null;

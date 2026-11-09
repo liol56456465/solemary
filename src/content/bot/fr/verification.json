@@ -40,6 +40,7 @@
     },
     "privacy": {
         "oauth": "La vérification enregistre ton ID Discord, un jeton de connexion chiffré (pour t'ajouter au serveur de support Mewvo) et une empreinte brouillée de ton adresse IP pour repérer les contournements de ban.",
+        "oauthServer": "« Vérifier avec Discord » ne partage avec Mewvo que ton profil Discord public (ID, nom, avatar) : pas d'e-mail, pas de liste de serveurs, et aucun jeton de connexion n'est conservé. Mewvo enregistre ton ID Discord et une empreinte brouillée de ton adresse IP, comparée uniquement aux membres bannis de ce serveur, pour repérer les contournements de ban.",
         "direct": "La vérification enregistre ton ID Discord et la date de ta vérification.",
         "link": "Confidentialité : {url}"
     },

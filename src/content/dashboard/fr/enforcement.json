@@ -134,11 +134,16 @@
   },
   "panels": {
     "title": "Panneaux d’appel",
+    "titleServer": "Panneau d’appel",
     "help": "Publie le panneau d’appel ici et sur le serveur de support, et retire les anciens. Tu peux aussi le faire avec /setappeal dans Discord.",
+    "helpServer": "Publie le panneau d’appel dans le salon choisi et retire l’ancien de ce salon. Les membres l’utilisent pour faire appel d’une sanction de ce serveur ou signaler un membre de l’équipe ; chaque appel s’ouvre dans un salon privé de ta catégorie d’appels. Pas encore de catégorie ? Mewvo crée une catégorie privée « Appeals ». Tu peux aussi le faire avec /setappeal sur Discord.",
     "channel": "Salon du panneau d’appel",
     "channelHelp": "Le panneau d’appel est un message avec un bouton sur lequel les membres appuient pour faire appel. Un second panneau va dans #appeals sur le serveur de support ; Mewvo crée ce salon s’il n’existe pas.",
+    "channelHelpServer": "Le panneau d’appel est un message avec un bouton sur lequel les membres appuient pour faire appel. Choisis un salon que tes membres peuvent lire.",
     "submit": "Publier les panneaux d’appel",
-    "confirm": "Publier les panneaux d’appel maintenant ? Les anciens panneaux de ces salons sont remplacés."
+    "submitServer": "Publier le panneau d’appel",
+    "confirm": "Publier les panneaux d’appel maintenant ? Les anciens panneaux de ces salons sont remplacés.",
+    "confirmServer": "Publier le panneau d’appel maintenant ? Un ancien panneau d’appel dans ce salon est remplacé."
   },
   "pages": {
     "transparencyTitle": "Rapport de transparence",
@@ -178,6 +183,8 @@
   "result": {
     "panelsPosted": "Panneaux d’appel publiés dans #{main} et dans #{support} du serveur de support.",
     "panelsPostedCreated": "Panneaux d’appel publiés dans #{main} et dans #{support} du serveur de support (créé).",
+    "panelPostedServer": "Panneau d’appel publié dans #{channel}. Les appels s’ouvrent dans {category}.",
+    "panelPostedServerCreated": "Panneau d’appel publié dans #{channel}. Mewvo a créé la catégorie privée {category} pour les appels et l’a enregistrée comme ta catégorie d’appels.",
     "templateInvalid": "Ce modèle n’est pas valide.",
     "templateAdded": "Modèle « {name} » ajouté.",
     "templateGone": "Ce modèle a déjà disparu. Recharge la page.",
@@ -189,12 +196,12 @@
   },
   "appealsHome": {
     "title": "Où les membres font appel",
-    "help": "Les messages de sanction (MP) indiquent aux membres où demander la levée d’une sanction. Support Mewvo : ils font appel sur le serveur de support de Mewvo. Notre propre serveur : le MP donne une invitation vers un serveur que vous gérez.",
+    "help": "Les messages de sanction (MP) indiquent aux membres où demander la levée d’une sanction. Notre propre serveur (par défaut) : le MP donne ton invitation ci-dessous et la page web d’appel de Mewvo quand elle est disponible ; sans les deux, il leur dit de contacter ton équipe. Support Mewvo : ils font appel sur le serveur de support Mewvo.",
     "choice": "Les membres font appel sur",
     "mewvo": "Support Mewvo",
     "own": "Notre propre serveur",
     "invite": "Invitation vers notre propre serveur",
-    "inviteHelp": "Une invitation discord.gg qui n’expire pas. Utilisée seulement avec « Notre propre serveur ». Vide : le MP n’a pas de ligne d’invitation.",
+    "inviteHelp": "Une invitation discord.gg qui n’expire pas. Utilisée seulement avec « Notre propre serveur ». Vide : le MP n’a pas de ligne d’invitation (il donne quand même la page web d’appel si elle est disponible, sinon il dit aux membres de contacter ton équipe).",
     "badInvite": "Invitation vers notre propre serveur : doit être un lien d’invitation discord.gg. Rien n’a été modifié.",
     "homeNote": "Cela ne s’applique pas ici : les membres des serveurs de Mewvo font toujours appel sur le serveur de support de Mewvo.",
     "homeOnlyAction": "Ce réglage ne s’applique pas aux serveurs de Mewvo. Rien n’a été modifié."

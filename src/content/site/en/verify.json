@@ -1,0 +1,35 @@
+{
+  "privacyLink": "Privacy Policy",
+  "cancelled": {
+    "title": "Verification cancelled",
+    "message": "You did not authorize the bot. Go back to Discord and press Verify again if you want to verify."
+  },
+  "unavailable": {
+    "title": "Try again",
+    "message": "Verification is not available right now. Go back to Discord and press Verify again in a minute."
+  },
+  "expired": {
+    "title": "Link expired",
+    "message": "This verification link is invalid, expired or already used. Go back to Discord and press Verify again."
+  },
+  "notSetUp": {
+    "title": "Verification is not set up",
+    "message": "Verification is not set up in this server. Ask a staff member."
+  },
+  "wrongAccount": {
+    "title": "Wrong account",
+    "message": "You authorized with a different Discord account than the one that pressed Verify. Log in with the right account and try again."
+  },
+  "held": {
+    "title": "Waiting for approval",
+    "message": "Thanks. A staff member needs to approve your verification first. You will get a DM when it is done."
+  },
+  "verified": {
+    "title": "You are verified",
+    "message": "Thanks. You can close this page and go back to Discord."
+  },
+  "failed": {
+    "title": "Verification failed",
+    "message": "Something went wrong. Go back to Discord and press Verify again."
+  }
+}

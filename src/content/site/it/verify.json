@@ -1,0 +1,35 @@
+{
+  "privacyLink": "Informativa sulla privacy",
+  "cancelled": {
+    "title": "Verifica annullata",
+    "message": "Non hai autorizzato il bot. Torna su Discord e premi di nuovo il pulsante di verifica se vuoi verificarti."
+  },
+  "unavailable": {
+    "title": "Riprova",
+    "message": "La verifica non è disponibile in questo momento. Torna su Discord e premi di nuovo il pulsante di verifica tra un minuto."
+  },
+  "expired": {
+    "title": "Link scaduto",
+    "message": "Questo link di verifica non è valido, è scaduto o è già stato usato. Torna su Discord e premi di nuovo il pulsante di verifica."
+  },
+  "notSetUp": {
+    "title": "La verifica non è configurata",
+    "message": "La verifica non è configurata in questo server. Chiedi a un membro dello staff."
+  },
+  "wrongAccount": {
+    "title": "Account sbagliato",
+    "message": "Hai autorizzato con un account Discord diverso da quello che ha premuto il pulsante di verifica. Accedi con l’account giusto e riprova."
+  },
+  "held": {
+    "title": "In attesa di approvazione",
+    "message": "Grazie. Un membro dello staff deve prima approvare la tua verifica. Riceverai un DM quando sarà fatto."
+  },
+  "verified": {
+    "title": "Sei verificato",
+    "message": "Grazie. Puoi chiudere questa pagina e tornare su Discord."
+  },
+  "failed": {
+    "title": "Verifica non riuscita",
+    "message": "Qualcosa è andato storto. Torna su Discord e premi di nuovo il pulsante di verifica."
+  }
+}

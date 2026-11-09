@@ -1,7 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import { infoEmbed, successEmbed } from '../utils/embeds.js';
 import { verificationSetupProblem, verifyUser } from '../services/verificationService.js';
-import { buildVerifyUrl, isOAuthVerificationEnabled } from '../services/oauthVerification.js';
+import { buildVerifyUrl, isOAuthVerificationEnabled, keepsVerifyToken } from '../services/oauthVerification.js';
 import { quizGate } from '../services/verificationQuiz.js';
 import { handleInteractionError, replyUserError, ErrorTypes } from '../utils/errorHandler.js';
 import { logger } from '../utils/logger.js';
@@ -13,23 +13,30 @@ import { botText, textForInteraction } from '../utils/botText.js';
  * The privacy line under a verification answer, in the member's language. English is exactly
  * utils/privacyNotice.js (oauthVerifyPrivacyNote / directVerifyPrivacyNote).
  */
-export function verifyPrivacyNote(kind, { lang, env = process.env } = {}) {
+export function verifyPrivacyNote(kind, { lang, env = process.env, home = true } = {}) {
     const tr = botText(lang);
-    const sentence = kind === 'oauth' ? tr.t('verification.privacy.oauth') : tr.t('verification.privacy.direct');
+    // 'oauth' in a server that is not Mewvo's (home: false): identify only, no token kept (D3).
+    const key = kind !== 'oauth' ? 'verification.privacy.direct' : home ? 'verification.privacy.oauth' : 'verification.privacy.oauthServer';
+    const sentence = tr.t(key);
     const url = privacyUrl(env);
     return url ? `${sentence} ${tr.t('verification.privacy.link', { url })}` : sentence;
 }
 
-/** The private reply with the "Verify with Discord" link (OAuth verification), in `lang`. */
+/**
+ * The private reply with the "Verify with Discord" link (OAuth verification), in `lang`. The
+ * privacy line and the scopes follow the server (keepsVerifyToken); `lang` also goes into the
+ * link's state, so the result page after Discord is in the same language.
+ */
 export function buildOAuthVerifyReply(guildId, userId, { lang } = {}) {
     const tr = botText(lang);
+    const home = keepsVerifyToken(guildId);
     return {
         embeds: [infoEmbed(
             tr.t('verification.button.oauthTitle'),
-            tr.t('verification.button.oauthText', { privacy: verifyPrivacyNote('oauth', { lang }) }),
+            tr.t('verification.button.oauthText', { privacy: verifyPrivacyNote('oauth', { lang, home }) }),
         )],
         components: [new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel(tr.t('verification.button.oauthButton')).setURL(buildVerifyUrl(guildId, userId)),
+            new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel(tr.t('verification.button.oauthButton')).setURL(buildVerifyUrl(guildId, userId, { lang: tr.lang })),
         )],
     };
 }

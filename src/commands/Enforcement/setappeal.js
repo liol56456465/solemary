@@ -40,12 +40,15 @@ export default {
         const target = interaction.options.getChannel('channel') || interaction.channel;
         if (!isHomeGuild(interaction.guildId)) {
             // Any other server (multi-server B1): one panel in this server; appeals and reports open here.
-            const { channel, category } = await postServerAppealPanel(interaction.guild, target, { lang: tr.lang });
+            // No appeals or ticket category yet: a private "Appeals" category is created and saved (2.4).
+            const { channel, category, categoryCreated } = await postServerAppealPanel(interaction.guild, target, {
+                lang: tr.lang, actor: { userId: interaction.user.id, username: interaction.user.username },
+            });
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [successEmbed(tr.t('staff.setappeal.posted.serverTitle'), [
                     tr.t('staff.setappeal.posted.serverPanel', { channelId: channel.id }),
                     '',
-                    tr.t('staff.setappeal.posted.category', { category: category.name }),
+                    tr.t(categoryCreated ? 'staff.setappeal.posted.categoryCreated' : 'staff.setappeal.posted.category', { category: category.name }),
                     tr.t('staff.setappeal.posted.serverDecide'),
                 ].join('\n'))],
             });

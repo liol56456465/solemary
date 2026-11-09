@@ -889,6 +889,7 @@
             "serverTitle": "Painel de apelações publicado",
             "serverPanel": "**Painel:** <#{channelId}>, para apelações de punições deste servidor e denúncias da equipe.",
             "category": "Cada apelação e denúncia abre em **{category}**, visível só para administradores.",
+            "categoryCreated": "Criei a categoria privada **{category}** para apelações e denúncias (só administradores e o Mewvo a veem) e a salvei como categoria de apelações deste servidor.",
             "serverDecide": "Decida as apelações com os botões Aceitar / Negar em cada apelação.",
             "homeTitle": "Painéis de apelações publicados",
             "main": "**Servidor principal:** <#{channelId}>, para silenciamentos e advertências.",
@@ -897,7 +898,8 @@
             "homeDecide": "Analise e decida com **/appeals**."
         },
         "error": {
-            "noServerCategory": "Não há categoria para abrir apelações e denúncias. Defina primeiro uma categoria de tickets (/ticket) e depois rode /setappeal de novo.",
+            "noServerCategory": "Não há categoria para abrir apelações e denúncias, e não consegui criar uma. Dê ao Mewvo a permissão **Gerenciar canais** (Configurações do servidor → Cargos → Mewvo) e rode /setappeal de novo, ou escolha uma categoria de apelações no painel (Punições e apelações).",
+            "categoryNotSaved": "Não foi possível salvar a nova categoria de apelações porque o banco de dados não está respondendo. Tente /setappeal de novo daqui a um minuto.",
             "noMainCategory": "Não há categoria para abrir apelações. Defina a categoria de apelações no painel (Punições e apelações), ou uma categoria de tickets.",
             "categoryPermissions": "Preciso de \"Ver canal\" e \"Gerenciar canais\" na categoria **{category}** para abrir canais de apelação lá.",
             "channelPermissions": "Preciso de \"Ver canal\", \"Enviar mensagens\" e \"Inserir links\" em <#{channelId}> para publicar o painel de apelações.",

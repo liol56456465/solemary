@@ -130,11 +130,16 @@
   },
   "panels": {
     "title": "Einspruchs-Panels",
+    "titleServer": "Einspruchs-Panel",
     "help": "Postet das Einspruchs-Panel hier und auf dem Support-Server und entfernt die alten. Das geht auch mit /setappeal in Discord.",
+    "helpServer": "Postet das Einspruchs-Panel im gewählten Kanal und entfernt das alte dort. Mitglieder legen darüber Einspruch gegen eine Strafe dieses Servers ein oder melden ein Teammitglied; jeder Einspruch öffnet sich in einem privaten Kanal deiner Einspruchskategorie. Noch keine Kategorie? Mewvo erstellt eine private Kategorie „Appeals“. Das geht auch mit /setappeal in Discord.",
     "channel": "Kanal für das Einspruchs-Panel",
     "channelHelp": "Das Einspruchs-Panel ist eine Nachricht mit einem Button, über den Mitglieder Einspruch einlegen. Ein zweites Panel kommt in #appeals auf dem Support-Server; Mewvo erstellt den Kanal, falls es ihn nicht gibt.",
+    "channelHelpServer": "Das Einspruchs-Panel ist eine Nachricht mit einem Button, über den Mitglieder Einspruch einlegen. Wähle einen Kanal, den deine Mitglieder lesen können.",
     "submit": "Einspruchs-Panels posten",
-    "confirm": "Einspruchs-Panels jetzt posten? Frühere Einspruchs-Panels in diesen Kanälen werden ersetzt."
+    "submitServer": "Einspruchs-Panel posten",
+    "confirm": "Einspruchs-Panels jetzt posten? Frühere Einspruchs-Panels in diesen Kanälen werden ersetzt.",
+    "confirmServer": "Das Einspruchs-Panel jetzt posten? Ein früheres Einspruchs-Panel in diesem Kanal wird ersetzt."
   },
   "pages": {
     "transparencyTitle": "Transparenzbericht",
@@ -174,6 +179,8 @@
   "result": {
     "panelsPosted": "Einspruchs-Panels in #{main} und in #{support} auf dem Support-Server gepostet.",
     "panelsPostedCreated": "Einspruchs-Panels in #{main} und in #{support} auf dem Support-Server gepostet (erstellt).",
+    "panelPostedServer": "Einspruchs-Panel in #{channel} gepostet. Einsprüche öffnen sich in {category}.",
+    "panelPostedServerCreated": "Einspruchs-Panel in #{channel} gepostet. Mewvo hat die private Kategorie {category} für Einsprüche erstellt und als deine Einspruchskategorie gespeichert.",
     "templateInvalid": "Diese Vorlage ist nicht gültig.",
     "templateAdded": "Vorlage „{name}“ hinzugefügt.",
     "templateGone": "Diese Vorlage ist schon weg. Lade die Seite neu.",
@@ -185,12 +192,12 @@
   },
   "appealsHome": {
     "title": "Wo Mitglieder Einspruch einlegen",
-    "help": "Die Nachrichten zu Strafen (DMs) sagen Mitgliedern, wo sie bitten können, eine Strafe aufzuheben. Mewvo-Support: Sie legen im Mewvo-Supportserver Einspruch ein. Unser eigener Server: Die DM nennt eine Einladung zu einem Server, den ihr betreibt.",
+    "help": "Strafnachrichten (DMs) sagen Mitgliedern, wo sie beantragen können, eine Strafe aufzuheben. Unser eigener Server (Standard): Die DM nennt deine Einladung unten und Mewvos Web-Einspruchsseite, wenn sie verfügbar ist; ohne beides sagt sie ihnen, dass sie sich an dein Team wenden sollen. Mewvo-Support: Sie legen Einspruch im Mewvo-Support-Server ein.",
     "choice": "Mitglieder legen Einspruch ein in",
     "mewvo": "Mewvo-Support",
     "own": "Unser eigener Server",
     "invite": "Einladung zu unserem eigenen Server",
-    "inviteHelp": "Eine discord.gg-Einladung, die nicht abläuft. Nur mit „Unser eigener Server“ genutzt. Leer: Die DM hat keine Einladungszeile.",
+    "inviteHelp": "Eine discord.gg-Einladung, die nicht abläuft. Wird nur mit „Unser eigener Server“ verwendet. Leer: Die DM hat keine Einladungszeile (sie verlinkt trotzdem die Web-Einspruchsseite, wenn verfügbar, sonst sagt sie Mitgliedern, dass sie sich an dein Team wenden sollen).",
     "badInvite": "Einladung zu unserem eigenen Server: muss ein discord.gg-Einladungslink sein. Es wurde nichts geändert.",
     "homeNote": "Das gilt hier nicht: Mitglieder von Mewvos eigenen Servern legen immer im Mewvo-Supportserver Einspruch ein.",
     "homeOnlyAction": "Diese Einstellung gilt nicht auf Mewvos eigenen Servern. Es wurde nichts geändert."

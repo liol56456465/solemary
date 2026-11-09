@@ -10,6 +10,7 @@
 import { PERMS, channelPicker, postForm, rolePicker } from './forms.js';
 import { registryGuildId, registryValue } from './modules/common.js';
 import { textFor } from './language.js';
+import { isHomeScope } from './modules/serverScope.js';
 
 const REGISTRY_KEYS = ['modLogChannelId', 'appealsCategoryId', 'reviewChannelId', 'alertsChannelId', 'mutedRoleId', 'bannedRoleId'];
 
@@ -61,6 +62,11 @@ export function setupStepForm(ctx, step, data) {
         case 'appealPanel':
         {
             const tr = textFor(ctx);
+            // Any other server: one panel in this server (the action posts postServerAppealPanel there).
+            if (!isHomeScope(ctx)) {
+                return form('enforcement', 'appeal-panels', channelPicker(g, 'channelId', null, { label: tr.t('overview.setup.appealPanelForm.channel'), perms: PERMS.post, optional: false }),
+                    { submit: tr.t('enforcement.panels.submitServer'), canEdit: canAdmin, confirm: tr.t('enforcement.panels.confirmServer') });
+            }
             return form('enforcement', 'appeal-panels', channelPicker(g, 'channelId', null, { label: tr.t('overview.setup.appealPanelForm.channel'), perms: PERMS.post, optional: false }),
                 { submit: tr.t(step.done ? 'overview.setup.appealPanelForm.postAgain' : 'overview.setup.appealPanelForm.post'), canEdit: canAdmin, confirm: tr.t('overview.setup.appealPanelForm.confirm') });
         }

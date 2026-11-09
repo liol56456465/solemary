@@ -12,6 +12,7 @@
         "rejoin": "Volver a unirte: {invite}",
         "record": "Tu historial completo: <{url}>",
         "appealWeb": "**Apela en línea:** <{url}>",
+        "appealAskStaff": "**Para apelar:** contacta con el equipo de {server}.",
         "appealDeniedWeb": "Puedes volver a apelar en línea cuando termine el tiempo de espera: <{url}>",
         "privacy": "-# Privacidad: <{url}>",
         "thisServer": "este servidor",

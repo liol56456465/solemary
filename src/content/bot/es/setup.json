@@ -21,7 +21,7 @@
             "mewvo": "Los miembros apelan en el servidor de soporte de Mewvo.",
             "mewvoChoice": "Los miembros apelan en el servidor de soporte de Mewvo. Puedes usar tu propio servidor en su lugar (panel).",
             "own": "Los miembros apelan en tu propio servidor: {invite}",
-            "ownMissing": "Elegiste tu propio servidor, pero no hay invitación. Añade una en el panel (Sanciones)."
+            "ownMissing": "Los miembros apelan en tu propio servidor (por defecto). Añade una invitación en el panel (Sanciones), para que los miembros expulsados o baneados sepan adónde ir."
         },
         "automod": {
             "label": "Automod",

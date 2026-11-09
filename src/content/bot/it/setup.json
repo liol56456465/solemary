@@ -21,7 +21,7 @@
             "mewvo": "I membri fanno ricorso nel server di supporto di Mewvo.",
             "mewvoChoice": "I membri fanno ricorso nel server di supporto di Mewvo. Puoi usare invece il tuo server (dashboard).",
             "own": "I membri fanno ricorso nel tuo server: {invite}",
-            "ownMissing": "Hai scelto il tuo server, ma non c’è un invito. Aggiungine uno nella dashboard (Sanzioni)."
+            "ownMissing": "I membri fanno ricorso nel tuo server (predefinito). Aggiungi un invito nella dashboard (Sanzioni), così chi è stato espulso o bannato sa dove andare."
         },
         "automod": {
             "label": "Automod",

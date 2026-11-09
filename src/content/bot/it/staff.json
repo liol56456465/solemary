@@ -889,6 +889,7 @@
             "serverTitle": "Pannello dei ricorsi pubblicato",
             "serverPanel": "**Pannello:** <#{channelId}>, per i ricorsi contro le sanzioni di questo server e le segnalazioni dello staff.",
             "category": "Ogni ricorso e segnalazione si apre in **{category}**, visibile solo agli amministratori.",
+            "categoryCreated": "Ho creato la categoria privata **{category}** per ricorsi e segnalazioni (la vedono solo gli amministratori e Mewvo) e l'ho salvata come categoria dei ricorsi di questo server.",
             "serverDecide": "Decidi i ricorsi con i pulsanti Accetta / Rifiuta su ogni ricorso.",
             "homeTitle": "Pannelli dei ricorsi pubblicati",
             "main": "**Server principale:** <#{channelId}>, per silenziamenti e avvertimenti.",
@@ -897,7 +898,8 @@
             "homeDecide": "Esaminali e decidi con **/appeals**."
         },
         "error": {
-            "noServerCategory": "Non c'è una categoria in cui aprire ricorsi e segnalazioni. Imposta prima una categoria per i ticket (/ticket), poi esegui di nuovo /setappeal.",
+            "noServerCategory": "Non c'è una categoria in cui aprire ricorsi e segnalazioni, e non sono riuscito a crearne una. Dai a Mewvo il permesso **Gestire i canali** (Impostazioni server → Ruoli → Mewvo) ed esegui di nuovo /setappeal, oppure scegli una categoria dei ricorsi nella dashboard (Sanzioni e ricorsi).",
+            "categoryNotSaved": "La nuova categoria dei ricorsi non è stata salvata perché il database non risponde. Riprova /setappeal tra un minuto.",
             "noMainCategory": "Non c'è una categoria in cui aprire i ricorsi. Imposta la categoria dei ricorsi nella dashboard (Sanzioni e ricorsi), o una categoria per i ticket.",
             "categoryPermissions": "Mi servono «Visualizzare il canale» e «Gestire i canali» nella categoria **{category}** per aprirci i canali dei ricorsi.",
             "channelPermissions": "Mi servono «Visualizzare il canale», «Inviare messaggi» e «Incorporare link» in <#{channelId}> per pubblicare il pannello dei ricorsi.",

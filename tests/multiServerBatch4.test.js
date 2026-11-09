@@ -74,8 +74,8 @@ test('DM invite, home servers: Mewvo\'s Support invite whatever appealsHome says
     assert.ok(appealDeniedDm().includes(MEWVO_SUPPORT()), 'no server named: as before');
 });
 
-test('DM invite, other server with appealsHome mewvo (also the default): Mewvo\'s Support invite', () => {
-    for (const row of [{}, { appealsHome: 'mewvo', appealsInvite: OWN_INVITE }]) {
+test('DM invite, other server that explicitly chose appealsHome mewvo: Mewvo\'s Support invite (kept after D2)', () => {
+    for (const row of [{ appealsHome: 'mewvo' }, { appealsHome: 'mewvo', appealsInvite: OWN_INVITE }]) {
         setSettingsCacheForTests(OTHER, row);
         assert.equal(appealInvite(OTHER), MEWVO_SUPPORT(), JSON.stringify(row));
         for (const [name, dm] of Object.entries(punishmentDms(caseOf(OTHER)))) {
@@ -102,15 +102,43 @@ test('DM invite, other server with appealsHome own and an invite: its own invite
     assert.ok(appealDeniedDm({ guildId: OTHER, lang: 'de' }).includes(OWN_INVITE), 'translated DM keeps the guild');
 });
 
-test('DM invite, other server with appealsHome own but no invite: no invite line at all', () => {
+test('D2: another server that never chose (no row value) appeals in its own server: no Mewvo Support invite', () => {
+    setSettingsCacheForTests(OTHER, {});
+    assert.equal(appealInvite(OTHER), null);
+    for (const [name, dm] of Object.entries(punishmentDms(caseOf(OTHER, { guild_name: 'Cosy Cats' })))) {
+        assert.ok(!dm.includes(MEWVO_SUPPORT()) && !dm.includes('discord.gg'), name);
+        assert.ok(dm.startsWith('**To appeal:** contact the staff of Cosy Cats.'), `${name}: ${dm}`);
+    }
+    setSettingsCacheForTests(OTHER, { appealsInvite: OWN_INVITE });
+    assert.equal(appealInvite(OTHER), OWN_INVITE, 'the default is own: its invite is used');
+});
+
+test('DM invite, other server with appealsHome own but no invite: no invite line, "contact the staff" instead', () => {
     setSettingsCacheForTests(OTHER, { appealsHome: 'own' });
     assert.equal(appealInvite(OTHER), null);
     for (const [name, dm] of Object.entries(punishmentDms(caseOf(OTHER)))) {
         assert.ok(!dm.includes('Appeal here'), name);
         assert.ok(!dm.includes('discord.gg'), `${name} names no invite`);
         assert.ok(dm.includes('Case code: abc2345'), `${name} still renders`);
+        assert.ok(dm.includes('**To appeal:** contact the staff of the server.'), `${name}: the honest path`);
     }
-    assert.ok(banDm(caseOf(OTHER, { unappealable: true })).includes('This ban cannot be appealed.'));
+    // The member portal on: the web appeal page replaces the "contact the staff" line.
+    const savedPortal = process.env.MEMBER_PORTAL_ENABLED;
+    process.env.MEMBER_PORTAL_ENABLED = 'true';
+    process.env.PUBLIC_URL = 'https://mewvo.example';
+    try {
+        const web = muteDm(caseOf(OTHER));
+        assert.ok(web.includes('<https://mewvo.example/me/appeal/abc2345>') && !web.includes('To appeal:'), web);
+    } finally {
+        if (savedPortal === undefined) delete process.env.MEMBER_PORTAL_ENABLED; else process.env.MEMBER_PORTAL_ENABLED = savedPortal;
+    }
+    const unappealable = banDm(caseOf(OTHER, { unappealable: true }));
+    assert.ok(unappealable.includes('This ban cannot be appealed.') && !unappealable.includes('To appeal:'));
+    for (const lang of ['de', 'ru', 'pt-BR']) {
+        const dm = muteDm(caseOf(OTHER), { lang });
+        assert.ok(!dm.includes('{') && !dm.includes('To appeal:'), `${lang}: translated`);
+    }
+    assert.ok(!banDm(caseOf(MAIN)).includes('To appeal:'), 'home DMs unchanged');
     const auto = banDm(caseOf(OTHER, { is_auto: true, ladder_level_after: 3, appeal_deadline: new Date('2027-05-01T00:00:00Z') }));
     assert.ok(!auto.includes('Appealing this code') && !auto.includes('You can appeal until'), 'no appeal promise without a place to appeal');
     const autoHome = banDm(caseOf(MAIN, { is_auto: true, ladder_level_after: 3, appeal_deadline: new Date('2027-05-01T00:00:00Z') }));

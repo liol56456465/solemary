@@ -20,9 +20,9 @@ const textOf = (lang) => botText(lang || 'en');
 /**
  * The appeal invite a punishment DM of this server names (read on every use: settings change at
  * runtime). Mewvo's own servers (and a caller that names no server) keep Mewvo's Support invite,
- * exactly as before. Any other server: Mewvo's Support invite when its appealsHome is 'mewvo'
- * (the default), its own appealsInvite when it chose 'own', and null (no invite line) when it
- * chose 'own' without setting one. Never throws: when that server's settings cannot be read
+ * exactly as before. Any other server: Mewvo's Support invite when it chose appealsHome 'mewvo',
+ * its own appealsInvite with 'own' (the default for those servers since owner decision D2,
+ * 2026-11-09; settingsRegistry neutral), and null (no invite line) with 'own' and no invite set. Never throws: when that server's settings cannot be read
  * (database down at boot) the DM goes out without the line instead of stopping the action.
  */
 export function appealInvite(guildId, env = process.env) {
@@ -153,6 +153,24 @@ function webAppealLine(rec, tr, guildId) {
     return url ? tr.t('enforcement.dm.appealWeb', { url }) : null;
 }
 
+/**
+ * The appeal path of a punishment DM, in this order (the most direct one the member can use):
+ * the invite (appealInvite), then the web appeal page (other servers, member portal on). Another
+ * (non-home) server with neither: "To appeal, contact the staff of <server>" for an appealable
+ * case, so the DM never leaves the member without a way (owner decision D2). Mewvo's own servers:
+ * exactly as before (the invite line, or nothing). Returns [inviteLine, webLine] (nulls dropped by finish()).
+ */
+function appealLines(rec, tr, { guildId, serverName: name } = {}, { unappealableLine = false } = {}) {
+    const gid = guildOf(rec, guildId);
+    const inviteUrl = appealInvite(gid);
+    const first = unappealableLine ? appealLine(rec, tr, inviteUrl) : appealHere(tr, inviteUrl);
+    const web = webAppealLine(rec, tr, guildId);
+    if (first || web || !gid || isHomeGuild(gid) || rec?.unappealable) return { lines: [first, web], where: Boolean(inviteUrl || web) };
+    // where: false — "contact the staff" is not a formal appeal, so the ban DM's appeal notes
+    // ("Appealing this code…", "You can appeal until…") stay out, as before.
+    return { lines: [tr.t('enforcement.dm.appealAskStaff', { server: serverFor(rec, { guildId, serverName: name }, tr) }), null], where: false };
+}
+
 function common(record, tr) {
     return [
         tr.t('enforcement.dm.by', { name: record.moderator_username }),
@@ -178,19 +196,16 @@ function banDmText(rec, { lang, guildId, serverName: name } = {}) {
     const duration = rec.expires_at
         ? tr.t('enforcement.dm.duration', { duration: durationIn(Number(rec.duration_ms), tr.lang), end: stamp(rec.expires_at) })
         : tr.t('enforcement.dm.durationPermanent');
-    const inviteUrl = appealInvite(guildOf(rec, guildId));
-    const web = webAppealLine(rec, tr, guildId);
+    const { lines: appeal, where } = appealLines(rec, tr, { guildId, serverName: name }, { unappealableLine: true });
     const lines = [
-        appealLine(rec, tr, inviteUrl),
-        web,
+        ...appeal,
         tr.t('enforcement.dm.ban.title', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
         ...common(rec, tr),
         duration,
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
         record(tr),
     ];
-    // The appeal notes only when the DM says where to appeal (no invite and no web appeal: neither).
-    const where = inviteUrl || web;
+    // The appeal notes only when the DM says where to appeal (home servers without an invite: neither).
     if (rec.is_auto && !rec.unappealable && where) {
         lines.push(tr.t('enforcement.dm.ban.autoNote'));
     }
@@ -203,8 +218,7 @@ function banDmText(rec, { lang, guildId, serverName: name } = {}) {
 function kickDmText(rec, inviteUrl, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
     return finish([
-        appealHere(tr, appealInvite(guildOf(rec, guildId))),
-        webAppealLine(rec, tr, guildId),
+        ...appealLines(rec, tr, { guildId, serverName: name }).lines,
         tr.t('enforcement.dm.kick.title', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
         ...common(rec, tr),
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
@@ -216,8 +230,7 @@ function kickDmText(rec, inviteUrl, { lang, guildId, serverName: name } = {}) {
 function muteDmText(rec, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
     return finish([
-        appealHere(tr, appealInvite(guildOf(rec, guildId))),
-        webAppealLine(rec, tr, guildId),
+        ...appealLines(rec, tr, { guildId, serverName: name }).lines,
         tr.t('enforcement.dm.mute.title', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
         ...common(rec, tr),
         tr.t('enforcement.dm.duration', { duration: durationIn(Number(rec.duration_ms), tr.lang), end: stamp(rec.expires_at) }),
@@ -230,8 +243,7 @@ function warnDmText(rec, warnNumber, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
     const limit = enforcementConfig.warnsPerLevel;
     return finish([
-        appealHere(tr, appealInvite(guildOf(rec, guildId))),
-        webAppealLine(rec, tr, guildId),
+        ...appealLines(rec, tr, { guildId, serverName: name }).lines,
         tr.t('enforcement.dm.warn.title', { number: warnNumber, limit, server: serverFor(rec, { guildId, serverName: name }, tr) }),
         ...common(rec, tr),
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
