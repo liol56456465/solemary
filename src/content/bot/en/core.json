@@ -7,8 +7,8 @@
             "title": "{bot} help",
             "description": "support us by boosting",
             "gettingStarted": "Getting started",
-            "adminSteps": "1. **/configwizard** sets the mod role and log channel.\n2. **/commands dashboard** turns categories on or off.\n3. Pick a category in the menu below to see its commands.",
-            "memberSteps": "Pick a category in the menu below to see its commands.\nNeed staff? DM the bot: your message goes to the team privately (modmail).",
+            "adminSteps": "1. **/setup** shows what is set up here, with the link to the dashboard.\n2. On the dashboard, open **Setup step by step** and do the essentials first.\n3. Pick a category in the menu below to see its commands.",
+            "memberSteps": "Pick a category in the menu below to see its commands.",
             "access": "Access",
             "accessAdmin": "• Commands marked 🔒 need the **Administrator** permission; the rest are for everyone.",
             "accessMember": "• This list shows the commands you can use.",
@@ -17,7 +17,9 @@
             "goodToKnow": "Good to know",
             "goodToKnowText": "• Most features have a dashboard command for their settings\n• Settings are saved per server",
             "supportButton": "Support Server",
-            "placeholder": "Pick a category"
+            "placeholder": "Pick a category",
+            "memberModmail": "Need staff? DM the bot: your message goes to the team privately (modmail).",
+            "descriptionNeutral": "Moderation, automod, appeals, tickets and more for this server."
         },
         "closed": {
             "title": "Help menu closed",
@@ -359,5 +361,26 @@
         "notRedeemedTitle": "Not redeemed",
         "databaseDown": "The database is not responding. Nothing was changed; try again in a few minutes.",
         "databaseDownTitle": "Try again later"
+    },
+    "categories": {
+        "Birthday": "Birthday",
+        "Community": "Community",
+        "Core": "Core",
+        "Enforcement": "Enforcement",
+        "Fun": "Fun",
+        "Giveaway": "Giveaway",
+        "JoinToCreate": "Join To Create",
+        "Leveling": "Leveling",
+        "Logging": "Logging",
+        "Moderation": "Moderation",
+        "Owner": "Owner",
+        "Reaction_roles": "Reaction Roles",
+        "Search": "Search",
+        "ServerStats": "Server Stats",
+        "Ticket": "Ticket",
+        "Tools": "Tools",
+        "Utility": "Utility",
+        "Verification": "Verification",
+        "Welcome": "Welcome"
     }
 }

@@ -17,6 +17,10 @@ import { dashboardUrlFor } from '../site/shell.js';
 import { LANGUAGES } from '../site/i18n.js';
 import { hasEveryoneAccess, isManageServerCommand } from '../../config/commands/commandAccess.js';
 import { isCommandAvailableInGuild } from '../../utils/commandGate.js';
+import { categoryLabel } from '../../config/commands/commandCategories.js';
+import { DISCORD_LOCALES } from '../../utils/commandLocalizations.js';
+import { detectedServerLanguage } from '../../utils/botText.js';
+import { memberReach, reachOk } from '../dashboard/botPermissions.js';
 
 export const SETUP_SELECT_ID = 'setup-cat';
 const SET = '✅';
@@ -28,6 +32,10 @@ export const defaultSetupData = {
     settingsFor: (guildId) => settingsFor(guildId),
     languageSource: (guildId) => resolvedSource(guildId, 'botLanguage'),
     isHomeGuild: (guildId) => isHomeGuild(guildId),
+    // The server's Discord language, for a server that never chose a bot language (botText.js).
+    detectedLanguage: (guildId, guild) => detectedServerLanguage(guildId, { locale: guild?.preferredLocale ?? null }),
+    // Members whose top role is at or above Mewvo's (member cache only, no fetch).
+    memberReach: (guild) => memberReach(guild),
     getGuildConfig: (client, guildId) => getGuildConfig(client, guildId),
     getWelcomeConfig: (client, guildId) => getWelcomeConfig(client, guildId),
     getAutomodSettings: (guildId) => getAutomodSettings(guildId),
@@ -45,10 +53,20 @@ export async function collectSetupState({ client, guildId, config = null, data =
         data.getWelcomeConfig(client, guildId),
         data.getAutomodSettings(guildId),
     ]);
+    const home = Boolean(data.isHomeGuild(guildId));
+    const guild = client?.guilds?.cache?.get?.(guildId) || null;
+    let reach = null;
+    try {
+        reach = guild && data.memberReach ? data.memberReach(guild) : null;
+    } catch {
+        reach = null; // cannot be checked: no row
+    }
     return {
         settings,
         languageSource,
-        home: Boolean(data.isHomeGuild(guildId)),
+        detectedLanguage: home || languageSource !== 'default' ? null : data.detectedLanguage?.(guildId, guild) ?? null,
+        reach,
+        home,
         modules: moduleStatesFrom(guildConfig, welcome, { automod }),
     };
 }
@@ -58,11 +76,20 @@ const languageName = (code) => LANGUAGES.find((l) => l.code === code)?.name || '
 
 /** The checklist rows: [{ key, done, text }], text in `tr`'s language. */
 export function checklistRows(state, tr) {
-    const { settings, modules, home, languageSource } = state;
+    const { settings, modules, home, languageSource, detectedLanguage = null, reach = null } = state;
     const t = (key, params) => tr.t(`setup.item.${key}`, params);
     const onOff = (key, on) => ({ key, done: Boolean(on), text: on ? tr.t('setup.on') : `${tr.t('setup.off')}. ${t(`${key}.next`)}` });
 
     const rows = [];
+    // First: Mewvo can only moderate members below its own role.
+    if (reach) {
+        const count = reach.partial ? t('rolePosition.atLeast', { count: reach.count }) : String(reach.count);
+        const names = (list) => (list || []).map((r) => `@${r.name}`).join(', ');
+        if (reachOk(reach)) rows.push({ key: 'rolePosition', done: true, text: t('rolePosition.ok') });
+        // Nobody counted, but the member cache is incomplete: name the roles above Mewvo instead of "fine".
+        else if (reach.count === 0) rows.push({ key: 'rolePosition', done: false, text: t('rolePosition.rolesAbove', { roles: names(reach.rolesAbove) }) });
+        else rows.push({ key: 'rolePosition', done: false, text: t('rolePosition.blocked', { count, roles: names(reach.roles) }) });
+    }
     rows.push(settings.modLogChannelId
         ? { key: 'modLog', done: true, text: channel(settings.modLogChannelId) }
         : { key: 'modLog', done: false, text: t('modLog.next') });
@@ -81,9 +108,9 @@ export function checklistRows(state, tr) {
     rows.push(onOff('welcome', modules.welcome));
     rows.push(onOff('tickets', modules.tickets));
     rows.push(onOff('leveling', modules.leveling));
-    rows.push(languageSource === 'default'
-        ? { key: 'language', done: false, text: t('language.default') }
-        : { key: 'language', done: true, text: languageName(settings.botLanguage) });
+    if (languageSource !== 'default') rows.push({ key: 'language', done: true, text: languageName(settings.botLanguage) });
+    else if (detectedLanguage && detectedLanguage !== 'en') rows.push({ key: 'language', done: false, text: t('language.detected', { language: languageName(detectedLanguage) }) });
+    else rows.push({ key: 'language', done: false, text: t('language.default') });
     return rows;
 }
 
@@ -94,16 +121,15 @@ export function checklistText(rows, tr) {
     return rows.map((row) => `${row.done ? SET : NOT_SET} **${tr.t(`setup.item.${row.key}.label`)}**: ${row.text}`).join('\n');
 }
 
-function categoryName(raw) {
-    return raw.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 /**
  * The commands of this server by category folder (src/commands/<Category>), sorted:
  * [{ category, label, commands: [{ name, description, locked, menu }] }]. Owner tools only where
  * they run (the owner-tools server). locked = Administrator only (no part for everyone, not /setup).
+ * `tr`: label and description in that language (core.categories.*, the command's own
+ * description_localizations), else English.
  */
-export function commandCategories(client, guildId) {
+export function commandCategories(client, guildId, tr = null) {
+    const locale = tr?.lang ? DISCORD_LOCALES[tr.lang]?.[0] : null;
     const byCategory = new Map();
     for (const command of client?.commands?.values?.() || []) {
         const json = command?.data?.toJSON?.();
@@ -112,7 +138,7 @@ export function commandCategories(client, guildId) {
         if (!byCategory.has(command.category)) byCategory.set(command.category, []);
         byCategory.get(command.category).push({
             name: json.name,
-            description: json.description || '',
+            description: (locale && json.description_localizations?.[locale]) || json.description || '',
             menu: json.type === 2 || json.type === 3,
             locked: !hasEveryoneAccess(json.name) && !isManageServerCommand(json.name),
         });
@@ -120,7 +146,7 @@ export function commandCategories(client, guildId) {
     return [...byCategory.entries()]
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([category, commands]) => ({
-            category, label: categoryName(category),
+            category, label: categoryLabel(category, tr),
             commands: commands.sort((a, b) => a.name.localeCompare(b.name)),
         }));
 }
@@ -162,14 +188,14 @@ export function setupReply({ client, guild, userId, state, tr }) {
         description: cut(description, DESCRIPTION_LIMIT),
         color: 'primary',
     });
-    const categories = commandCategories(client, guild.id);
+    const categories = commandCategories(client, guild.id, tr);
     const components = [...(dashboard ? [dashboard] : []), ...(categories.length ? [categorySelect(categories, userId, tr)] : [])];
     return { embeds: [embed], components, rows };
 }
 
 /** One category's list: one line per command, cut to the embed description limit. */
 export function categoryReply({ client, guildId, userId, category, tr }) {
-    const categories = commandCategories(client, guildId);
+    const categories = commandCategories(client, guildId, tr);
     const found = categories.find((c) => c.category === category);
     const lines = (found?.commands || []).map((c) => cut(`${c.locked ? '🔒 ' : ''}**${c.menu ? c.name : `/${c.name}`}** ${c.description}`.trim(), LINE_LIMIT));
     let text = '';
@@ -182,7 +208,7 @@ export function categoryReply({ client, guildId, userId, category, tr }) {
     }
     if (shown < lines.length) text += `\n${tr.tp('setup.more', lines.length - shown)}`;
     const embed = createEmbed({
-        title: cut(tr.t('setup.categoryTitle', { category: found?.label || categoryName(String(category || '')) }), 256),
+        title: cut(tr.t('setup.categoryTitle', { category: found?.label || categoryLabel(String(category || ''), tr) }), 256),
         description: text || tr.t('setup.categoryEmpty'),
         color: 'primary',
     });

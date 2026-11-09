@@ -8,7 +8,9 @@
   },
   "form": {
     "label": "Language for posts and DMs",
-    "help": "Members get punishment and appeal DMs in this language."
+    "help": "Members get punishment and appeal DMs in this language.",
+    "detected": "Not chosen yet: Mewvo uses {language}, your server's language in Discord. Save to keep it.",
+    "notChosen": "Not chosen yet: Mewvo uses English. Pick a language and save."
   },
   "rule": {
     "title": "Who sees which language",

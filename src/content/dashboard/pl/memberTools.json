@@ -1,7 +1,7 @@
 {
   "notice": {
-    "readOnly": "Tylko do odczytu: edycja z panelu jest wyłączona (DASHBOARD_EDIT_ENABLED nie jest ustawione na true).",
-    "viewOnly": "Tylko podgląd: do zmiany reguł ról potrzebujesz uprawnienia Administrator na głównym serwerze."
+    "readOnly": "Tylko do odczytu: zmiany z panelu są wyłączone w tej instancji Mewvo.",
+    "viewOnly": "Tylko podgląd: do zmiany reguł ról potrzebujesz uprawnienia Administrator na tym serwerze."
   },
   "trigger": {
     "days_in_server": "Dni na serwerze",
@@ -113,7 +113,7 @@
     "noRolesHelp": "Dołączyli w ciągu ostatnich 30 dni, ponad 24 godziny temu, i nadal nie mają roli (bez botów). Często: nigdy się nie zweryfikowali.",
     "joinedAt": "dołączył(a) {date}",
     "none": "Brak.",
-    "noGuild": "Bot nie widzi teraz głównego serwera.",
+    "noGuild": "Bot nie widzi teraz tego serwera.",
     "offendersTitle": {
       "one": "Recydywiści (ostatni {count} dzień)",
       "few": "Recydywiści (ostatnie {count} dni)",

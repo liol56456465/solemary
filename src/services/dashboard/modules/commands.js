@@ -126,7 +126,7 @@ export default {
         const botSettings = section(t('bot.title'), postForm(ctx, 'commands', 'bot-settings', html`<div class="grid">
 ${textInput('prefix', config?.prefix || getCommandPrefix(), { label: t('bot.prefix'), max: PREFIX_MAX, help: t('bot.prefixHelp') })}
 ${rolePicker(ctx.guild, 'modRole', roleIdOf(config?.modRole), { label: t('bot.modRole'), assign: false, help: t('bot.modRoleHelp') })}</div>`, { canEdit: can }),
-        t('bot.help'));
+        t('bot.help'), { key: 'bot-settings' });
         const utilities = section(t('utilities.title'), postForm(ctx, 'commands', 'shorten', html`<div class="grid">
 ${textInput('url', '', { label: t('utilities.url'), max: 2000, type: 'url', placeholder: 'https://example.com/a/long/link', help: t('utilities.urlHelp') })}
 ${textInput('custom', '', { label: t('utilities.custom'), max: 30, help: t('utilities.customHelp') })}</div>`, { submit: t('utilities.submit'), canEdit: can }),

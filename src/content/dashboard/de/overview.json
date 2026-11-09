@@ -119,8 +119,12 @@
     "after": "Es geht die Schritte unten einzeln mit dir durch.",
     "words": "Was bedeuten diese Begriffe?",
     "oneStep": "Ein Schritt nach dem anderen",
-    "progress": "{done} von {total} erledigt. Jeder Schritt dauert eine Minute; der Link öffnet die richtige Seite.",
-    "done": "Erledigt: {list}."
+    "progress": "{done} von {total} wichtigen Schritten erledigt. Jeder Schritt dauert eine Minute; der Link öffnet die richtige Seite.",
+    "done": "Erledigt: {list}.",
+    "essentials": "Das Wichtigste",
+    "essentialsLine": "Was jeder Server braucht, damit Mewvo sicher moderieren kann.",
+    "optional": "Optional",
+    "optionalLine": "Funktionen, die du hinzufügen kannst, wenn du sie willst."
   },
   "handover": {
     "writtenBy": "Geschrieben von {name}, {date}",
@@ -209,6 +213,25 @@
       "post": "Einspruchs-Panels posten",
       "postAgain": "Einspruchs-Panels erneut posten",
       "confirm": "Die Einspruchs-Panels jetzt posten? Frühere Einspruchs-Panels in diesen Kanälen werden ersetzt."
+    },
+    "rolePosition": {
+      "label": "Position von Mewvos Rolle",
+      "hint": "Mewvo kann nur Mitglieder moderieren, deren höchste Rolle unter seiner eigenen liegt. Im Moment sind das alle (außer Admins und dem Server-Inhaber)."
+    },
+    "language": {
+      "label": "Bot-Sprache",
+      "hint": "Die Sprache von Mewvos Beiträgen und DMs hier. Englisch, bis du eine wählst.",
+      "saved": "Sprache von Mewvos Beiträgen und DMs: {language}.",
+      "detected": "Mewvo nutzt {language}, die Sprache deines Servers in Discord. Speichere sie, um sie zu behalten, oder wähle eine andere.",
+      "english": "English"
+    },
+    "appealsHome": {
+      "label": "Wo Mitglieder Einspruch einlegen",
+      "hint": "Straf-DMs sagen Mitgliedern, wo sie um Aufhebung einer Strafe bitten können: im Mewvo-Support-Server oder in deinem eigenen Server."
+    },
+    "leveling": {
+      "label": "Level",
+      "hint": "Mitglieder sammeln XP und Level durchs Schreiben. Leg fest, ob und wo Mewvo Level-ups postet."
     }
   },
   "value": {
@@ -264,6 +287,11 @@
       "ManageMessages": "Nachrichten verwalten",
       "ManageGuild": "Server verwalten",
       "ViewAuditLog": "Audit-Log anzeigen"
-    }
+    },
+    "reach": "Mitglieder, die Mewvo nicht moderieren kann: {count}",
+    "reachFix": "Ihre höchste Rolle ({roles}) steht auf oder über Mewvos Rolle. Zieh {botRole} in Servereinstellungen → Rollen höher.",
+    "atLeast": "mindestens {count}",
+    "rolesAbove": "Rollen über Mewvos Rolle: {roles}",
+    "rolesAboveFix": "Mewvo kann Mitglieder mit diesen Rollen nicht moderieren (es hat noch nicht alle Mitglieder gesehen und kann sie nicht zählen). Zieh {botRole} in Servereinstellungen → Rollen höher."
   }
 }

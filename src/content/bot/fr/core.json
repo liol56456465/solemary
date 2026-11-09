@@ -7,8 +7,8 @@
             "title": "Aide de {bot}",
             "description": "soutiens-nous avec un boost",
             "gettingStarted": "Pour commencer",
-            "adminSteps": "1. **/configwizard** définit le rôle de modérateur et le salon de logs.\n2. **/commands dashboard** active ou désactive les catégories.\n3. Choisis une catégorie dans le menu ci-dessous pour voir ses commandes.",
-            "memberSteps": "Choisis une catégorie dans le menu ci-dessous pour voir ses commandes.\nBesoin de l’équipe ? Écris au bot en MP : ton message est envoyé à l’équipe en privé (modmail).",
+            "adminSteps": "1. **/setup** montre ce qui est configuré ici, avec le lien vers le tableau de bord.\n2. Sur le tableau de bord, ouvre **Configuration pas à pas** et commence par l’essentiel.\n3. Choisis une catégorie dans le menu ci-dessous pour voir ses commandes.",
+            "memberSteps": "Choisis une catégorie dans le menu ci-dessous pour voir ses commandes.",
             "access": "Accès",
             "accessAdmin": "• Les commandes marquées 🔒 demandent la permission **Administrateur** ; les autres sont pour tout le monde.",
             "accessMember": "• Cette liste montre les commandes que tu peux utiliser.",
@@ -17,7 +17,9 @@
             "goodToKnow": "Bon à savoir",
             "goodToKnowText": "• La plupart des fonctions ont une commande dashboard pour leurs réglages\n• Les réglages sont enregistrés par serveur",
             "supportButton": "Serveur d’assistance",
-            "placeholder": "Choisis une catégorie"
+            "placeholder": "Choisis une catégorie",
+            "memberModmail": "Besoin de l’équipe ? Écris au bot en MP : ton message est envoyé à l’équipe en privé (modmail).",
+            "descriptionNeutral": "Modération, automod, appels, tickets et plus encore pour ce serveur."
         },
         "closed": {
             "title": "Menu d’aide fermé",
@@ -365,5 +367,26 @@
         "notRedeemedTitle": "Pas utilisée",
         "databaseDown": "La base de données ne répond pas. Rien n’a été modifié ; réessaie dans quelques minutes.",
         "databaseDownTitle": "Réessaie plus tard"
+    },
+    "categories": {
+        "Birthday": "Anniversaires",
+        "Community": "Communauté",
+        "Core": "Général",
+        "Enforcement": "Sanctions",
+        "Fun": "Fun",
+        "Giveaway": "Concours",
+        "JoinToCreate": "Salons vocaux temporaires",
+        "Leveling": "Niveaux",
+        "Logging": "Logs",
+        "Moderation": "Modération",
+        "Owner": "Propriétaire",
+        "Reaction_roles": "Rôles par réaction",
+        "Search": "Recherche",
+        "ServerStats": "Statistiques du serveur",
+        "Ticket": "Tickets",
+        "Tools": "Outils",
+        "Utility": "Utilitaires",
+        "Verification": "Vérification",
+        "Welcome": "Bienvenue"
     }
 }

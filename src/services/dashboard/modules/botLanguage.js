@@ -15,8 +15,9 @@ import { html } from '../html.js';
 import { InputError, autoRoleField, choiceField, postForm, rolePicker, selectInput } from '../forms.js';
 import { textFor } from '../language.js';
 import { LANGUAGES, LANG_CODES } from '../../site/i18n.js';
-import { changedOnly, registryValue, saveRegistry, section } from './common.js';
-import { managerActions } from './serverScope.js';
+import { changedOnly, registrySaved, registryValue, saveRegistry, section } from './common.js';
+import { detectedServerLanguage } from '../../../utils/botText.js';
+import { isHomeScope, managerActions } from './serverScope.js';
 
 const languageName = (code) => LANGUAGES.find((l) => l.code === code)?.name || code;
 /** The form field of a language's role ('pt-BR' → role_pt_BR). */
@@ -32,13 +33,23 @@ export default {
     async load(ctx) {
         const value = registryValue(ctx, 'botLanguage');
         const roles = registryValue(ctx, 'languageRoles');
-        return { language: LANG_CODES.includes(value) ? value : 'en', roles: roles && typeof roles === 'object' ? roles : {} };
+        // Not chosen yet (another server): Mewvo uses the server's Discord language (utils/botText.js);
+        // the picker shows that one, and saving it makes it the server's choice.
+        const saved = isHomeScope(ctx) || registrySaved(ctx, 'botLanguage');
+        // English (also Discord's default 'en-US' for servers that never set one) is shown as "not chosen".
+        const found = saved ? null : detectedServerLanguage(ctx.guildId, { locale: ctx.guild?.preferredLocale ?? null });
+        const detected = found && found !== 'en' ? found : null;
+        const language = detected || (LANG_CODES.includes(value) ? value : 'en');
+        return { language, saved, detected, roles: roles && typeof roles === 'object' ? roles : {} };
     },
 
-    render(ctx, { language, roles = {} }) {
+    render(ctx, { language, saved = true, detected = null, roles = {} }) {
         const tr = textFor(ctx);
-        const form = postForm(ctx, 'bot-language', 'language', selectInput('botLanguage', language,
-            LANGUAGES.map((l) => [l.code, l.name]), { label: tr.t('botLanguage.form.label'), help: tr.t('botLanguage.form.help') }));
+        const note = saved ? '' : html`<p class="muted">${detected
+            ? tr.t('botLanguage.form.detected', { language: languageName(detected) })
+            : tr.t('botLanguage.form.notChosen')}</p>`;
+        const form = postForm(ctx, 'bot-language', 'language', html`${note}${selectInput('botLanguage', language,
+            LANGUAGES.map((l) => [l.code, l.name]), { label: tr.t('botLanguage.form.label'), help: tr.t('botLanguage.form.help') })}`);
         return html`${section(tr.t('botLanguage.card.title'), form, tr.t('botLanguage.card.help'), { key: 'language' })}
 ${section(tr.t('botLanguage.roles.title'), postForm(ctx, 'bot-language', 'language-roles', LANGUAGES.map((l) => rolePicker(ctx.guild, roleFieldName(l.code), roles[l.code] || null, {
             label: l.name, autoAssign: true, noneLabel: tr.t('botLanguage.roles.none'),
@@ -50,8 +61,9 @@ ${section(tr.t('botLanguage.rule.title'), html`<ul><li>${tr.t('botLanguage.rule.
         async language(ctx, form) {
             const tr = textFor(ctx);
             const botLanguage = choiceField(form, 'botLanguage', LANG_CODES, tr.t('botLanguage.form.label'));
-            // No change: the frame's own "Nothing changed." (errors.nothingChanged).
-            if (botLanguage === registryValue(ctx, 'botLanguage')) return { changes: [] };
+            // No change: the frame's own "Nothing changed." (errors.nothingChanged). Not saved yet:
+            // saving the shown language (even English) makes it this server's choice.
+            if (botLanguage === registryValue(ctx, 'botLanguage') && (isHomeScope(ctx) || registrySaved(ctx, 'botLanguage'))) return { changes: [] };
             const result = await saveRegistry(ctx, { botLanguage }, 'botLanguage');
             return { ...result, message: tr.t('botLanguage.saved.done', { language: languageName(botLanguage) }) };
         },

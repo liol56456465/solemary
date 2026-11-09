@@ -1,7 +1,7 @@
 {
   "notice": {
-    "readOnly": "Lecture seule : la modification depuis le tableau de bord est désactivée (DASHBOARD_EDIT_ENABLED n’est pas à true).",
-    "viewOnly": "Consultation seule : il te faut Administrateur sur le serveur principal pour modifier les règles de rôles."
+    "readOnly": "Lecture seule : les modifications depuis le tableau de bord sont désactivées sur cette instance de Mewvo.",
+    "viewOnly": "Consultation seule : il te faut Administrateur sur ce serveur pour modifier les règles de rôles."
   },
   "trigger": {
     "days_in_server": "Jours sur le serveur",
@@ -108,7 +108,7 @@
     "noRolesHelp": "Arrivés dans les 30 derniers jours, il y a plus de 24 heures, et toujours sans rôle (bots exclus). Souvent : jamais vérifiés.",
     "joinedAt": "arrivé le {date}",
     "none": "Aucun.",
-    "noGuild": "Le bot ne voit pas le serveur principal pour le moment.",
+    "noGuild": "Le bot ne voit pas ce serveur pour le moment.",
     "offendersTitle": {
       "one": "Récidivistes (dernier {count} jour)",
       "many": "Récidivistes ({count} derniers jours)",

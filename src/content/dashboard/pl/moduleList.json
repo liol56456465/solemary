@@ -9,7 +9,7 @@
       "other": "Pasuje {count} modułu"
     },
     "showAll": "Pokaż wszystkie",
-    "readOnly": "Tylko do odczytu: edycja w panelu jest wyłączona (DASHBOARD_EDIT_ENABLED nie jest true).",
+    "readOnly": "Tylko do odczytu: zmiany z panelu są wyłączone w tej instancji Mewvo.",
     "noMatch": "Żaden moduł nie pasuje. Spróbuj innego słowa albo przejrzyj wszystkie moduły.",
     "noneOn": "Żaden moduł nie jest włączony.",
     "noneOff": "Żaden moduł nie jest wyłączony."

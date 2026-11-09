@@ -221,7 +221,7 @@ test('help-page button for a category page', async () => {
     const interaction = fakeInteraction(`help-page:Enforcement:last:${first.totalPages}`, { locale: 'fr' });
     await helpPageButton.execute(interaction, client);
     const [, payload] = interaction.calls[1];
-    assert.match(payload.embeds[0].data.title, /Enforcement/);
+    assert.match(payload.embeds[0].data.title, /Sanctions/, 'the category name in French');
     if (first.totalPages > 1) assert.equal(payload.components[0].components[2].data.custom_id, `help-page:Enforcement:page:${first.totalPages}`);
 });
 

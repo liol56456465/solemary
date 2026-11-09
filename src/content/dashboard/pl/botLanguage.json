@@ -8,7 +8,9 @@
   },
   "form": {
     "label": "Język wiadomości i DM",
-    "help": "Członkowie dostają w tym języku DM o karach i odwołaniach."
+    "help": "Członkowie dostają w tym języku DM o karach i odwołaniach.",
+    "detected": "Jeszcze nie wybrano: Mewvo używa języka twojego serwera na Discordzie: {language}. Zapisz, żeby go zachować.",
+    "notChosen": "Jeszcze nie wybrano: Mewvo używa angielskiego. Wybierz język i zapisz."
   },
   "rule": {
     "title": "Kto widzi jaki język",

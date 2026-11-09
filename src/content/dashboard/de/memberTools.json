@@ -1,7 +1,7 @@
 {
   "notice": {
-    "readOnly": "Nur lesen: Bearbeiten im Dashboard ist ausgeschaltet (DASHBOARD_EDIT_ENABLED ist nicht true).",
-    "viewOnly": "Nur ansehen: Um Rollenregeln zu ändern, brauchst du Administrator auf dem Hauptserver."
+    "readOnly": "Nur lesen: Änderungen über das Dashboard sind bei dieser Mewvo-Instanz ausgeschaltet.",
+    "viewOnly": "Nur ansehen: Um Rollenregeln zu ändern, brauchst du Administrator auf diesem Server."
   },
   "trigger": {
     "days_in_server": "Tage auf dem Server",
@@ -103,7 +103,7 @@
     "noRolesHelp": "In den letzten 30 Tagen beigetreten, vor mehr als 24 Stunden, und noch immer ohne Rolle (ohne Bots). Oft: nie verifiziert.",
     "joinedAt": "beigetreten {date}",
     "none": "Keine.",
-    "noGuild": "Der Bot sieht den Hauptserver gerade nicht.",
+    "noGuild": "Der Bot sieht diesen Server gerade nicht.",
     "offendersTitle": {
       "one": "Wiederholungstäter (letzter {count} Tag)",
       "other": "Wiederholungstäter (letzte {count} Tage)"

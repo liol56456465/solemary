@@ -1,12 +1,12 @@
 {
   "back": "← Members",
   "notice": {
-    "readOnly": "Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true). Use the bot's commands.",
+    "readOnly": "Read-only: changes from the dashboard are switched off on this Mewvo instance. Use the bot's commands.",
     "viewOnly": {
-      "actions": "View only: you need Administrator in the main server to take enforcement actions here.",
-      "cases": "View only: you need Administrator in the main server to change cases here.",
-      "appeals": "View only: you need Administrator in the main server to decide appeals here.",
-      "orders": "View only: you need Administrator in the main server to start or end orders here."
+      "actions": "View only: you need Administrator in this server to take enforcement actions here.",
+      "cases": "View only: you need Administrator in this server to change cases here.",
+      "appeals": "View only: you need Administrator in this server to decide appeals here.",
+      "orders": "View only: you need Administrator in this server to start or end orders here."
     }
   },
   "form": {
@@ -66,10 +66,10 @@
     "muted": "Muted",
     "noMatch": "No member matches these filters.",
     "clearFilters": "Clear filters",
-    "empty": "No members to show yet. The list fills once the bot has loaded the main server.",
+    "empty": "No members to show yet. The list fills once the bot has loaded this server.",
     "show": "Show",
     "stillLoading": "Showing {cached} of {total} members: the member list is still loading. Reload in a minute.",
-    "unavailable": "The member list is not available right now (the bot cannot see the main server).",
+    "unavailable": "The member list is not available right now (the bot cannot see this server).",
     "search": "Search",
     "searchPlaceholder": "Name, nickname or user ID",
     "role": "Role",
@@ -134,8 +134,8 @@
     },
     "noMatch": "No ban matches.",
     "showAll": "Show everyone banned",
-    "empty": "Nobody is banned in the main server.",
-    "bannedCount": "{count} banned in the main server",
+    "empty": "Nobody is banned in this server.",
+    "bannedCount": "{count} banned in this server",
     "help": "Unban opens the member page: you see the effect, then confirm. The member gets a DM with an invite back.",
     "searchPlaceholder": "Name or user ID",
     "truncated": "Showing the first {count} bans: Discord's ban list is longer than that. Open a member by user ID to see someone who is not listed."

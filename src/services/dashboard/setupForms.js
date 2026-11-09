@@ -7,7 +7,8 @@
 // touched (no stale hidden copies of other settings). Steps that need several settings at
 // once (tickets, welcome, verification) keep the link to their page.
 
-import { PERMS, channelPicker, postForm, rolePicker } from './forms.js';
+import { PERMS, channelPicker, postForm, rolePicker, selectInput } from './forms.js';
+import { LANGUAGES } from '../site/i18n.js';
 import { registryGuildId, registryValue } from './modules/common.js';
 import { textFor } from './language.js';
 import { isHomeScope } from './modules/serverScope.js';
@@ -55,6 +56,10 @@ export function setupStepForm(ctx, step, data) {
             return form('logging', 'channels', channelPicker(g, 'audit', data.logChannels.audit || null, { label: step.label, perms: PERMS.post }));
         case 'modRole':
             return form('commands', 'bot-settings', rolePicker(g, 'modRole', roleIdOf(data.config.modRole), { label: step.label, assign: false }), { canEdit: canAdmin });
+        case 'language':
+            // The detected language (not saved yet) is preselected: saving it makes it the server's choice.
+            return form('bot-language', 'language', selectInput('botLanguage', step.languageCode || 'en',
+                LANGUAGES.map((l) => [l.code, l.name]), { label: step.label }));
         case 'birthdays':
             return form('birthdays', 'settings', channelPicker(g, 'channelId', data.config.birthdayChannelId || null, { label: step.label, perms: PERMS.post }));
         case 'bannedRole':

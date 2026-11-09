@@ -126,8 +126,12 @@
     "after": "Ele passa pelas etapas abaixo, uma de cada vez.",
     "words": "O que significam essas palavras?",
     "oneStep": "Uma etapa de cada vez",
-    "progress": "{done} de {total} concluídas. Cada etapa leva um minuto; o link abre a página certa.",
-    "done": "Concluído: {list}."
+    "progress": "{done} de {total} passos essenciais feitos. Cada passo leva um minuto; o link abre a página certa.",
+    "done": "Concluído: {list}.",
+    "essentials": "O essencial",
+    "essentialsLine": "O que todo servidor precisa para o Mewvo moderar com segurança.",
+    "optional": "Opcional",
+    "optionalLine": "Recursos para adicionar quando quiser."
   },
   "handover": {
     "writtenBy": "Escrito por {name}, {date}",
@@ -216,6 +220,25 @@
       "post": "Publicar os painéis de recurso",
       "postAgain": "Publicar os painéis de recurso de novo",
       "confirm": "Publicar os painéis de recurso agora? Os painéis anteriores nesses canais são substituídos."
+    },
+    "rolePosition": {
+      "label": "Posição do cargo do Mewvo",
+      "hint": "O Mewvo só pode moderar membros cujo cargo mais alto esteja abaixo do dele. Agora são todos (menos os admins e o dono do servidor)."
+    },
+    "language": {
+      "label": "Idioma do bot",
+      "hint": "O idioma das mensagens e DMs do Mewvo aqui. Inglês até você escolher um.",
+      "saved": "Idioma das mensagens e DMs do Mewvo: {language}.",
+      "detected": "O Mewvo usa o idioma do seu servidor no Discord: {language}. Salve para manter ou escolha outro.",
+      "english": "English"
+    },
+    "appealsHome": {
+      "label": "Onde os membros apelam",
+      "hint": "As DMs de punição dizem aos membros onde pedir para retirar uma punição: o servidor de suporte do Mewvo ou o seu próprio servidor."
+    },
+    "leveling": {
+      "label": "Níveis",
+      "hint": "Os membros ganham XP e níveis conversando. Escolha se o Mewvo anuncia as subidas de nível e onde."
     }
   },
   "value": {
@@ -273,6 +296,11 @@
       "ManageMessages": "Gerenciar mensagens",
       "ManageGuild": "Gerenciar servidor",
       "ViewAuditLog": "Ver registro de auditoria"
-    }
+    },
+    "reach": "Membros que o Mewvo não pode moderar: {count}",
+    "reachFix": "O cargo mais alto deles ({roles}) está no nível do cargo do Mewvo ou acima. Arraste {botRole} para cima em Configurações do servidor → Cargos.",
+    "atLeast": "pelo menos {count}",
+    "rolesAbove": "Cargos acima do cargo do Mewvo: {roles}",
+    "rolesAboveFix": "O Mewvo não pode moderar membros que os têm (ele ainda não viu todos os membros, então não consegue contá-los). Arraste {botRole} para cima em Configurações do servidor → Cargos."
   }
 }

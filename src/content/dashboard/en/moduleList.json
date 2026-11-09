@@ -7,7 +7,7 @@
       "other": "{count} modules match"
     },
     "showAll": "Show all",
-    "readOnly": "Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true).",
+    "readOnly": "Read-only: changes from the dashboard are switched off on this Mewvo instance.",
     "noMatch": "No module matches. Try another word, or browse all modules.",
     "noneOn": "No modules are on.",
     "noneOff": "No modules are off."

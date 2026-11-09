@@ -45,7 +45,15 @@
         },
         "language": {
             "label": "Lingua del bot",
-            "default": "Inglese (predefinita). Scegli la lingua dei messaggi e dei DM nella dashboard (Lingua del bot)."
+            "default": "Inglese (predefinita). Scegli la lingua dei messaggi e dei DM nella dashboard (Lingua del bot).",
+            "detected": "{language} (la lingua del tuo server su Discord). Puoi cambiarla nella dashboard (Lingua del bot)."
+        },
+        "rolePosition": {
+            "label": "Posizione del ruolo di Mewvo",
+            "ok": "Sopra il ruolo più alto di tutti i membri (tranne admin e proprietario).",
+            "blocked": "Membri che Mewvo non può moderare: {count} (ruolo più alto {roles}). Trascina più in alto il ruolo di Mewvo: Impostazioni server → Ruoli.",
+            "atLeast": "almeno {count}",
+            "rolesAbove": "Ruoli sopra il ruolo di Mewvo: {roles}. Mewvo non può moderare i membri che li hanno. Trascina più in alto il ruolo di Mewvo: Impostazioni server → Ruoli."
         }
     },
     "commandsTitle": "Tutti i comandi",
@@ -61,10 +69,12 @@
     "notYours": "Questo menu appartiene a qualcun altro. Usa /setup per avere il tuo.",
     "welcome": {
         "title": "Grazie per aver aggiunto Mewvo!",
-        "body": "Un admin può scrivere **/setup** per iniziare.",
+        "body": "**Admin:** usate **/setup** o aprite la dashboard per iniziare.",
         "help": "Scrivi **/help** per vedere i comandi. Domande? Chiedi nel server di supporto di Mewvo.",
-        "dm": "Hai aggiunto Mewvo a **{server}**. Un admin può scrivere lì **/setup** per iniziare.",
-        "dashboardButton": "Apri la dashboard",
-        "supportButton": "Server di supporto di Mewvo"
+        "dm": "Hai aggiunto Mewvo a **{server}**. Usa **/setup** lì o apri la dashboard per iniziare.",
+        "dashboardButton": "Dashboard (per gli admin)",
+        "supportButton": "Server di supporto di Mewvo",
+        "ownerDm": "Mewvo è stato aggiunto a **{server}**, ma non può scrivere in nessun canale (gli servono Visualizza canale, Invia messaggi e Incorpora link). Usa **/setup** lì o apri la dashboard per iniziare.",
+        "optional": "Facoltativi, quando vuoi: messaggi di benvenuto, ticket, verifica e livelli (gli annunci di livello restano spenti finché non li attivi)."
     }
 }

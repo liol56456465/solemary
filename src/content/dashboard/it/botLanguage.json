@@ -8,7 +8,9 @@
   },
   "form": {
     "label": "Lingua per messaggi e DM",
-    "help": "I membri ricevono in questa lingua i DM su sanzioni e ricorsi."
+    "help": "I membri ricevono in questa lingua i DM su sanzioni e ricorsi.",
+    "detected": "Non ancora scelta: Mewvo usa la lingua del tuo server su Discord: {language}. Salva per tenerla.",
+    "notChosen": "Non ancora scelta: Mewvo usa l'inglese. Scegli una lingua e salva."
   },
   "rule": {
     "title": "Chi vede quale lingua",

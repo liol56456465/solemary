@@ -14,7 +14,7 @@
   "words": {
     "server": {
       "term": "Server",
-      "text": "Deine Discord-Community. Mewvo arbeitet auf einem Hauptserver und einem optionalen Support-Server."
+      "text": "Deine Discord-Community. Mewvo arbeitet in jedem Server, zu dem es hinzugefügt wird, und jeder Server hat seine eigenen Einstellungen."
     },
     "channel": {
       "term": "Kanal",
@@ -178,7 +178,7 @@
     },
     "supportServer": {
       "term": "Support-Server",
-      "text": "Ein zweiter, kleiner Server, auf dem gebannte Mitglieder trotzdem Einspruch einlegen können, weil sie den Hauptserver nicht sehen."
+      "text": "Ein zweiter, kleiner Server, auf dem gebannte Mitglieder trotzdem Einspruch einlegen können, weil sie den Server, aus dem sie gebannt wurden, nicht mehr sehen."
     },
     "inbox": {
       "term": "Posteingang",
@@ -212,7 +212,7 @@
     "pickHere": "Noch nicht eingerichtet. Wähle es hier aus und speichere.",
     "moreSettings": "Mehr Einstellungen dazu: [eigene Seite öffnen]({href}).",
     "unreadable": "Die Einrichtungsschritte konnten gerade nicht geladen werden. Lade die Seite in einer Minute neu.",
-    "progress": "{done} von {total} Schritten erledigt. Geh sie der Reihe nach durch oder überspring, was du nicht brauchst. Über die Seitenleiste kommst du jederzeit hierher zurück.",
+    "progress": "{done} von {total} wichtigen Schritten erledigt. Geh sie der Reihe nach durch; danach kommen die optionalen Schritte, überspring, was du nicht brauchst. Du kannst jederzeit über die Seitenleiste hierher zurückkommen.",
     "stepOf": "Schritt {n} von {total}",
     "back": "Zurück",
     "next": "Nächster Schritt",
@@ -220,6 +220,7 @@
     "finish": "Fertig",
     "allSteps": "Alle Schritte",
     "doneMark": " (erledigt)",
-    "newWords": "Neu bei diesen Begriffen? [Begriffe erklärt]({href})."
+    "newWords": "Neu bei diesen Begriffen? [Begriffe erklärt]({href}).",
+    "rolePosition": "Discord lässt Mewvo nur Mitglieder moderieren, deren höchste Rolle unter Mewvos eigener Rolle liegt. Zieh Mewvos Rolle in Servereinstellungen → Rollen über die Rollen deiner Mitglieder; Rollen von Admins dürfen darüber bleiben. Gezählt werden die Mitglieder, die Mewvo zuletzt gesehen hat, ohne Admins, Bots und den Server-Inhaber."
   }
 }

@@ -14,7 +14,7 @@
   "words": {
     "server": {
       "term": "Servidor",
-      "text": "Sua comunidade no Discord. O Mewvo funciona em um servidor principal e em um servidor de suporte opcional."
+      "text": "Sua comunidade no Discord. O Mewvo funciona em cada servidor ao qual é adicionado, e cada servidor tem as próprias configurações."
     },
     "channel": {
       "term": "Canal",
@@ -178,7 +178,7 @@
     },
     "supportServer": {
       "term": "Servidor de suporte",
-      "text": "Um segundo servidor pequeno onde membros banidos ainda podem apelar, já que não veem o principal."
+      "text": "Um segundo servidor pequeno onde membros banidos ainda podem apelar, já que não veem mais o servidor de onde foram banidos."
     },
     "inbox": {
       "term": "Caixa de entrada",
@@ -212,7 +212,7 @@
     "pickHere": "Ainda não configurado. Escolha aqui e salve.",
     "moreSettings": "Mais configurações: [abra a página dele]({href}).",
     "unreadable": "Não foi possível carregar as etapas de configuração agora. Recarregue a página em um minuto.",
-    "progress": "{done} de {total} etapas feitas. Siga na ordem, ou pule as que você não precisa. Você pode voltar aqui a qualquer momento pela barra lateral.",
+    "progress": "{done} de {total} passos essenciais feitos. Siga na ordem; depois vêm os opcionais, pule os que não precisar. Você pode voltar aqui a qualquer momento pela barra lateral.",
     "stepOf": "Etapa {n} de {total}",
     "back": "Voltar",
     "next": "Próxima etapa",
@@ -220,6 +220,7 @@
     "finish": "Concluir",
     "allSteps": "Todas as etapas",
     "doneMark": " (feito)",
-    "newWords": "Palavras novas? [Glossário]({href})."
+    "newWords": "Palavras novas? [Glossário]({href}).",
+    "rolePosition": "O Discord só deixa o Mewvo moderar membros cujo cargo mais alto esteja abaixo do cargo do Mewvo. Em Configurações do servidor → Cargos, arraste o cargo do Mewvo acima dos cargos dos seus membros; cargos de admins podem ficar acima. A contagem usa os membros que o Mewvo viu recentemente, sem admins, bots e o dono do servidor."
   }
 }

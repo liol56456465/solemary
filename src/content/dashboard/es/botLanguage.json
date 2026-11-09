@@ -8,7 +8,9 @@
   },
   "form": {
     "label": "Idioma de publicaciones y MD",
-    "help": "Los miembros reciben en este idioma los MD de sanciones y apelaciones."
+    "help": "Los miembros reciben en este idioma los MD de sanciones y apelaciones.",
+    "detected": "Aún sin elegir: Mewvo usa el idioma de tu servidor en Discord: {language}. Guarda para conservarlo.",
+    "notChosen": "Aún sin elegir: Mewvo usa inglés. Elige un idioma y guarda."
   },
   "rule": {
     "title": "Quién ve qué idioma",

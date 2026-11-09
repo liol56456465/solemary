@@ -6,7 +6,7 @@
 import { html, layout, path, raw } from './html.js';
 import { isHomeOnlyPage } from './homeOnly.js';
 import { dashboardText, textFor } from './language.js';
-import { permissionsList } from './overview.js';
+import { essentialSteps, optionalSteps, permissionsList } from './overview.js';
 import { setupStepForm } from './setupForms.js';
 
 /** The words, in the order someone new meets them. [term, explanation, optional page link]. */
@@ -106,6 +106,10 @@ function stepBody(step, { ctx, forms }, tr = textFor(ctx || {})) {
         return html`${permissionsList(step.report || null, textFor(ctx || {}))}
 <p class="muted">${tr.ti('help.setup.checkAgain', { href: path('/setup?step=permissions') })}</p>`;
     }
+    if (step.key === 'rolePosition') {
+        return html`<p>${step.done ? html`<b class="ok-text">${tr.t('help.setup.done')}</b> ` : ''}${tr.t('help.setup.rolePosition')}</p>
+<p class="muted">${tr.ti('help.setup.checkAgain', { href: path('/setup?step=rolePosition') })}</p>`;
+    }
     const form = ctx ? setupStepForm(ctx, step, forms) : null;
     if (!form) {
         return html`<p>${step.done ? html`<b class="ok-text">${tr.t('help.setup.done')}</b> ${tr.t('help.setup.changeOnPage')}` : tr.t('help.setup.ownPage')}</p>
@@ -129,15 +133,23 @@ export function setupPage({ session, access = null, moduleStates = {}, steps, qu
     }
     const n = stepNumber(query, steps);
     const step = steps[n - 1];
-    const done = steps.filter((s) => s.done).length;
+    // The progress counts the essentials only (overview.js gettingStarted groups).
+    const essentials = essentialSteps(steps);
+    const done = essentials.filter((s) => s.done).length;
     const link = (k, text) => html`<a class="btn" href="${path(`/setup?step=${k}`)}">${text}</a>`;
+    const stepLink = (s) => {
+        const i = steps.indexOf(s);
+        return html`<li><a href="${path(`/setup?step=${i + 1}`)}"${i + 1 === n ? raw(' aria-current="step"') : ''}>${s.label}</a>${s.done ? tr.t('help.setup.doneMark') : ''}</li>`;
+    };
+    const optional = optionalSteps(steps);
     const body = html`<header class="page-head"><h1>${title}</h1>
-<p>${tr.t('help.setup.progress', { done: tr.fmtNumber(done), total: tr.fmtNumber(steps.length) })}</p></header>
+<p>${tr.t('help.setup.progress', { done: tr.fmtNumber(done), total: tr.fmtNumber(essentials.length) })}</p></header>
 ${flash ? html`<p class="flash" role="status">${flash}</p>` : ''}
 <section class="plain-section setup-step"><p class="muted">${tr.t('help.setup.stepOf', { n: tr.fmtNumber(n), total: tr.fmtNumber(steps.length) })}</p><h2>${step.label}</h2><p>${step.hint}</p>
 ${stepBody(step, { ctx, forms }, tr)}
 <p class="setup-nav">${n > 1 ? link(n - 1, tr.t('help.setup.back')) : ''} ${n < steps.length ? link(n + 1, step.done ? tr.t('help.setup.next') : tr.t('help.setup.skip')) : html`<a class="btn" href="${path('/overview')}">${tr.t('help.setup.finish')}</a>`}</p></section>
-<section class="plain-section"><h2>${tr.t('help.setup.allSteps')}</h2><ol class="setup-all">${steps.map((s, i) => html`<li><a href="${path(`/setup?step=${i + 1}`)}"${i + 1 === n ? raw(' aria-current="step"') : ''}>${s.label}</a>${s.done ? tr.t('help.setup.doneMark') : ''}</li>`)}</ol>
+<section class="plain-section"><h2>${tr.t('help.setup.allSteps')}</h2><h3>${tr.t('overview.start.essentials')}</h3><ol class="setup-all">${essentials.map(stepLink)}</ol>
+${optional.length ? html`<h3>${tr.t('overview.start.optional')}</h3><ol class="setup-all">${optional.map(stepLink)}</ol>` : ''}
 <p class="muted">${tr.ti('help.setup.newWords', { href: path('/help') })}</p></section>`;
     return layout({ title, active: 'setup', session, access, moduleStates, body });
 }

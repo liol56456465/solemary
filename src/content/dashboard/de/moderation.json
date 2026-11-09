@@ -46,12 +46,12 @@
     "warning": "Achtung:"
   },
   "access": {
-    "needModRole": "Dafür brauchst du die Moderatorrolle oder Administrator auf dem Hauptserver (vielleicht wurde sie dir seit dem Login entzogen).",
-    "needAdmin": "Dafür brauchst du die Berechtigung Administrator auf dem Hauptserver.",
-    "actionNeedsAdmin": "{action} braucht Administrator auf dem Hauptserver.",
+    "needModRole": "Dafür brauchst du die Moderatorrolle oder Administrator auf diesem Server (vielleicht wurde sie dir seit dem Login entzogen).",
+    "needAdmin": "Dafür brauchst du die Berechtigung Administrator auf diesem Server.",
+    "actionNeedsAdmin": "{action} braucht Administrator auf diesem Server.",
     "thisAction": "Diese Aktion",
     "ownerOnly": "Das können nur die Bot-Inhaber (wie /staff restore).",
-    "enforcementAdmin": "Strafaktionen brauchen Administrator auf dem Hauptserver (Bot-Inhaber ohne diese Berechtigung können nur ansehen)."
+    "enforcementAdmin": "Strafaktionen brauchen Administrator auf diesem Server (Bot-Inhaber ohne diese Berechtigung können nur ansehen)."
   },
   "expired": {
     "action": "Diese Bestätigung ist abgelaufen oder wurde schon benutzt. Nichts wurde getan; sieh dir die Aktion noch einmal in der Vorschau an.",

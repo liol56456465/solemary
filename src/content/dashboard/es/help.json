@@ -14,7 +14,7 @@
   "words": {
     "server": {
       "term": "Servidor",
-      "text": "Tu comunidad de Discord. Mewvo funciona en un servidor principal y en un servidor de soporte opcional."
+      "text": "Tu comunidad de Discord. Mewvo funciona en cada servidor al que se añade, y cada servidor tiene sus propios ajustes."
     },
     "channel": {
       "term": "Canal",
@@ -178,7 +178,7 @@
     },
     "supportServer": {
       "term": "Servidor de soporte",
-      "text": "Un segundo servidor pequeño donde los miembros baneados aún pueden apelar, ya que no ven el principal."
+      "text": "Un segundo servidor pequeño donde los miembros baneados aún pueden apelar, ya que no ven el servidor del que los banearon."
     },
     "inbox": {
       "term": "Bandeja de entrada",
@@ -212,7 +212,7 @@
     "pickHere": "Aún sin configurar. Elígelo aquí y guarda.",
     "moreSettings": "Más ajustes: [abre su página]({href}).",
     "unreadable": "No se pudieron cargar los pasos de configuración ahora mismo. Recarga la página en un minuto.",
-    "progress": "{done} de {total} pasos hechos. Síguelos en orden o sáltate los que no necesites. Puedes volver aquí cuando quieras desde la barra lateral.",
+    "progress": "{done} de {total} pasos esenciales hechos. Hazlos en orden; después vienen los opcionales, sáltate los que no necesites. Puedes volver aquí cuando quieras desde la barra lateral.",
     "stepOf": "Paso {n} de {total}",
     "back": "Atrás",
     "next": "Siguiente paso",
@@ -220,6 +220,7 @@
     "finish": "Terminar",
     "allSteps": "Todos los pasos",
     "doneMark": " (hecho)",
-    "newWords": "¿Palabras nuevas? [Glosario]({href})."
+    "newWords": "¿Palabras nuevas? [Glosario]({href}).",
+    "rolePosition": "Discord solo deja a Mewvo moderar a miembros cuyo rol más alto esté por debajo del rol de Mewvo. En Ajustes del servidor → Roles, arrastra el rol de Mewvo por encima de los roles de tus miembros; los roles de los admins pueden quedar por encima. El recuento usa los miembros que Mewvo ha visto hace poco, sin admins, bots ni el dueño del servidor."
   }
 }

@@ -45,7 +45,15 @@
         },
         "language": {
             "label": "Idioma do bot",
-            "default": "Inglês (padrão). Escolha o idioma das mensagens e DMs no painel (Idioma do bot)."
+            "default": "Inglês (padrão). Escolha o idioma das mensagens e DMs no painel (Idioma do bot).",
+            "detected": "{language} (o idioma do seu servidor no Discord). Você pode mudar no painel (Idioma do bot)."
+        },
+        "rolePosition": {
+            "label": "Posição do cargo do Mewvo",
+            "ok": "Acima do cargo mais alto de todos os membros (menos admins e dono).",
+            "blocked": "Membros que o Mewvo não pode moderar: {count} (cargo mais alto {roles}). Arraste o cargo do Mewvo para cima: Configurações do servidor → Cargos.",
+            "atLeast": "pelo menos {count}",
+            "rolesAbove": "Cargos acima do cargo do Mewvo: {roles}. O Mewvo não pode moderar membros que os têm. Arraste o cargo do Mewvo para cima: Configurações do servidor → Cargos."
         }
     },
     "commandsTitle": "Todos os comandos",
@@ -61,10 +69,12 @@
     "notYours": "Este menu é de outra pessoa. Use /setup para ter o seu.",
     "welcome": {
         "title": "Obrigado por adicionar o Mewvo!",
-        "body": "Um admin pode digitar **/setup** para começar.",
+        "body": "**Admins:** usem **/setup** ou abram o painel para começar.",
         "help": "Digite **/help** para ver os comandos. Dúvidas? Pergunte no servidor de suporte do Mewvo.",
-        "dm": "Você adicionou o Mewvo a **{server}**. Um admin pode digitar **/setup** lá para começar.",
-        "dashboardButton": "Abrir o painel",
-        "supportButton": "Servidor de suporte do Mewvo"
+        "dm": "Você adicionou o Mewvo a **{server}**. Use **/setup** lá ou abra o painel para começar.",
+        "dashboardButton": "Painel (para admins)",
+        "supportButton": "Servidor de suporte do Mewvo",
+        "ownerDm": "O Mewvo foi adicionado a **{server}**, mas não consegue escrever em nenhum canal (precisa de Ver canal, Enviar mensagens e Inserir links). Use **/setup** lá ou abra o painel para começar.",
+        "optional": "Opcional, quando quiser: boas-vindas, tickets, verificação e níveis (os anúncios de subida de nível ficam desligados até você ligá-los)."
     }
 }

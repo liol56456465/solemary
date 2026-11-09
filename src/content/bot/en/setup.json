@@ -45,7 +45,15 @@
         },
         "language": {
             "label": "Bot language",
-            "default": "English (default). Pick the language of posts and DMs on the dashboard (Bot language)."
+            "default": "English (default). Pick the language of posts and DMs on the dashboard (Bot language).",
+            "detected": "{language} (your server's language in Discord). Change it on the dashboard (Bot language)."
+        },
+        "rolePosition": {
+            "label": "Mewvo's role position",
+            "ok": "Above every member's top role (admins and the owner aside).",
+            "blocked": "Members Mewvo can't moderate: {count} (top role {roles}). Drag Mewvo's role higher: Server Settings → Roles.",
+            "atLeast": "at least {count}",
+            "rolesAbove": "Roles above Mewvo's role: {roles}. Members with them can't be moderated. Drag Mewvo's role higher: Server Settings → Roles."
         }
     },
     "commandsTitle": "All commands",
@@ -60,10 +68,12 @@
     "notYours": "This menu belongs to someone else. Run /setup to get your own.",
     "welcome": {
         "title": "Thanks for adding Mewvo!",
-        "body": "An admin can type **/setup** to get started.",
+        "body": "**Admins:** run **/setup** or open the dashboard to get started.",
         "help": "Type **/help** to see the commands. Questions? Ask in the Mewvo support server.",
-        "dm": "You added Mewvo to **{server}**. An admin can type **/setup** there to get started.",
-        "dashboardButton": "Open the dashboard",
-        "supportButton": "Mewvo support server"
+        "dm": "You added Mewvo to **{server}**. Run **/setup** there or open the dashboard to get started.",
+        "dashboardButton": "Dashboard (for admins)",
+        "supportButton": "Mewvo support server",
+        "ownerDm": "Mewvo was added to **{server}**, but it can't post in any channel there (it needs View Channel, Send Messages and Embed Links). Run **/setup** there or open the dashboard to get started.",
+        "optional": "Optional, when you want them: welcome messages, tickets, verification and leveling (level-up posts stay off until you turn them on)."
     }
 }

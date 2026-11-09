@@ -14,7 +14,7 @@
   "words": {
     "server": {
       "term": "Server",
-      "text": "Your Discord community. Mewvo works in one main server and an optional support server."
+      "text": "Your Discord community. Mewvo works in every server it is added to, and each server has its own settings."
     },
     "channel": {
       "term": "Channel",
@@ -178,7 +178,7 @@
     },
     "supportServer": {
       "term": "Support server",
-      "text": "A second, small server where banned members can still appeal, since they cannot see the main one."
+      "text": "A second, small server where banned members can still appeal, since they cannot see the server they were banned from."
     },
     "inbox": {
       "term": "Inbox",
@@ -212,7 +212,7 @@
     "pickHere": "Not set up yet. Pick it here and save.",
     "moreSettings": "More settings for this: [open its page]({href}).",
     "unreadable": "The setup steps could not be loaded just now. Reload the page in a minute.",
-    "progress": "{done} of {total} steps done. Go through them in order, or skip any you do not need. You can come back here at any time from the sidebar.",
+    "progress": "{done} of {total} essentials done. Go through them in order; the optional steps come after them, skip any you do not need. You can come back here at any time from the sidebar.",
     "stepOf": "Step {n} of {total}",
     "back": "Back",
     "next": "Next step",
@@ -220,6 +220,7 @@
     "finish": "Finish",
     "allSteps": "All steps",
     "doneMark": " (done)",
-    "newWords": "New to these words? [Words explained]({href})."
+    "newWords": "New to these words? [Words explained]({href}).",
+    "rolePosition": "Discord lets Mewvo moderate only members whose top role is below Mewvo's own role. In Server Settings → Roles, drag Mewvo's role above your members' roles; roles of admins may stay above it. The count uses the members Mewvo has seen recently, and leaves out admins, bots and the server owner."
   }
 }

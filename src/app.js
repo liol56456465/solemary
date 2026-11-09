@@ -66,6 +66,7 @@ import { memberAccountsOn, registerMemberPortal } from './services/site/memberPo
 import { premiumSettings, premiumStore } from './services/billing/premiumService.js';
 import { loadPremiumCache, runPremiumCron, setGuildOwnerResolver, setPremiumClient } from './services/billing/premiumEffects.js';
 import { finalErrorHandler } from './utils/finalErrorHandler.js';
+import { setGuildLocaleResolver } from './utils/botText.js';
 import { corsOrigins, createCompression, createCors, createRateLimit, createReadyHandler, hsts } from './utils/httpMiddleware.js';
 import { createCanonicalHostRedirect } from './utils/canonicalHost.js';
 import { loadAllSettings, seedFromEnvOnce } from './services/settings/guildSettings.js';
@@ -289,6 +290,8 @@ class Mewvo extends Client {
     // supportInvite: Mewvo's own Support server (the website is Mewvo's; home-only by design, B0b).
     setPremiumClient(this);
     setGuildOwnerResolver((guildId) => this.guilds.cache.get(guildId)?.ownerId || null);
+    // A server that never picked a bot language gets its Discord language (utils/botText.js serverLanguage).
+    setGuildLocaleResolver((guildId) => this.guilds.cache.get(guildId)?.preferredLocale || null);
     const memberPortalEnabled = registerMemberPortal(app, { dashboardEnabled, supportInvite: () => enforcementConfig.supportServerInvite, client: this });
     registerSite(app, this, { dashboardEnabled, memberPortalEnabled, memberAccountsEnabled: memberPortalEnabled && memberAccountsOn(), billingEnabled: premiumSettings().testCheckout, supportInvite: () => enforcementConfig.supportServerInvite });
 

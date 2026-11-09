@@ -23,7 +23,7 @@ export function moduleEntries(moduleStates = {}) {
 export function setupByModule(checklist) {
     const byModule = new Map();
     for (const item of checklist || []) {
-        const key = String(item.href || '').split('/').pop();
+        const key = String(item.href || '').split(/[?#]/)[0].split('/').pop();
         const entry = byModule.get(key) || { total: 0, todo: 0 };
         entry.total += 1;
         if (!item.done) entry.todo += 1;
@@ -68,7 +68,7 @@ function searchText(entry, steps = [], tr = currentText()) {
 function stepsByModule(checklist) {
     const steps = new Map();
     for (const item of checklist || []) {
-        const key = String(item.href || '').split('/').pop();
+        const key = String(item.href || '').split(/[?#]/)[0].split('/').pop();
         steps.set(key, [...(steps.get(key) || []), item.label]);
     }
     return steps;

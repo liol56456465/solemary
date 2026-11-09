@@ -1,7 +1,7 @@
 {
   "notice": {
-    "readOnly": "Somente leitura: a edição pelo painel está desligada (DASHBOARD_EDIT_ENABLED não é true).",
-    "viewOnly": "Só visualização: você precisa de Administrador no servidor principal para mudar as regras de cargos."
+    "readOnly": "Somente leitura: as alterações pelo painel estão desligadas nesta instância do Mewvo.",
+    "viewOnly": "Só visualização: você precisa de Administrador neste servidor para mudar as regras de cargos."
   },
   "trigger": {
     "days_in_server": "Dias no servidor",
@@ -113,7 +113,7 @@
     "noRolesHelp": "Entraram nos últimos 30 dias, há mais de 24 horas, e ainda estão sem cargo (bots fora). Muitas vezes: nunca se verificaram.",
     "joinedAt": "entrou em {date}",
     "none": "Nenhum.",
-    "noGuild": "O bot não está vendo o servidor principal agora.",
+    "noGuild": "O bot não está vendo este servidor agora.",
     "offendersTitle": {
       "zero": "Reincidentes (últimos {count} dias)",
       "one": "Reincidentes (último {count} dia)",

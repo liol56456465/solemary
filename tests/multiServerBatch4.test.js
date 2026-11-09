@@ -250,7 +250,9 @@ test('verification quiz: another server names its posted rules channel, else pla
 test('server cat: another server\'s own name and switch; unreadable settings throw', () => {
     setSettingsCacheForTests(MAIN, { catName: 'Mewvo cat', catAnnounce: false });
     setSettingsCacheForTests(OTHER, { catName: 'Mochi' });
-    assert.deepEqual(catSettings(OTHER), { name: 'Mochi', announce: true });
+    assert.deepEqual(catSettings(OTHER), { name: 'Mochi', announce: false }, 'not saved: off outside Mewvo\'s own servers (D5)');
+    setSettingsCacheForTests(OTHER, { catName: 'Mochi', catAnnounce: true });
+    assert.deepEqual(catSettings(OTHER), { name: 'Mochi', announce: true }, 'its own saved switch');
     assert.deepEqual(catSettings(MAIN), { name: 'Mewvo cat', announce: false });
 });
 

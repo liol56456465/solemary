@@ -86,10 +86,12 @@ test('permission list: ✓ or missing with a fix line, role position line, escap
 const BASE = { config: {}, welcome: null, settings: {}, mutedRole: null };
 const keys = (items) => items.map((i) => i.key);
 
-test('checklist: permissions first, then mod log, main log channel and moderator role; support steps only with a support server', () => {
+test('checklist: permissions first, then mod log, main log channel and review channel; moderator role optional; support steps only with a support server', () => {
     const report = { ok: false, missing: ['BanMembers'], roles: [], permissions: [] };
     const items = gettingStarted({ ...BASE, permissions: report, appealPanel: null, supportServer: true });
-    assert.deepEqual(keys(items).slice(0, 4), ['permissions', 'modLog', 'logChannel', 'modRole']);
+    assert.deepEqual(keys(items).slice(0, 4), ['permissions', 'modLog', 'logChannel', 'review']);
+    assert.equal(items.find((i) => i.key === 'modRole').group, 'optional');
+    assert.equal(items.find((i) => i.key === 'modRole').href, '/dashboard/commands#s-bot-settings', 'the moderator role card, not the command list');
     assert.ok(keys(items).includes('appealPanel') && keys(items).includes('bannedRole'));
     assert.equal(items[0].done, false);
     assert.equal(items[0].href, '/dashboard/setup?step=permissions');

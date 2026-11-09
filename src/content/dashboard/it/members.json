@@ -1,12 +1,12 @@
 {
   "back": "← Membri",
   "notice": {
-    "readOnly": "Sola lettura: la modifica dalla dashboard è disattivata (DASHBOARD_EDIT_ENABLED non è true). Usa i comandi del bot.",
+    "readOnly": "Sola lettura: le modifiche dalla dashboard sono disattivate su questa istanza di Mewvo. Usa i comandi del bot.",
     "viewOnly": {
-      "actions": "Solo visualizzazione: per sanzionare qui serve Amministratore nel server principale.",
-      "cases": "Solo visualizzazione: per modificare i casi qui serve Amministratore nel server principale.",
-      "appeals": "Solo visualizzazione: per decidere i ricorsi qui serve Amministratore nel server principale.",
-      "orders": "Solo visualizzazione: per avviare o terminare le separazioni qui serve Amministratore nel server principale."
+      "actions": "Solo visualizzazione: per sanzionare qui serve Amministratore in questo server.",
+      "cases": "Solo visualizzazione: per modificare i casi qui serve Amministratore in questo server.",
+      "appeals": "Solo visualizzazione: per decidere i ricorsi qui serve Amministratore in questo server.",
+      "orders": "Solo visualizzazione: per avviare o terminare le separazioni qui serve Amministratore in questo server."
     }
   },
   "form": {
@@ -68,10 +68,10 @@
     "muted": "Silenziato",
     "noMatch": "Nessun membro corrisponde a questi filtri.",
     "clearFilters": "Azzera i filtri",
-    "empty": "Ancora nessun membro da mostrare. La lista si riempie quando il bot ha caricato il server principale.",
+    "empty": "Ancora nessun membro da mostrare. La lista si riempie quando il bot ha caricato questo server.",
     "show": "Mostra",
     "stillLoading": "Mostrati {cached} membri su {total}: la lista sta ancora caricando. Ricarica tra un minuto.",
-    "unavailable": "La lista dei membri non è disponibile ora (il bot non vede il server principale).",
+    "unavailable": "La lista dei membri non è disponibile ora (il bot non vede questo server).",
     "search": "Cerca",
     "searchPlaceholder": "Nome, nickname o ID utente",
     "role": "Ruolo",
@@ -138,8 +138,8 @@
     },
     "noMatch": "Nessun ban corrisponde.",
     "showAll": "Mostra tutti i bannati",
-    "empty": "Nessuno è bannato nel server principale.",
-    "bannedCount": "{count} bannati nel server principale",
+    "empty": "Nessuno è bannato in questo server.",
+    "bannedCount": "{count} bannati in questo server",
     "help": "Togli il ban apre la pagina del membro: vedi l’effetto, poi confermi. Il membro riceve un DM con un invito per tornare.",
     "searchPlaceholder": "Nome o ID utente",
     "truncated": "Vengono mostrati i primi {count} ban: l’elenco di Discord è più lungo. Apri un membro tramite ID utente per vedere chi non è elencato."

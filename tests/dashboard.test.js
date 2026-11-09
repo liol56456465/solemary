@@ -649,7 +649,7 @@ test('module pages render the module; unknown modules fall through', async () =>
     const res = await runProtected(d, d.modulePage, { method: 'GET', headers: { cookie }, params: { module: 'support' } });
     assert.equal(res.statusCode, 200);
     assert.match(res.body, /Support server/);
-    assert.match(res.body, /Read-only: editing from the dashboard is turned off/, 'DASHBOARD_EDIT_ENABLED is not set in ENV');
+    assert.match(res.body, /Read-only: changes from the dashboard are switched off on this Mewvo instance/, "editing is not switched on in ENV");
     let next = false;
     const req = { method: 'GET', headers: { cookie }, params: { module: 'nope' } };
     await d.requireUser(req, fakeRes(), () => {});
@@ -784,7 +784,7 @@ test('Words explained and Setup step by step: plain pages, one step at a time, e
     assert.equal(stepNumber({ step: '9' }, steps), 2);
     assert.equal(stepNumber({}, steps.map((x) => ({ ...x, done: true }))), 1);
     const first = String(setupPage({ session, steps, query: {} }));
-    assert.ok(first.includes('1 of 3 steps done.'));
+    assert.ok(first.includes('1 of 3 essentials done.'), 'steps without a group count as essentials');
     assert.ok(first.includes('Step 2 of 3') && first.includes('<h2>Welcome channel</h2>'));
     assert.ok(first.includes('<a class="btn primary" href="/dashboard/welcome">Set this up</a>'));
     assert.ok(first.includes('href="/dashboard/setup?step=1">Back</a>') && first.includes('href="/dashboard/setup?step=3">Skip for now</a>'));

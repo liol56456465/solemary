@@ -14,7 +14,7 @@
   "words": {
     "server": {
       "term": "Serwer",
-      "text": "Twoja społeczność na Discordzie. Mewvo działa na jednym serwerze głównym i opcjonalnym serwerze wsparcia."
+      "text": "Twoja społeczność na Discordzie. Mewvo działa na każdym serwerze, do którego zostanie dodany, a każdy serwer ma własne ustawienia."
     },
     "channel": {
       "term": "Kanał",
@@ -178,7 +178,7 @@
     },
     "supportServer": {
       "term": "Serwer wsparcia",
-      "text": "Drugi, mały serwer, na którym zbanowani członkowie nadal mogą się odwołać, bo nie widzą głównego."
+      "text": "Drugi, mały serwer, na którym zbanowani członkowie nadal mogą się odwołać, bo nie widzą już serwera, z którego ich zbanowano."
     },
     "inbox": {
       "term": "Skrzynka",
@@ -212,7 +212,7 @@
     "pickHere": "Jeszcze nieskonfigurowane. Wybierz tutaj i zapisz.",
     "moreSettings": "Więcej ustawień: [otwórz jego stronę]({href}).",
     "unreadable": "Nie udało się teraz wczytać kroków konfiguracji. Odśwież stronę za minutę.",
-    "progress": "Gotowe kroki: {done} z {total}. Przejdź je po kolei albo pomiń te, których nie potrzebujesz. Możesz tu wrócić w każdej chwili z paska bocznego.",
+    "progress": "Zrobione: {done} z {total} niezbędnych kroków. Przejdź je po kolei; potem są kroki opcjonalne, pomiń te, których nie potrzebujesz. Możesz tu wrócić w każdej chwili z paska bocznego.",
     "stepOf": "Krok {n} z {total}",
     "back": "Wstecz",
     "next": "Następny krok",
@@ -220,6 +220,7 @@
     "finish": "Zakończ",
     "allSteps": "Wszystkie kroki",
     "doneMark": " (gotowe)",
-    "newWords": "Nowe słowa? [Słowniczek]({href})."
+    "newWords": "Nowe słowa? [Słowniczek]({href}).",
+    "rolePosition": "Discord pozwala Mewvo moderować tylko członków, których najwyższa rola jest pod rolą Mewvo. W Ustawienia serwera → Role przeciągnij rolę Mewvo nad role członków; role adminów mogą zostać wyżej. Liczeni są członkowie, których Mewvo ostatnio widział, bez adminów, botów i właściciela serwera."
   }
 }

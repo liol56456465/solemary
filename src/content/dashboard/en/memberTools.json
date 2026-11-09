@@ -1,7 +1,7 @@
 {
   "notice": {
-    "readOnly": "Read-only: editing from the dashboard is turned off (DASHBOARD_EDIT_ENABLED is not true).",
-    "viewOnly": "View only: you need Administrator in the main server to change role rules."
+    "readOnly": "Read-only: changes from the dashboard are switched off on this Mewvo instance.",
+    "viewOnly": "View only: you need Administrator in this server to change role rules."
   },
   "trigger": {
     "days_in_server": "Days in the server",
@@ -103,7 +103,7 @@
     "noRolesHelp": "Joined in the last 30 days, more than 24 hours ago, and still no role (bots left out). Often: never verified.",
     "joinedAt": "joined {date}",
     "none": "None.",
-    "noGuild": "The bot cannot see the main server right now.",
+    "noGuild": "The bot cannot see this server right now.",
     "offendersTitle": {
       "one": "Repeat offenders (last {count} days)",
       "other": "Repeat offenders (last {count} days)"

@@ -14,7 +14,7 @@
   "words": {
     "server": {
       "term": "Server",
-      "text": "La tua community Discord. Mewvo lavora in un server principale e in un server di supporto facoltativo."
+      "text": "La tua community Discord. Mewvo funziona in ogni server in cui viene aggiunto, e ogni server ha le sue impostazioni."
     },
     "channel": {
       "term": "Canale",
@@ -178,7 +178,7 @@
     },
     "supportServer": {
       "term": "Server di supporto",
-      "text": "Un secondo piccolo server dove i membri bannati possono comunque fare ricorso, visto che non vedono quello principale."
+      "text": "Un secondo piccolo server dove i membri bannati possono comunque fare ricorso, visto che non vedono più il server da cui sono stati bannati."
     },
     "inbox": {
       "term": "Posta in arrivo",
@@ -212,7 +212,7 @@
     "pickHere": "Non ancora configurato. Sceglilo qui e salva.",
     "moreSettings": "Altre impostazioni: [apri la sua pagina]({href}).",
     "unreadable": "Non è stato possibile caricare i passaggi di configurazione. Ricarica la pagina tra un minuto.",
-    "progress": "{done} passaggi fatti su {total}. Seguili in ordine o salta quelli che non ti servono. Puoi tornare qui quando vuoi dalla barra laterale.",
+    "progress": "{done} di {total} passaggi essenziali fatti. Seguili in ordine; dopo vengono quelli facoltativi, salta quelli che non ti servono. Puoi tornare qui quando vuoi dalla barra laterale.",
     "stepOf": "Passaggio {n} di {total}",
     "back": "Indietro",
     "next": "Passaggio successivo",
@@ -220,6 +220,7 @@
     "finish": "Fine",
     "allSteps": "Tutti i passaggi",
     "doneMark": " (fatto)",
-    "newWords": "Parole nuove? [Parole spiegate]({href})."
+    "newWords": "Parole nuove? [Parole spiegate]({href}).",
+    "rolePosition": "Discord permette a Mewvo di moderare solo i membri il cui ruolo più alto è sotto il ruolo di Mewvo. In Impostazioni server → Ruoli, trascina il ruolo di Mewvo sopra i ruoli dei tuoi membri; i ruoli degli admin possono restare sopra. Il conteggio usa i membri che Mewvo ha visto di recente, esclusi admin, bot e proprietario del server."
   }
 }

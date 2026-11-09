@@ -15,15 +15,16 @@ const category = {
 const snapshot = { categories: [category], enabledTotal: 1, totalCommands: 2 };
 const placeholderLeft = (text) => /\{[a-zA-Z]+\}/.test(String(text).replace(/\{not a param\}/g, ''));
 
-test('/help start page: English unchanged', async () => {
+test('/help start page: English (one first step everywhere: /setup -> dashboard)', async () => {
     const admin = (await createInitialHelpMenu(client, null, true)).embeds[0].data;
     assert.equal(admin.title, 'Mewvo help');
-    assert.equal(admin.description, 'support us by boosting');
+    assert.equal(admin.description, 'support us by boosting', 'no server given: home wording, as before');
     assert.equal(admin.fields[0].value, [
-        '1. **/configwizard** sets the mod role and log channel.',
-        '2. **/commands dashboard** turns categories on or off.',
+        '1. **/setup** shows what is set up here, with the link to the dashboard.',
+        '2. On the dashboard, open **Setup step by step** and do the essentials first.',
         '3. Pick a category in the menu below to see its commands.',
     ].join('\n'));
+    assert.ok(!admin.fields[0].value.includes('/configwizard'));
     assert.equal(admin.fields[1].value, [
         '• Commands marked 🔒 need the **Administrator** permission; the rest are for everyone.',
         '• **/setup** shows what is set up in this server, with a link to the dashboard.',
@@ -31,7 +32,9 @@ test('/help start page: English unchanged', async () => {
     ].join('\n'));
     assert.equal(admin.fields[2].value, '• Most features have a dashboard command for their settings\n• Settings are saved per server');
     const member = await createInitialHelpMenu(client, null, false, botText('en'));
-    assert.equal(member.embeds[0].data.fields[0].value, 'Pick a category in the menu below to see its commands.\nNeed staff? DM the bot: your message goes to the team privately (modmail).');
+    assert.equal(member.embeds[0].data.fields[0].value, 'Pick a category in the menu below to see its commands.', 'no modmail: not mentioned');
+    const withModmail = await createInitialHelpMenu(client, null, false, botText('en'), { modmail: true });
+    assert.equal(withModmail.embeds[0].data.fields[0].value, 'Pick a category in the menu below to see its commands.\nNeed staff? DM the bot: your message goes to the team privately (modmail).');
     assert.equal(member.embeds[0].data.fields[1].value, '• This list shows the commands you can use.');
     assert.equal(member.components[0].components[0].data.label, 'Support Server');
 });
@@ -46,7 +49,7 @@ test('/help start page in every language: translated, no placeholder left, withi
         for (const field of data.fields) {
             assert.ok(field.value.length <= 1024 && !placeholderLeft(field.value), `${lang}: ${field.value}`);
         }
-        assert.ok(data.fields[0].value.includes('**/configwizard**'), `${lang}: command kept`);
+        assert.ok(data.fields[0].value.includes('**/setup**') && !data.fields[0].value.includes('/configwizard'), `${lang}: /setup first`);
         const menu = components[1].components[0].toJSON();
         for (const option of menu.options) assert.ok(option.label.length <= 100 && option.description.length <= 100, lang);
     }

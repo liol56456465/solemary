@@ -14,14 +14,16 @@
 //                            welcome, a single birthday wish ...): the server's language
 //   purpose 'dm' | 'public'  a DM to a member (punishments, appeal results ...) or a channel-wide
 //                            post (panels, giveaways, mod log): the server's language (setting
-//                            botLanguage, Dashboard -> Bot language; default English).
+//                            botLanguage, Dashboard -> Bot language). Not chosen yet: in a
+//                            server other than Mewvo's own, the server's Discord language
+//                            (guild.preferredLocale) when it is one of the 8; else English.
 //                            'public' never looks at a language role.
 // Anything unknown (a Discord language we don't have, no server) is English.
 
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_LANG, LANG_CODES, createCatalog, formatNumberIn } from '../services/site/i18n.js';
 import { languageFromDiscordLocale } from '../services/dashboard/language.js';
-import { resolveSetting } from '../services/settings/guildSettings.js';
+import { isHomeGuild, resolveSetting, resolvedSource } from '../services/settings/guildSettings.js';
 import { logger } from './logger.js';
 
 export { LANG_CODES };
@@ -46,8 +48,42 @@ export function resetBotLanguageLogForTests() {
     languageRolesReadFailed = false;
 }
 
+// guildId → the server's Discord language (guild.preferredLocale), from the client's guild cache.
+// app.js sets it at startup (setGuildLocaleResolver); without it (tests, scripts) there is none.
+let guildLocaleOf = () => null;
+/** app.js: how to find a server's Discord language (preferredLocale) by id. */
+export function setGuildLocaleResolver(fn) {
+    guildLocaleOf = typeof fn === 'function' ? fn : () => null;
+}
+
 /**
- * The language a server chose for its public posts and member DMs, else English.
+ * The language Mewvo detects for a server that never chose one: its Discord language
+ * (guild.preferredLocale: a Community server's primary language, else 'en-US') when it is one
+ * of the 8, else null. `locale` replaces the guild cache lookup.
+ */
+export function detectedServerLanguage(guildId, { locale } = {}) {
+    let value = locale;
+    if (value === undefined) {
+        try {
+            value = guildLocaleOf(String(guildId));
+        } catch {
+            value = null;
+        }
+    }
+    return languageFromDiscordLocale(value) || null;
+}
+
+/**
+ * The language of a server's public posts and member DMs. Order:
+ *   1. the saved setting (Dashboard -> Bot language)
+ *   2. nothing saved, in a server other than Mewvo's own: the server's Discord language
+ *      (detectedServerLanguage). Nothing is written: it is read every time until an admin saves
+ *      a language, so servers that added Mewvo before this existed get it too.
+ *   3. English
+ * Mewvo's own servers keep stored -> English, as before.
+ *
+ * `resolve` (tests) replaces resolveSetting; `source` replaces resolvedSource (with `resolve`
+ * and no `source`, step 2 is skipped); `locale` replaces the guild cache lookup.
  *
  * The one place where a default on a database error is fine: the language is cosmetic, and a
  * punishment DM or an error reply must still go out when the settings cannot be read. So any
@@ -55,11 +91,19 @@ export function resetBotLanguageLogForTests() {
  * logged once per failing stretch (the next good read resets it), not on every message. Everywhere else the data-layer rule stands:
  * reads throw on a database error, never return defaults (CLAUDE.md "Data layer rules").
  */
-export function serverLanguage(guildId, { resolve = resolveSetting } = {}) {
+export function serverLanguage(guildId, { resolve, source, locale, isHome = isHomeGuild } = {}) {
     if (!guildId) return DEFAULT_LANG;
+    const id = String(guildId);
+    const read = resolve || resolveSetting;
+    const sourceOf = source || (resolve ? null : resolvedSource);
     try {
-        const value = resolve(String(guildId), BOT_LANGUAGE_KEY);
+        const value = read(id, BOT_LANGUAGE_KEY);
+        const saved = !sourceOf || isHome(id) || sourceOf(id, BOT_LANGUAGE_KEY) === 'database';
         languageReadFailed = false; // a later failure (e.g. a real outage) is logged again
+        if (!saved) {
+            const detected = detectedServerLanguage(id, { locale });
+            if (detected) return detected;
+        }
         return LANG_CODES.includes(value) ? value : DEFAULT_LANG;
     } catch (error) {
         if (!languageReadFailed) {

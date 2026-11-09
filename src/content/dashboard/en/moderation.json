@@ -46,12 +46,12 @@
     "warning": "Warning:"
   },
   "access": {
-    "needModRole": "You need the moderator role or Administrator in the main server to do this (it may have been removed since you logged in).",
-    "needAdmin": "You need the Administrator permission in the main server to do this.",
-    "actionNeedsAdmin": "{action} needs Administrator in the main server.",
+    "needModRole": "You need the moderator role or Administrator in this server to do this (it may have been removed since you logged in).",
+    "needAdmin": "You need the Administrator permission in this server to do this.",
+    "actionNeedsAdmin": "{action} needs Administrator in this server.",
     "thisAction": "This action",
     "ownerOnly": "Only the bot owners can do this (like /staff restore).",
-    "enforcementAdmin": "Enforcement actions need Administrator in the main server (bot owners without it can view only)."
+    "enforcementAdmin": "Enforcement actions need Administrator in this server (bot owners without it can view only)."
   },
   "expired": {
     "action": "This confirmation expired or was already used. Nothing was done; preview the action again.",

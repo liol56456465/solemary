@@ -46,12 +46,12 @@
     "warning": "Attention :"
   },
   "access": {
-    "needModRole": "Il te faut le rôle de modérateur ou la permission Administrateur sur le serveur principal pour faire ça (il t’a peut-être été retiré depuis ta connexion).",
-    "needAdmin": "Il te faut la permission Administrateur sur le serveur principal pour faire ça.",
-    "actionNeedsAdmin": "« {action} » demande la permission Administrateur sur le serveur principal.",
+    "needModRole": "Il te faut le rôle de modérateur ou la permission Administrateur sur ce serveur pour faire ça (il t’a peut-être été retiré depuis ta connexion).",
+    "needAdmin": "Il te faut la permission Administrateur sur ce serveur pour faire ça.",
+    "actionNeedsAdmin": "« {action} » demande la permission Administrateur sur ce serveur.",
     "thisAction": "Cette action",
     "ownerOnly": "Seuls les propriétaires du bot peuvent faire ça (comme /staff restore).",
-    "enforcementAdmin": "Les sanctions demandent la permission Administrateur sur le serveur principal (les propriétaires du bot sans elle peuvent seulement consulter)."
+    "enforcementAdmin": "Les sanctions demandent la permission Administrateur sur ce serveur (les propriétaires du bot sans elle peuvent seulement consulter)."
   },
   "expired": {
     "action": "Cette confirmation a expiré ou a déjà été utilisée. Rien n’a été fait ; prévisualise l’action à nouveau.",

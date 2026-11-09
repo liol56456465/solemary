@@ -119,8 +119,12 @@
     "after": "It goes through the steps below one at a time.",
     "words": "What do these words mean?",
     "oneStep": "One step at a time",
-    "progress": "{done} of {total} done. Each step takes a minute; the link opens the right page.",
-    "done": "Done: {list}."
+    "progress": "{done} of {total} essentials done. Each step takes a minute; the link opens the right page.",
+    "done": "Done: {list}.",
+    "essentials": "Essentials",
+    "essentialsLine": "What every server needs so Mewvo can moderate safely.",
+    "optional": "Optional",
+    "optionalLine": "Features to add when you want them."
   },
   "handover": {
     "writtenBy": "Written by {name}, {date}",
@@ -209,6 +213,25 @@
       "post": "Post the appeal panels",
       "postAgain": "Post the appeal panels again",
       "confirm": "Post the appeal panels now? Earlier appeal panels in these channels are replaced."
+    },
+    "rolePosition": {
+      "label": "Mewvo's role position",
+      "hint": "Mewvo can only moderate members whose top role is below its own. Right now that is everyone (admins and the server owner aside)."
+    },
+    "language": {
+      "label": "Bot language",
+      "hint": "The language of Mewvo's posts and DMs here. English until you pick one.",
+      "saved": "Language of Mewvo's posts and DMs: {language}.",
+      "detected": "Mewvo uses {language}, your server's language in Discord. Save it to keep it, or pick another.",
+      "english": "English"
+    },
+    "appealsHome": {
+      "label": "Where members appeal",
+      "hint": "Punishment DMs tell members where to ask for a punishment to be lifted: the Mewvo support server or your own server."
+    },
+    "leveling": {
+      "label": "Leveling",
+      "hint": "Members earn XP and levels for chatting. Choose whether Mewvo posts level-ups, and where."
     }
   },
   "value": {
@@ -264,6 +287,11 @@
       "ManageMessages": "Manage Messages",
       "ManageGuild": "Manage Server",
       "ViewAuditLog": "View Audit Log"
-    }
+    },
+    "reach": "Members Mewvo can't moderate: {count}",
+    "reachFix": "Their top role ({roles}) is at or above Mewvo's role. Drag {botRole} higher in Server Settings → Roles.",
+    "atLeast": "at least {count}",
+    "rolesAbove": "Roles above Mewvo's role: {roles}",
+    "rolesAboveFix": "Mewvo can't moderate members who have them (it has not seen every member, so it cannot count them). Drag {botRole} higher in Server Settings → Roles."
   }
 }
