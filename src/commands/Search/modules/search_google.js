@@ -2,7 +2,7 @@ import { escapeMarkdown } from 'discord.js';
 import { createEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
-import { publicText } from '../../Core/modules/commandText.js';
+import { publicText } from '../../../utils/commandLocalizations.js';
 
 // User text goes into embed markdown; escape it (escapeMarkdown also escapes backslashes) so it
 // cannot form masked links or formatting.

@@ -12,7 +12,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, SlashComman
 import { createEmbed } from '../../utils/embeds.js';
 import { botText } from '../../utils/botText.js';
 import { logger } from '../../utils/logger.js';
-import { localized, replyText } from '../Core/modules/commandText.js';
+import { localized, replyText } from '../../utils/commandLocalizations.js';
 import { KINDS } from '../../services/privacy/serverDataInventory.js';
 import {
     GRACE_DAYS, checkServerOwner, getDeletionRequest, isPending, previewServerData,

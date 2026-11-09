@@ -4,7 +4,7 @@ import { logger } from '../../../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../../../utils/errorHandler.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
-import { publicText } from '../../Core/modules/commandText.js';
+import { publicText } from '../../../utils/commandLocalizations.js';
 export default {
     data: new SlashCommandBuilder()
     .setName("flip")

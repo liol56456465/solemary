@@ -5,7 +5,7 @@ import { logger } from '../utils/logger.js';
 
 import { replyUserError, ErrorTypes } from '../utils/errorHandler.js';
 import { WIPE_ITEMS, wipeMemberData } from '../services/wipedataService.js';
-import { replyText } from '../commands/Core/modules/commandText.js';
+import { replyText } from '../utils/commandLocalizations.js';
 import { wipeItemLabel } from '../commands/Utility/wipedata.js';
 const wipedataConfirmHandler = {
   name: 'wipedata_yes',

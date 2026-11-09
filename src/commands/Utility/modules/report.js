@@ -7,7 +7,7 @@ import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { logger } from '../../../utils/logger.js';
 import { textForGuild } from '../../../utils/botText.js';
-import { replyText } from '../../Core/modules/commandText.js';
+import { replyText } from '../../../utils/commandLocalizations.js';
 import { checkRateLimit } from '../../../utils/rateLimiter.js';
 
 // Each report pings the server owner, so members may file only a few at a time.

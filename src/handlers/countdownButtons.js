@@ -7,7 +7,7 @@ import { hasOwnerPower } from '../utils/ownerPower.js';
 import { isAdministrator } from '../services/enforcement/enforcementService.js';
 import { noteOwnerOverride } from '../services/ownerOverride.js';
 import { botText, textForGuild } from '../utils/botText.js';
-import { replyText } from '../commands/Core/modules/commandText.js';
+import { replyText } from '../utils/commandLocalizations.js';
 
 // The countdown message is a public post: the server's language. Answers to the person who
 // clicked a button only they see: their own language.

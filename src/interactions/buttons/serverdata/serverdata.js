@@ -4,7 +4,7 @@
 
 import { MessageFlags } from 'discord.js';
 import { logger } from '../../../utils/logger.js';
-import { replyText } from '../../../commands/Core/modules/commandText.js';
+import { replyText } from '../../../utils/commandLocalizations.js';
 import {
     SERVERDATA_BUTTON, plainMessage, refusalText, scheduledMessage,
 } from '../../../commands/Utility/serverdata.js';

@@ -38,7 +38,12 @@
             "back": "Wstecz",
             "noDescription": "Brak opisu",
             "allTitle": "Wszystkie komendy",
-            "changePage": "Użyj przycisków poniżej, żeby zmienić stronę."
+            "changePage": "Użyj przycisków poniżej, żeby zmienić stronę.",
+            "first": "Pierwsza",
+            "previous": "Poprzednia",
+            "next": "Następna",
+            "last": "Ostatnia",
+            "pageOf": "Strona {page} z {total}"
         }
     },
     "commands": {

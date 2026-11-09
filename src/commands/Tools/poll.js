@@ -5,7 +5,7 @@ import {
     NATIVE_POLL_DEFAULT_HOURS, NATIVE_POLL_MAX_HOURS, NATIVE_POLL_MIN_HOURS, NATIVE_POLL_QUESTION_MAX, POLL_MAX_OPTIONS as MAX_OPTIONS, POLL_OPTION_MAX,
     createNativePoll, createPoll, endPoll,
 } from '../../services/botMessageService.js';
-import { localized, replyText } from '../Core/modules/commandText.js';
+import { localized, replyText } from '../../utils/commandLocalizations.js';
 
 const ORDINALS = ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth', 'Seventh', 'Eighth', 'Ninth', 'Tenth'];
 // Catalog keys of the option descriptions' translations (the English is built from ORDINALS).

@@ -6,7 +6,7 @@ import { MessageFlags } from 'discord.js';
 import { createEmbed } from '../../../utils/embeds.js';
 import { logger } from '../../../utils/logger.js';
 import { botText } from '../../../utils/botText.js';
-import { replyText } from '../../../commands/Core/modules/commandText.js';
+import { replyText } from '../../../utils/commandLocalizations.js';
 import { durationLabel } from '../../../commands/Utility/cooldown.js';
 import {
     BUTTON_PREFIX, LIMIT_PER_WINDOW, applySelfCooldown, checkLimit, refusalFor, takePrompt,

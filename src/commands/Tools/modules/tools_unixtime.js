@@ -3,7 +3,7 @@ import { createEmbed, errorEmbed, successEmbed, infoEmbed, warningEmbed } from '
 import { logger } from '../../../utils/logger.js';
 import { getColor } from '../../../config/bot.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
-import { replyText } from '../../Core/modules/commandText.js';
+import { replyText } from '../../../utils/commandLocalizations.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('unixtime')

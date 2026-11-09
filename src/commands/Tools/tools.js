@@ -8,7 +8,7 @@ import hexcolor from './modules/tools_hexcolor.js';
 import randomuser from './modules/tools_randomuser.js';
 import time from './modules/tools_time.js';
 import unixtime from './modules/tools_unixtime.js';
-import { localized, replyText } from '../Core/modules/commandText.js';
+import { localized, replyText } from '../../utils/commandLocalizations.js';
 
 // /tools <name> replaces the separate small tool commands (same options). Who may
 // use each one is set per subcommand in commandAccess.js (randomuser is admin-only).

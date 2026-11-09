@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
-import { localized, replyText } from '../Core/modules/commandText.js';
+import { localized, replyText } from '../../utils/commandLocalizations.js';
 
 import searchDefine from './modules/search_define.js';
 import searchGoogle from './modules/search_google.js';

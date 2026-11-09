@@ -38,7 +38,12 @@
             "back": "Zurück",
             "noDescription": "Keine Beschreibung",
             "allTitle": "Alle Befehle",
-            "changePage": "Mit den Buttons unten wechselst du die Seite."
+            "changePage": "Mit den Buttons unten wechselst du die Seite.",
+            "first": "Erste",
+            "previous": "Zurück",
+            "next": "Weiter",
+            "last": "Letzte",
+            "pageOf": "Seite {page} von {total}"
         }
     },
     "commands": {

@@ -5,7 +5,7 @@ import { handleInteractionError, replyUserError, ErrorTypes } from '../../../uti
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { BoundedMap } from '../../../utils/boundedMap.js';
 import { botText } from '../../../utils/botText.js';
-import { publicText, replyText } from '../../Core/modules/commandText.js';
+import { publicText, replyText } from '../../../utils/commandLocalizations.js';
 
 // B5: dictionaryapi.dev is a free service. Answers are kept in an LRU of 500 words (a day; a
 // word with no entry for an hour), and each user may cause one API call per DEFINE_COOLDOWN_MS

@@ -10,7 +10,7 @@ import { createEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { botText } from '../../utils/botText.js';
-import { localized, replyText } from '../Core/modules/commandText.js';
+import { localized, replyText } from '../../utils/commandLocalizations.js';
 import { ReminderError, reminderDelay, reminderStore } from '../../services/reminders/reminderService.js';
 
 const ts = (date, style) => `<t:${Math.floor(new Date(date).getTime() / 1000)}:${style}>`;

@@ -22,7 +22,7 @@ import {
   createDashboardCollectorFilter,
   isCommandAccessCustomId,
 } from './modules/commands_dashboard.js';
-import { localized, replyText } from './modules/commandText.js';
+import { localized, replyText } from '../../utils/commandLocalizations.js';
 
 const DASHBOARD_TIMEOUT_MS = 10 * 60 * 1000;
 

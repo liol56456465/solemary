@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from 'discord.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
-import { localized, publicText } from '../Core/modules/commandText.js';
+import { localized, publicText } from '../../utils/commandLocalizations.js';
 
 export default {
     data: new SlashCommandBuilder()

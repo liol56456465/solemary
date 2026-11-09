@@ -5,7 +5,7 @@ import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { evaluateMathExpression } from '../../../utils/safeMathParser.js';
 import { BoundedMap } from '../../../utils/boundedMap.js';
-import { localized, publicText, replyText } from '../../Core/modules/commandText.js';
+import { localized, publicText, replyText } from '../../../utils/commandLocalizations.js';
 
 // Bounded (B5): contexts wait for a modal answer (the oldest dropped first: that modal
 // then says "timed out"); history keeps each user's last few results.

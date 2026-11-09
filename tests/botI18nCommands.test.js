@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { BOT_CATALOG, LANG_CODES } from '../src/utils/botText.js';
-import { DISCORD_LOCALES, localized } from '../src/commands/Core/modules/commandText.js';
+import { DISCORD_LOCALES, localized } from '../src/utils/commandLocalizations.js';
 
 const SRC = new URL('../src/', import.meta.url);
 const FOLDERS = { core: 'Core', utility: 'Utility', tools: 'Tools', search: 'Search', fun: 'Fun' };

@@ -6,7 +6,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, SlashComman
 import { createEmbed } from '../../utils/embeds.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { botText } from '../../utils/botText.js';
-import { localized, replyText } from '../Core/modules/commandText.js';
+import { localized, replyText } from '../../utils/commandLocalizations.js';
 import {
     BUTTON_PREFIX, COOLDOWN_DURATIONS, LIMIT_PER_WINDOW, REASON_MAX, checkLimit, createPrompt, promptText, refusalFor,
 } from '../../services/members/selfCooldownService.js';

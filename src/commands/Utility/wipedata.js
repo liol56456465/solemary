@@ -5,7 +5,7 @@ import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { WIPE_ITEMS } from '../../services/wipedataService.js';
 import { botText } from '../../utils/botText.js';
-import { localized, replyText } from '../Core/modules/commandText.js';
+import { localized, replyText } from '../../utils/commandLocalizations.js';
 
 /** The catalog label of each wipe item (one literal key per WIPE_ITEMS id; legacy items are never shown). */
 const ITEM_KEYS = Object.freeze({

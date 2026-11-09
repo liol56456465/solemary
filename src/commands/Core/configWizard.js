@@ -26,7 +26,7 @@ import { hasOwnerPower } from '../../utils/ownerPower.js';
 import { hasAdministrator } from '../../utils/commandGate.js';
 import { randomBytes } from 'node:crypto';
 import { botText } from '../../utils/botText.js';
-import { localized, replyText } from './modules/commandText.js';
+import { localized, replyText } from '../../utils/commandLocalizations.js';
 
 const DASHBOARD_CUSTOM_ID = 'config_select';
 const WIZARD_BUTTON_ID = 'config_wizard';
