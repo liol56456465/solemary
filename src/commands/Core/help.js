@@ -13,6 +13,8 @@ import { categoryLabel } from '../../config/commands/commandCategories.js';
 import { usesHomeValues } from '../../services/settings/guildScoped.js';
 import { isModmailSetUp } from '../../services/modmailService.js';
 import { getGuildConfig } from '../../services/config/guildConfig.js';
+import { panelAccessFor } from '../../services/enforcement/panelAccess.js';
+import { isMewvoServer } from '../../utils/ownerPower.js';
 import { createEmbed } from "../../utils/embeds.js";
 import { botText } from '../../utils/botText.js';
 import { localized, replyText } from '../../utils/commandLocalizations.js';
@@ -51,18 +53,44 @@ export async function helpMenuOptions(client, guildId, config = null, { getConfi
     return { home, modmail };
 }
 
+/** Commands a Moderator-role member may run outside Mewvo's own servers (owner decision D1). */
+export const MODERATOR_HELP_COMMANDS = Object.freeze(['enforcements']);
+
+/**
+ * What this viewer sees in /help: true (admins: everything), a Set of extra command names (the
+ * Moderator role outside Mewvo's own servers: /enforcements, panelAccess.js), or false (members:
+ * the everyone commands). The role read is panelAccessFor's (budgeted, fails closed → false).
+ * `deps` (tests): canSeeAdmin, access, isHome.
+ */
+export async function helpViewFor(interaction, client, deps = {}) {
+    const canSeeAdmin = deps.canSeeAdmin || canSeeAdminCommands;
+    if (canSeeAdmin(interaction)) return true;
+    const guildId = interaction?.guildId;
+    const isHome = deps.isHome || isMewvoServer;
+    if (!guildId || !interaction.member || isHome(String(guildId))) return false;
+    try {
+        const access = await (deps.access || panelAccessFor)(interaction.member, guildId, { client });
+        return access?.level === 'moderator' ? new Set(MODERATOR_HELP_COMMANDS) : false;
+    } catch {
+        return false;
+    }
+}
+
 /**
  * The help start page. `tr`: the viewer's text functions (ephemeral menu: their Discord language).
  * `options` from helpMenuOptions (default: home by the guild id, no modmail line).
  */
-export async function createInitialHelpMenu(client, guildId = null, showAdmin = true, tr = botText('en'), menuOptions = {}) {
+export async function createInitialHelpMenu(client, guildId = null, view = true, tr = botText('en'), menuOptions = {}) {
     const { home = usesHomeValues(guildId), modmail = false } = menuOptions;
+    // view: helpViewFor's answer (true = admin, a Set = the Moderator role's extra commands).
+    const showAdmin = view === true;
+    const extra = view instanceof Set ? view : null;
     const commandsPath = path.join(__dirname, "../../commands");
     // Only list categories with at least one command this viewer can use in this server.
     const availableCategories = new Set(
         [...(client?.commands?.values?.() ?? [])]
             .filter((command) => isCommandAvailableInGuild(command, guildId))
-            .filter((command) => showAdmin || hasEveryoneAccess(command.data?.name))
+            .filter((command) => showAdmin || hasEveryoneAccess(command.data?.name) || Boolean(extra?.has(command.data?.name)))
             .map((command) => command.category)
     );
     const categoryDirs = (
@@ -107,6 +135,7 @@ export async function createInitialHelpMenu(client, guildId = null, showAdmin = 
                 name: tr.t('core.help.menu.access'),
                 value: [
                     showAdmin ? tr.t('core.help.menu.accessAdmin') : tr.t('core.help.menu.accessMember'),
+                    ...(extra ? [tr.t('core.help.menu.accessModerator')] : []),
                     ...(showAdmin ? [tr.t('core.help.menu.accessSetup')] : []),
                     ...(showAdmin ? [tr.t('core.help.menu.accessAppeals')] : []),
                 ].join('\n'),
@@ -158,7 +187,7 @@ export default {
 
         const tr = replyText(interaction);
         const options = await helpMenuOptions(client, interaction.guildId, guildConfig);
-        const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId, canSeeAdminCommands(interaction), tr, options);
+        const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId, await helpViewFor(interaction, client), tr, options);
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds,

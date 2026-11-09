@@ -1,12 +1,28 @@
 {
     "lock": {
         "cmd": {
-            "description": "Verrouille le salon actuel (@everyone ne peut plus envoyer de messages)."
+            "description": "Verrouille le salon actuel (@everyone ne peut plus envoyer de messages).",
+            "duration": "Déverrouiller automatiquement après ce délai, ex. 30m, 2h, 1d (30 jours max.)"
         },
         "already": "{channel} est déjà verrouillé.",
         "title": "Salon verrouillé",
         "done": "{channel} est verrouillé. Les membres ne peuvent plus écrire ici tant qu'il n'est pas déverrouillé.",
-        "failed": "Une erreur inattendue s'est produite en verrouillant le salon. Vérifie mes permissions (il me faut « Gérer les salons »)."
+        "failed": "Une erreur inattendue s'est produite en verrouillant le salon. Vérifie mes permissions (il me faut « Gérer les salons »).",
+        "badDuration": "Cette durée n'est pas valide. Utilise par exemple 30m, 2h ou 1d (de 1 minute à 30 jours). Rien n'a été modifié.",
+        "doneUntil": "{channel} est verrouillé jusqu'au {time} ({relative}). D'ici là, les membres ne peuvent pas écrire ici.",
+        "dbDown": "La base de données ne répond pas, le salon n'a donc pas été verrouillé. Rien n'a été modifié.",
+        "partial": "Discord a refusé une partie du verrouillage, je l'ai donc annulé. Vérifie mes permissions ici (il me faut « Gérer les salons » et « Gérer les permissions »).",
+        "botMissing": "Il me manque {perms} dans {channel}, je ne peux donc pas le verrouiller. Rien n'a été modifié.",
+        "rolesLocked": {
+            "one": "Verrouillé aussi pour {count} rôle qui avait sa propre permission « Envoyer des messages » ici : {roles}. /unlock la lui rend.",
+            "many": "Verrouillé aussi pour {count} rôles qui avaient leur propre permission « Envoyer des messages » ici : {roles}. /unlock la leur rend.",
+            "other": "Verrouillé aussi pour {count} rôles qui avaient leur propre permission « Envoyer des messages » ici : {roles}. /unlock la leur rend."
+        },
+        "rolesKept": {
+            "one": "Pas verrouillé pour {count} rôle du staff (il garde sa propre permission « Envoyer des messages » ici) : {roles}.",
+            "many": "Pas verrouillé pour {count} rôles du staff (ils gardent leur propre permission « Envoyer des messages » ici) : {roles}.",
+            "other": "Pas verrouillé pour {count} rôles du staff (ils gardent leur propre permission « Envoyer des messages » ici) : {roles}."
+        }
     },
     "unlock": {
         "cmd": {
@@ -15,7 +31,18 @@
         "notLocked": "{channel} n'est pas explicitement verrouillé (tout le monde peut déjà écrire).",
         "title": "Salon déverrouillé",
         "done": "{channel} est déverrouillé. Les membres peuvent de nouveau écrire ici.",
-        "failed": "Une erreur inattendue s'est produite en déverrouillant le salon. Vérifie mes permissions (il me faut « Gérer les salons »)."
+        "failed": "Une erreur inattendue s'est produite en déverrouillant le salon. Vérifie mes permissions (il me faut « Gérer les salons »).",
+        "notOverwrite": "{channel} n'est pas verrouillé par ses propres permissions : « Envoyer des messages » est refusé par sa catégorie ou le rôle @everyone, le déverrouiller ici ne changerait rien.",
+        "dbDown": "La base de données ne répond pas, le salon n'a donc pas été déverrouillé. Rien n'a été modifié.",
+        "botMissing": "Il me manque {perms} dans {channel}, je ne peux donc pas le déverrouiller. Rien n'a été modifié.",
+        "autoDone": "{channel} a été déverrouillé automatiquement : la durée du verrouillage est écoulée.",
+        "autoReason": "Durée du verrouillage écoulée (déverrouillage automatique)",
+        "skipped": {
+            "one": "{count} permission a été modifiée par quelqu'un depuis le verrouillage, je l'ai donc laissée telle quelle.",
+            "many": "{count} permissions ont été modifiées par quelqu'un depuis le verrouillage, je les ai donc laissées telles quelles.",
+            "other": "{count} permissions ont été modifiées par quelqu'un depuis le verrouillage, je les ai donc laissées telles quelles."
+        },
+        "partial": "Discord a refusé une partie du déverrouillage ({done} permissions sur {total} rétablies), {channel} peut donc encore être en partie verrouillé. Vérifie mes permissions ici (il me faut « Gérer les salons » et « Gérer les permissions »), puis relance /unlock."
     },
     "purge": {
         "cmd": {
@@ -29,7 +56,42 @@
             "many": "{count} messages supprimés dans {channel}.",
             "other": "{count} messages supprimés dans {channel}."
         },
-        "failed": "Une erreur inattendue s'est produite pendant la suppression. Remarque : les messages de plus de 14 jours ne peuvent pas être supprimés en masse."
+        "failed": "Une erreur inattendue s'est produite pendant la suppression. Remarque : les messages de plus de 14 jours ne peuvent pas être supprimés en masse.",
+        "botMissing": "Il me manque {perms} dans {channel}, je ne peux donc pas y supprimer de messages. Rien n'a été supprimé.",
+        "empty": "Il n'y a aucun message à supprimer dans {channel}.",
+        "allTooOld": {
+            "one": "{count} message date de plus de 14 jours. Discord ne peut pas supprimer en masse les messages de plus de 14 jours, donc rien n'a été supprimé.",
+            "many": "Les {count} messages datent tous de plus de 14 jours. Discord ne peut pas supprimer en masse les messages de plus de 14 jours, donc rien n'a été supprimé.",
+            "other": "Les {count} messages datent tous de plus de 14 jours. Discord ne peut pas supprimer en masse les messages de plus de 14 jours, donc rien n'a été supprimé."
+        },
+        "previewTitle": "Supprimer les messages ?",
+        "preview": {
+            "one": "Supprimer {count} message des 14 derniers jours dans {channel} ?",
+            "many": "Supprimer {count} messages des 14 derniers jours dans {channel} ?",
+            "other": "Supprimer {count} messages des 14 derniers jours dans {channel} ?"
+        },
+        "previewOld": {
+            "one": "{count} message date de plus de 14 jours et sera ignoré.",
+            "many": "{count} messages datent de plus de 14 jours et seront ignorés.",
+            "other": "{count} messages datent de plus de 14 jours et seront ignorés."
+        },
+        "previewNote": "Discord ne peut pas supprimer en masse les messages de plus de 14 jours.",
+        "previewExpires": "Cet aperçu expire {time}. Rien n'est supprimé tant que tu n'as pas appuyé sur Supprimer.",
+        "confirmButton": "Supprimer",
+        "cancelButton": "Annuler",
+        "cancelled": "Annulé. Rien n'a été supprimé.",
+        "expired": "Cet aperçu a expiré. Relance /purge. Rien n'a été supprimé.",
+        "notYours": "Seul le modérateur qui a lancé /purge peut utiliser ces boutons.",
+        "skippedOld": {
+            "one": "{count} ignoré : plus de 14 jours (Discord ne peut pas les supprimer en masse).",
+            "many": "{count} ignorés : plus de 14 jours (Discord ne peut pas les supprimer en masse).",
+            "other": "{count} ignorés : plus de 14 jours (Discord ne peut pas les supprimer en masse)."
+        },
+        "skippedGone": {
+            "one": "{count} ignoré : déjà supprimé.",
+            "many": "{count} ignorés : déjà supprimés.",
+            "other": "{count} ignorés : déjà supprimés."
+        }
     },
     "rules": {
         "cmd": {

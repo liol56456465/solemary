@@ -180,7 +180,8 @@
         "closedBody": "To zgłoszenie jest zamknięte.",
         "priorityChanged": "Priorytet zmieniony",
         "reopenedTitle": "Zgłoszenie otwarte ponownie",
-        "deletedTitle": "Zgłoszenie usunięte"
+        "deletedTitle": "Zgłoszenie usunięte",
+        "ratingCountsForYou": "Nikt nie przejął tego zgłoszenia, więc ocena członka zostanie zaliczona tobie."
     },
     "service": {
         "notTicket": "To nie jest kanał zgłoszenia.",

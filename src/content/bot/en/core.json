@@ -19,7 +19,8 @@
             "supportButton": "Support Server",
             "placeholder": "Pick a category",
             "memberModmail": "Need staff? DM the bot: your message goes to the team privately (modmail).",
-            "descriptionNeutral": "Moderation, automod, appeals, tickets and more for this server."
+            "descriptionNeutral": "Moderation, automod, appeals, tickets and more for this server.",
+            "accessModerator": "• You have this server's Moderator role: **/enforcements** lets you warn, mute, kick, unmute and remove warns."
         },
         "closed": {
             "title": "Help menu closed",

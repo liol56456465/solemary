@@ -18,6 +18,7 @@ import { diffSnapshots, recordDashboardChange, changeSummary } from '../src/serv
 import { channelPurposeFor } from '../src/services/automod/channelRouting.js';
 import { JS_PATH, NAV, moduleItems } from '../src/services/dashboard/html.js';
 import { lockChannel, purgeChannelMessages, unlockChannel } from '../src/services/channelToolsService.js';
+import { createMemoryLockStore } from '../src/services/moderation/channelLock.js';
 import { resolveLogChannel } from '../src/services/loggingService.js';
 import { storeWelcomeImage } from '../src/utils/welcomeImageStore.js';
 import { BacktestError } from '../src/services/automod/backtest.js';
@@ -124,6 +125,7 @@ function makeServices() {
     const s = {
         registry: {},
         logEvents: [],
+        lockStore: createMemoryLockStore(),
         automod: { enabled: true, mode: 'enforce', ruleModes: {}, channelRules: {}, exemptChannelIds: [TEXT2], trusted: { roleId: null, minLevel: 0 }, secondChance: true, moodAlerts: true, panic: { enabled: true, hours: 2 }, joinGate: {} },
         native: new Map(),
         lockdown: null,
@@ -399,8 +401,9 @@ function makeServices() {
         postModLog: async (client, kind, fields, options) => { record('postModLog', [kind, options]); },
         // Channel tools: the real service on the fake guild, its log event recorded instead of sent.
         purgeChannelMessages: async (args) => { record('purgeChannelMessages', [args.channel.id, args.amount, args.fromUserId]); return purgeChannelMessages({ ...args, log: async (e) => s.logEvents.push(e) }); },
-        lockChannel: async (args) => { record('lockChannel', [args.channel.id]); return lockChannel({ ...args, log: async (e) => s.logEvents.push(e) }); },
-        unlockChannel: async (args) => { record('unlockChannel', [args.channel.id]); return unlockChannel({ ...args, log: async (e) => s.logEvents.push(e) }); },
+        // Lock records in memory (the real store is Postgres temp_data).
+        lockChannel: async (args) => { record('lockChannel', [args.channel.id]); return lockChannel({ ...args, lockStore: s.lockStore, log: async (e) => s.logEvents.push(e) }); },
+        unlockChannel: async (args) => { record('unlockChannel', [args.channel.id]); return unlockChannel({ ...args, lockStore: s.lockStore, log: async (e) => s.logEvents.push(e) }); },
         // Posting panels and creating things in Discord (Part 1 of the "everything from the web" work).
         setupTicketSystem: async (c, guild, opts) => {
             record('setupTicketSystem', [opts.panelChannel?.id]);

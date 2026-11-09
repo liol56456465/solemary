@@ -1,12 +1,28 @@
 {
     "lock": {
         "cmd": {
-            "description": "Bloquea el canal actual (@everyone no puede enviar mensajes)."
+            "description": "Bloquea el canal actual (@everyone no puede enviar mensajes).",
+            "duration": "Desbloquear automáticamente tras este tiempo, p. ej. 30m, 2h, 1d (hasta 30 días)"
         },
         "already": "{channel} ya está bloqueado.",
         "title": "Canal bloqueado",
         "done": "{channel} está bloqueado. Los miembros no pueden escribir aquí hasta que se desbloquee.",
-        "failed": "Ocurrió un error inesperado al bloquear el canal. Revisa mis permisos (necesito «Gestionar canales»)."
+        "failed": "Ocurrió un error inesperado al bloquear el canal. Revisa mis permisos (necesito «Gestionar canales»).",
+        "badDuration": "Esa duración no es válida. Usa por ejemplo 30m, 2h o 1d (de 1 minuto a 30 días). No se cambió nada.",
+        "doneUntil": "{channel} está bloqueado hasta {time} ({relative}). Hasta entonces, los miembros no pueden escribir aquí.",
+        "dbDown": "La base de datos no responde, así que el canal no se bloqueó. No se cambió nada.",
+        "partial": "Discord rechazó parte del bloqueo, así que lo deshice. Revisa mis permisos aquí (necesito «Gestionar canales» y «Gestionar permisos»).",
+        "botMissing": "Me falta {perms} en {channel}, así que no puedo bloquearlo. No se cambió nada.",
+        "rolesLocked": {
+            "one": "También bloqueado para {count} rol que tenía su propio permiso «Enviar mensajes» aquí: {roles}. /unlock se lo devuelve.",
+            "many": "También bloqueado para {count} roles que tenían su propio permiso «Enviar mensajes» aquí: {roles}. /unlock se lo devuelve.",
+            "other": "También bloqueado para {count} roles que tenían su propio permiso «Enviar mensajes» aquí: {roles}. /unlock se lo devuelve."
+        },
+        "rolesKept": {
+            "one": "No bloqueado para {count} rol del staff (conserva aquí su propio permiso «Enviar mensajes»): {roles}.",
+            "many": "No bloqueado para {count} roles del staff (conservan aquí su propio permiso «Enviar mensajes»): {roles}.",
+            "other": "No bloqueado para {count} roles del staff (conservan aquí su propio permiso «Enviar mensajes»): {roles}."
+        }
     },
     "unlock": {
         "cmd": {
@@ -15,7 +31,18 @@
         "notLocked": "{channel} no está bloqueado explícitamente (todos ya pueden escribir).",
         "title": "Canal desbloqueado",
         "done": "{channel} está desbloqueado. Los miembros pueden volver a escribir aquí.",
-        "failed": "Ocurrió un error inesperado al desbloquear el canal. Revisa mis permisos (necesito «Gestionar canales»)."
+        "failed": "Ocurrió un error inesperado al desbloquear el canal. Revisa mis permisos (necesito «Gestionar canales»).",
+        "notOverwrite": "{channel} no está bloqueado por sus propios permisos: «Enviar mensajes» lo deniega su categoría o el rol @everyone, así que desbloquearlo aquí no cambiaría nada.",
+        "dbDown": "La base de datos no responde, así que el canal no se desbloqueó. No se cambió nada.",
+        "botMissing": "Me falta {perms} en {channel}, así que no puedo desbloquearlo. No se cambió nada.",
+        "autoDone": "{channel} se desbloqueó automáticamente: terminó el tiempo de bloqueo.",
+        "autoReason": "Terminó el tiempo de bloqueo (desbloqueo automático)",
+        "skipped": {
+            "one": "Alguien cambió {count} permiso desde el bloqueo, así que lo dejé como estaba.",
+            "many": "Alguien cambió {count} permisos desde el bloqueo, así que los dejé como estaban.",
+            "other": "Alguien cambió {count} permisos desde el bloqueo, así que los dejé como estaban."
+        },
+        "partial": "Discord rechazó parte del desbloqueo ({done} de {total} permisos restaurados), así que {channel} puede seguir bloqueado en parte. Revisa mis permisos aquí (necesito «Gestionar canales» y «Gestionar permisos») y vuelve a usar /unlock."
     },
     "purge": {
         "cmd": {
@@ -29,7 +56,42 @@
             "many": "Se borraron {count} mensajes en {channel}.",
             "other": "Se borraron {count} mensajes en {channel}."
         },
-        "failed": "Ocurrió un error inesperado al borrar los mensajes. Nota: los mensajes con más de 14 días no se pueden borrar en bloque."
+        "failed": "Ocurrió un error inesperado al borrar los mensajes. Nota: los mensajes con más de 14 días no se pueden borrar en bloque.",
+        "botMissing": "Me falta {perms} en {channel}, así que no puedo borrar mensajes ahí. No se borró nada.",
+        "empty": "No hay mensajes para borrar en {channel}.",
+        "allTooOld": {
+            "one": "{count} mensaje tiene más de 14 días. Discord no puede borrar en bloque mensajes de más de 14 días, así que no se borró nada.",
+            "many": "Los {count} mensajes tienen más de 14 días. Discord no puede borrar en bloque mensajes de más de 14 días, así que no se borró nada.",
+            "other": "Los {count} mensajes tienen más de 14 días. Discord no puede borrar en bloque mensajes de más de 14 días, así que no se borró nada."
+        },
+        "previewTitle": "¿Borrar mensajes?",
+        "preview": {
+            "one": "¿Borrar {count} mensaje de los últimos 14 días en {channel}?",
+            "many": "¿Borrar {count} mensajes de los últimos 14 días en {channel}?",
+            "other": "¿Borrar {count} mensajes de los últimos 14 días en {channel}?"
+        },
+        "previewOld": {
+            "one": "{count} mensaje tiene más de 14 días y se omitirá.",
+            "many": "{count} mensajes tienen más de 14 días y se omitirán.",
+            "other": "{count} mensajes tienen más de 14 días y se omitirán."
+        },
+        "previewNote": "Discord no puede borrar en bloque mensajes de más de 14 días.",
+        "previewExpires": "Esta vista previa caduca {time}. No se borra nada hasta que pulses Borrar.",
+        "confirmButton": "Borrar",
+        "cancelButton": "Cancelar",
+        "cancelled": "Cancelado. No se borró nada.",
+        "expired": "Esta vista previa caducó. Vuelve a usar /purge. No se borró nada.",
+        "notYours": "Solo el moderador que usó /purge puede usar estos botones.",
+        "skippedOld": {
+            "one": "Se omitió {count}: más de 14 días (Discord no puede borrarlos en bloque).",
+            "many": "Se omitieron {count}: más de 14 días (Discord no puede borrarlos en bloque).",
+            "other": "Se omitieron {count}: más de 14 días (Discord no puede borrarlos en bloque)."
+        },
+        "skippedGone": {
+            "one": "Se omitió {count}: ya estaba borrado.",
+            "many": "Se omitieron {count}: ya estaban borrados.",
+            "other": "Se omitieron {count}: ya estaban borrados."
+        }
     },
     "rules": {
         "cmd": {

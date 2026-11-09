@@ -240,8 +240,7 @@
             "done": "Fatto.",
             "nextWarn": "**Prossimo avvertimento:** avvertimento {n} di {max}, ancora nessun ban.",
             "nextWarnBans": "**Prossimo avvertimento:** ban automatico di {length}.",
-            "nextWarnBansPermanent": "**Prossimo avvertimento:** ban automatico permanente.",
-            "recordedOnly": "Solo registrato: questo avvertimento non conta per un ban automatico in questo server (impostazioni della scala degli avvertimenti)."
+            "nextWarnBansPermanent": "**Prossimo avvertimento:** ban automatico permanente."
         },
         "step": {
             "reason": "Passo 1: scegli un motivo.",
@@ -1116,7 +1115,8 @@
         },
         "dmFailed": "Impossibile mandare un DM al membro (ha lasciato il server o ha chiuso i DM).",
         "transcript": "Modmail con <@{userId}> (`{userId}`) chiuso da {closer}.",
-        "transcriptReason": "Motivo: {reason}"
+        "transcriptReason": "Motivo: {reason}",
+        "reminder": "I messaggi qui vanno al membro. Inizia con `//` per una nota solo per lo staff."
     },
     "enfCheck": {
         "perm": {
@@ -1166,7 +1166,14 @@
             "unbanDmFailed": "Il DM «ban terminato» non è stato consegnato.",
             "unmuteNoRole": "L'utente non era nel server o non aveva più il ruolo; il caso è stato comunque revocato.",
             "unmuteDmFailed": "Il DM «silenziamento terminato» non è stato consegnato.",
-            "removed": "`{code}` rimosso. Avvertimenti contati: {count}."
+            "removed": "`{code}` rimosso. Avvertimenti contati: {count}.",
+            "muteAdmin": "{name} ha il permesso Amministratore, quindi il ruolo Muted non può impedirgli di scrivere.",
+            "muteLeak": {
+                "one": "{name} può ancora scrivere in {count} canale: {channels}. Uno dei suoi ruoli (o un suo permesso personale nel canale) può inviare lì, e un'autorizzazione vince sul divieto del ruolo Muted. Togli quell'autorizzazione nei permessi del canale.",
+                "many": "{name} può ancora scrivere in {count} canali: {channels}. Uno dei suoi ruoli (o un suo permesso personale nel canale) può inviare lì, e un'autorizzazione vince sul divieto del ruolo Muted. Togli quell'autorizzazione nei permessi del canale.",
+                "other": "{name} può ancora scrivere in {count} canali: {channels}. Uno dei suoi ruoli (o un suo permesso personale nel canale) può inviare lì, e un'autorizzazione vince sul divieto del ruolo Muted. Togli quell'autorizzazione nei permessi del canale."
+            },
+            "warnUncounted": "Solo registrato: questo avvertimento non conta per un ban automatico in questo server (impostazioni della scala degli avvertimenti)."
         }
     }
 }

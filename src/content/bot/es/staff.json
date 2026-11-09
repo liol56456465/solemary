@@ -240,8 +240,7 @@
             "done": "Hecho.",
             "nextWarn": "**Próxima advertencia:** advertencia {n} de {max}, aún sin baneo.",
             "nextWarnBans": "**Próxima advertencia:** baneo automático por {length}.",
-            "nextWarnBansPermanent": "**Próxima advertencia:** baneo automático permanente.",
-            "recordedOnly": "Solo registrada: esta advertencia no cuenta para un baneo automático en este servidor (ajustes de la escalera de advertencias)."
+            "nextWarnBansPermanent": "**Próxima advertencia:** baneo automático permanente."
         },
         "step": {
             "reason": "Paso 1: elige un motivo.",
@@ -1116,7 +1115,8 @@
         },
         "dmFailed": "No se pudo enviar el MD al miembro (salió del servidor o cerró sus MD).",
         "transcript": "Modmail con <@{userId}> (`{userId}`) cerrado por {closer}.",
-        "transcriptReason": "Motivo: {reason}"
+        "transcriptReason": "Motivo: {reason}",
+        "reminder": "Los mensajes de aquí le llegan al miembro. Empieza con `//` para una nota solo para el staff."
     },
     "enfCheck": {
         "perm": {
@@ -1166,7 +1166,14 @@
             "unbanDmFailed": "No se pudo entregar el MD de «baneo terminado».",
             "unmuteNoRole": "El usuario no estaba en el servidor o ya no tenía el rol; el caso se levantó igualmente.",
             "unmuteDmFailed": "No se pudo entregar el MD de «silencio terminado».",
-            "removed": "`{code}` quitada. Advertencias contadas: {count}."
+            "removed": "`{code}` quitada. Advertencias contadas: {count}.",
+            "muteAdmin": "{name} tiene el permiso Administrador, así que el rol Muted no puede impedir que hable.",
+            "muteLeak": {
+                "one": "{name} todavía puede hablar en {count} canal: {channels}. Uno de sus roles (o su propio permiso en el canal) puede enviar mensajes ahí, y un permiso concedido gana a la denegación del rol Muted. Quita ese permiso en los permisos del canal.",
+                "many": "{name} todavía puede hablar en {count} canales: {channels}. Uno de sus roles (o su propio permiso en el canal) puede enviar mensajes ahí, y un permiso concedido gana a la denegación del rol Muted. Quita ese permiso en los permisos del canal.",
+                "other": "{name} todavía puede hablar en {count} canales: {channels}. Uno de sus roles (o su propio permiso en el canal) puede enviar mensajes ahí, y un permiso concedido gana a la denegación del rol Muted. Quita ese permiso en los permisos del canal."
+            },
+            "warnUncounted": "Solo registrado: esta advertencia no cuenta para un baneo automático en este servidor (ajustes de la escala de advertencias)."
         }
     }
 }

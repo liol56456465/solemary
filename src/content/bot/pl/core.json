@@ -19,7 +19,8 @@
             "supportButton": "Serwer wsparcia",
             "placeholder": "Wybierz kategorię",
             "memberModmail": "Potrzebujesz ekipy? Napisz do bota w DM: wiadomość trafi prywatnie do ekipy (modmail).",
-            "descriptionNeutral": "Moderacja, automod, odwołania, tickety i więcej dla tego serwera."
+            "descriptionNeutral": "Moderacja, automod, odwołania, tickety i więcej dla tego serwera.",
+            "accessModerator": "• Masz rolę moderatora tego serwera: **/enforcements** pozwala ostrzegać, wyciszać, wyrzucać, zdejmować wyciszenie i usuwać ostrzeżenia."
         },
         "closed": {
             "title": "Menu pomocy zamknięte",

@@ -1,16 +1,18 @@
 // channelToolsService.js — purge, lock and unlock a channel, for the dashboard's Channel tools
 // page. Same behaviour as /purge, /lock and /unlock (src/commands/Moderation/): bulk delete up
-// to 100 recent messages (Discord skips messages older than 14 days), lock = deny SendMessages
-// for @everyone on the channel, unlock = clear that deny (the channel inherits again).
+// to 100 recent messages (Discord skips messages older than 14 days); lock and unlock live in
+// services/moderation/channelLock.js (@everyone + roles with their own allow, restored exactly).
 // Same log events as the commands (utils/moderation.js logEvent → loggingService).
 // Fix permissions (the dashboard's /fix-permissions page): Mewvo gives itself the posting bits a
 // feature needs in one channel, only bits its own role has; otherwise the owner gets the Discord steps.
 //
-// Refusals throw an Error with `type` ('permission' / 'validation') and `userMessage`.
-// `log` can be replaced in tests.
+// Refusals throw an Error with `type` ('permission' / 'validation') and `userMessage`
+// (lock/unlock refusals also carry a `code`, translated by /lock and /unlock).
+// `log` and `lockStore` can be replaced in tests.
 
 import { OverwriteType, PermissionFlagsBits } from 'discord.js';
 import { logEvent } from '../utils/moderation.js';
+import { lockChannelWithState, unlockChannelWithState } from './moderation/channelLock.js';
 
 export const PURGE_MIN = 1;
 export const PURGE_MAX = 100;
@@ -43,12 +45,9 @@ export function missingBotPerms(guild, channel, perms) {
 function requireBotPerms(guild, channel, perms, doing) {
     const missing = missingBotPerms(guild, channel, perms);
     if (missing.length) {
-        throw refuse(`Mewvo is missing ${missing.join(', ')} in #${channel.name}, so it cannot ${doing} there. Nothing was changed.`, 'permission');
+        throw Object.assign(refuse(`Mewvo is missing ${missing.join(', ')} in #${channel.name}, so it cannot ${doing} there. Nothing was changed.`, 'permission'),
+            { code: 'botMissing', params: { perms: missing.join(', ') } });
     }
-}
-
-function everyoneOf(guild) {
-    return guild.roles?.everyone || guild.roles?.cache?.get(guild.id) || guild.id;
 }
 
 /** True when the channel's own @everyone overwrite denies Send Messages (what /lock sets). */
@@ -62,11 +61,6 @@ export function lockedChannels(guild, types) {
     return [...(guild?.channels?.cache?.values?.() || [])]
         .filter((c) => types.includes(c.type) && isLockedByOverwrite(guild, c))
         .sort((a, b) => String(a.name).localeCompare(String(b.name)));
-}
-
-function everyoneCanSend(guild, channel) {
-    const perms = channel.permissionsFor?.(everyoneOf(guild));
-    return perms ? perms.has(PermissionFlagsBits.SendMessages) !== false : true;
 }
 
 /**
@@ -104,11 +98,14 @@ export async function purgeChannelMessages({ client, guild, channel, amount, fro
     return { deleted, requested: amount, matched: messages.length, skippedOld };
 }
 
-/** Denies Send Messages for @everyone in `channel` (like /lock). `auditReason` goes to Discord's audit log. */
-export async function lockChannel({ client, guild, channel, moderator, auditReason, log = logEvent }) {
+/**
+ * Locks `channel` like /lock (services/moderation/channelLock.js): @everyone and roles with their
+ * own Send Messages allow (staff roles keep theirs), stored first so unlock restores exactly that.
+ * `auditReason` goes to Discord's audit log; `durationMs` unlocks it automatically later.
+ */
+export async function lockChannel({ client, guild, channel, moderator, auditReason, durationMs = null, lockStore = undefined, log = logEvent, via = 'dashboard' }) {
     requireBotPerms(guild, channel, TOOL_PERMS.lock, 'lock the channel');
-    if (!everyoneCanSend(guild, channel)) throw refuse(`#${channel.name} is already locked.`);
-    await channel.permissionOverwrites.edit(everyoneOf(guild), { SendMessages: false }, { type: 0, reason: auditReason });
+    const result = await lockChannelWithState({ guild, channel, moderatorId: moderator.id, durationMs, auditReason, ...(lockStore ? { store: lockStore } : {}) });
     await log({
         client,
         guild,
@@ -116,21 +113,23 @@ export async function lockChannel({ client, guild, channel, moderator, auditReas
             action: 'Channel Locked',
             target: channel.toString(),
             executor: `${moderator.tag} (${moderator.id})`,
-            metadata: { channelId: channel.id, category: channel.parent?.name || 'None', moderatorId: moderator.id, via: 'dashboard' },
+            metadata: {
+                channelId: channel.id, category: channel.parent?.name || 'None', moderatorId: moderator.id, via,
+                ...(result.changed.length ? { rolesLocked: result.changed.length } : {}),
+                ...(result.unlockAt ? { unlocksAt: result.unlockAt } : {}),
+            },
         },
     });
-    return { locked: true };
+    return { locked: true, ...result };
 }
 
-/** Clears the @everyone Send Messages deny (like /unlock): the channel inherits from its category again. */
-export async function unlockChannel({ client, guild, channel, moderator, auditReason, log = logEvent }) {
+/**
+ * Unlocks like /unlock: puts back exactly what the lock changed (its stored record), else clears
+ * the @everyone Send Messages deny (the channel inherits from its category again).
+ */
+export async function unlockChannel({ client, guild, channel, moderator, auditReason, lockStore = undefined, log = logEvent, via = 'dashboard' }) {
     requireBotPerms(guild, channel, TOOL_PERMS.lock, 'unlock the channel');
-    if (!isLockedByOverwrite(guild, channel)) {
-        throw refuse(everyoneCanSend(guild, channel)
-            ? `#${channel.name} is not locked (everyone can already send messages).`
-            : `#${channel.name} is not locked by a channel overwrite: Send Messages is denied by its category or the @everyone role, so unlocking here would change nothing.`);
-    }
-    await channel.permissionOverwrites.edit(everyoneOf(guild), { SendMessages: null }, { type: 0, reason: auditReason });
+    const result = await unlockChannelWithState({ guild, channel, auditReason, ...(lockStore ? { store: lockStore } : {}) });
     await log({
         client,
         guild,
@@ -138,10 +137,10 @@ export async function unlockChannel({ client, guild, channel, moderator, auditRe
             action: 'Channel Unlocked',
             target: channel.toString(),
             executor: `${moderator.tag} (${moderator.id})`,
-            metadata: { channelId: channel.id, category: channel.parent?.name || 'None', moderatorId: moderator.id, via: 'dashboard' },
+            metadata: { channelId: channel.id, category: channel.parent?.name || 'None', moderatorId: moderator.id, via },
         },
     });
-    return { locked: false };
+    return { locked: false, ...result };
 }
 
 // ── Fix permissions: Mewvo gives itself what a feature needs in one channel ──

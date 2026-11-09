@@ -1,12 +1,28 @@
 {
     "lock": {
         "cmd": {
-            "description": "Blocca il canale attuale (@everyone non può più inviare messaggi)."
+            "description": "Blocca il canale attuale (@everyone non può più inviare messaggi).",
+            "duration": "Sblocca automaticamente dopo questo tempo, es. 30m, 2h, 1d (fino a 30 giorni)"
         },
         "already": "{channel} è già bloccato.",
         "title": "Canale bloccato",
         "done": "{channel} è bloccato. I membri non possono scrivere qui finché non viene sbloccato.",
-        "failed": "Si è verificato un errore imprevisto durante il blocco del canale. Controlla i miei permessi (mi serve «Gestire i canali»)."
+        "failed": "Si è verificato un errore imprevisto durante il blocco del canale. Controlla i miei permessi (mi serve «Gestire i canali»).",
+        "badDuration": "Questa durata non è valida. Usa per esempio 30m, 2h o 1d (da 1 minuto a 30 giorni). Non è stato cambiato nulla.",
+        "doneUntil": "{channel} è bloccato fino a {time} ({relative}). Fino ad allora i membri non possono scrivere qui.",
+        "dbDown": "Il database non risponde, quindi il canale non è stato bloccato. Non è stato cambiato nulla.",
+        "partial": "Discord ha rifiutato una parte del blocco, quindi l'ho annullato. Controlla i miei permessi qui (mi servono «Gestire i canali» e «Gestire i permessi»).",
+        "botMissing": "Mi manca {perms} in {channel}, quindi non posso bloccarlo. Non è stato cambiato nulla.",
+        "rolesLocked": {
+            "one": "Bloccato anche per {count} ruolo che aveva un proprio permesso «Inviare messaggi» qui: {roles}. /unlock lo ripristina.",
+            "many": "Bloccato anche per {count} ruoli che avevano un proprio permesso «Inviare messaggi» qui: {roles}. /unlock lo ripristina.",
+            "other": "Bloccato anche per {count} ruoli che avevano un proprio permesso «Inviare messaggi» qui: {roles}. /unlock lo ripristina."
+        },
+        "rolesKept": {
+            "one": "Non bloccato per {count} ruolo dello staff (mantiene qui il proprio permesso «Inviare messaggi»): {roles}.",
+            "many": "Non bloccato per {count} ruoli dello staff (mantengono qui il proprio permesso «Inviare messaggi»): {roles}.",
+            "other": "Non bloccato per {count} ruoli dello staff (mantengono qui il proprio permesso «Inviare messaggi»): {roles}."
+        }
     },
     "unlock": {
         "cmd": {
@@ -15,7 +31,18 @@
         "notLocked": "{channel} non è bloccato esplicitamente (tutti possono già scrivere).",
         "title": "Canale sbloccato",
         "done": "{channel} è sbloccato. I membri possono di nuovo scrivere qui.",
-        "failed": "Si è verificato un errore imprevisto durante lo sblocco del canale. Controlla i miei permessi (mi serve «Gestire i canali»)."
+        "failed": "Si è verificato un errore imprevisto durante lo sblocco del canale. Controlla i miei permessi (mi serve «Gestire i canali»).",
+        "notOverwrite": "{channel} non è bloccato dai suoi permessi: «Inviare messaggi» è negato dalla categoria o dal ruolo @everyone, quindi sbloccarlo qui non cambierebbe nulla.",
+        "dbDown": "Il database non risponde, quindi il canale non è stato sbloccato. Non è stato cambiato nulla.",
+        "botMissing": "Mi manca {perms} in {channel}, quindi non posso sbloccarlo. Non è stato cambiato nulla.",
+        "autoDone": "{channel} è stato sbloccato automaticamente: il tempo di blocco è finito.",
+        "autoReason": "Tempo di blocco finito (sblocco automatico)",
+        "skipped": {
+            "one": "{count} permesso è stato cambiato da qualcuno dopo il blocco, quindi l'ho lasciato com'è.",
+            "many": "{count} permessi sono stati cambiati da qualcuno dopo il blocco, quindi li ho lasciati come sono.",
+            "other": "{count} permessi sono stati cambiati da qualcuno dopo il blocco, quindi li ho lasciati come sono."
+        },
+        "partial": "Discord ha rifiutato una parte dello sblocco ({done} permessi su {total} ripristinati), quindi {channel} potrebbe essere ancora in parte bloccato. Controlla i miei permessi qui (mi servono «Gestire i canali» e «Gestire i permessi»), poi esegui di nuovo /unlock."
     },
     "purge": {
         "cmd": {
@@ -29,7 +56,42 @@
             "many": "Eliminati {count} messaggi in {channel}.",
             "other": "Eliminati {count} messaggi in {channel}."
         },
-        "failed": "Si è verificato un errore imprevisto durante l'eliminazione. Nota: i messaggi più vecchi di 14 giorni non si possono eliminare in blocco."
+        "failed": "Si è verificato un errore imprevisto durante l'eliminazione. Nota: i messaggi più vecchi di 14 giorni non si possono eliminare in blocco.",
+        "botMissing": "Mi manca {perms} in {channel}, quindi non posso eliminare messaggi lì. Non è stato eliminato nulla.",
+        "empty": "Non ci sono messaggi da eliminare in {channel}.",
+        "allTooOld": {
+            "one": "{count} messaggio ha più di 14 giorni. Discord non può eliminare in blocco i messaggi più vecchi di 14 giorni, quindi non è stato eliminato nulla.",
+            "many": "Tutti i {count} messaggi hanno più di 14 giorni. Discord non può eliminare in blocco i messaggi più vecchi di 14 giorni, quindi non è stato eliminato nulla.",
+            "other": "Tutti i {count} messaggi hanno più di 14 giorni. Discord non può eliminare in blocco i messaggi più vecchi di 14 giorni, quindi non è stato eliminato nulla."
+        },
+        "previewTitle": "Eliminare i messaggi?",
+        "preview": {
+            "one": "Eliminare {count} messaggio degli ultimi 14 giorni in {channel}?",
+            "many": "Eliminare {count} messaggi degli ultimi 14 giorni in {channel}?",
+            "other": "Eliminare {count} messaggi degli ultimi 14 giorni in {channel}?"
+        },
+        "previewOld": {
+            "one": "{count} messaggio ha più di 14 giorni e verrà saltato.",
+            "many": "{count} messaggi hanno più di 14 giorni e verranno saltati.",
+            "other": "{count} messaggi hanno più di 14 giorni e verranno saltati."
+        },
+        "previewNote": "Discord non può eliminare in blocco i messaggi più vecchi di 14 giorni.",
+        "previewExpires": "Questa anteprima scade {time}. Non viene eliminato nulla finché non premi Elimina.",
+        "confirmButton": "Elimina",
+        "cancelButton": "Annulla",
+        "cancelled": "Annullato. Non è stato eliminato nulla.",
+        "expired": "Questa anteprima è scaduta. Esegui di nuovo /purge. Non è stato eliminato nulla.",
+        "notYours": "Solo il moderatore che ha eseguito /purge può usare questi pulsanti.",
+        "skippedOld": {
+            "one": "{count} saltato: più vecchio di 14 giorni (Discord non può eliminarli in blocco).",
+            "many": "{count} saltati: più vecchi di 14 giorni (Discord non può eliminarli in blocco).",
+            "other": "{count} saltati: più vecchi di 14 giorni (Discord non può eliminarli in blocco)."
+        },
+        "skippedGone": {
+            "one": "{count} saltato: già eliminato.",
+            "many": "{count} saltati: già eliminati.",
+            "other": "{count} saltati: già eliminati."
+        }
     },
     "rules": {
         "cmd": {

@@ -19,7 +19,8 @@
             "supportButton": "Server di supporto",
             "placeholder": "Scegli una categoria",
             "memberModmail": "Ti serve lo staff? Scrivi al bot in DM: il tuo messaggio arriva allo staff in privato (modmail).",
-            "descriptionNeutral": "Moderazione, automod, ricorsi, ticket e altro per questo server."
+            "descriptionNeutral": "Moderazione, automod, ricorsi, ticket e altro per questo server.",
+            "accessModerator": "• Hai il ruolo Moderatore di questo server: con **/enforcements** puoi avvertire, silenziare, espellere, togliere il silenzio e rimuovere avvertimenti."
         },
         "closed": {
             "title": "Menu della guida chiuso",

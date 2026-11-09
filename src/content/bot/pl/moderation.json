@@ -1,12 +1,30 @@
 {
     "lock": {
         "cmd": {
-            "description": "Blokuje bieżący kanał (@everyone nie może wysyłać wiadomości)."
+            "description": "Blokuje bieżący kanał (@everyone nie może wysyłać wiadomości).",
+            "duration": "Odblokuj automatycznie po tym czasie, np. 30m, 2h, 1d (do 30 dni)"
         },
         "already": "{channel} jest już zablokowany.",
         "title": "Kanał zablokowany",
         "done": "{channel} jest zablokowany. Członkowie nie mogą tu pisać, dopóki nie zostanie odblokowany.",
-        "failed": "Podczas blokowania kanału wystąpił nieoczekiwany błąd. Sprawdź moje uprawnienia (potrzebuję „Zarządzanie kanałami”)."
+        "failed": "Podczas blokowania kanału wystąpił nieoczekiwany błąd. Sprawdź moje uprawnienia (potrzebuję „Zarządzanie kanałami”).",
+        "badDuration": "Ten czas jest nieprawidłowy. Użyj na przykład 30m, 2h lub 1d (od 1 minuty do 30 dni). Nic nie zostało zmienione.",
+        "doneUntil": "{channel} jest zablokowany do {time} ({relative}). Do tego czasu członkowie nie mogą tu pisać.",
+        "dbDown": "Baza danych nie odpowiada, więc kanał nie został zablokowany. Nic nie zostało zmienione.",
+        "partial": "Discord odrzucił część blokady, więc ją cofnąłem. Sprawdź tu moje uprawnienia (potrzebuję „Zarządzanie kanałami” i „Zarządzanie uprawnieniami”).",
+        "botMissing": "Brakuje mi uprawnień {perms} na {channel}, więc nie mogę go zablokować. Nic nie zostało zmienione.",
+        "rolesLocked": {
+            "one": "Zablokowano też dla {count} roli z własnym uprawnieniem „Wysyłanie wiadomości” tutaj: {roles}. /unlock je przywróci.",
+            "few": "Zablokowano też dla {count} ról z własnym uprawnieniem „Wysyłanie wiadomości” tutaj: {roles}. /unlock je przywróci.",
+            "many": "Zablokowano też dla {count} ról z własnym uprawnieniem „Wysyłanie wiadomości” tutaj: {roles}. /unlock je przywróci.",
+            "other": "Zablokowano też dla {count} roli z własnym uprawnieniem „Wysyłanie wiadomości” tutaj: {roles}. /unlock je przywróci."
+        },
+        "rolesKept": {
+            "one": "Nie zablokowano dla {count} roli zespołu (zachowuje tu własne uprawnienie „Wysyłanie wiadomości”): {roles}.",
+            "few": "Nie zablokowano dla {count} ról zespołu (zachowują tu własne uprawnienie „Wysyłanie wiadomości”): {roles}.",
+            "many": "Nie zablokowano dla {count} ról zespołu (zachowują tu własne uprawnienie „Wysyłanie wiadomości”): {roles}.",
+            "other": "Nie zablokowano dla {count} roli zespołu (zachowują tu własne uprawnienie „Wysyłanie wiadomości”): {roles}."
+        }
     },
     "unlock": {
         "cmd": {
@@ -15,7 +33,19 @@
         "notLocked": "{channel} nie jest wprost zablokowany (wszyscy już mogą pisać).",
         "title": "Kanał odblokowany",
         "done": "{channel} jest odblokowany. Członkowie znów mogą tu pisać.",
-        "failed": "Podczas odblokowywania kanału wystąpił nieoczekiwany błąd. Sprawdź moje uprawnienia (potrzebuję „Zarządzanie kanałami”)."
+        "failed": "Podczas odblokowywania kanału wystąpił nieoczekiwany błąd. Sprawdź moje uprawnienia (potrzebuję „Zarządzanie kanałami”).",
+        "notOverwrite": "{channel} nie jest zablokowany własnymi uprawnieniami: „Wysyłanie wiadomości” blokuje kategoria lub rola @everyone, więc odblokowanie tutaj nic nie zmieni.",
+        "dbDown": "Baza danych nie odpowiada, więc kanał nie został odblokowany. Nic nie zostało zmienione.",
+        "botMissing": "Brakuje mi uprawnień {perms} na {channel}, więc nie mogę go odblokować. Nic nie zostało zmienione.",
+        "autoDone": "{channel} został odblokowany automatycznie: czas blokady minął.",
+        "autoReason": "Czas blokady minął (automatyczne odblokowanie)",
+        "skipped": {
+            "one": "{count} uprawnienie ktoś zmienił od czasu blokady, więc zostawiłem je bez zmian.",
+            "few": "{count} uprawnienia ktoś zmienił od czasu blokady, więc zostawiłem je bez zmian.",
+            "many": "{count} uprawnień ktoś zmienił od czasu blokady, więc zostawiłem je bez zmian.",
+            "other": "{count} uprawnienia ktoś zmienił od czasu blokady, więc zostawiłem je bez zmian."
+        },
+        "partial": "Discord odrzucił część odblokowania (przywrócono {done} z {total} uprawnień), więc {channel} może być nadal częściowo zablokowany. Sprawdź tu moje uprawnienia (potrzebuję „Zarządzanie kanałami” i „Zarządzanie uprawnieniami”), a potem uruchom /unlock ponownie."
     },
     "purge": {
         "cmd": {
@@ -30,7 +60,47 @@
             "many": "Usunięto {count} wiadomości na {channel}.",
             "other": "Usunięto {count} wiadomości na {channel}."
         },
-        "failed": "Podczas usuwania wiadomości wystąpił nieoczekiwany błąd. Uwaga: wiadomości starszych niż 14 dni nie da się usunąć zbiorczo."
+        "failed": "Podczas usuwania wiadomości wystąpił nieoczekiwany błąd. Uwaga: wiadomości starszych niż 14 dni nie da się usunąć zbiorczo.",
+        "botMissing": "Brakuje mi uprawnień {perms} na {channel}, więc nie mogę tam usuwać wiadomości. Nic nie zostało usunięte.",
+        "empty": "Na {channel} nie ma wiadomości do usunięcia.",
+        "allTooOld": {
+            "one": "{count} wiadomość jest starsza niż 14 dni. Discord nie pozwala masowo usuwać wiadomości starszych niż 14 dni, więc nic nie zostało usunięte.",
+            "few": "Wszystkie {count} wiadomości są starsze niż 14 dni. Discord nie pozwala masowo usuwać wiadomości starszych niż 14 dni, więc nic nie zostało usunięte.",
+            "many": "Wszystkie {count} wiadomości są starsze niż 14 dni. Discord nie pozwala masowo usuwać wiadomości starszych niż 14 dni, więc nic nie zostało usunięte.",
+            "other": "Wszystkie {count} wiadomości są starsze niż 14 dni. Discord nie pozwala masowo usuwać wiadomości starszych niż 14 dni, więc nic nie zostało usunięte."
+        },
+        "previewTitle": "Usunąć wiadomości?",
+        "preview": {
+            "one": "Usunąć {count} wiadomość z ostatnich 14 dni na {channel}?",
+            "few": "Usunąć {count} wiadomości z ostatnich 14 dni na {channel}?",
+            "many": "Usunąć {count} wiadomości z ostatnich 14 dni na {channel}?",
+            "other": "Usunąć {count} wiadomości z ostatnich 14 dni na {channel}?"
+        },
+        "previewOld": {
+            "one": "{count} wiadomość jest starsza niż 14 dni i zostanie pominięta.",
+            "few": "{count} wiadomości są starsze niż 14 dni i zostaną pominięte.",
+            "many": "{count} wiadomości jest starszych niż 14 dni i zostaną pominięte.",
+            "other": "{count} wiadomości jest starszych niż 14 dni i zostaną pominięte."
+        },
+        "previewNote": "Discord nie pozwala masowo usuwać wiadomości starszych niż 14 dni.",
+        "previewExpires": "Ten podgląd wygasa {time}. Nic nie zostanie usunięte, dopóki nie klikniesz Usuń.",
+        "confirmButton": "Usuń",
+        "cancelButton": "Anuluj",
+        "cancelled": "Anulowano. Nic nie zostało usunięte.",
+        "expired": "Ten podgląd wygasł. Uruchom /purge ponownie. Nic nie zostało usunięte.",
+        "notYours": "Tylko moderator, który użył /purge, może korzystać z tych przycisków.",
+        "skippedOld": {
+            "one": "Pominięto {count}: starsza niż 14 dni (Discord nie usuwa takich masowo).",
+            "few": "Pominięto {count}: starsze niż 14 dni (Discord nie usuwa takich masowo).",
+            "many": "Pominięto {count}: starszych niż 14 dni (Discord nie usuwa takich masowo).",
+            "other": "Pominięto {count}: starszych niż 14 dni (Discord nie usuwa takich masowo)."
+        },
+        "skippedGone": {
+            "one": "Pominięto {count}: już usunięta.",
+            "few": "Pominięto {count}: już usunięte.",
+            "many": "Pominięto {count}: już usuniętych.",
+            "other": "Pominięto {count}: już usuniętych."
+        }
     },
     "rules": {
         "cmd": {

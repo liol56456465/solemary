@@ -240,8 +240,7 @@
             "done": "Terminé.",
             "nextWarn": "**Prochain avertissement :** avertissement {n} sur {max}, pas encore de ban.",
             "nextWarnBans": "**Prochain avertissement :** ban automatique de {length}.",
-            "nextWarnBansPermanent": "**Prochain avertissement :** ban automatique définitif.",
-            "recordedOnly": "Enregistré seulement : cet avertissement ne compte pas pour un bannissement automatique sur ce serveur (réglages de l'échelle d'avertissements)."
+            "nextWarnBansPermanent": "**Prochain avertissement :** ban automatique définitif."
         },
         "step": {
             "reason": "Étape 1 : choisis une raison.",
@@ -1116,7 +1115,8 @@
         },
         "dmFailed": "Impossible d'envoyer un MP au membre (il a quitté le serveur ou fermé ses MP).",
         "transcript": "Modmail avec <@{userId}> (`{userId}`) fermé par {closer}.",
-        "transcriptReason": "Raison : {reason}"
+        "transcriptReason": "Raison : {reason}",
+        "reminder": "Les messages ici sont envoyés au membre. Commence par `//` pour une note réservée au staff."
     },
     "enfCheck": {
         "perm": {
@@ -1166,7 +1166,14 @@
             "unbanDmFailed": "Le MP « bannissement terminé » n'a pas pu être remis.",
             "unmuteNoRole": "L'utilisateur n'était pas sur le serveur ou n'avait plus le rôle ; le dossier a quand même été levé.",
             "unmuteDmFailed": "Le MP « sourdine terminée » n'a pas pu être remis.",
-            "removed": "`{code}` retiré. Avertissements comptés : {count}."
+            "removed": "`{code}` retiré. Avertissements comptés : {count}.",
+            "muteAdmin": "{name} a la permission Administrateur, le rôle Muted ne peut donc pas l'empêcher de parler.",
+            "muteLeak": {
+                "one": "{name} peut encore parler dans {count} salon : {channels}. Un de ses rôles (ou sa propre permission de salon) est autorisé à y écrire, et une autorisation l'emporte sur le refus du rôle Muted. Retire cette autorisation dans les permissions du salon.",
+                "many": "{name} peut encore parler dans {count} salons : {channels}. Un de ses rôles (ou sa propre permission de salon) est autorisé à y écrire, et une autorisation l'emporte sur le refus du rôle Muted. Retire cette autorisation dans les permissions du salon.",
+                "other": "{name} peut encore parler dans {count} salons : {channels}. Un de ses rôles (ou sa propre permission de salon) est autorisé à y écrire, et une autorisation l'emporte sur le refus du rôle Muted. Retire cette autorisation dans les permissions du salon."
+            },
+            "warnUncounted": "Enregistré seulement : cet avertissement ne compte pas pour un bannissement automatique sur ce serveur (réglages de l'échelle d'avertissements)."
         }
     }
 }

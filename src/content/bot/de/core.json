@@ -19,7 +19,8 @@
             "supportButton": "Support-Server",
             "placeholder": "Wähle eine Kategorie",
             "memberModmail": "Brauchst du das Team? Schreib dem Bot eine DM: deine Nachricht geht privat ans Team (Modmail).",
-            "descriptionNeutral": "Moderation, Automod, Einsprüche, Tickets und mehr für diesen Server."
+            "descriptionNeutral": "Moderation, Automod, Einsprüche, Tickets und mehr für diesen Server.",
+            "accessModerator": "• Du hast die Moderator-Rolle dieses Servers: Mit **/enforcements** kannst du verwarnen, stummschalten, kicken, die Stummschaltung aufheben und Verwarnungen entfernen."
         },
         "closed": {
             "title": "Hilfemenü geschlossen",

@@ -19,7 +19,8 @@
             "supportButton": "Servidor de suporte",
             "placeholder": "Escolha uma categoria",
             "memberModmail": "Precisa da equipe? Mande uma DM para o bot: sua mensagem vai para a equipe em particular (modmail).",
-            "descriptionNeutral": "Moderação, automod, apelações, tickets e mais para este servidor."
+            "descriptionNeutral": "Moderação, automod, apelações, tickets e mais para este servidor.",
+            "accessModerator": "• Você tem o cargo de moderador deste servidor: com **/enforcements** você pode avisar, silenciar, expulsar, tirar o silêncio e remover avisos."
         },
         "closed": {
             "title": "Menu de ajuda fechado",
