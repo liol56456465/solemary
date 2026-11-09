@@ -177,7 +177,7 @@ test('/purge cancel, expiry, another user, lost Administrator: nothing is delete
     assert.ok(stranger.replies.at(-1).reply && /Only the moderator who ran \/purge/.test(stranger.replies.at(-1).content));
     assert.ok(!stranger.interaction.updated, 'the preview stays for its moderator');
     const noAdmin = await click(['confirm', nonce], { admin: false });
-    assert.match(textOf(noAdmin.replies.at(-1)), /Administrator/);
+    assert.match(textOf(noAdmin.replies.at(-1)), /Only server admins can use this|Administrator/);
     assert.equal(channel.deleted.length, 0);
 });
 

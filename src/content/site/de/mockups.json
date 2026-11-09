@@ -15,7 +15,7 @@
     "by": "Von: Moderator",
     "reason": "Grund: Spam in #general",
     "dateValue": "Donnerstag, 29. Oktober 2026 um 14:05",
-    "limit": "Bei 3 Verwarnungen wirst du für 7 Tage gebannt."
+    "limit": "Verwarnungen laufen nicht ab. Noch 1 Verwarnung bedeutet einen automatischen Bann für 7 Tage."
   },
   "banDm": {
     "time": "Samstag um 19:40",

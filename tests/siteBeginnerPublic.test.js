@@ -150,12 +150,12 @@ test('4.10 Privacy and Terms: "In short" translated in all 7 other languages wit
     } finally { await site.close(); }
 });
 
-test('the warn DM preview says what the bot\'s DM says: "At 3 warnings you will be banned for 7 days." in every language', () => {
+test('the warn DM preview (warning 2 of 3) says what the bot\'s DM says: "1 more warning means an automatic ban for 7 days" in every language', () => {
     for (const code of CODES) {
         const bot = JSON.parse(readFileSync(new URL(`../src/content/bot/${code}/enforcement.json`, import.meta.url), 'utf8'));
-        const template = bot.enforcement?.dm?.warn?.limit ?? bot.dm?.warn?.limit;
+        const template = (bot.enforcement?.dm?.warn ?? bot.dm?.warn)?.next?.one;
         assert.equal(typeof template, 'string', `${code}: the bot's text`);
-        const expected = template.replace('{limit}', '3').replace('{length}', durationIn(7 * 86400000, code));
+        const expected = template.replace('{count}', '1').replace('{length}', durationIn(7 * 86400000, code));
         assert.equal(CATALOGS.get(code).get('mockups.warnDm.limit'), expected, code);
     }
 });

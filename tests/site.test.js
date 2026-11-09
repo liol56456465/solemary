@@ -673,7 +673,7 @@ test('home: a real DM preview, dashboard, ladder, what it does as cards, the pla
             assert.ok(at > last, `item ${id} in order`);
             last = at;
         }
-        assert.ok(body.includes('Warning 2 of 3 in Mewvo') && body.includes('At 3 warnings you will be banned for 7 days.'), 'warnDm wording (the bot\'s DM text)');
+        assert.ok(body.includes('Warning 2 of 3 in Mewvo') && body.includes('1 more warning means an automatic ban for 7 days.'), 'warnDm wording (the bot\'s DM text)');
         assert.ok(body.includes(`<span class="dc-link">${SUPPORT}</span>`), 'the real support invite in the DM preview');
         assert.ok(body.includes('$1.99') && body.includes('href="/pricing"'));
         assert.ok(body.includes('<ul class="plan-cards plan-cards-compact">') && !body.includes('plan-card-perks'), 'compact plan cards, perks on /pricing only');

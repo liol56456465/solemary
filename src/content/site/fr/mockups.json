@@ -15,7 +15,7 @@
     "by": "Par : Modérateur",
     "reason": "Raison : spam dans #general",
     "dateValue": "jeudi 29 octobre 2026 à 14:05",
-    "limit": "À 3 avertissements, tu seras banni pour 7 jours."
+    "limit": "Les avertissements n’expirent pas. Encore 1 avertissement et c’est un bannissement automatique de 7 jours."
   },
   "banDm": {
     "time": "Samedi à 19:40",
