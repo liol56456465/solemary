@@ -40,7 +40,6 @@
                 "other": "{count} cargos"
             },
             "inServerNo": "**No servidor:** não",
-            "warns": "**Advertências contadas:** {warns} · **Nível de advertência:** {stage}",
             "activeBanEnds": "banimento `{code}` · termina {date}",
             "activeBanPermanent": "banimento `{code}` · permanente",
             "bannedNoRecord": "banido fora do painel (sem registro)",
@@ -49,7 +48,12 @@
             "active": "**Punição ativa:** {list}",
             "activeNone": "nenhuma",
             "pendingAppeal": "**Apelação pendente:** {codes} (decida no canal de apelações ou com /appeals)",
-            "keepApart": "**Proibição de contato:** {list}"
+            "keepApart": "**Proibição de contato:** {list}",
+            "warnsNext": "**Advertências:** {n} — a próxima bane por {length}",
+            "warnsNextPermanent": "**Advertências:** {n} — a próxima bane permanentemente",
+            "warnsAt": "**Advertências:** {n} — com {max}, banimento de {length}",
+            "warnsAtPermanent": "**Advertências:** {n} — com {max}, banimento permanente",
+            "warnBans": "**Banimentos por advertência até agora:** {level}"
         },
         "keepApartLine": "com <@{otherId}> até {until} (ordem #{id})",
         "warns": {
@@ -97,13 +101,19 @@
             "cancel": "Cancelar",
             "confirm": "Confirmar",
             "editDetails": "Editar detalhes",
-            "tryAgain": "Tentar de novo"
+            "tryAgain": "Tentar de novo",
+            "undo": "Desfazer (erro)",
+            "removeWarnMistake": "Erro? Remover a advertência",
+            "confirmUndo": "Sim, remover o caso",
+            "unbanOnly": "Só desbanir (o nível fica)",
+            "removeWarnStage": "Remover a advertência (o nível volta)",
+            "confirmPermanent": "Sim, banir permanentemente"
         },
         "stepTitle": "{action}: {name}",
         "modal": {
             "customReason": "Motivo personalizado",
             "duration": "Duração",
-            "durationBan": "ex. 30m, 24h, 7d, 1mo. Deixe vazio para um banimento permanente.",
+            "durationBan": "ex. 30m, 24h, 7d, 1mo — ou digite permanente para um banimento permanente.",
             "durationMute": "Obrigatório. ex. 30m, 24h, 7d, 1mo.",
             "name": "Nome (opcional)",
             "nameDefault": "Padrão: {name}",
@@ -136,7 +146,8 @@
             "badDuration": "\"{value}\" não é uma duração válida. Use formatos como 30m, 24h, 7d ou 1mo.",
             "evidenceLinks": "As provas devem ser links (ex. um link de mensagem do Discord: clique com o botão direito numa mensagem → Copiar link da mensagem).",
             "evidenceMax": "No máximo {max} links de prova aqui; adicione mais depois com /case evidence add.",
-            "nameTaken": "Já existe um registro chamado **{name}** neste servidor. Escolha outro nome."
+            "nameTaken": "Já existe um registro chamado **{name}** neste servidor. Escolha outro nome.",
+            "banNeedsDuration": "Um banimento precisa de uma duração (ex. 7d) ou da palavra permanente."
         },
         "evidence": {
             "notSaved": "A prova {url} não foi salva: {error}",
@@ -206,7 +217,9 @@
             "evidence": "**Provas:** {list}",
             "unreadable": " (mensagem ilegível, só o link)",
             "template": "**Modelo:** {name}",
-            "effect": "**Efeito:** {effect}"
+            "effect": "**Efeito:** {effect}",
+            "permanentTitle": "Banimento permanente sem apelação",
+            "permanentBody": "**{name}** será banido **permanentemente** e **não poderá apelar**. Só um admin poderá retirar depois. Tem certeza?"
         },
         "result": {
             "caseCode": "**Código do caso:** `{code}`",
@@ -215,11 +228,15 @@
             "dmFailed": "**Não foi possível entregar a DM** (DMs fechadas ou nenhum servidor em comum). A ação foi executada mesmo assim.",
             "dmDelivered": "DM entregue.",
             "title": "Feito ({action}): {name}",
-            "done": "Feito."
+            "done": "Feito.",
+            "nextWarn": "**Próxima advertência:** advertência {n} de {max}, ainda sem banimento.",
+            "nextWarnBans": "**Próxima advertência:** banimento automático de {length}.",
+            "nextWarnBansPermanent": "**Próxima advertência:** banimento automático permanente."
         },
         "step": {
             "reason": "Passo 1: escolha um motivo.",
-            "reasonWithMessage": "**Mensagem:** {url} (anexada como prova)\nPasso 1: escolha um motivo."
+            "reasonWithMessage": "**Mensagem:** {url} (anexada como prova)\nPasso 1: escolha um motivo.",
+            "unbanOnly": "Este banimento não é mais automático por advertências. Desbana normalmente:"
         },
         "removeWarn": {
             "none": "Este usuário não tem advertências contadas para remover.",
@@ -229,7 +246,28 @@
         "cancelledTitle": "Cancelado",
         "cancelled": "Nada foi alterado. Execute /enforcements para começar de novo.",
         "failedTitle": "Falhou ({action})",
-        "failedGeneric": "Algo deu errado; talvez nada tenha mudado. Confira /background antes de tentar de novo."
+        "unbanChoice": "O banimento `{code}` foi automático: o limite de advertências o causou. Escolha:\n**Só desbanir (o nível fica):** o banimento acaba, mas o nível de advertência fica, então a próxima advertência bane de novo, por mais tempo.\n**Remover a advertência (o nível volta):** a advertência foi um erro. Ela é removida, o banimento acaba e o nível volta um degrau. O usuário recebe uma DM com um convite para voltar.",
+        "undo": {
+            "title": "Desfazer (erro): {name}",
+            "what": {
+                "warn": "A advertência `{code}` é removida: não conta mais, então as advertências caem em uma.",
+                "warnLadder": "A advertência `{code}` é removida e o banimento automático `{ban}` que ela causou é retirado. O nível de advertência volta um degrau.",
+                "ban": "O banimento `{code}` é removido e o usuário é desbanido.",
+                "banLadder": "O banimento automático `{code}` é removido: o usuário é desbanido, a advertência que o causou é removida e o nível volta um degrau.",
+                "mute": "O silenciamento `{code}` é removido e o usuário deixa de estar silenciado.",
+                "kick": "A expulsão `{code}` é removida do histórico. Uma expulsão não pode ser desfeita: o usuário volta com o convite que recebeu."
+            },
+            "dm": "O usuário recebe uma DM dizendo que foi um erro. O caso fica em /background como removido (um erro).",
+            "doneTitle": "Desfeito: {name}",
+            "done": "`{code}` foi removido (um erro); não conta mais.",
+            "failedTitle": "Falha ao desfazer"
+        },
+        "failed": {
+            "happened": "A ação foi aplicada (caso `{code}`), mas uma etapa seguinte falhou. Confira /background e não a repita.",
+            "happenedNoCase": "A ação foi aplicada, mas uma etapa seguinte falhou. Confira /background e não a repita.",
+            "notHappened": "Nada foi alterado. Você pode tentar de novo com /enforcements.",
+            "unknown": "Algo deu errado e não está claro se algo mudou. Confira /background antes de tentar de novo."
+        }
     },
     "enforcements": {
         "cmd": {

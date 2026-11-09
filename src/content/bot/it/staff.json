@@ -40,7 +40,6 @@
                 "other": "{count} ruoli"
             },
             "inServerNo": "**Nel server:** no",
-            "warns": "**Avvertimenti contati:** {warns} · **Livello di avvertimento:** {stage}",
             "activeBanEnds": "ban `{code}` · termina {date}",
             "activeBanPermanent": "ban `{code}` · permanente",
             "bannedNoRecord": "bannato fuori dal pannello (nessun registro)",
@@ -49,7 +48,12 @@
             "active": "**Sanzione attiva:** {list}",
             "activeNone": "nessuna",
             "pendingAppeal": "**Ricorso in attesa:** {codes} (decidi nel canale dei ricorsi o con /appeals)",
-            "keepApart": "**Divieto di contatto:** {list}"
+            "keepApart": "**Divieto di contatto:** {list}",
+            "warnsNext": "**Avvertimenti:** {n} — il prossimo banna per {length}",
+            "warnsNextPermanent": "**Avvertimenti:** {n} — il prossimo banna per sempre",
+            "warnsAt": "**Avvertimenti:** {n} — a {max} scatta un ban di {length}",
+            "warnsAtPermanent": "**Avvertimenti:** {n} — a {max} scatta un ban permanente",
+            "warnBans": "**Ban da avvertimenti finora:** {level}"
         },
         "keepApartLine": "con <@{otherId}> fino al {until} (ordine #{id})",
         "warns": {
@@ -97,13 +101,19 @@
             "cancel": "Annulla",
             "confirm": "Conferma",
             "editDetails": "Modifica dettagli",
-            "tryAgain": "Riprova"
+            "tryAgain": "Riprova",
+            "undo": "Annulla (errore)",
+            "removeWarnMistake": "Errore? Rimuovi l’avvertimento",
+            "confirmUndo": "Sì, rimuovi il caso",
+            "unbanOnly": "Solo sbanna (il livello resta)",
+            "removeWarnStage": "Rimuovi l’avvertimento (il livello scende)",
+            "confirmPermanent": "Sì, banna per sempre"
         },
         "stepTitle": "{action}: {name}",
         "modal": {
             "customReason": "Motivo personalizzato",
             "duration": "Durata",
-            "durationBan": "es. 30m, 24h, 7d, 1mo. Lascia vuoto per un ban permanente.",
+            "durationBan": "es. 30m, 24h, 7d, 1mo — o scrivi permanente per un ban permanente.",
             "durationMute": "Obbligatorio. es. 30m, 24h, 7d, 1mo.",
             "name": "Nome (facoltativo)",
             "nameDefault": "Predefinito: {name}",
@@ -136,7 +146,8 @@
             "badDuration": "\"{value}\" non è una durata valida. Usa formati come 30m, 24h, 7d o 1mo.",
             "evidenceLinks": "Le prove devono essere link (es. un link a un messaggio Discord: clic destro su un messaggio → Copia link messaggio).",
             "evidenceMax": "Al massimo {max} link di prova qui; aggiungine altri dopo con /case evidence add.",
-            "nameTaken": "Esiste già un registro chiamato **{name}** in questo server. Scegli un altro nome."
+            "nameTaken": "Esiste già un registro chiamato **{name}** in questo server. Scegli un altro nome.",
+            "banNeedsDuration": "Un ban richiede una durata (es. 7d) o la parola permanente."
         },
         "evidence": {
             "notSaved": "La prova {url} non è stata salvata: {error}",
@@ -206,7 +217,9 @@
             "evidence": "**Prove:** {list}",
             "unreadable": " (messaggio non leggibile, solo link)",
             "template": "**Modello:** {name}",
-            "effect": "**Effetto:** {effect}"
+            "effect": "**Effetto:** {effect}",
+            "permanentTitle": "Ban permanente senza ricorso",
+            "permanentBody": "**{name}** sarà bannato **per sempre** e **non potrà fare ricorso**. Solo un admin potrà revocarlo in seguito. Sei sicuro?"
         },
         "result": {
             "caseCode": "**Codice del caso:** `{code}`",
@@ -215,11 +228,15 @@
             "dmFailed": "**Il DM non è stato consegnato** (DM chiusi o nessun server in comune). L’azione è stata comunque eseguita.",
             "dmDelivered": "DM consegnato.",
             "title": "{action} completato: {name}",
-            "done": "Fatto."
+            "done": "Fatto.",
+            "nextWarn": "**Prossimo avvertimento:** avvertimento {n} di {max}, ancora nessun ban.",
+            "nextWarnBans": "**Prossimo avvertimento:** ban automatico di {length}.",
+            "nextWarnBansPermanent": "**Prossimo avvertimento:** ban automatico permanente."
         },
         "step": {
             "reason": "Passo 1: scegli un motivo.",
-            "reasonWithMessage": "**Messaggio:** {url} (allegato come prova)\nPasso 1: scegli un motivo."
+            "reasonWithMessage": "**Messaggio:** {url} (allegato come prova)\nPasso 1: scegli un motivo.",
+            "unbanOnly": "Questo ban non è più un ban automatico da avvertimenti. Sbanna come al solito:"
         },
         "removeWarn": {
             "none": "Questo utente non ha avvertimenti contati da rimuovere.",
@@ -229,7 +246,28 @@
         "cancelledTitle": "Annullato",
         "cancelled": "Non è cambiato nulla. Esegui /enforcements per ricominciare.",
         "failedTitle": "{action} non riuscito",
-        "failedGeneric": "Qualcosa è andato storto; forse non è cambiato nulla. Controlla /background prima di riprovare."
+        "unbanChoice": "Il ban `{code}` era automatico: l’ha causato il limite di avvertimenti. Scegli:\n**Solo sbanna (il livello resta):** il ban finisce, ma il livello di avvertimenti resta, quindi il prossimo avvertimento banna di nuovo, più a lungo.\n**Rimuovi l’avvertimento (il livello scende):** l’avvertimento era un errore. Viene rimosso, il ban finisce e il livello scende di un gradino. L’utente riceve un DM con un invito per tornare.",
+        "undo": {
+            "title": "Annulla (errore): {name}",
+            "what": {
+                "warn": "L’avvertimento `{code}` viene rimosso: non conta più, quindi i suoi avvertimenti scendono di uno.",
+                "warnLadder": "L’avvertimento `{code}` viene rimosso e il ban automatico `{ban}` che ha causato viene revocato. Il livello di avvertimenti scende di un gradino.",
+                "ban": "Il ban `{code}` viene rimosso e l’utente viene sbannato.",
+                "banLadder": "Il ban automatico `{code}` viene rimosso: l’utente viene sbannato, l’avvertimento che l’ha causato viene rimosso e il livello scende di un gradino.",
+                "mute": "Il mute `{code}` viene rimosso e l’utente non è più silenziato.",
+                "kick": "L’espulsione `{code}` viene rimossa dal suo storico. Un’espulsione non si può annullare: rientra con l’invito ricevuto."
+            },
+            "dm": "L’utente riceve un DM che era un errore. Il caso resta in /background come rimosso (un errore).",
+            "doneTitle": "Annullato: {name}",
+            "done": "`{code}` è stato rimosso (un errore); non conta più.",
+            "failedTitle": "Annullamento non riuscito"
+        },
+        "failed": {
+            "happened": "L’azione è andata a buon fine (caso `{code}`), ma un passaggio successivo è fallito. Controlla /background e non ripeterla.",
+            "happenedNoCase": "L’azione è andata a buon fine, ma un passaggio successivo è fallito. Controlla /background e non ripeterla.",
+            "notHappened": "Non è cambiato nulla. Puoi riprovare con /enforcements.",
+            "unknown": "Qualcosa è andato storto e non è chiaro se sia cambiato qualcosa. Controlla /background prima di riprovare."
+        }
     },
     "enforcements": {
         "cmd": {

@@ -898,17 +898,20 @@ async function liftCaseEntries(client, record, admin, { reason, via }) {
         // The ladder ban's code also covers the warn that triggered it: that warn is
         // removed and the ladder steps back one level, keeping the level's other warns.
         const previousLevel = Math.max(0, record.ladder_level_after - 1);
+        // The ban's own created_at from the row, not the JS Date: a Date keeps milliseconds only, and
+        // the trigger warn shares the ban's transaction timestamp (microseconds), so `<= Date` missed it.
         const { rows: [warn] } = await db.query(
             `UPDATE ${T.cases} SET status = 'revoked', revoked_by = $1, revoked_at = NOW(), revoke_reason = $2
              WHERE id = (
                  SELECT id FROM ${T.cases}
                  WHERE guild_id = $3 AND target_user_id = $4 AND type = 'warn' AND status = ANY($5)
-                   AND is_test = FALSE AND ladder_level_after = $6 AND counts_toward_level = $7 AND created_at <= $8
+                   AND is_test = FALSE AND ladder_level_after = $6 AND counts_toward_level = $7
+                   AND created_at <= (SELECT created_at FROM ${T.cases} WHERE id = $8)
                  ORDER BY created_at DESC LIMIT 1
              )
              RETURNING *`,
             [admin.id, `${reason} (ban ${record.case_code})`, record.guild_id, record.target_user_id,
-                OPEN_STATUSES, record.ladder_level_after, previousLevel, record.created_at]
+                OPEN_STATUSES, record.ladder_level_after, previousLevel, record.id]
         );
         const { rows: [counted] } = await db.query(
             `SELECT COUNT(*)::int AS count FROM ${T.cases}

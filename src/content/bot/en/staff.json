@@ -39,7 +39,6 @@
                 "other": "{count} roles"
             },
             "inServerNo": "**In server:** no",
-            "warns": "**Counted warns:** {warns} · **Warning stage:** {stage}",
             "activeBanEnds": "ban `{code}` · ends {date}",
             "activeBanPermanent": "ban `{code}` · permanent",
             "bannedNoRecord": "banned outside the panel (no record)",
@@ -48,7 +47,12 @@
             "active": "**Active punishment:** {list}",
             "activeNone": "none",
             "pendingAppeal": "**Pending appeal:** {codes} (decide in the appeal channel or with /appeals)",
-            "keepApart": "**Keep apart:** {list}"
+            "keepApart": "**Keep apart:** {list}",
+            "warnsNext": "**Warnings:** {n} — the next one bans for {length}",
+            "warnsNextPermanent": "**Warnings:** {n} — the next one bans permanently",
+            "warnsAt": "**Warnings:** {n} — at {max} they are banned for {length}",
+            "warnsAtPermanent": "**Warnings:** {n} — at {max} they are banned permanently",
+            "warnBans": "**Warning bans so far:** {level}"
         },
         "keepApartLine": "with <@{otherId}> until {until} (order #{id})",
         "warns": {
@@ -94,13 +98,19 @@
             "cancel": "Cancel",
             "confirm": "Confirm",
             "editDetails": "Edit details",
-            "tryAgain": "Try again"
+            "tryAgain": "Try again",
+            "undo": "Undo (mistake)",
+            "removeWarnMistake": "Mistake? Remove the warn",
+            "confirmUndo": "Yes, remove the case",
+            "unbanOnly": "Unban only (stage stays)",
+            "removeWarnStage": "Remove the warn (stage goes back)",
+            "confirmPermanent": "Yes, ban permanently"
         },
         "stepTitle": "{action}: {name}",
         "modal": {
             "customReason": "Custom reason",
             "duration": "Duration",
-            "durationBan": "e.g. 30m, 24h, 7d, 1mo. Leave blank for a permanent ban.",
+            "durationBan": "e.g. 30m, 24h, 7d, 1mo — or type permanent for a permanent ban.",
             "durationMute": "Required. e.g. 30m, 24h, 7d, 1mo.",
             "name": "Name (optional)",
             "nameDefault": "Default: {name}",
@@ -133,7 +143,8 @@
             "badDuration": "\"{value}\" is not a valid duration. Use formats like 30m, 24h, 7d or 1mo.",
             "evidenceLinks": "Evidence must be links (e.g. a Discord message link: right-click a message → Copy Message Link).",
             "evidenceMax": "At most {max} evidence links here; add more afterwards with /case evidence add.",
-            "nameTaken": "A record named **{name}** already exists in this server. Pick another name."
+            "nameTaken": "A record named **{name}** already exists in this server. Pick another name.",
+            "banNeedsDuration": "A ban needs a duration (e.g. 7d) or the word permanent."
         },
         "evidence": {
             "notSaved": "Evidence {url} was not saved: {error}",
@@ -194,7 +205,9 @@
             "evidence": "**Evidence:** {list}",
             "unreadable": " (message not readable, link only)",
             "template": "**Template:** {name}",
-            "effect": "**Effect:** {effect}"
+            "effect": "**Effect:** {effect}",
+            "permanentTitle": "Permanent ban, no appeal",
+            "permanentBody": "**{name}** will be banned **permanently** and **cannot appeal**. Only an admin can lift it later. Are you sure?"
         },
         "result": {
             "caseCode": "**Case code:** `{code}`",
@@ -203,11 +216,15 @@
             "dmFailed": "**The DM could not be delivered** (DMs closed or no shared server). The action still ran.",
             "dmDelivered": "DM delivered.",
             "title": "{action} done: {name}",
-            "done": "Done."
+            "done": "Done.",
+            "nextWarn": "**Next warn:** warning {n} of {max}, no ban yet.",
+            "nextWarnBans": "**Next warn:** automatic ban for {length}.",
+            "nextWarnBansPermanent": "**Next warn:** automatic permanent ban."
         },
         "step": {
             "reason": "Step 1: choose a reason.",
-            "reasonWithMessage": "**Message:** {url} (attached as evidence)\nStep 1: choose a reason."
+            "reasonWithMessage": "**Message:** {url} (attached as evidence)\nStep 1: choose a reason.",
+            "unbanOnly": "This ban is no longer an automatic warning ban. Unban as usual:"
         },
         "removeWarn": {
             "none": "This user has no counted warnings to remove.",
@@ -217,7 +234,28 @@
         "cancelledTitle": "Cancelled",
         "cancelled": "Nothing was changed. Run /enforcements to start again.",
         "failedTitle": "{action} failed",
-        "failedGeneric": "Something went wrong; nothing may have changed. Check /background before retrying."
+        "unbanChoice": "Ban `{code}` was automatic: the warning limit caused it. Choose:\n**Unban only (stage stays):** the ban ends, but the warning stage stays, so the next warning bans again, for longer.\n**Remove the warn (stage goes back):** the warning was a mistake. The warn is removed, the ban ends and the stage goes back one step. They get a DM with an invite back.",
+        "undo": {
+            "title": "Undo (mistake): {name}",
+            "what": {
+                "warn": "Warn `{code}` is removed: it no longer counts, so their warnings go down by one.",
+                "warnLadder": "Warn `{code}` is removed and the automatic ban `{ban}` it caused is lifted. The warning stage goes back one step.",
+                "ban": "Ban `{code}` is removed and they are unbanned.",
+                "banLadder": "Automatic ban `{code}` is removed: they are unbanned, the warn that caused it is removed and the warning stage goes back one step.",
+                "mute": "Mute `{code}` is removed and they are unmuted.",
+                "kick": "Kick `{code}` is removed from their record. A kick cannot be reversed: they rejoin with the invite they got."
+            },
+            "dm": "They get a DM saying it was a mistake. The case stays in /background as removed (a mistake).",
+            "doneTitle": "Undone: {name}",
+            "done": "`{code}` was removed (a mistake); it no longer counts.",
+            "failedTitle": "Undo failed"
+        },
+        "failed": {
+            "happened": "The action went through (case `{code}`), but a later step failed. Check /background and do not run it again.",
+            "happenedNoCase": "The action went through, but a later step failed. Check /background and do not run it again.",
+            "notHappened": "Nothing was changed. You can try again with /enforcements.",
+            "unknown": "Something went wrong and it is not clear whether anything changed. Check /background before retrying."
+        }
     },
     "enforcements": {
         "cmd": {

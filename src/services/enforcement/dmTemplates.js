@@ -242,12 +242,17 @@ function muteDmText(rec, { lang, guildId, serverName: name } = {}) {
 function warnDmText(rec, warnNumber, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
     const limit = enforcementConfig.warnsPerLevel;
+    // The ban that comes at the limit (audit 3.2): the next stage's ban length.
+    const banAtLimit = enforcementConfig.ladderBans[Math.min((Number(rec.ladder_level_after) || 0) + 1, 3)];
+    const limitLine = banAtLimit != null
+        ? tr.t('enforcement.dm.warn.limit', { limit, length: durationIn(banAtLimit, tr.lang) })
+        : tr.t('enforcement.dm.warn.limitPermanent', { limit });
     return finish([
         ...appealLines(rec, tr, { guildId, serverName: name }).lines,
         tr.t('enforcement.dm.warn.title', { number: warnNumber, limit, server: serverFor(rec, { guildId, serverName: name }, tr) }),
         ...common(rec, tr),
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
-        tr.t('enforcement.dm.warn.limit', { limit }),
+        limitLine,
         record(tr),
     ], tr);
 }

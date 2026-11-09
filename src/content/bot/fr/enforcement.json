@@ -30,7 +30,8 @@
         },
         "warn": {
             "title": "**Avertissement {number} sur {limit} dans {server}**",
-            "limit": "À {limit} avertissements, tu seras banni."
+            "limit": "À {limit} avertissements, tu seras banni pour {length}.",
+            "limitPermanent": "À {limit} avertissements, tu seras banni définitivement."
         },
         "appealAccepted": {
             "title": "**Appel accepté**",

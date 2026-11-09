@@ -39,7 +39,6 @@
                 "other": "{count} Rollen"
             },
             "inServerNo": "**Auf dem Server:** nein",
-            "warns": "**Gezählte Verwarnungen:** {warns} · **Verwarnungsstufe:** {stage}",
             "activeBanEnds": "Bann `{code}` · endet {date}",
             "activeBanPermanent": "Bann `{code}` · dauerhaft",
             "bannedNoRecord": "außerhalb des Panels gebannt (kein Eintrag)",
@@ -48,7 +47,12 @@
             "active": "**Aktive Strafe:** {list}",
             "activeNone": "keine",
             "pendingAppeal": "**Offener Einspruch:** {codes} (entscheide im Einspruchskanal oder mit /appeals)",
-            "keepApart": "**Kontaktverbot:** {list}"
+            "keepApart": "**Kontaktverbot:** {list}",
+            "warnsNext": "**Verwarnungen:** {n} — die nächste bannt für {length}",
+            "warnsNextPermanent": "**Verwarnungen:** {n} — die nächste bannt dauerhaft",
+            "warnsAt": "**Verwarnungen:** {n} — bei {max} folgt ein Bann für {length}",
+            "warnsAtPermanent": "**Verwarnungen:** {n} — bei {max} folgt ein dauerhafter Bann",
+            "warnBans": "**Bisherige Verwarnungs-Banns:** {level}"
         },
         "keepApartLine": "mit <@{otherId}> bis {until} (Anordnung #{id})",
         "warns": {
@@ -94,13 +98,19 @@
             "cancel": "Abbrechen",
             "confirm": "Bestätigen",
             "editDetails": "Details bearbeiten",
-            "tryAgain": "Erneut versuchen"
+            "tryAgain": "Erneut versuchen",
+            "undo": "Rückgängig (Fehler)",
+            "removeWarnMistake": "Fehler? Verwarnung entfernen",
+            "confirmUndo": "Ja, Fall entfernen",
+            "unbanOnly": "Nur entbannen (Stufe bleibt)",
+            "removeWarnStage": "Verwarnung entfernen (Stufe zurück)",
+            "confirmPermanent": "Ja, dauerhaft bannen"
         },
         "stepTitle": "{action}: {name}",
         "modal": {
             "customReason": "Eigener Grund",
             "duration": "Dauer",
-            "durationBan": "z. B. 30m, 24h, 7d, 1mo. Leer lassen für einen dauerhaften Bann.",
+            "durationBan": "z. B. 30m, 24h, 7d, 1mo — oder „dauerhaft“ für einen dauerhaften Bann.",
             "durationMute": "Pflichtfeld. z. B. 30m, 24h, 7d, 1mo.",
             "name": "Name (optional)",
             "nameDefault": "Standard: {name}",
@@ -133,7 +143,8 @@
             "badDuration": "„{value}“ ist keine gültige Dauer. Nutze Formate wie 30m, 24h, 7d oder 1mo.",
             "evidenceLinks": "Beweise müssen Links sein (z. B. ein Discord-Nachrichtenlink: Rechtsklick auf eine Nachricht → Nachrichtenlink kopieren).",
             "evidenceMax": "Hier höchstens {max} Beweislinks; weitere danach mit /case evidence add.",
-            "nameTaken": "Ein Eintrag namens **{name}** existiert auf diesem Server bereits. Wähle einen anderen Namen."
+            "nameTaken": "Ein Eintrag namens **{name}** existiert auf diesem Server bereits. Wähle einen anderen Namen.",
+            "banNeedsDuration": "Ein Bann braucht eine Dauer (z. B. 7d) oder das Wort „dauerhaft“."
         },
         "evidence": {
             "notSaved": "Beweis {url} wurde nicht gespeichert: {error}",
@@ -194,7 +205,9 @@
             "evidence": "**Beweise:** {list}",
             "unreadable": " (Nachricht nicht lesbar, nur Link)",
             "template": "**Vorlage:** {name}",
-            "effect": "**Wirkung:** {effect}"
+            "effect": "**Wirkung:** {effect}",
+            "permanentTitle": "Dauerhafter Bann ohne Einspruch",
+            "permanentBody": "**{name}** wird **dauerhaft** gebannt und kann **keinen Einspruch** einlegen. Nur ein Admin kann das später aufheben. Bist du sicher?"
         },
         "result": {
             "caseCode": "**Fallcode:** `{code}`",
@@ -203,11 +216,15 @@
             "dmFailed": "**Die DM konnte nicht zugestellt werden** (DMs geschlossen oder kein gemeinsamer Server). Die Maßnahme wurde trotzdem ausgeführt.",
             "dmDelivered": "DM zugestellt.",
             "title": "{action} erledigt: {name}",
-            "done": "Erledigt."
+            "done": "Erledigt.",
+            "nextWarn": "**Nächste Verwarnung:** Verwarnung {n} von {max}, noch kein Bann.",
+            "nextWarnBans": "**Nächste Verwarnung:** automatischer Bann für {length}.",
+            "nextWarnBansPermanent": "**Nächste Verwarnung:** automatischer dauerhafter Bann."
         },
         "step": {
             "reason": "Schritt 1: Wähle einen Grund.",
-            "reasonWithMessage": "**Nachricht:** {url} (als Beweis angehängt)\nSchritt 1: Wähle einen Grund."
+            "reasonWithMessage": "**Nachricht:** {url} (als Beweis angehängt)\nSchritt 1: Wähle einen Grund.",
+            "unbanOnly": "Dieser Bann ist kein automatischer Verwarnungs-Bann mehr. Ganz normal entbannen:"
         },
         "removeWarn": {
             "none": "Dieser Nutzer hat keine gezählten Verwarnungen, die entfernt werden können.",
@@ -217,7 +234,28 @@
         "cancelledTitle": "Abgebrochen",
         "cancelled": "Nichts wurde geändert. Führe /enforcements aus, um neu zu beginnen.",
         "failedTitle": "{action} fehlgeschlagen",
-        "failedGeneric": "Etwas ist schiefgelaufen; möglicherweise wurde nichts geändert. Prüfe /background, bevor du es erneut versuchst."
+        "unbanChoice": "Bann `{code}` war automatisch: das Verwarnungslimit hat ihn ausgelöst. Wähle:\n**Nur entbannen (Stufe bleibt):** der Bann endet, aber die Verwarnungsstufe bleibt, also bannt die nächste Verwarnung wieder, und länger.\n**Verwarnung entfernen (Stufe zurück):** die Verwarnung war ein Fehler. Sie wird entfernt, der Bann endet und die Stufe geht einen Schritt zurück. Der Nutzer bekommt eine DM mit einer Einladung zurück.",
+        "undo": {
+            "title": "Rückgängig (Fehler): {name}",
+            "what": {
+                "warn": "Verwarnung `{code}` wird entfernt: sie zählt nicht mehr, die Verwarnungen sinken um eins.",
+                "warnLadder": "Verwarnung `{code}` wird entfernt und der automatische Bann `{ban}`, den sie ausgelöst hat, aufgehoben. Die Verwarnungsstufe geht einen Schritt zurück.",
+                "ban": "Bann `{code}` wird entfernt und der Nutzer entbannt.",
+                "banLadder": "Automatischer Bann `{code}` wird entfernt: der Nutzer wird entbannt, die auslösende Verwarnung entfernt und die Verwarnungsstufe geht einen Schritt zurück.",
+                "mute": "Stummschaltung `{code}` wird entfernt und aufgehoben.",
+                "kick": "Kick `{code}` wird aus der Akte entfernt. Ein Kick lässt sich nicht rückgängig machen: der Nutzer kommt mit seiner Einladung zurück."
+            },
+            "dm": "Der Nutzer bekommt eine DM, dass es ein Fehler war. Der Fall bleibt in /background als entfernt (Fehler).",
+            "doneTitle": "Rückgängig gemacht: {name}",
+            "done": "`{code}` wurde entfernt (Fehler); er zählt nicht mehr.",
+            "failedTitle": "Rückgängig fehlgeschlagen"
+        },
+        "failed": {
+            "happened": "Die Maßnahme wurde ausgeführt (Fall `{code}`), aber ein späterer Schritt schlug fehl. Prüfe /background und führe sie nicht noch einmal aus.",
+            "happenedNoCase": "Die Maßnahme wurde ausgeführt, aber ein späterer Schritt schlug fehl. Prüfe /background und führe sie nicht noch einmal aus.",
+            "notHappened": "Nichts wurde geändert. Du kannst es mit /enforcements erneut versuchen.",
+            "unknown": "Etwas ist schiefgelaufen, und es ist unklar, ob sich etwas geändert hat. Prüfe /background, bevor du es erneut versuchst."
+        }
     },
     "enforcements": {
         "cmd": {

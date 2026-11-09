@@ -30,7 +30,8 @@
         },
         "warn": {
             "title": "**Ostrzeżenie {number} z {limit} na {server}**",
-            "limit": "Przy {limit} ostrzeżeniach dostaniesz bana."
+            "limit": "Przy {limit} ostrzeżeniach dostaniesz bana na {length}.",
+            "limitPermanent": "Przy {limit} ostrzeżeniach dostaniesz bana na stałe."
         },
         "appealAccepted": {
             "title": "**Odwołanie przyjęte**",
