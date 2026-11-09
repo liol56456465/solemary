@@ -54,3 +54,20 @@ into the new language. Code: `src/services/botDm/` (`dmRenderers.js`, `dmLog.js`
   on a re-edit (appeal invite, PUBLIC_URL links), as they would for a new DM.
 - **Retention:** rows older than 30 days go in the daily retention job (`privacy/retentionService.js`, rule
   `bot_dm_log`). `/wipedata` deletes the member's rows (all servers).
+
+## Personal language without a role (audit 4.6, 2026-11-09)
+
+- `/language set` lists all 8 languages. One with a role here works as above; one without a role (or any pick in
+  a server without language roles) is saved as the member's **personal language**: key-value key
+  `user:<id>:lang` (no schema change), one value per Discord account, for every server. The member's language
+  roles in that server are removed then (a role would keep winning there); if Mewvo can't remove them the
+  choice is still saved and the answer says the role still applies there. "Clear my personal language" removes it.
+- Also on the website: My record → Account settings → "Language of Mewvo's DMs" (POST `/me/account/language`).
+- Order: language role > personal language > Discord locale (private answers) / server language (DMs). Public
+  posts and posts for one member in a channel never use it.
+- In memory: loaded at startup (`loadPersonalLanguages`), written through. A failed load: DMs use the server
+  language, one warning, a retry at most once a minute. Reads for the settings page and the export throw.
+- DM re-edit: DMs to a member with a personal language are logged too (also without language roles); a change
+  re-edits their DMs of every server in `bot_dm_log` plus the current one (`schedulePersonalRelang`). The "Contest
+  this" button is not re-rendered on a re-edit (it stays in the language it was sent in).
+- Privacy: in the data export (`personalLanguage`), deleted by `/wipedata` (item `language`), on the privacy page.

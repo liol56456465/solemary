@@ -1,6 +1,8 @@
 // /language set | panel — language roles (services/languageRoleService.js).
-// set: everyone (commandAccess.js): a private select of the languages that have a role here;
-//      picking one gives that role and removes the member's other language roles.
+// set: everyone (commandAccess.js): a private select of all 8 languages; picking one that has a
+//      role here gives that role and removes the member's other language roles; one without a
+//      role (or in a server without language roles) is saved as the member's personal language
+//      for DMs (services/personalLanguage.js, audit 4.6).
 // panel: Administrator-only (not listed in commandAccess.js, so the dispatcher's gate refuses
 //      everyone else before execute runs): posts a persistent panel with one button per
 //      language (langrole:set:<code>), which does the same for whoever clicks.
@@ -14,12 +16,17 @@ import { textForGuild, textForInteraction } from '../../utils/botText.js';
 import { describe } from '../../utils/commandLocalizations.js';
 import {
     LanguageRoleError, NO_MENTIONS, currentLanguageRole, languageErrorText, languagePanelRows, languagePickerRow,
-    languageRolesFor, offeredLanguages,
+    languageRolesFor, nativeLanguageName, offeredLanguages,
 } from '../../services/languageRoleService.js';
+import { personalLanguageOf } from '../../services/personalLanguage.js';
 
 const PANEL_PERMS = [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks];
 
-/** The private /language set reply. deps (tests): { resolve }. */
+/**
+ * The private /language set reply: every language; the member's language role here (else their
+ * personal language) is preselected. No language roles in the server is no longer a dead end:
+ * the pick is saved as their personal language. deps (tests): { resolve, personal }.
+ */
 export function languageSetReply(interaction, deps = {}) {
     const tr = textForInteraction(interaction);
     const title = tr.t('language.pick.title');
@@ -29,12 +36,13 @@ export function languageSetReply(interaction, deps = {}) {
     } catch (error) {
         return { embeds: [createEmbed({ title, description: languageErrorText(tr, error), color: 'warning' })], components: [], allowedMentions: NO_MENTIONS };
     }
-    if (!offeredLanguages(map).length) {
-        return { embeds: [createEmbed({ title, description: tr.t('language.notSetUp'), color: 'warning' })], components: [], allowedMentions: NO_MENTIONS };
-    }
+    const personal = (deps.personal || personalLanguageOf)(interaction.user.id);
+    const role = currentLanguageRole(interaction.member, map);
+    const lines = [tr.t(offeredLanguages(map).length ? 'language.pick.text' : 'language.pick.textPersonal')];
+    if (personal) lines.push(tr.t('language.pick.personalNow', { language: nativeLanguageName(personal) }));
     return {
-        embeds: [createEmbed({ title, description: tr.t('language.pick.text'), color: 'info' })],
-        components: [languagePickerRow(tr, map, { userId: interaction.user.id, current: currentLanguageRole(interaction.member, map) })],
+        embeds: [createEmbed({ title, description: lines.join('\n\n'), color: 'info' })],
+        components: [languagePickerRow(tr, map, { userId: interaction.user.id, current: role ?? personal, personal })],
         allowedMentions: NO_MENTIONS,
     };
 }

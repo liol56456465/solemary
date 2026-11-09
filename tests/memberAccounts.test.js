@@ -43,15 +43,23 @@ async function serve({ env = ENV, store = createMemoryAccountStore(), accountLim
     const discord = { me: { id: DISCORD_A, username: 'discorda' } };
     const fetchImpl = async (url) => ({ ok: true, status: 200, json: async () => (url.includes('/token') ? { access_token: 't' } : discord.me) });
     const after = [];
+    // The personal language (Account settings → Language of Mewvo's DMs), in memory.
+    const languages = new Map();
+    const personalLanguage = {
+        read: async (id) => languages.get(id) ?? null,
+        down: false,
+        save: async (id, lang) => { if (personalLanguage.down) throw new Error('db down'); languages.set(id, lang); return lang; },
+        clear: async (id) => { languages.delete(id); return true; },
+    };
     const enabled = registerMemberPortal(app, {
         env, sessions, data: DATA, fetchImpl, accountStore: store, hashParams: LOW, accountLimits,
-        accountAfter: async (result, from) => { after.push({ result, from }); },
+        accountAfter: async (result, from) => { after.push({ result, from }); }, personalLanguage,
     });
     app.use(createSite({ client: { commands: null }, env, dashboardEnabled: false, memberPortalEnabled: enabled, memberAccountsEnabled: enabled && memberAccountsOn(env), supportInvite: () => null }));
     const server = await new Promise((resolve) => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
     const base = `http://127.0.0.1:${server.address().port}`;
     return {
-        base, store, sessions, discord, after,
+        base, store, sessions, discord, after, languages, personalLanguage,
         close: () => new Promise((resolve) => { server.closeAllConnections?.(); server.close(resolve); }),
     };
 }
@@ -761,4 +769,43 @@ test('Account settings: Your plan without a Pro bonus (slot 101, or a higher pla
     assert.equal(daysLeftText(new Date(now + 183 * day), now), '183 days left');
     assert.equal(daysLeftText(new Date(now + 1.9 * day), now), '1 day left');
     assert.equal(daysLeftText(new Date(now + 3600 * 1000), now), 'Ends today');
+});
+
+test('Account settings: the personal language for DMs is saved, shown, cleared; a bad value or a failed save changes nothing (audit 4.6)', async () => {
+    const app = await serve();
+    const b = browser(app);
+    try {
+        await member(app, b);
+        const page = (await b.request('/me/account')).body;
+        assert.match(page, /Language of Mewvo&#39;s DMs|Language of Mewvo's DMs/);
+        assert.match(page, /<option value="" selected>Each server&#39;s language \(default\)|<option value="" selected>Each server's language \(default\)/);
+        assert.match(page, /<option value="de" lang="de">Deutsch<\/option>/);
+
+        const saved = await b.request('/me/account/language', { form: { language: 'de' } });
+        assert.equal(saved.status, 303);
+        assert.equal(saved.location, '/me/account');
+        assert.equal(app.languages.get(DISCORD_A), 'de');
+        const after = (await b.request('/me/account')).body;
+        assert.match(after, /Saved: Mewvo will DM you in Deutsch\./);
+        assert.match(after, /<option value="de" lang="de" selected>Deutsch<\/option>/);
+
+        assert.equal((await b.request('/me/account/language', { form: { language: 'xx' } })).status, 403, 'an unknown code is refused');
+        assert.equal(app.languages.get(DISCORD_A), 'de');
+        assert.equal((await b.request('/me/account/language', { form: { language: 'fr' }, origin: 'https://evil.example' })).status, 403, 'another origin is refused');
+        assert.equal(app.languages.get(DISCORD_A), 'de');
+
+        await b.request('/me/account');
+        const cleared = await b.request('/me/account/language', { form: { language: '' } });
+        assert.equal(cleared.status, 303);
+        assert.equal(app.languages.has(DISCORD_A), false);
+
+        await b.request('/me/account');
+        app.personalLanguage.down = true;
+        const failed = await b.request('/me/account/language', { form: { language: 'pl' } });
+        assert.equal(failed.status, 503);
+        assert.match(failed.body, /could not be saved right now/);
+        assert.equal(app.languages.has(DISCORD_A), false, 'never shown as saved');
+    } finally {
+        await app.close();
+    }
 });

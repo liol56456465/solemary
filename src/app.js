@@ -68,6 +68,7 @@ import { premiumSettings, premiumStore } from './services/billing/premiumService
 import { loadPremiumCache, runPremiumCron, setGuildOwnerResolver, setPremiumClient } from './services/billing/premiumEffects.js';
 import { finalErrorHandler } from './utils/finalErrorHandler.js';
 import { setGuildLocaleResolver } from './utils/botText.js';
+import { loadPersonalLanguages } from './services/personalLanguage.js';
 import { corsOrigins, createCompression, createCors, createRateLimit, createReadyHandler, hsts } from './utils/httpMiddleware.js';
 import { createCanonicalHostRedirect } from './utils/canonicalHost.js';
 import { loadAllSettings, seedFromEnvOnce } from './services/settings/guildSettings.js';
@@ -153,6 +154,10 @@ class Mewvo extends Client {
       }
       
       await this.loadSettings(dbStatus);
+      // Members' own DM languages (/language without a role) into memory; a failed load is
+      // logged and retried later, DMs then use the server language (never throws).
+      const personal = await loadPersonalLanguages(this.db);
+      startupLog(personal === null ? 'Personal languages: not loaded (retried later)' : `Personal languages loaded: ${personal}`);
 
       // The owner's website text and images (dashboard Owner → Website). A DB error is logged and
       // the site runs on the catalog files and default images (these never throw).

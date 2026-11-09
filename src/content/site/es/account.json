@@ -153,7 +153,14 @@
     "unlink": "Desvincular Discord",
     "unlinkFoot": "Una cuenta de Mewvo necesita una cuenta de Discord vinculada: después de desvincularla, solo puedes vincular otra (o eliminar la cuenta). El plan se queda con tu cuenta de Discord. Una cuenta de Discord recibe la bonificación para las primeras cuentas una sola vez.",
     "yourData": "Tus datos",
-    "download": "Descargar mis datos"
+    "download": "Descargar mis datos",
+    "language": {
+      "heading": "Idioma de los DM de Mewvo",
+      "lead": "Mewvo te escribe por DM en este idioma y lo usa en Discord en las respuestas que solo ves tú, en todos los servidores. Un rol de idioma en un servidor tiene prioridad allí.",
+      "label": "Idioma",
+      "server": "El idioma de cada servidor (predeterminado)",
+      "submit": "Guardar idioma"
+    }
   },
   "password": {
     "heading": "Cambiar la contraseña",
@@ -204,7 +211,8 @@
     "wrongTwoStepOff": "La contraseña o el código son incorrectos. El inicio de sesión en dos pasos sigue activado.",
     "confirmDelete": "Marca la casilla para confirmar que quieres eliminar tu cuenta.",
     "wrongDeleteWithCode": "La contraseña o el código son incorrectos. No se ha eliminado nada.",
-    "wrongDelete": "La contraseña es incorrecta. No se ha eliminado nada."
+    "wrongDelete": "La contraseña es incorrecta. No se ha eliminado nada.",
+    "languageNotSaved": "Ahora mismo no se pudo guardar tu idioma (la base de datos no responde). No se cambió nada."
   },
   "flash": {
     "passwordReset": "Tu nueva contraseña se ha guardado. Se cerraron todas las demás sesiones.",
@@ -214,7 +222,9 @@
     "twoStepAlreadyOn": "El inicio de sesión en dos pasos ya está activado.",
     "twoStepAlreadyOff": "El inicio de sesión en dos pasos ya está desactivado.",
     "twoStepOff": "El inicio de sesión en dos pasos está desactivado.",
-    "unlinked": "Tu cuenta de Discord se ha desvinculado. Vuelve a vincular una cuenta de Discord para seguir usando tu cuenta de Mewvo."
+    "unlinked": "Tu cuenta de Discord se ha desvinculado. Vuelve a vincular una cuenta de Discord para seguir usando tu cuenta de Mewvo.",
+    "languageSaved": "Guardado: Mewvo te escribirá por DM en {language}.",
+    "languageCleared": "Borrado: Mewvo vuelve a usar el idioma de cada servidor para tus DM."
   },
   "errorCodes": {
     "usernameLength": "El nombre de usuario debe tener entre {min} y {max} caracteres.",

@@ -3,7 +3,8 @@
 // Language: the server's (owner's "mixed" rule). Every translated template takes `{ lang }` last;
 // callers get it from resolveBotLanguage({ guildId, userId, purpose: 'dm' }) (utils/botText.js).
 // Without it the DM is English, exactly as before. Text: src/content/bot/<lang>/enforcement.json
-// (dm.*, duration.*). The keep-apart DMs and the "Contest this" button are still English only.
+// (dm.*, duration.*). The keep-apart DMs and the "Contest this" button: member.json (keepApart.*,
+// contest.button), also `{ lang }` last.
 //
 // Punishment DM layout (beginner audit 4.1/4.2, 2026-11-09): title first, then reason (with its
 // rule), duration/end, what happens next, how to appeal, the case code "(you need this to
@@ -404,38 +405,46 @@ function caseVoidedDmText(rec, reason, inviteUrl = null, { lang, guildId, server
     ].filter(Boolean).join('\n'), process.env, { lang: tr.lang });
 }
 
+// ── Keep-apart (no-contact) DMs: member.json keepApart.* (audit 4.3) ─────────────
+
+/** The order's server in a keep-apart DM ("the server" in the DM's language when it has no name). */
+const keepApartServer = (order, name, tr) => dmServerName(order?.guild_id, name, tr.t('enforcement.dm.thisServer'));
+
 /**
  * Sent to both members when staff start a no-contact order. `other` is the other member (or null);
  * `options.serverName`: the order's server name (another server than Mewvo's is named by it).
+ * `options.lang`: the member's language (English: the text as before).
  */
-export function noContactStartedDm(order, other, { serverName: name } = {}) {
-    const otherName = other ? `**${other.username}**` : 'another member';
+function noContactStartedDmText(order, other, { serverName: name, lang } = {}) {
+    const tr = textOf(lang);
+    const otherName = other ? `**${other.username}**` : tr.t('member.keepApart.anotherMember');
     return withPrivacyLine([
-        `**Keep apart: an order in ${dmServerName(order?.guild_id, name)}**`,
-        `Staff have asked you and ${otherName} not to contact each other until ${stamp(order.until)}.`,
-        'Until then, do not mention or reply to them in the server: those messages are removed.',
-        `Reason: ${order.reason}`,
-        'This is not a punishment and does not count as a warning.',
-    ].join('\n'));
+        tr.t('member.keepApart.startedTitle', { server: keepApartServer(order, name, tr) }),
+        tr.t('member.keepApart.asked', { other: otherName, until: stamp(order.until) }),
+        tr.t('member.keepApart.rule'),
+        tr.t('member.keepApart.reason', { reason: order.reason }),
+        tr.t('member.keepApart.notPunishment'),
+    ].join('\n'), process.env, { lang: tr.lang });
 }
 
 /** Sent to both members when a no-contact order ends (early by staff, or it expired). */
-export function noContactEndedDm(order, other, { early = false, serverName: name } = {}) {
+function noContactEndedDmText(order, other, { early = false, serverName: name, lang } = {}) {
+    const tr = textOf(lang);
     return withPrivacyLine([
-        `**Your keep-apart order in ${dmServerName(order?.guild_id, name)} has ended**`,
-        `${early ? 'Staff ended it early.' : 'It expired.'} You may contact ${other ? `**${other.username}**` : 'the other member'} again.`,
-    ].join('\n'));
+        tr.t('member.keepApart.endedTitle', { server: keepApartServer(order, name, tr) }),
+        `${tr.t(early ? 'member.keepApart.early' : 'member.keepApart.expired')} ${tr.t('member.keepApart.contact', { other: other ? `**${other.username}**` : tr.t('member.keepApart.theOtherMember') })}`,
+    ].join('\n'), process.env, { lang: tr.lang });
 }
 
 /**
  * The "Contest this" button under an automod DM whose message was deleted
- * (automodContest.js). DM buttons work without a shared server. customId carries
- * the case code: amcontest:open:<code>.
+ * (automodContest.js), in the DM's language. DM buttons work without a shared server.
+ * customId carries the case code: amcontest:open:<code> (unchanged in every language).
  */
-export function contestComponents(caseCode) {
+export function contestComponents(caseCode, { lang } = {}) {
     if (!caseCode) return [];
     return [new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`amcontest:open:${caseCode}`).setLabel('Contest this').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`amcontest:open:${caseCode}`).setLabel(textOf(lang).t('member.contest.button').slice(0, 80)).setStyle(ButtonStyle.Secondary),
     )];
 }
 
@@ -467,3 +476,5 @@ export const appealDeniedDm = englishOnError('appealDeniedDm', appealDeniedDmTex
 export const banEndedDm = englishOnError('banEndedDm', banEndedDmText);
 export const muteEndedDm = englishOnError('muteEndedDm', muteEndedDmText);
 export const caseVoidedDm = englishOnError('caseVoidedDm', caseVoidedDmText);
+export const noContactStartedDm = englishOnError('noContactStartedDm', noContactStartedDmText);
+export const noContactEndedDm = englishOnError('noContactEndedDm', noContactEndedDmText);

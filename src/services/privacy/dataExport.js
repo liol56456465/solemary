@@ -13,6 +13,7 @@
 // Every new section is capped at ROW_LIMIT rows.
 
 import { pgConfig } from '../../config/database/postgres.js';
+import { personalLanguageKey } from '../personalLanguage.js';
 
 export const EXPORT_FORMAT = 'mewvo-data-export-v1';
 const ID = /^\d{17,20}$/;
@@ -140,6 +141,9 @@ export async function buildDataExport(userId, { query, readKey, tables = pgConfi
     // Only whether a token is stored: the encrypted token itself is never in the file.
     const oauth = readKey ? await readKey(`oauth:tokens:${userId}`) : null;
     sections.oauthTokenStored = Boolean(oauth && typeof oauth === 'object');
+    // The language picked for Mewvo's DMs (/language without a role, the website), or null.
+    const language = readKey ? await readKey(personalLanguageKey(userId)) : null;
+    sections.personalLanguage = typeof language === 'string' ? language : null;
     return {
         format: EXPORT_FORMAT,
         generatedAt: now().toISOString(),

@@ -121,6 +121,7 @@
             "reminders": "Rappels",
             "oauth": "Jeton de connexion Discord enregistré (de « Vérifier avec Discord »)",
             "dmlog": "Copies enregistrées des MP du bot (pour les retraduire quand vous changez de langue)",
+            "language": "Votre langue personnelle pour Mewvo (via /language)",
             "ticketRatings": "Notes de tickets que vous avez données (votre nom et commentaire ; les étoiles restent)",
             "invites": "Suivi des invitations : comment tu es arrivé, et ton nom comme personne ayant invité d'autres membres"
         },

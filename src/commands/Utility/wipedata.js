@@ -11,6 +11,7 @@ import { localized, replyText } from '../../utils/commandLocalizations.js';
 const ITEM_KEYS = Object.freeze({
     levels: 'utility.wipedata.item.levels', birthday: 'utility.wipedata.item.birthday', todo: 'utility.wipedata.item.todo',
     reminders: 'utility.wipedata.item.reminders', oauth: 'utility.wipedata.item.oauth', dmlog: 'utility.wipedata.item.dmlog',
+    language: 'utility.wipedata.item.language',
     ticketRatings: 'utility.wipedata.item.ticketRatings',
     invites: 'utility.wipedata.item.invites',
 });

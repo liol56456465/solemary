@@ -7,8 +7,12 @@
     },
     "pick": {
         "title": "La tua lingua",
-        "text": "Scegli la lingua che Mewvo deve usare per i messaggi rivolti a te. Ricevi il ruolo corrispondente; gli altri ruoli di lingua vengono rimossi.",
-        "placeholder": "Scegli una lingua"
+        "text": "Scegli la lingua che Mewvo deve usare per i messaggi rivolti a te. Una lingua con un ruolo qui ti dà quel ruolo (gli altri ruoli di lingua vengono rimossi); una senza ruolo viene salvata come tua lingua personale.",
+        "placeholder": "Scegli una lingua",
+        "textPersonal": "Scegli la lingua che Mewvo deve usare per i tuoi DM e per le risposte che vedi solo tu. Questo server non ha ruoli di lingua, quindi viene salvata come tua lingua personale, in tutti i server (un ruolo di lingua in un server lì ha comunque la precedenza).",
+        "personalNow": "La tua lingua personale: **{language}**.",
+        "personalOption": "Nessun ruolo qui: salvata come lingua personale",
+        "resetOption": "Cancella la mia lingua personale"
     },
     "panel": {
         "title": "Scegli la tua lingua",
@@ -31,6 +35,10 @@
         "dangerous": "Il ruolo **{role}** ha permessi da staff, quindi non lo assegno. Chiedi a un admin di scegliere un altro ruolo di lingua.",
         "hierarchy": "Il ruolo **{role}** non è sotto il mio ruolo più alto, quindi non posso darlo né toglierlo. Chiedi a un admin di spostare più in alto il mio ruolo.",
         "failed": "Discord ha rifiutato la modifica del ruolo. Riprova tra poco.",
-        "dbDown": "Al momento le impostazioni non si possono leggere (il database non risponde). Non è stato cambiato nulla."
-    }
+        "dbDown": "Al momento le impostazioni non si possono leggere (il database non risponde). Non è stato cambiato nulla.",
+        "saveFailed": "Non è stato possibile salvare la tua lingua (il database non risponde). Non è stato cambiato nulla."
+    },
+    "saved": "Salvato: Mewvo ti scriverà in DM in {language} e la userà per le risposte che vedi solo tu. Un ruolo di lingua in un server lì ha comunque la precedenza.",
+    "resetDone": "Cancellata: per i tuoi DM Mewvo usa di nuovo la lingua di ogni server.",
+    "roleKept": "-# Il tuo ruolo di lingua in questo server qui ha ancora la precedenza: {reason}"
 }

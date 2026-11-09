@@ -121,6 +121,7 @@
             "reminders": "Reminders",
             "oauth": "Stored Discord login token (from Verify with Discord)",
             "dmlog": "Saved copies of bot DMs (to re-translate them when you change language)",
+            "language": "Your personal language for Mewvo (from /language)",
             "ticketRatings": "Ticket ratings you gave (your name and comment; the stars stay)",
             "invites": "Invite tracking: how you joined, and your name as the inviter of others"
         },

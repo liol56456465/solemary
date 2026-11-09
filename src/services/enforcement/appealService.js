@@ -24,7 +24,7 @@ import { generateTranscript } from '../ticket.js';
 import { removeMutedRole } from './muteService.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { durationIn } from './dmTemplates.js';
-import { botText, textForGuild } from '../../utils/botText.js';
+import { botText, resolveBotLanguage, textForGuild } from '../../utils/botText.js';
 import { LADDER_STAGE_BANS, dateStamp, ladderStage, ladderStageShort, stamp, truncate } from './format.js';
 import { evidenceDisplay } from './evidenceService.js';
 import { SECOND_REVIEWER_MESSAGE, checkAppealReviewer, needsSecondReviewer } from './appealReviewer.js';
@@ -79,32 +79,36 @@ function isStillInEffect(record) {
         && (!record.expires_at || new Date(record.expires_at) > new Date());
 }
 
-/** Throws a user-facing error when this user may not appeal this case right now. */
-export async function assertAppealable(record, userId) {
+/**
+ * Throws a user-facing error when this user may not appeal this case right now. The text is in
+ * `lang` (the member's language; the appeal form passes it), English by default.
+ */
+export async function assertAppealable(record, userId, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     // The same message for "no such code" and "not yours" so codes can't be probed.
     if (!record || record.target_user_id !== userId) {
-        throw userError('That case code was not found for your account. Check the code in your DM.');
+        throw userError(tr.t('member.appeal.error.notFound'));
     }
     if (record.unappealable) {
-        throw userError('This case cannot be appealed.');
+        throw userError(tr.t('member.appeal.error.unappealable'));
     }
     if (record.status === 'revoked') {
-        throw userError('This case has already been lifted.');
+        throw userError(tr.t('member.appeal.error.lifted'));
     }
 
     const now = Date.now();
     if (record.type === 'ban' || record.type === 'mute') {
         if (!isStillInEffect(record)) {
-            throw userError(`This ${record.type} has already ended, so there is nothing to appeal.`);
+            throw userError(tr.t(record.type === 'ban' ? 'member.appeal.error.endedBan' : 'member.appeal.error.endedMute'));
         }
         if (record.appeal_deadline && new Date(record.appeal_deadline).getTime() <= now) {
-            throw userError('The appeal window for this ban has closed.');
+            throw userError(tr.t('member.appeal.error.windowClosed'));
         }
     } else {
         const windowMs = resolveSetting(appealSettingsGuild(record.guild_id), 'appealWindowMs');
         if (now - new Date(record.created_at).getTime() > windowMs) {
             const days = Math.round(windowMs / DAY_MS);
-            throw userError(`${record.type === 'kick' ? 'Kicks' : 'Warnings'} can only be appealed within ${days} day${days === 1 ? '' : 's'}.`);
+            throw userError(tr.tp(record.type === 'kick' ? 'member.appeal.error.windowKick' : 'member.appeal.error.windowWarn', days));
         }
     }
 
@@ -116,12 +120,12 @@ export async function assertAppealable(record, userId) {
     );
     const last = rows[0];
     if (last?.status === 'pending') {
-        throw userError('You already have a pending appeal for this case. You will get a DM with the decision.');
+        throw userError(tr.t('member.appeal.error.pending'));
     }
     if (last?.status === 'denied') {
         const retryAt = new Date(last.decided_at).getTime() + resolveSetting(appealSettingsGuild(record.guild_id), 'appealCooldownMs');
         if (retryAt > now) {
-            throw userError(`Your last appeal for this case was denied. You can appeal again <t:${Math.floor(retryAt / 1000)}:R>.`);
+            throw userError(tr.t('member.appeal.error.cooldown', { when: `<t:${Math.floor(retryAt / 1000)}:R>` }));
         }
     }
 }
@@ -562,32 +566,65 @@ async function openSupportAppealChannel(client, record, user) {
     }
 }
 
-/** What the appellant sees in their support-server appeal channel. */
-function memberAppealSummary(record, answers) {
+/** A case type (ban, kick, mute, warn) for the member, in a language; anything else as stored. */
+function memberCaseType(type, tr) {
+    const key = `member.appeal.type.${type}`;
+    return tr.has(key) ? tr.t(key) : String(type ?? '');
+}
+
+/**
+ * The appellant's language in an appeal channel they read: their language role in that channel's
+ * server (cached member), else their personal language, else that server's language.
+ */
+export function appellantLanguage(client, guildId, userId) {
+    const member = client?.guilds?.cache?.get?.(guildId)?.members?.cache?.get?.(userId) ?? null;
+    return resolveBotLanguage({ guildId, member, userId, purpose: 'dm' });
+}
+
+/** What the appellant sees in their support-server appeal channel (in their language). Exported for tests. */
+export function memberAppealSummary(record, answers, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     const lines = [
-        `**Case code:** \`${record.case_code}\``,
-        `**Type:** ${record.type}`,
-        `**When:** ${stamp(record.created_at)}`,
-        `**Reason:** ${truncate(record.reason, 500)}`,
+        tr.t('member.appeal.channel.caseCode', { code: record.case_code }),
+        tr.t('member.appeal.channel.type', { type: memberCaseType(record.type, tr) }),
+        tr.t('member.appeal.channel.when', { date: stamp(record.created_at) }),
+        tr.t('member.appeal.channel.reason', { reason: truncate(record.reason, 500) }),
     ];
     if (record.type === 'ban') {
-        lines.push(record.expires_at ? `**Ends:** ${stamp(record.expires_at)}` : '**Duration:** Permanent');
+        lines.push(record.expires_at ? tr.t('member.appeal.channel.ends', { date: stamp(record.expires_at) }) : tr.t('member.appeal.channel.permanent'));
     }
     return createEmbed({
-        title: `Your appeal for ${record.case_code}`,
+        title: truncate(tr.t('member.appeal.channel.title', { code: record.case_code }), 256),
         description: truncate(lines.join('\n'), 4096),
-        fields: answerFields(answers),
-        footer: { text: 'Staff will review it here. You can add more details or screenshots in this channel. You get the decision by DM.' },
+        fields: answerFields(answers, tr.lang),
+        footer: { text: truncate(tr.t('member.appeal.channel.footer'), 2048) },
         color: 'primary',
     });
 }
 
-export async function submitAppeal({ client, user, caseCode, answers }) {
+/**
+ * The note in the appellant's channel after a decision (no admin name, no note). English is the
+ * text as before. Pure (tests).
+ */
+export function memberDecisionEmbed({ caseCode, decision, dmDelivered, seconds }, { lang = 'en' } = {}) {
+    const tr = botText(lang);
+    const accepted = decision === 'accept';
+    return createEmbed({
+        title: tr.t(accepted ? 'member.appeal.result.acceptedTitle' : 'member.appeal.result.deniedTitle'),
+        description: truncate(`${tr.t(accepted ? 'member.appeal.result.accepted' : 'member.appeal.result.denied', { code: caseCode })} `
+            + `${tr.t(dmDelivered ? 'member.appeal.result.dm' : 'member.appeal.result.noDm')}\n\n`
+            + tr.t('member.appeal.result.deleted', { seconds }), 4096),
+        color: accepted ? 'success' : 'error',
+    });
+}
+
+export async function submitAppeal({ client, user, caseCode, answers, lang = 'en' }) {
     // Any server: the member appeals their own case (assertAppealable checks the user id, with the
     // same "not found" text for unknown and other people's codes), wherever it was issued.
+    // `lang`: the member's language for the refusals (the appeal form passes it).
     const record = await getCaseByCodeAnyServer(caseCode);
     return Mutex.runExclusive(`appeal:${caseCode}`, async () => {
-        await assertAppealable(record, user.id);
+        await assertAppealable(record, user.id, { lang });
         // Home cases: the main server, as before. Another server's case: that server only; when it
         // has no appeals (or ticket) category, or the bot is not in it, the appeal is stored
         // without a channel and handled from the dashboard / web form.
@@ -613,7 +650,7 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
             });
         } catch (error) {
             if (isUniqueViolation(error, 'one_pending')) {
-                throw userError('You already have a pending appeal for this case. You will get a DM with the decision.');
+                throw userError(botText(lang).t('member.appeal.error.pending'));
             }
             throw error;
         }
@@ -667,9 +704,11 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
         await query(`UPDATE ${T.appeals} SET channel_id = $2, channel_guild_id = $3, staff_channel_id = $4 WHERE id = $1`,
             [appeal.id, channel.id, channelGuildId, inSupport ? staffChannel.id : null]);
         if (inSupport) {
+            // The appellant reads this channel: their language there (role, personal, server).
+            const memberLang = appellantLanguage(client, channelGuildId, user.id);
             await channel.send({
-                content: `<@${user.id}>, your appeal was received.`,
-                embeds: [memberAppealSummary(record, answers)],
+                content: botText(memberLang).t('member.appeal.channel.received', { userId: user.id }),
+                embeds: [memberAppealSummary(record, answers, { lang: memberLang })],
                 allowedMentions: { users: [user.id] },
             });
         }
@@ -715,17 +754,18 @@ export async function submitAppeal({ client, user, caseCode, answers }) {
 const MAX_REPORTS_PER_DAY = 3;
 
 /** Each report opens a channel, so cap them per server: one open at a time, three a day. */
-async function assertCanReport(guild, userId) {
+async function assertCanReport(guild, userId, lang = 'en') {
+    const tr = botText(lang);
     const { rows } = await query(
         `SELECT channel_id, created_at > NOW() - INTERVAL '1 day' AS today FROM ${T.appeals}
          WHERE kind = 'report' AND user_id = $1 AND guild_id = $2`,
         [userId, guild.id]
     );
     if (rows.filter((row) => row.today).length >= MAX_REPORTS_PER_DAY) {
-        throw userError('You have sent the maximum number of staff reports for today. Please try again tomorrow.');
+        throw userError(tr.t('member.appeal.error.reportsToday'));
     }
     const open = rows.find((row) => row.channel_id && guild.channels.cache.has(row.channel_id));
-    if (open) throw userError('You already have an open staff report. The administrators will contact you about it.');
+    if (open) throw userError(tr.t('member.appeal.error.reportOpen'));
 }
 
 /** Shown when a server without any category for reports gets one. */
@@ -745,22 +785,22 @@ export function reportGuildId(guildId) {
  * in; default: the main server). Its channel opens in that server's reports category (else its
  * ticket, else its appeals category); a server without one gets REPORTS_NOT_SET_UP.
  */
-export async function submitStaffReport({ client, user, staffMember, details, proof, guildId = null }) {
+export async function submitStaffReport({ client, user, staffMember, details, proof, guildId = null, lang = 'en' }) {
     const targetId = reportGuildId(guildId);
     const home = isHomeGuild(targetId);
     const guild = client.guilds.cache.get(targetId);
     if (!guild) {
         if (home) throw configError('Main guild unavailable for staff reports');
-        throw userError('That server is not available right now. Nothing was sent.');
+        throw userError(botText(lang).t('member.appeal.error.serverUnavailable'));
     }
     if (!home && !(await getReportsCategory(guild))) throw userError(REPORTS_NOT_SET_UP);
     // One submission per member and server at a time: two forms sent at once must not both pass
     // the "one open report" check (the new row only counts as open once its channel exists).
-    return Mutex.runExclusive(`report:${guild.id}:${user.id}`, () => openStaffReport({ client, guild, user, staffMember, details, proof }));
+    return Mutex.runExclusive(`report:${guild.id}:${user.id}`, () => openStaffReport({ client, guild, user, staffMember, details, proof, lang }));
 }
 
-async function openStaffReport({ client, guild, user, staffMember, details, proof }) {
-    await assertCanReport(guild, user.id);
+async function openStaffReport({ client, guild, user, staffMember, details, proof, lang = 'en' }) {
+    await assertCanReport(guild, user.id, lang);
     // Reports count toward the open-channel cap (with modmail); appeals never do.
     const slot = await withOpenChannelSlot(guild, 'staff report', async () => {
         const { rows } = await query(
@@ -1090,13 +1130,10 @@ async function decideAppealLocked({ client, admin, caseCode, decision, note, rec
         const separateStaff = Boolean(appeal.staff_channel_id);
         const staffChannel = separateStaff ? await fetchIn(appeal.guild_id, appeal.staff_channel_id) : channel;
         if (separateStaff && channel) {
-            // The appellant reads the channel: no admin name, no note, no internal notes.
+            // The appellant reads the channel: no admin name, no note, no internal notes; their language.
+            const memberLang = appellantLanguage(client, channel.guildId ?? appeal.channel_guild_id, record.target_user_id);
             await channel.send({
-                embeds: [createEmbed({
-                    title: `Appeal ${label}`,
-                    description: `Your appeal for \`${record.case_code}\` was ${label}. You ${dmDelivered ? 'got' : 'will not get'} the details by DM${dmDelivered ? '' : ' (your DMs are closed)'}.\n\n-# This channel is deleted in ${APPEAL_CHANNEL_DELETE_DELAY_MS / 1000} seconds.`,
-                    color: decision === 'accept' ? 'success' : 'error',
-                })],
+                embeds: [memberDecisionEmbed({ caseCode: record.case_code, decision, dmDelivered, seconds: APPEAL_CHANNEL_DELETE_DELAY_MS / 1000 }, { lang: memberLang })],
                 allowedMentions: { parse: [] },
             }).catch(() => {});
         }

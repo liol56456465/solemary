@@ -12,16 +12,15 @@ import { enforcementConfig } from '../../config/enforcement.js';
 import { getActiveCase, getCountedWarns, listUserAppeals } from './caseService.js';
 import { getLadder, previewWarn } from './enforcementService.js';
 import { formatDuration, ladderStageLabel, truncate } from './format.js';
+import { durationIn } from './dmTemplates.js';
+import { ladderStageShortIn } from './precedentService.js';
+import { botText } from '../../utils/botText.js';
 
 const day = (date) => `<t:${Math.floor(new Date(date).getTime() / 1000)}:d>`;
 const relative = (date) => `<t:${Math.floor(new Date(date).getTime() / 1000)}:R>`;
 
-const APPEAL_STATUS = {
-    pending: '⏳ pending',
-    accepted: 'accepted',
-    denied: 'denied',
-    closed: 'closed',
-};
+const APPEAL_STATUSES = new Set(['pending', 'accepted', 'denied', 'closed']);
+const CASE_TYPES = new Set(['ban', 'kick', 'mute', 'warn']);
 
 export async function getMemberStanding(guildId, userId) {
     const ladder = await getLadder(guildId, userId);
@@ -70,38 +69,71 @@ function banLength(ms) {
     return ms == null ? 'permanent' : formatDuration(ms);
 }
 
-/** The embed fields for a standing; pure, for tests. */
-export function standingFields(standing) {
+/** "Warning stage 1 of 3 (7-day ban)" in a language (English: format.js ladderStageLabel). */
+function stageLabelIn(level, tr) {
+    if (tr.lang === 'en') return ladderStageLabel(level);
+    const text = tr.t('staff.panel.stage.long', { stage: ladderStageShortIn(level, { lang: tr.lang }) });
+    return text.charAt(0).toLocaleUpperCase(tr.lang) + text.slice(1);
+}
+
+/** nextWarningText in a language (English: exactly nextWarningText). */
+export function nextWarningIn(ladder, { lang = 'en' } = {}) {
+    if (lang === 'en') return nextWarningText(ladder);
+    const tr = botText(lang);
+    const step = nextWarningSteps(ladder);
+    if (step.ladderOff) return tr.t('member.record.ladderOff');
+    const ban = step.banMs == null ? tr.t('member.record.permanent') : durationIn(step.banMs, tr.lang);
+    if (step.escalates) return tr.t('member.record.limit', { ban, stage: step.nextLevel });
+    const after = step.left === 1 ? tr.t('member.record.oneAfter', { ban }) : tr.tp('member.record.moreAfter', step.left, { ban });
+    return `${tr.t('member.record.would', { n: step.warnNumber, max: step.threshold })} ${after}`;
+}
+
+/**
+ * The embed fields for a standing ("My record"), in the member's language (`lang`; English is
+ * the text as before). Pure, for tests.
+ */
+export function standingFields(standing, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     const { ladder, warns, activeBan, activeMute, appeals } = standing;
     const threshold = ladder.level === 0 ? enforcementConfig.warnsPerLevel : 1;
 
     const warnLines = warns.slice(0, 10).map((warn) => `\`${warn.case_code}\` · ${truncate(warn.reason, 80)} · ${day(warn.created_at)}`);
-    if (warns.length > 10) warnLines.push(`…and ${warns.length - 10} more`);
+    if (warns.length > 10) warnLines.push(tr.t('member.record.andMore', { n: warns.length - 10 }));
     const warnsValue = [
         ladder.enabled === false
-            ? LADDER_OFF_TEXT
+            ? tr.t('member.record.ladderOff')
             : ladder.warns_since_level
-                ? `**${ladder.warns_since_level}** counted (limit at this stage: ${threshold}).`
-                : 'None counted right now.',
+                ? tr.t('member.record.counted', { n: ladder.warns_since_level, threshold })
+                : tr.t('member.record.noneCounted'),
         ...warnLines,
-        '-# Warnings do not expire. One stops counting when staff remove it, it is lifted on appeal, or you reach the limit (then the count starts again at the next stage).',
+        tr.t('member.record.expiry'),
     ].join('\n');
 
     const ladderValue = [
-        `**${ladderStageLabel(ladder.level)}**.`,
-        `**Your next warning:** ${nextWarningText(ladder)}`,
+        tr.t('member.record.stage', { stage: stageLabelIn(ladder.level, tr) }),
+        tr.t('member.record.next', { text: nextWarningIn(ladder, { lang: tr.lang }) }),
     ].join('\n');
 
     const active = [];
-    if (activeBan) active.push(`Ban \`${activeBan.case_code}\` · ${activeBan.expires_at ? `ends ${day(activeBan.expires_at)} (${relative(activeBan.expires_at)})` : 'permanent'}`);
-    if (activeMute) active.push(`Mute \`${activeMute.case_code}\` · ends ${day(activeMute.expires_at)} (${relative(activeMute.expires_at)})`);
+    if (activeBan) {
+        active.push(activeBan.expires_at
+            ? tr.t('member.record.banEnds', { code: activeBan.case_code, date: day(activeBan.expires_at), relative: relative(activeBan.expires_at) })
+            : tr.t('member.record.banPermanent', { code: activeBan.case_code }));
+    }
+    if (activeMute) active.push(tr.t('member.record.muteEnds', { code: activeMute.case_code, date: day(activeMute.expires_at), relative: relative(activeMute.expires_at) }));
 
-    const appealLines = appeals.map((appeal) => `\`${appeal.case_code}\` ${appeal.type} · ${APPEAL_STATUS[appeal.status] ?? appeal.status} · filed ${day(appeal.created_at)}${appeal.decided_at ? `, decided ${day(appeal.decided_at)}` : ''}`);
+    const appealLines = appeals.map((appeal) => tr.t('member.record.appealLine', {
+        code: appeal.case_code,
+        type: CASE_TYPES.has(appeal.type) ? tr.t(`member.appeal.type.${appeal.type}`) : appeal.type,
+        status: APPEAL_STATUSES.has(appeal.status) ? tr.t(`member.record.status.${appeal.status}`) : appeal.status,
+        date: day(appeal.created_at),
+        decided: appeal.decided_at ? tr.t('member.record.appealDecided', { date: day(appeal.decided_at) }) : '',
+    }));
 
     return [
-        { name: 'Counted warnings', value: truncate(warnsValue, 1024) },
-        { name: 'Warning ladder', value: truncate(ladderValue, 1024) },
-        { name: 'Active punishments', value: active.length ? active.join('\n') : 'None.' },
-        { name: 'Appeals', value: truncate(appealLines.length ? appealLines.join('\n') : 'None filed.', 1024) },
+        { name: tr.t('member.record.field.warns'), value: truncate(warnsValue, 1024) },
+        { name: tr.t('member.record.field.ladder'), value: truncate(ladderValue, 1024) },
+        { name: tr.t('member.record.field.active'), value: truncate(active.length ? active.join('\n') : tr.t('member.record.none'), 1024) },
+        { name: tr.t('member.record.field.appeals'), value: truncate(appealLines.length ? appealLines.join('\n') : tr.t('member.record.noneFiled'), 1024) },
     ];
 }

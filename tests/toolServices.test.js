@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { emptyPoolMessage, filterRandomMemberPool, pickFromPool, pickRandomMember } from '../src/services/randomMemberService.js';
 import { shortenUrl, validateShortenInput } from '../src/services/urlShortener.js';
 import { WIPE_ITEMS, wipeMemberData } from '../src/services/wipedataService.js';
+import { personalLanguageOf, setPersonalLanguagesForTests } from '../src/services/personalLanguage.js';
 
 const ROLE = '600000000000000001';
 const member = (id, { bot = false, status = 'online', roles = [] } = {}) => ({
@@ -63,10 +64,12 @@ test('wipedata: deletes levels, economy, AFK, birthday and to-do; reports failur
         [`guild:${g}:afk:${me}`, { reason: 'x' }],
         [`todo_${me}`, { tasks: [] }],
         [`oauth:tokens:${me}`, { tokens: 'encrypted' }],
+        [`user:${me}:lang`, 'de'],
         [`oauth:tokens:${me}9`, { tokens: 'encrypted' }],
         [`guild:${g}:leveling:users:${me}9`, { xp: 9 }],
     ]);
     const db = { exists: async (k) => store.has(k), delete: async (k) => store.delete(k) };
+    setPersonalLanguagesForTests({ [me]: 'de' });
     const birthdays = [];
     const reminders = [];
     const verifiedGuilds = [];
@@ -96,6 +99,8 @@ test('wipedata: deletes levels, economy, AFK, birthday and to-do; reports failur
     assert.equal(WIPE_ITEMS.find((i) => i.id === 'levels').label, 'Levels, XP and voice time');
     assert.deepEqual(ratings, [`hide:${me}`, me], 'open channel surveys are hidden first, then the ratings lose their name and comment (v14)');
     assert.deepEqual(invites, [`${g}:${me}`], 'invite tracking of this server too (v14)');
+    assert.equal(personalLanguageOf(me), null, 'the personal language is gone from memory too (audit 4.6)');
+    setPersonalLanguagesForTests();
 
     const broken = { db: { exists: async () => true, delete: async (k) => { if (k.includes('afk')) throw new Error('db down'); return true; } } };
     const partial = await wipeMemberData(broken, g, me, { removeBirthday: async () => { throw new Error('db down'); }, removeReminders: async () => {}, removeVerifiedGuilds: async () => {}, removeDmLog: async () => {}, removeTicketRatings: async () => {}, removeVoiceTime: async () => {}, removeInvites: async () => {} });
@@ -104,7 +109,8 @@ test('wipedata: deletes levels, economy, AFK, birthday and to-do; reports failur
     const silentFail = await wipeMemberData({ db: { exists: async () => true, delete: async () => false } }, g, me, { removeBirthday: async () => {}, removeReminders: async () => {}, removeVerifiedGuilds: async () => {}, removeDmLog: async () => {}, removeTicketRatings: async () => {}, removeVoiceTime: async () => {}, removeInvites: async () => {} });
     const listFails = await wipeMemberData({ db }, g, me, { removeBirthday: async () => {}, removeReminders: async () => {}, removeVerifiedGuilds: async () => { throw new Error('db down'); }, removeDmLog: async () => {}, removeTicketRatings: async () => {}, removeVoiceTime: async () => {}, removeInvites: async () => {} });
     assert.deepEqual(listFails.failed.map((f) => f.id), ['oauth'], 'a failed delete of the server list is reported, not hidden');
-    assert.ok(silentFail.failed.length === 5, 'a false from delete is an error');
+    // levels, economy, afk, todo, oauth and the personal language (key-value deletes).
+    assert.ok(silentFail.failed.length === 6, 'a false from delete is an error');
     const dmLogFails = await wipeMemberData({ db }, g, me, { removeBirthday: async () => {}, removeReminders: async () => {}, removeVerifiedGuilds: async () => {}, removeDmLog: async () => { throw new Error('db down'); }, removeTicketRatings: async () => {}, removeVoiceTime: async () => {}, removeInvites: async () => {} });
     assert.deepEqual(dmLogFails.failed.map((f) => f.id), ['dmlog'], 'a failed DM log delete is reported');
     const ratingsFail = await wipeMemberData({ db }, g, me, { removeBirthday: async () => {}, removeReminders: async () => {}, removeVerifiedGuilds: async () => {}, removeDmLog: async () => {}, removeTicketRatings: async () => { throw new Error('db down'); }, removeVoiceTime: async () => {}, removeInvites: async () => {} });

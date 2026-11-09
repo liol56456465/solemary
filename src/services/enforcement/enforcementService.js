@@ -475,10 +475,11 @@ function baseRecord(guild, targetUser, flow, moderatorInfo) {
 
 /**
  * DM components for an action: the "Contest this" button when automod deleted the
- * member's message (flow.contestable, set by automodService.applyStep).
+ * member's message (flow.contestable, set by automodService.applyStep). A function of the DM's
+ * language: sendLoggedDm builds it once it knows the language (the button label follows it).
  */
 function dmComponentsFor(flow, record) {
-    return flow?.contestable && record?.case_code ? contestComponents(record.case_code) : null;
+    return flow?.contestable && record?.case_code ? (lang) => contestComponents(record.case_code, { lang }) : null;
 }
 
 /** Rolls back a case whose Discord action failed (never throws: the action's error matters). */

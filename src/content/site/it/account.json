@@ -153,7 +153,14 @@
     "unlink": "Scollega Discord",
     "unlinkFoot": "Un account Mewvo ha bisogno di un account Discord collegato: dopo lo scollegamento puoi solo collegarne di nuovo uno (o eliminare l'account). Un piano resta con il tuo account Discord. Un account Discord riceve il bonus per i primi account una sola volta.",
     "yourData": "I tuoi dati",
-    "download": "Scarica i miei dati"
+    "download": "Scarica i miei dati",
+    "language": {
+      "heading": "Lingua dei DM di Mewvo",
+      "lead": "Mewvo ti scrive in DM in questa lingua e la usa su Discord per le risposte che vedi solo tu, in tutti i server. Un ruolo di lingua in un server lì ha la precedenza.",
+      "label": "Lingua",
+      "server": "La lingua di ogni server (predefinita)",
+      "submit": "Salva la lingua"
+    }
   },
   "password": {
     "heading": "Cambia password",
@@ -204,7 +211,8 @@
     "wrongTwoStepOff": "La password o il codice sono errati. L'accesso in due passaggi è ancora attivo.",
     "confirmDelete": "Spunta la casella per confermare che vuoi eliminare il tuo account.",
     "wrongDeleteWithCode": "La password o il codice sono errati. Non è stato eliminato nulla.",
-    "wrongDelete": "La password è errata. Non è stato eliminato nulla."
+    "wrongDelete": "La password è errata. Non è stato eliminato nulla.",
+    "languageNotSaved": "Al momento non è stato possibile salvare la tua lingua (il database non risponde). Non è stato cambiato nulla."
   },
   "flash": {
     "passwordReset": "La tua nuova password è salvata. Tutti gli altri accessi sono stati chiusi.",
@@ -214,7 +222,9 @@
     "twoStepAlreadyOn": "L'accesso in due passaggi è già attivo.",
     "twoStepAlreadyOff": "L'accesso in due passaggi è già disattivato.",
     "twoStepOff": "L'accesso in due passaggi è disattivato.",
-    "unlinked": "Il tuo account Discord è stato scollegato. Collega di nuovo un account Discord per continuare a usare il tuo account Mewvo."
+    "unlinked": "Il tuo account Discord è stato scollegato. Collega di nuovo un account Discord per continuare a usare il tuo account Mewvo.",
+    "languageSaved": "Salvato: Mewvo ti scriverà in DM in {language}.",
+    "languageCleared": "Cancellata: per i tuoi DM Mewvo usa di nuovo la lingua di ogni server."
   },
   "errorCodes": {
     "usernameLength": "Il nome utente deve avere da {min} a {max} caratteri.",

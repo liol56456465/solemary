@@ -150,7 +150,14 @@
     "unlink": "Unlink Discord",
     "unlinkFoot": "A Mewvo account needs a linked Discord account: after unlinking, you can only link one again (or delete the account). A plan stays with your Discord account. A Discord account gets the early-account bonus only once.",
     "yourData": "Your data",
-    "download": "Download my data"
+    "download": "Download my data",
+    "language": {
+      "heading": "Language of Mewvo's DMs",
+      "lead": "Mewvo DMs you in this language, and uses it for answers only you see on Discord, in every server. A language role in a server comes first there.",
+      "label": "Language",
+      "server": "Each server's language (default)",
+      "submit": "Save language"
+    }
   },
   "password": {
     "heading": "Change password",
@@ -201,7 +208,8 @@
     "wrongTwoStepOff": "The password or the code is wrong. Two-step login is still on.",
     "confirmDelete": "Tick the box to confirm that you want to delete your account.",
     "wrongDeleteWithCode": "The password or the code is wrong. Nothing was deleted.",
-    "wrongDelete": "The password is wrong. Nothing was deleted."
+    "wrongDelete": "The password is wrong. Nothing was deleted.",
+    "languageNotSaved": "Your language could not be saved right now (database not responding). Nothing was changed."
   },
   "flash": {
     "passwordReset": "Your new password is saved. Every other login was ended.",
@@ -211,7 +219,9 @@
     "twoStepAlreadyOn": "Two-step login is already on.",
     "twoStepAlreadyOff": "Two-step login is already off.",
     "twoStepOff": "Two-step login is off.",
-    "unlinked": "Your Discord account was unlinked. Link a Discord account again to keep using your Mewvo account."
+    "unlinked": "Your Discord account was unlinked. Link a Discord account again to keep using your Mewvo account.",
+    "languageSaved": "Saved: Mewvo will DM you in {language}.",
+    "languageCleared": "Cleared: Mewvo uses each server's language for your DMs again."
   },
   "errorCodes": {
     "usernameLength": "The username must be {min} to {max} characters long.",

@@ -3,8 +3,9 @@
 //
 // What is stored, per DM: the server it is about, the member, the DM channel and message id,
 // the template key (dmRenderers.js) and its params (only what the DM showed), the language it
-// is in now, and when it was sent. Only for servers that have language roles (no language role,
-// nothing to re-edit, nothing stored). Kept 30 days (DM_LOG_DAYS): the daily retention job
+// is in now, and when it was sent. Only for servers that have language roles, or for a member
+// who chose a personal language (services/personalLanguage.js); otherwise nothing to re-edit,
+// nothing stored. Kept 30 days (DM_LOG_DAYS): the daily retention job
 // deletes older rows (privacy/retentionService.js), /wipedata deletes a member's rows.
 //
 // The log is a helper, not a record: a DM that was delivered stays delivered when its row cannot
@@ -17,6 +18,7 @@ import { LANGUAGE_ROLES_KEY, resolveBotLanguage } from '../../utils/botText.js';
 import { resolveSetting } from '../settings/guildSettings.js';
 import { isEnforcementDbAvailable, query as dbQuery } from '../enforcement/db.js';
 import { renderDm } from './dmRenderers.js';
+import { personalLanguageOf } from '../personalLanguage.js';
 
 export const DM_LOG_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -76,6 +78,17 @@ export async function setDmLogLang(id, lang, { query = dbQuery, tables } = {}) {
     await query(`UPDATE ${table(tables)} SET lang = $2 WHERE id = $1`, [id, lang]);
 }
 
+/**
+ * The servers this member has logged DMs about from the last DM_LOG_DAYS days (a personal
+ * language change re-edits each of them). Throws on a database error.
+ */
+export async function listDmGuildsForUser(userId, { query = dbQuery, tables, now = Date.now() } = {}) {
+    const { rows } = await query(
+        `SELECT DISTINCT guild_id FROM ${table(tables)} WHERE user_id = $1 AND created_at >= $2`,
+        [String(userId), new Date(now - DM_LOG_DAYS * DAY_MS)]);
+    return rows.map((row) => String(row.guild_id));
+}
+
 /** /wipedata: every logged DM to this member (all servers). Throws on a database error. */
 export async function deleteDmLogForUser(userId, { query = dbQuery, tables } = {}) {
     const result = await query(`DELETE FROM ${table(tables)} WHERE user_id = $1`, [String(userId)]);
@@ -104,23 +117,26 @@ export async function pruneDmLog({ query = dbQuery, tables, now = Date.now(), li
  * @param {object} [o.params]      what the template needs; only what the DM shows
  * @param {string|null} [o.guildId] the server the DM is about (none: never logged)
  * @param {object|null} [o.member]  the member, when the caller has it
- * @param {Array} [o.components]    extra components (not re-rendered later, e.g. "Contest this")
+ * @param {Array|Function} [o.components]  extra components (not re-rendered later, e.g. "Contest this");
+ *                                 a function gets the DM's language and returns them
  * @param {Array} [o.files]         attachments (kept as they are on a later edit)
  * @param {string} [o.label]        what the DM is, for the failure log line
- * @param {object} [deps]           tests: { insert, dbAvailable, hasLanguageRoles, resolveLanguage, render }
+ * @param {object} [deps]           tests: { insert, dbAvailable, hasLanguageRoles, hasPersonal, resolveLanguage, render }
  */
 export async function sendLoggedDm(user, { key, params = {}, guildId = null, member = null, components = null, files = null, label = key } = {}, deps = {}) {
     const {
         insert = insertDmLog,
         dbAvailable = isEnforcementDbAvailable,
         hasLanguageRoles = guildHasLanguageRoles,
+        hasPersonal = (userId) => Boolean(personalLanguageOf(userId)),
         resolveLanguage = resolveBotLanguage,
         render = renderDm,
     } = deps;
     if (!user?.send) return false;
     const lang = resolveLanguage({ guildId, member: member ?? cachedMember(user, guildId), userId: user.id, purpose: 'dm' });
     const payload = await render(key, params, lang);
-    const extraComponents = components?.length ? components : null;
+    const built = typeof components === 'function' ? components(lang) : components;
+    const extraComponents = built?.length ? built : null;
     let message;
     try {
         message = await user.send({
@@ -135,7 +151,7 @@ export async function sendLoggedDm(user, { key, params = {}, guildId = null, mem
     }
     try {
         if (guildId && ID.test(String(guildId)) && message?.id && message?.channelId
-            && hasLanguageRoles(guildId) && dbAvailable()) {
+            && (hasLanguageRoles(guildId) || hasPersonal(user.id)) && dbAvailable()) {
             await insert({ guildId, userId: user.id, channelId: message.channelId, messageId: message.id, key, params, lang });
         }
     } catch (error) {

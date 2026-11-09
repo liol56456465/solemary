@@ -121,6 +121,7 @@
             "reminders": "Recordatorios",
             "oauth": "Token de inicio de sesión de Discord guardado (de \"Verificar con Discord\")",
             "dmlog": "Copias guardadas de los MD del bot (para volver a traducirlos cuando cambias de idioma)",
+            "language": "Tu idioma personal para Mewvo (de /language)",
             "ticketRatings": "Valoraciones de tickets que diste (tu nombre y comentario; las estrellas se quedan)",
             "invites": "Seguimiento de invitaciones: cómo entraste, y tu nombre como quien invitó a otros"
         },

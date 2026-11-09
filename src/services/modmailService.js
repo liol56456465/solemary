@@ -18,6 +18,10 @@
 // restarts. Blocked members are stored in each server's guild config.
 // Relayed text goes out as message content, not embeds: embeds.js strips emoji
 // from embed descriptions.
+// What the member reads in DMs (prompt, buttons, status lines, the close notice, the "(staff)"
+// tag) is in the member's language (memberModmailLang): their language role in that server,
+// else their personal language, else that server's language; before a server is picked, their
+// personal language or English. customIds never change.
 
 import {
     ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ChannelType,
@@ -31,7 +35,7 @@ import { GUILD_SQL, guildIdsFromSql } from './scheduling/guildScan.js';
 import { generateTranscript } from './ticket.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
 import { logger } from '../utils/logger.js';
-import { botText, textForGuild } from '../utils/botText.js';
+import { botText, resolveBotLanguage, textForGuild } from '../utils/botText.js';
 import { linkModmailChannel, linkedChannelId, linkedChannelsForUser, linkedUserId, unlinkModmailChannel } from './modmailLinks.js';
 import { withOpenChannelSlot } from './openChannelCap.js';
 import { isHomeGuild, resolveSetting } from './settings/guildSettings.js';
@@ -48,9 +52,19 @@ const NO_MENTIONS = { parse: [] };
 const opening = new Set(); // userIds with a channel being created right now
 
 /** "-# Privacy: <url>" under member-facing modmail messages, or '' without PUBLIC_URL. */
-function privacySuffix() {
+function privacySuffix(tr = botText('en')) {
     const url = privacyUrl();
-    return url ? `\n-# Privacy: <${url}>` : '';
+    return url ? `\n${tr.t('enforcement.dm.privacy', { url })}` : '';
+}
+
+/**
+ * The language of a modmail text the member reads in DMs: their language role in `guild`
+ * (cached member, no API call), else their personal language, else that server's language.
+ * No server (yet): their personal language, else English.
+ */
+export function memberModmailLang(userId, guild = null) {
+    const member = guild?.members?.cache?.get?.(userId) ?? null;
+    return resolveBotLanguage({ guildId: guild?.id ?? null, member, userId, purpose: 'dm' });
 }
 
 export const MODMAIL_BUTTONS = { open: 'modmail_open', cancel: 'modmail_cancel', close: 'modmail_close' };
@@ -66,8 +80,8 @@ export function getMainGuild(client) {
 const isMainGuild = (guildId) => Boolean(guildId) && guildId === enforcementConfig.mainGuildId;
 
 /** "the Mewvo staff" for the main server (wording as before), "the staff of <name>" elsewhere. */
-export function staffLabel(guild) {
-    return !guild || isMainGuild(guild.id) ? 'the Mewvo staff' : `the staff of ${guild.name}`;
+export function staffLabel(guild, tr = botText('en')) {
+    return !guild || isMainGuild(guild.id) ? tr.t('member.modmail.staffMain') : tr.t('member.modmail.staffOf', { server: guild.name });
 }
 
 /** Where a conversation opens: the server's modmail category, else its /ticket category, else null. */
@@ -162,6 +176,11 @@ function splitAttachments(message) {
     return { files, links };
 }
 
+/** The "**Name (staff):**" line above a staff message relayed to the member, in their language. */
+export function staffHeader(name, lang = 'en') {
+    return botText(lang).t('member.modmail.staffName', { name });
+}
+
 /** Sends `header` + the message's text and files to `target`, split to fit. */
 async function relay(target, header, message) {
     const { files, links } = splitAttachments(message);
@@ -177,10 +196,10 @@ async function relay(target, header, message) {
     }
 }
 
-function promptRow(messageId, guildId) {
+function promptRow(messageId, guildId, tr) {
     return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`${MODMAIL_BUTTONS.open}:${messageId}:${guildId}`).setLabel('Send to staff').setStyle(ButtonStyle.Primary),
-        new ButtonBuilder().setCustomId(MODMAIL_BUTTONS.cancel).setLabel('Cancel').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId(`${MODMAIL_BUTTONS.open}:${messageId}:${guildId}`).setLabel(tr.t('member.modmail.send').slice(0, 80)).setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(MODMAIL_BUTTONS.cancel).setLabel(tr.t('member.modmail.cancel').slice(0, 80)).setStyle(ButtonStyle.Secondary),
     );
 }
 
@@ -211,18 +230,17 @@ export async function postStaffReminder(channel, tr) {
     return reminder;
 }
 
-const NOT_A_MEMBER_MAIN = 'Modmail is for members of the Mewvo server. If you were banned, use the appeal panel in the support server.';
-export const NO_MODMAIL_SERVER = 'None of the servers you share with this bot takes modmail (or you are not a member there any more). '
-    + 'Ask that server\'s staff another way. If you were banned from the Mewvo server, use the appeal panel in the support server.';
-export const MODMAIL_BLOCKED = 'You can\'t use modmail.';
+/** The English refusals (member.json modmail.*), kept as exports for callers and tests. */
+export const NO_MODMAIL_SERVER = botText('en').t('member.modmail.none');
+export const MODMAIL_BLOCKED = botText('en').t('member.modmail.blocked');
 
-/** Why this user can't use modmail in `guild` right now, or null when they can. */
-async function modmailRefusal(client, guild, userId) {
-    if (!guild) return 'Modmail is not available right now.';
-    if (await isModmailBlocked(client, guild.id, userId)) return MODMAIL_BLOCKED;
+/** Why this user can't use modmail in `guild` right now (in `tr`), or null when they can. */
+async function modmailRefusal(client, guild, userId, tr = botText('en')) {
+    if (!guild) return tr.t('member.modmail.unavailable');
+    if (await isModmailBlocked(client, guild.id, userId)) return tr.t('member.modmail.blocked');
     const member = await guild.members.fetch(userId).catch(() => null);
     if (!member) {
-        return isMainGuild(guild.id) ? NOT_A_MEMBER_MAIN : `You are not a member of ${guild.name}, so its staff can't be reached through modmail.`;
+        return isMainGuild(guild.id) ? tr.t('member.modmail.notMemberMain') : tr.t('member.modmail.notMember', { server: guild.name });
     }
     return null;
 }
@@ -365,30 +383,31 @@ export async function findOpenModmail(client, userId) {
  *   none → the refusal text; one → "Send to staff?" with the server in the button;
  *   several → "Which server?" with a select menu (first 25) and Cancel.
  */
-export function modmailPromptPayload(servers, messageId, { blockedSomewhere = false } = {}) {
+export function modmailPromptPayload(servers, messageId, { blockedSomewhere = false, lang = 'en' } = {}) {
+    const tr = botText(lang);
     if (!servers.length) {
-        return { content: blockedSomewhere ? MODMAIL_BLOCKED : NO_MODMAIL_SERVER, components: [], allowedMentions: NO_MENTIONS };
+        return { content: tr.t(blockedSomewhere ? 'member.modmail.blocked' : 'member.modmail.none'), components: [], allowedMentions: NO_MENTIONS };
     }
     if (servers.length === 1) {
         const [guild] = servers;
         return {
-            content: `Do you want to send this message to ${staffLabel(guild)}? They will reply here in DMs.${privacySuffix()}`,
-            components: [promptRow(messageId, guild.id)],
+            content: `${tr.t('member.modmail.promptOne', { staff: staffLabel(guild, tr) })}${privacySuffix(tr)}`,
+            components: [promptRow(messageId, guild.id, tr)],
             allowedMentions: NO_MENTIONS,
         };
     }
     const shown = servers.slice(0, MAX_SERVER_CHOICES);
     const select = new StringSelectMenuBuilder()
         .setCustomId(`${MODMAIL_PICK}:${messageId}`)
-        .setPlaceholder('Choose a server')
+        .setPlaceholder(tr.t('member.modmail.placeholder').slice(0, 100))
         .addOptions(shown.map((guild) => ({ label: String(guild.name || guild.id).slice(0, 100), value: guild.id })));
-    const more = servers.length > shown.length ? `\n-# Only the first ${MAX_SERVER_CHOICES} servers are listed.` : '';
+    const more = servers.length > shown.length ? `\n${tr.t('member.modmail.promptMore', { count: MAX_SERVER_CHOICES })}` : '';
     return {
-        content: `Which server's staff should get this message? They will reply here in DMs.${more}${privacySuffix()}`,
+        content: `${tr.t('member.modmail.promptSeveral')}${more}${privacySuffix(tr)}`,
         components: [
             new ActionRowBuilder().addComponents(select),
             new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId(MODMAIL_BUTTONS.cancel).setLabel('Cancel').setStyle(ButtonStyle.Secondary)),
+                new ButtonBuilder().setCustomId(MODMAIL_BUTTONS.cancel).setLabel(tr.t('member.modmail.cancel').slice(0, 80)).setStyle(ButtonStyle.Secondary)),
         ],
         allowedMentions: NO_MENTIONS,
     };
@@ -401,7 +420,7 @@ export async function handleModmailDm(message, client, { getConfig = getGuildCon
 
     const open = await findOpenModmail(client, userId);
     if (open) {
-        const refusal = await modmailRefusal(client, open.guild, userId);
+        const refusal = await modmailRefusal(client, open.guild, userId, botText(memberModmailLang(userId, open.guild)));
         if (refusal) {
             if (await checkRateLimit(`modmail:refusal:${userId}`, 1, 60_000)) {
                 await message.reply({ content: refusal, allowedMentions: NO_MENTIONS }).catch(() => {});
@@ -422,13 +441,15 @@ export async function handleModmailDm(message, client, { getConfig = getGuildCon
     // Limited before the server lookup, which checks membership in every server the bot is in.
     if (!(await checkRateLimit(`modmail:prompt:${userId}`, 3, 60_000))) return;
     const { servers, blockedSomewhere } = await modmailServersFor(client, userId, { getConfig });
+    // One server: its language for this member; none or several: their personal language, else English.
+    const lang = memberModmailLang(userId, servers.length === 1 ? servers[0] : null);
     if (!servers.length) {
         if (await checkRateLimit(`modmail:refusal:${userId}`, 1, 60_000)) {
-            await message.reply(modmailPromptPayload(servers, message.id, { blockedSomewhere })).catch(() => {});
+            await message.reply(modmailPromptPayload(servers, message.id, { blockedSomewhere, lang })).catch(() => {});
         }
         return;
     }
-    await message.reply(modmailPromptPayload(servers, message.id))
+    await message.reply(modmailPromptPayload(servers, message.id, { lang }))
         .catch((error) => logger.warn(`Modmail prompt failed for ${userId}: ${error.message}`));
 }
 
@@ -439,16 +460,18 @@ export async function handleModmailDm(message, client, { getConfig = getGuildCon
  */
 export async function openModmail(client, user, dmChannel, messageId, guildId = enforcementConfig.mainGuildId, { getConfig = getGuildConfig } = {}) {
     const guild = (guildId && client.guilds.cache.get(guildId)) || null;
-    if (guild && blacklistHit({ guildId: guild.id })) return 'Modmail is not available right now.';
-    const refusal = await modmailRefusal(client, guild, user.id);
+    // The status lines replace the DM prompt: the member's language for that server.
+    const mt = botText(memberModmailLang(user.id, guild));
+    if (guild && blacklistHit({ guildId: guild.id })) return mt.t('member.modmail.unavailable');
+    const refusal = await modmailRefusal(client, guild, user.id, mt);
     if (refusal) return refusal;
-    if (await findOpenModmail(client, user.id)) return 'You already have an open conversation. Just send your messages here.';
-    if (opening.has(user.id)) return 'Your conversation is being opened.';
+    if (await findOpenModmail(client, user.id)) return mt.t('member.modmail.alreadyOpen');
+    if (opening.has(user.id)) return mt.t('member.modmail.opening');
     const setupConfig = await getConfig(client, guild.id);
-    if (!isModmailSetUp(guild, setupConfig)) return `${guild.name} does not take modmail right now.`;
+    if (!isModmailSetUp(guild, setupConfig)) return mt.t('member.modmail.notTaking', { server: guild.name });
 
     const original = await dmChannel.messages.fetch(messageId).catch(() => null);
-    if (!original || original.author.id !== user.id) return 'That message is gone. Send it again.';
+    if (!original || original.author.id !== user.id) return mt.t('member.modmail.gone');
 
     opening.add(user.id);
     try {
@@ -512,8 +535,8 @@ export async function openModmail(client, user, dmChannel, messageId, guildId = 
         await relay(channel, `**${user.username}:**`, original);
         await original.react('✅').catch(() => {});
         logger.info(`Modmail opened for ${user.id} in ${channel.id}`);
-        const to = isMainGuild(guild.id) ? 'staff' : `the staff of ${guild.name}`;
-        return `Sent to ${to}. They will reply here; anything else you send here goes to them too.${privacySuffix()}`;
+        const sent = isMainGuild(guild.id) ? mt.t('member.modmail.sentMain') : mt.t('member.modmail.sentOther', { server: guild.name });
+        return `${sent}${privacySuffix(mt)}`;
     } finally {
         opening.delete(user.id);
     }
@@ -524,7 +547,7 @@ export async function sendStaffTextToMember(channel, staffName, text) {
     const userId = await modmailUserId(channel);
     if (!userId) return false;
     const user = await channel.client.users.fetch(userId);
-    for (const chunk of chunkText(`**${staffName} (staff):**\n${text}`)) {
+    for (const chunk of chunkText(`${staffHeader(staffName, memberModmailLang(userId, channel.guild))}\n${text}`)) {
         await user.send({ content: chunk, allowedMentions: NO_MENTIONS });
     }
     return true;
@@ -541,7 +564,7 @@ export async function handleModmailStaffMessage(message, prefix = getCommandPref
     try {
         const user = await message.client.users.fetch(userId);
         const name = message.member?.displayName || message.author.username;
-        await relay(user, `**${name} (staff):**`, message);
+        await relay(user, staffHeader(name, memberModmailLang(userId, message.guild)), message);
         await message.react('✅').catch(() => {});
     } catch (error) {
         logger.warn(`Modmail DM to ${userId} failed: ${error.message}`);
@@ -595,11 +618,12 @@ export async function closeModmail(channel, closer, reason = '') {
     const userId = await modmailUserId(channel);
     if (!userId) return false;
     const client = channel.client;
-    const note = reason ? `\nReason: ${reason}` : '';
+    const mt = botText(memberModmailLang(userId, channel.guild));
+    const note = reason ? `\n${mt.t('member.modmail.closedReason', { reason })}` : '';
 
     const user = await client.users.fetch(userId).catch(() => null);
     await user?.send({
-        content: `Your conversation with ${staffLabel(channel.guild)} was closed.${note}\nSend a new message here any time to start another one.`,
+        content: `${mt.t('member.modmail.closed', { staff: staffLabel(channel.guild, mt) })}${note}\n${mt.t('member.modmail.closedAgain')}`.slice(0, MAX_MESSAGE),
         allowedMentions: NO_MENTIONS,
     }).catch(() => {});
 

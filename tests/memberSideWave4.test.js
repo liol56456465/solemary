@@ -300,11 +300,11 @@ test('4.7 Leave: a bad customId is refused before any work (no defer, no store r
 
 // ── 4.9 jargon, /wipedata, report, reminder ────────────────────────────
 
-test('4.9 /wipedata: the 8 items stay; what is deleted where and what stays (and why), in every language', () => {
+test('4.9 /wipedata: the 9 items stay (8 + personal language, wave G); what is deleted where and what stays (and why), in every language', () => {
     for (const lang of LANG_CODES) {
         const tr = botText(lang);
         const text = wipeWarningText(tr);
-        assert.equal(text.split('\n- ').length, 9, lang);
+        assert.equal(text.split('\n- ').length, 10, lang);
         assert.ok(text.includes(tr.t('utility.wipedata.body')) && tr.t('utility.wipedata.body').includes('**'), `${lang}: "what stays" in bold`);
         assert.ok(tr.t('utility.wipedata.done', { items: 'x' }).includes('**'), lang);
     }

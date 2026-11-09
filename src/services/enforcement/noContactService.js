@@ -16,7 +16,7 @@ import { query, T, isUniqueViolation, isEnforcementDbAvailable } from './db.js';
 import { postModLog, sendDm } from './enforcementService.js';
 import { noContactEndedDm, noContactStartedDm } from './dmTemplates.js';
 import { truncate } from './format.js';
-import { botText } from '../../utils/botText.js';
+import { botText, resolveBotLanguage } from '../../utils/botText.js';
 
 export const NO_CONTACT_MAX_DAYS = 365;
 const NOTICE_DELETE_MS = 8000;
@@ -145,10 +145,15 @@ async function dmBoth(client, row, build) {
         client.users.fetch(row.user_b).catch(() => null),
     ]);
     // The order's server by its Discord name in the DM (Mewvo's own servers stay "Mewvo").
-    const serverName = client.guilds?.cache?.get?.(row.guild_id)?.name;
+    const guild = client.guilds?.cache?.get?.(row.guild_id);
+    const serverName = guild?.name;
+    // Each member's own DM language: their language role there (cached), personal, the server's.
+    const langOf = (user) => resolveBotLanguage({
+        guildId: row.guild_id, member: guild?.members?.cache?.get?.(user.id) ?? null, userId: user.id, purpose: 'dm',
+    });
     const results = await Promise.all([
-        a ? sendDm(a, build(row, b, { serverName })) : false,
-        b ? sendDm(b, build(row, a, { serverName })) : false,
+        a ? sendDm(a, build(row, b, { serverName, lang: langOf(a) })) : false,
+        b ? sendDm(b, build(row, a, { serverName, lang: langOf(b) })) : false,
     ]);
     return { a, b, delivered: results };
 }

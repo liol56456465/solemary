@@ -1,0 +1,191 @@
+{
+    "appeal": {
+        "modal": {
+            "title": "Appeal a punishment",
+            "reason": "Why should it be lifted?",
+            "reasonHint": "Why should you be unbanned, unmuted or unwarned?",
+            "code": "Case code",
+            "codeHint": "From the DM you got when you were punished, e.g. k7m2qx.",
+            "more": "More info (optional)",
+            "moreHint": "Anything else the administrators should know."
+        },
+        "report": {
+            "title": "Report a staff member",
+            "staff": "Staff member username",
+            "details": "What happened?",
+            "proof": "Proof links",
+            "proofHint": "Links to screenshots or messages, one per line"
+        },
+        "wrongPlace": {
+            "report": "Staff reports are filed from the panel in the Mewvo support server.",
+            "panel": "Use the appeal panel in a server."
+        },
+        "badCode": "That is not a valid case code. It is 5–7 letters and digits, from the DM you received.",
+        "submitted": {
+            "title": "Appeal submitted",
+            "text": "The administrators will review it. You'll get a DM with the decision."
+        },
+        "reportSent": {
+            "title": "Report submitted",
+            "text": "Your report was submitted to the administrators. If they ask for screenshot proof, please post it in your DMs with them."
+        },
+        "formGone": "This form is not available here any more. Open it again from the panel.",
+        "type": {
+            "ban": "ban",
+            "kick": "kick",
+            "mute": "mute",
+            "warn": "warn"
+        },
+        "error": {
+            "notFound": "That case code was not found for your account. Check the code in your DM.",
+            "unappealable": "This case cannot be appealed.",
+            "lifted": "This case has already been lifted.",
+            "endedBan": "This ban has already ended, so there is nothing to appeal.",
+            "endedMute": "This mute has already ended, so there is nothing to appeal.",
+            "windowClosed": "The appeal window for this ban has closed.",
+            "windowKick": {
+                "one": "Kicks can only be appealed within {count} day.",
+                "other": "Kicks can only be appealed within {count} days."
+            },
+            "windowWarn": {
+                "one": "Warnings can only be appealed within {count} day.",
+                "other": "Warnings can only be appealed within {count} days."
+            },
+            "pending": "You already have a pending appeal for this case. You will get a DM with the decision.",
+            "cooldown": "Your last appeal for this case was denied. You can appeal again {when}.",
+            "reportsToday": "You have sent the maximum number of staff reports for today. Please try again tomorrow.",
+            "reportOpen": "You already have an open staff report. The administrators will contact you about it.",
+            "serverUnavailable": "That server is not available right now. Nothing was sent."
+        },
+        "channel": {
+            "received": "<@{userId}>, your appeal was received.",
+            "title": "Your appeal for {code}",
+            "caseCode": "**Case code:** `{code}`",
+            "type": "**Type:** {type}",
+            "when": "**When:** {date}",
+            "reason": "**Reason:** {reason}",
+            "ends": "**Ends:** {date}",
+            "permanent": "**Duration:** Permanent",
+            "footer": "Staff will review it here. You can add more details or screenshots in this channel. You get the decision by DM."
+        },
+        "result": {
+            "acceptedTitle": "Appeal accepted",
+            "deniedTitle": "Appeal denied",
+            "accepted": "Your appeal for `{code}` was accepted.",
+            "denied": "Your appeal for `{code}` was denied.",
+            "dm": "You got the details by DM.",
+            "noDm": "You will not get the details by DM (your DMs are closed).",
+            "deleted": "-# This channel is deleted in {seconds} seconds."
+        }
+    },
+    "record": {
+        "title": "My record in {server}",
+        "thisServer": "this server",
+        "onlyYou": "Only you can see this.",
+        "field": {
+            "warns": "Counted warnings",
+            "ladder": "Warning ladder",
+            "active": "Active punishments",
+            "appeals": "Appeals"
+        },
+        "counted": "**{n}** counted (limit at this stage: {threshold}).",
+        "noneCounted": "None counted right now.",
+        "andMore": "…and {n} more",
+        "expiry": "-# Warnings do not expire. One stops counting when staff remove it, it is lifted on appeal, or you reach the limit (then the count starts again at the next stage).",
+        "stage": "**{stage}**.",
+        "next": "**Your next warning:** {text}",
+        "banEnds": "Ban `{code}` · ends {date} ({relative})",
+        "banPermanent": "Ban `{code}` · permanent",
+        "muteEnds": "Mute `{code}` · ends {date} ({relative})",
+        "none": "None.",
+        "noneFiled": "None filed.",
+        "appealLine": "`{code}` {type} · {status} · filed {date}{decided}",
+        "appealDecided": ", decided {date}",
+        "status": {
+            "pending": "⏳ pending",
+            "accepted": "accepted",
+            "denied": "denied",
+            "closed": "closed"
+        },
+        "ladderOff": "Warnings are recorded but never lead to an automatic ban in this server (the warn ladder is off).",
+        "would": "It would be warning {n} of {max}.",
+        "oneAfter": "The one after it would mean an automatic ban ({ban}).",
+        "moreAfter": {
+            "one": "{count} more after it would mean an automatic ban ({ban}).",
+            "other": "{count} more after it would mean an automatic ban ({ban})."
+        },
+        "limit": "It would reach the warning limit: an automatic ban ({ban}, warning stage {stage} of 3).",
+        "permanent": "permanent"
+    },
+    "myAppeals": {
+        "title": "My appeals",
+        "none": "You have not filed any appeals. Press **Appeal** on the appeal panel to file one; you need the case code from the DM you got.",
+        "status": {
+            "pending": "Waiting for a decision",
+            "accepted": "Accepted",
+            "denied": "Denied",
+            "closed": "Closed"
+        },
+        "claimed": "Waiting for a decision. Someone on the staff team is looking at it.",
+        "head": "**`{code}`**: {type} ({name})",
+        "line": "{status} · filed {filed}{decided}",
+        "decided": " · decided {date}"
+    },
+    "modmail": {
+        "staffMain": "the Mewvo staff",
+        "staffOf": "the staff of {server}",
+        "promptOne": "Do you want to send this message to {staff}? They will reply here in DMs.",
+        "promptSeveral": "Which server's staff should get this message? They will reply here in DMs.",
+        "promptMore": "-# Only the first {count} servers are listed.",
+        "placeholder": "Choose a server",
+        "send": "Send to staff",
+        "cancel": "Cancel",
+        "notSent": "Not sent.",
+        "none": "None of the servers you share with this bot takes modmail (or you are not a member there any more). Ask that server's staff another way. If you were banned from the Mewvo server, use the appeal panel in the support server.",
+        "blocked": "You can't use modmail.",
+        "unavailable": "Modmail is not available right now.",
+        "notMemberMain": "Modmail is for members of the Mewvo server. If you were banned, use the appeal panel in the support server.",
+        "notMember": "You are not a member of {server}, so its staff can't be reached through modmail.",
+        "alreadyOpen": "You already have an open conversation. Just send your messages here.",
+        "opening": "Your conversation is being opened.",
+        "notTaking": "{server} does not take modmail right now.",
+        "gone": "That message is gone. Send it again.",
+        "sentMain": "Sent to staff. They will reply here; anything else you send here goes to them too.",
+        "sentOther": "Sent to the staff of {server}. They will reply here; anything else you send here goes to them too.",
+        "broken": "That prompt is broken. Send your message again.",
+        "failed": "Could not reach the staff right now. Please try again later.",
+        "closed": "Your conversation with {staff} was closed.",
+        "closedReason": "Reason: {reason}",
+        "closedAgain": "Send a new message here any time to start another one.",
+        "staffName": "**{name} (staff):**"
+    },
+    "contest": {
+        "button": "Contest this",
+        "title": "Contest this decision",
+        "label": "Why was this OK?",
+        "hint": "A moderator will read this and decide.",
+        "broken": "That button is broken (no case code).",
+        "already": "You already contested this decision. The moderators will look at it.",
+        "unknownAction": "Unknown action.",
+        "unknownForm": "Unknown form.",
+        "sentTitle": "Sent to the moderators",
+        "sent": "A moderator will review case {code} with your explanation. You'll get a DM if it is reversed.",
+        "gone": "That case no longer exists.",
+        "notYours": "Only the member this decision was about can contest it.",
+        "notAuto": "Only automatic decisions can be contested here. Use the appeal form instead.",
+        "reversed": "This decision was already reversed."
+    },
+    "keepApart": {
+        "startedTitle": "**Keep apart: an order in {server}**",
+        "asked": "Staff have asked you and {other} not to contact each other until {until}.",
+        "rule": "Until then, do not mention or reply to them in the server: those messages are removed.",
+        "reason": "Reason: {reason}",
+        "notPunishment": "This is not a punishment and does not count as a warning.",
+        "anotherMember": "another member",
+        "endedTitle": "**Your keep-apart order in {server} has ended**",
+        "early": "Staff ended it early.",
+        "expired": "It expired.",
+        "contact": "You may contact {other} again.",
+        "theOtherMember": "the other member"
+    }
+}

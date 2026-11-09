@@ -42,17 +42,18 @@ const ATTACHMENT_SUFFIX = /\s*\[\d+ attachment\(s\)\]$/;
  * channel (markReviewCard). `onlyGuildId`: limit it to one server (null: any).
  */
 export function checkContestTarget(record, userId, onlyGuildId = null) {
+    // `code`: the member.json contest.* key of the text (the handler shows it in the member's language).
     if (!record || (onlyGuildId && record.guild_id !== onlyGuildId)) {
-        return { ok: false, message: 'That case no longer exists.' };
+        return { ok: false, code: 'gone', message: 'That case no longer exists.' };
     }
     if (String(record.target_user_id) !== String(userId)) {
-        return { ok: false, message: 'Only the member this decision was about can contest it.' };
+        return { ok: false, code: 'notYours', message: 'Only the member this decision was about can contest it.' };
     }
     if (!String(record.reason_key || '').startsWith('automod:')) {
-        return { ok: false, message: 'Only automatic decisions can be contested here. Use the appeal form instead.' };
+        return { ok: false, code: 'notAuto', message: 'Only automatic decisions can be contested here. Use the appeal form instead.' };
     }
     if (record.voided_at || record.status === 'revoked') {
-        return { ok: false, message: 'This decision was already reversed.' };
+        return { ok: false, code: 'reversed', message: 'This decision was already reversed.' };
     }
     return { ok: true };
 }
@@ -163,7 +164,7 @@ export async function getContest(caseCode) {
 export async function recordContest(client, record, userId, reason, now = Date.now()) {
     return Mutex.runExclusive(`amcontest:${record.case_code}`, async () => {
         if (await getContest(record.case_code)) {
-            return { ok: false, message: 'You already contested this decision. The moderators will look at it.' };
+            return { ok: false, code: 'already', message: 'You already contested this decision. The moderators will look at it.' };
         }
         const contest = { caseCode: record.case_code, userId, reason: cleanContestReason(reason), at: now };
         await setInDb(contestKey(record.case_code), contest, CONTEST_TTL_SECONDS);
