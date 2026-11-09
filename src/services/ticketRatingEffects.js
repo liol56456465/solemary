@@ -9,6 +9,7 @@
 // Nothing here pings anyone: every send has allowedMentions { parse: [] }. Each step is logged
 // and skipped on failure; the rating itself is already saved.
 
+import { OverwriteType } from 'discord.js';
 import { getTicketData } from '../utils/database.js';
 import { logger } from '../utils/logger.js';
 import { logTicketFeedback } from '../utils/ticket/ticketLogging.js';
@@ -16,7 +17,7 @@ import { fetchStaffChannel } from './automod/channelRouting.js';
 import { getGuildConfig } from './config/guildConfig.js';
 import { renderDm } from './botDm/dmRenderers.js';
 import { textForGuild } from '../utils/botText.js';
-import { LOW_RATING_MAX, channelSurveysDone, ratingSettings, starsText } from './ticketRatingService.js';
+import { LOW_RATING_MAX, channelSurveysDone, channelSurveysOf, ratingSettings, starsText } from './ticketRatingService.js';
 
 export { commentFieldName, commentFieldValue } from './ticketRatingService.js';
 
@@ -139,7 +140,8 @@ export async function hideClosedTicketFromOpener(client, guildId, channelId, ope
         if (current?.deny?.has?.('ViewChannel')) return false;
         const ticket = await loadTicket(guildId, channelId).catch(() => null);
         if (ticket?.status !== 'closed') return false;
-        await channel.permissionOverwrites.edit(openerId, HIDDEN);
+        // type given: the opener is usually not cached when the sweep runs (after a restart).
+        await channel.permissionOverwrites.edit(openerId, HIDDEN, { type: OverwriteType.Member });
         return true;
     } catch (error) {
         logger.warn(`Could not hide closed ticket ${channelId} from its opener: ${error.message}`);
@@ -163,6 +165,27 @@ export async function sweepChannelSurveyAccess(client, { query, tables, now = Da
         }
         if (batch.length < 500) break;
         afterId = batch.at(-1).id;
+    }
+    return hidden;
+}
+
+/**
+ * /wipedata: before a member's ratings lose their opener id, the closed tickets where their channel
+ * survey (O2) is still shown are hidden from them; afterwards the sweep can no longer find them.
+ * No client with channels (tests, scripts): nothing to do. Never throws; returns the number hidden.
+ */
+export async function hideChannelSurveysOf(client, userId, { rows: load = channelSurveysOf, hide = hideClosedTicketFromOpener } = {}) {
+    if (!client?.channels) return 0;
+    let rows = [];
+    try {
+        rows = await load(userId);
+    } catch (error) {
+        logger.warn(`Ticket rating: could not list open channel surveys before a wipe: ${error.message}`);
+        return 0;
+    }
+    let hidden = 0;
+    for (const row of rows) {
+        if (await hide(client, row.guild_id, row.ref_id, userId)) hidden += 1;
     }
     return hidden;
 }

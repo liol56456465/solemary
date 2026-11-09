@@ -12,7 +12,8 @@ import {
     cleanComment, commentFieldName, commentFieldValue, createPendingRating, handlingStaffId, isCommentFlagged,
     ratingBadge, ratingSettings, starsText, submitComment, submitRating, weeklyRatingTrend,
 } from '../src/services/ticketRatingService.js';
-import { afterComment, editTranscriptLogRating, hideClosedTicketFromOpener, postLowRatingAlert, channelSurveyPayload, RATED_GRACE_MS, sweepChannelSurveyAccess } from '../src/services/ticketRatingEffects.js';
+import { OverwriteType } from 'discord.js';
+import { afterComment, editTranscriptLogRating, hideChannelSurveysOf, hideClosedTicketFromOpener, postLowRatingAlert, channelSurveyPayload, RATED_GRACE_MS, sweepChannelSurveyAccess } from '../src/services/ticketRatingEffects.js';
 import feedbackButtons, { handleDecline, handleRatingClick } from '../src/interactions/buttons/ticket/ticketFeedback.js';
 import { handleCommentSubmit } from '../src/interactions/modals/ticket/ticketFeedbackComment.js';
 import { closedOpenerAccess, postChannelSurvey, prepareTicketRating, ticketNumberOf } from '../src/services/ticket.js';
@@ -330,7 +331,7 @@ test('DM failed (O2): survey posted in the ticket channel without pings, deliver
     const broken = { ...channel, send: async () => { throw new Error('Missing Access'); } };
     const failed = await postChannelSurvey(broken, { userId: OPENER }, row(), { setDelivery: async (id, d) => deliveries.push(d) });
     assert.equal(failed, 'failed');
-    assert.deepEqual(edits[0], [OPENER, { ViewChannel: false, SendMessages: false }], 'nothing to read: hidden again');
+    assert.deepEqual(edits[0], [OPENER, { ViewChannel: false, SendMessages: false }, { type: OverwriteType.Member }], 'nothing to read: hidden again');
 });
 
 test('channel survey text exists in every language with the opener placeholder', async () => {
@@ -411,7 +412,7 @@ function fakeTicketChannel({ hidden = false } = {}) {
         id: C, guildId: G,
         permissionOverwrites: {
             cache: new Map([[OPENER, { deny: { has: (bit) => hidden && bit === 'ViewChannel' } }]]),
-            edit: async (id, perms) => { edits.push({ id, perms }); },
+            edit: async (id, perms, opts) => { edits.push({ id, perms, type: opts?.type }); },
         },
     };
     const client = { channels: { cache: new Map([[C, channel]]), fetch: async () => null } };
@@ -422,7 +423,8 @@ test('closed ticket hidden from the opener: only while closed, once, never throw
     const closed = async () => ({ status: 'closed' });
     const a = fakeTicketChannel();
     assert.equal(await hideClosedTicketFromOpener(a.client, G, C, OPENER, { loadTicket: closed }), true);
-    assert.deepEqual(a.edits, [{ id: OPENER, perms: { ViewChannel: false, SendMessages: false } }]);
+    assert.deepEqual(a.edits, [{ id: OPENER, perms: { ViewChannel: false, SendMessages: false }, type: OverwriteType.Member }],
+        'the type is given: after a restart the opener is not cached and discord.js would throw without it');
 
     const reopened = fakeTicketChannel();
     assert.equal(await hideClosedTicketFromOpener(reopened.client, G, C, OPENER, { loadTicket: async () => ({ status: 'open' }) }), false);
@@ -474,4 +476,15 @@ test('channel survey done: decline and comment hide the ticket; the sweep picks 
     assert.equal(all, 501);
     assert.deepEqual(afters, [0, 500]);
     await assert.rejects(sweepChannelSurveyAccess({}, { query: async () => { throw new Error('db down'); } }), /db down/);
+});
+
+test('/wipedata: open channel surveys are hidden before the opener id is blanked', async () => {
+    const hidden = [];
+    const hide = async (client, g, c, u) => { hidden.push(`${g}:${c}:${u}`); return true; };
+    const rows = async () => [{ guild_id: G, ref_id: C }];
+    assert.equal(await hideChannelSurveysOf({ channels: {} }, OPENER, { rows, hide }), 1);
+    assert.deepEqual(hidden, [`${G}:${C}:${OPENER}`]);
+    assert.equal(await hideChannelSurveysOf({ db: {} }, OPENER, { rows: async () => assert.fail('no client: no query') }), 0);
+    assert.equal(await hideChannelSurveysOf({ channels: {} }, OPENER, { rows: async () => { throw new Error('db down'); }, hide }), 0,
+        'a failed list never blocks the wipe');
 });

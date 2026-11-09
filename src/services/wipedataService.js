@@ -20,6 +20,7 @@ import { query } from './enforcement/db.js';
 import { pgConfig } from '../config/database/postgres.js';
 import { deleteDmLogForUser } from './botDm/dmLog.js';
 import { clearRatingsGivenBy } from './ticketRatingService.js';
+import { hideChannelSurveysOf } from './ticketRatingEffects.js';
 
 // Voice XP: the member's voice time in this server goes with their levels.
 async function deleteVoiceTime(guildId, userId) {
@@ -67,6 +68,7 @@ const ID = /^\d{17,20}$/;
 export async function wipeMemberData(client, guildId, userId, {
     removeBirthday = deleteBirthday, removeReminders = deleteReminders, removeVerifiedGuilds = deleteVerifiedGuilds,
     removeDmLog = deleteDmLogForUser, removeVoiceTime = deleteVoiceTime, removeTicketRatings = clearRatingsGivenBy, removeInvites = wipeInviteData,
+    hideSurveys = hideChannelSurveysOf,
 } = {}) {
     if (!ID.test(String(guildId)) || !ID.test(String(userId))) throw new Error('wipeMemberData: bad ids');
     const db = client?.db;
@@ -95,7 +97,8 @@ export async function wipeMemberData(client, guildId, userId, {
             await removeVerifiedGuilds(userId);
         },
         dmlog: () => removeDmLog(userId),
-        ticketRatings: () => removeTicketRatings(userId),
+        // Hide open channel surveys first: once opener_id is blank, the access sweep can't find them.
+        ticketRatings: async () => { await hideSurveys(client, userId); return removeTicketRatings(userId); },
         invites: () => removeInvites(guildId, userId),
     };
 

@@ -81,6 +81,7 @@ test('wipedata: deletes levels, economy, AFK, birthday and to-do; reports failur
         removeDmLog: async (user) => { dmLogs.push(user); },
         removeVoiceTime: async (guild, user) => { voiceRows.push(`${guild}:${user}`); },
         removeTicketRatings: async (user) => { ratings.push(user); },
+        hideSurveys: async (client, user) => { ratings.push(`hide:${user}`); },
         removeInvites: async (guild, user) => { invites.push(`${guild}:${user}`); },
     });
     assert.deepEqual(result.deleted, WIPE_ITEMS.map((i) => i.id));
@@ -93,7 +94,7 @@ test('wipedata: deletes levels, economy, AFK, birthday and to-do; reports failur
     assert.deepEqual(dmLogs, [me], 'the bot DM log too (v13)');
     assert.deepEqual(voiceRows, [`${g}:${me}`], 'voice time goes with the levels (Voice XP, v14)');
     assert.equal(WIPE_ITEMS.find((i) => i.id === 'levels').label, 'Levels, XP and voice time');
-    assert.deepEqual(ratings, [me], 'the ticket ratings they gave lose their name and comment (v14)');
+    assert.deepEqual(ratings, [`hide:${me}`, me], 'open channel surveys are hidden first, then the ratings lose their name and comment (v14)');
     assert.deepEqual(invites, [`${g}:${me}`], 'invite tracking of this server too (v14)');
 
     const broken = { db: { exists: async () => true, delete: async (k) => { if (k.includes('afk')) throw new Error('db down'); return true; } } };

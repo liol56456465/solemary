@@ -7,6 +7,7 @@ import {
   ButtonStyle,
   PermissionFlagsBits,
   AttachmentBuilder,
+  OverwriteType,
 } from 'discord.js';
 import { buildStandardLogEmbed, formatLogLine } from '../utils/logging/logEmbeds.js';
 import { getGuildConfig } from './config/guildConfig.js';
@@ -379,7 +380,7 @@ export async function postChannelSurvey(channel, ticketData, row, { payload = ch
   const delivery = posted ? 'channel' : 'failed';
   await noteRatingDelivery(row, delivery, setDelivery);
   if (!posted) {
-    await channel.permissionOverwrites.edit(ticketData.userId, closedOpenerAccess(false))
+    await channel.permissionOverwrites.edit(ticketData.userId, closedOpenerAccess(false), { type: OverwriteType.Member })
       .catch((error) => logger.warn(`Could not hide closed ticket ${channel.id} from its opener: ${error.message}`));
   }
   return delivery;

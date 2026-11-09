@@ -384,6 +384,16 @@ export async function ratingDashboard(guildId, { now = Date.now() } = {}, deps =
 
 // ── privacy ───────────────────────────────────────────────────────────────
 
+/** Ticket surveys this member still has in a channel (O2), last 40 days, for hiding before a wipe. Throws on a DB error. */
+export async function channelSurveysOf(userId, { query = dbQuery, tables, now = Date.now() } = {}) {
+    if (!ID.test(String(userId))) throw new Error('channelSurveysOf: bad id');
+    const result = await query(
+        `SELECT guild_id, ref_id FROM ${table(tables)}
+          WHERE opener_id = $1 AND kind = 'ticket' AND delivery = 'channel' AND prompted_at > $2`,
+        [String(userId), new Date(now - 40 * 86_400_000)]);
+    return result?.rows ?? [];
+}
+
 /** /wipedata: the ratings this member gave (every server) lose their opener and comment; the stars stay. */
 export async function clearRatingsGivenBy(userId, { query = dbQuery, tables } = {}) {
     if (!ID.test(String(userId))) throw new Error('clearRatingsGivenBy: bad id');
