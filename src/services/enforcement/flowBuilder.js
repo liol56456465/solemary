@@ -348,7 +348,9 @@ export function warnStatusText(ladder, { lang = 'en' } = {}) {
  */
 export function nextWarnText(ladder, { lang = 'en' } = {}) {
     const tr = botText(lang);
-    const step = previewWarn({ level: Number(ladder?.level) || 0, warns_since_level: Number(ladder?.warns_since_level) || 0 });
+    const step = previewWarn({ level: Number(ladder?.level) || 0, warns_since_level: Number(ladder?.warns_since_level) || 0, enabled: ladder?.enabled });
+    // Warn ladder off in this server: no warning ever bans, so no "next warn" promise.
+    if (step.ladderOff) return null;
     if (!step.escalates) return tr.t('staff.panel.result.nextWarn', { n: step.warnNumber, max: step.threshold });
     return step.banDurationMs != null
         ? tr.t('staff.panel.result.nextWarnBans', { length: durationIn(step.banDurationMs, lang) })

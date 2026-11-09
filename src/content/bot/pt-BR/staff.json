@@ -240,7 +240,8 @@
             "done": "Feito.",
             "nextWarn": "**Próxima advertência:** advertência {n} de {max}, ainda sem banimento.",
             "nextWarnBans": "**Próxima advertência:** banimento automático de {length}.",
-            "nextWarnBansPermanent": "**Próxima advertência:** banimento automático permanente."
+            "nextWarnBansPermanent": "**Próxima advertência:** banimento automático permanente.",
+            "recordedOnly": "Apenas registrado: este aviso não conta para um banimento automático neste servidor (configurações da escada de avisos)."
         },
         "step": {
             "reason": "Passo 1: escolha um motivo.",

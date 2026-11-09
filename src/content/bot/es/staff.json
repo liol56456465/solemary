@@ -240,7 +240,8 @@
             "done": "Hecho.",
             "nextWarn": "**Próxima advertencia:** advertencia {n} de {max}, aún sin baneo.",
             "nextWarnBans": "**Próxima advertencia:** baneo automático por {length}.",
-            "nextWarnBansPermanent": "**Próxima advertencia:** baneo automático permanente."
+            "nextWarnBansPermanent": "**Próxima advertencia:** baneo automático permanente.",
+            "recordedOnly": "Solo registrada: esta advertencia no cuenta para un baneo automático en este servidor (ajustes de la escalera de advertencias)."
         },
         "step": {
             "reason": "Paso 1: elige un motivo.",

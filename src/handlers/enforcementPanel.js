@@ -565,7 +565,8 @@ export function resultPayload(flow, result, { lang = 'en', moderatorId = null, u
         lines.push(tr.t('staff.panel.result.dmDelivered'));
     }
     // Before the service notes, so a long note list can't truncate it away.
-    if (flow.type === 'warn' && ladderAfter) lines.push(nextWarnText(ladderAfter, { lang }));
+    const nextWarn = flow.type === 'warn' && ladderAfter ? nextWarnText(ladderAfter, { lang }) : null;
+    if (nextWarn) lines.push(nextWarn);
     lines.push(...result.notes);
 
     const components = [];
@@ -930,6 +931,16 @@ async function runUndo(interaction, client, moderatorId, undo, lang) {
 }
 
 /** An undo flow usable by this click: same moderator, same server (the guard checked the rest). */
+/**
+ * Whether voiding this warn would lift an automatic ladder ban (exported for tests): the member is
+ * banned by an automatic ban now, or their state can't be read (treated as yes: fail closed).
+ */
+export function undoWouldLiftBan(undo, state) {
+    if (!undo || undo.type !== 'warn') return false;
+    if (!state) return true;
+    return Boolean(state.banned && state.activeBan?.is_auto);
+}
+
 /** The access action an undo needs (exported for tests): a lifted ban is an unban (Administrator only). */
 export function undoAccessAction(undo) {
     if (!undo || undo.kind !== 'undo') return null;
@@ -1007,6 +1018,19 @@ export async function handleEnforcementButton(interaction, client, args) {
         await interaction.deferUpdate();
         const undo = undoFlowOf(arg, moderatorId, interaction.guildId, { take: true });
         if (!undo) return expired(interaction);
+        // Run-time check: since the card was built, a later warn may have triggered an automatic ban
+        // that voiding this warn would lift. Lifting a ban needs Administrator (D1). Unreadable state:
+        // refused for the Moderator role (fail closed).
+        if (access.level !== 'admin' && undo.type === 'warn') {
+            const state = await getTargetState(interaction.guild, undo.targetId).catch(() => null);
+            if (undoWouldLiftBan(undo, state)) {
+                return InteractionHelper.safeEditReply(interaction, {
+                    allowedMentions: NO_PINGS,
+                    embeds: [createEmbed({ description: tr.t('staff.enforcements.modNotAllowed', { action: actionLabelIn('unban', { lang }) }), color: 'error' })],
+                    components: [],
+                });
+            }
+        }
         return runUndo(interaction, client, moderatorId, undo, lang);
     }
 

@@ -227,7 +227,8 @@
             "done": "Erledigt.",
             "nextWarn": "**Nächste Verwarnung:** Verwarnung {n} von {max}, noch kein Bann.",
             "nextWarnBans": "**Nächste Verwarnung:** automatischer Bann für {length}.",
-            "nextWarnBansPermanent": "**Nächste Verwarnung:** automatischer dauerhafter Bann."
+            "nextWarnBansPermanent": "**Nächste Verwarnung:** automatischer dauerhafter Bann.",
+            "recordedOnly": "Nur vermerkt: Diese Verwarnung zählt in diesem Server nicht für einen automatischen Bann (Einstellungen der Verwarnungsstufen)."
         },
         "step": {
             "reason": "Schritt 1: Wähle einen Grund.",

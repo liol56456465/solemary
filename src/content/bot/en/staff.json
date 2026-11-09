@@ -227,7 +227,8 @@
             "done": "Done.",
             "nextWarn": "**Next warn:** warning {n} of {max}, no ban yet.",
             "nextWarnBans": "**Next warn:** automatic ban for {length}.",
-            "nextWarnBansPermanent": "**Next warn:** automatic permanent ban."
+            "nextWarnBansPermanent": "**Next warn:** automatic permanent ban.",
+            "recordedOnly": "Recorded only: this warning does not count toward an automatic ban in this server (warn ladder settings)."
         },
         "step": {
             "reason": "Step 1: choose a reason.",

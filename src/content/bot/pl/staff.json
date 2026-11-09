@@ -253,7 +253,8 @@
             "done": "Gotowe.",
             "nextWarn": "**Następne ostrzeżenie:** ostrzeżenie {n} z {max}, jeszcze bez bana.",
             "nextWarnBans": "**Następne ostrzeżenie:** automatyczny ban na {length}.",
-            "nextWarnBansPermanent": "**Następne ostrzeżenie:** automatyczny ban na stałe."
+            "nextWarnBansPermanent": "**Następne ostrzeżenie:** automatyczny ban na stałe.",
+            "recordedOnly": "Tylko zapisane: to ostrzeżenie nie liczy się do automatycznego bana na tym serwerze (ustawienia drabinki ostrzeżeń)."
         },
         "step": {
             "reason": "Krok 1: wybierz powód.",

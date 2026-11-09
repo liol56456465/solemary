@@ -730,7 +730,7 @@ async function doWarn({ guild, moderator, targetUser, targetMember, flow, lang =
         const record = { ...warnRecord, dm_delivered: dmDelivered };
         await syncWarnRolesQuietly(guild, targetUser.id);
         await logEnforcement(guild.client, guild.id, 'warn', { record, target: targetUser, moderatorLabel: label });
-        if (preview.uncounted) notes.push('Recorded only: this warning does not count toward an automatic ban in this server (warn ladder settings).');
+        if (preview.uncounted) notes.push(tr.t('staff.panel.result.recordedOnly'));
         return { record, dmDelivered, notes, warnNumber: preview.warnNumber, countsOnLadder: !preview.uncounted };
     }
 

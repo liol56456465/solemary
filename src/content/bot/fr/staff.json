@@ -240,7 +240,8 @@
             "done": "Terminé.",
             "nextWarn": "**Prochain avertissement :** avertissement {n} sur {max}, pas encore de ban.",
             "nextWarnBans": "**Prochain avertissement :** ban automatique de {length}.",
-            "nextWarnBansPermanent": "**Prochain avertissement :** ban automatique définitif."
+            "nextWarnBansPermanent": "**Prochain avertissement :** ban automatique définitif.",
+            "recordedOnly": "Enregistré seulement : cet avertissement ne compte pas pour un bannissement automatique sur ce serveur (réglages de l'échelle d'avertissements)."
         },
         "step": {
             "reason": "Étape 1 : choisis une raison.",

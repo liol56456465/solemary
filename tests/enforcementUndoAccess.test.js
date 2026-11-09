@@ -25,3 +25,21 @@ test('the Moderator role may undo its own kinds of action, never a ban', () => {
     assert.ok(!MODERATOR_PANEL_ACTIONS.includes(undoAccessAction(undo({ type: 'ban' }))));
     assert.ok(!MODERATOR_PANEL_ACTIONS.includes(undoAccessAction(undo({ type: 'warn', ladderBanCode: 'abc23' }))));
 });
+
+// Review of wave 1: an older warn's undo could lift an automatic ban that a LATER warn triggered.
+import { undoWouldLiftBan } from '../src/handlers/enforcementPanel.js';
+import { nextWarnText } from '../src/services/enforcement/flowBuilder.js';
+
+test('warn undo by the Moderator role: refused while an automatic ban is active, or when unsure', () => {
+    const warn = undo({ type: 'warn' });
+    assert.equal(undoWouldLiftBan(warn, { banned: true, activeBan: { is_auto: true } }), true);
+    assert.equal(undoWouldLiftBan(warn, null), true, 'state unreadable: fail closed');
+    assert.equal(undoWouldLiftBan(warn, { banned: true, activeBan: { is_auto: false } }), false, 'a manual ban is not lifted by a warn undo');
+    assert.equal(undoWouldLiftBan(warn, { banned: false }), false);
+    assert.equal(undoWouldLiftBan(undo({ type: 'mute' }), null), false, 'only warn undos can reach liftLadderBanForWarn');
+});
+
+test('next-warn line: none when the warn ladder is off', () => {
+    assert.equal(nextWarnText({ level: 0, warns_since_level: 2, enabled: false }, { lang: 'en' }), null);
+    assert.match(nextWarnText({ level: 0, warns_since_level: 2, enabled: true }, { lang: 'en' }), /automatic/i);
+});
