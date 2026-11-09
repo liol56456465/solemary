@@ -71,8 +71,9 @@ test('delivery: DM first, then the channel with only that user mentioned; failur
     const dmClosed = { users: { fetch: async () => ({ send: async () => { throw new Error('Cannot send messages to this user'); } }) }, channels: { fetch: async () => channel } };
     assert.equal(await deliverReminder(dmClosed, row), 'channel');
     assert.deepEqual(sent[1][1].allowedMentions, { users: [ME] });
-    assert.ok(sent[1][1].content.startsWith(`<@${ME}> Reminder from`));
-    assert.match(reminderMessage(row), /^Reminder from <t:0:R>: stretch @everyone$/);
+    assert.ok(sent[1][1].content.startsWith(`<@${ME}> ⏰ Reminder you set`));
+    assert.match(reminderMessage(row), /^⏰ Reminder you set <t:0:R>: stretch @everyone$/);
+    assert.match(reminderMessage(row, 'de'), /^⏰ Erinnerung, die du <t:0:R> gestellt hast: stretch @everyone$/);
     // Never posts where the member could not post it themselves now (muted, timed out, left, other server).
     canWrite = false;
     assert.equal(await deliverReminder(dmClosed, row), 'failed', 'muted: no Send Messages');

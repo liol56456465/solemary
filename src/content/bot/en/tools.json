@@ -484,7 +484,7 @@
         "cancelledTitle": "{title} (cancelled)",
         "cancelledBody": "The countdown was cancelled.",
         "expired": "This countdown has expired or was cancelled.",
-        "adminOnly": "You need the Administrator role to control countdowns.",
+        "adminOnly": "Only server admins can control countdowns.",
         "resumed": "Countdown resumed.",
         "paused": "Countdown paused.",
         "cancelled": "Countdown cancelled.",

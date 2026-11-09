@@ -62,7 +62,11 @@
         "slowDown": "Doucement, puis réessaie.",
         "notActive": "Ce giveaway n'est plus actif.",
         "alreadyEnded": "Ce giveaway est déjà terminé.",
-        "alreadyIn": "Tu participes déjà à ce giveaway.",
+        "alreadyIn": "Tu participes déjà à ce giveaway. Tu as changé d’avis ? Appuie sur **Quitter le giveaway** ci-dessous.",
+        "alreadyInTitle": "Déjà inscrit",
+        "leftTitle": "Tu as quitté le giveaway",
+        "left": "Tu ne participes plus. Tu peux revenir à tout moment avant la fin.",
+        "notIn": "Tu ne participes pas à ce giveaway, il n’y a donc rien à quitter.",
         "joinedTitle": "Tu participes",
         "joined": {
             "one": "Bonne chance. {count} personne participe pour l'instant.",
@@ -70,8 +74,8 @@
             "other": "Bonne chance. {count} personnes participent pour l'instant."
         },
         "guildOnly": "Ce bouton ne marche que sur un serveur.",
-        "needAdminEnd": "Tu as besoin du rôle Administrateur pour terminer un giveaway.",
-        "needAdminReroll": "Tu as besoin du rôle Administrateur pour retirer au sort un giveaway.",
+        "needAdminEnd": "Seuls les admins du serveur peuvent terminer un giveaway.",
+        "needAdminReroll": "Seuls les admins du serveur peuvent retirer au sort un giveaway.",
         "endedTitle": "Giveaway terminé",
         "picked": {
             "one": "{count} gagnant tiré.",
@@ -101,7 +105,14 @@
         "reroll": "Retirer au sort",
         "winners": "Gagnants",
         "join": "Participer",
+        "leave": "Quitter le giveaway",
         "end": "Terminer"
+    },
+    "dm": {
+        "won": "🎉 Tu as gagné **{prize}** sur **{server}** !",
+        "claimHost": "Pour recevoir ton prix, écris à l’organisateur <@{hostId}> ou demande au staff du serveur.",
+        "claimStaff": "Pour recevoir ton prix, demande au staff du serveur.",
+        "link": "Giveaway : {url}"
     },
     "post": {
         "newGiveaway": "**Nouveau giveaway**",

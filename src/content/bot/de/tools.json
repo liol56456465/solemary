@@ -484,7 +484,7 @@
         "cancelledTitle": "{title} (abgebrochen)",
         "cancelledBody": "Der Countdown wurde abgebrochen.",
         "expired": "Dieser Countdown ist abgelaufen oder wurde abgebrochen.",
-        "adminOnly": "Du brauchst die Administrator-Rolle, um Countdowns zu steuern.",
+        "adminOnly": "Nur Server-Admins können Countdowns steuern.",
         "resumed": "Countdown fortgesetzt.",
         "paused": "Countdown pausiert.",
         "cancelled": "Countdown abgebrochen.",

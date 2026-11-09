@@ -229,11 +229,11 @@ test('executeAction: the Moderator role passes only for its actions and only whi
     const staffRole = { roleId: MOD_ROLE, actions: [...access.MODERATOR_PANEL_ACTIONS] };
     const target = { id: TARGET, username: 'target' };
     await assert.rejects(enf.executeAction({ guild, moderator: member(MODERATOR), targetUser: target, flow: { type: 'warn' }, staffRole }),
-        (error) => /Administrator permission/.test(error.userMessage), 'role removed: refused');
+        (error) => /Only server admins/.test(error.userMessage), 'role removed: refused');
     await assert.rejects(enf.executeAction({ guild, moderator: member(MODERATOR, { roleIds: [MOD_ROLE] }), targetUser: target, flow: { type: 'ban' }, staffRole }),
-        (error) => /Administrator permission/.test(error.userMessage), 'ban is not a moderator action');
+        (error) => /Only server admins/.test(error.userMessage), 'ban is not a moderator action');
     await assert.rejects(enf.executeAction({ guild, moderator: member(MODERATOR, { roleIds: [MOD_ROLE] }), targetUser: target, flow: { type: 'unban' }, staffRole }),
-        (error) => /Administrator permission/.test(error.userMessage), 'unban is not a moderator action');
+        (error) => /Only server admins/.test(error.userMessage), 'unban is not a moderator action');
 });
 
 // ── Per-action bot permissions (3.6) ──────────────────────────────────────

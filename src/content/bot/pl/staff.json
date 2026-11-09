@@ -299,8 +299,8 @@
             "userId": "ID użytkownika, dla osób, których nie ma już na serwerze"
         },
         "serverOnly": "Ta komenda działa tylko na serwerze.",
-        "noAdmin": "Potrzebujesz uprawnienia Administrator, aby używać tego panelu.",
-        "noAdminOrMod": "Potrzebujesz uprawnienia Administrator albo roli moderatora tego serwera, aby używać tego panelu.",
+        "noAdmin": "Tylko admini serwera mogą używać tego panelu.",
+        "noAdminOrMod": "Tylko admini serwera i osoby z rolą moderatora tego serwera mogą używać tego panelu.",
         "modNotAllowed": "Z rolą moderatora możesz ostrzegać, wyciszać, wyrzucać, cofać wyciszenie i usuwać ostrzeżenia. **{action}** wymaga uprawnienia Administrator.",
         "accessUnavailable": "Nie udało się teraz sprawdzić twojej roli moderatora (baza danych nie odpowiada). Nic nie zostało zmienione. Spróbuj za chwilę."
     },
@@ -310,11 +310,11 @@
     },
     "warnmessage": {
         "otherServer": "To działa tylko z wiadomościami na tym serwerze.",
-        "noAdmin": "Potrzebujesz uprawnienia Administrator, aby ostrzegać członków.",
+        "noAdmin": "Tylko admini serwera mogą ostrzegać członków.",
         "botMessage": "Nie można ostrzegać za wiadomości botów, webhooków ani systemowe.",
         "self": "Nie możesz ostrzec samego siebie.",
         "notInServer": "**{name}** nie ma już na serwerze, więc ostrzeżenie do tej osoby nie dotrze.",
-        "noAdminOrMod": "Potrzebujesz uprawnienia Administrator albo roli moderatora tego serwera, aby ostrzegać członków."
+        "noAdminOrMod": "Tylko admini serwera i osoby z rolą moderatora tego serwera mogą ostrzegać członków."
     },
     "reportmessage": {
         "serverOnly": "Zgłoszenia działają tylko na serwerze.",

@@ -487,7 +487,7 @@
         "cancelledTitle": "{title} (cancelada)",
         "cancelledBody": "A contagem regressiva foi cancelada.",
         "expired": "Esta contagem regressiva terminou ou foi cancelada.",
-        "adminOnly": "Você precisa do cargo de Administrador para controlar contagens regressivas.",
+        "adminOnly": "Só os admins do servidor podem controlar contagens regressivas.",
         "resumed": "Contagem regressiva retomada.",
         "paused": "Contagem regressiva pausada.",
         "cancelled": "Contagem regressiva cancelada.",

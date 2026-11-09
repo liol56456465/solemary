@@ -286,8 +286,8 @@
             "userId": "ID utente, per chi non è più nel server"
         },
         "serverOnly": "Questo comando funziona solo in un server.",
-        "noAdmin": "Ti serve il permesso Amministratore per usare questo pannello.",
-        "noAdminOrMod": "Ti serve il permesso Amministratore o il ruolo di moderatore di questo server per usare questo pannello.",
+        "noAdmin": "Solo gli admin del server possono usare questo pannello.",
+        "noAdminOrMod": "Solo gli admin del server e i membri con il ruolo di moderatore di questo server possono usare questo pannello.",
         "modNotAllowed": "Con il ruolo di moderatore puoi avvertire, silenziare, espellere, togliere il silenziamento e rimuovere avvertimenti. **{action}** richiede il permesso Amministratore.",
         "accessUnavailable": "Non sono riuscito a controllare il tuo ruolo di moderatore (il database non risponde). Non è stato cambiato nulla. Riprova tra un momento."
     },
@@ -297,11 +297,11 @@
     },
     "warnmessage": {
         "otherServer": "Funziona solo sui messaggi di questo server.",
-        "noAdmin": "Ti serve il permesso Amministratore per avvertire i membri.",
+        "noAdmin": "Solo gli admin del server possono avvertire i membri.",
         "botMessage": "Non si può avvertire per messaggi di bot, webhook o di sistema.",
         "self": "Non puoi avvertire te stesso.",
         "notInServer": "**{name}** non è più nel server, quindi un avvertimento non gli arriverebbe.",
-        "noAdminOrMod": "Ti serve il permesso Amministratore o il ruolo di moderatore di questo server per avvertire i membri."
+        "noAdminOrMod": "Solo gli admin del server e i membri con il ruolo di moderatore di questo server possono avvertire i membri."
     },
     "reportmessage": {
         "serverOnly": "Le segnalazioni funzionano solo in un server.",

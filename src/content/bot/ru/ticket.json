@@ -242,14 +242,16 @@
     },
     "dm": {
         "closedTitle": "Ваш тикет закрыт",
-        "closedBody": "Ваш тикет **{channel}** закрыт.\n\n**Причина:** {reason}\n**Закрыл:** {closer}\n**Когда:** <t:{time}:F>\n\nЕсли нужно что-то ещё, просто откройте новый тикет.",
+        "closedBody": "Ваш тикет **{channel}**{where} закрыт.\n\n**Причина:** {reason}\n**Закрыл:** {closer}\n**Когда:** <t:{time}:F>\n\nЕсли нужно что-то ещё, просто откройте новый тикет.",
         "feedbackTitle": "Как мы справились?",
-        "feedbackBody": "Оцените ваш тикет **{channel}** от 1 до 5. Выберите число ниже.",
+        "feedbackBody": "Оцените ваш тикет **{channel}**{where} от 1 до 5. Выберите число ниже.",
         "feedbackFooter": "Это необязательно.",
         "feedbackComment": "Добавить комментарий",
         "feedbackDecline": "Нет, спасибо",
         "transcriptTitle": "Запись вашего тикета",
-        "transcriptBody": "Вот запись тикета **{channel}**.",
+        "transcriptBody": "Вот запись тикета **{channel}**{where}.",
+        "inServer": " на сервере **{server}**",
+        "transcriptAttached": "Запись этого тикета во вложении.",
         "modmailFeedbackBody": "Оцените разговор с командой от 1 до 5. Выберите число ниже."
     },
     "reminder": {

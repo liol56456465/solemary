@@ -4,21 +4,24 @@
         "cannotAppeal": "Este baneo no se puede apelar.",
         "by": "Por: {name}",
         "reason": "Motivo: {reason}",
+        "reasonRule": "Motivo: {reason} ({rule})",
         "rule": "Regla",
         "date": "Fecha: {date}",
         "duration": "Duración: {duration}, termina el {end}",
         "durationPermanent": "Duración: permanente",
         "caseCode": "Código del caso: {code}",
+        "caseCodeAppeal": "Código del caso: {code} (lo necesitas para apelar)",
         "rejoin": "Volver a unirte: {invite}",
         "record": "Tu historial completo: <{url}>",
         "appealWeb": "**Apela en línea:** <{url}>",
+        "appealBoth": "**Apela aquí:** {invite} o en línea: <{url}>",
         "appealAskStaff": "**Para apelar:** contacta con el equipo de {server}.",
         "appealDeniedWeb": "Puedes volver a apelar en línea cuando termine el tiempo de espera: <{url}>",
         "privacy": "-# Privacidad: <{url}>",
         "thisServer": "este servidor",
         "ban": {
             "title": "**Baneado de {server}**",
-            "autoNote": "Apelar este código también elimina la advertencia que causó este baneo.",
+            "autoNote": "Si se acepta tu apelación, también se elimina la advertencia que llevó a este baneo.",
             "appealUntil": "Puedes apelar hasta el {date}."
         },
         "kick": {
@@ -26,12 +29,21 @@
             "noInvite": "Volver a unirte: pide una invitación a alguien del equipo"
         },
         "mute": {
-            "title": "**Silenciado en {server}**"
+            "title": "**Silenciado en {server}**",
+            "next": "Puedes seguir leyendo el servidor, pero no escribir, reaccionar ni hablar hasta que termine."
         },
         "warn": {
             "title": "**Advertencia {number} de {limit} en {server}**",
-            "limit": "Con {limit} advertencias serás baneado por {length}.",
-            "limitPermanent": "Con {limit} advertencias serás baneado de forma permanente.",
+            "next": {
+                "one": "Las advertencias no caducan. {count} advertencia más significa un baneo automático de {length}.",
+                "many": "Las advertencias no caducan. {count} advertencias más significan un baneo automático de {length}.",
+                "other": "Las advertencias no caducan. {count} advertencias más significan un baneo automático de {length}."
+            },
+            "nextPermanent": {
+                "one": "Las advertencias no caducan. {count} advertencia más significa un baneo automático permanente.",
+                "many": "Las advertencias no caducan. {count} advertencias más significan un baneo automático permanente.",
+                "other": "Las advertencias no caducan. {count} advertencias más significan un baneo automático permanente."
+            },
             "titleRecorded": "**Una advertencia en {server}**",
             "notCounted": "Esta advertencia queda en tu historial, pero no cuenta para un baneo automático."
         },
@@ -46,6 +58,8 @@
             "title": "**Tu baneo de {server} ha terminado**",
             "early": "Un moderador lo quitó antes de tiempo.",
             "expired": "Ha caducado.",
+            "nextWarn": "Las advertencias no caducan: tu próxima advertencia aquí significa otro baneo automático, de {length}.",
+            "nextWarnPermanent": "Las advertencias no caducan: tu próxima advertencia aquí significa un baneo automático permanente.",
             "noInvite": "Volver a unirte: pide una invitación en el servidor de soporte: {invite}"
         },
         "muteEnded": {

@@ -90,7 +90,7 @@ test('settings modal submit: acknowledged first; saved with one locked write; re
 test('settings modal submit: expired, no longer Administrator, invalid value, trigger removed, database down → nothing saved', async () => {
     const cases = [
         [{ customId: settingsModalId('limit', TRIGGER, NOW - 11 * 60 * 1000) }, /expired/],
-        [{ admin: false }, /Administrator/],
+        [{ admin: false }, /Only server admins/],
         [{ value: '150' }, /0 to 99\. Nothing was changed/],
         [{ customId: 'jtcset:bogus' }, /not valid any more/],
     ];

@@ -30,11 +30,13 @@ test('English is byte-for-byte the old text', () => {
     for (const [key, { label }] of Object.entries(COOLDOWN_DURATIONS)) assert.equal(durationLabel(key), label, key);
     assert.deepEqual(confirmButtons('1', 'n').toJSON().components.map((c) => c.label), ['Start cooldown', 'Cancel']);
     for (const item of WIPE_ITEMS.filter((i) => !i.legacy)) assert.equal(wipeItemLabel(item.id), item.label, item.id);
-    assert.equal(wipeWarningText(), 'This permanently deletes your data in this server:\n'
+    // Audit 4.9: beginner wording (what is deleted where, what stays and why); same 8 items.
+    assert.equal(wipeWarningText(), 'If you confirm, this data about you is deleted:\n'
         + WIPE_ITEMS.filter((item) => !item.legacy).map((item) => `- ${item.label}`).join('\n')
-        + '\n\nYour to-do list, reminders and stored login token are the same in every server, so they are deleted everywhere. '
-        + 'Without the login token the bot can no longer add you to the support server; Verify with Discord stores a new one. '
-        + 'Moderation, appeal, report and verification records are kept.\n\n**This cannot be undone.**');
+        + '\n\nLevels and birthday are deleted in this server only. Your to-do list, reminders and login token belong to you, not to a server, '
+        + 'so they are deleted everywhere. (Without the login token, Mewvo can\'t add you back to its support server until you use Verify with Discord again.)'
+        + '\n\n**What stays:** your warnings, bans, appeals, reports and verification checks. Servers keep these as safety records, '
+        + 'so this command can\'t remove them. The Privacy Policy explains how to ask about them.\n\n**This cannot be undone.**');
     assert.equal(en.t('utility.todo.created', { name: 'Groceries', id: 'abc' }), 'Created shared list "Groceries" with ID: `abc`\nUse `/todo share add list_id:abc user:@username` to add members.');
     assert.equal(en.t('utility.report.ownerPing', { ownerId: '42' }), '<@42> New report');
 });

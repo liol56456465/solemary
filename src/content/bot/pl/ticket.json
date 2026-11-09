@@ -242,14 +242,16 @@
     },
     "dm": {
         "closedTitle": "Twoje zgłoszenie zostało zamknięte",
-        "closedBody": "Twoje zgłoszenie **{channel}** zostało zamknięte.\n\n**Powód:** {reason}\n**Zamknął(-ęła):** {closer}\n**Kiedy:** <t:{time}:F>\n\nJeśli potrzebujesz czegoś jeszcze, po prostu otwórz nowe zgłoszenie.",
+        "closedBody": "Twoje zgłoszenie **{channel}**{where} zostało zamknięte.\n\n**Powód:** {reason}\n**Zamknął(-ęła):** {closer}\n**Kiedy:** <t:{time}:F>\n\nJeśli potrzebujesz czegoś jeszcze, po prostu otwórz nowe zgłoszenie.",
         "feedbackTitle": "Jak nam poszło?",
-        "feedbackBody": "Oceń swoje zgłoszenie **{channel}** w skali od 1 do 5. Wybierz liczbę poniżej.",
+        "feedbackBody": "Oceń swoje zgłoszenie **{channel}**{where} w skali od 1 do 5. Wybierz liczbę poniżej.",
         "feedbackFooter": "To nieobowiązkowe.",
         "feedbackComment": "Dodaj komentarz",
         "feedbackDecline": "Nie, dziękuję",
         "transcriptTitle": "Zapis twojego zgłoszenia",
-        "transcriptBody": "Oto zapis zgłoszenia **{channel}**.",
+        "transcriptBody": "Oto zapis zgłoszenia **{channel}**{where}.",
+        "inServer": " na **{server}**",
+        "transcriptAttached": "Zapis tego zgłoszenia jest w załączniku.",
         "modmailFeedbackBody": "Oceń swoją rozmowę z obsługą od 1 do 5. Wybierz liczbę poniżej."
     },
     "reminder": {

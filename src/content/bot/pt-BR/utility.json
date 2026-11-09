@@ -60,7 +60,7 @@
         "reason": "Motivo",
         "notDelivered": "Não foi possível entregar sua denúncia: o canal de denúncias não existe, os registros estão desativados ou não tenho permissão para escrever lá. Fale direto com um moderador.",
         "submittedTitle": "Denúncia enviada",
-        "submitted": "Sua denúncia sobre **{tag}** foi enviada aos moderadores. Obrigado por avisar.",
+        "submitted": "Sua denúncia sobre **{tag}** chegou aos moderadores. Eles vão analisar e decidir o que fazer; talvez você não receba notícias do resultado. Obrigado por avisar.",
         "setchannel": {
             "noAdmin": "Você precisa da permissão de **Administrador** para definir o canal de denúncias.",
             "saveFailed": "Não foi possível salvar a configuração do canal.",
@@ -75,6 +75,7 @@
         "setTitle": "Lembrete criado",
         "deleted": "Lembrete `{id}` apagado.",
         "deletedTitle": "Lembrete apagado",
+        "delivered": "⏰ Lembrete que você criou {when}: {text}",
         "notFound": "Você não tem lembrete com esse número. Confira `/remind list`.",
         "dbDown": "O banco de dados não está respondendo, então nada foi salvo. Tente de novo em alguns minutos.",
         "dbDownTitle": "Tente mais tarde"
@@ -108,8 +109,8 @@
     },
     "wipedata": {
         "title": "Apagar seus dados?",
-        "intro": "Isto apaga para sempre seus dados neste servidor:",
-        "body": "Sua lista de tarefas, seus lembretes e seu token de login salvo são os mesmos em todos os servidores, então são apagados em todo lugar. Sem o token de login, o bot não consegue mais adicionar você ao servidor de suporte; \"Verificar com o Discord\" salva um novo. Os registros de moderação, recursos, denúncias e verificação são mantidos.",
+        "intro": "Se você confirmar, estes dados sobre você serão apagados:",
+        "body": "Níveis e aniversário são apagados só neste servidor. Sua lista de tarefas, seus lembretes e seu token de login são seus, não de um servidor, então são apagados em todo lugar. (Sem o token, o Mewvo não consegue adicionar você de novo ao servidor de suporte até você usar \"Verificar com o Discord\" outra vez.)\n\n**O que fica:** suas advertências, banimentos, recursos, denúncias e verificações. Os servidores guardam isso como registros de segurança, então este comando não pode apagá-los. A Política de Privacidade explica como perguntar sobre eles.",
         "final": "**Isto não pode ser desfeito.**",
         "confirm": "Confirmar",
         "cancel": "Cancelar",
@@ -128,7 +129,7 @@
         "partialDeleted": "Apagado: {items}. ",
         "partialRetry": "Use /wipedata de novo em alguns minutos.",
         "doneTitle": "Seus dados foram apagados",
-        "done": "Apagado: {items}.\nNíveis e aniversário neste servidor; lista de tarefas, lembretes e o token de login salvo em todo lugar.\n\nOs registros de moderação, recursos, denúncias e verificação são mantidos, porque são os registros de segurança do servidor. Veja na Política de Privacidade como perguntar sobre eles.",
+        "done": "Apagado: {items}.\nNíveis e aniversário: neste servidor. Lista de tarefas, lembretes e token de login: em todo lugar.\n\n**O que fica:** suas advertências, banimentos, recursos, denúncias e verificações. Os servidores guardam isso como registros de segurança; a Política de Privacidade explica como perguntar sobre eles.",
         "nothingStored": "nada estava salvo",
         "failed": "O banco de dados não está respondendo. Talvez nada tenha sido apagado; tente de novo em alguns minutos.",
         "cancelledTitle": "Nada foi apagado",

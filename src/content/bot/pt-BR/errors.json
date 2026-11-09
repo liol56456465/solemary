@@ -63,9 +63,9 @@
         }
     },
     "access": {
-        "adminChannel": "Você precisa do cargo de Administrador para usar este comando. Peça um cargo de mod ou admin aqui: <#{channelId}>",
-        "admin": "Você precisa do cargo de Administrador para usar este comando.",
-        "adminOther": "Você precisa do cargo de Administrador para usar este comando. Peça acesso a um admin deste servidor se precisar.",
+        "adminChannel": "Só os admins do servidor podem usar isto. Peça um cargo de mod ou admin aqui: <#{channelId}>",
+        "admin": "Só os admins do servidor podem usar isto.",
+        "adminOther": "Só os admins do servidor podem usar isto. Peça acesso a um admin deste servidor se precisar.",
         "manageServer": "Você precisa da permissão Gerenciar servidor ou Administrador para usar este comando."
     },
     "dispatch": {

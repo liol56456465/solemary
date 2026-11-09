@@ -238,14 +238,16 @@
     },
     "dm": {
         "closedTitle": "Dein Ticket wurde geschlossen",
-        "closedBody": "Dein Ticket **{channel}** wurde geschlossen.\n\n**Grund:** {reason}\n**Geschlossen von:** {closer}\n**Geschlossen am:** <t:{time}:F>\n\nWenn du noch etwas brauchst, öffne einfach ein neues Ticket.",
+        "closedBody": "Dein Ticket **{channel}**{where} wurde geschlossen.\n\n**Grund:** {reason}\n**Geschlossen von:** {closer}\n**Geschlossen am:** <t:{time}:F>\n\nWenn du noch etwas brauchst, öffne einfach ein neues Ticket.",
         "feedbackTitle": "Wie war's?",
-        "feedbackBody": "Bewerte dein Ticket **{channel}** von 1 bis 5. Wähl unten eine Zahl.",
+        "feedbackBody": "Bewerte dein Ticket **{channel}**{where} von 1 bis 5. Wähl unten eine Zahl.",
         "feedbackFooter": "Das ist freiwillig.",
         "feedbackComment": "Kommentar hinzufügen",
         "feedbackDecline": "Nein danke",
         "transcriptTitle": "Verlauf deines Tickets",
-        "transcriptBody": "Hier ist der Verlauf von **{channel}**.",
+        "transcriptBody": "Hier ist der Verlauf von **{channel}**{where}.",
+        "inServer": " in **{server}**",
+        "transcriptAttached": "Der Verlauf dieses Tickets ist angehängt.",
         "modmailFeedbackBody": "Bewerte dein Gespräch mit dem Team von 1 bis 5. Wähle unten eine Zahl."
     },
     "reminder": {

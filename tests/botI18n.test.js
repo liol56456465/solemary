@@ -148,11 +148,11 @@ test('a ban DM in German: translated lines, placeholders filled, case code and <
     const dm = banDm(record(), { lang: 'de' });
     assert.ok(dm.includes('**Von '), dm);
     assert.ok(dm.includes('gebannt**'));
-    assert.ok(dm.includes('Von: Mod<One>'), 'moderator name as given');
+    assert.ok(!dm.includes('Von: Mod<One>'), 'audit 4.1: no moderator line');
+    assert.ok(dm.startsWith('**Von '), 'the title comes first');
     assert.ok(dm.includes('Grund: Spam {not a param}'), 'a {…} in user text is not treated as a placeholder');
-    assert.ok(dm.includes('Fallcode: abc23k'));
+    assert.ok(dm.includes('Fallcode: abc23k (den brauchst du für einen Einspruch)'));
     assert.match(dm, /Dauer: 7 Tage, endet <t:\d+:F> \(<t:\d+:R>\)/);
-    assert.match(dm, /Datum: <t:\d+:F>/);
     assert.ok(!/\{[a-zA-Z]+\}/.test(dm.replace('{not a param}', '')), 'no placeholder left');
     assert.ok(!dm.includes('Banned') && !dm.includes('Case code'), 'no English line left');
 });
@@ -176,16 +176,14 @@ test('every translated DM renders in every language without a missing key or pla
     }
 });
 
-test('English DMs are byte-for-byte the old layout (explicit en and no language are the same)', () => {
+test('English DMs: the audit 4.1 layout, title first (explicit en and no language are the same)', () => {
     const r = record({ reason: 'Spam' });
     const ban = [
-        '**Appeal here:** https://discord.gg/7Ckv9Bt577',
         '**Banned from Mewvo**',
-        'By: Mod<One>',
         'Reason: Spam',
-        `Date: <t:${Date.UTC(2026, 10, 1) / 1000}:F>`,
         `Duration: 7 days, ends <t:${Date.UTC(2026, 10, 8) / 1000}:F> (<t:${Date.UTC(2026, 10, 8) / 1000}:R>)`,
-        'Case code: abc23k',
+        '**Appeal here:** https://discord.gg/7Ckv9Bt577',
+        'Case code: abc23k (you need this to appeal)',
     ].join('\n');
     const env = { ...process.env };
     delete process.env.PUBLIC_URL;
@@ -194,10 +192,10 @@ test('English DMs are byte-for-byte the old layout (explicit en and no language 
         assert.equal(banDm(r), ban);
         assert.equal(banDm(r, { lang: 'en' }), ban);
         assert.equal(appealDeniedDm(), '**Appeal denied.** If you think this is a mistake, appeal again here:\nhttps://discord.gg/7Ckv9Bt577');
-        assert.equal(warnDm(r, 1).split('\n')[1], '**Warning 1 of 3 in Mewvo**');
+        assert.equal(warnDm(r, 1).split('\n')[0], '**Warning 1 of 3 in Mewvo**');
         assert.equal(caseVoidedDm(r, 'oops').split('\n')[0], '**A ban on your record in Mewvo was removed**');
         assert.equal(caseVoidedDm({ ...r, type: 'note' }, 'oops').split('\n')[0], '**A note on your record in Mewvo was removed**');
-        assert.equal(kickDm(r, null).split('\n').at(-1), 'Rejoin: ask a staff member for an invite');
+        assert.equal(kickDm(r, null).split('\n')[2], 'Rejoin: ask a staff member for an invite');
     } finally {
         Object.assign(process.env, env);
     }
@@ -246,12 +244,12 @@ test('error texts: English catalog = the code\'s English (so English stays ident
     assert.equal(buildUserErrorEmbed('database', 'x', { lang: 'de', titleOverride: 'Own' }).data.title, 'Own');
 });
 
-test('the Administrator refusal: English unchanged, other languages keep the channel mention', () => {
+test('the Administrator refusal (audit 4.4: "Only server admins"), other languages keep the channel mention', () => {
     const stored = () => '400000000000000004';
-    assert.equal(getAdminRequiredMessage(OTHER_GUILD, { stored }), 'You need the Administrator role to use this command. Request a mod/admin role here: <#400000000000000004>');
-    assert.equal(getAdminRequiredMessage(OTHER_GUILD, { stored: () => null }), 'You need the Administrator role to use this command. Ask an admin of this server if you need access.');
+    assert.equal(getAdminRequiredMessage(OTHER_GUILD, { stored }), 'Only server admins can use this. Request a mod/admin role here: <#400000000000000004>');
+    assert.equal(getAdminRequiredMessage(OTHER_GUILD, { stored: () => null }), 'Only server admins can use this. Ask an admin of this server if you need access.');
     const ru = getAdminRequiredMessage(OTHER_GUILD, { stored, lang: 'ru' });
-    assert.ok(ru.startsWith('Для этой команды нужна роль администратора.'), ru);
+    assert.ok(ru.startsWith('Это доступно только администраторам сервера.'), ru);
     assert.ok(ru.endsWith('<#400000000000000004>'));
 });
 

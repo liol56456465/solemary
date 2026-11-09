@@ -62,7 +62,11 @@
         "slowDown": "Rallenta un attimo, poi riprova.",
         "notActive": "Questo giveaway non è più attivo.",
         "alreadyEnded": "Questo giveaway è già chiuso.",
-        "alreadyIn": "Partecipi già a questo giveaway.",
+        "alreadyIn": "Partecipi già a questo giveaway. Hai cambiato idea? Premi **Esci dal giveaway** qui sotto.",
+        "alreadyInTitle": "Già iscritto",
+        "leftTitle": "Hai lasciato il giveaway",
+        "left": "Non partecipi più. Puoi rientrare quando vuoi prima della fine.",
+        "notIn": "Non partecipi a questo giveaway, quindi non c’è niente da lasciare.",
         "joinedTitle": "Sei dentro",
         "joined": {
             "one": "Buona fortuna. Finora ha partecipato {count} persona.",
@@ -70,8 +74,8 @@
             "other": "Buona fortuna. Finora hanno partecipato {count} persone."
         },
         "guildOnly": "Questo pulsante si può usare solo in un server.",
-        "needAdminEnd": "Ti serve il ruolo Amministratore per chiudere un giveaway.",
-        "needAdminReroll": "Ti serve il ruolo Amministratore per riestrarre un giveaway.",
+        "needAdminEnd": "Solo gli admin del server possono chiudere un giveaway.",
+        "needAdminReroll": "Solo gli admin del server possono riestrarre un giveaway.",
         "endedTitle": "Giveaway chiuso",
         "picked": {
             "one": "Estratto {count} vincitore.",
@@ -101,7 +105,14 @@
         "reroll": "Riestrai",
         "winners": "Vincitori",
         "join": "Partecipa",
+        "leave": "Esci dal giveaway",
         "end": "Chiudi"
+    },
+    "dm": {
+        "won": "🎉 Hai vinto **{prize}** in **{server}**!",
+        "claimHost": "Per ricevere il premio, scrivi all’organizzatore <@{hostId}> o chiedi allo staff del server.",
+        "claimStaff": "Per ricevere il premio, chiedi allo staff del server.",
+        "link": "Giveaway: {url}"
     },
     "post": {
         "newGiveaway": "**Nuovo giveaway**",

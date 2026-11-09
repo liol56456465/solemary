@@ -1,5 +1,6 @@
 import {
   giveawayJoinHandler,
+  giveawayLeaveHandler,
   giveawayEndHandler,
   giveawayRerollHandler,
   giveawayViewHandler,
@@ -14,6 +15,7 @@ function fromCustomId(handler) {
 
 export default [
   fromCustomId(giveawayJoinHandler),
+  fromCustomId(giveawayLeaveHandler),
   fromCustomId(giveawayEndHandler),
   fromCustomId(giveawayRerollHandler),
   fromCustomId(giveawayViewHandler),

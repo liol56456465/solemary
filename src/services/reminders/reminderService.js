@@ -8,6 +8,7 @@ import { pgConfig } from '../../config/database/postgres.js';
 import { query as defaultQuery } from '../enforcement/db.js';
 import { parseDuration } from '../enforcement/format.js';
 import { logger } from '../../utils/logger.js';
+import { botText, resolveBotLanguage } from '../../utils/botText.js';
 
 export const REMINDER_TEXT_MAX = 500;
 export const MAX_ACTIVE_REMINDERS = 25;
@@ -83,9 +84,19 @@ export const reminderStore = createReminderStore();
 
 const ts = (date, style) => `<t:${Math.floor(new Date(date).getTime() / 1000)}:${style}>`;
 
-/** The message a reminder sends. */
-export function reminderMessage(row) {
-    return `Reminder from ${ts(row.created_at, 'R')}: ${row.text}`;
+/** The message a reminder sends: "⏰ Reminder you set <t:…:R>: text" in `lang` (audit, member side). */
+export function reminderMessage(row, lang = 'en') {
+    return botText(lang).t('utility.remind.delivered', { when: ts(row.created_at, 'R'), text: row.text });
+}
+
+/** The language of a reminder: the member's (language role) or else its server's; English when unreadable. */
+function reminderLanguage(client, row) {
+    try {
+        const member = row.guild_id ? client?.guilds?.cache?.get?.(row.guild_id)?.members?.cache?.get?.(row.user_id) ?? null : null;
+        return resolveBotLanguage({ guildId: row.guild_id || null, member, userId: row.user_id, purpose: 'dm' });
+    } catch {
+        return 'en';
+    }
 }
 
 /**
@@ -103,7 +114,7 @@ export async function mayPostIn(channel, row) {
 
 /** Sends one reminder: DM first, then the channel it was made in. Returns 'dm' | 'channel' | 'failed'. */
 export async function deliverReminder(client, row) {
-    const content = reminderMessage(row);
+    const content = reminderMessage(row, reminderLanguage(client, row));
     try {
         const user = await client.users.fetch(row.user_id);
         await user.send({ content, allowedMentions: { parse: [] } });

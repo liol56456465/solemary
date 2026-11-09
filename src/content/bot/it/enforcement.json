@@ -4,21 +4,24 @@
         "cannotAppeal": "Contro questo ban non si può fare ricorso.",
         "by": "Da: {name}",
         "reason": "Motivo: {reason}",
+        "reasonRule": "Motivo: {reason} ({rule})",
         "rule": "Regola",
         "date": "Data: {date}",
         "duration": "Durata: {duration}, termina {end}",
         "durationPermanent": "Durata: permanente",
         "caseCode": "Codice del caso: {code}",
+        "caseCodeAppeal": "Codice del caso: {code} (ti serve per fare ricorso)",
         "rejoin": "Rientra: {invite}",
         "record": "La tua storia completa: <{url}>",
         "appealWeb": "**Fai ricorso online:** <{url}>",
+        "appealBoth": "**Fai ricorso qui:** {invite} oppure online: <{url}>",
         "appealAskStaff": "**Per fare ricorso:** contatta lo staff di {server}.",
         "appealDeniedWeb": "Dopo il periodo di attesa puoi fare di nuovo ricorso online: <{url}>",
         "privacy": "-# Privacy: <{url}>",
         "thisServer": "questo server",
         "ban": {
             "title": "**Bannato da {server}**",
-            "autoNote": "Fare ricorso con questo codice rimuove anche l’avvertimento che ha causato questo ban.",
+            "autoNote": "Se il tuo ricorso viene accettato, viene rimosso anche l’avvertimento che ha portato a questo ban.",
             "appealUntil": "Puoi fare ricorso fino al {date}."
         },
         "kick": {
@@ -26,12 +29,21 @@
             "noInvite": "Rientra: chiedi un invito a un membro dello staff"
         },
         "mute": {
-            "title": "**Silenziato in {server}**"
+            "title": "**Silenziato in {server}**",
+            "next": "Puoi ancora leggere il server, ma non scrivere, reagire o parlare finché non finisce."
         },
         "warn": {
             "title": "**Avvertimento {number} di {limit} in {server}**",
-            "limit": "A {limit} avvertimenti verrai bannato per {length}.",
-            "limitPermanent": "A {limit} avvertimenti verrai bannato per sempre.",
+            "next": {
+                "one": "Gli avvertimenti non scadono. Ancora {count} avvertimento significa un ban automatico di {length}.",
+                "many": "Gli avvertimenti non scadono. Ancora {count} avvertimenti significano un ban automatico di {length}.",
+                "other": "Gli avvertimenti non scadono. Ancora {count} avvertimenti significano un ban automatico di {length}."
+            },
+            "nextPermanent": {
+                "one": "Gli avvertimenti non scadono. Ancora {count} avvertimento significa un ban automatico permanente.",
+                "many": "Gli avvertimenti non scadono. Ancora {count} avvertimenti significano un ban automatico permanente.",
+                "other": "Gli avvertimenti non scadono. Ancora {count} avvertimenti significano un ban automatico permanente."
+            },
             "titleRecorded": "**Un avvertimento in {server}**",
             "notCounted": "Questo avvertimento è nel tuo storico, ma non conta per un ban automatico."
         },
@@ -46,6 +58,8 @@
             "title": "**Il tuo ban da {server} è finito**",
             "early": "Un moderatore l’ha tolto prima.",
             "expired": "È scaduto.",
+            "nextWarn": "Gli avvertimenti non scadono: il tuo prossimo avvertimento qui significa un nuovo ban automatico, di {length}.",
+            "nextWarnPermanent": "Gli avvertimenti non scadono: il tuo prossimo avvertimento qui significa un ban automatico permanente.",
             "noInvite": "Rientra: chiedi un invito nel server di supporto: {invite}"
         },
         "muteEnded": {

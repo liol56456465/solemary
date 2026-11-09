@@ -4,21 +4,24 @@
         "cannotAppeal": "Ce bannissement ne peut pas faire l’objet d’un appel.",
         "by": "Par : {name}",
         "reason": "Raison : {reason}",
+        "reasonRule": "Raison : {reason} ({rule})",
         "rule": "Règle",
         "date": "Date : {date}",
         "duration": "Durée : {duration}, se termine le {end}",
         "durationPermanent": "Durée : définitive",
         "caseCode": "Code du dossier : {code}",
+        "caseCodeAppeal": "Code du dossier : {code} (il te faut ce code pour faire appel)",
         "rejoin": "Revenir : {invite}",
         "record": "Ton dossier complet : <{url}>",
         "appealWeb": "**Faire appel en ligne :** <{url}>",
+        "appealBoth": "**Faire appel ici :** {invite} ou en ligne : <{url}>",
         "appealAskStaff": "**Pour faire appel :** contacte l'équipe de {server}.",
         "appealDeniedWeb": "Tu pourras refaire appel en ligne après le délai d'attente : <{url}>",
         "privacy": "-# Confidentialité : <{url}>",
         "thisServer": "ce serveur",
         "ban": {
             "title": "**Banni de {server}**",
-            "autoNote": "Faire appel de ce code retire aussi l’avertissement qui a causé ce bannissement.",
+            "autoNote": "Si ton appel est accepté, l’avertissement qui a mené à ce bannissement est aussi retiré.",
             "appealUntil": "Tu peux faire appel jusqu’au {date}."
         },
         "kick": {
@@ -26,12 +29,21 @@
             "noInvite": "Revenir : demande une invitation à un membre de l’équipe"
         },
         "mute": {
-            "title": "**Rendu muet dans {server}**"
+            "title": "**Rendu muet dans {server}**",
+            "next": "Tu peux toujours lire le serveur, mais pas écrire, réagir ni parler jusqu’à la fin."
         },
         "warn": {
             "title": "**Avertissement {number} sur {limit} dans {server}**",
-            "limit": "À {limit} avertissements, tu seras banni pour {length}.",
-            "limitPermanent": "À {limit} avertissements, tu seras banni définitivement.",
+            "next": {
+                "one": "Les avertissements n’expirent pas. Encore {count} avertissement et c’est un bannissement automatique de {length}.",
+                "many": "Les avertissements n’expirent pas. Encore {count} avertissements et c’est un bannissement automatique de {length}.",
+                "other": "Les avertissements n’expirent pas. Encore {count} avertissements et c’est un bannissement automatique de {length}."
+            },
+            "nextPermanent": {
+                "one": "Les avertissements n’expirent pas. Encore {count} avertissement et c’est un bannissement automatique définitif.",
+                "many": "Les avertissements n’expirent pas. Encore {count} avertissements et c’est un bannissement automatique définitif.",
+                "other": "Les avertissements n’expirent pas. Encore {count} avertissements et c’est un bannissement automatique définitif."
+            },
             "titleRecorded": "**Un avertissement sur {server}**",
             "notCounted": "Cet avertissement figure dans ton historique, mais il ne compte pas pour un bannissement automatique."
         },
@@ -46,6 +58,8 @@
             "title": "**Ton bannissement de {server} est terminé**",
             "early": "Un modérateur l’a levé plus tôt.",
             "expired": "Il a expiré.",
+            "nextWarn": "Les avertissements n’expirent pas : ton prochain avertissement ici entraîne un nouveau bannissement automatique de {length}.",
+            "nextWarnPermanent": "Les avertissements n’expirent pas : ton prochain avertissement ici entraîne un bannissement automatique définitif.",
             "noInvite": "Revenir : demande une invitation sur le serveur d’aide : {invite}"
         },
         "muteEnded": {

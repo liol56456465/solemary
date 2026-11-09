@@ -60,7 +60,7 @@
         "reason": "Grund",
         "notDelivered": "Deine Meldung konnte nicht zugestellt werden: Der Meldungskanal fehlt, das Logging ist aus oder ich darf dort nicht schreiben. Wende dich bitte direkt an einen Moderator.",
         "submittedTitle": "Meldung gesendet",
-        "submitted": "Deine Meldung über **{tag}** wurde an die Moderatoren geschickt. Danke für den Hinweis.",
+        "submitted": "Deine Meldung über **{tag}** ist bei den Moderatoren angekommen. Sie sehen sie sich an und entscheiden, was zu tun ist; über das Ergebnis hörst du vielleicht nichts. Danke für den Hinweis.",
         "setchannel": {
             "noAdmin": "Du brauchst die Berechtigung **Administrator**, um den Meldungskanal festzulegen.",
             "saveFailed": "Die Kanal-Einstellung konnte nicht gespeichert werden.",
@@ -75,6 +75,7 @@
         "setTitle": "Erinnerung gesetzt",
         "deleted": "Erinnerung `{id}` gelöscht.",
         "deletedTitle": "Erinnerung gelöscht",
+        "delivered": "⏰ Erinnerung, die du {when} gestellt hast: {text}",
         "notFound": "Du hast keine Erinnerung mit dieser Nummer. Schau in `/remind list` nach.",
         "dbDown": "Die Datenbank antwortet nicht, daher wurde nichts gespeichert. Versuch es in ein paar Minuten noch mal.",
         "dbDownTitle": "Später noch mal versuchen"
@@ -108,8 +109,8 @@
     },
     "wipedata": {
         "title": "Deine Daten löschen?",
-        "intro": "Damit werden deine Daten in diesem Server endgültig gelöscht:",
-        "body": "Deine To-do-Liste, Erinnerungen und dein gespeichertes Login-Token sind in jedem Server dieselben, deshalb werden sie überall gelöscht. Ohne das Login-Token kann der Bot dich nicht mehr zum Support-Server hinzufügen; „Mit Discord verifizieren“ speichert ein neues. Einträge zu Moderation, Einsprüchen, Meldungen und Verifizierung bleiben erhalten.",
+        "intro": "Wenn du bestätigst, werden diese Daten über dich gelöscht:",
+        "body": "Level und Geburtstag werden nur in diesem Server gelöscht. Deine To-do-Liste, Erinnerungen und dein Login-Token gehören dir, nicht einem Server, deshalb werden sie überall gelöscht. (Ohne das Login-Token kann Mewvo dich erst wieder zum Support-Server hinzufügen, wenn du „Mit Discord verifizieren“ erneut nutzt.)\n\n**Was bleibt:** deine Verwarnungen, Banns, Einsprüche, Meldungen und Verifizierungen. Server bewahren sie als Sicherheitsaufzeichnungen auf, deshalb kann dieser Befehl sie nicht löschen. In der Datenschutzerklärung steht, wie du danach fragen kannst.",
         "final": "**Das kann nicht rückgängig gemacht werden.**",
         "confirm": "Bestätigen",
         "cancel": "Abbrechen",
@@ -128,7 +129,7 @@
         "partialDeleted": "Gelöscht: {items}. ",
         "partialRetry": "Nutze /wipedata in ein paar Minuten noch mal.",
         "doneTitle": "Deine Daten wurden gelöscht",
-        "done": "Gelöscht: {items}.\nLevel und Geburtstag in diesem Server; To-do-Liste, Erinnerungen und das gespeicherte Login-Token überall.\n\nEinträge zu Moderation, Einsprüchen, Meldungen und Verifizierung bleiben erhalten, weil sie die Sicherheitsaufzeichnungen des Servers sind. In der Datenschutzerklärung steht, wie du danach fragen kannst.",
+        "done": "Gelöscht: {items}.\nLevel und Geburtstag: in diesem Server. To-do-Liste, Erinnerungen und Login-Token: überall.\n\n**Was bleibt:** deine Verwarnungen, Banns, Einsprüche, Meldungen und Verifizierungen. Server bewahren sie als Sicherheitsaufzeichnungen auf; in der Datenschutzerklärung steht, wie du danach fragen kannst.",
         "nothingStored": "es war nichts gespeichert",
         "failed": "Die Datenbank antwortet nicht. Möglicherweise wurde nichts gelöscht; versuch es in ein paar Minuten noch mal.",
         "cancelledTitle": "Nichts wurde gelöscht",

@@ -59,8 +59,8 @@
         "channel": "Channel",
         "reason": "Reason",
         "notDelivered": "Your report could not be delivered: the report channel is missing, logging is disabled, or I lack permission to post there. Please contact a moderator directly.",
-        "submittedTitle": "Report Submitted",
-        "submitted": "Your report against **{tag}** was sent to the moderators. Thanks for letting us know.",
+        "submittedTitle": "Report sent",
+        "submitted": "Your report about **{tag}** reached the moderators. They'll look into it and decide what to do; you might not hear back about the outcome. Thanks for letting us know.",
         "setchannel": {
             "noAdmin": "You need the **Administrator** permission to set the report channel.",
             "saveFailed": "Could not save the channel configuration.",
@@ -75,6 +75,7 @@
         "setTitle": "Reminder set",
         "deleted": "Deleted reminder `{id}`.",
         "deletedTitle": "Reminder deleted",
+        "delivered": "⏰ Reminder you set {when}: {text}",
         "notFound": "You have no reminder with that number. Check `/remind list`.",
         "dbDown": "The database is not responding, so nothing was saved. Try again in a few minutes.",
         "dbDownTitle": "Try again later"
@@ -108,8 +109,8 @@
     },
     "wipedata": {
         "title": "Delete your data?",
-        "intro": "This permanently deletes your data in this server:",
-        "body": "Your to-do list, reminders and stored login token are the same in every server, so they are deleted everywhere. Without the login token the bot can no longer add you to the support server; Verify with Discord stores a new one. Moderation, appeal, report and verification records are kept.",
+        "intro": "If you confirm, this data about you is deleted:",
+        "body": "Levels and birthday are deleted in this server only. Your to-do list, reminders and login token belong to you, not to a server, so they are deleted everywhere. (Without the login token, Mewvo can't add you back to its support server until you use Verify with Discord again.)\n\n**What stays:** your warnings, bans, appeals, reports and verification checks. Servers keep these as safety records, so this command can't remove them. The Privacy Policy explains how to ask about them.",
         "final": "**This cannot be undone.**",
         "confirm": "Confirm",
         "cancel": "Cancel",
@@ -128,7 +129,7 @@
         "partialDeleted": "Deleted: {items}. ",
         "partialRetry": "Run /wipedata again in a few minutes.",
         "doneTitle": "Your data was deleted",
-        "done": "Deleted: {items}.\nLevels and birthday in this server; to-do list, reminders and the stored login token everywhere.\n\nModeration, appeal, report and verification records are kept, because they are the server's safety records. See the Privacy Policy for how to ask about those.",
+        "done": "Deleted: {items}.\nLevels and birthday: in this server. To-do list, reminders and login token: everywhere.\n\n**What stays:** your warnings, bans, appeals, reports and verification checks. Servers keep these as safety records; the Privacy Policy explains how to ask about them.",
         "nothingStored": "nothing was stored",
         "failed": "The database is not responding. Nothing may have been deleted; try again in a few minutes.",
         "cancelledTitle": "Nothing was deleted",

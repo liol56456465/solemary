@@ -490,7 +490,7 @@
         "cancelledTitle": "{title} (anulowane)",
         "cancelledBody": "Odliczanie zostało anulowane.",
         "expired": "To odliczanie wygasło lub zostało anulowane.",
-        "adminOnly": "Do sterowania odliczaniem potrzebujesz roli Administrator.",
+        "adminOnly": "Tylko admini serwera mogą sterować odliczaniem.",
         "resumed": "Odliczanie wznowione.",
         "paused": "Odliczanie wstrzymane.",
         "cancelled": "Odliczanie anulowane.",

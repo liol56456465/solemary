@@ -63,9 +63,9 @@
         }
     },
     "access": {
-        "adminChannel": "Necesitas el rol de Administrador para usar este comando. Pide un rol de mod o admin aquí: <#{channelId}>",
-        "admin": "Necesitas el rol de Administrador para usar este comando.",
-        "adminOther": "Necesitas el rol de Administrador para usar este comando. Pide acceso a un admin de este servidor si lo necesitas.",
+        "adminChannel": "Solo los admins del servidor pueden usar esto. Pide un rol de mod o admin aquí: <#{channelId}>",
+        "admin": "Solo los admins del servidor pueden usar esto.",
+        "adminOther": "Solo los admins del servidor pueden usar esto. Pide acceso a un admin de este servidor si lo necesitas.",
         "manageServer": "Necesitas el permiso Gestionar servidor o Administrador para usar este comando."
     },
     "dispatch": {

@@ -4,6 +4,10 @@
 // callers get it from resolveBotLanguage({ guildId, userId, purpose: 'dm' }) (utils/botText.js).
 // Without it the DM is English, exactly as before. Text: src/content/bot/<lang>/enforcement.json
 // (dm.*, duration.*). The keep-apart DMs and the "Contest this" button are still English only.
+//
+// Punishment DM layout (beginner audit 4.1/4.2, 2026-11-09): title first, then reason (with its
+// rule), duration/end, what happens next, how to appeal, the case code "(you need this to
+// appeal)", the optional record link: at most 7 lines before the short privacy footer.
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, escapeMarkdown } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
@@ -13,6 +17,7 @@ import { ruleLineFor } from '../rules/serverRules.js';
 import { privacyUrl } from '../../utils/privacyNotice.js';
 import { botText } from '../../utils/botText.js';
 import { logger } from '../../utils/logger.js';
+import { isWarnLadderEnabled } from './ladderPolicy.js';
 
 const { serverName } = enforcementConfig;
 const textOf = (lang) => botText(lang || 'en');
@@ -72,12 +77,6 @@ function serverFor(rec, { guildId, serverName: name } = {}, tr) {
 /** "Appeal here: <invite>", or null when this server has no invite to name. */
 function appealHere(tr, inviteUrl) {
     return inviteUrl ? tr.t('enforcement.dm.appealHere', { invite: inviteUrl }) : null;
-}
-
-function appealLine(record, tr, inviteUrl) {
-    return record.unappealable
-        ? tr.t('enforcement.dm.cannotAppeal')
-        : appealHere(tr, inviteUrl);
 }
 
 // Discord's message content limit: the rule line is dropped rather than going over it.
@@ -146,102 +145,118 @@ export function webAppealUrl(guildId, caseCode = null, env = process.env) {
     return caseCode && /^[a-z0-9]{5,7}$/.test(caseCode) ? `${origin}/me/appeal/${caseCode}` : `${origin}/me/appeals`;
 }
 
-/** "Appeal online: <…/me/appeal/code>" for an appealable case of another server, else null. */
-function webAppealLine(rec, tr, guildId) {
-    if (!rec || rec.unappealable) return null;
-    const url = webAppealUrl(guildOf(rec, guildId), rec.case_code);
-    return url ? tr.t('enforcement.dm.appealWeb', { url }) : null;
-}
-
 /**
- * The appeal path of a punishment DM, in this order (the most direct one the member can use):
- * the invite (appealInvite), then the web appeal page (other servers, member portal on). Another
- * (non-home) server with neither: "To appeal, contact the staff of <server>" for an appealable
- * case, so the DM never leaves the member without a way (owner decision D2). Mewvo's own servers:
- * exactly as before (the invite line, or nothing). Returns [inviteLine, webLine] (nulls dropped by finish()).
+ * The appeal line of a punishment DM: the most direct way the member can use. The invite
+ * (appealInvite) and, for another server with the member portal on, the web appeal page, joined
+ * on one line when both exist. Another (non-home) server with neither: "To appeal, contact the
+ * staff of <server>" for an appealable case, so the DM never leaves the member without a way
+ * (owner decision D2). Mewvo's own servers: the invite line, or nothing.
+ * `unappealableLine`: an unappealable case says so ("This ban cannot be appealed."; the ban DM).
+ * Returns { line, where, web }: `where` is true when the DM names a formal appeal path (the ban
+ * DM's appeal notes depend on it), `web` when the line already links the member portal.
  */
 function appealLines(rec, tr, { guildId, serverName: name } = {}, { unappealableLine = false } = {}) {
     const gid = guildOf(rec, guildId);
     const inviteUrl = appealInvite(gid);
-    const first = unappealableLine ? appealLine(rec, tr, inviteUrl) : appealHere(tr, inviteUrl);
-    const web = webAppealLine(rec, tr, guildId);
-    if (first || web || !gid || isHomeGuild(gid) || rec?.unappealable) return { lines: [first, web], where: Boolean(inviteUrl || web) };
+    if (rec?.unappealable) return { line: unappealableLine ? tr.t('enforcement.dm.cannotAppeal') : appealHere(tr, inviteUrl), where: false, web: false };
+    const webUrl = rec ? webAppealUrl(gid, rec.case_code) : null;
+    if (inviteUrl && webUrl) return { line: tr.t('enforcement.dm.appealBoth', { invite: inviteUrl, url: webUrl }), where: true, web: true };
+    if (inviteUrl) return { line: appealHere(tr, inviteUrl), where: true, web: false };
+    if (webUrl) return { line: tr.t('enforcement.dm.appealWeb', { url: webUrl }), where: true, web: true };
+    if (!gid || isHomeGuild(gid)) return { line: null, where: false, web: false };
     // where: false — "contact the staff" is not a formal appeal, so the ban DM's appeal notes
-    // ("Appealing this code…", "You can appeal until…") stay out, as before.
-    return { lines: [tr.t('enforcement.dm.appealAskStaff', { server: serverFor(rec, { guildId, serverName: name }, tr) }), null], where: false };
+    // ("If your appeal is accepted…", "You can appeal until…") stay out, as before.
+    return { line: tr.t('enforcement.dm.appealAskStaff', { server: serverFor(rec, { guildId, serverName: name }, tr) }), where: false, web: false };
 }
 
-function common(record, tr) {
-    return [
-        tr.t('enforcement.dm.by', { name: record.moderator_username }),
-        tr.t('enforcement.dm.reason', { reason: record.reason }),
-        // "Rule 3: No spam — <link>" when the prebuilt reason is linked to a server rule.
-        { ruleLine: ruleLineFor(record, process.env, { word: tr.t('enforcement.dm.rule') }) },
-        tr.t('enforcement.dm.date', { date: dateStamp(record.created_at) }),
-    ];
+/**
+ * "Reason: Spam (Rule 3: No spam, <link>)" when the prebuilt reason is linked to a server rule,
+ * as { full, plain }: finish() keeps the rule part only while the DM fits Discord's limit.
+ */
+function reasonLine(rec, tr) {
+    const plain = tr.t('enforcement.dm.reason', { reason: rec.reason });
+    const rule = ruleLineFor(rec, process.env, { word: tr.t('enforcement.dm.rule') });
+    return rule ? { full: tr.t('enforcement.dm.reasonRule', { reason: rec.reason, rule }), plain } : plain;
 }
 
-/** Joins DM lines; the rule line placeholder is kept only while the DM fits the limit. */
+/** "Case code: x (you need this to appeal)"; just "Case code: x" when the case cannot be appealed. */
+function caseLine(rec, tr) {
+    return rec.unappealable
+        ? tr.t('enforcement.dm.caseCode', { code: rec.case_code })
+        : tr.t('enforcement.dm.caseCodeAppeal', { code: rec.case_code });
+}
+
+/**
+ * Joins DM lines (beginner audit 4.1: the title first, at most 7 lines before the privacy footer).
+ * A { full, plain } line (the reason with its rule) and an { optional } line (the record link)
+ * keep their extra only while the DM fits Discord's limit; nulls are dropped.
+ */
 function finish(lines, tr) {
-    const plain = lines.filter((line) => typeof line === 'string');
-    const withRule = lines.map((line) => (typeof line === 'string' ? line : line?.ruleLine || line?.optional || null)).filter(Boolean);
-    const text = withRule.join('\n');
+    const plain = lines.map((line) => (typeof line === 'string' ? line : line?.plain || null)).filter(Boolean);
+    const rich = lines.map((line) => (typeof line === 'string' ? line : line?.full || line?.optional || line?.plain || null)).filter(Boolean);
+    const text = rich.join('\n');
     return withPrivacyLine(text.length <= DM_MAX ? text : plain.join('\n'), process.env, { lang: tr.lang });
 }
 
-const record = (tr) => ({ optional: recordLine(process.env, { lang: tr.lang }) });
+/** "Your full record: <…/me>"; left out when the appeal line already links the member portal. */
+const recordOf = (tr, appeal) => (appeal?.web ? null : { optional: recordLine(process.env, { lang: tr.lang }) });
 
 function banDmText(rec, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
     const duration = rec.expires_at
         ? tr.t('enforcement.dm.duration', { duration: durationIn(Number(rec.duration_ms), tr.lang), end: stamp(rec.expires_at) })
         : tr.t('enforcement.dm.durationPermanent');
-    const { lines: appeal, where } = appealLines(rec, tr, { guildId, serverName: name }, { unappealableLine: true });
-    const lines = [
-        ...appeal,
+    const appeal = appealLines(rec, tr, { guildId, serverName: name }, { unappealableLine: true });
+    // What happens next: the appeal notes, only when the DM says where to appeal (home servers
+    // without an invite: neither).
+    const notes = [];
+    if (rec.is_auto && !rec.unappealable && appeal.where) notes.push(tr.t('enforcement.dm.ban.autoNote'));
+    if (rec.ladder_level_after === 3 && rec.is_auto && rec.appeal_deadline && !rec.unappealable && appeal.where) {
+        notes.push(tr.t('enforcement.dm.ban.appealUntil', { date: dateStamp(rec.appeal_deadline) }));
+    }
+    return finish([
         tr.t('enforcement.dm.ban.title', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
-        ...common(rec, tr),
+        reasonLine(rec, tr),
         duration,
-        tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
-        record(tr),
-    ];
-    // The appeal notes only when the DM says where to appeal (home servers without an invite: neither).
-    if (rec.is_auto && !rec.unappealable && where) {
-        lines.push(tr.t('enforcement.dm.ban.autoNote'));
-    }
-    if (rec.ladder_level_after === 3 && rec.is_auto && rec.appeal_deadline && !rec.unappealable && where) {
-        lines.push(tr.t('enforcement.dm.ban.appealUntil', { date: dateStamp(rec.appeal_deadline) }));
-    }
-    return finish(lines, tr);
+        notes.length ? notes.join(' ') : null,
+        appeal.line,
+        caseLine(rec, tr),
+        recordOf(tr, appeal),
+    ], tr);
 }
 
 function kickDmText(rec, inviteUrl, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
+    const appeal = appealLines(rec, tr, { guildId, serverName: name });
     return finish([
-        ...appealLines(rec, tr, { guildId, serverName: name }).lines,
         tr.t('enforcement.dm.kick.title', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
-        ...common(rec, tr),
-        tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
+        reasonLine(rec, tr),
         inviteUrl ? tr.t('enforcement.dm.rejoin', { invite: inviteUrl }) : tr.t('enforcement.dm.kick.noInvite'),
-        record(tr),
+        appeal.line,
+        caseLine(rec, tr),
+        recordOf(tr, appeal),
     ], tr);
 }
 
 function muteDmText(rec, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
+    const appeal = appealLines(rec, tr, { guildId, serverName: name });
     return finish([
-        ...appealLines(rec, tr, { guildId, serverName: name }).lines,
         tr.t('enforcement.dm.mute.title', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
-        ...common(rec, tr),
+        reasonLine(rec, tr),
         tr.t('enforcement.dm.duration', { duration: durationIn(Number(rec.duration_ms), tr.lang), end: stamp(rec.expires_at) }),
-        tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
-        record(tr),
+        tr.t('enforcement.dm.mute.next'),
+        appeal.line,
+        caseLine(rec, tr),
+        recordOf(tr, appeal),
     ], tr);
 }
 
 /**
  * `warnNumber` null: the warn does not count toward the ladder (warn ladder off in that server, or
- * an automod warn there, ladderPolicy.js), so no "Warning X of 3" and no "you will be banned".
+ * an automod warn there, ladderPolicy.js), so no "Warning X of 3" and no ban talk.
+ * A counted warn DM is only sent below the limit (the warn that reaches it is announced by the
+ * ban DM alone), so "what happens next" says how many more warnings lead to which ban.
  */
 function warnDmText(rec, warnNumber, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
@@ -250,18 +265,20 @@ function warnDmText(rec, warnNumber, { lang, guildId, serverName: name } = {}) {
     const server = serverFor(rec, { guildId, serverName: name }, tr);
     // The ban that comes at the limit (audit 3.2): the next stage's ban length.
     const banAtLimit = enforcementConfig.ladderBans[Math.min((Number(rec.ladder_level_after) || 0) + 1, 3)];
-    const limitLine = !counted
+    const left = Math.max(1, limit - (Number(warnNumber) || 0));
+    const nextLine = !counted
         ? tr.t('enforcement.dm.warn.notCounted')
         : banAtLimit != null
-            ? tr.t('enforcement.dm.warn.limit', { limit, length: durationIn(banAtLimit, tr.lang) })
-            : tr.t('enforcement.dm.warn.limitPermanent', { limit });
+            ? tr.tp('enforcement.dm.warn.next', left, { length: durationIn(banAtLimit, tr.lang) })
+            : tr.tp('enforcement.dm.warn.nextPermanent', left);
+    const appeal = appealLines(rec, tr, { guildId, serverName: name });
     return finish([
-        ...appealLines(rec, tr, { guildId, serverName: name }).lines,
         counted ? tr.t('enforcement.dm.warn.title', { number: warnNumber, limit, server }) : tr.t('enforcement.dm.warn.titleRecorded', { server }),
-        ...common(rec, tr),
-        tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
-        limitLine,
-        record(tr),
+        reasonLine(rec, tr),
+        nextLine,
+        appeal.line,
+        caseLine(rec, tr),
+        recordOf(tr, appeal),
     ], tr);
 }
 
@@ -312,6 +329,29 @@ function appealDeniedDmText({ lang, guildId } = {}) {
 }
 
 /**
+ * After an automatic (warn ladder) ban at stage 1 or 2: the ladder never resets, so the next
+ * counted warning bans again at once (enforcementService previewWarn: threshold 1 above stage 0).
+ * Says so with the real length. Nothing for a manual ban, a stage-3 (permanent) ban, or a server
+ * whose warn ladder is off; a settings read that fails leaves the line out (never a guess).
+ * An unban does not move the ladder (doUnban), so this holds for an early end too; an accepted
+ * appeal sends appealAccepted instead.
+ */
+function nextWarnLine(rec, tr, gid) {
+    const stage = Number(rec?.ladder_level_after);
+    if (!rec?.is_auto || rec.type !== 'ban' || !(stage === 1 || stage === 2)) return null;
+    try {
+        if (!isWarnLadderEnabled(gid)) return null;
+    } catch (error) {
+        logger.warn(`Warn ladder setting of guild ${gid} not readable (${error?.message || error}); ban-ended DM sent without the next-warning line.`);
+        return null;
+    }
+    const length = enforcementConfig.ladderBans[stage + 1];
+    return length != null
+        ? tr.t('enforcement.dm.banEnded.nextWarn', { length: durationIn(length, tr.lang) })
+        : tr.t('enforcement.dm.banEnded.nextWarnPermanent');
+}
+
+/**
  * Sent when a ban ends: on expiry, or early when a moderator unbans.
  * `inviteUrl` is a one-time invite back to the server (null when none could be made).
  */
@@ -325,6 +365,7 @@ function banEndedDmText(rec, inviteUrl, { early = false, lang, guildId, serverNa
     return withPrivacyLine([
         tr.t('enforcement.dm.banEnded.title', { server: serverFor(rec, { guildId, serverName: name }, tr) }),
         early ? tr.t('enforcement.dm.banEnded.early') : tr.t('enforcement.dm.banEnded.expired'),
+        nextWarnLine(rec, tr, gid),
         rec?.case_code ? tr.t('enforcement.dm.caseCode', { code: rec.case_code }) : null,
         inviteUrl ? tr.t('enforcement.dm.rejoin', { invite: inviteUrl })
             : !home ? otherServerNoInviteLine(tr, gid)

@@ -272,20 +272,20 @@ test('admin refusal: the main server keeps its wording and channel; other server
     try {
         enforcementConfig.mainGuildId = MAIN;
         enforcementConfig.adminRequestChannelId = '1527697155643408442';
-        const main = 'You need the Administrator role to use this command. Request a mod/admin role here: <#1527697155643408442>';
+        const main = 'Only server admins can use this. Request a mod/admin role here: <#1527697155643408442>';
         assert.equal(getAdminRequiredMessage(MAIN), main);
         assert.equal(getAdminRequiredMessage(), main, 'no server given: as before');
         const none = getAdminRequiredMessage(SUPPORT, { stored: () => undefined });
         assert.ok(!none.includes('1527697155643408442'), 'not the main channel');
-        assert.equal(none, 'You need the Administrator role to use this command. Ask an admin of this server if you need access.');
+        assert.equal(none, 'Only server admins can use this. Ask an admin of this server if you need access.');
         assert.equal(getAdminRequiredMessage(SUPPORT, { stored: (g, key) => (g === SUPPORT && key === 'adminRequestChannelId' ? '777' : undefined) }),
-            'You need the Administrator role to use this command. Request a mod/admin role here: <#777>');
+            'Only server admins can use this. Request a mod/admin role here: <#777>');
         assert.ok(!getAdminRequiredMessage(SUPPORT, { stored: () => { throw new Error('x'); } }).includes('<#'), 'a failing read: neutral');
         // Through the gate: a support-server command refused for a non-admin (default stored lookup: nothing stored).
         const result = checkCommandAccess({ command: { data: { name: 'help' } }, accessKey: 'ban', guild: { id: SUPPORT, ownerId: 'o' }, userId: 'u', permissions: { has: () => false } });
-        if (!result.allowed && /Administrator/.test(result.message)) assert.ok(!result.message.includes('1527697155643408442'));
+        if (!result.allowed && /Only server admins/.test(result.message)) assert.ok(!result.message.includes('1527697155643408442'));
         enforcementConfig.adminRequestChannelId = null;
-        assert.equal(getAdminRequiredMessage(MAIN), 'You need the Administrator role to use this command.');
+        assert.equal(getAdminRequiredMessage(MAIN), 'Only server admins can use this.');
     } finally {
         enforcementConfig.mainGuildId = before.main;
         enforcementConfig.adminRequestChannelId = before.channel;

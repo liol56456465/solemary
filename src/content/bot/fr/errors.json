@@ -63,9 +63,9 @@
         }
     },
     "access": {
-        "adminChannel": "Tu as besoin du rôle Administrateur pour utiliser cette commande. Demande un rôle de modo ou d’admin ici : <#{channelId}>",
-        "admin": "Tu as besoin du rôle Administrateur pour utiliser cette commande.",
-        "adminOther": "Tu as besoin du rôle Administrateur pour utiliser cette commande. Demande à un admin de ce serveur si tu as besoin d’accès.",
+        "adminChannel": "Seuls les admins du serveur peuvent utiliser ceci. Demande un rôle de modo ou d’admin ici : <#{channelId}>",
+        "admin": "Seuls les admins du serveur peuvent utiliser ceci.",
+        "adminOther": "Seuls les admins du serveur peuvent utiliser ceci. Demande à un admin de ce serveur si tu as besoin d’accès.",
         "manageServer": "Tu as besoin de la permission Gérer le serveur ou Administrateur pour utiliser cette commande."
     },
     "dispatch": {

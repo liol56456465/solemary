@@ -208,7 +208,8 @@ test('result card after a warn: the "Next warn" line from previewWarn on the lad
 
 test('the warn DM names the ban length at the limit, in every language', () => {
     const rec = { case_code: 'wwwww', guild_id: '1', reason: 'Spam', created_at: new Date(0), ladder_level_after: 0, dm_delivered: null };
-    assert.match(warnDm(rec, 2), /At 3 warnings you will be banned for 7 days\./);
+    assert.match(warnDm(rec, 2), /Warnings don't expire\. 1 more warning means an automatic ban for 7 days\./);
+    assert.match(warnDm(rec, 1), /2 more warnings mean an automatic ban for 7 days\./);
     for (const lang of LANG_CODES) {
         const dm = warnDm(rec, 2, { lang });
         assert.ok(dm.includes(botText(lang).tp('enforcement.duration.day', 7)), `${lang}: ${dm}`);

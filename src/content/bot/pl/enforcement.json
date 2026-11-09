@@ -4,21 +4,24 @@
         "cannotAppeal": "Od tego bana nie można się odwołać.",
         "by": "Wystawił: {name}",
         "reason": "Powód: {reason}",
+        "reasonRule": "Powód: {reason} ({rule})",
         "rule": "Zasada",
         "date": "Data: {date}",
         "duration": "Czas trwania: {duration}, kończy się {end}",
         "durationPermanent": "Czas trwania: na stałe",
         "caseCode": "Kod sprawy: {code}",
+        "caseCodeAppeal": "Kod sprawy: {code} (potrzebujesz go do odwołania)",
         "rejoin": "Dołącz ponownie: {invite}",
         "record": "Cała twoja historia: <{url}>",
         "appealWeb": "**Odwołaj się online:** <{url}>",
+        "appealBoth": "**Odwołaj się tutaj:** {invite} lub online: <{url}>",
         "appealAskStaff": "**Aby się odwołać:** skontaktuj się z administracją serwera {server}.",
         "appealDeniedWeb": "Po okresie oczekiwania możesz odwołać się ponownie online: <{url}>",
         "privacy": "-# Prywatność: <{url}>",
         "thisServer": "tym serwerze",
         "ban": {
             "title": "**Ban na {server}**",
-            "autoNote": "Odwołanie od tego kodu usuwa też ostrzeżenie, które spowodowało ten ban.",
+            "autoNote": "Jeśli twoje odwołanie zostanie przyjęte, usunięte zostanie też ostrzeżenie, które doprowadziło do tego bana.",
             "appealUntil": "Możesz się odwołać do {date}."
         },
         "kick": {
@@ -26,12 +29,23 @@
             "noInvite": "Dołącz ponownie: poproś kogoś z ekipy o zaproszenie"
         },
         "mute": {
-            "title": "**Wyciszenie na {server}**"
+            "title": "**Wyciszenie na {server}**",
+            "next": "Nadal możesz czytać serwer, ale do końca nie możesz pisać, reagować ani mówić."
         },
         "warn": {
             "title": "**Ostrzeżenie {number} z {limit} na {server}**",
-            "limit": "Przy {limit} ostrzeżeniach dostaniesz bana na {length}.",
-            "limitPermanent": "Przy {limit} ostrzeżeniach dostaniesz bana na stałe.",
+            "next": {
+                "one": "Ostrzeżenia nie wygasają. Jeszcze {count} ostrzeżenie oznacza automatycznego bana na {length}.",
+                "few": "Ostrzeżenia nie wygasają. Jeszcze {count} ostrzeżenia oznaczają automatycznego bana na {length}.",
+                "many": "Ostrzeżenia nie wygasają. Jeszcze {count} ostrzeżeń oznacza automatycznego bana na {length}.",
+                "other": "Ostrzeżenia nie wygasają. Jeszcze {count} ostrzeżenia oznacza automatycznego bana na {length}."
+            },
+            "nextPermanent": {
+                "one": "Ostrzeżenia nie wygasają. Jeszcze {count} ostrzeżenie oznacza automatycznego bana na stałe.",
+                "few": "Ostrzeżenia nie wygasają. Jeszcze {count} ostrzeżenia oznaczają automatycznego bana na stałe.",
+                "many": "Ostrzeżenia nie wygasają. Jeszcze {count} ostrzeżeń oznacza automatycznego bana na stałe.",
+                "other": "Ostrzeżenia nie wygasają. Jeszcze {count} ostrzeżenia oznacza automatycznego bana na stałe."
+            },
             "titleRecorded": "**Ostrzeżenie na serwerze {server}**",
             "notCounted": "To ostrzeżenie jest w twojej historii, ale nie liczy się do automatycznego bana."
         },
@@ -46,6 +60,8 @@
             "title": "**Twój ban na {server} się skończył**",
             "early": "Moderator zdjął go wcześniej.",
             "expired": "Wygasł.",
+            "nextWarn": "Ostrzeżenia nie wygasają: twoje następne ostrzeżenie tutaj oznacza kolejnego automatycznego bana, na {length}.",
+            "nextWarnPermanent": "Ostrzeżenia nie wygasają: twoje następne ostrzeżenie tutaj oznacza automatycznego bana na stałe.",
             "noInvite": "Dołącz ponownie: poproś o zaproszenie na serwerze pomocy: {invite}"
         },
         "muteEnded": {

@@ -60,7 +60,7 @@
         "reason": "Raison",
         "notDelivered": "Ton signalement n'a pas pu être transmis : le salon des signalements n'existe plus, les logs sont désactivés ou je n'ai pas le droit d'y écrire. Contacte directement un modérateur.",
         "submittedTitle": "Signalement envoyé",
-        "submitted": "Ton signalement contre **{tag}** a été envoyé aux modérateurs. Merci de nous avoir prévenus.",
+        "submitted": "Ton signalement contre **{tag}** est arrivé aux modérateurs. Ils vont l’examiner et décider quoi faire ; tu n’auras peut-être pas de nouvelles du résultat. Merci de nous avoir prévenus.",
         "setchannel": {
             "noAdmin": "Il te faut la permission **Administrateur** pour choisir le salon des signalements.",
             "saveFailed": "Impossible d'enregistrer le réglage du salon.",
@@ -75,6 +75,7 @@
         "setTitle": "Rappel créé",
         "deleted": "Rappel `{id}` supprimé.",
         "deletedTitle": "Rappel supprimé",
+        "delivered": "⏰ Rappel que tu as créé {when} : {text}",
         "notFound": "Tu n'as aucun rappel avec ce numéro. Regarde `/remind list`.",
         "dbDown": "La base de données ne répond pas, rien n'a donc été enregistré. Réessaie dans quelques minutes.",
         "dbDownTitle": "Réessaie plus tard"
@@ -108,8 +109,8 @@
     },
     "wipedata": {
         "title": "Supprimer tes données ?",
-        "intro": "Cela supprime définitivement tes données sur ce serveur :",
-        "body": "Ta liste de tâches, tes rappels et ton jeton de connexion enregistré sont les mêmes sur tous les serveurs, ils sont donc supprimés partout. Sans le jeton de connexion, le bot ne peut plus t'ajouter au serveur d'assistance ; « Vérifier avec Discord » en enregistre un nouveau. Les dossiers de modération, d'appels, de signalements et de vérification sont conservés.",
+        "intro": "Si tu confirmes, ces données te concernant sont supprimées :",
+        "body": "Les niveaux et l’anniversaire sont supprimés sur ce serveur uniquement. Ta liste de tâches, tes rappels et ton jeton de connexion t’appartiennent, pas à un serveur, ils sont donc supprimés partout. (Sans le jeton, Mewvo ne peut plus te rajouter à son serveur d’assistance tant que tu n’as pas refait « Vérifier avec Discord ».)\n\n**Ce qui reste :** tes avertissements, bannissements, appels, signalements et vérifications. Les serveurs les gardent comme dossiers de sécurité, cette commande ne peut donc pas les supprimer. La Politique de confidentialité explique comment poser des questions à leur sujet.",
         "final": "**C'est irréversible.**",
         "confirm": "Confirmer",
         "cancel": "Annuler",
@@ -128,7 +129,7 @@
         "partialDeleted": "Supprimé : {items}. ",
         "partialRetry": "Relance /wipedata dans quelques minutes.",
         "doneTitle": "Tes données ont été supprimées",
-        "done": "Supprimé : {items}.\nNiveaux et anniversaire sur ce serveur ; liste de tâches, rappels et jeton de connexion enregistré partout.\n\nLes dossiers de modération, d'appels, de signalements et de vérification sont conservés, car ce sont les dossiers de sécurité du serveur. La Politique de confidentialité explique comment poser des questions à leur sujet.",
+        "done": "Supprimé : {items}.\nNiveaux et anniversaire : sur ce serveur. Liste de tâches, rappels et jeton de connexion : partout.\n\n**Ce qui reste :** tes avertissements, bannissements, appels, signalements et vérifications. Les serveurs les gardent comme dossiers de sécurité ; la Politique de confidentialité explique comment poser des questions à leur sujet.",
         "nothingStored": "rien n'était enregistré",
         "failed": "La base de données ne répond pas. Il est possible que rien n'ait été supprimé ; réessaie dans quelques minutes.",
         "cancelledTitle": "Rien n'a été supprimé",

@@ -325,7 +325,7 @@ test('D4 warn DM: counted keeps "Warning X of 3"; uncounted drops the ladder lin
     setup();
     const counted = warnDm(rec, 2, { guildId: OTHER, serverName: 'Test' });
     assert.match(counted, /Warning 2 of 3/);
-    assert.match(counted, /At 3 warnings you will be banned/);
+    assert.match(counted, /Warnings don't expire\. 1 more warning means an automatic ban for 7 days\./);
     for (const lang of ['en', 'de', 'es', 'fr', 'it', 'pl', 'pt-BR', 'ru']) {
         const text = warnDm(rec, null, { guildId: OTHER, serverName: 'Test', lang });
         assert.doesNotMatch(text, /null|\{|2 of 3|3 warnings/, lang);
