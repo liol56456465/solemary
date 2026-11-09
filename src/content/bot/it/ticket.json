@@ -247,7 +247,8 @@
         "feedbackComment": "Aggiungi un commento",
         "feedbackDecline": "No, grazie",
         "transcriptTitle": "Trascrizione del tuo ticket",
-        "transcriptBody": "Ecco la trascrizione di **{channel}**."
+        "transcriptBody": "Ecco la trascrizione di **{channel}**.",
+        "modmailFeedbackBody": "Valuta la tua conversazione con lo staff da 1 a 5. Scegli un numero qui sotto."
     },
     "reminder": {
         "unanswered": {
@@ -281,7 +282,6 @@
         "notSavedComment": "Impossibile salvare il tuo commento adesso. Riprova più tardi.",
         "savedTitle": "Valutazione salvata",
         "savedBody": "Hai valutato questo ticket **{rating}**.",
-        "savedFooter": "Grazie per la valutazione.",
         "modalTitle": "Opinione sul ticket",
         "modalLabel": "Il tuo commento",
         "modalPlaceholder": "Cosa è andato bene, cosa si può migliorare?",
@@ -438,5 +438,15 @@
         "blocked": "{user} non può più usare il modmail.",
         "openStays": " La sua conversazione aperta {channel} resta finché non la chiudi.",
         "unblocked": "{user} può di nuovo usare il modmail."
+    },
+    "rating": {
+        "channelPrompt": "{user}, non siamo riusciti a inviarti un DM, quindi puoi valutare questo ticket qui. Puoi ancora leggere questo canale finché non viene eliminato.",
+        "savedFooterComment": "Grazie per la valutazione. Puoi aggiungere un commento.",
+        "closedTitle": "Valutazione chiusa",
+        "closedBody": "Il tempo per valutare questo ticket è scaduto.",
+        "rateFirstTitle": "Prima valuta",
+        "rateFirstBody": "Scegli prima un numero di stelle, poi aggiungi il tuo commento.",
+        "commentAlreadyTitle": "Commento già inviato",
+        "commentAlreadyBody": "Hai già inviato un commento per questo ticket."
     }
 }

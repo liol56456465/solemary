@@ -19,6 +19,11 @@ export const TICKET_SETTING_KEYS = [
     'dmOnClose',
     'ticketLogsChannelId',
     'ticketTranscriptChannelId',
+    // Ratings (ticketRatingService.js ratingSettings has the defaults: tickets on, modmail off, 7 days, alert on).
+    'ticketRatingsEnabled',
+    'modmailRatingsEnabled',
+    'ticketRatingWindowDays',
+    'ticketLowRatingAlert',
 ];
 
 const LABELS = {
@@ -33,6 +38,10 @@ const LABELS = {
     dmOnClose: 'DM on close',
     ticketLogsChannelId: 'Ticket logs channel',
     ticketTranscriptChannelId: 'Ticket transcript channel',
+    ticketRatingsEnabled: 'Ticket ratings',
+    modmailRatingsEnabled: 'Modmail ratings',
+    ticketRatingWindowDays: 'Rating window (days)',
+    ticketLowRatingAlert: 'Low-rating alert',
 };
 
 const TicketSettingsPatchSchema = z.strictObject({
@@ -52,6 +61,15 @@ const TicketSettingsPatchSchema = z.strictObject({
     dmOnClose: z.boolean({ error: `${LABELS.dmOnClose} must be true or false.` }).optional(),
     ticketLogsChannelId: nullableSnowflake(LABELS.ticketLogsChannelId).optional(),
     ticketTranscriptChannelId: nullableSnowflake(LABELS.ticketTranscriptChannelId).optional(),
+    ticketRatingsEnabled: z.boolean({ error: `${LABELS.ticketRatingsEnabled} must be true or false.` }).optional(),
+    modmailRatingsEnabled: z.boolean({ error: `${LABELS.modmailRatingsEnabled} must be true or false.` }).optional(),
+    ticketRatingWindowDays: z
+        .number({ error: `${LABELS.ticketRatingWindowDays} must be a number.` })
+        .int(`${LABELS.ticketRatingWindowDays} must be a whole number.`)
+        .min(1, `${LABELS.ticketRatingWindowDays} must be between 1 and 30.`)
+        .max(30, `${LABELS.ticketRatingWindowDays} must be between 1 and 30.`)
+        .optional(),
+    ticketLowRatingAlert: z.boolean({ error: `${LABELS.ticketLowRatingAlert} must be true or false.` }).optional(),
 });
 
 /** Validates a ticket settings patch without writing it; returns the parsed patch. */

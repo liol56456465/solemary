@@ -88,3 +88,14 @@ test('Discord length limits hold in every language', () => {
         }
     }
 });
+
+test('ticket ratings: English texts; every language keeps the opener placeholder and fits Discord limits', () => {
+    assert.equal(en.t('ticket.rating.closedTitle'), 'Rating closed');
+    assert.equal(en.t('ticket.dm.modmailFeedbackBody'), 'Rate your conversation with staff from 1 to 5. Pick a number below.');
+    for (const lang of LANG_CODES) {
+        const tr = botText(lang);
+        assert.ok(tr.t('ticket.rating.channelPrompt', { user: '<@7>' }).includes('<@7>'), lang);
+        for (const key of ['closedTitle', 'rateFirstTitle', 'commentAlreadyTitle']) assert.ok(tr.t(`ticket.rating.${key}`).length <= 256, `${lang} ${key}`);
+        assert.ok(tr.t('ticket.rating.savedFooterComment').length <= 2048, lang);
+    }
+});

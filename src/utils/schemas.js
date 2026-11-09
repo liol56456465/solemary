@@ -125,6 +125,10 @@ export const GuildConfigSchema = z
     ticketPanelMessage: z.string().nullable().optional(),
     ticketButtonLabel: z.string().nullable().optional(),
     maxTicketsPerUser: z.number().nullable().optional(),
+    ticketRatingsEnabled: z.boolean().optional(),
+    modmailRatingsEnabled: z.boolean().optional(),
+    ticketRatingWindowDays: z.number().optional(),
+    ticketLowRatingAlert: z.boolean().optional(),
     leveling: LevelingConfigSchema.nullable().optional()
   })
   .passthrough();

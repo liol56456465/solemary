@@ -119,7 +119,8 @@
             "todo": "Persönliche To-do-Liste",
             "reminders": "Erinnerungen",
             "oauth": "Gespeichertes Discord-Login-Token (aus „Mit Discord verifizieren“)",
-            "dmlog": "Gespeicherte Kopien der Bot-DMs (um sie bei einem Sprachwechsel neu zu übersetzen)"
+            "dmlog": "Gespeicherte Kopien der Bot-DMs (um sie bei einem Sprachwechsel neu zu übersetzen)",
+            "ticketRatings": "Ticket-Bewertungen, die du abgegeben hast (dein Name und Kommentar; die Sterne bleiben)"
         },
         "partialTitle": "Nicht alles wurde gelöscht",
         "partialFailed": "Die Datenbank hat nicht geantwortet für: {items}. ",

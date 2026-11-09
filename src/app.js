@@ -28,6 +28,7 @@ import { remindStaleAppeals } from './services/enforcement/appealStatusService.j
 import { flushActivity, pruneActivity } from './services/stats/activityService.js';
 import { purgeIncidentTimelines } from './services/automod/incidentTimeline.js';
 import { runRetention, scheduleRetention } from './services/privacy/retentionService.js';
+import { backfillLegacyRatings } from './services/ticketRatingService.js';
 import { runDueDeletions as runDueServerDataDeletions } from './services/privacy/serverDataDeletion.js';
 import { checkCatGrowth } from './services/community/catService.js';
 import { query as enforcementQuery } from './services/enforcement/db.js';
@@ -69,6 +70,21 @@ import { runSafeTask, handleTaskError, ErrorCodes } from './utils/errorHandler.j
 import { EXPECTED_SCHEMA_VERSION, EXPECTED_SCHEMA_LABEL } from './config/database/schemaVersion.js';
 import { refreshRates } from './services/site/exchangeRates.js';
 import { startEventLoopMonitor } from './utils/eventLoopMonitor.js';
+
+
+/**
+ * Ratings saved in the ticket JSONB before schema v14 → ticket_ratings (O4). Every start;
+ * INSERT … SELECT … ON CONFLICT DO NOTHING, so a second run adds nothing (ticketRatingService.js).
+ * A failure is logged: the old surveys still work (a click copies its ticket in by itself).
+ */
+async function backfillTicketRatingsOnce() {
+  try {
+    const added = await backfillLegacyRatings();
+    if (added) logger.info(`Ticket ratings: ${added} old rating(s) copied from ticket data`);
+  } catch (error) {
+    logger.warn(`Ticket ratings backfill skipped this start: ${error.message}`);
+  }
+}
 
 class Mewvo extends Client {
   constructor() {
@@ -320,6 +336,7 @@ class Mewvo extends Client {
       const importOnly = runSafeTask('enforcement_import', async () => {
         await importLegacyWarnings(this);
         await importModmailTopicsOnce(this.guilds.cache.get(enforcementConfig.mainGuildId));
+        await backfillTicketRatingsOnce();
       });
       if (this.isReady()) importOnly(); else this.once(Events.ClientReady, () => importOnly());
       return;
@@ -442,6 +459,7 @@ class Mewvo extends Client {
       await importLegacyWarnings(this);
       // Modmail channels opened before modmail_links existed: linked once from their topic.
       await importModmailTopicsOnce(this.guilds.cache.get(enforcementConfig.mainGuildId));
+      await backfillTicketRatingsOnce();
     });
     if (this.isReady()) {
       startupEnforcement();

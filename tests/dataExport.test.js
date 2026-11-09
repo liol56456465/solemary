@@ -60,3 +60,12 @@ test('data export: the new sections cover what the member is entitled to, bounde
     assert.match(byName.giveawayEntries, /data->'participants' \? \$1/);
     assert.match(byName.invitesCreated, /inviter_id = \$1/);
 });
+
+test('data export: ticket ratings you gave (stars, comment, dates); about you as staff only stars, date and ticket number', () => {
+    const sections = Object.fromEntries(EXPORT_SECTIONS.map(([name, sql]) => [name, sql(pgConfig.tables)]));
+    assert.match(sections.ticketRatingsGiven, /SELECT guild_id, kind, ticket_number, rating, comment, prompted_at, rated_at, comment_at\s+FROM ticket_ratings WHERE opener_id = \$1/);
+    const about = sections.ticketRatingsAboutYou;
+    assert.match(about, /WHERE staff_id = \$1 AND rating IS NOT NULL/);
+    const selected = about.slice(about.indexOf('SELECT') + 6, about.indexOf(' FROM '));
+    for (const hidden of ['comment', 'opener_id', 'closer_id']) assert.ok(!selected.includes(hidden), `about-you leaves out ${hidden}`);
+});

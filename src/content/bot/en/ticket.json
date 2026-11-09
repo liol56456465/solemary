@@ -245,7 +245,8 @@
         "feedbackComment": "Add a comment",
         "feedbackDecline": "No thanks",
         "transcriptTitle": "Your ticket transcript",
-        "transcriptBody": "Here's the transcript for **{channel}**."
+        "transcriptBody": "Here's the transcript for **{channel}**.",
+        "modmailFeedbackBody": "Rate your conversation with staff from 1 to 5. Pick a number below."
     },
     "reminder": {
         "unanswered": {
@@ -278,7 +279,6 @@
         "notSavedComment": "Couldn't save your comment right now. Try again later.",
         "savedTitle": "Rating saved",
         "savedBody": "You rated this ticket **{rating}**.",
-        "savedFooter": "Thanks for rating.",
         "modalTitle": "Ticket feedback",
         "modalLabel": "Your comment",
         "modalPlaceholder": "What went well, what could be better?",
@@ -431,5 +431,15 @@
         "blocked": "{user} can no longer use modmail.",
         "openStays": " Their open conversation {channel} stays until you close it.",
         "unblocked": "{user} can use modmail again."
+    },
+    "rating": {
+        "channelPrompt": "{user}, we couldn't send you a DM, so you can rate this ticket here. You can still read this channel until it is deleted.",
+        "savedFooterComment": "Thanks for rating. You can add one comment.",
+        "closedTitle": "Rating closed",
+        "closedBody": "The time to rate this ticket is over.",
+        "rateFirstTitle": "Rate first",
+        "rateFirstBody": "Pick a number of stars first, then add your comment.",
+        "commentAlreadyTitle": "Comment already sent",
+        "commentAlreadyBody": "You already sent a comment for this ticket."
     }
 }

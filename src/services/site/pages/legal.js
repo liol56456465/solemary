@@ -18,8 +18,8 @@
 import { html } from '../../dashboard/html.js';
 import { layout } from '../shell.js';
 
-export const LEGAL_UPDATED = '2026-11-04';
-const UPDATED_TEXT = '4 November 2026';
+export const LEGAL_UPDATED = '2026-11-09';
+const UPDATED_TEXT = '9 November 2026';
 
 const EMAIL = /^[^\s@<>"]{1,64}@[a-z0-9.-]{1,190}\.[a-z]{2,}$/i;
 
@@ -117,6 +117,7 @@ ${row('Raid records: when a join raid ended, the accounts that joined during it 
 ${row('Short automod records: a flag from the join checks, probation after a ban ended, the “heads-up first” and “second chance” markers', 'So automod treats a repeat in the same way each time and staff can review flags.', 'Join check flags 14 days, probation 7 days, heads-up and second-chance markers 30 days.')}
 ${row('Staff only: warnings the owner gives staff, weekly activity counts (messages, reviews, tickets claimed) and staff roles removed by the safety guard', 'To keep the staff team accountable and give roles back with /staff restore.', 'As long as the server uses Mewvo; removed roles until they are given back.')}
 ${row('Tickets and modmail: who opened it, its state, which channel belongs to which member; a transcript posted to a staff channel when it closes', 'To answer you and keep a record of support conversations.', 'As long as the server uses Mewvo.')}
+${row('Ticket and modmail ratings: the stars (1–5) and optional comment you give after a ticket closes, when, and which staff member handled it. Comments are checked against the server’s word filter and only marked for staff, never blocked', 'To let the server see how well its support works.', 'Comments 180 days; ratings 2 years; a rating request you never answered 30 days after it closed.')}
 ${row('Role applications: your answers, the status, the reviewer and their notes', 'To decide your application.', 'Open applications 30 days, decided ones 14 days (a server can change both).')}
 ${row('Invites: which invite you joined through and who created it, and how often each invite was used', 'Invite statistics and rewards for the staff team.', 'As long as the server uses Mewvo.')}
 ${row('Starboard: which messages got enough stars, and the starboard post (a copy on Discord)', 'To run the starboard.', 'Until the post is removed or the server stops using Mewvo.')}
@@ -192,10 +193,10 @@ ${row(html`<code>mewvo_lang</code>`, 'Remembers the website language you chose i
 <li>your data to be deleted (erasure, Art. 17), or its use to be limited (Art. 18);</li>
 <li>your data to no longer be used for a legitimate interest (objection, Art. 21);</li>
 <li>a person to review an automatic decision (Art. 22(3)).</li></ul>
-${ctx.memberPortal ? html`<p>You can download a copy of your data yourself: log in on <a href="/me">My record</a> and choose <strong>Download my data</strong>. You get a JSON file with what Mewvo stores about your Discord account in every server: levels, economy, cases, appeals and reports, watchlist entries and no-contact orders about you, staff notes on your cases, tickets, modmail, giveaway entries, invites, raid entries, verification, plans, your Mewvo account and more. Left out is what would reveal other people, such as who reported something or another member’s message. Evidence excerpts attached to your cases are not in the file yet; ask through the contact address and we send the ones that are yours.</p>
+${ctx.memberPortal ? html`<p>You can download a copy of your data yourself: log in on <a href="/me">My record</a> and choose <strong>Download my data</strong>. You get a JSON file with what Mewvo stores about your Discord account in every server: levels, economy, cases, appeals and reports, watchlist entries and no-contact orders about you, staff notes on your cases, tickets, modmail, the ticket ratings you gave (staff: the stars and dates of ratings about tickets they handled), giveaway entries, invites, raid entries, verification, plans, your Mewvo account and more. Left out is what would reveal other people, such as who reported something or another member’s message. Evidence excerpts attached to your cases are not in the file yet; ask through the contact address and we send the ones that are yours.</p>
 ` : ''}<p>To use any of these, ${contactLine(ctx)}. ${cannotReachLine(ctx)} You get an answer within one month. Some safety records, such as an active ban, may be kept for as long as they are still needed to keep a server safe; if so, you are told why.</p>
 <p>You can also delete data yourself:</p>
-<ul><li>Run <code>/wipedata</code> in a server to delete your levels and XP, your economy balance, your AFK status and your birthday in that server, your personal to-do list and reminders, and your stored Discord login token. It does not delete moderation records, appeals, reports or the verification history. Levels are kept when you leave a server; if you have left and want them deleted, ${contactLine(ctx)}, or rejoin and run <code>/wipedata</code>.</li>
+<ul><li>Run <code>/wipedata</code> in a server to delete your levels and XP, your economy balance, your AFK status and your birthday in that server, your personal to-do list and reminders, and your stored Discord login token. It also removes your name and comment from the ticket ratings you gave (the stars stay, without your name). It does not delete moderation records, appeals, reports or the verification history. Levels are kept when you leave a server; if you have left and want them deleted, ${contactLine(ctx)}, or rejoin and run <code>/wipedata</code>.</li>
 <li>If you have a Mewvo account, delete it in <strong>Account settings</strong> on the website (your password is needed). This deletes the username, password hash and two-step login at once. A plan and the early-account bonus record stay with your Discord account; ask if you want those deleted too.</li></ul>
 <p>If you think your data is handled wrongly, you can complain to the Lithuanian data protection authority, the State Data Protection Inspectorate (Valstybinė duomenų apsaugos inspekcija, VDAI, <a href="https://vdai.lrv.lt" rel="noopener">vdai.lrv.lt</a>), or to the authority of the EU country where you live or work (GDPR Art. 77). Asking Mewvo first is often faster, but you don’t have to.</p>
 

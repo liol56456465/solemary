@@ -13,10 +13,71 @@ import { diffSnapshots } from '../audit.js';
 import { changedOnly, section, table, topic } from './common.js';
 import { textFor } from '../language.js';
 import { requireCanAct, managerActions } from './serverScope.js';
+import { ratingSettings, starsText, WINDOW_DAYS_MAX, WINDOW_DAYS_MIN } from '../../ticketRatingService.js';
 
 // Words: src/content/dashboard/<lang>/tickets.json. The default button text and panel message
 // (tickets.defaults.*) are prefilled in the admin's dashboard language; they are posted in
 // Discord as saved, and the admin can change them before posting.
+
+/** The kind + priority label of a stats row ("Ticket · high", "Modmail"). */
+function kindLabel(tr, kind, priority) {
+    if (kind === 'modmail') return tr.t('tickets.ratings.kindModmail');
+    return priority && priority !== 'none' ? `${tr.t('tickets.ratings.kindTicket')} · ${priority}` : tr.t('tickets.ratings.kindTicket');
+}
+
+/** A staff member's name from the cache, else the id (plain text on the page). */
+function staffName(guild, id) {
+    if (!id) return '-';
+    const member = guild?.members?.cache?.get?.(id);
+    return member?.user?.username || member?.displayName || id;
+}
+
+const avgText = (tr, avg) => (avg === null || avg === undefined ? '-' : tr.fmtNumber(Math.round(avg * 10) / 10));
+
+const EMPTY_RATINGS = Object.freeze({ byStaff: [], byPriority: [], trend: [], response: { prompted: 0, rated: 0, pending: 0, rate: null }, low: [] });
+
+/**
+ * The Ratings topic (ticketRatingService.ratingDashboard, last 90 days): settings, average per
+ * staff, per kind/priority, the 8-week trend as CSS bars (h-0…h-10 classes: strict CSP, no
+ * chart script, no inline style), the response rate and the newest low ratings. Comments are
+ * member text, escaped by html``; a flagged one is marked for staff, never hidden.
+ */
+export function renderRatings(ctx, tr, settingsValues, ratings) {
+    const s = ratingSettings(settingsValues);
+    const g = ctx.guild;
+    const form = postForm(ctx, 'tickets', 'ratings', html`<div class="grid">
+${switchInput('ticketRatingsEnabled', s.ticketsEnabled, { label: tr.t('tickets.ratings.ticketsEnabled'), help: tr.t('tickets.ratings.ticketsEnabledHelp') })}
+${switchInput('modmailRatingsEnabled', s.modmailEnabled, { label: tr.t('tickets.ratings.modmailEnabled'), help: tr.t('tickets.ratings.modmailEnabledHelp') })}
+${numberInput('ticketRatingWindowDays', s.windowDays, { label: tr.t('tickets.ratings.windowDays'), min: WINDOW_DAYS_MIN, max: WINDOW_DAYS_MAX, help: tr.t('tickets.ratings.windowDaysHelp') })}
+${switchInput('ticketLowRatingAlert', s.lowRatingAlert, { label: tr.t('tickets.ratings.lowAlert'), help: tr.t('tickets.ratings.lowAlertHelp') })}</div>`);
+    const r = ratings || EMPTY_RATINGS;
+    const staffRows = r.byStaff.map((row) => [staffName(g, row.staffId), `${starsText(Math.round(row.avg))} ${avgText(tr, row.avg)}`, tr.fmtNumber(row.count)]);
+    const priorityRows = r.byPriority.map((row) => [kindLabel(tr, row.kind, row.priority), avgText(tr, row.avg), tr.fmtNumber(row.count)]);
+    const rated = r.trend.reduce((sum, w) => sum + w.count, 0);
+    const summary = r.trend.map((w) => `${w.week}: ${avgText(tr, w.avg)} (${tr.fmtNumber(w.count)})`).join(', ');
+    const chart = rated
+        ? html`<div class="chart" role="img" aria-label="${tr.t('tickets.ratings.trendAria', { summary })}">${r.trend.map((w) => html`<div class="bar" title="${w.week}: ${tr.fmtNumber(w.count)}"><span class="bar-count">${w.avg === null ? '' : avgText(tr, w.avg)}</span><i class="h-${w.avg === null ? 0 : Math.round((w.avg / 5) * 10)}"></i><span class="bar-label">${w.week.slice(5)}</span></div>`)}</div>`
+        : html`<p class="muted">${tr.t('tickets.ratings.empty')}</p>`;
+    const resp = r.response;
+    const response = resp.prompted
+        ? html`<p>${tr.t('tickets.ratings.responseLine', { rated: tr.fmtNumber(resp.rated), prompted: tr.fmtNumber(resp.prompted), pct: tr.fmtNumber(Math.round((resp.rate || 0) * 100)) })}</p>${resp.pending ? html`<p class="muted">${tr.t('tickets.ratings.pending', { count: tr.fmtNumber(resp.pending) })}</p>` : ''}`
+        : html`<p class="muted">${tr.t('tickets.ratings.empty')}</p>`;
+    const lowRows = r.low.map((row) => [
+        row.rated_at ? new Date(row.rated_at).toISOString().slice(0, 10) : '-',
+        row.kind === 'modmail' ? tr.t('tickets.ratings.kindModmail') : (row.ticket_number ? `#${row.ticket_number}` : tr.t('tickets.ratings.kindTicket')),
+        staffName(g, row.staff_id),
+        starsText(row.rating),
+        row.comment
+            ? html`${row.comment_flagged ? html`<span class="field-warn">${tr.t('tickets.ratings.flagged')}</span> ` : ''}${row.comment}`
+            : html`<span class="muted">${tr.t('tickets.ratings.noComment')}</span>`,
+    ]);
+    return topic(tr.t('tickets.ratings.topic'), tr.t('tickets.ratings.topicLine'), html`${section(tr.t('tickets.ratings.settingsTitle'), form, tr.t('tickets.ratings.settingsHelp'), { key: 'rating-settings', size: 'normal' })}
+${section(tr.t('tickets.ratings.trend'), chart, tr.t('tickets.ratings.trendHelp'), { key: 'rating-trend', size: 'normal' })}
+${section(tr.t('tickets.ratings.byStaff'), table([tr.t('tickets.ratings.staff'), tr.t('tickets.ratings.avg'), tr.t('tickets.ratings.count')], staffRows, tr.t('tickets.ratings.empty')), tr.t('tickets.ratings.periodHelp'), { key: 'rating-staff', size: 'normal' })}
+${section(tr.t('tickets.ratings.byPriority'), table([tr.t('tickets.ratings.kind'), tr.t('tickets.ratings.avg'), tr.t('tickets.ratings.count')], priorityRows, tr.t('tickets.ratings.empty')), tr.t('tickets.ratings.periodHelp'), { key: 'rating-priority', size: 'normal' })}
+${section(tr.t('tickets.ratings.response'), response, tr.t('tickets.ratings.responseHelp'), { key: 'rating-response', size: 'normal' })}
+${section(tr.t('tickets.ratings.low'), table([tr.t('tickets.ratings.when'), tr.t('tickets.ratings.ticket'), tr.t('tickets.ratings.staff'), tr.t('tickets.ratings.stars'), tr.t('tickets.ratings.comment')], lowRows, tr.t('tickets.ratings.lowEmpty')), tr.t('tickets.ratings.lowHelp'), { key: 'rating-low', size: 'full' })}`, { key: 'ticket-ratings' });
+}
 
 export default {
     key: 'tickets',
@@ -25,15 +86,17 @@ export default {
     help: 'Tickets let members ask staff for help in a private channel. They press a button on the ticket panel (a message Mewvo posts) and get their own channel that only they and staff can see. Modmail is the same idea through a private message to Mewvo. You can also set this up with /ticket setup in Discord.',
 
     async load(ctx) {
-        const [settings, config, canned] = await Promise.all([
+        // B3: this server's ratings only (ctx.guildId).
+        const [settings, config, canned, ratings] = await Promise.all([
             ctx.services.getTicketSettings(ctx.client, ctx.guildId),
             ctx.services.getGuildConfig(ctx.client, ctx.guildId),
             ctx.services.listCanned(ctx.guildId),
+            ctx.services.ticketRatingDashboard(ctx.guildId),
         ]);
-        return { settings, blocked: Array.isArray(config.modmailBlocked) ? config.modmailBlocked : [], canned };
+        return { settings, blocked: Array.isArray(config.modmailBlocked) ? config.modmailBlocked : [], canned, ratings };
     },
 
-    render(ctx, { settings: t, blocked, canned }) {
+    render(ctx, { settings: t, blocked, canned, ratings }) {
         const g = ctx.guild;
         const tr = textFor(ctx);
         const form = postForm(ctx, 'tickets', 'settings', html`<div class="grid">
@@ -78,7 +141,8 @@ ${textArea('text', '', { label: tr.t('tickets.canned.answer'), max: CANNED_MAX_L
         return html`${topic(tr.t('tickets.topic.tickets'), tr.t('tickets.topic.ticketsLine'), html`${section(tr.t('tickets.panel.title'), panel, tr.t(ctx.canAct ? 'tickets.panel.help' : 'tickets.panel.helpNoAdmin'), { key: 'ticket-panel', size: 'full' })}
 ${section(tr.t('tickets.settings.title'), form, tr.t('tickets.settings.help'), { key: 'ticket-settings', size: 'wide' })}`, { key: 'tickets' })}
 ${topic(tr.t('tickets.topic.modmail'), tr.t('tickets.topic.modmailLine'), html`${section(tr.t('tickets.blocked.title'), html`${table([tr.t('tickets.blocked.userId'), ''], blockedRows, tr.t('tickets.blocked.empty'))}<h3>${tr.t('tickets.blocked.heading')}</h3>${blockForm}`, tr.t('tickets.blocked.help'), { key: 'modmail-blocked-members', size: 'normal' })}
-${section(tr.t('tickets.canned.title'), html`${table([tr.t('tickets.canned.name'), tr.t('tickets.canned.text'), ''], cannedRows)}${cannedAdd}`, tr.t('tickets.canned.help'), { key: 'canned-answers', size: 'normal' })}`, { key: 'modmail-and-saved-answers' })}`;
+${section(tr.t('tickets.canned.title'), html`${table([tr.t('tickets.canned.name'), tr.t('tickets.canned.text'), ''], cannedRows)}${cannedAdd}`, tr.t('tickets.canned.help'), { key: 'canned-answers', size: 'normal' })}`, { key: 'modmail-and-saved-answers' })}
+${renderRatings(ctx, tr, t, ratings)}`;
     },
 
     actions: managerActions(['canned-add', 'canned-remove'], {
@@ -114,6 +178,23 @@ ${section(tr.t('tickets.canned.title'), html`${table([tr.t('tickets.canned.name'
                     message: textFor(ctx).t(action === 'posted' ? 'tickets.action.panelReposted' : 'tickets.action.panelUpdated'),
                 };
             },
+        },
+        // Ratings: their own form, so the main ticket form never touches them (an unchecked switch = false).
+        async ratings(ctx, form) {
+            const tr = textFor(ctx);
+            const now = ratingSettings(await ctx.services.getTicketSettings(ctx.client, ctx.guildId));
+            const patch = changedOnly({
+                ticketRatingsEnabled: checkbox(form, 'ticketRatingsEnabled'),
+                modmailRatingsEnabled: checkbox(form, 'modmailRatingsEnabled'),
+                ticketRatingWindowDays: intField(form, 'ticketRatingWindowDays', { min: WINDOW_DAYS_MIN, max: WINDOW_DAYS_MAX, label: tr.t('tickets.ratings.windowDays') }),
+                ticketLowRatingAlert: checkbox(form, 'ticketLowRatingAlert'),
+            }, {
+                ticketRatingsEnabled: now.ticketsEnabled, modmailRatingsEnabled: now.modmailEnabled,
+                ticketRatingWindowDays: now.windowDays, ticketLowRatingAlert: now.lowRatingAlert,
+            });
+            if (!Object.keys(patch).length) return { changes: [], message: tr.t('errors.nothingChanged') };
+            const { before, after } = await ctx.services.updateTicketSettings(ctx.client, ctx.guildId, patch);
+            return { changes: diffSnapshots(before, after, Object.keys(patch)), message: tr.t('tickets.ratings.saved') };
         },
         async settings(ctx, form) {
             const g = ctx.guild;

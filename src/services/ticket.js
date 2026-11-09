@@ -20,6 +20,8 @@ import { ensureTypedServiceError, wrapServiceBoundary } from '../utils/serviceEr
 import { PRIORITY_MAP } from '../utils/helpers.js';
 import { LANG_CODES, botText, textForGuild } from '../utils/botText.js';
 import { sendLoggedDm } from './botDm/dmLog.js';
+import { createPendingRating, handlingStaffId, ratingSettings, setRatingDelivery } from './ticketRatingService.js';
+import { channelSurveyPayload } from './ticketRatingEffects.js';
 const TICKET_DELETE_DELAY_MS = 3000;
 const TICKET_DELETE_DELAY_SECONDS = Math.floor(TICKET_DELETE_DELAY_MS / 1000);
 const TICKET_SERVICE = 'ticketService';
@@ -243,6 +245,8 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
       claimedBy: null,
       priority: priority || 'none',
       reason,
+      // The visible number (ticket-012): ratings and their stats show it.
+      number: ticketNumber,
     };
     
     const priorityInfo = PRIORITY_MAP[priority] || PRIORITY_MAP.none;
@@ -320,6 +324,68 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
   }
 }
 
+/**
+ * The pending rating row of a ticket that is being closed, or null: ratings off in this server,
+ * the ticket already rated (a re-close after a reopen keeps it), or the database down (logged;
+ * the close goes on without a survey). `deps` for tests: { create }.
+ */
+export async function prepareTicketRating(channel, ticketData, closer, config, { create = createPendingRating } = {}) {
+  const settings = ratingSettings(config);
+  if (!settings.ticketsEnabled) return null;
+  try {
+    return await create({
+      guildId: channel.guild.id, kind: 'ticket', refId: channel.id, ticketNumber: ticketNumberOf(ticketData, channel),
+      openerId: ticketData.userId, staffId: handlingStaffId(ticketData, closer.id), closerId: closer.id,
+      priority: ticketData.priority || null, windowDays: settings.windowDays,
+    });
+  } catch (error) {
+    logger.warn(`Ticket rating row not written for ${channel.id}; no survey this time: ${error.message}`);
+    return null;
+  }
+}
+
+/** The visible ticket number: stored since the ratings upgrade, else from the channel name (ticket-012). */
+export function ticketNumberOf(ticketData, channel) {
+  const stored = String(ticketData?.number ?? '');
+  if (/^\d{1,10}$/.test(stored)) return stored;
+  return String(channel?.name ?? '').match(/ticket-(\d{1,10})/)?.[1] ?? null;
+}
+
+/** The opener's overwrite on a closed ticket: read-only while the rating survey waits there (O2), else hidden. */
+export function closedOpenerAccess(surveyInChannel) {
+  return surveyInChannel
+    ? { ViewChannel: true, ReadMessageHistory: true, SendMessages: false }
+    : { ViewChannel: false, SendMessages: false };
+}
+
+/**
+ * O2: the survey DM failed, so it is posted in the ticket channel (no pings), and the delivery
+ * saved ('channel'). When even that fails: 'failed', and the opener loses the view like any closed
+ * ticket. Returns the delivery. Never throws. `deps` for tests: { payload, setDelivery }.
+ */
+export async function postChannelSurvey(channel, ticketData, row, { payload = channelSurveyPayload, setDelivery = setRatingDelivery } = {}) {
+  let posted = null;
+  try {
+    posted = await channel.send(await payload({
+      guildId: channel.guild.id, channelId: channel.id, channelName: channel.name, openerId: ticketData.userId,
+    }));
+  } catch (error) {
+    logger.warn(`Ticket rating survey not posted in ${channel.id}: ${error.message}`);
+  }
+  const delivery = posted ? 'channel' : 'failed';
+  await noteRatingDelivery(row, delivery, setDelivery);
+  if (!posted) {
+    await channel.permissionOverwrites.edit(ticketData.userId, closedOpenerAccess(false))
+      .catch((error) => logger.warn(`Could not hide closed ticket ${channel.id} from its opener: ${error.message}`));
+  }
+  return delivery;
+}
+
+async function noteRatingDelivery(row, delivery, setDelivery = setRatingDelivery) {
+  if (!row?.id) return;
+  await setDelivery(row.id, delivery).catch((error) => logger.warn(`Ticket rating delivery not saved: ${error.message}`));
+}
+
 export async function closeTicket(channel, closer, reason = 'No reason provided', { lang = 'en' } = {}) {
   const tr = botText(lang);
   try {
@@ -385,7 +451,10 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
       });
     }
 
-    if (ticketCreator) {
+    // Rating survey (ticketRatingService.js): a pending row first (the claimer at close, else the
+    // closer), then the DM. No row (ratings off, already rated before a reopen, database down): no survey.
+    const rating = await prepareTicketRating(channel, ticketData, closer, config);
+    if (rating && ticketCreator) {
       feedbackSurveySent = await sendLoggedDm(ticketCreator, {
         key: 'ticket.feedback',
         params: { channelName: channel.name, guildId: channel.guild.id, channelId: channel.id },
@@ -394,26 +463,24 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
         logger.warn(`Ticket DM to ${ticketData.userId} not built: ${error.message}`);
         return false;
       });
-    } else {
-      logger.warn(`Could not deliver feedback survey; ticket creator ${ticketData.userId} could not be fetched`);
+    } else if (rating) {
+      logger.warn(`Could not deliver feedback survey by DM; ticket creator ${ticketData.userId} could not be fetched`);
     }
+    // O2: the DM failed → the survey goes into the ticket channel, the opener keeps a read-only view.
+    const surveyInChannel = Boolean(rating && !feedbackSurveySent);
+    if (rating && feedbackSurveySent) await noteRatingDelivery(rating, 'dm');
     
     try {
       const user = await channel.guild.members.fetch(ticketData.userId).catch(() => null);
       const targetUser = user?.user || await channel.client.users.fetch(ticketData.userId).catch(() => null);
       
       if (targetUser) {
+        const closedAccess = closedOpenerAccess(surveyInChannel);
         const overwrite = channel.permissionOverwrites.cache.get(ticketData.userId);
         if (overwrite) {
-          await overwrite.edit({
-            ViewChannel: false,
-            SendMessages: false,
-          });
+          await overwrite.edit(closedAccess);
         } else {
-          await channel.permissionOverwrites.create(targetUser, {
-            ViewChannel: false,
-            SendMessages: false,
-          });
+          await channel.permissionOverwrites.create(targetUser, closedAccess);
         }
       }
     } catch (permError) {
@@ -465,6 +532,8 @@ components: []
     );
     
     await channel.send({ embeds: [closeEmbed], components: [controlRow] });
+
+    if (surveyInChannel) await postChannelSurvey(channel, ticketData, rating);
     
     await logTicketEvent({
       client: channel.client,
@@ -882,11 +951,14 @@ async function deliverTicketTranscript(channel, ticketData, executor, { persist 
           timestamp: true,
         });
 
-        await transcriptChannel.send({
+        const transcriptMessage = await transcriptChannel.send({
           embeds: [transcriptEmbed],
           files: [buildTranscriptAttachment(transcript)],
+          allowedMentions: { parse: [] },
         });
         channelSent = true;
+        // A rating given later is added to this message (ticketRatingEffects.js).
+        if (transcriptMessage?.id) ticketData.transcriptLog = { channelId: transcriptChannel.id, messageId: transcriptMessage.id };
       }
     } catch (error) {
       logger.error('Failed to send transcript to configured channel', {

@@ -13,7 +13,8 @@
 //   enf.banEnded / enf.muteEnded                      enforcementService.js notifyPunishmentEnded
 //   enf.appealAccepted / enf.appealDenied             appealService.js
 //   enf.caseVoided                                    caseEditService.js (/case remove)
-//   ticket.closed / ticket.feedback / ticket.transcript  services/ticket.js
+//   ticket.closed / ticket.feedback / ticket.transcript  services/ticket.js (ticket.feedback also
+//                                                     modmailService.js, kind 'modmail')
 //   application.result                                applicationReviewService.js
 //   verification.approved / verification.denied       handlers/verificationReview.js
 //   suggestion.status                                 community/suggestionService.js
@@ -100,15 +101,21 @@ export const DM_RENDERERS = Object.freeze({
             return {
                 embeds: [createEmbed({
                     title: tr.t('ticket.dm.feedbackTitle'),
-                    description: tr.t('ticket.dm.feedbackBody', { channel: p.channelName }),
+                    // kind 'modmail': a closed modmail conversation (modmailService.js), same buttons.
+                    description: p.kind === 'modmail'
+                        ? tr.t('ticket.dm.modmailFeedbackBody')
+                        : tr.t('ticket.dm.feedbackBody', { channel: p.channelName }),
                     color: '#F1C40F',
                     footer: { text: tr.t('ticket.dm.feedbackFooter') },
                 })],
                 components: ticketFeedbackRows(tr, p.guildId, p.channelId),
             };
         },
-        // Answered or declined: the handlers replaced the survey and removed its buttons.
-        stillCurrent: (message) => Array.isArray(message?.components) && message.components.length > 0,
+        // Answered or declined: the handlers replaced the survey and removed its buttons. Rated with
+        // only "Add a comment" left (ticketRatingService.js): moved on too, the stars must not come back.
+        stillCurrent: (message) => Array.isArray(message?.components) && message.components.length > 0
+            && !message.components.every((row) => Array.isArray(row?.components) && row.components.length > 0
+                && row.components.every((c) => String(c?.customId ?? c?.custom_id ?? '').startsWith('ticket_feedback_comment:'))),
     },
     'ticket.transcript': {
         render: (p, lang) => {

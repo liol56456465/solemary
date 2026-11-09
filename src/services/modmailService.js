@@ -36,6 +36,8 @@ import { withOpenChannelSlot } from './openChannelCap.js';
 import { isHomeGuild, resolveSetting } from './settings/guildSettings.js';
 import { blacklistHit } from './owner/blacklistCache.js';
 import { privacyUrl } from '../utils/privacyNotice.js';
+import { sendLoggedDm } from './botDm/dmLog.js';
+import { createPendingRating, ratingSettings, setRatingDelivery } from './ticketRatingService.js';
 
 const NOTE_PREFIX = '//';
 const MAX_MESSAGE = 2000;
@@ -537,6 +539,37 @@ export function isOwnTranscriptChannel(transcriptChannel, guildId) {
     return Boolean(transcriptChannel && guildId && transcriptChannel.guildId === guildId && transcriptChannel.isSendable?.());
 }
 
+/**
+ * The rating survey after a closed modmail conversation, when the server turned it on: a pending
+ * row (staff = the closer), then the DM. Never throws (the close goes on). Returns the delivery
+ * ('dm' | 'failed') or null when no survey was due. `deps` for tests: { loadConfig, create, setDelivery, send }.
+ */
+export async function promptModmailRating(channel, user, userId, closer, deps = {}) {
+    const {
+        loadConfig = getGuildConfig, create = createPendingRating, setDelivery = setRatingDelivery, send = sendLoggedDm,
+    } = deps;
+    try {
+        const settings = ratingSettings(await loadConfig(channel.client, channel.guild.id));
+        if (!settings.modmailEnabled) return null;
+        const row = await create({
+            guildId: channel.guild.id, kind: 'modmail', refId: channel.id, openerId: userId,
+            staffId: closer?.id ?? null, closerId: closer?.id ?? null, windowDays: settings.windowDays,
+        });
+        if (!row) return null;
+        const sent = user ? await send(user, {
+            key: 'ticket.feedback',
+            params: { channelName: channel.name, guildId: channel.guild.id, channelId: channel.id, kind: 'modmail' },
+            guildId: channel.guild.id, label: 'modmail rating survey',
+        }).catch(() => false) : false;
+        const delivery = sent ? 'dm' : 'failed';
+        await setDelivery(row.id, delivery);
+        return delivery;
+    } catch (error) {
+        logger.warn(`Modmail rating for ${channel.id} not prompted: ${error.message}`);
+        return null;
+    }
+}
+
 /** Ends a conversation: tells the member, files the transcript, deletes the channel. */
 export async function closeModmail(channel, closer, reason = '') {
     const userId = await modmailUserId(channel);
@@ -549,6 +582,9 @@ export async function closeModmail(channel, closer, reason = '') {
         content: `Your conversation with ${staffLabel(channel.guild)} was closed.${note}\nSend a new message here any time to start another one.`,
         allowedMentions: NO_MENTIONS,
     }).catch(() => {});
+
+    // Rating (off by default; modmailRatingsEnabled): the row before the channel goes.
+    await promptModmailRating(channel, user, userId, closer);
 
     try {
         const config = await getGuildConfig(client, channel.guild.id);
