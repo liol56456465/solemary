@@ -29,7 +29,8 @@
         },
         "warn": {
             "title": "**Warning {number} of {limit} in {server}**",
-            "limit": "At {limit} warnings you will be banned."
+            "limit": "At {limit} warnings you will be banned for {length}.",
+            "limitPermanent": "At {limit} warnings you will be banned permanently."
         },
         "appealAccepted": {
             "title": "**Appeal accepted**",

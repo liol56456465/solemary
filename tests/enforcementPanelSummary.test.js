@@ -17,8 +17,9 @@ test('panel summary: member with roles, ladder and an active mute', () => {
     assert.match(text, /Account created:.*<t:1577836800:F>/);
     assert.match(text, /In server:\*\* yes, joined <t:1714521600:F>/);
     assert.match(text, /3 roles/);
-    assert.match(text, /Warning stage:\*\* 1 of 3 \(7-day ban\)/);
-    assert.match(text, /next warn bans/);
+    // Plain words, one number (audit 3.7): level 1 → the next warn bans for 1 month (30 days).
+    assert.match(text, /\*\*Warnings:\*\* 0 — the next one bans for 1 month · \*\*Warning bans so far:\*\* 1/);
+    assert.doesNotMatch(text, /of 3/);
     assert.match(text, /Active punishment:\*\* mute `abcde`/);
     assert.match(text, /Pending appeal:\*\* `xyzab`/);
 });
@@ -27,7 +28,7 @@ test('panel summary: banned non-member without a record', () => {
     const state = { member: null, banned: true, ladder: { level: 0, warns_since_level: 2 }, activeBan: null, activeMute: null, muted: false };
     const text = panelSummaryLines(user, state).join('\n');
     assert.match(text, /In server:\*\* no/);
-    assert.match(text, /2 of 3/);
+    assert.match(text, /\*\*Warnings:\*\* 2 — the next one bans for 7 days/);
     assert.match(text, /banned outside the panel \(no record\)/);
 });
 

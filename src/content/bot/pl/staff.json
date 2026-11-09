@@ -41,7 +41,6 @@
                 "other": "{count} roli"
             },
             "inServerNo": "**Na serwerze:** nie",
-            "warns": "**Liczone ostrzeżenia:** {warns} · **Poziom ostrzeżeń:** {stage}",
             "activeBanEnds": "ban `{code}` · kończy się {date}",
             "activeBanPermanent": "ban `{code}` · na stałe",
             "bannedNoRecord": "zbanowany poza panelem (brak wpisu)",
@@ -50,7 +49,12 @@
             "active": "**Aktywna kara:** {list}",
             "activeNone": "brak",
             "pendingAppeal": "**Oczekujące odwołanie:** {codes} (zdecyduj na kanale odwołań lub przez /appeals)",
-            "keepApart": "**Zakaz kontaktu:** {list}"
+            "keepApart": "**Zakaz kontaktu:** {list}",
+            "warnsNext": "**Ostrzeżenia:** {n} — następne daje bana na {length}",
+            "warnsNextPermanent": "**Ostrzeżenia:** {n} — następne daje bana na stałe",
+            "warnsAt": "**Ostrzeżenia:** {n} — przy {max} ban na {length}",
+            "warnsAtPermanent": "**Ostrzeżenia:** {n} — przy {max} ban na stałe",
+            "warnBans": "**Dotychczasowe bany za ostrzeżenia:** {level}"
         },
         "keepApartLine": "z <@{otherId}> do {until} (nakaz #{id})",
         "warns": {
@@ -100,13 +104,19 @@
             "cancel": "Anuluj",
             "confirm": "Potwierdź",
             "editDetails": "Edytuj szczegóły",
-            "tryAgain": "Spróbuj ponownie"
+            "tryAgain": "Spróbuj ponownie",
+            "undo": "Cofnij (pomyłka)",
+            "removeWarnMistake": "Pomyłka? Usuń ostrzeżenie",
+            "confirmUndo": "Tak, usuń sprawę",
+            "unbanOnly": "Tylko odbanuj (poziom zostaje)",
+            "removeWarnStage": "Usuń ostrzeżenie (poziom w dół)",
+            "confirmPermanent": "Tak, zbanuj na stałe"
         },
         "stepTitle": "{action}: {name}",
         "modal": {
             "customReason": "Własny powód",
             "duration": "Czas trwania",
-            "durationBan": "np. 30m, 24h, 7d, 1mo. Zostaw puste, aby zbanować na stałe.",
+            "durationBan": "np. 30m, 24h, 7d, 1mo — albo wpisz „na stałe”, aby zbanować na stałe.",
             "durationMute": "Wymagane. np. 30m, 24h, 7d, 1mo.",
             "name": "Nazwa (opcjonalnie)",
             "nameDefault": "Domyślnie: {name}",
@@ -139,7 +149,8 @@
             "badDuration": "„{value}” to nieprawidłowy czas trwania. Użyj formatów takich jak 30m, 24h, 7d lub 1mo.",
             "evidenceLinks": "Dowody muszą być linkami (np. link do wiadomości na Discordzie: prawy klik na wiadomość → Kopiuj link do wiadomości).",
             "evidenceMax": "Tutaj najwyżej {max} linków z dowodami; kolejne dodaj potem przez /case evidence add.",
-            "nameTaken": "Wpis o nazwie **{name}** już istnieje na tym serwerze. Wybierz inną nazwę."
+            "nameTaken": "Wpis o nazwie **{name}** już istnieje na tym serwerze. Wybierz inną nazwę.",
+            "banNeedsDuration": "Ban wymaga czasu trwania (np. 7d) albo słów „na stałe”."
         },
         "evidence": {
             "notSaved": "Dowód {url} nie został zapisany: {error}",
@@ -218,7 +229,9 @@
             "evidence": "**Dowody:** {list}",
             "unreadable": " (wiadomość nieczytelna, tylko link)",
             "template": "**Szablon:** {name}",
-            "effect": "**Skutek:** {effect}"
+            "effect": "**Skutek:** {effect}",
+            "permanentTitle": "Ban na stałe bez odwołania",
+            "permanentBody": "**{name}** dostanie bana **na stałe** i **nie będzie mógł się odwołać**. Później zdejmie go tylko admin. Na pewno?"
         },
         "result": {
             "caseCode": "**Kod sprawy:** `{code}`",
@@ -227,11 +240,15 @@
             "dmFailed": "**Nie udało się dostarczyć DM** (zamknięte DM lub brak wspólnego serwera). Akcja i tak została wykonana.",
             "dmDelivered": "DM dostarczony.",
             "title": "Wykonano ({action}): {name}",
-            "done": "Gotowe."
+            "done": "Gotowe.",
+            "nextWarn": "**Następne ostrzeżenie:** ostrzeżenie {n} z {max}, jeszcze bez bana.",
+            "nextWarnBans": "**Następne ostrzeżenie:** automatyczny ban na {length}.",
+            "nextWarnBansPermanent": "**Następne ostrzeżenie:** automatyczny ban na stałe."
         },
         "step": {
             "reason": "Krok 1: wybierz powód.",
-            "reasonWithMessage": "**Wiadomość:** {url} (dołączona jako dowód)\nKrok 1: wybierz powód."
+            "reasonWithMessage": "**Wiadomość:** {url} (dołączona jako dowód)\nKrok 1: wybierz powód.",
+            "unbanOnly": "Ten ban nie jest już automatycznym banem za ostrzeżenia. Odbanuj jak zwykle:"
         },
         "removeWarn": {
             "none": "Ten użytkownik nie ma liczonych ostrzeżeń do usunięcia.",
@@ -241,7 +258,28 @@
         "cancelledTitle": "Anulowano",
         "cancelled": "Nic nie zmieniono. Uruchom /enforcements, aby zacząć od nowa.",
         "failedTitle": "Nie udało się ({action})",
-        "failedGeneric": "Coś poszło nie tak; możliwe, że nic się nie zmieniło. Sprawdź /background, zanim spróbujesz ponownie."
+        "unbanChoice": "Ban `{code}` był automatyczny: wywołał go limit ostrzeżeń. Wybierz:\n**Tylko odbanuj (poziom zostaje):** ban się kończy, ale poziom ostrzeżeń zostaje, więc następne ostrzeżenie znów da bana, dłuższego.\n**Usuń ostrzeżenie (poziom w dół):** ostrzeżenie było pomyłką. Zostaje usunięte, ban się kończy, a poziom spada o jeden. Użytkownik dostaje DM z zaproszeniem z powrotem.",
+        "undo": {
+            "title": "Cofnij (pomyłka): {name}",
+            "what": {
+                "warn": "Ostrzeżenie `{code}` zostaje usunięte: już się nie liczy, więc liczba ostrzeżeń spada o jedno.",
+                "warnLadder": "Ostrzeżenie `{code}` zostaje usunięte, a automatyczny ban `{ban}`, który wywołało, zdjęty. Poziom ostrzeżeń spada o jeden.",
+                "ban": "Ban `{code}` zostaje usunięty, a użytkownik odbanowany.",
+                "banLadder": "Automatyczny ban `{code}` zostaje usunięty: użytkownik jest odbanowany, ostrzeżenie, które go wywołało, usunięte, a poziom ostrzeżeń spada o jeden.",
+                "mute": "Wyciszenie `{code}` zostaje usunięte, a użytkownik odciszony.",
+                "kick": "Wyrzucenie `{code}` zostaje usunięte z historii. Wyrzucenia nie da się cofnąć: użytkownik wraca z zaproszeniem, które dostał."
+            },
+            "dm": "Użytkownik dostaje DM, że to była pomyłka. Sprawa zostaje w /background jako usunięta (pomyłka).",
+            "doneTitle": "Cofnięto: {name}",
+            "done": "`{code}` usunięto (pomyłka); już się nie liczy.",
+            "failedTitle": "Nie udało się cofnąć"
+        },
+        "failed": {
+            "happened": "Akcja została wykonana (sprawa `{code}`), ale późniejszy krok się nie udał. Sprawdź /background i nie uruchamiaj jej ponownie.",
+            "happenedNoCase": "Akcja została wykonana, ale późniejszy krok się nie udał. Sprawdź /background i nie uruchamiaj jej ponownie.",
+            "notHappened": "Nic nie zmieniono. Możesz spróbować ponownie przez /enforcements.",
+            "unknown": "Coś poszło nie tak i nie wiadomo, czy coś się zmieniło. Sprawdź /background, zanim spróbujesz ponownie."
+        }
     },
     "enforcements": {
         "cmd": {

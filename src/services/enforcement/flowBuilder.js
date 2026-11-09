@@ -110,7 +110,7 @@ export function liftReasonPatch(flow, reason, via = '/enforcements') {
  * Returns { patch, error }: on an error, `patch` holds what was parsed so far (the
  * panel keeps it for "Try again"). Pure.
  */
-export function parseFlowInput(flow, input = {}, { lang = 'en' } = {}) {
+export function parseFlowInput(flow, input = {}, { lang = 'en', explicitPermanent = false } = {}) {
     const tr = botText(lang);
     const patch = {};
     if (flow.reasonKey === CUSTOM_REASON_KEY) {
@@ -123,8 +123,11 @@ export function parseFlowInput(flow, input = {}, { lang = 'en' } = {}) {
         const raw = String(input.durationInput || '').trim();
         patch.durationInput = raw;
         if (!raw && flow.type === 'mute') return { patch, error: tr.t('staff.panel.input.muteNeedsDuration') };
-        patch.durationMs = raw ? parseDuration(raw) : null;
-        if (raw && patch.durationMs == null) {
+        // The panel (explicitPermanent): a permanent ban is typed as "permanent", never a blank field.
+        if (!raw && flow.type === 'ban' && explicitPermanent) return { patch, error: tr.t('staff.panel.input.banNeedsDuration') };
+        const permanent = flow.type === 'ban' && isPermanentWord(raw, lang);
+        patch.durationMs = raw && !permanent ? parseDuration(raw) : null;
+        if (raw && !permanent && patch.durationMs == null) {
             return { patch, error: tr.t('staff.panel.input.badDuration', { value: truncate(raw, 20) }) };
         }
     }
@@ -144,6 +147,22 @@ export function parseFlowInput(flow, input = {}, { lang = 'en' } = {}) {
     }
     patch.evidenceEntries = evidenceEntries;
     return { patch, error: null };
+}
+
+/**
+ * True for the word that asks for a permanent ban: "permanent", "perm", "forever", or the
+ * panel language's own word for it (enforcement.duration.permanent, e.g. "Dauerhaft").
+ */
+export function isPermanentWord(raw, lang = 'en') {
+    const text = String(raw || '').trim().toLowerCase();
+    if (!text) return false;
+    if (/^(perm|permanent|forever)$/.test(text)) return true;
+    return text === botText(lang).t('enforcement.duration.permanent').toLowerCase();
+}
+
+/** A permanent ban the member cannot appeal: the panel asks a second time before it runs. */
+export function needsSecondConfirm(flow) {
+    return flow?.type === 'ban' && flow.durationMs == null && Boolean(flow.unappealable);
 }
 
 export const defaultFlowDeps = {
@@ -291,4 +310,42 @@ export function countedWarnsText(ladder, { lang = 'en' } = {}) {
             : tr.t('staff.panel.warns.nextBans', { n: ladder.warns_since_level });
     }
     return `${ladder.warns_since_level}${ladder.level === 0 ? ` of ${enforcementConfig.warnsPerLevel}` : ' (next warn bans)'}`;
+}
+
+/**
+ * The panel's warnings line in plain words, one number only (audit 3.7):
+ * "**Warnings:** 2 — the next one bans for 7 days", "**Warnings:** 1 — at 3 they are banned for
+ * 7 days", plus "**Warning bans so far:** 2" once a warning ban happened.
+ */
+export function warnStatusText(ladder, { lang = 'en' } = {}) {
+    const tr = botText(lang);
+    const level = Number(ladder?.level) || 0;
+    const n = Number(ladder?.warns_since_level) || 0;
+    const step = previewWarn({ level, warns_since_level: n });
+    let text;
+    if (step.escalates) {
+        text = step.banDurationMs != null
+            ? tr.t('staff.panel.info.warnsNext', { n, length: durationIn(step.banDurationMs, lang) })
+            : tr.t('staff.panel.info.warnsNextPermanent', { n });
+    } else {
+        // Not escalating yet: the ban that comes at the limit is the next level's.
+        const atLimit = previewWarn({ level, warns_since_level: Math.max(0, step.threshold - 1) });
+        text = atLimit.banDurationMs != null
+            ? tr.t('staff.panel.info.warnsAt', { n, max: step.threshold, length: durationIn(atLimit.banDurationMs, lang) })
+            : tr.t('staff.panel.info.warnsAtPermanent', { n, max: step.threshold });
+    }
+    return level > 0 ? `${text} · ${tr.t('staff.panel.info.warnBans', { level })}` : text;
+}
+
+/**
+ * What the member's next warning does, for the result card after a warn (audit 3.2):
+ * previewWarn on the ladder as it is now. "**Next warn:** automatic 7-day ban".
+ */
+export function nextWarnText(ladder, { lang = 'en' } = {}) {
+    const tr = botText(lang);
+    const step = previewWarn({ level: Number(ladder?.level) || 0, warns_since_level: Number(ladder?.warns_since_level) || 0 });
+    if (!step.escalates) return tr.t('staff.panel.result.nextWarn', { n: step.warnNumber, max: step.threshold });
+    return step.banDurationMs != null
+        ? tr.t('staff.panel.result.nextWarnBans', { length: durationIn(step.banDurationMs, lang) })
+        : tr.t('staff.panel.result.nextWarnBansPermanent');
 }

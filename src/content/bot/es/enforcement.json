@@ -29,7 +29,8 @@
         },
         "warn": {
             "title": "**Advertencia {number} de {limit} en {server}**",
-            "limit": "Con {limit} advertencias serás baneado."
+            "limit": "Con {limit} advertencias serás baneado por {length}.",
+            "limitPermanent": "Con {limit} advertencias serás baneado de forma permanente."
         },
         "appealAccepted": {
             "title": "**Apelación aceptada**",

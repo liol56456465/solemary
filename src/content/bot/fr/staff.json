@@ -40,7 +40,6 @@
                 "other": "{count} rôles"
             },
             "inServerNo": "**Sur le serveur :** non",
-            "warns": "**Avertissements comptés :** {warns} · **Palier d’avertissement :** {stage}",
             "activeBanEnds": "ban `{code}` · se termine {date}",
             "activeBanPermanent": "ban `{code}` · définitif",
             "bannedNoRecord": "banni en dehors du panneau (aucun dossier)",
@@ -49,7 +48,12 @@
             "active": "**Sanction en cours :** {list}",
             "activeNone": "aucune",
             "pendingAppeal": "**Appel en attente :** {codes} (décide dans le salon des appels ou avec /appeals)",
-            "keepApart": "**Interdiction de contact :** {list}"
+            "keepApart": "**Interdiction de contact :** {list}",
+            "warnsNext": "**Avertissements :** {n} — le prochain bannit pour {length}",
+            "warnsNextPermanent": "**Avertissements :** {n} — le prochain bannit définitivement",
+            "warnsAt": "**Avertissements :** {n} — à {max}, ban de {length}",
+            "warnsAtPermanent": "**Avertissements :** {n} — à {max}, ban définitif",
+            "warnBans": "**Bans par avertissements jusqu’ici :** {level}"
         },
         "keepApartLine": "avec <@{otherId}> jusqu’au {until} (ordre #{id})",
         "warns": {
@@ -97,13 +101,19 @@
             "cancel": "Annuler",
             "confirm": "Confirmer",
             "editDetails": "Modifier les détails",
-            "tryAgain": "Réessayer"
+            "tryAgain": "Réessayer",
+            "undo": "Annuler (erreur)",
+            "removeWarnMistake": "Erreur ? Retirer l’avertissement",
+            "confirmUndo": "Oui, retirer le dossier",
+            "unbanOnly": "Débannir seulement (le palier reste)",
+            "removeWarnStage": "Retirer l’avertissement (le palier recule)",
+            "confirmPermanent": "Oui, bannir définitivement"
         },
         "stepTitle": "{action} : {name}",
         "modal": {
             "customReason": "Raison personnalisée",
             "duration": "Durée",
-            "durationBan": "ex. 30m, 24h, 7d, 1mo. Laisse vide pour un ban définitif.",
+            "durationBan": "ex. 30m, 24h, 7d, 1mo — ou tape définitif pour un ban définitif.",
             "durationMute": "Obligatoire. ex. 30m, 24h, 7d, 1mo.",
             "name": "Nom (facultatif)",
             "nameDefault": "Par défaut : {name}",
@@ -136,7 +146,8 @@
             "badDuration": "« {value} » n’est pas une durée valide. Utilise des formats comme 30m, 24h, 7d ou 1mo.",
             "evidenceLinks": "Les preuves doivent être des liens (ex. un lien de message Discord : clic droit sur un message → Copier le lien du message).",
             "evidenceMax": "Au plus {max} liens de preuve ici ; ajoute les autres ensuite avec /case evidence add.",
-            "nameTaken": "Un dossier nommé **{name}** existe déjà sur ce serveur. Choisis un autre nom."
+            "nameTaken": "Un dossier nommé **{name}** existe déjà sur ce serveur. Choisis un autre nom.",
+            "banNeedsDuration": "Un ban a besoin d’une durée (ex. 7d) ou du mot définitif."
         },
         "evidence": {
             "notSaved": "La preuve {url} n’a pas été enregistrée : {error}",
@@ -206,7 +217,9 @@
             "evidence": "**Preuves :** {list}",
             "unreadable": " (message illisible, lien seulement)",
             "template": "**Modèle :** {name}",
-            "effect": "**Effet :** {effect}"
+            "effect": "**Effet :** {effect}",
+            "permanentTitle": "Ban définitif sans appel",
+            "permanentBody": "**{name}** sera banni **définitivement** et **ne pourra pas faire appel**. Seul un admin pourra le lever plus tard. Tu es sûr ?"
         },
         "result": {
             "caseCode": "**Code du dossier :** `{code}`",
@@ -215,11 +228,15 @@
             "dmFailed": "**Le MP n’a pas pu être envoyé** (MP fermés ou aucun serveur en commun). L’action a quand même été exécutée.",
             "dmDelivered": "MP envoyé.",
             "title": "{action} effectué : {name}",
-            "done": "Terminé."
+            "done": "Terminé.",
+            "nextWarn": "**Prochain avertissement :** avertissement {n} sur {max}, pas encore de ban.",
+            "nextWarnBans": "**Prochain avertissement :** ban automatique de {length}.",
+            "nextWarnBansPermanent": "**Prochain avertissement :** ban automatique définitif."
         },
         "step": {
             "reason": "Étape 1 : choisis une raison.",
-            "reasonWithMessage": "**Message :** {url} (joint comme preuve)\nÉtape 1 : choisis une raison."
+            "reasonWithMessage": "**Message :** {url} (joint comme preuve)\nÉtape 1 : choisis une raison.",
+            "unbanOnly": "Ce ban n’est plus un ban automatique d’avertissements. Débannis comme d’habitude :"
         },
         "removeWarn": {
             "none": "Cet utilisateur n’a aucun avertissement compté à retirer.",
@@ -229,7 +246,28 @@
         "cancelledTitle": "Annulé",
         "cancelled": "Rien n’a été modifié. Lance /enforcements pour recommencer.",
         "failedTitle": "{action} : échec",
-        "failedGeneric": "Un problème est survenu ; il se peut que rien n’ait changé. Vérifie /background avant de réessayer."
+        "unbanChoice": "Le ban `{code}` était automatique : la limite d’avertissements l’a déclenché. Choisis :\n**Débannir seulement (le palier reste) :** le ban prend fin, mais le palier d’avertissement reste, donc le prochain avertissement bannit à nouveau, plus longtemps.\n**Retirer l’avertissement (le palier recule) :** l’avertissement était une erreur. Il est retiré, le ban prend fin et le palier recule d’un cran. Le membre reçoit un MP avec une invitation pour revenir.",
+        "undo": {
+            "title": "Annuler (erreur) : {name}",
+            "what": {
+                "warn": "L’avertissement `{code}` est retiré : il ne compte plus, ses avertissements baissent d’un.",
+                "warnLadder": "L’avertissement `{code}` est retiré et le ban automatique `{ban}` qu’il a causé est levé. Le palier d’avertissement recule d’un cran.",
+                "ban": "Le ban `{code}` est retiré et le membre est débanni.",
+                "banLadder": "Le ban automatique `{code}` est retiré : le membre est débanni, l’avertissement qui l’a causé est retiré et le palier recule d’un cran.",
+                "mute": "Le mute `{code}` est retiré et le membre n’est plus muet.",
+                "kick": "L’expulsion `{code}` est retirée de son dossier. Une expulsion ne s’annule pas : le membre revient avec l’invitation reçue."
+            },
+            "dm": "Le membre reçoit un MP indiquant que c’était une erreur. Le dossier reste dans /background comme retiré (une erreur).",
+            "doneTitle": "Annulé : {name}",
+            "done": "`{code}` a été retiré (une erreur) ; il ne compte plus.",
+            "failedTitle": "Échec de l’annulation"
+        },
+        "failed": {
+            "happened": "L’action a été appliquée (dossier `{code}`), mais une étape suivante a échoué. Vérifie /background et ne la relance pas.",
+            "happenedNoCase": "L’action a été appliquée, mais une étape suivante a échoué. Vérifie /background et ne la relance pas.",
+            "notHappened": "Rien n’a été modifié. Tu peux réessayer avec /enforcements.",
+            "unknown": "Un problème est survenu et on ne sait pas si quelque chose a changé. Vérifie /background avant de réessayer."
+        }
     },
     "enforcements": {
         "cmd": {

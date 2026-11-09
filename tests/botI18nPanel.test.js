@@ -89,7 +89,7 @@ test('English: the panel summary and last cases lines are unchanged', () => {
         '**User:** kit (<@123456789012345678>) · `123456789012345678`',
         '**Account created:** <t:1577836800:F> (<t:1577836800:R>)',
         '**In server:** yes, joined at an unknown time · 1 role',
-        '**Counted warns:** 1 of 3 · **Warning stage:** 0 of 3 (no warning ban yet)',
+        '**Warnings:** 1 — at 3 they are banned for 7 days',
         '**Active punishment:** ban `bbbbb` · permanent; has the muted role (no record)',
     ]);
     const rows = [{ case_code: 'aaaaa', type: 'warn', name: 'kit warn 2', created_at: new Date('2025-01-02T00:00:00Z'), status: 'active', is_test: true, is_imported: true }];
