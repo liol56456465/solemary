@@ -1,12 +1,28 @@
 {
     "lock": {
         "cmd": {
-            "description": "Tranca o canal atual (@everyone não pode enviar mensagens)."
+            "description": "Tranca o canal atual (@everyone não pode enviar mensagens).",
+            "duration": "Destrancar automaticamente após esse tempo, ex.: 30m, 2h, 1d (até 30 dias)"
         },
         "already": "{channel} já está trancado.",
         "title": "Canal trancado",
         "done": "{channel} está trancado. Os membros não podem escrever aqui até ele ser destrancado.",
-        "failed": "Ocorreu um erro inesperado ao trancar o canal. Confira minhas permissões (preciso de \"Gerenciar canais\")."
+        "failed": "Ocorreu um erro inesperado ao trancar o canal. Confira minhas permissões (preciso de \"Gerenciar canais\").",
+        "badDuration": "Essa duração não é válida. Use por exemplo 30m, 2h ou 1d (de 1 minuto a 30 dias). Nada foi alterado.",
+        "doneUntil": "{channel} está trancado até {time} ({relative}). Até lá, os membros não podem escrever aqui.",
+        "dbDown": "O banco de dados não está respondendo, então o canal não foi trancado. Nada foi alterado.",
+        "partial": "O Discord recusou parte do trancamento, então eu desfiz tudo. Confira minhas permissões aqui (preciso de \"Gerenciar canais\" e \"Gerenciar permissões\").",
+        "botMissing": "Está me faltando {perms} em {channel}, então não consigo trancá-lo. Nada foi alterado.",
+        "rolesLocked": {
+            "one": "Também trancado para {count} cargo que tinha a própria permissão \"Enviar mensagens\" aqui: {roles}. /unlock devolve a permissão.",
+            "many": "Também trancado para {count} cargos que tinham a própria permissão \"Enviar mensagens\" aqui: {roles}. /unlock devolve a permissão.",
+            "other": "Também trancado para {count} cargos que tinham a própria permissão \"Enviar mensagens\" aqui: {roles}. /unlock devolve a permissão."
+        },
+        "rolesKept": {
+            "one": "Não trancado para {count} cargo da equipe (ele mantém a própria permissão \"Enviar mensagens\" aqui): {roles}.",
+            "many": "Não trancado para {count} cargos da equipe (eles mantêm a própria permissão \"Enviar mensagens\" aqui): {roles}.",
+            "other": "Não trancado para {count} cargos da equipe (eles mantêm a própria permissão \"Enviar mensagens\" aqui): {roles}."
+        }
     },
     "unlock": {
         "cmd": {
@@ -15,7 +31,18 @@
         "notLocked": "{channel} não está trancado explicitamente (todos já podem escrever).",
         "title": "Canal destrancado",
         "done": "{channel} está destrancado. Os membros podem escrever aqui de novo.",
-        "failed": "Ocorreu um erro inesperado ao destrancar o canal. Confira minhas permissões (preciso de \"Gerenciar canais\")."
+        "failed": "Ocorreu um erro inesperado ao destrancar o canal. Confira minhas permissões (preciso de \"Gerenciar canais\").",
+        "notOverwrite": "{channel} não está trancado pelas próprias permissões: \"Enviar mensagens\" é negado pela categoria ou pelo cargo @everyone, então destrancar aqui não mudaria nada.",
+        "dbDown": "O banco de dados não está respondendo, então o canal não foi destrancado. Nada foi alterado.",
+        "botMissing": "Está me faltando {perms} em {channel}, então não consigo destrancá-lo. Nada foi alterado.",
+        "autoDone": "{channel} foi destrancado automaticamente: o tempo de trancamento acabou.",
+        "autoReason": "Tempo de trancamento acabou (destrancado automaticamente)",
+        "skipped": {
+            "one": "Alguém mudou {count} permissão desde o trancamento, então deixei como estava.",
+            "many": "Alguém mudou {count} permissões desde o trancamento, então deixei como estavam.",
+            "other": "Alguém mudou {count} permissões desde o trancamento, então deixei como estavam."
+        },
+        "partial": "O Discord recusou parte do destrancamento ({done} de {total} permissões restauradas), então {channel} pode ainda estar trancado em parte. Confira minhas permissões aqui (preciso de \"Gerenciar canais\" e \"Gerenciar permissões\") e use /unlock de novo."
     },
     "purge": {
         "cmd": {
@@ -29,7 +56,42 @@
             "many": "{count} mensagens apagadas em {channel}.",
             "other": "{count} mensagens apagadas em {channel}."
         },
-        "failed": "Ocorreu um erro inesperado ao apagar as mensagens. Observação: mensagens com mais de 14 dias não podem ser apagadas em massa."
+        "failed": "Ocorreu um erro inesperado ao apagar as mensagens. Observação: mensagens com mais de 14 dias não podem ser apagadas em massa.",
+        "botMissing": "Está me faltando {perms} em {channel}, então não consigo apagar mensagens lá. Nada foi apagado.",
+        "empty": "Não há mensagens para apagar em {channel}.",
+        "allTooOld": {
+            "one": "{count} mensagem tem mais de 14 dias. O Discord não apaga em massa mensagens com mais de 14 dias, então nada foi apagado.",
+            "many": "Todas as {count} mensagens têm mais de 14 dias. O Discord não apaga em massa mensagens com mais de 14 dias, então nada foi apagado.",
+            "other": "Todas as {count} mensagens têm mais de 14 dias. O Discord não apaga em massa mensagens com mais de 14 dias, então nada foi apagado."
+        },
+        "previewTitle": "Apagar mensagens?",
+        "preview": {
+            "one": "Apagar {count} mensagem dos últimos 14 dias em {channel}?",
+            "many": "Apagar {count} mensagens dos últimos 14 dias em {channel}?",
+            "other": "Apagar {count} mensagens dos últimos 14 dias em {channel}?"
+        },
+        "previewOld": {
+            "one": "{count} mensagem tem mais de 14 dias e será ignorada.",
+            "many": "{count} mensagens têm mais de 14 dias e serão ignoradas.",
+            "other": "{count} mensagens têm mais de 14 dias e serão ignoradas."
+        },
+        "previewNote": "O Discord não apaga em massa mensagens com mais de 14 dias.",
+        "previewExpires": "Esta prévia expira {time}. Nada é apagado até você clicar em Apagar.",
+        "confirmButton": "Apagar",
+        "cancelButton": "Cancelar",
+        "cancelled": "Cancelado. Nada foi apagado.",
+        "expired": "Esta prévia expirou. Use /purge de novo. Nada foi apagado.",
+        "notYours": "Só o moderador que usou /purge pode usar estes botões.",
+        "skippedOld": {
+            "one": "{count} ignorada: mais de 14 dias (o Discord não apaga essas em massa).",
+            "many": "{count} ignoradas: mais de 14 dias (o Discord não apaga essas em massa).",
+            "other": "{count} ignoradas: mais de 14 dias (o Discord não apaga essas em massa)."
+        },
+        "skippedGone": {
+            "one": "{count} ignorada: já tinha sido apagada.",
+            "many": "{count} ignoradas: já tinham sido apagadas.",
+            "other": "{count} ignoradas: já tinham sido apagadas."
+        }
     },
     "rules": {
         "cmd": {

@@ -178,7 +178,8 @@
         "closedBody": "This ticket is closed.",
         "priorityChanged": "Priority changed",
         "reopenedTitle": "Ticket reopened",
-        "deletedTitle": "Ticket deleted"
+        "deletedTitle": "Ticket deleted",
+        "ratingCountsForYou": "Nobody claimed this ticket, so the member's rating will count for you."
     },
     "service": {
         "notTicket": "This is not a ticket channel.",

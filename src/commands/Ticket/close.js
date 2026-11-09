@@ -5,7 +5,7 @@ import { logger } from '../../utils/logger.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { getTicketPermissionContext } from '../../utils/ticket/ticketPermissions.js';
-import { closeTicket } from '../../services/ticket.js';
+import { closeTicket, closedReplyText } from '../../services/ticket.js';
 import { textForInteraction } from '../../utils/botText.js';
 import { descriptionLocalizations as localizations } from '../../utils/commandLocalizations.js';
 export default {
@@ -43,13 +43,13 @@ export default {
             interaction.options?.getString("reason") ||
             "Closed via command without a specific reason.";
 
-        await closeTicket(interaction.channel, interaction.user, reason, { lang: tr.lang });
+        const closed = await closeTicket(interaction.channel, interaction.user, reason, { lang: tr.lang });
 
         await InteractionHelper.safeEditReply(interaction, {
             embeds: [
                 successEmbed(
                     tr.t('ticket.reply.closedTitle'),
-                    tr.t('ticket.reply.closedBody'),
+                    closedReplyText(tr, closed),
                 ),
             ],
         });

@@ -19,6 +19,7 @@ import { checkBirthdays } from './services/birthdayService.js';
 import { checkGiveaways } from './services/giveawayService.js';
 import { runEnforcementExpiry } from './services/enforcement/expiryService.js';
 import { runTempRoleExpiry } from './services/members/tempRoleService.js';
+import { announceAutoUnlock, runChannelLockExpiry } from './services/moderation/channelLock.js';
 import { runRoleRules } from './services/members/roleRuleService.js';
 import { pruneMemberEvents } from './services/members/memberInsightsService.js';
 import { pruneExpiredSessions } from './services/dashboard/sessionStore.js';
@@ -381,6 +382,8 @@ class Mewvo extends Client {
     else logger.info('Twitch feeds are off: TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET are not set');
     cron.schedule('* * * * *', exclusive('enforcement_expiry', () => runEnforcementExpiry(this)));
     cron.schedule('* * * * *', exclusive('temp_role_expiry', () => runTempRoleExpiry(this)));
+    // /lock duration: due channels unlock (the lock time is stored, so a restart still unlocks).
+    cron.schedule('* * * * *', exclusive('channel_lock_expiry', () => runChannelLockExpiry(this, { onUnlocked: announceAutoUnlock })));
     // Plans: "ends in 3 days" / "has ended" DMs, the plan cache, supporter roles (premiumEffects.js).
     cron.schedule('*/5 * * * *', exclusive('premium', () => runPremiumCron(this, premiumStore)));
     // Role rules (dashboard Members): every 10 minutes, capped changes per run (roleRuleService.js).
@@ -473,6 +476,7 @@ class Mewvo extends Client {
     const startupEnforcement = runSafeTask('enforcement_startup', async () => {
       await runEnforcementExpiry(this);
       await runTempRoleExpiry(this);
+      await runChannelLockExpiry(this, { onUnlocked: announceAutoUnlock }).catch((error) => logger.warn(`Auto-unlock at startup failed: ${error.message}`));
       // Active plans into memory before limits are checked (a failure keeps everyone on Free limits until the cron).
       await loadPremiumCache(premiumStore).catch((error) => logger.warn(`Plan cache not loaded at startup: ${error.message}`));
       await importLegacyWarnings(this);

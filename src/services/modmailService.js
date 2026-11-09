@@ -9,7 +9,8 @@
 // staff can see. One open conversation per member at a time, across servers. From then on:
 // - the member's DMs are copied into the channel,
 // - staff messages in the channel are DM'd to the member, except messages that
-//   start with `//` (internal notes) or the command prefix.
+//   start with `//` (internal notes) or the command prefix. A pinned reminder at the top of the
+//   channel says so; each relayed message gets ✅ (❌ and a short reply when the DM failed).
 // Staff close the conversation with the Close button or /modmail close; the
 // transcript goes to the ticket transcript channel and the channel is deleted.
 //
@@ -192,6 +193,23 @@ function closeRow(lang = 'en') {
 
 /** Text for a post in a modmail staff channel or the transcript channel: the server's language. */
 const staffChannelText = (guildId) => textForGuild(guildId, { purpose: 'public' });
+
+/**
+ * The pinned reminder at the top of a new staff channel (audit 3.9): everything typed there goes
+ * to the member unless it starts with `//`. Pinning needs Pin Messages / Manage Messages; without
+ * it the reminder stays as a plain message (logged), and opening the conversation goes on.
+ * Returns the message, or null when it could not be posted.
+ */
+export async function postStaffReminder(channel, tr) {
+    const reminder = await channel.send({ content: tr.t('staff.modmail.reminder'), allowedMentions: NO_MENTIONS }).catch((error) => {
+        logger.warn(`Modmail reminder not posted in ${channel.id}: ${error.message}`);
+        return null;
+    });
+    if (reminder?.pin) {
+        await reminder.pin('Modmail: reminder for staff').catch((error) => logger.info(`Modmail reminder not pinned in ${channel.id}: ${error.message}`));
+    }
+    return reminder;
+}
 
 const NOT_A_MEMBER_MAIN = 'Modmail is for members of the Mewvo server. If you were banned, use the appeal panel in the support server.';
 export const NO_MODMAIL_SERVER = 'None of the servers you share with this bot takes modmail (or you are not a member there any more). '
@@ -490,6 +508,7 @@ export async function openModmail(client, user, dmChannel, messageId, guildId = 
             components: [closeRow(tr.lang)],
             allowedMentions: { roles: staffRoleId ? [staffRoleId] : [] },
         });
+        await postStaffReminder(channel, tr);
         await relay(channel, `**${user.username}:**`, original);
         await original.react('✅').catch(() => {});
         logger.info(`Modmail opened for ${user.id} in ${channel.id}`);
@@ -512,8 +531,9 @@ export async function sendStaffTextToMember(channel, staffName, text) {
 }
 
 /** Copies a staff message from a modmail channel to the member. Returns true when it was a modmail channel. */
-export async function handleModmailStaffMessage(message, prefix = getCommandPrefix()) {
-    const userId = await modmailUserId(message.channel);
+export async function handleModmailStaffMessage(message, prefix = getCommandPrefix(), { userIdOf = modmailUserId } = {}) {
+    // ✅ on the staff message when it reached the member, ❌ plus a short reply when it did not.
+    const userId = await userIdOf(message.channel);
     if (!userId) return false;
     const text = message.content.trimStart();
     if (text.startsWith(NOTE_PREFIX) || (prefix && text.startsWith(prefix))) return true;

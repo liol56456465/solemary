@@ -179,7 +179,8 @@
         "closedBody": "Este ticket está cerrado.",
         "priorityChanged": "Prioridad cambiada",
         "reopenedTitle": "Ticket reabierto",
-        "deletedTitle": "Ticket borrado"
+        "deletedTitle": "Ticket borrado",
+        "ratingCountsForYou": "Nadie reclamó este ticket, así que la valoración del miembro contará para ti."
     },
     "service": {
         "notTicket": "Este no es un canal de ticket.",

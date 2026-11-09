@@ -345,6 +345,21 @@ export async function prepareTicketRating(channel, ticketData, closer, config, {
   }
 }
 
+/**
+ * True when a rating survey went out for this close and it will count for the closer because the
+ * ticket was never claimed (handlingStaffId falls back to the closer). Never for the opener.
+ */
+export function ratingCountsForCloser(ticketData, closerId, ratingCreated) {
+  if (!ratingCreated || !closerId || ticketData?.claimedBy) return false;
+  return handlingStaffId(ticketData, closerId) === String(closerId);
+}
+
+/** The closer's private "ticket closed" line; adds the unclaimed-rating note when it applies (staff only). */
+export function closedReplyText(tr, closed) {
+  const body = tr.t('ticket.reply.closedBody');
+  return closed?.ratingCountsForCloser ? `${body}\n${tr.t('ticket.reply.ratingCountsForYou')}` : body;
+}
+
 /** The visible ticket number: stored since the ratings upgrade, else from the channel name (ticket-012). */
 export function ticketNumberOf(ticketData, channel) {
   const stored = String(ticketData?.number ?? '');
@@ -570,6 +585,11 @@ components: []
       });
     }
     
+    // Staff-facing note for the close confirmation (not saved, not enumerable): the rating will
+    // count for the closer because nobody claimed the ticket (ratingCountsForCloser).
+    Object.defineProperty(ticketData, 'ratingCountsForCloser', {
+      value: ratingCountsForCloser(ticketData, closer?.id, Boolean(rating)), enumerable: false, configurable: true,
+    });
     return ticketData;
     
   } catch (error) {

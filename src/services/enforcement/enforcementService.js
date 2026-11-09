@@ -11,7 +11,7 @@ import { logger } from '../../utils/logger.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { query, withTransaction, T } from './db.js';
 import { insertCase, setDmDelivered, setEndDmDelivered, countUncountedWarns, getActiveCase, nextDefaultName, OPEN_STATUSES } from './caseService.js';
-import { ensureMutedRole, addMutedRole, removeMutedRole, findMutedRole } from './muteService.js';
+import { ensureMutedRole, addMutedRole, removeMutedRole, findMutedRole, mutedRoleGaps, mutedRoleGapNotes } from './muteService.js';
 import { contestComponents } from './dmTemplates.js';
 import { addMonths, formatDuration, dateStamp, ladderStageShort } from './format.js';
 import { ladderStageIn } from './precedentService.js';
@@ -603,7 +603,14 @@ async function doMute({ guild, moderator, targetUser, targetMember, flow, lang =
     await setDmDelivered(record.id, dmDelivered);
     record = { ...record, dm_delivered: dmDelivered };
     await logEnforcement(guild.client, guild.id, 'mute', { record, target: targetUser, moderatorLabel: moderatorLabel(moderator) });
-    return { record, dmDelivered, notes: [] };
+    // Where the Muted role cannot stop them (a role allow on a channel, Administrator): told, not refused.
+    let notes = [];
+    try {
+        notes = mutedRoleGapNotes(tr, mutedRoleGaps(guild, targetMember, role.id), targetUser.username);
+    } catch (error) {
+        logger.debug(`Mute gap check skipped: ${error.message}`);
+    }
+    return { record, dmDelivered, notes };
 }
 
 // ── Warn ladder ────────────────────────────────────────────────────────────
@@ -730,7 +737,7 @@ async function doWarn({ guild, moderator, targetUser, targetMember, flow, lang =
         const record = { ...warnRecord, dm_delivered: dmDelivered };
         await syncWarnRolesQuietly(guild, targetUser.id);
         await logEnforcement(guild.client, guild.id, 'warn', { record, target: targetUser, moderatorLabel: label });
-        if (preview.uncounted) notes.push('Recorded only: this warning does not count toward an automatic ban in this server (warn ladder settings).');
+        if (preview.uncounted) notes.push(tr.t('staff.enfCheck.note.warnUncounted'));
         return { record, dmDelivered, notes, warnNumber: preview.warnNumber, countsOnLadder: !preview.uncounted };
     }
 

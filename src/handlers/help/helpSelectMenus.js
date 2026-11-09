@@ -4,7 +4,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Collection, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { isCommandAvailableInGuild, canSeeAdminCommands } from '../../utils/commandGate.js';
+import { isCommandAvailableInGuild } from '../../utils/commandGate.js';
+import { helpViewFor } from '../../commands/Core/help.js';
 import { isEveryoneCommand } from '../../config/commands/commandAccess.js';
 import { categoryLabel } from '../../config/commands/commandCategories.js';
 import { logger } from '../../utils/logger.js';
@@ -53,9 +54,14 @@ function lockFor(entry) {
     return isEveryoneCommand(entry.displayName) ? '' : '🔒 ';
 }
 
-/** Members only see what they can run; admins see everything, admin-only marked 🔒. */
-function visibleEntries(entries, showAdmin) {
-    return showAdmin ? entries : entries.filter((entry) => isEveryoneCommand(entry.displayName));
+/**
+ * Members only see what they can run; admins see everything, admin-only marked 🔒.
+ * `view`: true (admin), a Set of extra command names (Moderator role, help.js helpViewFor), or false.
+ */
+export function visibleEntries(entries, view) {
+    if (view === true) return entries;
+    const extra = view instanceof Set ? view : null;
+    return entries.filter((entry) => isEveryoneCommand(entry.displayName) || Boolean(extra?.has(entry.baseName)));
 }
 
 /** A command's (or option's) description in the viewer's language, else its English one. */
@@ -403,7 +409,7 @@ export const helpCategorySelectMenu = {
 
             // Only a command folder name opens a category (it becomes a path); anything else shows all.
             const view = selectedCategory !== ALL_COMMANDS_ID && await isHelpCategory(selectedCategory) ? selectedCategory : ALL_VIEW;
-            const { embeds, components } = await createHelpPage(view, 1, client, interaction.guildId, canSeeAdminCommands(interaction), tr);
+            const { embeds, components } = await createHelpPage(view, 1, client, interaction.guildId, await helpViewFor(interaction, client), tr);
             await interaction.editReply({
                 embeds,
                 components,

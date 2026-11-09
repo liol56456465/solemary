@@ -1,12 +1,26 @@
 {
     "lock": {
         "cmd": {
-            "description": "Locks the current channel (prevents @everyone from sending messages)."
+            "description": "Locks the current channel (prevents @everyone from sending messages).",
+            "duration": "Unlock automatically after this time, e.g. 30m, 2h, 1d (up to 30 days)"
         },
         "already": "{channel} is already locked.",
         "title": "Channel locked",
         "done": "{channel} is locked. Members can't send messages here until it's unlocked.",
-        "failed": "An unexpected error occurred while trying to lock the channel. Check my permissions (I need 'Manage Channels')."
+        "failed": "An unexpected error occurred while trying to lock the channel. Check my permissions (I need 'Manage Channels').",
+        "badDuration": "That duration isn't valid. Use for example 30m, 2h or 1d (from 1 minute to 30 days). Nothing was changed.",
+        "doneUntil": "{channel} is locked until {time} ({relative}). Members can't send messages here until then.",
+        "dbDown": "The database is not responding, so the channel was not locked. Nothing was changed.",
+        "partial": "Discord refused part of the lock, so I undid it. Check my permissions here (I need 'Manage Channels' and 'Manage Permissions').",
+        "botMissing": "I'm missing {perms} in {channel}, so I can't lock it. Nothing was changed.",
+        "rolesLocked": {
+            "one": "Also locked for {count} role that had its own Send Messages permission here: {roles}. /unlock gives it back.",
+            "other": "Also locked for {count} roles that had their own Send Messages permission here: {roles}. /unlock gives it back."
+        },
+        "rolesKept": {
+            "one": "Not locked for {count} staff role (it keeps its own Send Messages permission here): {roles}.",
+            "other": "Not locked for {count} staff roles (they keep their own Send Messages permission here): {roles}."
+        }
     },
     "unlock": {
         "cmd": {
@@ -15,7 +29,17 @@
         "notLocked": "{channel} is not explicitly locked (everyone can already send messages).",
         "title": "Channel unlocked",
         "done": "{channel} is unlocked. Members can talk here again.",
-        "failed": "An unexpected error occurred while trying to unlock the channel. Check my permissions (I need 'Manage Channels')."
+        "failed": "An unexpected error occurred while trying to unlock the channel. Check my permissions (I need 'Manage Channels').",
+        "notOverwrite": "{channel} is not locked by its own permissions: Send Messages is denied by its category or the @everyone role, so unlocking here would change nothing.",
+        "dbDown": "The database is not responding, so the channel was not unlocked. Nothing was changed.",
+        "botMissing": "I'm missing {perms} in {channel}, so I can't unlock it. Nothing was changed.",
+        "autoDone": "{channel} was unlocked automatically: the lock time is over.",
+        "autoReason": "Lock time over (automatic unlock)",
+        "skipped": {
+            "one": "{count} permission was changed by someone since the lock, so I left it as it is.",
+            "other": "{count} permissions were changed by someone since the lock, so I left them as they are."
+        },
+        "partial": "Discord refused part of the unlock ({done} of {total} permissions restored), so {channel} may still be partly locked. Check my permissions here (I need 'Manage Channels' and 'Manage Permissions'), then run /unlock again."
     },
     "purge": {
         "cmd": {
@@ -28,7 +52,37 @@
             "one": "Deleted {count} message in {channel}.",
             "other": "Deleted {count} messages in {channel}."
         },
-        "failed": "An unexpected error occurred during message deletion. Note: Messages older than 14 days cannot be bulk deleted."
+        "failed": "An unexpected error occurred during message deletion. Note: Messages older than 14 days cannot be bulk deleted.",
+        "botMissing": "I'm missing {perms} in {channel}, so I can't delete messages there. Nothing was deleted.",
+        "empty": "There are no messages to delete in {channel}.",
+        "allTooOld": {
+            "one": "{count} message is older than 14 days. Discord can't bulk-delete messages older than 14 days, so nothing was deleted.",
+            "other": "All {count} messages are older than 14 days. Discord can't bulk-delete messages older than 14 days, so nothing was deleted."
+        },
+        "previewTitle": "Delete messages?",
+        "preview": {
+            "one": "Delete {count} message from the last 14 days in {channel}?",
+            "other": "Delete {count} messages from the last 14 days in {channel}?"
+        },
+        "previewOld": {
+            "one": "{count} message is older than 14 days and will be skipped.",
+            "other": "{count} messages are older than 14 days and will be skipped."
+        },
+        "previewNote": "Messages older than 14 days can't be bulk-deleted by Discord.",
+        "previewExpires": "This preview expires {time}. Nothing is deleted until you press Delete.",
+        "confirmButton": "Delete",
+        "cancelButton": "Cancel",
+        "cancelled": "Cancelled. Nothing was deleted.",
+        "expired": "This preview expired. Run /purge again. Nothing was deleted.",
+        "notYours": "Only the moderator who ran /purge can use these buttons.",
+        "skippedOld": {
+            "one": "Skipped {count}: older than 14 days (Discord can't bulk-delete those).",
+            "other": "Skipped {count}: older than 14 days (Discord can't bulk-delete those)."
+        },
+        "skippedGone": {
+            "one": "Skipped {count}: already deleted.",
+            "other": "Skipped {count}: already deleted."
+        }
     },
     "rules": {
         "cmd": {

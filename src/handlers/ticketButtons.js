@@ -1,6 +1,6 @@
 import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, AttachmentBuilder, MessageFlags, PermissionFlagsBits, ChannelType } from 'discord.js';
 import { createEmbed, successEmbed } from '../utils/embeds.js';
-import { createTicket, closeTicket, claimTicket, updateTicketPriority } from '../services/ticket.js';
+import { createTicket, closeTicket, closedReplyText, claimTicket, updateTicketPriority } from '../services/ticket.js';
 import { getGuildConfig } from '../services/config/guildConfig.js';
 import { logTicketEvent } from '../utils/ticket/ticketLogging.js';
 import { logger } from '../utils/logger.js';
@@ -358,8 +358,8 @@ const closeTicketModalHandler = {
       // The default reason is stored on the ticket record and goes into the logs: kept in English.
       const reason = providedReason || 'Closed via ticket button without a specific reason.';
 
-      await closeTicket(interaction.channel, interaction.user, reason, { lang: tr.lang });
-      await interaction.editReply({ embeds: [successEmbed(tr.t('ticket.reply.closedTitle'), tr.t('ticket.reply.closedBody'))] });
+      const closed = await closeTicket(interaction.channel, interaction.user, reason, { lang: tr.lang });
+      await interaction.editReply({ embeds: [successEmbed(tr.t('ticket.reply.closedTitle'), closedReplyText(tr, closed))] });
     } catch (error) {
       logger.error('Error submitting close ticket modal:', error);
       await replyTicketActionError(interaction, error, { fallback: 'ticket.buttons.closeError', action: 'close this ticket', botPermissions: ['ManageChannels', 'ManageRoles'] });

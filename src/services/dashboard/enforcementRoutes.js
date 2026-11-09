@@ -28,7 +28,7 @@
 
 import { PermissionFlagsBits } from 'discord.js';
 import { CUSTOM_REASON_KEY, getReason } from '../../config/enforcement.js';
-import { hasOwnerPower } from '../../utils/ownerPower.js';
+import { hasOwnerPower, isMewvoServer } from '../../utils/ownerPower.js';
 import { resolveSetting } from '../settings/guildSettings.js';
 import { logger } from '../../utils/logger.js';
 import { recordOwnerOverride } from '../ownerOverride.js';
@@ -213,6 +213,8 @@ export function createEnforcementHandlers(core) {
     } = core;
 
     const guildOf = () => client.guilds?.cache?.get(guildId) || null;
+    // Mewvo's own servers: the Moderator level keeps the table as is; elsewhere also Remove warn (D1).
+    const isHomeServer = () => isMewvoServer(String(guildId || ''));
     const actorOf = (req) => ({ userId: req.dashboard.session.userId, username: req.dashboard.session.username });
     const canWrite = (req) => Boolean(settings.editEnabled && req.dashboard.access.canAct);
     // OWNER_IDS keep their override only in Mewvo's own servers (utils/ownerPower.js); test doubles
@@ -269,11 +271,11 @@ export function createEnforcementHandlers(core) {
 
     /** What executeAction needs for a moderator (the service re-checks role + action type). */
     const staffRoleOf = (req) => (req.dashboard.fresh?.level === MODERATOR
-        ? { roleId: req.dashboard.fresh.roleId, actions: moderatorActionTypes() } : null);
+        ? { roleId: req.dashboard.fresh.roleId, actions: moderatorActionTypes({ home: isHomeServer() }) } : null);
 
     /** Refuses an enforcement type the level may not run (ban, unban, remove warn for moderators). */
     function assertActionAllowed(req, type) {
-        if (!mayRun(req.dashboard.access, `action:${type}`)) {
+        if (!mayRun(req.dashboard.access, `action:${type}`, { home: isHomeServer() })) {
             const tr = textOf(req);
             throw new InputError(tr.t('moderation.access.actionNeedsAdmin', { action: actionLabel(tr, type) || tr.t('moderation.access.thisAction') }), 403);
         }
@@ -461,7 +463,7 @@ export function createEnforcementHandlers(core) {
         if (!view) return fail(res, 404, textOf(req).t('errors.notFound'), textOf(req).t('moderation.members.noUser'), req);
         return sendHtml(res, status, userPage({
             ...shellOf(req), view, canAct: req.dashboard.access.canAct, editEnabled: settings.editEnabled,
-            allow: (key) => mayRun(req.dashboard.access, key),
+            allow: (key) => mayRun(req.dashboard.access, key, { home: isHomeServer() }),
             flash: status === 200 ? req.dashboard.flash : null, error, values,
         }));
     }

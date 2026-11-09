@@ -1139,7 +1139,8 @@
         },
         "dmFailed": "Nie udało się wysłać DM do członka (opuścił serwer albo zamknął DM).",
         "transcript": "Modmail z <@{userId}> (`{userId}`) zamknął(-ęła) {closer}.",
-        "transcriptReason": "Powód: {reason}"
+        "transcriptReason": "Powód: {reason}",
+        "reminder": "Wiadomości tutaj trafiają do członka. Zacznij od `//`, by dodać notatkę tylko dla zespołu."
     },
     "enfCheck": {
         "perm": {
@@ -1189,7 +1190,15 @@
             "unbanDmFailed": "Nie udało się dostarczyć wiadomości „ban zakończony”.",
             "unmuteNoRole": "Użytkownika nie było na serwerze albo nie miał już roli; wpis i tak został zdjęty.",
             "unmuteDmFailed": "Nie udało się dostarczyć wiadomości „wyciszenie zakończone”.",
-            "removed": "Usunięto `{code}`. Liczone ostrzeżenia: {count}."
+            "removed": "Usunięto `{code}`. Liczone ostrzeżenia: {count}.",
+            "muteAdmin": "{name} ma uprawnienie Administrator, więc rola Muted nie zablokuje mu pisania.",
+            "muteLeak": {
+                "one": "{name} nadal może pisać na {count} kanale: {channels}. Jedna z jego ról (albo jego własne uprawnienie na kanale) ma tam zezwolenie na pisanie, a zezwolenie wygrywa z zakazem roli Muted. Usuń to zezwolenie w uprawnieniach kanału.",
+                "few": "{name} nadal może pisać na {count} kanałach: {channels}. Jedna z jego ról (albo jego własne uprawnienie na kanale) ma tam zezwolenie na pisanie, a zezwolenie wygrywa z zakazem roli Muted. Usuń to zezwolenie w uprawnieniach kanału.",
+                "many": "{name} nadal może pisać na {count} kanałach: {channels}. Jedna z jego ról (albo jego własne uprawnienie na kanale) ma tam zezwolenie na pisanie, a zezwolenie wygrywa z zakazem roli Muted. Usuń to zezwolenie w uprawnieniach kanału.",
+                "other": "{name} nadal może pisać na {count} kanału: {channels}. Jedna z jego ról (albo jego własne uprawnienie na kanale) ma tam zezwolenie na pisanie, a zezwolenie wygrywa z zakazem roli Muted. Usuń to zezwolenie w uprawnieniach kanału."
+            },
+            "warnUncounted": "Tylko zapisane: to ostrzeżenie nie liczy się do automatycznego bana na tym serwerze (ustawienia drabiny ostrzeżeń)."
         }
     }
 }

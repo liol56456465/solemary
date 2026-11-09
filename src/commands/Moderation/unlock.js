@@ -1,13 +1,18 @@
-import { SlashCommandBuilder, PermissionFlagsBits, PermissionsBitField, ChannelType } from 'discord.js';
-import { createEmbed, successEmbed, infoEmbed, warningEmbed } from '../../utils/embeds.js';
-import { logEvent } from '../../utils/moderation.js';
+import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from 'discord.js';
+import { successEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
-import { getColor } from '../../config/bot.js';
 
 import { InteractionHelper } from '../../utils/interactionHelper.js';
-import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
+import { replyUserError } from '../../utils/errorHandler.js';
 import { textForInteraction } from '../../utils/botText.js';
 import { descriptionLocalizations } from '../../utils/commandLocalizations.js';
+import { unlockChannel } from '../../services/channelToolsService.js';
+import { lockRefusal } from './lock.js';
+
+const NO_MENTIONS = Object.freeze({ parse: [] });
+
+// Unlock puts back exactly what /lock changed (services/moderation/channelLock.js); a channel
+// locked before that (or by hand) only gets its @everyone deny cleared, as before.
 export default {
     data: new SlashCommandBuilder()
         .setName("unlock")
@@ -18,7 +23,7 @@ export default {
 .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
     category: "moderation",
 
-    async execute(interaction, config, client) {
+    async execute(interaction, config, client, deps = {}) {
         const deferSuccess = await InteractionHelper.safeDefer(interaction);
         if (!deferSuccess) {
             logger.warn(`Unlock interaction defer failed`, {
@@ -33,55 +38,32 @@ export default {
         const tr = textForInteraction(interaction);
         const pub = textForInteraction(interaction, { purpose: 'public' });
         const channel = interaction.channel;
-        const everyoneRole = interaction.guild.roles.everyone;
 
+        let result;
         try {
-            const currentPermissions = channel.permissionsFor(everyoneRole);
-            if (
-                currentPermissions.has(PermissionFlagsBits.SendMessages) ===
-                    true ||
-                currentPermissions.has(PermissionFlagsBits.SendMessages) ===
-                    null
-            ) {
-                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: tr.t('moderation.unlock.notLocked', { channel: String(channel) }) });
-            }
-
-            // Clear the deny instead of allowing: the channel goes back to inheriting from
-            // its category, as it was before /lock.
-            await channel.permissionOverwrites.edit(
-                everyoneRole,
-                { SendMessages: null },
-                {
-                    type: 0,
-                    reason: `Channel unlocked by ${interaction.user.tag}`,
-},
-            );
-
-            await logEvent({
-                client,
-                guild: interaction.guild,
-                event: {
-                    action: "Channel Unlocked",
-                    target: channel.toString(),
-                    executor: `${interaction.user.tag} (${interaction.user.id})`,
-                    metadata: {
-                        channelId: channel.id,
-                        category: channel.parent?.name || 'None'
-                    }
-                }
-            });
-
-            await InteractionHelper.safeEditReply(interaction, {
-                embeds: [
-                    successEmbed(
-                        pub.t('moderation.unlock.title'),
-                        pub.t('moderation.unlock.done', { channel: String(channel) }),
-                    ),
-                ],
+            result = await (deps.unlockChannel || unlockChannel)({
+                client, guild: interaction.guild, channel, moderator: interaction.user, via: 'command',
+                auditReason: `Channel unlocked by ${interaction.user.tag}`.slice(0, 512),
+                ...(deps.lockStore ? { lockStore: deps.lockStore } : {}), ...(deps.log ? { log: deps.log } : {}),
             });
         } catch (error) {
-            logger.error('Unlock command error:', error);
-            await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('moderation.unlock.failed') });
+            if (!error?.code) logger.error('Unlock command error:', error);
+            return await replyUserError(interaction, lockRefusal(tr, error, channel, 'unlock'));
+        }
+
+        await InteractionHelper.safeEditReply(interaction, {
+            embeds: [
+                successEmbed(
+                    pub.t('moderation.unlock.title'),
+                    pub.t('moderation.unlock.done', { channel: String(channel) }),
+                ),
+            ],
+            allowedMentions: NO_MENTIONS,
+        });
+
+        if (result?.skipped?.length && !interaction._isPrefixCommand && typeof interaction.followUp === 'function') {
+            await interaction.followUp({ content: tr.tp('moderation.unlock.skipped', result.skipped.length), flags: MessageFlags.Ephemeral, allowedMentions: NO_MENTIONS })
+                .catch((error) => logger.debug(`Unlock note not sent: ${error.message}`));
         }
     }
 };

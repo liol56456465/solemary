@@ -19,7 +19,8 @@
             "supportButton": "Serveur d’assistance",
             "placeholder": "Choisis une catégorie",
             "memberModmail": "Besoin de l’équipe ? Écris au bot en MP : ton message est envoyé à l’équipe en privé (modmail).",
-            "descriptionNeutral": "Modération, automod, appels, tickets et plus encore pour ce serveur."
+            "descriptionNeutral": "Modération, automod, appels, tickets et plus encore pour ce serveur.",
+            "accessModerator": "• Tu as le rôle Modérateur de ce serveur : **/enforcements** te permet d'avertir, rendre muet, expulser, rendre la parole et retirer des avertissements."
         },
         "closed": {
             "title": "Menu d’aide fermé",

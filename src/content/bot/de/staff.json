@@ -1091,7 +1091,8 @@
         },
         "dmFailed": "Die DM an das Mitglied ging nicht raus (es hat den Server verlassen oder seine DMs geschlossen).",
         "transcript": "Modmail mit <@{userId}> (`{userId}`) geschlossen von {closer}.",
-        "transcriptReason": "Grund: {reason}"
+        "transcriptReason": "Grund: {reason}",
+        "reminder": "Nachrichten hier gehen an das Mitglied. Beginne mit `//` für eine Notiz nur fürs Team."
     },
     "enfCheck": {
         "perm": {
@@ -1141,7 +1142,13 @@
             "unbanDmFailed": "Die DM „Bann beendet“ konnte nicht zugestellt werden.",
             "unmuteNoRole": "Die Person war nicht auf dem Server oder hatte die Rolle nicht mehr; der Eintrag wurde trotzdem aufgehoben.",
             "unmuteDmFailed": "Die DM „Stummschaltung beendet“ konnte nicht zugestellt werden.",
-            "removed": "`{code}` entfernt. Gezählte Verwarnungen: {count}."
+            "removed": "`{code}` entfernt. Gezählte Verwarnungen: {count}.",
+            "muteAdmin": "{name} hat die Berechtigung Administrator, deshalb kann die Rolle Muted sie nicht am Schreiben hindern.",
+            "muteLeak": {
+                "one": "{name} kann noch in {count} Kanal schreiben: {channels}. Eine ihrer Rollen (oder eine eigene Kanalberechtigung) darf dort senden, und eine Erlaubnis schlägt das Verbot der Rolle Muted. Entferne diese Erlaubnis in den Kanalberechtigungen.",
+                "other": "{name} kann noch in {count} Kanälen schreiben: {channels}. Eine ihrer Rollen (oder eine eigene Kanalberechtigung) darf dort senden, und eine Erlaubnis schlägt das Verbot der Rolle Muted. Entferne diese Erlaubnis in den Kanalberechtigungen."
+            },
+            "warnUncounted": "Nur vermerkt: Diese Verwarnung zählt auf diesem Server nicht für einen automatischen Bann (Einstellungen der Verwarnungsstufen)."
         }
     }
 }

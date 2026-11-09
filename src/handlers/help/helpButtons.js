@@ -1,8 +1,7 @@
 import { supportInviteUrl } from '../../commands/Core/support.js';
 import { createEmbed } from '../../utils/embeds.js';
-import { canSeeAdminCommands } from '../../utils/commandGate.js';
 import { createAllCommandsMenu, createHelpPage, parseHelpPageId } from './helpSelectMenus.js';
-import { createInitialHelpMenu, helpMenuOptions } from '../../commands/Core/help.js';
+import { createInitialHelpMenu, helpMenuOptions, helpViewFor } from '../../commands/Core/help.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import { logger } from '../../utils/logger.js';
 import { replyText } from '../../utils/commandLocalizations.js';
@@ -19,7 +18,7 @@ export const helpBackButton = {
                 await interaction.deferUpdate();
             }
 
-            const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId, canSeeAdminCommands(interaction), replyText(interaction),
+            const { embeds, components } = await createInitialHelpMenu(client, interaction.guildId, await helpViewFor(interaction, client), replyText(interaction),
                 await helpMenuOptions(client, interaction.guildId));
             await interaction.editReply({
                 embeds,
@@ -125,7 +124,7 @@ export const helpPageButton = {
             }
 
             const tr = replyText(interaction);
-            const showAdmin = canSeeAdminCommands(interaction);
+            const showAdmin = await helpViewFor(interaction, client);
             const target = parseHelpPageId(interaction.customId);
             const menu = (target && await createHelpPage(target.view, target.page, client, interaction.guildId, showAdmin, tr))
                 || await createInitialHelpMenu(client, interaction.guildId, showAdmin, tr, await helpMenuOptions(client, interaction.guildId));
@@ -151,7 +150,7 @@ export const helpPaginationButton = {
             }
 
             const nextPage = legacyTargetPage(interaction.customId, interaction.message?.components);
-            const { embeds, components } = await createAllCommandsMenu(nextPage, client, interaction.guildId, canSeeAdminCommands(interaction), replyText(interaction));
+            const { embeds, components } = await createAllCommandsMenu(nextPage, client, interaction.guildId, await helpViewFor(interaction, client), replyText(interaction));
             await interaction.editReply({ embeds, components, allowedMentions: { parse: [] } });
         } catch (error) {
             if (error?.code === 40060 || error?.code === 10062) {

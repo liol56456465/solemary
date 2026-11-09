@@ -180,7 +180,8 @@
         "closedBody": "Этот тикет закрыт.",
         "priorityChanged": "Приоритет изменён",
         "reopenedTitle": "Тикет снова открыт",
-        "deletedTitle": "Тикет удалён"
+        "deletedTitle": "Тикет удалён",
+        "ratingCountsForYou": "Никто не взял этот тикет, поэтому оценка участника будет засчитана вам."
     },
     "service": {
         "notTicket": "Это не канал тикета.",

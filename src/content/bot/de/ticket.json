@@ -178,7 +178,8 @@
         "closedBody": "Dieses Ticket ist geschlossen.",
         "priorityChanged": "Priorität geändert",
         "reopenedTitle": "Ticket wieder geöffnet",
-        "deletedTitle": "Ticket gelöscht"
+        "deletedTitle": "Ticket gelöscht",
+        "ratingCountsForYou": "Niemand hat dieses Ticket übernommen, deshalb zählt die Bewertung des Mitglieds für dich."
     },
     "service": {
         "notTicket": "Das ist kein Ticket-Kanal.",

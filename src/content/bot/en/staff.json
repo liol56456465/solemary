@@ -1091,7 +1091,8 @@
         },
         "dmFailed": "Could not DM the member (they left the server or closed their DMs).",
         "transcript": "Modmail with <@{userId}> (`{userId}`) closed by {closer}.",
-        "transcriptReason": "Reason: {reason}"
+        "transcriptReason": "Reason: {reason}",
+        "reminder": "Messages here go to the member. Start with `//` for a staff-only note."
     },
     "enfCheck": {
         "perm": {
@@ -1141,7 +1142,13 @@
             "unbanDmFailed": "The \"ban ended\" DM could not be delivered.",
             "unmuteNoRole": "The user was not in the server or no longer had the role; the record was still lifted.",
             "unmuteDmFailed": "The \"mute ended\" DM could not be delivered.",
-            "removed": "Removed `{code}`. Counted warns: {count}."
+            "removed": "Removed `{code}`. Counted warns: {count}.",
+            "muteAdmin": "{name} has the Administrator permission, so the Muted role can't stop them from talking.",
+            "muteLeak": {
+                "one": "{name} can still talk in {count} channel: {channels}. One of their roles (or their own channel permission) is allowed to send there, and an allow beats the Muted role's deny. Remove that allow in the channel's permissions.",
+                "other": "{name} can still talk in {count} channels: {channels}. One of their roles (or their own channel permission) is allowed to send there, and an allow beats the Muted role's deny. Remove that allow in the channel's permissions."
+            },
+            "warnUncounted": "Recorded only: this warning does not count toward an automatic ban in this server (warn ladder settings)."
         }
     }
 }

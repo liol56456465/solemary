@@ -1,12 +1,26 @@
 {
     "lock": {
         "cmd": {
-            "description": "Sperrt den aktuellen Kanal (@everyone kann keine Nachrichten mehr senden)."
+            "description": "Sperrt den aktuellen Kanal (@everyone kann keine Nachrichten mehr senden).",
+            "duration": "Nach dieser Zeit automatisch entsperren, z. B. 30m, 2h, 1d (bis 30 Tage)"
         },
         "already": "{channel} ist bereits gesperrt.",
         "title": "Kanal gesperrt",
         "done": "{channel} ist gesperrt. Mitglieder können hier keine Nachrichten senden, bis er entsperrt wird.",
-        "failed": "Beim Sperren des Kanals ist ein unerwarteter Fehler aufgetreten. Prüfe meine Berechtigungen (ich brauche „Kanäle verwalten“)."
+        "failed": "Beim Sperren des Kanals ist ein unerwarteter Fehler aufgetreten. Prüfe meine Berechtigungen (ich brauche „Kanäle verwalten“).",
+        "badDuration": "Diese Dauer ist ungültig. Nutze zum Beispiel 30m, 2h oder 1d (1 Minute bis 30 Tage). Es wurde nichts geändert.",
+        "doneUntil": "{channel} ist bis {time} ({relative}) gesperrt. Bis dahin können Mitglieder hier keine Nachrichten senden.",
+        "dbDown": "Die Datenbank antwortet nicht, deshalb wurde der Kanal nicht gesperrt. Es wurde nichts geändert.",
+        "partial": "Discord hat einen Teil der Sperre abgelehnt, deshalb habe ich sie rückgängig gemacht. Prüfe hier meine Berechtigungen (ich brauche „Kanäle verwalten“ und „Berechtigungen verwalten“).",
+        "botMissing": "Mir fehlt {perms} in {channel}, deshalb kann ich ihn nicht sperren. Es wurde nichts geändert.",
+        "rolesLocked": {
+            "one": "Auch für {count} Rolle gesperrt, die hier ihre eigene Berechtigung „Nachrichten senden“ hatte: {roles}. /unlock gibt sie zurück.",
+            "other": "Auch für {count} Rollen gesperrt, die hier ihre eigene Berechtigung „Nachrichten senden“ hatten: {roles}. /unlock gibt sie zurück."
+        },
+        "rolesKept": {
+            "one": "Nicht gesperrt für {count} Team-Rolle (sie behält hier ihre eigene Berechtigung „Nachrichten senden“): {roles}.",
+            "other": "Nicht gesperrt für {count} Team-Rollen (sie behalten hier ihre eigene Berechtigung „Nachrichten senden“): {roles}."
+        }
     },
     "unlock": {
         "cmd": {
@@ -15,7 +29,17 @@
         "notLocked": "{channel} ist nicht ausdrücklich gesperrt (alle können bereits Nachrichten senden).",
         "title": "Kanal entsperrt",
         "done": "{channel} ist entsperrt. Mitglieder können hier wieder schreiben.",
-        "failed": "Beim Entsperren des Kanals ist ein unerwarteter Fehler aufgetreten. Prüfe meine Berechtigungen (ich brauche „Kanäle verwalten“)."
+        "failed": "Beim Entsperren des Kanals ist ein unerwarteter Fehler aufgetreten. Prüfe meine Berechtigungen (ich brauche „Kanäle verwalten“).",
+        "notOverwrite": "{channel} ist nicht durch seine eigenen Berechtigungen gesperrt: „Nachrichten senden“ wird von der Kategorie oder der Rolle @everyone verweigert, Entsperren hier würde nichts ändern.",
+        "dbDown": "Die Datenbank antwortet nicht, deshalb wurde der Kanal nicht entsperrt. Es wurde nichts geändert.",
+        "botMissing": "Mir fehlt {perms} in {channel}, deshalb kann ich ihn nicht entsperren. Es wurde nichts geändert.",
+        "autoDone": "{channel} wurde automatisch entsperrt: Die Sperrzeit ist vorbei.",
+        "autoReason": "Sperrzeit vorbei (automatisch entsperrt)",
+        "skipped": {
+            "one": "{count} Berechtigung wurde seit der Sperre von jemandem geändert, deshalb habe ich sie so gelassen.",
+            "other": "{count} Berechtigungen wurden seit der Sperre von jemandem geändert, deshalb habe ich sie so gelassen."
+        },
+        "partial": "Discord hat einen Teil des Entsperrens abgelehnt ({done} von {total} Berechtigungen wiederhergestellt), {channel} kann also noch teilweise gesperrt sein. Prüfe hier meine Berechtigungen (ich brauche „Kanäle verwalten“ und „Berechtigungen verwalten“) und führe /unlock erneut aus."
     },
     "purge": {
         "cmd": {
@@ -28,7 +52,37 @@
             "one": "{count} Nachricht in {channel} gelöscht.",
             "other": "{count} Nachrichten in {channel} gelöscht."
         },
-        "failed": "Beim Löschen der Nachrichten ist ein unerwarteter Fehler aufgetreten. Hinweis: Nachrichten, die älter als 14 Tage sind, können nicht gesammelt gelöscht werden."
+        "failed": "Beim Löschen der Nachrichten ist ein unerwarteter Fehler aufgetreten. Hinweis: Nachrichten, die älter als 14 Tage sind, können nicht gesammelt gelöscht werden.",
+        "botMissing": "Mir fehlt {perms} in {channel}, deshalb kann ich dort keine Nachrichten löschen. Es wurde nichts gelöscht.",
+        "empty": "In {channel} gibt es keine Nachrichten zum Löschen.",
+        "allTooOld": {
+            "one": "{count} Nachricht ist älter als 14 Tage. Discord kann Nachrichten, die älter als 14 Tage sind, nicht gesammelt löschen, deshalb wurde nichts gelöscht.",
+            "other": "Alle {count} Nachrichten sind älter als 14 Tage. Discord kann Nachrichten, die älter als 14 Tage sind, nicht gesammelt löschen, deshalb wurde nichts gelöscht."
+        },
+        "previewTitle": "Nachrichten löschen?",
+        "preview": {
+            "one": "{count} Nachricht aus den letzten 14 Tagen in {channel} löschen?",
+            "other": "{count} Nachrichten aus den letzten 14 Tagen in {channel} löschen?"
+        },
+        "previewOld": {
+            "one": "{count} Nachricht ist älter als 14 Tage und wird übersprungen.",
+            "other": "{count} Nachrichten sind älter als 14 Tage und werden übersprungen."
+        },
+        "previewNote": "Nachrichten, die älter als 14 Tage sind, kann Discord nicht gesammelt löschen.",
+        "previewExpires": "Diese Vorschau läuft {time} ab. Es wird nichts gelöscht, bis du auf Löschen drückst.",
+        "confirmButton": "Löschen",
+        "cancelButton": "Abbrechen",
+        "cancelled": "Abgebrochen. Es wurde nichts gelöscht.",
+        "expired": "Diese Vorschau ist abgelaufen. Führe /purge erneut aus. Es wurde nichts gelöscht.",
+        "notYours": "Nur die Person, die /purge ausgeführt hat, kann diese Buttons benutzen.",
+        "skippedOld": {
+            "one": "{count} übersprungen: älter als 14 Tage (die kann Discord nicht gesammelt löschen).",
+            "other": "{count} übersprungen: älter als 14 Tage (die kann Discord nicht gesammelt löschen)."
+        },
+        "skippedGone": {
+            "one": "{count} übersprungen: schon gelöscht.",
+            "other": "{count} übersprungen: schon gelöscht."
+        }
     },
     "rules": {
         "cmd": {

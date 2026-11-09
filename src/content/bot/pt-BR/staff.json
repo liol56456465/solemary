@@ -1115,7 +1115,8 @@
         },
         "dmFailed": "Não foi possível mandar DM ao membro (ele saiu do servidor ou fechou as DMs).",
         "transcript": "Modmail com <@{userId}> (`{userId}`) fechado por {closer}.",
-        "transcriptReason": "Motivo: {reason}"
+        "transcriptReason": "Motivo: {reason}",
+        "reminder": "As mensagens aqui vão para o membro. Comece com `//` para uma nota só para a equipe."
     },
     "enfCheck": {
         "perm": {
@@ -1165,7 +1166,14 @@
             "unbanDmFailed": "A DM de \"banimento encerrado\" não pôde ser entregue.",
             "unmuteNoRole": "O usuário não estava no servidor ou não tinha mais o cargo; o registro foi removido mesmo assim.",
             "unmuteDmFailed": "A DM de \"silenciamento encerrado\" não pôde ser entregue.",
-            "removed": "`{code}` removida. Advertências contadas: {count}."
+            "removed": "`{code}` removida. Advertências contadas: {count}.",
+            "muteAdmin": "{name} tem a permissão Administrador, então o cargo Muted não consegue impedir que fale.",
+            "muteLeak": {
+                "one": "{name} ainda pode falar em {count} canal: {channels}. Um dos cargos dele (ou a própria permissão no canal) pode enviar mensagens lá, e uma permissão concedida vence a negação do cargo Muted. Remova essa permissão nas permissões do canal.",
+                "many": "{name} ainda pode falar em {count} canais: {channels}. Um dos cargos dele (ou a própria permissão no canal) pode enviar mensagens lá, e uma permissão concedida vence a negação do cargo Muted. Remova essa permissão nas permissões do canal.",
+                "other": "{name} ainda pode falar em {count} canais: {channels}. Um dos cargos dele (ou a própria permissão no canal) pode enviar mensagens lá, e uma permissão concedida vence a negação do cargo Muted. Remova essa permissão nas permissões do canal."
+            },
+            "warnUncounted": "Só registrado: este aviso não conta para um banimento automático neste servidor (configurações da escada de avisos)."
         }
     }
 }

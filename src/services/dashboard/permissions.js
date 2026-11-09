@@ -273,17 +273,28 @@ export function allows(decision, key) {
 }
 
 /**
- * May this decision RUN `key` (an enforcement POST)? Admins yes; moderators per the table;
- * owners and managers no (canAct). Settings forms use allows(…, 'settings.edit') instead.
+ * Keys the Moderator level gets only OUTSIDE Mewvo's own servers, matching the Discord panel
+ * (owner decision D1, services/enforcement/panelAccess.js MODERATOR_PANEL_ACTIONS): Remove warn.
+ * In Mewvo's own servers they stay Administrator-only, as the table says.
  */
-export function mayRun(decision, key) {
+export const MODERATOR_OUTSIDE_HOME = Object.freeze(new Set(['action:removewarn']));
+
+/**
+ * May this decision RUN `key` (an enforcement POST)? Admins yes; moderators per the table (plus
+ * MODERATOR_OUTSIDE_HOME when `home` is false); owners and managers no (canAct). Settings forms
+ * use allows(…, 'settings.edit') instead. `home` defaults to true (the stricter answer).
+ */
+export function mayRun(decision, key, { home = true } = {}) {
     if (decision?.canAct) return true;
-    return decision?.role === MODERATOR && requiredLevel(key) === MODERATOR;
+    if (decision?.role !== MODERATOR) return false;
+    return requiredLevel(key) === MODERATOR || (home === false && MODERATOR_OUTSIDE_HOME.has(key));
 }
 
-/** The enforcement flow types a moderator may run (for the service's own check). */
-export function moderatorActionTypes() {
-    return Object.keys(PERMISSIONS).filter((key) => key.startsWith('action:') && PERMISSIONS[key] === MODERATOR).map((key) => key.slice(7));
+/** The enforcement flow types a moderator may run (for the service's own check); `home` as in mayRun. */
+export function moderatorActionTypes({ home = true } = {}) {
+    return Object.keys(PERMISSIONS)
+        .filter((key) => key.startsWith('action:') && (PERMISSIONS[key] === MODERATOR || (home === false && MODERATOR_OUTSIDE_HOME.has(key))))
+        .map((key) => key.slice(7));
 }
 
 /** The level shown in the account menu. */

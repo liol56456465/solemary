@@ -179,7 +179,8 @@
         "closedBody": "Ce ticket est fermé.",
         "priorityChanged": "Priorité modifiée",
         "reopenedTitle": "Ticket rouvert",
-        "deletedTitle": "Ticket supprimé"
+        "deletedTitle": "Ticket supprimé",
+        "ratingCountsForYou": "Personne n'a pris en charge ce ticket, la note du membre comptera donc pour toi."
     },
     "service": {
         "notTicket": "Ce n’est pas un salon de ticket.",
