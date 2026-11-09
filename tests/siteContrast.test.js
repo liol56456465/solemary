@@ -36,6 +36,8 @@ const PAIRS = [
     ['on-brand', 'brand', TEXT], ['on-brand', 'brand-hover', TEXT], // main buttons: white fill, dark text
     ['brand', 'bg', UI], ['brand', 'raised', UI], ['brand', 'raised-strong', UI], // featured plan border
     ['border-strong', 'bg', UI], ['border-strong', 'raised', UI], // quiet button outline
+    ['border-strong', 'bg-alt', UI], // command explorer: search field and select outlines (on the page and in a card)
+    ['text', 'raised', TEXT], ['on-brand', 'brand', TEXT], // command explorer: access tag on a card, the current "who" link
     ['text', 'accent-soft', TEXT], ['text-muted', 'accent-soft', TEXT], // linked rule highlight
     ['text', 'brand-soft', TEXT], ['text-muted', 'brand-soft', TEXT],
     ['accent', 'bg', UI], ['accent', 'raised', UI], // focus ring, markers

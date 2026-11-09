@@ -73,7 +73,7 @@ test('phones: form fields at 16px (iOS zoom), 44px tap targets, no sticky bar on
     assert.ok(CSS.includes(fields), 'fields at 16px');
     assert.ok(CSS.indexOf(fields) > CSS.indexOf('.form-field input { width: 100%'), 'the 16px rule comes after the base field rules');
     const touch = block('(max-width: 760px), (pointer: coarse)');
-    for (const sel of ['.topnav a, .topbar-actions .button, .lang-chip, .account-chip', '.lang-pop a, .account-pop a, .account-pop button', '.footer-links a', '.footer-langs a', '.jump a', '.index a']) {
+    for (const sel of ['.topnav a, .topbar-actions .button, .lang-chip, .account-chip', '.lang-pop a, .account-pop a, .account-pop button', '.footer-links a', '.footer-langs a', '.jump a', '.cmd-who a', '.index a']) {
         const at = touch.indexOf(`${sel} {`);
         assert.ok(at > -1, sel);
         assert.match(touch.slice(at, touch.indexOf('}', at)), /min-height: 44px/, sel);

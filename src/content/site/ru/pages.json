@@ -1,9 +1,9 @@
 {
   "commands": {
     "title": "Команды",
-    "description": "Команды Mewvo, которые может использовать любой участник.",
+    "description": "Все команды Mewvo: что делает каждая, её параметры, пример и кто может её использовать.",
     "heading": "Команды",
-    "lead": "Команды, доступные каждому участнику. Инструменты модераторов находятся в веб-панели и требуют роли с правом «Администратор».",
+    "lead": "Все команды Mewvo, взятые прямо из бота, поэтому список всегда актуален. Ищите по нему или фильтруйте по группе и по тому, кто может использовать команду. Командам для персонала нужна роль администратора, и у большинства из них есть страница в панели управления.",
     "jumpLabel": "Группы команд",
     "groups": {
       "core": "Общие",
@@ -17,7 +17,16 @@
       "verification": "Верификация",
       "ticket": "Тикеты",
       "menus": "Меню по правому клику",
-      "other": "Другое"
+      "other": "Другое",
+      "enforcement": "Наказания",
+      "moderation": "Модерация",
+      "logging": "Журналы",
+      "welcome": "Приветствие",
+      "giveaway": "Розыгрыши",
+      "reaction-roles": "Роли по реакциям",
+      "serverstats": "Статистика сервера",
+      "jointocreate": "Голосовые по входу",
+      "recovery": "Восстановление"
     },
     "menu": {
       "message": "Правый клик по сообщению → Приложения → {command}",
@@ -26,6 +35,112 @@
     "notes": {
       "ticketStaff": "Модераторы тикетов",
       "ticketStaffOrOpener": "Модераторы тикетов или автор тикета"
+    },
+    "loading": "Список команд загружается. Обновите страницу через минуту.",
+    "selfLink": "Ссылка на {command}",
+    "example": "Пример",
+    "search": {
+      "formLabel": "Поиск и фильтр команд",
+      "label": "Поиск",
+      "placeholder": "Команда или слово, например warn или день рождения",
+      "category": "Группа",
+      "allCategories": "Все группы",
+      "who": "Кто может использовать",
+      "submit": "Показать",
+      "reset": "Сбросить фильтры",
+      "count": "Показано команд: {shown} из {total}",
+      "empty": "Ни одна команда не подходит. Попробуйте другое слово или сбросьте фильтры."
+    },
+    "who": {
+      "label": "Фильтр по тому, кто может использовать",
+      "all": "Все",
+      "everyone": "Все участники",
+      "manage": "Управление сервером",
+      "admin": "Администратор",
+      "ownerkit": "Набор владельца"
+    },
+    "access": {
+      "everyone": "Все участники",
+      "manage": "Управление сервером или администратор",
+      "admin": "Администратор",
+      "ownerkit": "Администратор; только владелец, когда команды администраторов отключены"
+    },
+    "options": {
+      "caption": "Параметры {command}",
+      "name": "Параметр",
+      "type": "Тип",
+      "required": "Обязательный",
+      "description": "Для чего",
+      "yes": "Да",
+      "no": "Нет",
+      "choices": "Варианты: {list}"
+    },
+    "types": {
+      "text": "Текст",
+      "integer": "Целое число",
+      "boolean": "Да / Нет",
+      "member": "Участник",
+      "channel": "Канал",
+      "role": "Роль",
+      "mentionable": "Участник или роль",
+      "number": "Число",
+      "file": "Файл"
+    },
+    "placeholders": {
+      "text": "текст",
+      "integer": "5",
+      "boolean": "True",
+      "member": "@участник",
+      "channel": "#канал",
+      "role": "@роль",
+      "mentionable": "@участник",
+      "number": "1.5",
+      "file": "(файл)"
+    },
+    "dashboard": {
+      "moved": "Перенесено в панель управления: {page}",
+      "also": "Также в панели управления: {page}"
+    },
+    "examples": {
+      "remind-me": "/remind me in:2h text:Достать хлеб из духовки",
+      "todo-add": "/todo add task:Купить корм для кошки",
+      "birthday-set": "/birthday set month:7 day:14",
+      "fun-roll": "/fun roll notation:2d20 + 5",
+      "weather": "/weather city:Вильнюс",
+      "report-file": "/report file user:@участник reason:Рассылает приглашения во все каналы",
+      "rank": "/rank user:@участник",
+      "enforcements": "/enforcements user:@участник",
+      "case-search": "/case search member:@участник text:спам",
+      "purge": "/purge amount:20",
+      "giveaway-create": "/giveaway create duration:1d winners:1 prize:Подарок Nitro",
+      "poll-create": "/poll create question:Киновечер? option1:Пятница option2:Суббота hours:24"
+    },
+    "dashboardPages": {
+      "appeals": "Апелляции",
+      "applications": "Заявки",
+      "automod": "Автомодерация",
+      "birthdays": "Дни рождения",
+      "bot-language": "Язык бота",
+      "cases": "Дела",
+      "channels": "Инструменты каналов",
+      "commands": "Команды",
+      "community": "Сообщество",
+      "counters": "Счётчики",
+      "enforcement": "Наказания и апелляции",
+      "giveaways": "Розыгрыши",
+      "join-to-create": "Join to create",
+      "leveling": "Уровни",
+      "logging": "Журналы",
+      "messages": "Сообщения",
+      "overview": "Обзор",
+      "reaction-roles": "Роли за реакции",
+      "rules": "Правила",
+      "server-data": "Данные сервера",
+      "staff": "Модераторы",
+      "tickets": "Тикеты и modmail",
+      "users": "Участники",
+      "verification": "Верификация",
+      "welcome": "Приветствия и прощания"
     }
   },
   "about": {

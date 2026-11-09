@@ -8,6 +8,7 @@ import { enforcementConfig } from '../../config/enforcement.js';
 import { testMode } from '../../config/testMode.js';
 import { adminCommandsRetired, retireCommandJson } from '../../config/commands/retirement.js';
 import { ownerToolsGuildId, ownerToolsProblem } from '../../config/ownerTools.js';
+import { invalidateCommandCatalog } from '../../services/site/commandCatalog.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -535,7 +536,9 @@ export async function reloadCommand(client, commandName) {
         newCommand.filePath = command.filePath;
 
         client.commands.set(commandName, newCommand);
-        
+        // The website's command explorer caches the command data: rebuild it on the next request.
+        invalidateCommandCatalog();
+
         logger.info(`Reloaded command: ${commandName}`);
         return { success: true, message: `Successfully reloaded command "${commandName}"` };
     } catch (error) {

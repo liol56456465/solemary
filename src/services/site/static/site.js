@@ -43,4 +43,34 @@
         w.addEventListener('scroll', () => hint(w), quiet);
     }
     if (wraps.length) addEventListener('resize', () => wraps.forEach(hint), quiet);
+
+    // /commands: live filter, the server's rules (pages/commands.js matchesFilters); the URL follows.
+    const ex = document.querySelector('[data-cmd-explorer]'), q = ex?.querySelector('[data-cmd-q]');
+    if (q) {
+        const $ = (s) => ex.querySelector(s), cat = $('[data-cmd-cat]'), who = $('[data-cmd-who]'), out = $('[data-cmd-shown]'), empty = $('[data-cmd-empty]');
+        const fmt = new Intl.NumberFormat(document.documentElement.lang || 'en');
+        const apply = () => {
+            const text = q.value.trim().slice(0, 100), words = text.toLowerCase().split(/\s+/).filter(Boolean);
+            const c = cat.value, w = who.value;
+            let n = 0;
+            for (const g of ex.querySelectorAll('[data-cmd-group]')) {
+                let any = false;
+                for (const card of g.querySelectorAll('.cmd-card')) {
+                    const d = card.dataset;
+                    card.hidden = !((!c || d.cat === c) && (!w || d.who.split(' ').includes(w)) && words.every((x) => d.search.includes(x)));
+                    if (!card.hidden) { any = true; n += 1; }
+                }
+                g.hidden = !any;
+                const jump = $(`[data-cmd-jump="${g.dataset.cmdGroup}"]`);
+                if (jump) jump.hidden = !any;
+            }
+            out.textContent = fmt.format(n);
+            empty.hidden = n > 0;
+            const p = String(new URLSearchParams(Object.entries({ q: text, cat: c, who: w }).filter(([, v]) => v)));
+            history.replaceState(history.state, '', `${location.pathname}${p ? `?${p}` : ''}${location.hash}`);
+        };
+        q.addEventListener('input', apply);
+        cat.addEventListener('change', apply);
+        who.addEventListener('change', apply);
+    }
 })();

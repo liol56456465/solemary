@@ -175,7 +175,7 @@ export function normalizePagePath(pathname) {
 /** True for a public page path (no query): "/features", "/docs/appeals", "/" (a trailing slash is allowed). */
 export function isPagePath(pathname) {
     const path = normalizePagePath(pathname);
-    return PAGE_SET.has(path) || /^\/docs\/[a-z0-9-]{1,64}$/.test(path);
+    return PAGE_SET.has(path) || /^\/(docs|commands)\/[a-z0-9-]{1,64}$/.test(path);
 }
 
 export function isEnglishOnlyPath(pathname) {

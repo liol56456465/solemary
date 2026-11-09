@@ -1,6 +1,6 @@
 // site.js — the front website at the site root. Server-rendered with the dashboard's `html`
 // template (every value escaped), no inline scripts or styles: one optional static script
-// (static/site.js, menus only; CSP: style-src 'self', script-src 'self', img-src 'self').
+// (static/site.js: menus and the command explorer's live filter; CSP: style-src 'self', script-src 'self', img-src 'self').
 //
 //   GET /             Home (pages/home.js)
 //   GET /features     the full feature reference (pages/features.js)
@@ -10,7 +10,9 @@
 //   GET /admins       For server admins: permissions and why, first steps, appeals, data, limits (pages/admins.js)
 //   GET /added        "Mewvo is in your server" after adding the bot (INSTALL_REDIRECT_ENABLED), or a plain
 //                     link; ?guild_id= is only used for the /dashboard/<id> link, nothing is stored (pages/admins.js)
-//   GET /commands     the commands every member may use (EVERYONE_COMMANDS + the loaded descriptions)
+//   GET /commands     the command explorer: every command with its options, access and dashboard page,
+//                     ?q=&cat=&who= filters (pages/commands.js, commandCatalog.js; form-action 'self' here only)
+//   GET /commands/<slug>  301 to /commands#<slug> (or the command's first subcommand); unknown: 404
 //   GET /about        who runs it
 //   GET /leaderboard  the main server's leveling leaderboard, 50 a page (?page=), with the server cat
 //                     above it (hidden when it cannot be read)
@@ -47,8 +49,7 @@ import { fileURLToPath } from 'node:url';
 import { serveSlotImage, serveUploadedLogo, staticImageCacheControl } from './siteImages.js';
 import express from 'express';
 import { html } from '../dashboard/html.js';
-import { EVERYONE_COMMANDS } from '../../config/commands/commandAccess.js';
-import { commandEntries } from '../../config/commands/retirement.js';
+import { adminCommandsRetired } from '../../config/commands/retirement.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { LEADERBOARD_MAX_OFFSET, getLeaderboard, getLevelingConfig } from '../leveling/leveling.js';
 import { getConfiguredSetting } from '../settings/guildSettings.js';
@@ -71,6 +72,7 @@ import { changelogPage } from './pages/changelog.js';
 import { LEGAL_UPDATED, contactPage, legalContact, legalNoticePage, privacyPage, termsPage } from './pages/legal.js';
 import { withdrawalPage } from './pages/withdrawal.js';
 import { addedPage, addedState, adminsPage } from './pages/admins.js';
+import { COMMANDS_CSP, commandAnchor, commandsPage } from './pages/commands.js';
 import {
     DEFAULT_LANG, LANGUAGES, isEnglishOnlyPath, isLanguage, localizePath, textOf, translator,
 } from './i18n.js';
@@ -85,67 +87,8 @@ export {
 } from './shell.js';
 export { homePage, featuresPage, pricingPage, faqPage, docsPage, guidePage, rulesPage, changelogPage, GUIDES };
 export { addedPage, addedState, adminsPage };
+export { COMMANDS_CSP, commandsPage };
 export { LEGAL_UPDATED, contactPage, legalContact, legalNoticePage, privacyPage, termsPage };
-
-// Command categories with a label in the catalog (pages.commands.groups.<key>); others show their own name.
-const CATEGORY_ORDER = ['Core', 'Community', 'Leveling', 'Fun', 'Birthday', 'Utility', 'Tools', 'Search', 'Verification', 'Ticket'];
-const LABELLED_CATEGORIES = new Set([...CATEGORY_ORDER, 'Menus', 'Other']);
-// Everyone-commands that narrow access inside the command (commandAccess.js header comment): the note's catalog key.
-const NARROWED = {
-    claim: 'ticketStaff', priority: 'ticketStaff', 'modmail close': 'ticketStaff',
-    'canned send': 'ticketStaff', 'canned list': 'ticketStaff', close: 'ticketStaffOrOpener',
-};
-
-/**
- * The everyone-commands, grouped by command category: [{ label, items: [{ key, description, slash, note }] }].
- * Descriptions come from the loaded commands (data, not catalog text); before they are loaded the keys are listed alone.
- */
-export function everyoneCommandGroups(commands, ctx) {
-    const { t } = textOf(ctx);
-    const noteFor = (key) => (NARROWED[key] ? t(`pages.commands.notes.${NARROWED[key]}`) : '');
-    const groups = new Map();
-    const push = (category, item) => {
-        if (!groups.has(category)) groups.set(category, []);
-        groups.get(category).push(item);
-    };
-    const seen = new Set();
-    for (const [name, command] of commands?.entries?.() || []) {
-        const json = typeof command?.data?.toJSON === 'function' ? command.data.toJSON() : null;
-        const menu = json?.type === 2 || json?.type === 3;
-        for (const entry of commandEntries(new Map([[name, command]]))) {
-            if (entry.access !== 'everyone' || seen.has(entry.key)) continue;
-            seen.add(entry.key);
-            const category = menu ? 'Menus' : (command.category || 'Other');
-            const description = menu ? t(json.type === 3 ? 'pages.commands.menu.message' : 'pages.commands.menu.member', { command: entry.key }) : entry.description;
-            push(category, { key: entry.key, description, slash: !menu, note: noteFor(entry.key) });
-        }
-    }
-    if (!seen.size) {
-        for (const key of EVERYONE_COMMANDS) push('Other', { key, description: '', slash: true, note: noteFor(key) });
-    }
-    const rank = (c) => { const i = CATEGORY_ORDER.indexOf(c); return i === -1 ? CATEGORY_ORDER.length + (c === 'Menus' ? 0 : 1) : i; };
-    return [...groups.entries()]
-        .sort(([a], [b]) => rank(a) - rank(b) || a.localeCompare(b))
-        .map(([category, items]) => ({
-            key: category.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            label: LABELLED_CATEGORIES.has(category) ? t(`pages.commands.groups.${category.toLowerCase()}`) : category.replace(/_/g, ' '),
-            items: items.sort((a, b) => a.key.localeCompare(b.key)),
-        }));
-}
-
-export function commandsPage(ctx) {
-    const { t } = textOf(ctx);
-    const groups = everyoneCommandGroups(ctx.commands, ctx);
-    return layout(ctx, {
-        title: t('pages.commands.title'), active: 'commands', path: '/commands',
-        description: t('pages.commands.description'),
-        body: html`<div class="wrap page"><header class="page-head page-head-split"><div><h1>${t('pages.commands.heading')}</h1></div>
-<p class="lead">${t('pages.commands.lead')}</p></header>
-${groups.length > 1 ? html`<nav class="jump" aria-label="${t('pages.commands.jumpLabel')}"><ul>${groups.map((g) => html`<li><a href="#c-${g.key}">${g.label}</a></li>`)}</ul></nav>` : ''}
-${groups.map((g) => html`<section class="cmd-group" id="c-${g.key}" aria-labelledby="h-${g.key}"><h2 id="h-${g.key}">${g.label}</h2>
-<dl class="cmd-list">${g.items.map((c) => html`<div class="cmd"><dt><code>${c.slash ? `/${c.key}` : c.key}</code>${c.note ? html` <span class="tag">${c.note}</span>` : ''}</dt><dd>${c.description || ' '}</dd></div>`)}</dl></section>`)}</div>`,
-    });
-}
 
 export function aboutPage(ctx) {
     const { t, ti, tb } = textOf(ctx);
@@ -398,6 +341,8 @@ export function createSite({
         mainInvite: inviteOrNull(env.MAIN_SERVER_INVITE),
         origin: siteOrigin(env),
         legal: { ...legalContact(env), vatRegistered: Boolean(String(env.LEGAL_VAT_NO || '').trim()) },
+        // RETIRE_ADMIN_COMMANDS: the explorer says "Moved to the dashboard" instead of "Also on the dashboard".
+        adminCommandsRetired: adminCommandsRetired(env),
     };
     const context = (req = null) => {
         let support = null;
@@ -462,7 +407,21 @@ export function createSite({
         if (!guide) return next();
         return page((ctx) => guidePage(ctx, guide))(req, res);
     });
-    router.get('/commands', page(commandsPage));
+    // The explorer's filter form submits here (GET): form-action 'self' on this page only.
+    router.get('/commands', (req, res) => {
+        res.set('Content-Security-Policy', COMMANDS_CSP);
+        return page((ctx) => commandsPage(ctx, req.query))(req, res);
+    });
+    // /commands/case → /commands#case-edit (that card's anchor, or the command's first card).
+    // Before the commands load nothing is known yet: a plain redirect to the list.
+    router.get('/commands/:slug', (req, res, next) => {
+        const commands = client?.commands || null;
+        const list = localizePath(req.siteLang || DEFAULT_LANG, '/commands');
+        if (!commands?.size) return res.redirect(302, list);
+        const slug = commandAnchor(commands, req.params.slug);
+        if (!slug) return next();
+        return res.redirect(301, `${list}#${slug}`);
+    });
     router.get('/about', page(aboutPage));
     router.get('/changelog', page(changelogPage));
     router.get('/privacy', page(privacyPage));

@@ -1,9 +1,9 @@
 {
   "commands": {
     "title": "Comandos",
-    "description": "Os comandos do Mewvo que qualquer membro pode usar.",
+    "description": "Todos os comandos do Mewvo: o que fazem, suas opções, um exemplo e quem pode usá-los.",
     "heading": "Comandos",
-    "lead": "Os comandos que qualquer membro pode usar. As ferramentas da equipe ficam no painel e exigem o cargo de Administrador.",
+    "lead": "Todos os comandos do Mewvo, lidos direto do bot, então esta lista está sempre atualizada. Pesquise nela ou filtre por grupo e por quem pode usá-los. Os comandos da equipe precisam do cargo de Administrador, e a maioria também tem uma página no painel.",
     "jumpLabel": "Grupos de comandos",
     "groups": {
       "core": "Geral",
@@ -17,7 +17,16 @@
       "verification": "Verificação",
       "ticket": "Tickets",
       "menus": "Menus do botão direito",
-      "other": "Outros"
+      "other": "Outros",
+      "enforcement": "Punições",
+      "moderation": "Moderação",
+      "logging": "Registros",
+      "welcome": "Boas-vindas",
+      "giveaway": "Sorteios",
+      "reaction-roles": "Cargos por reação",
+      "serverstats": "Estatísticas do servidor",
+      "jointocreate": "Canais de voz sob demanda",
+      "recovery": "Recuperação"
     },
     "menu": {
       "message": "Clique com o botão direito em uma mensagem → Apps → {command}",
@@ -26,6 +35,112 @@
     "notes": {
       "ticketStaff": "Equipe de tickets",
       "ticketStaffOrOpener": "Equipe de tickets ou quem abriu o ticket"
+    },
+    "loading": "A lista de comandos está carregando. Recarregue a página daqui a pouco.",
+    "selfLink": "Link para {command}",
+    "example": "Exemplo",
+    "search": {
+      "formLabel": "Pesquisar e filtrar comandos",
+      "label": "Pesquisar",
+      "placeholder": "Um comando ou uma palavra, como warn ou aniversário",
+      "category": "Grupo",
+      "allCategories": "Todos os grupos",
+      "who": "Quem pode usar",
+      "submit": "Mostrar",
+      "reset": "Limpar filtros",
+      "count": "Comandos exibidos: {shown} de {total}",
+      "empty": "Nenhum comando corresponde. Tente outra palavra ou limpe os filtros."
+    },
+    "who": {
+      "label": "Filtrar por quem pode usar",
+      "all": "Todos",
+      "everyone": "Todo mundo",
+      "manage": "Gerenciar servidor",
+      "admin": "Administrador",
+      "ownerkit": "Kit do dono"
+    },
+    "access": {
+      "everyone": "Todo mundo",
+      "manage": "Gerenciar servidor ou Administrador",
+      "admin": "Administrador",
+      "ownerkit": "Administrador; só o dono quando os comandos de admin estão desativados"
+    },
+    "options": {
+      "caption": "Opções de {command}",
+      "name": "Opção",
+      "type": "Tipo",
+      "required": "Obrigatória",
+      "description": "Para que serve",
+      "yes": "Sim",
+      "no": "Não",
+      "choices": "Escolhas: {list}"
+    },
+    "types": {
+      "text": "Texto",
+      "integer": "Número inteiro",
+      "boolean": "Verdadeiro / Falso",
+      "member": "Membro",
+      "channel": "Canal",
+      "role": "Cargo",
+      "mentionable": "Membro ou cargo",
+      "number": "Número",
+      "file": "Arquivo"
+    },
+    "placeholders": {
+      "text": "texto",
+      "integer": "5",
+      "boolean": "True",
+      "member": "@membro",
+      "channel": "#canal",
+      "role": "@cargo",
+      "mentionable": "@membro",
+      "number": "1.5",
+      "file": "(arquivo)"
+    },
+    "dashboard": {
+      "moved": "Mudou para o painel: {page}",
+      "also": "Também no painel: {page}"
+    },
+    "examples": {
+      "remind-me": "/remind me in:2h text:Tirar o pão do forno",
+      "todo-add": "/todo add task:Comprar ração para o gato",
+      "birthday-set": "/birthday set month:7 day:14",
+      "fun-roll": "/fun roll notation:2d20 + 5",
+      "weather": "/weather city:São Paulo",
+      "report-file": "/report file user:@membro reason:Manda convites em todos os canais",
+      "rank": "/rank user:@membro",
+      "enforcements": "/enforcements user:@membro",
+      "case-search": "/case search member:@membro text:spam",
+      "purge": "/purge amount:20",
+      "giveaway-create": "/giveaway create duration:1d winners:1 prize:Um presente de Nitro",
+      "poll-create": "/poll create question:Noite de cinema? option1:Sexta option2:Sábado hours:24"
+    },
+    "dashboardPages": {
+      "appeals": "Apelações",
+      "applications": "Candidaturas",
+      "automod": "Automod",
+      "birthdays": "Aniversários",
+      "bot-language": "Idioma do bot",
+      "cases": "Casos",
+      "channels": "Ferramentas de canal",
+      "commands": "Comandos",
+      "community": "Comunidade",
+      "counters": "Contadores",
+      "enforcement": "Punições e apelações",
+      "giveaways": "Sorteios",
+      "join-to-create": "Entrar para criar",
+      "leveling": "Níveis",
+      "logging": "Registros",
+      "messages": "Mensagens",
+      "overview": "Visão geral",
+      "reaction-roles": "Cargos por reação",
+      "rules": "Regras",
+      "server-data": "Dados do servidor",
+      "staff": "Equipe",
+      "tickets": "Tickets e modmail",
+      "users": "Membros",
+      "verification": "Verificação",
+      "welcome": "Boas-vindas e despedidas"
     }
   },
   "about": {

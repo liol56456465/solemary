@@ -42,6 +42,9 @@ const DASHBOARD_PAGE = {
     wipedata: 'overview', rules: 'rules', language: 'bot-language', serverdata: 'server-data',
 };
 
+/** Every dashboard page dashboardPageFor() can answer (the website labels each one). */
+export const DASHBOARD_PAGES = Object.freeze([...new Set([...Object.values(DASHBOARD_PAGE), 'overview'])].sort());
+
 export function adminCommandsRetired(env = process.env) {
     return /^(1|true|yes|on)$/i.test(String(env.RETIRE_ADMIN_COMMANDS || '').trim());
 }
