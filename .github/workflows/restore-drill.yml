@@ -36,8 +36,8 @@ jobs:
       POSTGRES_USER: titanbot
       POSTGRES_PASSWORD: titanbot
       POSTGRES_SSL: "false"
-      SCHEMA_VERSION: "13"
-      SCHEMA_VERSION_LABEL: "baseline-v13"
+      SCHEMA_VERSION: "14"
+      SCHEMA_VERSION_LABEL: "baseline-v14"
       BACKUP_RETENTION_DAYS: "7"
 
     steps:

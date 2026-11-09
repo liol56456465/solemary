@@ -57,8 +57,8 @@ jobs:
       POSTGRES_URL: postgresql://mewvo:mewvo@localhost:5432/mewvo_test
       POSTGRES_SSL: "false"
       AUTO_MIGRATE: "true"
-      SCHEMA_VERSION: "13"
-      SCHEMA_VERSION_LABEL: baseline-v13
+      SCHEMA_VERSION: "14"
+      SCHEMA_VERSION_LABEL: baseline-v14
       TEST_ENABLE_CRON: "false"
       # Made-up server IDs (never the real Mewvo servers; some tests need a main/support server).
       MAIN_GUILD_ID: "100000000000000001"

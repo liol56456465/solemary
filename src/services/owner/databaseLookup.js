@@ -226,7 +226,7 @@ export const GUILD_TABLES = [
     'invite_tracking', 'application_roles', 'verification_audit', 'member_events', 'member_role_rules', 'guild_users',
     'server_snapshots', 'automod_native_rules', 'automod_raid_incidents', 'incident_timelines', 'sticky_messages', 'tags',
     'suggestions', 'starboard_posts', 'feeds', 'scheduled_messages', 'dashboard_audit', 'guild_daily_stats', 'reminders',
-    'error_events',
+    'error_events', 'voice_activity', 'invite_joins', 'invite_inviters', 'ticket_ratings',
 ];
 
 /** Big tables whose oldest and newest rows /database stats shows: [table key, time column]. */
