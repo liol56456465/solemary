@@ -405,7 +405,8 @@
     "tooManyChannels": "Elige como mucho {max} canales ({picked} elegidos).",
     "ignoredChannel": "Automod ignora #{channel}, así que una prueba allí no encuentra nada. Elige otro canal.",
     "offNeedsAdmin": "Para desactivar el automod necesitas el permiso de Administrador en este servidor. No se ha cambiado nada.",
-    "staffGuardOwnerOnly": "Solo el propietario del servidor puede desactivar el automod mientras la protección del staff está activada (desactivar el automod también detiene esa protección). No se ha cambiado nada."
+    "staffGuardOwnerOnly": "Solo el propietario del servidor puede desactivar el automod mientras la protección del staff está activada (desactivar el automod también detiene esa protección). No se ha cambiado nada.",
+    "needReviewChannel": "Primero elige un canal para las tarjetas de revisión de automod (el canal de tarjetas de revisión abajo, o un canal de registro de moderación en la página de Sanciones)."
   },
   "action": {
     "automodOn": "Automod está activado.",
@@ -438,6 +439,14 @@
     "nativeSaved": "Regla de Discord «{name}» actualizada.",
     "lockdownEnded": "Bloqueo terminado. El nivel de verificación ha vuelto a como estaba y las invitaciones y mensajes directos pausados se han reanudado.",
     "probationEnded": "La vigilancia extra de {member} terminó antes de tiempo.",
-    "testRunStarted": "Prueba iniciada. Recarga la página en un momento para ver el progreso."
+    "testRunStarted": "Prueba iniciada. Recarga la página en un momento para ver el progreso.",
+    "startedMonitor": "Empieza en Solo informar: Mewvo publica una tarjeta de revisión con un botón Aplicar y no borra nada. Cambia a Activado cuando las tarjetas se vean bien."
+  },
+  "notice": {
+    "title": "Antes de confiar en automod",
+    "noReviewChannel": "Automod está activado, pero no hay canal para sus tarjetas de revisión: nadie ve lo que encuentra. Elige un canal de revisión abajo (o un canal de registro de moderación en la página de Sanciones).",
+    "monitor": "Solo informar: Mewvo publica una tarjeta de revisión con un botón Aplicar y no borra nada. Cambia a Activado cuando las tarjetas se vean bien.",
+    "nudge": "Solo informar lleva un día. ¿Se ve bien? Cambia a Activado.",
+    "switchOn": "Cambiar a Activado"
   }
 }

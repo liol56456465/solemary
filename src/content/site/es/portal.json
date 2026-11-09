@@ -42,7 +42,9 @@
       "expired": "expirado",
       "activeAppealDenied": "activo, apelación rechazada",
       "active": "activo"
-    }
+    },
+    "automodNotCounted": "advertencia de automod — no cuenta para baneos",
+    "notCounted": "en el historial, no cuenta para baneos"
   },
   "login": {
     "lead": "Consulta tu propio historial de moderación en todos los servidores que usan Mewvo: tus advertencias, tu nivel, cualquier baneo o silencio activo, tus casos y tus apelaciones.",
@@ -61,6 +63,7 @@
     "logOut": "Cerrar sesión",
     "warnings": "Advertencias",
     "warningsCount": "{count} de {threshold}",
+    "warningsLadderOff": "{count} (escalera de advertencias desactivada)",
     "warningsNote": "Advertencias contadas en tu nivel. Las advertencias no caducan.",
     "ladder": "Escala de advertencias",
     "ladderLevel": "Nivel {level} de {max}",
@@ -183,7 +186,8 @@
       "other": "{count} más después de esta supondrían un baneo automático ({ban})."
     },
     "limit": "Alcanzaría el límite de advertencias: un baneo automático ({ban}, etapa de advertencia {level} de 3).",
-    "permanent": "permanente"
+    "permanent": "permanente",
+    "ladderOff": "Las advertencias se registran pero nunca llevan a un baneo automático en este servidor (la escalera de advertencias está desactivada)."
   },
   "duration": {
     "month": {

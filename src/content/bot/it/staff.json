@@ -49,12 +49,18 @@
             "active": "**Sanzione attiva:** {list}",
             "activeNone": "nessuna",
             "pendingAppeal": "**Ricorso in attesa:** {codes} (decidi nel canale dei ricorsi o con /appeals)",
-            "keepApart": "**Divieto di contatto:** {list}"
+            "keepApart": "**Divieto di contatto:** {list}",
+            "uncountedWarns": {
+                "one": "**Non conteggiato:** {count} avvertimento nello storico che non conta per i ban",
+                "many": "**Non conteggiati:** {count} avvertimenti nello storico che non contano per i ban",
+                "other": "**Non conteggiati:** {count} avvertimenti nello storico che non contano per i ban"
+            }
         },
         "keepApartLine": "con <@{otherId}> fino al {until} (ordine #{id})",
         "warns": {
             "of": "{n} su {max}",
-            "nextBans": "{n} (il prossimo avvertimento banna)"
+            "nextBans": "{n} (il prossimo avvertimento banna)",
+            "ladderOff": "{n} (scala degli avvertimenti disattivata)"
         },
         "stage": {
             "none": "0 su 3 (ancora nessun ban per avvertimenti)",
@@ -128,7 +134,8 @@
         "effect": {
             "warn": "avvertimento {n} su {max}.",
             "escalates": "raggiunge il limite di avvertimenti → ban automatico di {length} (livello di avvertimento {stage} su 3).",
-            "escalatesPermanent": "raggiunge il limite di avvertimenti → ban permanente automatico (livello di avvertimento {stage} su 3)."
+            "escalatesPermanent": "raggiunge il limite di avvertimenti → ban permanente automatico (livello di avvertimento {stage} su 3).",
+            "warnLadderOff": "solo registrato: la scala degli avvertimenti è disattivata in questo server, quindi non porta mai a un ban automatico."
         },
         "input": {
             "customReasonRequired": "Serve un motivo personalizzato.",
@@ -199,7 +206,8 @@
                 "many": "Questo membro: {count} avvertimenti contati, {stage}; il prossimo avvertimento banna.",
                 "other": "Questo membro: {count} avvertimenti contati, {stage}; il prossimo avvertimento banna."
             },
-            "unavailable": "Questo membro: livello non disponibile al momento."
+            "unavailable": "Questo membro: livello non disponibile al momento.",
+            "ladderOff": "Questo membro: la scala degli avvertimenti è disattivata in questo server, quindi gli avvertimenti non portano mai a un ban automatico."
         },
         "confirm": {
             "title": "Conferma: {action}",
@@ -224,7 +232,8 @@
         "removeWarn": {
             "none": "Questo utente non ha avvertimenti contati da rimuovere.",
             "placeholder": "Scegli l’avvertimento da rimuovere",
-            "which": "Quale avvertimento va rimosso?"
+            "which": "Quale avvertimento va rimosso?",
+            "uncountedTag": "non conta"
         },
         "cancelledTitle": "Annullato",
         "cancelled": "Non è cambiato nulla. Esegui /enforcements per ricominciare.",

@@ -41,7 +41,9 @@
       "expired": "expired",
       "activeAppealDenied": "active, appeal denied",
       "active": "active"
-    }
+    },
+    "automodNotCounted": "automod warning — doesn't count toward bans",
+    "notCounted": "on record, doesn't count toward bans"
   },
   "login": {
     "lead": "See your own moderation record in every server that uses Mewvo: your warnings, warning stage, any active ban or mute, your cases and your appeals.",
@@ -60,6 +62,7 @@
     "logOut": "Log out",
     "warnings": "Warnings",
     "warningsCount": "{count} of {threshold}",
+    "warningsLadderOff": "{count} (warn ladder off)",
     "warningsNote": "Counted warnings at your level. Warnings do not expire.",
     "ladder": "Warning ladder",
     "ladderLevel": "Level {level} of {max}",
@@ -129,7 +132,8 @@
       "other": "{count} more after it would mean an automatic ban ({ban})."
     },
     "limit": "It would reach the warning limit: an automatic ban ({ban}, warning stage {level} of 3).",
-    "permanent": "permanent"
+    "permanent": "permanent",
+    "ladderOff": "Warnings are recorded but never lead to an automatic ban in this server (the warn ladder is off)."
   },
   "duration": {
     "month": {

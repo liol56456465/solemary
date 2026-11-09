@@ -246,10 +246,17 @@ test('automod off: owner-only while the staff guard is on (as /automod enable); 
     const manager = ctxFor(OTHER, { canAct: false });
     await assert.rejects(run('automod', 'enabled', manager, { enabled: 'false' }), (error) => error.status === 403 && /Administrator/.test(error.message));
     assert.equal(manager.calls.length, 0);
-    // Turning it on stays open to every editor.
-    const managerOn = ctxFor(OTHER, { canAct: false, automod: { enabled: false } });
+    // Turning it on stays open to every editor, once review cards have a channel (audit 2.2b).
+    const noChannel = ctxFor(OTHER, { canAct: false, automod: { enabled: false } });
+    await assert.rejects(run('automod', 'enabled', noChannel, { enabled: 'true' }), (error) => error.status === 400 && /Pick a channel for automod review cards first/.test(error.message));
+    assert.equal(noChannel.calls.length, 0, 'nothing saved');
+    const managerOn = ctxFor(OTHER, { canAct: false, automod: { enabled: false }, registry: { reviewChannelId: '300000000000000001' } });
     await run('automod', 'enabled', managerOn, { enabled: 'true' });
     assert.equal(managerOn.calls.length, 1);
+    // The mod log channel is enough (review cards fall back to it, channelRouting.js).
+    const modLogOnly = ctxFor(OTHER, { automod: { enabled: false }, registry: { modLogChannelId: '300000000000000002' } });
+    await run('automod', 'enabled', modLogOnly, { enabled: 'true' });
+    assert.equal(modLogOnly.calls.length, 1);
     // The main server keeps its old rule (staff guard always on there; admins may switch automod off).
     const main = ctxFor(enforcementConfig.mainGuildId, { automod: { staffGuard: true } });
     await run('automod', 'enabled', main, { enabled: 'false' });

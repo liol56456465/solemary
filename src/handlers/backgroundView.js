@@ -22,6 +22,7 @@ import { durationIn } from '../services/enforcement/dmTemplates.js';
 import { dateStamp, formatDuration, LADDER_STAGE_BANS, ladderStageShort, stamp, truncate } from '../services/enforcement/format.js';
 import { getActiveOrdersFor, noContactLines } from '../services/enforcement/noContactService.js';
 import { getActiveWatchChecked, watchlistLine } from '../services/enforcement/watchlistService.js';
+import { uncountedLabelKey } from '../services/enforcement/ladderPolicy.js';
 
 const PAGE_SIZE = 6;
 const NOTES_SHOWN = 5;
@@ -148,7 +149,7 @@ export async function buildRecordEmbed(row, { client = null, lang = 'en' } = {})
     }
     lines.push(
         tr.t('staff.background.record.canAppeal', { answer: appealability(row, tr) }),
-        tr.t('staff.background.record.stageAfter', { stage: ladderStageText(row.ladder_level_after, tr) }),
+        uncountedLabelKey(row) ? tr.t(uncountedLabelKey(row)) : tr.t('staff.background.record.stageAfter', { stage: ladderStageText(row.ladder_level_after, tr) }),
         tr.t('staff.background.record.dmDelivered', { answer: yesNo(row.dm_delivered) }),
         ...(row.end_dm_delivered == null ? [] : [tr.t('staff.background.record.endDmDelivered', { answer: yesNo(row.end_dm_delivered) })]),
         ...(edits ? [tr.tp('staff.background.record.edited', edits, { code: row.case_code })] : []),
@@ -204,6 +205,8 @@ export async function buildRecordList(guildId, viewerId, targetUser, page, { lan
             `\`${row.case_code}\` · ${dateStamp(row.created_at)}${row.is_imported ? tr.t('staff.background.list.imported') : ''}`,
             tr.t('staff.background.list.reason', { reason: row.reason }),
             row.expires_at ? tr.t('staff.background.list.ends', { date: stamp(row.expires_at) }) : null,
+            // A warn that does not count toward the ladder (D4): "automod warning — doesn't count toward bans".
+            uncountedLabelKey(row) ? `-# ${tr.t(uncountedLabelKey(row))}` : null,
         ].filter(Boolean).join('\n'), 1024),
     }));
 

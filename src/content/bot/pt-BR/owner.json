@@ -175,6 +175,7 @@
         "appealSupport": "Apele pelo servidor de suporte com esse código.",
         "appealWithCode": "Apele com esse código (a DM diz onde).",
         "onlyTarget": "Só {name} pode apelar; rode /test em você mesmo para testar a apelação.",
-        "realInvite": "O convite nela é um convite real de uso único para este servidor."
+        "realInvite": "O convite nela é um convite real de uso único para este servidor.",
+        "noteWarnLadderOff": "aviso (escada desligada: apenas registrado)"
     }
 }

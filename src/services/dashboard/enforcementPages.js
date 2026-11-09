@@ -10,6 +10,7 @@
 
 import { ENFORCEMENT_REASONS, CUSTOM_REASON_KEY } from '../../config/enforcement.js';
 import { RECORD_ACTIONS } from '../enforcement/flowBuilder.js';
+import { uncountedKind } from '../enforcement/ladderPolicy.js';
 import { MAX_LINKS_PER_FORM, NOTE_MAX as EVIDENCE_NOTE_MAX } from '../enforcement/evidenceService.js';
 import { NO_CONTACT_MAX_DAYS } from '../enforcement/noContactService.js';
 import { NOTE_MAX } from '../enforcement/staffNotesService.js';
@@ -399,7 +400,7 @@ ${type === 'ban' ? html`<label>${t('cases.detail.canAppeal')}<select name="unapp
 <label>${t('members.action.name')}<input name="name" maxlength="100" value="${values.name || ''}"><span class="hint">${tx('members.action.nameHint', { name: view.user.username, type })}</span></label>
 <label class="wide">${t('members.action.evidence')}<textarea name="evidence" rows="2" maxlength="1000">${values.evidence || ''}</textarea><span class="hint">${t('members.action.evidenceHint', { max: MAX_LINKS_PER_FORM })}</span></label></div>`;
     } else {
-        fields = html`<div class="grid">${type === 'removewarn' ? html`<label>${t('members.action.warning')}<select name="warn" required>${(view.countedWarns || []).map((w) => option(w.case_code, `${w.case_code} · ${w.name} · ${w.reason}`, values.warn === w.case_code))}</select></label>` : ''}
+        fields = html`<div class="grid">${type === 'removewarn' ? html`<label>${t('members.action.warning')}<select name="warn" required>${(view.countedWarns || []).map((w) => option(w.case_code, `${w.case_code} · ${w.name} · ${w.reason}`, values.warn === w.case_code))}${(view.uncountedWarns || []).map((w) => option(w.case_code, `${w.case_code} · ${w.name} · ${t(`cases.detail.uncounted.${uncountedKind(w) || 'ladderOff'}`)} · ${w.reason}`, values.warn === w.case_code))}</select></label>` : ''}
 <label class="wide">${t('members.action.reasonOptional')}<input name="reason" maxlength="500" value="${values.reason || ''}"></label></div>`;
     }
     return html`<details class="action"${values.type === type ? raw(' open') : ''}><summary>${actionLabelText(type, tr)}</summary>
@@ -554,7 +555,7 @@ export function appealConfirmPage({ session, access = null, moduleStates = {}, r
         ? (record.is_test ? t('cases.appealConfirm.effect.test')
             : record.type === 'ban' ? t('cases.appealConfirm.effect.ban')
                 : record.type === 'mute' ? t('cases.appealConfirm.effect.mute')
-                    : record.type === 'warn' ? t('cases.appealConfirm.effect.warn')
+                    : record.type === 'warn' ? t(uncountedKind(record) ? 'cases.appealConfirm.effect.warnUncounted' : 'cases.appealConfirm.effect.warn')
                         : t('cases.appealConfirm.effect.lifted'))
         : t('cases.appealConfirm.effect.deny');
     const code = html`<code>${record.case_code}</code>`;

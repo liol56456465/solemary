@@ -35,6 +35,7 @@ import {
 } from '../services/enforcement/enforcementService.js';
 import {
     getCountedWarns,
+    getUncountedWarns,
     listCasesForUser,
     getLatestAppealStatuses,
     caseStatusLabel,
@@ -167,6 +168,7 @@ export function panelSummaryLines(targetUser, state, appealStatuses = new Map(),
             })
             : tr.t('staff.panel.info.inServerNo'),
         tr.t('staff.panel.info.warns', { warns: countedWarnsText(state.ladder, { lang }), stage: ladderStageShortIn(state.ladder.level, { lang }) }),
+        ...(state.uncountedWarns > 0 ? [tr.tp('staff.panel.info.uncountedWarns', state.uncountedWarns)] : []),
     ];
 
     const active = [];
@@ -544,7 +546,14 @@ async function startAction(interaction, moderatorId, targetId, action) {
     }
 
     if (action === 'removewarn') {
-        const warns = await getCountedWarns(interaction.guildId, targetId, (await getTargetState(interaction.guild, targetId)).ladder.level);
+        const level = (await getTargetState(interaction.guild, targetId)).ladder.level;
+        // Counted warns first, then the ones that never counted toward the ladder (labelled; D4).
+        const [counted, uncounted] = await Promise.all([
+            getCountedWarns(interaction.guildId, targetId, level),
+            getUncountedWarns(interaction.guildId, targetId),
+        ]);
+        const uncountedTag = tr.t('staff.panel.removeWarn.uncountedTag');
+        const warns = [...counted, ...uncounted.map((warn) => ({ ...warn, tag: uncountedTag }))].slice(0, 25);
         if (warns.length === 0) {
             throw userError(tr.t('staff.panel.removeWarn.none'));
         }
@@ -555,7 +564,7 @@ async function startAction(interaction, moderatorId, targetId, action) {
             .addOptions(warns.map((warn) => ({
                 label: truncate(warn.name, 100),
                 value: warn.case_code,
-                description: truncate(`${warn.case_code} · ${warn.reason}`, 100),
+                description: truncate(`${warn.case_code} · ${warn.tag ? `${warn.tag} · ` : ''}${warn.reason}`, 100),
             })));
         return InteractionHelper.safeEditReply(interaction, {
             embeds: [stepEmbed(flow, tr.t('staff.panel.removeWarn.which'), { lang })],

@@ -41,7 +41,9 @@
       "expired": "abgelaufen",
       "activeAppealDenied": "aktiv, Einspruch abgelehnt",
       "active": "aktiv"
-    }
+    },
+    "automodNotCounted": "Automod-Verwarnung — zählt nicht für Banns",
+    "notCounted": "im Verlauf, zählt nicht für Banns"
   },
   "login": {
     "lead": "Sieh deine eigene Moderationsakte aus jedem Server, der Mewvo nutzt: deine Verwarnungen, deine Verwarnungsstufe, aktive Banns oder Stummschaltungen, deine Fälle und deine Einsprüche.",
@@ -60,6 +62,7 @@
     "logOut": "Abmelden",
     "warnings": "Verwarnungen",
     "warningsCount": "{count} von {threshold}",
+    "warningsLadderOff": "{count} (Verwarnungsstufen aus)",
     "warningsNote": "Gezählte Verwarnungen auf deiner Stufe. Verwarnungen laufen nicht ab.",
     "ladder": "Verwarnungsleiter",
     "ladderLevel": "Stufe {level} von {max}",
@@ -180,7 +183,8 @@
       "other": "Noch {count} weitere danach würden einen automatischen Bann bedeuten ({ban})."
     },
     "limit": "Damit wäre das Verwarnungslimit erreicht: ein automatischer Bann ({ban}, Verwarnungsstufe {level} von 3).",
-    "permanent": "permanent"
+    "permanent": "permanent",
+    "ladderOff": "Verwarnungen werden vermerkt, führen auf diesem Server aber nie zu einem automatischen Bann (Verwarnungsstufen aus)."
   },
   "duration": {
     "month": {

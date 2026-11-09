@@ -198,5 +198,14 @@
     "badInvite": "Invito al nostro server: deve essere un link di invito discord.gg. Non è stato cambiato nulla.",
     "homeNote": "Qui non si applica: i membri dei server di Mewvo fanno sempre ricorso nel server di supporto di Mewvo.",
     "homeOnlyAction": "Questa impostazione non si applica ai server di Mewvo. Non è stato cambiato nulla."
+  },
+  "ladderSettings": {
+    "title": "Impostazioni della scala degli avvertimenti",
+    "help": "Se gli avvertimenti si sommano fino a ban automatici in questo server. Gli avvertimenti vengono sempre registrati e mostrati nello storico del membro.",
+    "enabled": "Scala degli avvertimenti: 3 avvertimenti portano a un ban automatico",
+    "enabledHelp": "Disattivato: gli avvertimenti vengono comunque registrati e inviati, ma non bannano mai nessuno da soli. I ban dati a mano non cambiano.",
+    "automod": "Gli avvertimenti di automod contano per la scala degli avvertimenti",
+    "automodHelp": "Disattivato (predefinito nei nuovi server): gli avvertimenti che automod dà da solo vengono registrati e mostrati come «Avvertimento automod — non conta per i ban». Attivo: tre rilevamenti di automod possono significare un ban automatico di 7 giorni.",
+    "offNote": "La scala degli avvertimenti è disattivata: nessun avvertimento in questo server porta a un ban automatico, quindi l'impostazione di automod ora non ha effetto."
   }
 }

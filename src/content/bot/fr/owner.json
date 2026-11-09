@@ -175,6 +175,7 @@
         "appealSupport": "Fais appel depuis le serveur de support avec ce code.",
         "appealWithCode": "Fais appel avec ce code (le MP indique où).",
         "onlyTarget": "Seul·e {name} peut faire appel ; lance /test sur toi-même pour essayer le parcours d'appel.",
-        "realInvite": "L'invitation qu'il contient est une vraie invitation à usage unique vers ce serveur."
+        "realInvite": "L'invitation qu'il contient est une vraie invitation à usage unique vers ce serveur.",
+        "noteWarnLadderOff": "avertissement (échelle désactivée : seulement enregistré)"
     }
 }

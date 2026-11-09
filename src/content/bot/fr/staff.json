@@ -49,12 +49,18 @@
             "active": "**Sanction en cours :** {list}",
             "activeNone": "aucune",
             "pendingAppeal": "**Appel en attente :** {codes} (décide dans le salon des appels ou avec /appeals)",
-            "keepApart": "**Interdiction de contact :** {list}"
+            "keepApart": "**Interdiction de contact :** {list}",
+            "uncountedWarns": {
+                "one": "**Non compté :** {count} avertissement dans l’historique qui ne compte pas pour les bannissements",
+                "many": "**Non comptés :** {count} avertissements dans l’historique qui ne comptent pas pour les bannissements",
+                "other": "**Non comptés :** {count} avertissements dans l’historique qui ne comptent pas pour les bannissements"
+            }
         },
         "keepApartLine": "avec <@{otherId}> jusqu’au {until} (ordre #{id})",
         "warns": {
             "of": "{n} sur {max}",
-            "nextBans": "{n} (le prochain avertissement bannit)"
+            "nextBans": "{n} (le prochain avertissement bannit)",
+            "ladderOff": "{n} (échelle d'avertissements désactivée)"
         },
         "stage": {
             "none": "0 sur 3 (pas encore de ban d’avertissement)",
@@ -128,7 +134,8 @@
         "effect": {
             "warn": "avertissement {n} sur {max}.",
             "escalates": "atteint la limite d’avertissements → ban automatique de {length} (palier d’avertissement {stage} sur 3).",
-            "escalatesPermanent": "atteint la limite d’avertissements → ban définitif automatique (palier d’avertissement {stage} sur 3)."
+            "escalatesPermanent": "atteint la limite d’avertissements → ban définitif automatique (palier d’avertissement {stage} sur 3).",
+            "warnLadderOff": "seulement enregistré : l'échelle d'avertissements est désactivée sur ce serveur, donc cela ne mène jamais à un bannissement automatique."
         },
         "input": {
             "customReasonRequired": "Une raison personnalisée est requise.",
@@ -199,7 +206,8 @@
                 "many": "Ce membre : {count} avertissements comptés, {stage} ; le prochain avertissement bannit.",
                 "other": "Ce membre : {count} avertissements comptés, {stage} ; le prochain avertissement bannit."
             },
-            "unavailable": "Ce membre : palier indisponible pour le moment."
+            "unavailable": "Ce membre : palier indisponible pour le moment.",
+            "ladderOff": "Ce membre : l'échelle d'avertissements est désactivée sur ce serveur, les avertissements ne mènent donc jamais à un bannissement automatique."
         },
         "confirm": {
             "title": "Confirmer : {action}",
@@ -224,7 +232,8 @@
         "removeWarn": {
             "none": "Cet utilisateur n’a aucun avertissement compté à retirer.",
             "placeholder": "Choisis l’avertissement à retirer",
-            "which": "Quel avertissement faut-il retirer ?"
+            "which": "Quel avertissement faut-il retirer ?",
+            "uncountedTag": "ne compte pas"
         },
         "cancelledTitle": "Annulé",
         "cancelled": "Rien n’a été modifié. Lance /enforcements pour recommencer.",

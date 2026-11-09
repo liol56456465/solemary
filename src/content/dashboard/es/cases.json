@@ -156,7 +156,8 @@
   },
   "warns": {
     "of": "{n} de {max}",
-    "nextBans": "{n} (la próxima advertencia banea)"
+    "nextBans": "{n} (la próxima advertencia banea)",
+    "ladderOff": "{n} (escalera de advertencias desactivada)"
   },
   "next": {
     "would": "Sería la advertencia {n} de {max}.",
@@ -166,7 +167,8 @@
       "other": "{count} más después supondrían un baneo automático ({ban}).",
       "many": "{count} más después supondrían un baneo automático ({ban})."
     },
-    "limit": "Llegaría al límite de advertencias: un baneo automático ({ban}, etapa de advertencias {stage} de 3)."
+    "limit": "Llegaría al límite de advertencias: un baneo automático ({ban}, etapa de advertencias {stage} de 3).",
+    "ladderOff": "Las advertencias se registran pero nunca llevan a un baneo automático en este servidor (la escalera de advertencias está desactivada)."
   },
   "settings": {
     "title": "Ajustes",
@@ -220,7 +222,11 @@
     "filed": "Presentada",
     "decided": "Decidida",
     "note": "Nota",
-    "noAppeals": "Sin apelaciones."
+    "noAppeals": "Sin apelaciones.",
+    "uncounted": {
+      "automod": "Advertencia de automod — no cuenta para baneos",
+      "ladderOff": "Advertencia — no cuenta para baneos (escalera de advertencias desactivada)"
+    }
   },
   "appeals": {
     "pageTitle": "Apelaciones",
@@ -300,7 +306,8 @@
       "mute": "Al miembro se le quita el silencio (si sigue activo), recibe un MD y el caso se levanta.",
       "warn": "La advertencia se quita (baja la cuenta de la escala; un baneo automático que causó se levanta) y el miembro recibe un MD.",
       "lifted": "El caso se levanta y el miembro recibe un MD.",
-      "deny": "La sanción se mantiene. El miembro recibe un MD de que la apelación fue rechazada."
+      "deny": "La sanción se mantiene. El miembro recibe un MD de que la apelación fue rechazada.",
+      "warnUncounted": "La advertencia se elimina y se avisa al miembro por MD. Nunca contó para la escalera de advertencias, así que nada más cambia."
     },
     "headingAccept": "Confirmar: aceptar la apelación de {code}",
     "headingDeny": "Confirmar: rechazar la apelación de {code}",

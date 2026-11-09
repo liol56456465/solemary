@@ -29,7 +29,9 @@
         },
         "warn": {
             "title": "**Advertencia {number} de {limit} en {server}**",
-            "limit": "Con {limit} advertencias serás baneado."
+            "limit": "Con {limit} advertencias serás baneado.",
+            "titleRecorded": "**Una advertencia en {server}**",
+            "notCounted": "Esta advertencia queda en tu historial, pero no cuenta para un baneo automático."
         },
         "appealAccepted": {
             "title": "**Apelación aceptada**",
@@ -85,5 +87,9 @@
             "many": "{count} minutos",
             "other": "{count} minutos"
         }
+    },
+    "uncounted": {
+        "automod": "Advertencia de automod — no cuenta para baneos",
+        "ladderOff": "Advertencia — no cuenta para baneos (escalera de advertencias desactivada)"
     }
 }

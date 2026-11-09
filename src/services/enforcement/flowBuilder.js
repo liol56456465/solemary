@@ -66,7 +66,7 @@ export function availableActions(state) {
     if (state.member) actions.push('warn');
     if (state.banned) actions.push('unban');
     if (state.muted) actions.push('unmute');
-    if (state.ladder.warns_since_level > 0) actions.push('removewarn');
+    if (state.ladder.warns_since_level > 0 || state.uncountedWarns > 0) actions.push('removewarn');
     return actions;
 }
 
@@ -205,6 +205,8 @@ export async function completeFlowDetails({ guild, moderator, targetUser, flow, 
 /** What a warn does at this ladder state, as one sentence (confirm steps). */
 export function warnEffectText(ladder, { lang = 'en' } = {}) {
     const step = previewWarn(ladder);
+    // Warn ladder off in this server (ladderPolicy.js): recorded only, never an automatic ban.
+    if (step.ladderOff) return botText(lang).t('staff.panel.effect.warnLadderOff');
     if (lang !== 'en') {
         const tr = botText(lang);
         if (!step.escalates) return tr.t('staff.panel.effect.warn', { n: step.warnNumber, max: step.threshold });
@@ -284,6 +286,7 @@ export async function attachFlowEvidence(flow, record, moderatorUser, { add = ad
 
 /** Counted-warns limit text for summaries: "2 of 3" or "1 (next warn bans)". */
 export function countedWarnsText(ladder, { lang = 'en' } = {}) {
+    if (ladder?.enabled === false) return botText(lang).t('staff.panel.warns.ladderOff', { n: ladder.warns_since_level });
     if (lang !== 'en') {
         const tr = botText(lang);
         return ladder.level === 0

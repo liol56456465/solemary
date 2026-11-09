@@ -112,6 +112,8 @@ function makeEnforcement(overrides = {}) {
         getTargetState: rec('getTargetState', async (guild, id) => ({ member: guild.members.cache.get(id) || null, banned: false, muted: false, ladder: { ...LADDER }, activeBan: null, activeMute: null })),
         getLadder: rec('getLadder', async () => ({ ...LADDER })),
         getCountedWarns: rec('getCountedWarns', async () => [{ case_code: 'wrn2345', name: 'target warn 1', reason: 'Spam' }]),
+        // An automod warn that does not count toward the ladder (D4): removable too.
+        getUncountedWarns: rec('getUncountedWarns', async () => [{ case_code: 'aut2345', name: 'target warn 2', reason: 'Automod: Spam', type: 'warn', reason_key: 'automod:spam', counts_toward_level: null, is_imported: false }]),
         listCasesForUser: rec('listCasesForUser', async () => ({ rows: [{ ...record, reason: '<img src=x>' }], total: 1 })),
         getLatestAppealStatuses: rec('getLatestAppealStatuses', async () => new Map([[CODE, 'pending']])),
         getActiveOrdersFor: rec('getActiveOrdersFor', () => [{ id: 7, otherId: OTHER, until: Date.now() + 86400000 }]),
@@ -495,6 +497,7 @@ test('preview validation: unknown action, unavailable action, bad input, other m
     const okRw = await preview(h, { type: 'removewarn', warn: 'wrn2345', reason: '' });
     assert.equal(okRw.statusCode, 200);
     assert.match(okRw.body, /Remove warn via the dashboard/);
+    assert.equal((await preview(h, { type: 'removewarn', warn: 'aut2345', reason: '' })).statusCode, 200, 'an uncounted automod warn can be removed');
     assert.equal((await preview(h, { type: 'warn', reason: 'spam' }, '12345')).statusCode, 404);
     assert.equal(serviceCalls(h, ['executeAction']).length, 0);
 });

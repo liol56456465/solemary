@@ -175,6 +175,7 @@
         "appealSupport": "Lege mit diesem Code im Support-Server Einspruch ein.",
         "appealWithCode": "Lege mit diesem Code Einspruch ein (die DM sagt, wo).",
         "onlyTarget": "Nur {name} kann Einspruch einlegen; führe /test für dich selbst aus, um den Einspruch auszuprobieren.",
-        "realInvite": "Die Einladung darin ist eine echte einmalige Einladung zu diesem Server."
+        "realInvite": "Die Einladung darin ist eine echte einmalige Einladung zu diesem Server.",
+        "noteWarnLadderOff": "Verwarnung (Verwarnungsstufen aus: nur vermerkt)"
     }
 }

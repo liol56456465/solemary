@@ -48,12 +48,17 @@
             "active": "**Aktive Strafe:** {list}",
             "activeNone": "keine",
             "pendingAppeal": "**Offener Einspruch:** {codes} (entscheide im Einspruchskanal oder mit /appeals)",
-            "keepApart": "**Kontaktverbot:** {list}"
+            "keepApart": "**Kontaktverbot:** {list}",
+            "uncountedWarns": {
+                "one": "**Nicht gezählt:** {count} Verwarnung im Verlauf, die nicht für Banns zählt",
+                "other": "**Nicht gezählt:** {count} Verwarnungen im Verlauf, die nicht für Banns zählen"
+            }
         },
         "keepApartLine": "mit <@{otherId}> bis {until} (Anordnung #{id})",
         "warns": {
             "of": "{n} von {max}",
-            "nextBans": "{n} (nächste Verwarnung bannt)"
+            "nextBans": "{n} (nächste Verwarnung bannt)",
+            "ladderOff": "{n} (Verwarnungsstufen aus)"
         },
         "stage": {
             "none": "0 von 3 (noch kein Verwarnungsbann)",
@@ -125,7 +130,8 @@
         "effect": {
             "warn": "Verwarnung {n} von {max}.",
             "escalates": "erreicht das Verwarnungslimit → automatischer Bann für {length} (Verwarnungsstufe {stage} von 3).",
-            "escalatesPermanent": "erreicht das Verwarnungslimit → automatischer dauerhafter Bann (Verwarnungsstufe {stage} von 3)."
+            "escalatesPermanent": "erreicht das Verwarnungslimit → automatischer dauerhafter Bann (Verwarnungsstufe {stage} von 3).",
+            "warnLadderOff": "nur vermerkt: Die Verwarnungsstufen sind auf diesem Server aus, daher folgt nie ein automatischer Bann."
         },
         "input": {
             "customReasonRequired": "Ein eigener Grund ist erforderlich.",
@@ -187,7 +193,8 @@
                 "one": "Dieses Mitglied: {count} gezählte Verwarnung, {stage}; die nächste Verwarnung bannt.",
                 "other": "Dieses Mitglied: {count} gezählte Verwarnungen, {stage}; die nächste Verwarnung bannt."
             },
-            "unavailable": "Dieses Mitglied: Verwarnungsstufe gerade nicht verfügbar."
+            "unavailable": "Dieses Mitglied: Verwarnungsstufe gerade nicht verfügbar.",
+            "ladderOff": "Dieses Mitglied: Die Verwarnungsstufen sind auf diesem Server aus, Verwarnungen führen nie zu einem automatischen Bann."
         },
         "confirm": {
             "title": "Bestätigen: {action}",
@@ -212,7 +219,8 @@
         "removeWarn": {
             "none": "Dieser Nutzer hat keine gezählten Verwarnungen, die entfernt werden können.",
             "placeholder": "Wähle die zu entfernende Verwarnung",
-            "which": "Welche Verwarnung soll entfernt werden?"
+            "which": "Welche Verwarnung soll entfernt werden?",
+            "uncountedTag": "zählt nicht"
         },
         "cancelledTitle": "Abgebrochen",
         "cancelled": "Nichts wurde geändert. Führe /enforcements aus, um neu zu beginnen.",

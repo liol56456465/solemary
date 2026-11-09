@@ -29,7 +29,9 @@
         },
         "warn": {
             "title": "**Avertissement {number} sur {limit} dans {server}**",
-            "limit": "À {limit} avertissements, tu seras banni."
+            "limit": "À {limit} avertissements, tu seras banni.",
+            "titleRecorded": "**Un avertissement sur {server}**",
+            "notCounted": "Cet avertissement figure dans ton historique, mais il ne compte pas pour un bannissement automatique."
         },
         "appealAccepted": {
             "title": "**Appel accepté**",
@@ -85,5 +87,9 @@
             "many": "{count} minutes",
             "other": "{count} minutes"
         }
+    },
+    "uncounted": {
+        "automod": "Avertissement automod — ne compte pas pour les bannissements",
+        "ladderOff": "Avertissement — ne compte pas pour les bannissements (échelle d'avertissements désactivée)"
     }
 }

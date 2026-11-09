@@ -226,16 +226,22 @@ function muteDmText(rec, { lang, guildId, serverName: name } = {}) {
     ], tr);
 }
 
+/**
+ * `warnNumber` null: the warn does not count toward the ladder (warn ladder off in that server, or
+ * an automod warn there, ladderPolicy.js), so no "Warning X of 3" and no "you will be banned".
+ */
 function warnDmText(rec, warnNumber, { lang, guildId, serverName: name } = {}) {
     const tr = textOf(lang);
     const limit = enforcementConfig.warnsPerLevel;
+    const counted = warnNumber !== null && warnNumber !== undefined;
+    const server = serverFor(rec, { guildId, serverName: name }, tr);
     return finish([
         appealHere(tr, appealInvite(guildOf(rec, guildId))),
         webAppealLine(rec, tr, guildId),
-        tr.t('enforcement.dm.warn.title', { number: warnNumber, limit, server: serverFor(rec, { guildId, serverName: name }, tr) }),
+        counted ? tr.t('enforcement.dm.warn.title', { number: warnNumber, limit, server }) : tr.t('enforcement.dm.warn.titleRecorded', { server }),
         ...common(rec, tr),
         tr.t('enforcement.dm.caseCode', { code: rec.case_code }),
-        tr.t('enforcement.dm.warn.limit', { limit }),
+        counted ? tr.t('enforcement.dm.warn.limit', { limit }) : tr.t('enforcement.dm.warn.notCounted'),
         record(tr),
     ], tr);
 }

@@ -486,7 +486,8 @@
             "exemptOn": "Automod ignoriert jetzt <#{channelId}>.",
             "exemptOff": "Automod prüft <#{channelId}> wieder.",
             "noLockdown": "Gerade läuft kein Lockdown.",
-            "lockdownEnded": "Lockdown beendet. Die Verifizierungsstufe ist wieder wie vorher, und pausierte Einladungen und DMs laufen wieder."
+            "lockdownEnded": "Lockdown beendet. Die Verifizierungsstufe ist wieder wie vorher, und pausierte Einladungen und DMs laufen wieder.",
+            "startedMonitor": "**Nur melden:** Mewvo postet eine Prüfkarte mit einem Anwenden-Knopf und löscht nichts. Schalte auf Ein (`/automod mode`), wenn die Karten passen."
         },
         "joingate": {
             "ageNote": "Konten jünger als **{days} Tag(e)**. „Mit Discord verifizieren“ hält Konten jünger als {defaultDays} Tage bereits zur Freigabe zurück; Mitglieder, die so verifiziert sind, werden nie geprüft.",
@@ -595,7 +596,8 @@
             "customNewAction": "Neue Aktion",
             "customToggle": "Eine Regel ein- oder ausschalten",
             "customRemove": "Eine Regel entfernen"
-        }
+        },
+        "needReviewChannel": "Wähle zuerst einen Kanal für die Automod-Prüfkarten: Lege im Dashboard einen Prüfkanal (oder einen Mod-Log-Kanal) fest und schalte Automod dann ein."
     },
     "joinGate": {
         "check": {

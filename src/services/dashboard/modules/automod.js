@@ -44,7 +44,7 @@ import {
 import { guildPlan as defaultGuildPlan } from '../../billing/premiumEffects.js';
 import { planName } from '../../billing/premiumService.js';
 import { textFor } from '../language.js';
-import { isLegacyAutomodGuild } from '../../automod/automodSettings.js';
+import { isLegacyAutomodGuild, shouldNudgeToEnforce } from '../../automod/automodSettings.js';
 import { requireCanAct, adminOnlyActions } from './serverScope.js';
 
 // Words: src/content/dashboard/<lang>/automod.json. English rule, join-gate check and policy names
@@ -203,6 +203,11 @@ const memberName = (guild, id) => guild?.members?.cache?.get(id)?.user?.username
 /** before/after snapshot diff of the automod settings, as audit changes. */
 function settingsChanges(before, after, keys) {
     return diffSnapshots(before, after, keys);
+}
+
+/** Where automod review cards go in this server: the review channel, else the mod log (channelRouting.js), or null. */
+function reviewChannelOf(ctx) {
+    return registryValue(ctx, 'reviewChannelId') || registryValue(ctx, 'modLogChannelId') || null;
 }
 
 async function change(ctx, keys, run, message) {
@@ -546,7 +551,15 @@ ${reviews.length > QUEUE_LISTED ? html`<p class="muted">${tr.t('automod.queue.mo
             ]), tr.t('automod.probation.empty'));
         // v6: cards grouped by topic (common.js topic/section). Keys: the slugs of the English titles.
         const lockdownCard = section(tr.t('automod.lockdown.title'), lockdownBody, tr.t('automod.lockdown.help'), { key: 'raid-lockdown', size: 'full' });
-        const live = topic(tr.t('automod.topics.now'), tr.t('automod.topics.nowLine'), html`${lockdown?.active ? lockdownCard : ''}
+        // Beginner audit 2.2: no channel for review cards; Report only explained, and after 24 h the nudge.
+        const noChannel = s.enabled && !reviewChannelOf(ctx)
+            ? html`<p class="warn" role="alert">${tr.t('automod.notice.noReviewChannel')}</p>` : '';
+        const monitorNote = s.enabled && s.mode === 'monitor'
+            ? html`<p class="muted">${tr.t('automod.notice.monitor')}</p>${shouldNudgeToEnforce(s)
+                ? html`<p><strong>${tr.t('automod.notice.nudge')}</strong> ${buttonForm(ctx, 'automod', 'mode', tr.t('automod.notice.switchOn'), { mode: 'enforce' }, { canEdit: ctx.canEdit && ctx.canAct })}</p>` : ''}`
+            : '';
+        const notices = noChannel || monitorNote ? section(tr.t('automod.notice.title'), html`${noChannel}${monitorNote}`, '', { key: 'automod-notices', size: 'full' }) : '';
+        const live = topic(tr.t('automod.topics.now'), tr.t('automod.topics.nowLine'), html`${notices}${lockdown?.active ? lockdownCard : ''}
 ${section(reviews ? tr.t('automod.queue.titleCount', { count: tr.fmtNumber(reviews.length) }) : tr.t('automod.queue.title'), queue, '', { key: 'review-queue' })}
 ${section(probations ? tr.t('automod.probation.titleCount', { count: tr.fmtNumber(probations.length) }) : tr.t('automod.probation.title'), probation, tr.t('automod.probation.help'), { key: 'probation' })}`, { key: 'right-now' });
         const ruleCards = topic(tr.t('automod.topics.rules'), tr.t('automod.topics.rulesLine'), html`${section(tr.t('automod.global.title'), top, tr.t('automod.global.help'), { key: 'global-mode' })}
@@ -583,7 +596,17 @@ ${section(tr.t('automod.testRun.title'), testRunSection(ctx, data.backtest, data
                     if (settings?.staffGuard) throw new InputError(tr.t('automod.error.staffGuardOwnerOnly'), 403);
                 }
             }
-            return change(ctx, ['enabled'], () => ctx.services.setAutomodEnabled(ctx.guildId, enabled), tr.t(enabled ? 'automod.action.automodOn' : 'automod.action.automodOff'));
+            // Review cards need a channel (review, else the mod log): refuse to turn on without one.
+            if (enabled && !reviewChannelOf(ctx)) throw new InputError(tr.t('automod.error.needReviewChannel'), 400);
+            let startedInMonitor = false;
+            const result = await change(ctx, ['enabled', 'mode'], async () => {
+                const saved = await ctx.services.setAutomodEnabled(ctx.guildId, enabled);
+                startedInMonitor = Boolean(saved?.startedInMonitor);
+                return saved;
+            }, tr.t(enabled ? 'automod.action.automodOn' : 'automod.action.automodOff'));
+            // First time on in another server: it starts in Report only (automodSettings.setAutomodEnabled).
+            if (startedInMonitor) result.message = `${result.message} ${tr.t('automod.action.startedMonitor')}`;
+            return result;
         },
         async mode(ctx, form) {
             const tr = textFor(ctx);

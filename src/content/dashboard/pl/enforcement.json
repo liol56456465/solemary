@@ -202,5 +202,14 @@
     "badInvite": "Zaproszenie na nasz własny serwer: musi to być link z zaproszeniem discord.gg. Nic nie zostało zmienione.",
     "homeNote": "Tu to nie ma zastosowania: członkowie serwerów Mewvo zawsze odwołują się na serwerze wsparcia Mewvo.",
     "homeOnlyAction": "To ustawienie nie dotyczy serwerów Mewvo. Nic nie zostało zmienione."
+  },
+  "ladderSettings": {
+    "title": "Ustawienia drabinki ostrzeżeń",
+    "help": "Czy ostrzeżenia sumują się do automatycznych banów na tym serwerze. Ostrzeżenia są zawsze zapisywane i widoczne w historii członka.",
+    "enabled": "Drabinka ostrzeżeń: 3 ostrzeżenia prowadzą do automatycznego bana",
+    "enabledHelp": "Wyłączone: ostrzeżenia są nadal zapisywane i wysyłane, ale nigdy same nikogo nie banują. Bany nadawane ręcznie się nie zmieniają.",
+    "automod": "Ostrzeżenia automoda liczą się do drabinki ostrzeżeń",
+    "automodHelp": "Wyłączone (domyślnie na nowych serwerach): ostrzeżenia, które automod daje sam, są zapisywane i pokazywane jako „Ostrzeżenie automoda — nie liczy się do banów”. Włączone: trzy wykrycia automoda mogą oznaczać automatyczny 7-dniowy ban.",
+    "offNote": "Drabinka ostrzeżeń jest wyłączona: żadne ostrzeżenie na tym serwerze nie prowadzi do automatycznego bana, więc ustawienie automoda teraz nic nie zmienia."
   }
 }

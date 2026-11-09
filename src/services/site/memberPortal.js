@@ -53,6 +53,7 @@ import { createPgSessionStore } from '../dashboard/sessionStore.js';
 import { query } from '../enforcement/db.js';
 import { OPEN_STATUSES, caseStatusCode, caseStatusLabel, listUserAppeals } from '../enforcement/caseService.js';
 import { getMemberStanding, nextWarningSteps } from '../enforcement/standingService.js';
+import { uncountedKind } from '../enforcement/ladderPolicy.js';
 import { NOINDEX, inviteOrNull, layout, legalContact, publicSiteEnabled, siteInstallUrl, siteOrigin } from './site.js';
 import { createBillingHandlers } from './billing.js';
 import { premiumSettings, premiumStore } from '../billing/premiumService.js';
@@ -227,6 +228,9 @@ function memberStatus(t, record, countedCodes, appealStatus) {
     const code = caseStatusCode(record, appealStatus);
     if (code === 'voided') return t('portal.status.voided');
     if (record.status === 'active' && record.type === 'warn') {
+        // Recorded without counting toward the ladder (ladderPolicy.js, D4).
+        const uncounted = uncountedKind(record);
+        if (uncounted) return t(uncounted === 'automod' ? 'portal.status.automodNotCounted' : 'portal.status.notCounted');
         return t(countedCodes.has(record.case_code) ? 'portal.status.counts' : 'portal.status.noLongerCounts');
     }
     if (record.status === 'active' && record.type === 'kick') return t('portal.status.onRecord');
@@ -255,6 +259,7 @@ export function banLengthText(ms, { t, tp }) {
 export function nextWarningWords(ladder, text = translator()) {
     const { t, tp } = text;
     const step = nextWarningSteps(ladder);
+    if (step.ladderOff) return t('portal.next.ladderOff');
     const ban = banLengthText(step.banMs, text);
     if (step.escalates) return t('portal.next.limit', { ban, level: step.nextLevel });
     const first = t('portal.next.warning', { number: step.warnNumber, threshold: step.threshold });
@@ -284,7 +289,8 @@ export function buildRecordView({ standing, cases, appeals, now = Date.now(), co
     const threshold = ladder.level === 0 ? (config?.warnsPerLevel ?? enforcementConfig.warnsPerLevel) : 1;
     const active = (record) => (record ? { code: record.case_code, endsAt: record.expires_at || null } : null);
     return {
-        warnings: { count: Number(ladder.warns_since_level) || 0, threshold },
+        // ladderOff: the server turned the warn ladder off (no "X of 3").
+        warnings: { count: Number(ladder.warns_since_level) || 0, threshold, ladderOff: ladder.enabled === false },
         ladder: { level: Number(ladder.level) || 0, next: nextWarningWords(ladder, text) },
         activeBan: active(standing.activeBan),
         activeMute: active(standing.activeMute),
@@ -391,7 +397,7 @@ function summaryCards(ctx, view) {
         view.activeMute ? html`<li>${ti('portal.record.activeMuteEnds', { code: code(view.activeMute.code), date: when(ctx, view.activeMute.endsAt) })}</li>` : '',
     ].filter(Boolean);
     return html`<ul class="record-summary">
-<li class="feature"><h3>${t('portal.record.warnings')}</h3><p class="record-big">${t('portal.record.warningsCount', { count: warn.count, threshold: warn.threshold })}</p><p>${t('portal.record.warningsNote')}</p></li>
+<li class="feature"><h3>${t('portal.record.warnings')}</h3><p class="record-big">${warn.ladderOff ? t('portal.record.warningsLadderOff', { count: warn.count }) : t('portal.record.warningsCount', { count: warn.count, threshold: warn.threshold })}</p><p>${t('portal.record.warningsNote')}</p></li>
 <li class="feature"><h3>${t('portal.record.ladder')}</h3><p class="record-big">${t('portal.record.ladderLevel', { level: view.ladder.level, max: 3 })}</p><p>${view.ladder.next}</p></li>
 <li class="feature"><h3>${t('portal.record.activeNow')}</h3>${activeRows.length ? html`<ul class="record-active">${activeRows}</ul>` : html`<p>${t('portal.record.nothingActive')}</p>`}</li>
 </ul>`;

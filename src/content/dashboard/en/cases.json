@@ -149,7 +149,8 @@
   },
   "warns": {
     "of": "{n} of {max}",
-    "nextBans": "{n} (next warn bans)"
+    "nextBans": "{n} (next warn bans)",
+    "ladderOff": "{n} (warn ladder off)"
   },
   "next": {
     "would": "It would be warning {n} of {max}.",
@@ -158,7 +159,8 @@
       "one": "{count} more after it would mean an automatic ban ({ban}).",
       "other": "{count} more after it would mean an automatic ban ({ban})."
     },
-    "limit": "It would reach the warning limit: an automatic ban ({ban}, warning stage {stage} of 3)."
+    "limit": "It would reach the warning limit: an automatic ban ({ban}, warning stage {stage} of 3).",
+    "ladderOff": "Warnings are recorded but never lead to an automatic ban in this server (the warn ladder is off)."
   },
   "settings": {
     "title": "Settings",
@@ -212,7 +214,11 @@
     "filed": "Filed",
     "decided": "Decided",
     "note": "Note",
-    "noAppeals": "No appeals."
+    "noAppeals": "No appeals.",
+    "uncounted": {
+      "automod": "Automod warning — doesn't count toward bans",
+      "ladderOff": "Warning — doesn't count toward bans (warn ladder off)"
+    }
   },
   "appeals": {
     "pageTitle": "Appeals",
@@ -292,7 +298,8 @@
       "mute": "The member is unmuted (if still muted), DMed, and the case is lifted.",
       "warn": "The warning is removed (the ladder count drops; an automatic ban it caused is lifted) and the member is DMed.",
       "lifted": "The case is lifted and the member is DMed.",
-      "deny": "The punishment stays. The member is DMed that the appeal was denied."
+      "deny": "The punishment stays. The member is DMed that the appeal was denied.",
+      "warnUncounted": "The warning is removed and the member is DMed. It never counted toward the warn ladder, so nothing else changes."
     },
     "headingAccept": "Confirm: accept the appeal on {code}",
     "headingDeny": "Confirm: deny the appeal on {code}",

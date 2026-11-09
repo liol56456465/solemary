@@ -175,6 +175,7 @@
         "appealSupport": "Appeal it from the support server with that code.",
         "appealWithCode": "Appeal it with that code (the DM says where).",
         "onlyTarget": "Only {name} can appeal it; run /test on yourself to try the appeal flow.",
-        "realInvite": "The invite in it is a real one-time invite to this server."
+        "realInvite": "The invite in it is a real one-time invite to this server.",
+        "noteWarnLadderOff": "warn (warn ladder off: recorded only)"
     }
 }

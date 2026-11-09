@@ -20,7 +20,7 @@ const KEYS = [
     'openChannelCap', 'mutedRoleId', 'warnRoleIds',
     'appealWindowMs', 'appealCooldownMs', 'rejoinInviteMaxAgeSeconds', 'staleReportMs',
     'staleAppealReminderMs', 'independentAppealReview', 'massActionLimit', 'massMuteLimit', 'massActionWindowMs', 'massActionBlockMs',
-    'enforcementTemplates',
+    'enforcementTemplates', 'warnLadderEnabled', 'automodWarnsCountOnLadder',
 ];
 // Mewvo's own servers only (multi-server B3, section 4): the Support invite and the public pages.
 const HOME_KEYS = ['supportServerInvite', 'transparencyReportEnabled', 'trustCardEnabled'];
@@ -143,6 +143,16 @@ ${numberInput('massMuteLimit', v.massMuteLimit, { label: t('enforcement.mass.mut
 ${numberInput('massActionWindowMinutes', Math.round(v.massActionWindowMs / MINUTE), { label: t('enforcement.mass.window'), min: 1, max: 1440 })}
 ${numberInput('massActionBlockMinutes', Math.round(v.massActionBlockMs / MINUTE), { label: t('enforcement.mass.block'), min: 1, max: 10080, help: t('enforcement.mass.blockHelp') })}
 </div>`, { canEdit: adminEdit });
+        // Warn ladder switches (D4, enforcement/ladderPolicy.js): Administrator only, like the safety limits.
+        const ladderOn = v.warnLadderEnabled !== false;
+        const ladderSettings = postForm(ctx, 'enforcement', 'ladder-settings', html`${switchInput('warnLadderEnabled', ladderOn, {
+            label: t('enforcement.ladderSettings.enabled'),
+            help: t('enforcement.ladderSettings.enabledHelp'),
+        })}
+${switchInput('automodWarnsCountOnLadder', v.automodWarnsCountOnLadder === true, {
+            label: t('enforcement.ladderSettings.automod'),
+            help: t('enforcement.ladderSettings.automodHelp'),
+        })}${ladderOn ? '' : html`<p class="muted">${t('enforcement.ladderSettings.offNote')}</p>`}`, { canEdit: adminEdit });
         const ladder = table([t('enforcement.rules.level'), t('enforcement.rules.banLength')], Object.entries(enforcementConfig.ladderBans).map(([level, ms]) => [level, ms ? durationText(tr, ms) : t('enforcement.rules.permanent')]));
         const words = actionWords(tr);
         // Ids: stored ones, or derived from the name for templates saved before ids (templateService.js).
@@ -187,6 +197,7 @@ ${section(t('enforcement.templates.title'), html`${templateList}${templateAdd}`,
         const pages = topic(t('enforcement.topic.pages'), t('enforcement.topic.pagesLine'), html`${section(t('enforcement.pages.transparencyTitle'), transparency, [t('enforcement.pages.transparencyHelp'), `${t('enforcement.pages.transparencyMore')}${adminOnly}`], { key: 'transparency-report' })}
 ${section(t('enforcement.pages.trustTitle'), trust, [t('enforcement.pages.trustHelp'), `${t('enforcement.pages.trustMore')}${adminOnly}`], { key: 'trust-card' })}`, { key: 'public-pages' });
         const rules = topic(t('enforcement.topic.rules'), t('enforcement.topic.rulesLine'), html`${section(t('enforcement.rules.ladderTitle'), html`<p class="muted">${tr.tx('enforcement.rules.ladderText', { count: tr.fmtNumber(enforcementConfig.warnsPerLevel) })}</p>${ladder}`, t('enforcement.rules.ladderHelp'), { key: 'warn-ladder', size: 'normal' })}
+${section(t('enforcement.ladderSettings.title'), ladderSettings, `${t('enforcement.ladderSettings.help')}${adminOnly}`, { key: 'warn-ladder-settings', size: 'normal' })}
 ${section(t('enforcement.rules.reasonsTitle'), reasons, [t('enforcement.rules.reasonsHelp'), t('enforcement.rules.reasonsMore')], { key: 'reasons', size: 'normal' })}
 ${section(t('enforcement.rules.stepsTitle'), steps, t('enforcement.rules.stepsHelp'), { key: 'automod-steps', size: 'full' })}`, { key: 'how-punishments-add-up' });
         // The public pages (transparency report, trust card) are Mewvo's own servers only for now.
@@ -328,6 +339,18 @@ ${section(t('enforcement.rules.stepsTitle'), steps, t('enforcement.rules.stepsHe
             admin: true,
             async run(ctx, form) {
                 const patch = changedOnly({ independentAppealReview: checkbox(form, 'independentAppealReview') }, current(ctx));
+                if (!Object.keys(patch).length) return nothing(ctx);
+                return saveRegistry(ctx, patch, 'enforcement');
+            },
+        },
+        // Warn ladder switches (D4): Administrator only. Saved in one locked settings write.
+        'ladder-settings': {
+            admin: true,
+            async run(ctx, form) {
+                const patch = changedOnly({
+                    warnLadderEnabled: checkbox(form, 'warnLadderEnabled'),
+                    automodWarnsCountOnLadder: checkbox(form, 'automodWarnsCountOnLadder'),
+                }, current(ctx));
                 if (!Object.keys(patch).length) return nothing(ctx);
                 return saveRegistry(ctx, patch, 'enforcement');
             },

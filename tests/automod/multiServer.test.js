@@ -106,7 +106,7 @@ afterEach(() => {
     resetAutomodSettingsCache();
 });
 
-const turnOn = (guildId, extra = {}) => updateAutomodSettings(guildId, { enabled: true, ...extra });
+const turnOn = (guildId, extra = {}) => updateAutomodSettings(guildId, { enabled: true, mode: 'enforce', ...extra });
 
 // ── fakes ─────────────────────────────────────────────────────────────────
 
@@ -195,8 +195,9 @@ test('defaults: the main server keeps the old ones; any other server (support to
         // Mewvo's English-only house rules are off there unless set; the rest follow the global mode.
         assert.equal(ruleMode(other, 'english'), 'off');
         assert.equal(ruleMode(other, 'characters'), 'off');
-        assert.equal(ruleMode(other, 'caps'), 'on');
-        assert.equal(ruleMode(other, 'scam'), 'on');
+        // Never saved: the global mode is Report only there (first "on" starts in it, audit 2.2).
+        assert.equal(ruleMode(other, 'caps'), id === SUPPORT ? 'on' : 'monitor');
+        assert.equal(ruleMode(other, 'scam'), id === SUPPORT ? 'on' : 'monitor');
     }
 });
 
@@ -682,7 +683,8 @@ test('readiness line works for any server the bot is in', async () => {
     const guild = fakeGuild(OTHER);
     guild.members.me = { permissions: { has: () => true } };
     const client = fakeClient([guild]);
-    assert.equal(await describeAutomodReadiness(client, OTHER), 'off, enforce; all permissions present');
+    // Never saved in another server: off, and it will start in Report only (audit 2.2).
+    assert.equal(await describeAutomodReadiness(client, OTHER), 'off, monitor; all permissions present');
     assert.equal(await describeAutomodReadiness(client, THIRD), 'skipped: the bot is not in that server');
 });
 
@@ -935,8 +937,14 @@ test('/automod works in every server: each server changes only its own settings;
     assert.match(await run(OTHER, 'staffguard', { enabled: true }), /Staff guard is \*\*on\*\*.*automod enable/);
     assert.equal((await getAutomodSettings(OTHER)).staffGuard, true);
     assert.equal((await getAutomodSettings(OTHER2)).staffGuard, false, 'another server is untouched');
-    assert.match(await run(OTHER2, 'enable', { enabled: true }), /Automod/);
+    // No channel for review cards (no review channel, no mod log): refused, nothing changes (audit 2.2b).
+    await assert.rejects(run(OTHER2, 'enable', { enabled: true }), (error) => /Pick a channel for automod review cards first/.test(error.userMessage || error.message));
+    assert.equal((await getAutomodSettings(OTHER2)).enabled, false);
+    setSettingsCacheForTests(OTHER2, { reviewChannelId: '300000000000000001' });
+    // First time on in another server: Report only, and the reply says so (audit 2.2).
+    assert.match(await run(OTHER2, 'enable', { enabled: true }), /Automod.*Report only.*deletes nothing/);
     assert.equal((await getAutomodSettings(OTHER2)).enabled, true);
+    assert.equal((await getAutomodSettings(OTHER2)).mode, 'monitor');
     assert.equal((await getAutomodSettings(OTHER)).enabled, false, 'another server is untouched');
     await assert.rejects(run(MAIN, 'staffguard', { enabled: false }), /always on in this server/);
     await assert.rejects(run(null, 'status'), (error) => /Use this command in a server/.test(error.userMessage));
@@ -965,6 +973,7 @@ test('/automod staffguard: any admin turns it on, only the server owner turns it
         return JSON.stringify(replies);
     };
     const ownerOnly = (error) => /Only the server owner/.test(error.userMessage || error.message);
+    setSettingsCacheForTests(OTHER, { modLogChannelId: '300000000000000002' }); // the mod log is enough for review cards
     await run(OTHER, 'admin', 'enable', { enabled: true });
     await run(OTHER, 'admin', 'staffguard', { enabled: true });
     assert.equal((await getAutomodSettings(OTHER)).staffGuard, true);

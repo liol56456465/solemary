@@ -49,12 +49,18 @@
             "active": "**Sanción activa:** {list}",
             "activeNone": "ninguna",
             "pendingAppeal": "**Apelación pendiente:** {codes} (decide en el canal de apelaciones o con /appeals)",
-            "keepApart": "**Prohibición de contacto:** {list}"
+            "keepApart": "**Prohibición de contacto:** {list}",
+            "uncountedWarns": {
+                "one": "**Sin contar:** {count} advertencia en el historial que no cuenta para baneos",
+                "many": "**Sin contar:** {count} advertencias en el historial que no cuentan para baneos",
+                "other": "**Sin contar:** {count} advertencias en el historial que no cuentan para baneos"
+            }
         },
         "keepApartLine": "con <@{otherId}> hasta {until} (orden #{id})",
         "warns": {
             "of": "{n} de {max}",
-            "nextBans": "{n} (la próxima advertencia banea)"
+            "nextBans": "{n} (la próxima advertencia banea)",
+            "ladderOff": "{n} (escalera de advertencias desactivada)"
         },
         "stage": {
             "none": "0 de 3 (aún sin baneo por advertencias)",
@@ -128,7 +134,8 @@
         "effect": {
             "warn": "advertencia {n} de {max}.",
             "escalates": "alcanza el límite de advertencias → baneo automático de {length} (nivel de advertencias {stage} de 3).",
-            "escalatesPermanent": "alcanza el límite de advertencias → baneo permanente automático (nivel de advertencias {stage} de 3)."
+            "escalatesPermanent": "alcanza el límite de advertencias → baneo permanente automático (nivel de advertencias {stage} de 3).",
+            "warnLadderOff": "solo se registra: la escalera de advertencias está desactivada en este servidor, así que nunca lleva a un baneo automático."
         },
         "input": {
             "customReasonRequired": "Hace falta un motivo personalizado.",
@@ -199,7 +206,8 @@
                 "many": "Este miembro: {count} advertencias contadas, {stage}; la próxima advertencia banea.",
                 "other": "Este miembro: {count} advertencias contadas, {stage}; la próxima advertencia banea."
             },
-            "unavailable": "Este miembro: nivel no disponible ahora mismo."
+            "unavailable": "Este miembro: nivel no disponible ahora mismo.",
+            "ladderOff": "Este miembro: la escalera de advertencias está desactivada en este servidor, así que las advertencias nunca llevan a un baneo automático."
         },
         "confirm": {
             "title": "Confirmar: {action}",
@@ -224,7 +232,8 @@
         "removeWarn": {
             "none": "Este usuario no tiene advertencias contadas que quitar.",
             "placeholder": "Elige la advertencia que quieres quitar",
-            "which": "¿Qué advertencia hay que quitar?"
+            "which": "¿Qué advertencia hay que quitar?",
+            "uncountedTag": "no cuenta"
         },
         "cancelledTitle": "Cancelado",
         "cancelled": "No se cambió nada. Ejecuta /enforcements para empezar de nuevo.",

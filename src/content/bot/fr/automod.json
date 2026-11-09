@@ -496,7 +496,8 @@
             "exemptOn": "L'automod ignore maintenant <#{channelId}>.",
             "exemptOff": "L'automod vérifie de nouveau <#{channelId}>.",
             "noLockdown": "Il n'y a pas de confinement en ce moment.",
-            "lockdownEnded": "Confinement terminé. Le niveau de vérification est revenu à ce qu'il était, et les invitations et MP en pause reprennent."
+            "lockdownEnded": "Confinement terminé. Le niveau de vérification est revenu à ce qu'il était, et les invitations et MP en pause reprennent.",
+            "startedMonitor": "**Signaler seulement :** Mewvo publie une carte de vérification avec un bouton Appliquer et ne supprime rien. Passe sur Activé (`/automod mode`) quand les cartes te semblent justes."
         },
         "joingate": {
             "ageNote": "Comptes de moins de **{days} jour(s)**. « Vérifier avec Discord » retient déjà les comptes de moins de {defaultDays} jours pour approbation ; les membres vérifiés ainsi ne sont jamais contrôlés.",
@@ -608,7 +609,8 @@
             "customNewAction": "Nouvelle action",
             "customToggle": "Activer ou désactiver une règle",
             "customRemove": "Supprimer une règle"
-        }
+        },
+        "needReviewChannel": "Choisis d'abord un salon pour les cartes de vérification d'automod : définis un salon de vérification (ou un salon de journal de modération) sur le tableau de bord, puis active automod."
     },
     "joinGate": {
         "check": {

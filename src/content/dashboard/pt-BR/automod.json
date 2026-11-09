@@ -405,7 +405,8 @@
     "tooManyChannels": "Escolha no máximo {max} canais ({picked} escolhidos).",
     "ignoredChannel": "O Automod ignora #{channel}, então um teste ali não encontra nada. Escolha outro canal.",
     "offNeedsAdmin": "Para desligar o automod você precisa da permissão de Administrador neste servidor. Nada foi alterado.",
-    "staffGuardOwnerOnly": "Só o dono do servidor pode desligar o automod enquanto a proteção da equipe está ligada (desligar o automod também para essa proteção). Nada foi alterado."
+    "staffGuardOwnerOnly": "Só o dono do servidor pode desligar o automod enquanto a proteção da equipe está ligada (desligar o automod também para essa proteção). Nada foi alterado.",
+    "needReviewChannel": "Primeiro escolha um canal para os cartões de revisão do automod (o canal de cartões de revisão abaixo, ou um canal de registro de moderação na página de Punições)."
   },
   "action": {
     "automodOn": "O Automod está ativado.",
@@ -438,6 +439,14 @@
     "nativeSaved": "Regra do Discord “{name}” atualizada.",
     "lockdownEnded": "Bloqueio encerrado. O nível de verificação voltou ao que era, e os convites e mensagens diretas pausados voltaram a funcionar.",
     "probationEnded": "A vigilância extra de {member} terminou antes da hora.",
-    "testRunStarted": "Teste iniciado. Recarregue a página daqui a pouco para ver o progresso."
+    "testRunStarted": "Teste iniciado. Recarregue a página daqui a pouco para ver o progresso.",
+    "startedMonitor": "Começa em Só relatar: o Mewvo publica um cartão de revisão com um botão Aplicar e não apaga nada. Mude para Ligado quando os cartões parecerem certos."
+  },
+  "notice": {
+    "title": "Antes de confiar no automod",
+    "noReviewChannel": "O automod está ligado, mas não há canal para os cartões de revisão: ninguém vê o que ele encontra. Escolha um canal de revisão abaixo (ou um canal de registro de moderação na página de Punições).",
+    "monitor": "Só relatar: o Mewvo publica um cartão de revisão com um botão Aplicar e não apaga nada. Mude para Ligado quando os cartões parecerem certos.",
+    "nudge": "Só relatar está rodando há um dia. Parece bom? Mude para Ligado.",
+    "switchOn": "Mudar para Ligado"
   }
 }

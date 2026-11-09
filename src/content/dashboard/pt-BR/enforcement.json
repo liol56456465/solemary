@@ -198,5 +198,14 @@
     "badInvite": "Convite para o nosso próprio servidor: precisa ser um link de convite discord.gg. Nada foi alterado.",
     "homeNote": "Isto não se aplica aqui: membros dos servidores do próprio Mewvo sempre recorrem no servidor de suporte do Mewvo.",
     "homeOnlyAction": "Esta configuração não se aplica aos servidores do próprio Mewvo. Nada foi alterado."
+  },
+  "ladderSettings": {
+    "title": "Configurações da escada de avisos",
+    "help": "Se os avisos se somam até banimentos automáticos neste servidor. Os avisos são sempre registrados e mostrados no histórico do membro.",
+    "enabled": "Escada de avisos: 3 avisos levam a um banimento automático",
+    "enabledHelp": "Desligado: os avisos continuam sendo registrados e enviados, mas nunca banem ninguém sozinhos. Banimentos dados à mão não mudam.",
+    "automod": "Avisos do automod contam para a escada de avisos",
+    "automodHelp": "Desligado (o padrão em servidores novos): avisos que o automod dá sozinho são registrados e mostrados como \"Aviso do automod — não conta para banimentos\". Ligado: três detecções do automod podem significar um banimento automático de 7 dias.",
+    "offNote": "A escada de avisos está desligada: nenhum aviso neste servidor leva a um banimento automático, então a configuração do automod não tem efeito agora."
   }
 }

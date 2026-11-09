@@ -397,7 +397,7 @@ export function createEnforcementHandlers(core) {
         const user = await client.users.fetch(userId).catch(() => null);
         if (!user) return null;
         const state = await e.getTargetState(guild, userId);
-        const [{ rows: cases, total }, appealStatuses, countedWarns, notes, block, precedent] = await Promise.all([
+        const [{ rows: cases, total }, appealStatuses, countedWarns, notes, block, precedent, uncountedWarns] = await Promise.all([
             e.listCasesForUser(guildId, userId, { limit: RECENT_CASES }),
             e.getLatestAppealStatuses(userId, guildId),
             e.getCountedWarns(guildId, userId, state.ladder.level),
@@ -406,6 +406,8 @@ export function createEnforcementHandlers(core) {
             e.getMassActionBlock(guildId, req.dashboard.session.userId),
             precedentReason && isKnownReasonKey(precedentReason) && precedentReason !== CUSTOM_REASON_KEY
                 ? e.precedentHint(guildId, precedentReason, getReason(precedentReason)?.label || precedentReason).catch(() => null) : null,
+            // Warns that do not count toward the ladder (D4) can be removed too.
+            e.getUncountedWarns ? e.getUncountedWarns(guildId, userId) : [],
         ]);
         // The timeline is extra: a database problem leaves it out (the page says so), never the page.
         const timeline = e.memberTimeline
@@ -445,7 +447,7 @@ export function createEnforcementHandlers(core) {
                     .sort((a, b) => (b.position ?? 0) - (a.position ?? 0)).map((r) => ({ id: r.id, name: r.name })),
             } : null,
             memberEdit,
-            state, cases, casesTotal: total, appealStatuses, countedWarns, notes, block,
+            state, cases, casesTotal: total, appealStatuses, countedWarns, uncountedWarns, notes, block,
             noContact, noContactNames,
             actions: availableActions(state),
             precedentReason: precedentReason && isKnownReasonKey(precedentReason) ? precedentReason : '',
@@ -493,8 +495,12 @@ export function createEnforcementHandlers(core) {
             flow = startFlow({ type, moderatorId, targetUser });
             if (type === 'removewarn') {
                 const warnCode = normalizeCaseCode(text(req.body, 'warn', 10));
-                const counted = await e.getCountedWarns(guildId, userId, state.ladder.level);
-                if (!warnCode || !counted.some((w) => w.case_code === warnCode)) throw new InputError(textOf(req).t('moderation.members.chooseCountedWarn'));
+                const [counted, uncounted] = await Promise.all([
+                    e.getCountedWarns(guildId, userId, state.ladder.level),
+                    e.getUncountedWarns ? e.getUncountedWarns(guildId, userId) : [],
+                ]);
+                const removable = counted.concat(uncounted);
+                if (!warnCode || !removable.some((w) => w.case_code === warnCode)) throw new InputError(textOf(req).t('moderation.members.chooseCountedWarn'));
                 flow.warnCode = warnCode;
             }
             Object.assign(flow, liftReasonPatch(flow, text(req.body, 'reason', 500), 'the dashboard'));

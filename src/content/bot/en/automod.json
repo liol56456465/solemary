@@ -486,7 +486,8 @@
             "exemptOn": "Automod now ignores <#{channelId}>.",
             "exemptOff": "Automod checks <#{channelId}> again.",
             "noLockdown": "There is no lockdown right now.",
-            "lockdownEnded": "Lockdown ended. The verification level is back to what it was, and paused invites and DMs are resumed."
+            "lockdownEnded": "Lockdown ended. The verification level is back to what it was, and paused invites and DMs are resumed.",
+            "startedMonitor": "**Report only:** Mewvo posts a review card with an Apply button and deletes nothing. Switch to On (`/automod mode`) when the cards look right."
         },
         "joingate": {
             "ageNote": "Accounts younger than **{days} day(s)**. \"Verify with Discord\" already holds accounts younger than {defaultDays} days for approval; members who verified that way are never gated.",
@@ -595,7 +596,8 @@
             "customNewAction": "New action",
             "customToggle": "Turn a rule on or off",
             "customRemove": "Remove a rule"
-        }
+        },
+        "needReviewChannel": "Pick a channel for automod review cards first: set a review channel (or a mod log channel) on the dashboard, then turn automod on."
     },
     "joinGate": {
         "check": {

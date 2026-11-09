@@ -163,7 +163,8 @@
   },
   "warns": {
     "of": "{n} z {max}",
-    "nextBans": "{n} (następne ostrzeżenie to ban)"
+    "nextBans": "{n} (następne ostrzeżenie to ban)",
+    "ladderOff": "{n} (drabinka ostrzeżeń wyłączona)"
   },
   "next": {
     "would": "To byłoby ostrzeżenie {n} z {max}.",
@@ -174,7 +175,8 @@
       "few": "Jeszcze {count} po nim oznaczają automatyczny ban ({ban}).",
       "many": "Jeszcze {count} po nim oznacza automatyczny ban ({ban})."
     },
-    "limit": "To osiągnęłoby limit ostrzeżeń: automatyczny ban ({ban}, stopień ostrzeżeń {stage} z 3)."
+    "limit": "To osiągnęłoby limit ostrzeżeń: automatyczny ban ({ban}, stopień ostrzeżeń {stage} z 3).",
+    "ladderOff": "Ostrzeżenia są zapisywane, ale nigdy nie prowadzą do automatycznego bana na tym serwerze (drabinka ostrzeżeń wyłączona)."
   },
   "settings": {
     "title": "Ustawienia",
@@ -228,7 +230,11 @@
     "filed": "Złożone",
     "decided": "Rozstrzygnięte",
     "note": "Notatka",
-    "noAppeals": "Brak odwołań."
+    "noAppeals": "Brak odwołań.",
+    "uncounted": {
+      "automod": "Ostrzeżenie automoda — nie liczy się do banów",
+      "ladderOff": "Ostrzeżenie — nie liczy się do banów (drabinka ostrzeżeń wyłączona)"
+    }
   },
   "appeals": {
     "pageTitle": "Odwołania",
@@ -308,7 +314,8 @@
       "mute": "Członkowi zostaje zdjęte wyciszenie (jeśli nadal trwa), dostaje wiadomość prywatną, a sprawa zostaje zdjęta.",
       "warn": "Ostrzeżenie zostaje usunięte (licznik drabiny spada; automatyczny ban, który spowodowało, zostaje zdjęty), a członek dostaje wiadomość prywatną.",
       "lifted": "Sprawa zostaje zdjęta, a członek dostaje wiadomość prywatną.",
-      "deny": "Kara zostaje. Członek dostaje wiadomość prywatną, że odwołanie odrzucono."
+      "deny": "Kara zostaje. Członek dostaje wiadomość prywatną, że odwołanie odrzucono.",
+      "warnUncounted": "Ostrzeżenie zostaje usunięte, a członek dostaje DM. Nigdy nie liczyło się do drabinki ostrzeżeń, więc nic więcej się nie zmienia."
     },
     "headingAccept": "Potwierdź: przyjmij odwołanie w sprawie {code}",
     "headingDeny": "Potwierdź: odrzuć odwołanie w sprawie {code}",

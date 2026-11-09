@@ -156,7 +156,8 @@
   },
   "warns": {
     "of": "{n} sur {max}",
-    "nextBans": "{n} (le prochain avertissement bannit)"
+    "nextBans": "{n} (le prochain avertissement bannit)",
+    "ladderOff": "{n} (échelle d'avertissements désactivée)"
   },
   "next": {
     "would": "Ce serait l’avertissement {n} sur {max}.",
@@ -166,7 +167,8 @@
       "other": "Encore {count} après entraîneraient un bannissement automatique ({ban}).",
       "many": "Encore {count} après entraîneraient un bannissement automatique ({ban})."
     },
-    "limit": "Cela atteindrait la limite d’avertissements : un bannissement automatique ({ban}, palier d’avertissement {stage} sur 3)."
+    "limit": "Cela atteindrait la limite d’avertissements : un bannissement automatique ({ban}, palier d’avertissement {stage} sur 3).",
+    "ladderOff": "Les avertissements sont enregistrés mais ne mènent jamais à un bannissement automatique sur ce serveur (l'échelle d'avertissements est désactivée)."
   },
   "settings": {
     "title": "Paramètres",
@@ -220,7 +222,11 @@
     "filed": "Déposé",
     "decided": "Décidé",
     "note": "Note",
-    "noAppeals": "Aucun appel."
+    "noAppeals": "Aucun appel.",
+    "uncounted": {
+      "automod": "Avertissement automod — ne compte pas pour les bannissements",
+      "ladderOff": "Avertissement — ne compte pas pour les bannissements (échelle d'avertissements désactivée)"
+    }
   },
   "appeals": {
     "pageTitle": "Appels",
@@ -300,7 +306,8 @@
       "mute": "La sourdine du membre est retirée (si elle est encore active), il reçoit un MP, et le dossier est levé.",
       "warn": "L’avertissement est retiré (le compteur de l’échelle baisse ; un bannissement automatique qu’il a causé est levé) et le membre reçoit un MP.",
       "lifted": "Le dossier est levé et le membre reçoit un MP.",
-      "deny": "La sanction reste. Le membre reçoit un MP indiquant que l’appel est refusé."
+      "deny": "La sanction reste. Le membre reçoit un MP indiquant que l’appel est refusé.",
+      "warnUncounted": "L'avertissement est retiré et le membre est prévenu en MP. Il n'a jamais compté pour l'échelle d'avertissements, rien d'autre ne change donc."
     },
     "headingAccept": "Confirmer : accepter l’appel sur {code}",
     "headingDeny": "Confirmer : refuser l’appel sur {code}",

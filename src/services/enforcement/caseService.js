@@ -205,6 +205,32 @@ export async function getCountedWarns(guildId, userId, level) {
     return rows;
 }
 
+/**
+ * Open warns recorded without counting toward the ladder (warn ladder off, or automod warns in a
+ * server where they do not count: ladderPolicy.js). Imported legacy warns are not included.
+ */
+export async function getUncountedWarns(guildId, userId) {
+    const { rows } = await query(
+        `SELECT * FROM ${T.cases}
+         WHERE guild_id = $1 AND target_user_id = $2 AND type = 'warn' AND is_imported = FALSE AND is_test = FALSE
+           AND status = ANY($3) AND counts_toward_level IS NULL
+         ORDER BY created_at DESC LIMIT 25`,
+        [guildId, userId, OPEN_STATUSES]
+    );
+    return rows;
+}
+
+/** How many open warns do not count toward the ladder (getUncountedWarns without its 25 limit). */
+export async function countUncountedWarns(guildId, userId) {
+    const { rows } = await query(
+        `SELECT COUNT(*)::int AS count FROM ${T.cases}
+         WHERE guild_id = $1 AND target_user_id = $2 AND type = 'warn' AND is_imported = FALSE AND is_test = FALSE
+           AND status = ANY($3) AND counts_toward_level IS NULL`,
+        [guildId, userId, OPEN_STATUSES]
+    );
+    return rows[0]?.count || 0;
+}
+
 /** Next number for the default "<username> <type> <n>" name. */
 export async function nextDefaultName(guildId, userId, username, type) {
     const { rows } = await query(

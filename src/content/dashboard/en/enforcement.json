@@ -194,5 +194,14 @@
     "badInvite": "Invite to our own server: must be a discord.gg invite link. Nothing was changed.",
     "homeNote": "This does not apply here: members of Mewvo's own servers always appeal in the Mewvo support server.",
     "homeOnlyAction": "This setting does not apply in Mewvo's own servers. Nothing was changed."
+  },
+  "ladderSettings": {
+    "title": "Warn ladder settings",
+    "help": "Whether warnings add up to automatic bans in this server. Warnings are always recorded and shown in the member’s record.",
+    "enabled": "Warn ladder: 3 warnings lead to an automatic ban",
+    "enabledHelp": "Off: warnings are still recorded and sent, but never ban anyone by themselves. Bans you give by hand are not affected.",
+    "automod": "Automod warnings count toward the warn ladder",
+    "automodHelp": "Off (the default in new servers): warnings automod gives on its own are recorded and shown as \"automod warning — doesn’t count toward bans\". On: three automod hits can mean an automatic 7-day ban.",
+    "offNote": "The warn ladder is off: no warning in this server leads to an automatic ban, so the automod setting has no effect right now."
   }
 }
