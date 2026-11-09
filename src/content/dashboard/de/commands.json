@@ -8,7 +8,7 @@
     "prefix": "Präfix für Textbefehle",
     "prefixHelp": "Manche Befehle funktionieren auch in einer normalen Nachricht: Tipp dieses Zeichen und dann den Befehlsnamen, statt einen Slash-Befehl zu nutzen. 1 bis 10 Zeichen, keine Leerzeichen.",
     "modRole": "Moderatorrolle",
-    "modRoleHelp": "Mitglieder mit dieser Rolle können Moderationsbefehle nutzen. Sie können sich außerdem als Moderatoren in diesem Dashboard anmelden: Sie sehen Mitglieder, Fälle und Einsprüche und können verwarnen, stummschalten, die Stummschaltung aufheben, kicken und Timeouts geben. Sie können nicht bannen und keine Einstellungen ändern. Mewvo gibt diese Rolle nie von selbst an jemanden.",
+    "modRoleHelp": "Mitglieder mit dieser Rolle können Moderationsbefehle nutzen. Sie können sich außerdem als Moderatoren in diesem Dashboard anmelden: Sie sehen Mitglieder, Fälle und Einsprüche und können verwarnen, stummschalten, die Stummschaltung aufheben, kicken und Timeouts geben. Sie können nicht bannen und keine Einstellungen ändern. Mewvo gibt diese Rolle nie von selbst an jemanden. In Discord können sie außerdem /enforcements, das Menü „Moderate“ und „Warn for this message“ nutzen, um zu verwarnen, stummzuschalten, zu kicken, die Stummschaltung aufzuheben und Verwarnungen zu entfernen (nicht auf Mewvos eigenen Servern); Bannen, Entbannen, Fälle bearbeiten und Einstellungen bleiben bei den Administratoren.",
     "needsAdmin": "Um Bot-Einstellungen zu ändern und die Werkzeuge hier zu nutzen, brauchst du die Berechtigung Administrator auf diesem Server.",
     "saved": "Bot-Einstellungen gespeichert.",
     "nothing": "Nichts geändert.",

@@ -205,9 +205,12 @@ test('owner override: full power only in Mewvo\'s own servers', () => {
     const noAdmin = { has: () => false };
     const main = checkCommandAccess({ command: {}, accessKey: 'enforcements', guild: { id: MAIN, ownerId: SERVER_OWNER }, userId: OWNER_ID, permissions: noAdmin });
     assert.deepEqual(main, { allowed: true, ownerOverride: true }, 'home: unchanged');
-    const other = checkCommandAccess({ command: {}, accessKey: 'enforcements', guild: { id: OTHER, ownerId: SERVER_OWNER }, userId: OWNER_ID, permissions: noAdmin });
+    const other = checkCommandAccess({ command: {}, accessKey: 'background', guild: { id: OTHER, ownerId: SERVER_OWNER }, userId: OWNER_ID, permissions: noAdmin });
     assert.equal(other.allowed, false, 'another server: no override');
     assert.equal(other.ownerOverride, undefined);
+    // The panel's entry points pass on to the command's own Moderator-role check there (D1), never as an override.
+    const panel = checkCommandAccess({ command: {}, accessKey: 'enforcements', guild: { id: OTHER, ownerId: SERVER_OWNER }, userId: OWNER_ID, permissions: noAdmin });
+    assert.deepEqual(panel, { allowed: true, moderatorCheck: true });
 
     const helpAsk = (guildId) => canSeeAdminCommands({ user: { id: OWNER_ID }, guildId, guild: { id: guildId, ownerId: SERVER_OWNER }, memberPermissions: noAdmin });
     assert.equal(helpAsk(MAIN), true);

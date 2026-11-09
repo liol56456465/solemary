@@ -1,8 +1,8 @@
 import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
-import { buildPanel } from '../../handlers/enforcementPanel.js';
-import { assertBotPermissions, isAdministrator } from '../../services/enforcement/enforcementService.js';
+import { buildPanel, readOnlyIfUntargetable } from '../../handlers/enforcementPanel.js';
+import { panelAccessFor, refusalKey } from '../../services/enforcement/panelAccess.js';
 import { resolveTargetUser } from '../../handlers/backgroundView.js';
 import { textForInteraction } from '../../utils/botText.js';
 import { descriptionLocalizations } from '../../utils/commandLocalizations.js';
@@ -31,17 +31,21 @@ export default {
             throw new TitanBotError('/enforcements outside a server', ErrorTypes.PERMISSION,
                 tr.t('staff.enforcements.serverOnly'), { expected: true });
         }
-        if (!isAdministrator(interaction.member)) {
-            throw new TitanBotError('Not an administrator', ErrorTypes.PERMISSION,
-                tr.t('staff.enforcements.noAdmin'), { expected: true });
-        }
-
+        // Acknowledged first: a moderator's role check may read the guild config.
         const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
         if (!deferred) return;
+        // Administrator; in servers that are not Mewvo's own also the Moderator role (owner decision D1).
+        const access = await panelAccessFor(interaction.member, interaction.guildId, { client });
+        if (!access.level) {
+            throw new TitanBotError('No panel access', ErrorTypes.PERMISSION,
+                tr.t(refusalKey(access, interaction.guildId)), { expected: true });
+        }
 
         const targetUser = await resolveTargetUser(interaction, client);
-        assertBotPermissions(interaction.guild);
-
-        await InteractionHelper.safeEditReply(interaction, await buildPanel(interaction.guild, interaction.user.id, targetUser, { lang: tr.lang }));
+        // Bot permissions are checked per action (enforcementService.assertBotPermissions), so a
+        // warn never needs Ban Members. The role order is checked now, before any form (audit 3.5).
+        const panel = await buildPanel(interaction.guild, interaction.user.id, targetUser, { lang: tr.lang, actions: access.actions });
+        await readOnlyIfUntargetable(panel, { guild: interaction.guild, moderator: interaction.member, targetUser, lang: tr.lang });
+        await InteractionHelper.safeEditReply(interaction, panel);
     },
 };

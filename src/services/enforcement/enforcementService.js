@@ -13,7 +13,10 @@ import { query, withTransaction, T } from './db.js';
 import { insertCase, setDmDelivered, setEndDmDelivered, getActiveCase, nextDefaultName, OPEN_STATUSES } from './caseService.js';
 import { ensureMutedRole, addMutedRole, removeMutedRole, findMutedRole } from './muteService.js';
 import { contestComponents } from './dmTemplates.js';
-import { addMonths, formatDuration, dateStamp, ladderStage, ladderStageShort } from './format.js';
+import { addMonths, formatDuration, dateStamp, ladderStageShort } from './format.js';
+import { ladderStageIn } from './precedentService.js';
+import { durationIn } from './dmTemplates.js';
+import { botText } from '../../utils/botText.js';
 import { syncBannedRoleQuietly } from './bannedRoleService.js';
 import { syncWarnRolesQuietly } from './warnRoleService.js';
 import { enforceMassActionGuard } from './massActionGuard.js';
@@ -40,6 +43,7 @@ export function sendCaseDm(user, key, record, { guild = null, guildId = null, me
     });
 }
 
+/** Every server permission some panel action needs (the union of ACTION_BOT_PERMISSIONS). */
 export const REQUIRED_BOT_PERMISSIONS = [
     ['BanMembers', 'Ban Members'],
     ['KickMembers', 'Kick Members'],
@@ -48,8 +52,32 @@ export const REQUIRED_BOT_PERMISSIONS = [
     ['CreateInstantInvite', 'Create Invite'],
 ];
 
+/**
+ * What Mewvo itself needs per action (audit 3.6): a warn or a removed warn needs nothing beyond
+ * answering; a mute needs Manage Roles + Manage Channels (the muted role and its channel
+ * overwrites); an unmute Manage Roles; a kick Kick Members + Create Invite (the one-time rejoin
+ * invite); a ban or unban Ban Members.
+ */
+export const ACTION_BOT_PERMISSIONS = Object.freeze({
+    warn: [],
+    removewarn: [],
+    mute: ['ManageRoles', 'ManageChannels'],
+    unmute: ['ManageRoles'],
+    kick: ['KickMembers', 'CreateInstantInvite'],
+    ban: ['BanMembers'],
+    unban: ['BanMembers'],
+});
+
+/** Discord's "Missing Permissions" error code. */
+export const MISSING_PERMISSIONS = 50013;
+
 function userError(message, type = ErrorTypes.VALIDATION) {
     return createError(message, type, message, { expected: true });
+}
+
+/** A permission's name as Discord shows it, in a language. */
+export function permissionLabel(flag, lang = 'en') {
+    return botText(lang).t(`staff.enfCheck.perm.${flag}`);
 }
 
 export function isAdministrator(member) {
@@ -58,41 +86,80 @@ export function isAdministrator(member) {
     return Boolean(member.permissions?.has?.(PermissionFlagsBits.Administrator));
 }
 
-export function getMissingBotPermissions(guild) {
+/**
+ * The permissions Mewvo lacks for `action` (labels in `lang`). `action` null: every permission
+ * any action needs (REQUIRED_BOT_PERMISSIONS), for a setup overview.
+ */
+export function getMissingBotPermissions(guild, action = null, { lang = 'en' } = {}) {
     const me = guild.members.me;
-    return REQUIRED_BOT_PERMISSIONS
-        .filter(([flag]) => !me?.permissions?.has(PermissionFlagsBits[flag]))
-        .map(([, label]) => label);
+    const flags = action ? (ACTION_BOT_PERMISSIONS[action] ?? []) : REQUIRED_BOT_PERMISSIONS.map(([flag]) => flag);
+    return flags
+        .filter((flag) => !me?.permissions?.has(PermissionFlagsBits[flag]))
+        .map((flag) => permissionLabel(flag, lang));
 }
 
-export function assertBotPermissions(guild) {
-    const missing = getMissingBotPermissions(guild);
+/** Refuses with what to fix when Mewvo lacks a permission `action` needs (nothing for a warn). */
+export function assertBotPermissions(guild, action = null, { lang = 'en' } = {}) {
+    const missing = getMissingBotPermissions(guild, action, { lang });
     if (missing.length > 0) {
-        throw userError(
-            `I'm missing these server permissions: **${missing.join(', ')}**. ` +
-            'Grant them to my role in Server Settings → Roles, then try again.',
-            ErrorTypes.PERMISSION
-        );
+        throw userError(botText(lang).t('staff.enfCheck.missingPerms', { list: missing.join(', ') }), ErrorTypes.PERMISSION);
     }
 }
 
 /**
  * Refuses the owner, the bot, yourself, and anyone with an equal or higher role
  * than the moderator (or the bot). Non-members can only be checked by ID.
+ * The texts are action-neutral, so they translate; `action` stays for the callers.
  */
-export function assertCanTarget(guild, moderator, targetUserId, targetMember, action) {
+export function assertCanTarget(guild, moderator, targetUserId, targetMember, action, { lang = 'en' } = {}) {
+    const tr = botText(lang);
     if (targetUserId === moderator.id) {
-        throw userError(`You cannot ${action} yourself.`);
+        throw userError(tr.t('staff.enfCheck.self'));
     }
     if (targetUserId === guild.client.user.id) {
-        throw userError(`I cannot ${action} myself.`);
+        throw userError(tr.t('staff.enfCheck.bot'));
     }
     if (targetUserId === guild.ownerId) {
-        throw userError(`You cannot ${action} the server owner.`);
+        throw userError(tr.t('staff.enfCheck.owner'));
     }
     if (targetMember) {
-        ModerationService.assertModerationHierarchy(moderator, targetMember, action);
+        ModerationService.assertModerationHierarchy(moderator, targetMember, action, { lang });
     }
+}
+
+/**
+ * Before the ban/kick DM (audit 1.3): Mewvo must hold the permission and be able to act on this
+ * member (role order), else nothing is sent and the moderator is told what to fix.
+ * `targetMember` null: not in the server (a ban by ID; only the permission counts).
+ */
+export function assertBotCanRemove(guild, kind, targetMember, { lang = 'en' } = {}) {
+    const tr = botText(lang);
+    const flag = kind === 'ban' ? 'BanMembers' : 'KickMembers';
+    if (!guild.members?.me?.permissions?.has?.(PermissionFlagsBits[flag])) {
+        throw userError(tr.t(kind === 'ban' ? 'staff.enfCheck.cannotBanPerm' : 'staff.enfCheck.cannotKickPerm'), ErrorTypes.PERMISSION);
+    }
+    // discord.js: bannable / kickable = the permission + Mewvo's highest role above theirs (+ not the owner).
+    const able = kind === 'ban' ? targetMember?.bannable : targetMember?.kickable;
+    if (targetMember && able === false) {
+        const role = targetMember.roles?.highest?.name ?? '?';
+        throw userError(tr.t(kind === 'ban' ? 'staff.enfCheck.cannotBanRole' : 'staff.enfCheck.cannotKickRole', { role }), ErrorTypes.PERMISSION);
+    }
+}
+
+/**
+ * Discord refused `kind` (ban, kick, mute, unban, unmute): an actionable, translated message.
+ * 50013 (Missing Permissions) names the permission and, when known, the role to move above.
+ */
+export function refusalMessage(kind, error, { lang = 'en', role = null } = {}) {
+    const tr = botText(lang);
+    if (error?.code === MISSING_PERMISSIONS) {
+        const flags = { ban: 'BanMembers', unban: 'BanMembers', kick: 'KickMembers', mute: 'ManageRoles', unmute: 'ManageRoles' };
+        const permission = permissionLabel(flags[kind] ?? 'BanMembers', lang);
+        return role
+            ? tr.t('staff.enfCheck.refusedMissingRole', { permission, role })
+            : tr.t('staff.enfCheck.refusedMissing', { permission });
+    }
+    return tr.t(`staff.enfCheck.refused.${kind}`, { error: error?.message || String(error) });
 }
 
 /** Serializes every enforcement change to one user in one guild (panel, expiry, appeals, /case). */
@@ -301,26 +368,32 @@ async function isBanned(guild, userId) {
  * Returns { record, dmDelivered, notes[] } for the moderator's confirmation message.
  */
 export async function executeAction({ guild, moderator, targetUser, flow, staffRole = null, lang = 'en' }) {
-    assertBotPermissions(guild);
+    const tr = botText(lang);
     const asModerator = Boolean(staffRole?.roleId && Array.isArray(staffRole.actions) && staffRole.actions.includes(flow?.type)
         && moderator?.roles?.cache?.has?.(staffRole.roleId));
     if (!isAdministrator(moderator) && !asModerator) {
-        throw userError('You need the Administrator permission to use this panel.', ErrorTypes.PERMISSION);
+        throw userError(tr.t('staff.enforcements.noAdmin'), ErrorTypes.PERMISSION);
     }
+    // Only what this action needs (audit 3.6): a warn needs no Ban/Kick/Roles/Channels/Invite.
+    assertBotPermissions(guild, flow?.type, { lang });
     // One action at a time per moderator, so the mass-action count can't be raced
     // by clicking several panels at once.
     return Mutex.runExclusive(`panel-mod:${guild.id}:${moderator.id}`, async () => {
         // Checked under the target's lock (see runAction), so the ladder read here is the one the
         // warn will use: a warn that escalates bans the member, so it counts as a ban.
+        let guardNote = null;
         const guard = async () => {
             const guardType = flow.type === 'warn' && previewWarn(await getLadder(guild.id, targetUser.id)).escalates ? 'ban' : flow.type;
-            // A dashboard moderator may not ban, so not through the warn ladder either.
+            // A moderator (dashboard, or the Discord Moderator role) may not ban, so not through the warn ladder either.
             if (guardType === 'ban' && !isAdministrator(moderator) && !staffRole?.actions?.includes?.('ban')) {
-                throw userError(`This warning would automatically ban ${targetUser.username} (warn ladder), so it needs an Administrator.`, ErrorTypes.PERMISSION);
+                throw userError(tr.t('staff.enfCheck.ladderNeedsAdmin', { name: targetUser.username }), ErrorTypes.PERMISSION);
             }
-            await enforceMassActionGuard(guild, moderator, guardType, { lang }); // the refusal: the panel user's language
+            // The refusal and the "one more" heads-up: the panel user's language.
+            guardNote = (await enforceMassActionGuard(guild, moderator, guardType, { lang }))?.warning ?? null;
         };
-        return runAction({ guild, moderator, targetUser, flow, guard });
+        const result = await runAction({ guild, moderator, targetUser, flow, guard, lang });
+        if (guardNote && Array.isArray(result?.notes)) result.notes.push(guardNote);
+        return result;
     });
 }
 
@@ -330,15 +403,15 @@ export async function executeAction({ guild, moderator, targetUser, flow, staffR
  * hierarchy checks, DMs, cases and logs are identical.
  */
 export async function executeSystemAction({ guild, targetUser, flow }) {
-    assertBotPermissions(guild);
+    assertBotPermissions(guild, flow?.type);
     const moderator = guild.members.me || await guild.members.fetchMe();
     return runAction({ guild, moderator, targetUser, flow });
 }
 
 const CASE_TYPES = new Set(['ban', 'kick', 'mute', 'warn']);
 
-async function runAction({ guild, moderator, targetUser, flow, guard = null }) {
-    const result = await runActionLocked({ guild, moderator, targetUser, flow, guard });
+async function runAction({ guild, moderator, targetUser, flow, guard = null, lang = 'en' }) {
+    const result = await runActionLocked({ guild, moderator, targetUser, flow, guard, lang });
     // Staff watchlist: a new case for a watched member → one mod log line (memory lookup; never throws).
     if (CASE_TYPES.has(flow.type) && result?.record?.case_code) {
         void alertWatched(guild.client, {
@@ -352,11 +425,11 @@ async function runAction({ guild, moderator, targetUser, flow, guard = null }) {
     return result;
 }
 
-async function runActionLocked({ guild, moderator, targetUser, flow, guard = null }) {
+async function runActionLocked({ guild, moderator, targetUser, flow, guard = null, lang = 'en' }) {
     return lockFor(guild.id, targetUser.id, async () => {
         if (guard) await guard();
         const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
-        assertCanTarget(guild, moderator, targetUser.id, targetMember, flow.type);
+        assertCanTarget(guild, moderator, targetUser.id, targetMember, flow.type, { lang });
 
         // Default names are re-picked under the lock so two panels can't claim the same number.
         if (flow.nameIsDefault && ['ban', 'kick', 'mute', 'warn'].includes(flow.type)) {
@@ -364,14 +437,14 @@ async function runActionLocked({ guild, moderator, targetUser, flow, guard = nul
         }
 
         switch (flow.type) {
-            case 'ban': return doBan({ guild, moderator, targetUser, flow });
-            case 'kick': return doKick({ guild, moderator, targetUser, targetMember, flow });
-            case 'mute': return doMute({ guild, moderator, targetUser, targetMember, flow });
-            case 'warn': return doWarn({ guild, moderator, targetUser, targetMember, flow });
-            case 'unban': return doUnban({ guild, moderator, targetUser, flow });
-            case 'unmute': return doUnmute({ guild, moderator, targetUser, flow });
-            case 'removewarn': return doRemoveWarn({ guild, moderator, targetUser, flow });
-            default: throw userError(`Unknown action: ${flow.type}`);
+            case 'ban': return doBan({ guild, moderator, targetUser, targetMember, flow, lang });
+            case 'kick': return doKick({ guild, moderator, targetUser, targetMember, flow, lang });
+            case 'mute': return doMute({ guild, moderator, targetUser, targetMember, flow, lang });
+            case 'warn': return doWarn({ guild, moderator, targetUser, targetMember, flow, lang });
+            case 'unban': return doUnban({ guild, moderator, targetUser, flow, lang });
+            case 'unmute': return doUnmute({ guild, moderator, targetUser, flow, lang });
+            case 'removewarn': return doRemoveWarn({ guild, moderator, targetUser, flow, lang });
+            default: throw userError(botText(lang).t('staff.enfCheck.unknownAction', { action: String(flow.type) }));
         }
     });
 }
@@ -397,25 +470,43 @@ function dmComponentsFor(flow, record) {
     return flow?.contestable && record?.case_code ? contestComponents(record.case_code) : null;
 }
 
-/** Records the case, DMs first, then bans. Rolls the case back if the ban fails. */
-async function banWithRecord({ guild, targetUser, record, auditReason, dmComponents = null }) {
+/** Rolls back a case whose Discord action failed (never throws: the action's error matters). */
+async function deleteCaseQuietly(record) {
+    await query(`DELETE FROM ${T.cases} WHERE id = $1`, [record.id])
+        .catch((error) => logger.warn(`Could not roll back case ${record.case_code}: ${error.message}`));
+}
+
+/**
+ * Records the case, DMs first, then bans. Rolls the case back if the ban fails. Mewvo's Ban
+ * Members permission and role order are checked BEFORE the DM (audit 1.3): a member is never
+ * told "you are banned" when the ban cannot happen. `targetMember`: null when not in the server.
+ */
+async function banWithRecord({ guild, targetUser, targetMember = null, record, auditReason, dmComponents = null, lang = 'en' }) {
+    try {
+        assertBotCanRemove(guild, 'ban', targetMember, { lang });
+    } catch (error) {
+        await deleteCaseQuietly(record);
+        throw error;
+    }
     const dmDelivered = await sendCaseDm(targetUser, 'enf.ban', record, { guild, components: dmComponents });
     try {
         await guild.members.ban(targetUser.id, { reason: auditReason.slice(0, 512) });
     } catch (error) {
-        await query(`DELETE FROM ${T.cases} WHERE id = $1`, [record.id]).catch(() => {});
+        await deleteCaseQuietly(record);
         throw createError(`Ban failed: ${error.message}`, ErrorTypes.DISCORD_API,
-            `Discord refused the ban: ${error.message}`, { expected: true });
+            refusalMessage('ban', error, { lang, role: targetMember?.roles?.highest?.name ?? null }), { expected: true });
     }
     await setDmDelivered(record.id, dmDelivered);
     await syncBannedRoleQuietly(guild.client, targetUser.id);
     return { ...record, dm_delivered: dmDelivered };
 }
 
-async function doBan({ guild, moderator, targetUser, flow }) {
+async function doBan({ guild, moderator, targetUser, targetMember = null, flow, lang = 'en' }) {
     if (await isBanned(guild, targetUser.id)) {
-        throw userError(`**${targetUser.username}** is already banned.`);
+        throw userError(botText(lang).t('staff.enfCheck.alreadyBanned', { name: targetUser.username }));
     }
+    // Before the case is written: nothing to roll back, nothing sent.
+    assertBotCanRemove(guild, 'ban', targetMember, { lang });
 
     const now = new Date();
     let record = await insertCase(null, {
@@ -428,7 +519,7 @@ async function doBan({ guild, moderator, targetUser, flow }) {
     });
 
     record = await banWithRecord({
-        guild, targetUser, record,
+        guild, targetUser, targetMember, record, lang,
         auditReason: `${record.case_code}: ${record.reason} (by ${moderator.user.username})`,
         dmComponents: dmComponentsFor(flow, record),
     });
@@ -436,10 +527,13 @@ async function doBan({ guild, moderator, targetUser, flow }) {
     return { record, dmDelivered: record.dm_delivered, notes: [] };
 }
 
-async function doKick({ guild, moderator, targetUser, targetMember, flow }) {
+async function doKick({ guild, moderator, targetUser, targetMember, flow, lang = 'en' }) {
+    const tr = botText(lang);
     if (!targetMember) {
-        throw userError(`**${targetUser.username}** is not in the server.`);
+        throw userError(tr.t('staff.enfCheck.notInServer', { name: targetUser.username }));
     }
+    // Before the case and the DM (audit 1.3): never "you were kicked" when the kick cannot happen.
+    assertBotCanRemove(guild, 'kick', targetMember, { lang });
 
     let record = await insertCase(null, {
         ...baseRecord(guild, targetUser, flow, moderatorFields(moderator)),
@@ -453,26 +547,27 @@ async function doKick({ guild, moderator, targetUser, targetMember, flow }) {
     try {
         await targetMember.kick(`${record.case_code}: ${record.reason} (by ${moderator.user.username})`.slice(0, 512));
     } catch (error) {
-        await query(`DELETE FROM ${T.cases} WHERE id = $1`, [record.id]).catch(() => {});
+        await deleteCaseQuietly(record);
         throw createError(`Kick failed: ${error.message}`, ErrorTypes.DISCORD_API,
-            `Discord refused the kick: ${error.message}`, { expected: true });
+            refusalMessage('kick', error, { lang, role: targetMember.roles?.highest?.name ?? null }), { expected: true });
     }
 
     await setDmDelivered(record.id, dmDelivered);
     record = { ...record, dm_delivered: dmDelivered };
     // A kicked member gets no temporary role back when they rejoin.
     await endTempRoles(guild.id, targetUser.id).catch((error) => logger.warn(`Temporary roles not ended after kick ${record.case_code}: ${error.message}`));
-    const notes = invite ? [] : ['No rejoin invite could be created (no channel where I can create invites).'];
+    const notes = invite ? [] : [tr.t('staff.enfCheck.note.noInvite')];
     await logEnforcement(guild.client, guild.id, 'kick', { record, target: targetUser, moderatorLabel: moderatorLabel(moderator) });
     return { record, dmDelivered, notes };
 }
 
-async function doMute({ guild, moderator, targetUser, targetMember, flow }) {
+async function doMute({ guild, moderator, targetUser, targetMember, flow, lang = 'en' }) {
+    const tr = botText(lang);
     if (!targetMember) {
-        throw userError(`**${targetUser.username}** is not in the server.`);
+        throw userError(tr.t('staff.enfCheck.notInServer', { name: targetUser.username }));
     }
     if (await getActiveCase(guild.id, targetUser.id, 'mute')) {
-        throw userError(`**${targetUser.username}** is already muted. Unmute first to change the duration.`);
+        throw userError(tr.t('staff.enfCheck.alreadyMuted', { name: targetUser.username }));
     }
 
     const role = await ensureMutedRole(guild);
@@ -488,9 +583,9 @@ async function doMute({ guild, moderator, targetUser, targetMember, flow }) {
     try {
         await addMutedRole(targetMember, role, `${record.case_code}: ${record.reason}`.slice(0, 512));
     } catch (error) {
-        await query(`DELETE FROM ${T.cases} WHERE id = $1`, [record.id]).catch(() => {});
+        await deleteCaseQuietly(record);
         throw createError(`Mute failed: ${error.message}`, ErrorTypes.DISCORD_API,
-            `Could not add the muted role: ${error.message}`, { expected: true });
+            refusalMessage('mute', error, { lang, role: targetMember.roles?.highest?.name ?? null }), { expected: true });
     }
 
     const dmDelivered = await sendCaseDm(targetUser, 'enf.mute', record, { guild, member: targetMember, components: dmComponentsFor(flow, record) });
@@ -541,15 +636,19 @@ export function previewWarn(ladder) {
     };
 }
 
-async function doWarn({ guild, moderator, targetUser, targetMember, flow }) {
+async function doWarn({ guild, moderator, targetUser, targetMember, flow, lang = 'en' }) {
+    const tr = botText(lang);
     if (!targetMember) {
-        throw userError(`**${targetUser.username}** is not in the server, so a warning can't reach them.`);
+        throw userError(tr.t('staff.enfCheck.warnNotInServer', { name: targetUser.username }));
     }
 
     const botUser = guild.client.user;
     const { warnRecord, banRecord, preview } = await withTransaction(async (client) => {
         const ladder = await lockLadderRow(client, guild.id, targetUser.id);
         const step = previewWarn(ladder);
+        // A warn that escalates bans: when Mewvo cannot ban this member, refuse the whole warn here
+        // (the throw rolls back the warn and the ladder step), so no half-done ladder ban is recorded.
+        if (step.escalates) assertBotCanRemove(guild, 'ban', targetMember, { lang });
 
         const warn = await insertCase(client, {
             ...baseRecord(guild, targetUser, flow, moderatorFields(moderator)),
@@ -607,17 +706,20 @@ async function doWarn({ guild, moderator, targetUser, targetMember, flow }) {
     let ban = banRecord;
     try {
         ban = await banWithRecord({
-            guild, targetUser, record: banRecord,
+            guild, targetUser, targetMember, record: banRecord, lang,
             auditReason: `${banRecord.case_code}: ${enforcementConfig.ladderReason} (warn ${warnRecord.case_code})`,
             // The automod warn is what the member contests (the review card carries its code).
             dmComponents: dmComponentsFor(flow, warnRecord),
         });
         await setDmDelivered(warnRecord.id, ban.dm_delivered);
         record = { ...warnRecord, dm_delivered: ban.dm_delivered };
-        notes.push(`Warning limit reached: automatic ${ban.expires_at ? formatDuration(Number(ban.duration_ms)) : 'permanent'} ban \`${ban.case_code}\`. Now at ${ladderStage(preview.nextLevel)}.`);
+        const stage = ladderStageIn(preview.nextLevel, { lang });
+        notes.push(ban.expires_at
+            ? tr.t('staff.enfCheck.note.ladderBan', { length: durationIn(Number(ban.duration_ms), lang), code: ban.case_code, stage })
+            : tr.t('staff.enfCheck.note.ladderBanPermanent', { code: ban.case_code, stage }));
     } catch (error) {
-        // banWithRecord removed the ban row; the warn and the ladder step stay recorded.
-        notes.push(`Warning limit reached, but the automatic ban failed: ${error.userMessage || error.message}. The member is now at ${ladderStage(preview.nextLevel)}; ban manually.`);
+        // banWithRecord removed the ban row (and sent no DM when Mewvo could not ban); the warn and the ladder step stay recorded.
+        notes.push(tr.t('staff.enfCheck.note.ladderBanFailed', { error: error.userMessage || error.message, stage: ladderStageIn(preview.nextLevel, { lang }) }));
         ban = null;
     }
 
@@ -664,11 +766,16 @@ async function revokeOpenCases(guildId, userId, type, revokedBy, reason) {
     return rows;
 }
 
-async function doUnban({ guild, moderator, targetUser, flow }) {
+async function doUnban({ guild, moderator, targetUser, flow, lang = 'en' }) {
+    const tr = botText(lang);
     if (!(await isBanned(guild, targetUser.id))) {
-        throw userError(`**${targetUser.username}** is not banned.`);
+        throw userError(tr.t('staff.enfCheck.notBanned', { name: targetUser.username }));
     }
-    await guild.members.unban(targetUser.id, `${flow.reason} (by ${moderator.user.username})`.slice(0, 512));
+    try {
+        await guild.members.unban(targetUser.id, `${flow.reason} (by ${moderator.user.username})`.slice(0, 512));
+    } catch (error) {
+        throw createError(`Unban failed: ${error.message}`, ErrorTypes.DISCORD_API, refusalMessage('unban', error, { lang }), { expected: true });
+    }
     const revoked = await revokeOpenCases(guild.id, targetUser.id, 'ban', moderator.id, flow.reason);
     await syncBannedRoleQuietly(guild.client, targetUser.id);
     const endDm = await notifyPunishmentEnded(guild.client, guild, { type: 'ban', userId: targetUser.id, records: revoked, early: true });
@@ -679,16 +786,23 @@ async function doUnban({ guild, moderator, targetUser, flow }) {
             ...(revoked.length ? [{ name: 'Lifted cases', value: revoked.map((r) => `\`${r.case_code}\``).join(', ') }] : []),
         ],
     });
-    const notes = revoked.length ? [`Lifted: ${revoked.map((r) => `\`${r.case_code}\``).join(', ')}`] : [];
-    notes.push(endDm ? 'The user was told by DM, with an invite back.' : 'The "ban ended" DM could not be delivered.');
+    const notes = revoked.length ? [tr.t('staff.enfCheck.note.lifted', { codes: revoked.map((r) => `\`${r.case_code}\``).join(', ') })] : [];
+    notes.push(endDm ? tr.t('staff.enfCheck.note.unbanDm') : tr.t('staff.enfCheck.note.unbanDmFailed'));
     return { record: null, dmDelivered: null, notes };
 }
 
-async function doUnmute({ guild, moderator, targetUser, flow }) {
-    const removed = await removeMutedRole(guild, targetUser.id, `${flow.reason} (by ${moderator.user.username})`.slice(0, 512));
+async function doUnmute({ guild, moderator, targetUser, flow, lang = 'en' }) {
+    const tr = botText(lang);
+    let removed;
+    try {
+        removed = await removeMutedRole(guild, targetUser.id, `${flow.reason} (by ${moderator.user.username})`.slice(0, 512));
+    } catch (error) {
+        if (error?.code !== MISSING_PERMISSIONS) throw error;
+        throw createError(`Unmute failed: ${error.message}`, ErrorTypes.DISCORD_API, refusalMessage('unmute', error, { lang }), { expected: true });
+    }
     const revoked = await revokeOpenCases(guild.id, targetUser.id, 'mute', moderator.id, flow.reason);
     if (!removed && revoked.length === 0) {
-        throw userError(`**${targetUser.username}** is not muted.`);
+        throw userError(tr.t('staff.enfCheck.notMuted', { name: targetUser.username }));
     }
     const endDm = await notifyPunishmentEnded(guild.client, guild, { type: 'mute', userId: targetUser.id, records: revoked, early: true });
     await logEnforcement(guild.client, guild.id, 'unmute', {
@@ -698,8 +812,8 @@ async function doUnmute({ guild, moderator, targetUser, flow }) {
             ...(revoked.length ? [{ name: 'Lifted cases', value: revoked.map((r) => `\`${r.case_code}\``).join(', ') }] : []),
         ],
     });
-    const notes = removed ? [] : ['The user was not in the server or no longer had the role; the record was still lifted.'];
-    if (!endDm) notes.push('The "mute ended" DM could not be delivered.');
+    const notes = removed ? [] : [tr.t('staff.enfCheck.note.unmuteNoRole')];
+    if (!endDm) notes.push(tr.t('staff.enfCheck.note.unmuteDmFailed'));
     return { record: null, dmDelivered: null, notes };
 }
 
@@ -786,10 +900,10 @@ export async function liftLadderBanForWarn(guild, warn, admin, reason) {
     return ban;
 }
 
-async function doRemoveWarn({ guild, moderator, targetUser, flow }) {
+async function doRemoveWarn({ guild, moderator, targetUser, flow, lang = 'en' }) {
     const result = await revokeWarn(guild.id, flow.warnCode, moderator.id, flow.reason);
     if (!result) {
-        throw userError('That warning is no longer active.');
+        throw userError(botText(lang).t('staff.enfCheck.warnGone'));
     }
     const ladder = await getLadder(guild.id, targetUser.id);
     await syncWarnRolesQuietly(guild, targetUser.id);
@@ -798,10 +912,10 @@ async function doRemoveWarn({ guild, moderator, targetUser, flow }) {
         extra: [
             { name: 'Warning', value: `\`${result.case_code}\` · ${result.name}` },
             { name: 'Reason', value: flow.reason },
-            { name: 'Counted warns now', value: `${ladder.warns_since_level} (${ladderStage(ladder.level)})` },
+            { name: 'Counted warns now', value: `${ladder.warns_since_level} (${ladderStageIn(ladder.level)})` },
         ],
     });
-    return { record: null, dmDelivered: null, notes: [`Removed \`${result.case_code}\`. Counted warns: ${ladder.warns_since_level}.`] };
+    return { record: null, dmDelivered: null, notes: [botText(lang).t('staff.enfCheck.note.removed', { code: result.case_code, count: ladder.warns_since_level })] };
 }
 
 function moderatorLabel(moderator) {

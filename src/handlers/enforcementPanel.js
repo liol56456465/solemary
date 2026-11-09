@@ -9,8 +9,9 @@
 //   enf:final:<mod>:<nonce>              second confirm (permanent ban the member cannot appeal)
 //   enf:unbanonly:<mod>:<nonce>          "Unban only (stage stays)" → the unban form
 //   enf:undo|undook:<mod>:<nonce>        "Undo (mistake)" → its confirm → voidCase
-// Every component re-checks that the clicker is that moderator and still an
-// Administrator before doing anything.
+// Every component re-checks that the clicker is that moderator and still may use the panel
+// (Administrator; in servers that are not Mewvo's own also the Moderator role, for Warn, Mute,
+// Kick, Unmute and Remove warn only: services/enforcement/panelAccess.js) before doing anything.
 
 import {
     ActionRowBuilder,
@@ -33,13 +34,15 @@ import { caseStatusCode } from '../services/enforcement/caseService.js';
 import { formatPrecedent } from '../services/enforcement/precedentService.js';
 import { createError, ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import {
+    assertBotPermissions,
+    assertCanTarget,
     executeAction,
     getLadder,
     getTargetState,
-    isAdministrator,
     previewWarn,
 } from '../services/enforcement/enforcementService.js';
 import { voidCase } from '../services/enforcement/caseEditService.js';
+import { ALL_PANEL_ACTIONS, panelAccessFor, panelActionAllowed, refusalKey, staffRoleFor } from '../services/enforcement/panelAccess.js';
 import {
     getCaseByCode,
     getCountedWarns,
@@ -114,8 +117,13 @@ function typeIn(type, lang) {
 
 // ── Guards ─────────────────────────────────────────────────────────────────
 
-/** Returns true when the clicker may use this component; otherwise replies and returns false. */
-async function guard(interaction, moderatorId) {
+/**
+ * Returns the clicker's panel access (panelAccess.js) when they may use this component for
+ * `action` (null: cancel, or a step whose flow is gone); otherwise replies and returns null.
+ * `checkBot`: also check Mewvo's permissions for `action` now (the action buttons, before any
+ * form is filled in). The refusal must answer within 3 s: the role read has a budget.
+ */
+async function guard(interaction, moderatorId, { action = null, checkBot = false } = {}) {
     // Ephemeral refusals: the clicker's Discord language (utils/botText.js).
     const tr = botText(langOf(interaction));
     if (interaction.user.id !== moderatorId) {
@@ -123,21 +131,37 @@ async function guard(interaction, moderatorId) {
             type: ErrorTypes.PERMISSION,
             message: tr.t('errors.panel.otherModerator'),
         });
-        return false;
+        return null;
     }
     // Any server (multi-server B1): the panel acts in the server it was opened in (interaction.guild).
     if (!interaction.inGuild()) {
         await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('errors.panel.serverOnly') });
-        return false;
+        return null;
     }
-    if (!isAdministrator(interaction.member)) {
+    const access = await panelAccessFor(interaction.member, interaction.guildId, { client: interaction.client });
+    if (!access.level) {
         await replyUserError(interaction, {
             type: ErrorTypes.PERMISSION,
-            message: tr.t('errors.panel.noAdmin'),
+            message: tr.t(refusalKey(access, interaction.guildId, { closed: true })),
         });
-        return false;
+        return null;
     }
-    return true;
+    if (!panelActionAllowed(access, action)) {
+        await replyUserError(interaction, {
+            type: ErrorTypes.PERMISSION,
+            message: tr.t('staff.enforcements.modNotAllowed', { action: actionLabelIn(action, { lang: tr.lang }) }),
+        });
+        return null;
+    }
+    if (checkBot && action) {
+        try {
+            assertBotPermissions(interaction.guild, action, { lang: tr.lang });
+        } catch (error) {
+            await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: error.userMessage || error.message });
+            return null;
+        }
+    }
+    return access;
 }
 
 async function expired(interaction) {
@@ -225,8 +249,12 @@ export function recentCasesText(rows, total, appealStatuses = new Map(), { lang 
 
 const RECENT_CASES_SHOWN = 3;
 
-/** The panel for one member. `lang`: the moderator's language (the panel is an ephemeral reply). */
-export async function buildPanel(guild, moderatorId, targetUser, { lang = 'en' } = {}) {
+/**
+ * The panel for one member. `lang`: the moderator's language (the panel is an ephemeral reply).
+ * `actions`: what the moderator may run (panelAccess.js; a Moderator-role user gets no Ban/Unban
+ * buttons or templates); every action by default.
+ */
+export async function buildPanel(guild, moderatorId, targetUser, { lang = 'en', actions = ALL_PANEL_ACTIONS } = {}) {
     const tr = botText(lang);
     const state = await getTargetState(guild, targetUser.id);
     const [{ rows: recent, total }, appealStatuses] = await Promise.all([
@@ -247,7 +275,8 @@ export async function buildPanel(guild, moderatorId, targetUser, { lang = 'en' }
 
     // Unban of an automatic ladder ban first asks "unban only" or "remove the warn" (audit 1.2).
     const ladderBan = Boolean(state.banned && state.activeBan?.is_auto);
-    const buttons = availableActions(state).map((action) => new ButtonBuilder()
+    const offered = availableActions(state).filter((action) => actions.includes(action));
+    const buttons = offered.map((action) => new ButtonBuilder()
         .setCustomId(`enf:act:${moderatorId}:${targetUser.id}:${action}${action === 'unban' && ladderBan ? ':ladder' : ''}`)
         .setLabel(actionLabelIn(action, { lang }))
         .setStyle(ACTION_STYLES[action]));
@@ -256,7 +285,7 @@ export async function buildPanel(guild, moderatorId, targetUser, { lang = 'en' }
     for (let i = 0; i < buttons.length; i += 5) {
         rows.push(new ActionRowBuilder().addComponents(buttons.slice(i, i + 5)));
     }
-    const templates = usableTemplates(readTemplates(guild.id), availableActions(state));
+    const templates = usableTemplates(readTemplates(guild.id), offered);
     if (templates.length) {
         rows.push(new ActionRowBuilder().addComponents(new StringSelectMenuBuilder()
             .setCustomId(`enfsel:tpl:${moderatorId}:${targetUser.id}`)
@@ -268,6 +297,23 @@ export async function buildPanel(guild, moderatorId, targetUser, { lang = 'en' }
             })))));
     }
     return { embeds: [embed], components: rows };
+}
+
+/**
+ * Early role-order check (audit 3.5): when no action could pass the hierarchy check on Confirm
+ * (the member is the moderator, the owner, Mewvo, or at/above the moderator's or Mewvo's role),
+ * the panel is shown read-only with the reason, so no reason is typed for nothing. Changes
+ * `panel` in place. `targetMember` undefined: fetched here (null = not in the server).
+ */
+export async function readOnlyIfUntargetable(panel, { guild, moderator, targetUser, targetMember, lang = 'en' }) {
+    const member = targetMember !== undefined ? targetMember : await guild.members.fetch(targetUser.id).catch(() => null);
+    try {
+        assertCanTarget(guild, moderator, targetUser.id, member, 'moderate', { lang });
+    } catch (error) {
+        panel.content = botText(lang).t('staff.moderateuser.readOnly', { reason: error.userMessage || error.message });
+        panel.components = [];
+    }
+    return panel;
 }
 
 /**
@@ -808,7 +854,7 @@ async function startAction(interaction, moderatorId, targetId, action, extra = n
 }
 
 /** Runs a confirmed record/lift flow and shows the result card (with its undo button). */
-async function runConfirmedFlow(interaction, client, moderatorId, flow, lang) {
+async function runConfirmedFlow(interaction, client, moderatorId, flow, lang, access = null) {
     const tr = botText(lang);
     const targetUser = await client.users.fetch(flow.targetId);
     const startedAt = Date.now();
@@ -817,7 +863,7 @@ async function runConfirmedFlow(interaction, client, moderatorId, flow, lang) {
         ? await listCasesForUser(interaction.guildId, flow.targetId, { limit: 1 }).then(({ rows }) => rows[0]?.id ?? 0).catch(() => null)
         : null;
     try {
-        const result = await executeAction({ guild: interaction.guild, moderator: interaction.member, targetUser, flow, lang });
+        const result = await executeAction({ guild: interaction.guild, moderator: interaction.member, targetUser, flow, lang, staffRole: staffRoleFor(access) });
         result.notes.push(...await attachFlowEvidence(flow, result.record, interaction.user, { lang }));
         // The "Next warn" line reads the ladder as the warn left it; a failed read only drops the line.
         const ladderAfter = flow.type === 'warn' ? await getLadder(interaction.guildId, flow.targetId).catch(() => null) : null;
@@ -875,6 +921,15 @@ async function runUndo(interaction, client, moderatorId, undo, lang) {
 }
 
 /** An undo flow usable by this click: same moderator, same server (the guard checked the rest). */
+/** The access action an undo needs (exported for tests): a lifted ban is an unban (Administrator only). */
+export function undoAccessAction(undo) {
+    if (!undo || undo.kind !== 'undo') return null;
+    if (undo.type === 'ban' || undo.isLadderBan || undo.ladderBanCode) return 'unban';
+    if (undo.type === 'mute') return 'unmute';
+    if (undo.type === 'warn') return 'removewarn';
+    return undo.type;
+}
+
 function undoFlowOf(nonce, moderatorId, guildId, { take = false } = {}) {
     const flow = take ? takeFlow(nonce) : getFlow(nonce);
     if (!flow || flow.kind !== 'undo' || flow.moderatorId !== moderatorId || flow.guildId !== guildId) return null;
@@ -883,8 +938,15 @@ function undoFlowOf(nonce, moderatorId, guildId, { take = false } = {}) {
 
 export async function handleEnforcementButton(interaction, client, args) {
     const [step, moderatorId, arg, action, extra] = args;
-    // Every step, the undo ones included: the clicker must be this moderator and still an Administrator.
-    if (!(await guard(interaction, moderatorId))) return;
+    // Every step, the undo ones included: the clicker must be this moderator and may still run
+    // the action (Administrator; outside Mewvo's servers also the Moderator role for its actions).
+    // The action: the button's own (act), an undo's lifting action, else the open flow's.
+    const guardedAction = step === 'act' ? action
+        : step === 'cancel' ? null
+            : (step === 'undo' || step === 'undook') ? undoAccessAction(getFlow(arg))
+                : getFlow(arg)?.type ?? null;
+    const access = await guard(interaction, moderatorId, { action: guardedAction, checkBot: step === 'act' });
+    if (!access) return;
 
     if (step === 'act') {
         return startAction(interaction, moderatorId, arg, action, extra);
@@ -916,7 +978,7 @@ export async function handleEnforcementButton(interaction, client, args) {
         }
         const flow = takeFlow(arg);
         if (!flow) return expired(interaction);
-        return runConfirmedFlow(interaction, client, moderatorId, flow, lang);
+        return runConfirmedFlow(interaction, client, moderatorId, flow, lang, access);
     }
 
     if (step === 'unbanonly') {
@@ -944,7 +1006,10 @@ export async function handleEnforcementButton(interaction, client, args) {
 
 export async function handleEnforcementSelect(interaction, client, args) {
     const [step, moderatorId, nonce] = args;
-    if (!(await guard(interaction, moderatorId))) return;
+    const guardedAction = step === 'tpl'
+        ? readTemplates(interaction.guildId)[Number(interaction.values?.[0])]?.action ?? null
+        : getFlow(nonce)?.type ?? null;
+    if (!(await guard(interaction, moderatorId, { action: guardedAction, checkBot: step === 'tpl' }))) return;
     // Templates carry the target id (no flow yet).
     if (step === 'tpl') return startTemplate(interaction, client, moderatorId, nonce, interaction.values[0]);
 
@@ -970,7 +1035,7 @@ export async function handleEnforcementSelect(interaction, client, args) {
 
 export async function handleEnforcementModal(interaction, client, args) {
     const [step, moderatorId, nonce] = args;
-    if (!(await guard(interaction, moderatorId))) return;
+    if (!(await guard(interaction, moderatorId, { action: getFlow(nonce)?.type ?? null }))) return;
 
     await interaction.deferUpdate();
     const flow = getFlow(nonce);

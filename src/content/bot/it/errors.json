@@ -76,6 +76,7 @@
     "panel": {
         "otherModerator": "Questo pannello appartiene a un altro moderatore. Esegui tu /enforcements.",
         "serverOnly": "Questo pannello funziona solo in un server.",
-        "noAdmin": "Non hai più il permesso di Amministratore, quindi questo pannello è chiuso."
+        "noAdmin": "Non hai più il permesso di Amministratore, quindi questo pannello è chiuso.",
+        "noAccess": "Non hai più il permesso Amministratore né il ruolo di moderatore, quindi questo pannello è chiuso."
     }
 }

@@ -264,7 +264,10 @@
             "userId": "Nutzer-ID, für Leute, die nicht mehr auf dem Server sind"
         },
         "serverOnly": "Dieser Befehl funktioniert nur auf einem Server.",
-        "noAdmin": "Du brauchst die Administrator-Berechtigung, um dieses Panel zu nutzen."
+        "noAdmin": "Du brauchst die Administrator-Berechtigung, um dieses Panel zu nutzen.",
+        "noAdminOrMod": "Du brauchst die Administrator-Berechtigung oder die Moderatorrolle dieses Servers, um dieses Panel zu nutzen.",
+        "modNotAllowed": "Mit der Moderatorrolle kannst du verwarnen, stummschalten, kicken, die Stummschaltung aufheben und Verwarnungen entfernen. **{action}** braucht die Administrator-Berechtigung.",
+        "accessUnavailable": "Ich konnte deine Moderatorrolle gerade nicht prüfen (die Datenbank antwortet nicht). Es wurde nichts geändert. Versuch es gleich noch einmal."
     },
     "moderateuser": {
         "serverOnly": "Das funktioniert nur auf einem Server.",
@@ -275,7 +278,8 @@
         "noAdmin": "Du brauchst die Administrator-Berechtigung, um Mitglieder zu verwarnen.",
         "botMessage": "Für Bot-, Webhook- und Systemnachrichten kann nicht verwarnt werden.",
         "self": "Du kannst dich nicht selbst verwarnen.",
-        "notInServer": "**{name}** ist nicht mehr auf dem Server, eine Verwarnung erreicht diese Person nicht."
+        "notInServer": "**{name}** ist nicht mehr auf dem Server, eine Verwarnung erreicht diese Person nicht.",
+        "noAdminOrMod": "Du brauchst die Administrator-Berechtigung oder die Moderatorrolle dieses Servers, um Mitglieder zu verwarnen."
     },
     "reportmessage": {
         "serverOnly": "Meldungen funktionieren nur auf einem Server.",
@@ -1040,7 +1044,11 @@
             "titleBans": "Sicherheitslimit: zu viele Banns/Kicks in {minutes} Minuten, Moderator gesperrt",
             "titleMutes": "Sicherheitslimit: zu viele Stummschaltungen in {minutes} Minuten, Moderator gesperrt",
             "dmBans": "**Sicherheitslimit (zu viele Banns/Kicks in {minutes} Minuten) in {server}.** {summary} Der Panelzugang ist bis <t:{until}:f> gesperrt. Früher aufheben mit `/staff restore`.",
-            "dmMutes": "**Sicherheitslimit (zu viele Stummschaltungen in {minutes} Minuten) in {server}.** {summary} Der Panelzugang ist bis <t:{until}:f> gesperrt. Früher aufheben mit `/staff restore`."
+            "dmMutes": "**Sicherheitslimit (zu viele Stummschaltungen in {minutes} Minuten) in {server}.** {summary} Der Panelzugang ist bis <t:{until}:f> gesperrt. Früher aufheben mit `/staff restore`.",
+            "liftHome": "Der Server-Owner kann sie mit `/staff restore` früher aufheben.",
+            "liftOther": "Ein Administrator kann sie mit `/staff restore` früher aufheben.",
+            "lastOneBans": "Hinweis: Noch 1 Bann oder Kick innerhalb von {minutes} Minuten pausiert dein Panel für {block} Minuten.",
+            "lastOneMutes": "Hinweis: Noch 1 Stummschaltung innerhalb von {minutes} Minuten pausiert dein Panel für {block} Minuten."
         }
     },
     "modmail": {
@@ -1075,5 +1083,56 @@
         "dmFailed": "Die DM an das Mitglied ging nicht raus (es hat den Server verlassen oder seine DMs geschlossen).",
         "transcript": "Modmail mit <@{userId}> (`{userId}`) geschlossen von {closer}.",
         "transcriptReason": "Grund: {reason}"
+    },
+    "enfCheck": {
+        "perm": {
+            "BanMembers": "Mitglieder bannen",
+            "KickMembers": "Mitglieder kicken",
+            "ManageRoles": "Rollen verwalten",
+            "ManageChannels": "Kanäle verwalten",
+            "CreateInstantInvite": "Einladung erstellen"
+        },
+        "missingPerms": "Mir fehlen diese Serverberechtigungen: **{list}**. Gib sie meiner Rolle unter Servereinstellungen → Rollen und versuch es dann noch einmal.",
+        "self": "Das kannst du nicht bei dir selbst anwenden.",
+        "bot": "Ich kann nicht gegen mich selbst vorgehen.",
+        "owner": "Du kannst nicht gegen den Server-Owner vorgehen.",
+        "modTooLow": "Du kannst nicht gegen **{target}** vorgehen: Die Rolle **{targetRole}** ist gleich hoch oder höher als deine (**{yourRole}**). Zieh unter **Servereinstellungen → Rollen** deine Rolle über **{targetRole}**.",
+        "botTooLow": "Ich kann nicht gegen **{target}** vorgehen: Meine Rolle **{botRole}** ist gleich hoch oder niedriger als deren (**{targetRole}**). Verschieb unter **Servereinstellungen → Rollen** Mewvos Rolle über **{targetRole}**.",
+        "hierarchyUnknown": "Ich konnte die Rollenreihenfolge für **{target}** nicht lesen. Prüf, ob Mewvos Rolle auf diesem Server eingerichtet ist, und versuch es dann noch einmal.",
+        "botNotInServer": "Mewvo ist nicht auf diesem Server.",
+        "cannotBanPerm": "Gib Mewvo die Berechtigung **Mitglieder bannen** (Servereinstellungen → Rollen → Mewvos Rolle) und versuch es dann noch einmal. Dem Mitglied wurde nichts geschickt.",
+        "cannotKickPerm": "Gib Mewvo die Berechtigung **Mitglieder kicken** (Servereinstellungen → Rollen → Mewvos Rolle) und versuch es dann noch einmal. Dem Mitglied wurde nichts geschickt.",
+        "cannotBanRole": "Mewvo kann dieses Mitglied nicht bannen: Verschieb Mewvos Rolle unter Servereinstellungen → Rollen über **{role}** und versuch es dann noch einmal. Dem Mitglied wurde nichts geschickt.",
+        "cannotKickRole": "Mewvo kann dieses Mitglied nicht kicken: Verschieb Mewvos Rolle unter Servereinstellungen → Rollen über **{role}** und versuch es dann noch einmal. Dem Mitglied wurde nichts geschickt.",
+        "refusedMissing": "Discord hat abgelehnt: Mewvo fehlt eine Berechtigung. Gib Mewvo die Berechtigung **{permission}** (Servereinstellungen → Rollen) und versuch es dann noch einmal.",
+        "refusedMissingRole": "Discord hat abgelehnt: Mewvo fehlt eine Berechtigung. Gib Mewvo die Berechtigung **{permission}** und verschieb Mewvos Rolle über **{role}** (Servereinstellungen → Rollen), dann versuch es noch einmal.",
+        "refused": {
+            "ban": "Discord hat den Bann abgelehnt: {error}",
+            "kick": "Discord hat den Kick abgelehnt: {error}",
+            "mute": "Die Stumm-Rolle konnte nicht vergeben werden: {error}",
+            "unban": "Discord hat das Entbannen abgelehnt: {error}",
+            "unmute": "Die Stumm-Rolle konnte nicht entfernt werden: {error}"
+        },
+        "alreadyBanned": "**{name}** ist bereits gebannt.",
+        "notInServer": "**{name}** ist nicht auf dem Server.",
+        "warnNotInServer": "**{name}** ist nicht auf dem Server, daher erreicht sie/ihn keine Verwarnung.",
+        "alreadyMuted": "**{name}** ist bereits stummgeschaltet. Heb die Stummschaltung zuerst auf, um die Dauer zu ändern.",
+        "notBanned": "**{name}** ist nicht gebannt.",
+        "notMuted": "**{name}** ist nicht stummgeschaltet.",
+        "warnGone": "Diese Verwarnung ist nicht mehr aktiv.",
+        "unknownAction": "Unbekannte Aktion: {action}",
+        "ladderNeedsAdmin": "Diese Verwarnung würde {name} automatisch bannen (Verwarnungsstufen), daher braucht sie einen Administrator.",
+        "note": {
+            "noInvite": "Es konnte keine Einladung zum Wiederbeitreten erstellt werden (kein Kanal, in dem ich Einladungen erstellen kann).",
+            "ladderBan": "Verwarnungslimit erreicht: automatischer Bann für {length} `{code}`. Jetzt bei {stage}.",
+            "ladderBanPermanent": "Verwarnungslimit erreicht: automatischer dauerhafter Bann `{code}`. Jetzt bei {stage}.",
+            "ladderBanFailed": "Verwarnungslimit erreicht, aber der automatische Bann ist fehlgeschlagen: {error}. Das Mitglied ist jetzt bei {stage}; bitte manuell bannen.",
+            "lifted": "Aufgehoben: {codes}",
+            "unbanDm": "Die Person wurde per DM informiert, mit einer Einladung zurück.",
+            "unbanDmFailed": "Die DM „Bann beendet“ konnte nicht zugestellt werden.",
+            "unmuteNoRole": "Die Person war nicht auf dem Server oder hatte die Rolle nicht mehr; der Eintrag wurde trotzdem aufgehoben.",
+            "unmuteDmFailed": "Die DM „Stummschaltung beendet“ konnte nicht zugestellt werden.",
+            "removed": "`{code}` entfernt. Gezählte Verwarnungen: {count}."
+        }
     }
 }

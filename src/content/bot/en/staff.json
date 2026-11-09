@@ -264,7 +264,10 @@
             "userId": "User ID, for people no longer in the server"
         },
         "serverOnly": "This command only works in a server.",
-        "noAdmin": "You need the Administrator permission to use this panel."
+        "noAdmin": "You need the Administrator permission to use this panel.",
+        "noAdminOrMod": "You need the Administrator permission or this server's Moderator role to use this panel.",
+        "modNotAllowed": "With the Moderator role you can warn, mute, kick, unmute and remove warnings. **{action}** needs the Administrator permission.",
+        "accessUnavailable": "I could not check your Moderator role right now (the database is not responding). Nothing was changed. Try again in a moment."
     },
     "moderateuser": {
         "serverOnly": "This only works in a server.",
@@ -275,7 +278,8 @@
         "noAdmin": "You need the Administrator permission to warn members.",
         "botMessage": "Bot, webhook and system messages cannot be warned for.",
         "self": "You cannot warn yourself.",
-        "notInServer": "**{name}** is no longer in the server, so a warning can't reach them."
+        "notInServer": "**{name}** is no longer in the server, so a warning can't reach them.",
+        "noAdminOrMod": "You need the Administrator permission or this server's Moderator role to warn members."
     },
     "reportmessage": {
         "serverOnly": "Reports only work in a server.",
@@ -1040,7 +1044,11 @@
             "titleBans": "Safety limit: too many bans/kicks in {minutes} minutes, moderator blocked",
             "titleMutes": "Safety limit: too many mutes in {minutes} minutes, moderator blocked",
             "dmBans": "**Safety limit (too many bans/kicks in {minutes} minutes) in {server}.** {summary} Their panel access is blocked until <t:{until}:f>. Lift it early with `/staff restore`.",
-            "dmMutes": "**Safety limit (too many mutes in {minutes} minutes) in {server}.** {summary} Their panel access is blocked until <t:{until}:f>. Lift it early with `/staff restore`."
+            "dmMutes": "**Safety limit (too many mutes in {minutes} minutes) in {server}.** {summary} Their panel access is blocked until <t:{until}:f>. Lift it early with `/staff restore`.",
+            "liftHome": "The server owner can lift it early with `/staff restore`.",
+            "liftOther": "An administrator can lift it early with `/staff restore`.",
+            "lastOneBans": "Heads-up: 1 more ban or kick within {minutes} minutes pauses your panel for {block} minutes.",
+            "lastOneMutes": "Heads-up: 1 more mute within {minutes} minutes pauses your panel for {block} minutes."
         }
     },
     "modmail": {
@@ -1075,5 +1083,56 @@
         "dmFailed": "Could not DM the member (they left the server or closed their DMs).",
         "transcript": "Modmail with <@{userId}> (`{userId}`) closed by {closer}.",
         "transcriptReason": "Reason: {reason}"
+    },
+    "enfCheck": {
+        "perm": {
+            "BanMembers": "Ban Members",
+            "KickMembers": "Kick Members",
+            "ManageRoles": "Manage Roles",
+            "ManageChannels": "Manage Channels",
+            "CreateInstantInvite": "Create Invite"
+        },
+        "missingPerms": "I'm missing these server permissions: **{list}**. Grant them to my role in Server Settings → Roles, then try again.",
+        "self": "You cannot use this on yourself.",
+        "bot": "I cannot act on myself.",
+        "owner": "You cannot act on the server owner.",
+        "modTooLow": "You cannot act on **{target}**: their role **{targetRole}** is equal to or above yours (**{yourRole}**). In **Server Settings → Roles**, drag your role above **{targetRole}**.",
+        "botTooLow": "I cannot act on **{target}**: my role **{botRole}** is equal to or below theirs (**{targetRole}**). In **Server Settings → Roles**, move Mewvo's role above **{targetRole}**.",
+        "hierarchyUnknown": "I could not read the role order for **{target}**. Check that Mewvo's role is set up in this server, then try again.",
+        "botNotInServer": "Mewvo is not in this server.",
+        "cannotBanPerm": "Give Mewvo the **Ban Members** permission (Server Settings → Roles → Mewvo's role), then try again. Nothing was sent to the member.",
+        "cannotKickPerm": "Give Mewvo the **Kick Members** permission (Server Settings → Roles → Mewvo's role), then try again. Nothing was sent to the member.",
+        "cannotBanRole": "Mewvo cannot ban this member: move Mewvo's role above **{role}** in Server Settings → Roles, then try again. Nothing was sent to the member.",
+        "cannotKickRole": "Mewvo cannot kick this member: move Mewvo's role above **{role}** in Server Settings → Roles, then try again. Nothing was sent to the member.",
+        "refusedMissing": "Discord refused: Mewvo is missing a permission. Give Mewvo the **{permission}** permission (Server Settings → Roles), then try again.",
+        "refusedMissingRole": "Discord refused: Mewvo is missing a permission. Give Mewvo the **{permission}** permission and move Mewvo's role above **{role}** (Server Settings → Roles), then try again.",
+        "refused": {
+            "ban": "Discord refused the ban: {error}",
+            "kick": "Discord refused the kick: {error}",
+            "mute": "Could not add the muted role: {error}",
+            "unban": "Discord refused the unban: {error}",
+            "unmute": "Could not remove the muted role: {error}"
+        },
+        "alreadyBanned": "**{name}** is already banned.",
+        "notInServer": "**{name}** is not in the server.",
+        "warnNotInServer": "**{name}** is not in the server, so a warning can't reach them.",
+        "alreadyMuted": "**{name}** is already muted. Unmute first to change the duration.",
+        "notBanned": "**{name}** is not banned.",
+        "notMuted": "**{name}** is not muted.",
+        "warnGone": "That warning is no longer active.",
+        "unknownAction": "Unknown action: {action}",
+        "ladderNeedsAdmin": "This warning would automatically ban {name} (warn ladder), so it needs an Administrator.",
+        "note": {
+            "noInvite": "No rejoin invite could be created (no channel where I can create invites).",
+            "ladderBan": "Warning limit reached: automatic {length} ban `{code}`. Now at {stage}.",
+            "ladderBanPermanent": "Warning limit reached: automatic permanent ban `{code}`. Now at {stage}.",
+            "ladderBanFailed": "Warning limit reached, but the automatic ban failed: {error}. The member is now at {stage}; ban manually.",
+            "lifted": "Lifted: {codes}",
+            "unbanDm": "The user was told by DM, with an invite back.",
+            "unbanDmFailed": "The \"ban ended\" DM could not be delivered.",
+            "unmuteNoRole": "The user was not in the server or no longer had the role; the record was still lifted.",
+            "unmuteDmFailed": "The \"mute ended\" DM could not be delivered.",
+            "removed": "Removed `{code}`. Counted warns: {count}."
+        }
     }
 }

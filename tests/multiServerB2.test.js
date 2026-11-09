@@ -197,8 +197,10 @@ test('gate: every public command runs in any server; Administrator-only stays Ad
     const check = (name, accessKey, permissions, userId = MEMBER) => checkCommandAccess({ command: client.commands.get(name), accessKey, guild, userId, permissions });
     assert.deepEqual(check('help', 'help', perms()), { allowed: true }, 'everyone-command in another server');
     assert.deepEqual(check('enforcements', 'enforcements', perms(PermissionFlagsBits.Administrator), ADMIN), { allowed: true }, "a former main-only command for an admin");
-    const refused = check('enforcements', 'enforcements', perms());
+    const refused = check('background', 'background', perms());
     assert.equal(refused.allowed, false);
+    // D1: the panel's entry points go on to the command's own Moderator-role check in other servers.
+    assert.deepEqual(check('enforcements', 'enforcements', perms()), { allowed: true, moderatorCheck: true });
     assert.equal(refused.message, botText('en').t('errors.access.adminOther'));
     assert.equal(check('purge', 'purge', perms(PermissionFlagsBits.ManageGuild), MANAGER).allowed, false, 'Manage Server is not Administrator');
     assert.ok(!JSON.stringify(refused).includes('Mewvo servers'));

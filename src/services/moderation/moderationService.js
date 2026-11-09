@@ -1,6 +1,7 @@
 // moderationService.js
 
 import { TitanBotError, ErrorTypes } from '../../utils/errorHandler.js';
+import { botText } from '../../utils/botText.js';
 
 function getTargetLabel(target) {
   return target.user?.tag ?? target.displayName ?? 'this user';
@@ -12,18 +13,18 @@ function getHighestRole(member) {
 
 export class ModerationService {
 
-  static buildHierarchyMessage({ actor, actorRole, targetRole, targetLabel, action }) {
+  /**
+   * The role-order refusal, translated (staff.enfCheck.*). Action-neutral wording ("act on"), so
+   * it reads right in every language; `action` is kept for callers. `lang`: the reader's language.
+   */
+  static buildHierarchyMessage({ actor, actorRole, targetRole, targetLabel, action, lang = 'en' }) {
+    void action;
+    const tr = botText(lang);
+    const params = { target: targetLabel, targetRole: targetRole.name, yourRole: actorRole.name, botRole: actorRole.name };
     if (actor === 'moderator') {
-      return (
-        `You cannot ${action} **${targetLabel}**: their role **${targetRole.name}** is equal to or above yours (**${actorRole.name}**). ` +
-        `In **Server Settings → Roles**, drag your moderator role above **${targetRole.name}**.`
-      );
+      return tr.t('staff.enfCheck.modTooLow', { target: params.target, targetRole: params.targetRole, yourRole: params.yourRole });
     }
-
-    return (
-      `I cannot ${action} **${targetLabel}**: my role **${actorRole.name}** is equal to or below theirs (**${targetRole.name}**). ` +
-      `In **Server Settings → Roles**, drag my bot role above **${targetRole.name}**.`
-    );
+    return tr.t('staff.enfCheck.botTooLow', { target: params.target, targetRole: params.targetRole, botRole: params.botRole });
   }
 
   static buildHierarchySkipReason(moderator, target, action, actor = 'moderator') {
@@ -46,7 +47,7 @@ export class ModerationService {
     return `Your role **${modRole.name}** is too low for **${targetRole.name}**: move your role higher`;
   }
 
-  static validateHierarchy(moderator, target, action) {
+  static validateHierarchy(moderator, target, action, { lang = 'en' } = {}) {
     if (!moderator || !target) {
       return { valid: false, error: 'Invalid moderator or target' };
     }
@@ -61,7 +62,7 @@ export class ModerationService {
     if (!modRole || !targetRole) {
       return {
         valid: false,
-        error: 'Could not resolve role hierarchy. Try mentioning the user or use the slash command.',
+        error: botText(lang).t('staff.enfCheck.hierarchyUnknown', { target: getTargetLabel(target) }),
       };
     }
 
@@ -74,6 +75,7 @@ export class ModerationService {
           targetRole,
           targetLabel: getTargetLabel(target),
           action,
+          lang,
         }),
       };
     }
@@ -81,14 +83,14 @@ export class ModerationService {
     return { valid: true };
   }
 
-  static validateBotHierarchy(target, action) {
+  static validateBotHierarchy(target, action, { lang = 'en' } = {}) {
     if (!target) {
       return { valid: false, error: 'Invalid target' };
     }
 
     const botMember = target.guild?.members?.me;
     if (!botMember) {
-      return { valid: false, error: 'Bot is not in the guild' };
+      return { valid: false, error: botText(lang).t('staff.enfCheck.botNotInServer') };
     }
 
     const botRole = getHighestRole(botMember);
@@ -97,7 +99,7 @@ export class ModerationService {
     if (!botRole || !targetRole) {
       return {
         valid: false,
-        error: 'Could not resolve bot role hierarchy. Check that my role is configured in this server.',
+        error: botText(lang).t('staff.enfCheck.hierarchyUnknown', { target: getTargetLabel(target) }),
       };
     }
 
@@ -110,6 +112,7 @@ export class ModerationService {
           targetRole,
           targetLabel: getTargetLabel(target),
           action,
+          lang,
         }),
       };
     }
@@ -117,15 +120,16 @@ export class ModerationService {
     return { valid: true };
   }
 
-  static assertModerationHierarchy(moderator, target, action) {
-    const botCheck = this.validateBotHierarchy(target, action);
+  /** Bot first, then the moderator; the refusal in `lang` (expected: a user error, not a bug). */
+  static assertModerationHierarchy(moderator, target, action, { lang = 'en' } = {}) {
+    const botCheck = this.validateBotHierarchy(target, action, { lang });
     if (!botCheck.valid) {
-      throw new TitanBotError(botCheck.error, ErrorTypes.PERMISSION, botCheck.error);
+      throw new TitanBotError(botCheck.error, ErrorTypes.PERMISSION, botCheck.error, { expected: true });
     }
 
-    const modCheck = this.validateHierarchy(moderator, target, action);
+    const modCheck = this.validateHierarchy(moderator, target, action, { lang });
     if (!modCheck.valid) {
-      throw new TitanBotError(modCheck.error, ErrorTypes.PERMISSION, modCheck.error);
+      throw new TitanBotError(modCheck.error, ErrorTypes.PERMISSION, modCheck.error, { expected: true });
     }
   }
 }

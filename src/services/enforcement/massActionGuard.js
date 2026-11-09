@@ -10,6 +10,9 @@
 // in any other server to that server's owner (guild.ownerId); OWNER_IDS have no exemption
 // there (utils/ownerPower.js). The block is stored with a TTL, so a restart doesn't lift it;
 // /staff restore lifts it early.
+// Undo always works (audit 1.4): Unban and Unmute are never refused, also while blocked. The
+// action that reaches the limit gets a heads-up ("1 more … pauses your panel"). The refusal says
+// "… was alerted" only when an alert DM was actually delivered, and names `/staff restore`.
 
 import { botConfig } from '../../config/bot.js';
 import { hasOwnerPower, isMewvoServer } from '../../utils/ownerPower.js';
@@ -23,15 +26,24 @@ import { resolveSetting } from '../settings/guildSettings.js';
 
 const blockKey = (guildId, moderatorId) => `enforcement:massguard:${guildId}:${moderatorId}`;
 
+/** Undo actions: never refused by the guard, also while blocked (audit 1.4). */
+export const ALWAYS_ALLOWED_ACTIONS = Object.freeze(new Set(['unban', 'unmute']));
+
 /**
  * The refusal the blocked moderator sees. `lang`: theirs when the caller knows it (the panel);
- * else English (the web dashboard shows bot errors in English).
+ * else English (the web dashboard shows bot errors in English). "… was alerted" only when the
+ * block records a delivered alert DM (block.alerted; a block stored before that field: none).
+ * Then who can lift it: the owner in Mewvo's own servers, an administrator elsewhere (/staff restore).
  */
-function blockedError(block, guildId, lang = 'en') {
+export function blockedError(block, guildId, lang = 'en', { isHome = isMewvoServer } = {}) {
     const tr = botText(lang || 'en');
     const until = Math.floor(new Date(block.until).getTime() / 1000);
-    const alerted = isMewvoServer(guildId) ? tr.t('staff.staff.massGuard.alertedOwners') : tr.t('staff.staff.massGuard.alertedOwner');
-    const params = { until, count: block.count, alerted };
+    const home = isHome(guildId);
+    const parts = [];
+    if (block.alerted === 'owners') parts.push(tr.t('staff.staff.massGuard.alertedOwners'));
+    else if (block.alerted === 'owner') parts.push(tr.t('staff.staff.massGuard.alertedOwner'));
+    parts.push(tr.t(home ? 'staff.staff.massGuard.liftHome' : 'staff.staff.massGuard.liftOther'));
+    const params = { until, count: block.count, alerted: parts.join(' ') };
     return createError(`Moderator blocked by the mass-action guard until ${block.until}`, ErrorTypes.PERMISSION,
         block.attempted === 'mute' ? tr.t('staff.staff.massGuard.blockedMutes', params) : tr.t('staff.staff.massGuard.blockedBans', params),
         { expected: true });
@@ -107,12 +119,23 @@ export function massAlertRecipients(guild, moderatorId, { owners = botConfig.com
     return ownerId && ownerId !== String(moderatorId) ? [ownerId] : [];
 }
 
+/** DMs every recipient; returns how many DMs were actually delivered (never throws). */
 async function alertOwners(client, recipients, text) {
+    let delivered = 0;
     for (const ownerId of recipients) {
         const owner = await client.users.fetch(ownerId).catch(() => null);
-        await owner?.send({ content: text, allowedMentions: { parse: [] } })
-            .catch((error) => logger.warn(`Mass-action alert DM to ${ownerId} failed: ${error.message}`));
+        if (!owner) {
+            logger.warn(`Mass-action alert DM to ${ownerId} failed: user not found`);
+            continue;
+        }
+        const sent = await owner.send({ content: text, allowedMentions: { parse: [] } })
+            .then(() => true, (error) => {
+                logger.warn(`Mass-action alert DM to ${ownerId} failed: ${error.message}`);
+                return false;
+            });
+        if (sent) delivered += 1;
     }
+    return delivered;
 }
 
 async function blockModerator(guild, moderator, count, attempted) {
@@ -153,8 +176,29 @@ async function blockModerator(guild, moderator, count, attempted) {
         { name: tr.t('staff.staff.massGuard.liftEarly'), value: '`/staff restore`' },
     ], { title: tr.t(mutes ? 'staff.staff.massGuard.titleMutes' : 'staff.staff.massGuard.titleBans', { minutes: windowMinutes }), guildId: guild.id });
     const dmParams = { minutes: windowMinutes, server: guild.name, summary: localSummary, until: untilStamp };
-    await alertOwners(guild.client, massAlertRecipients(guild, moderator.id), mutes ? tr.t('staff.staff.massGuard.dmMutes', dmParams) : tr.t('staff.staff.massGuard.dmBans', dmParams));
-    return block;
+    const delivered = await alertOwners(guild.client, massAlertRecipients(guild, moderator.id), mutes ? tr.t('staff.staff.massGuard.dmMutes', dmParams) : tr.t('staff.staff.massGuard.dmBans', dmParams));
+    if (delivered === 0) return block;
+    // Who was told, for this refusal and the later ones (same TTL). Only while this very block is
+    // still stored: a /staff restore during the DMs must not be undone by this write.
+    const alerted = { ...block, alerted: isMewvoServer(guild.id) ? 'owners' : 'owner' };
+    const remainingSeconds = Math.max(1, Math.ceil((Date.parse(until) - Date.now()) / 1000));
+    try {
+        const current = await getMassActionBlock(guild.id, moderator.id);
+        if (current?.at === block.at) await db.set(blockKey(guild.id, moderator.id), alerted, remainingSeconds);
+    } catch (error) {
+        logger.warn(`Mass-action block of ${moderator.id} in ${guild.id}: alert note not stored: ${error.message}`);
+    }
+    return alerted;
+}
+
+/** The heads-up on the action that reaches the limit: one more pauses the panel. */
+function lastOneWarning(guildId, actionType, lang) {
+    const tr = botText(lang || 'en');
+    const params = {
+        minutes: Math.round(resolveSetting(guildId, 'massActionWindowMs') / 60000),
+        block: Math.round(resolveSetting(guildId, 'massActionBlockMs') / 60000),
+    };
+    return tr.t(actionType === 'mute' ? 'staff.staff.massGuard.lastOneMutes' : 'staff.staff.massGuard.lastOneBans', params);
 }
 
 /**
@@ -162,10 +206,13 @@ async function blockModerator(guild, moderator, count, attempted) {
  * ban/kick over the limit it blocks them, alerts the owners and throws. A warn that
  * will trigger a ladder ban is passed in as 'ban' (see executeAction). `lang`: the
  * moderator's language for the refusal when the caller has it (else English, e.g. the dashboard).
+ * Unban and Unmute always pass (undo must work). Returns { warning } when this action is the
+ * last one before the limit (the caller shows it), else nothing.
  */
 export async function enforceMassActionGuard(guild, moderator, actionType, { lang = 'en' } = {}) {
+    if (ALWAYS_ALLOWED_ACTIONS.has(actionType)) return undefined;
     // OWNER_IDS are exempt in Mewvo's own servers only.
-    if (hasOwnerPower(moderator.id, guild.id)) return;
+    if (hasOwnerPower(moderator.id, guild.id)) return undefined;
     const existing = await getMassActionBlock(guild.id, moderator.id);
     if (existing) throw blockedError(existing, guild.id, lang);
     let count;
@@ -177,9 +224,12 @@ export async function enforceMassActionGuard(guild, moderator, actionType, { lan
         count = await recentMuteCount(guild.id, moderator.id);
         limit = resolveSetting(guild.id, 'massMuteLimit');
     } else {
-        return;
+        return undefined;
     }
     if (count >= limit) {
         throw blockedError(await blockModerator(guild, moderator, count, actionType), guild.id, lang);
     }
+    // This one makes `limit`: the next one is refused and blocks.
+    if (count === limit - 1) return { warning: lastOneWarning(guild.id, actionType, lang) };
+    return undefined;
 }

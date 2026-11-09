@@ -288,7 +288,10 @@
             "userId": "ID użytkownika, dla osób, których nie ma już na serwerze"
         },
         "serverOnly": "Ta komenda działa tylko na serwerze.",
-        "noAdmin": "Potrzebujesz uprawnienia Administrator, aby używać tego panelu."
+        "noAdmin": "Potrzebujesz uprawnienia Administrator, aby używać tego panelu.",
+        "noAdminOrMod": "Potrzebujesz uprawnienia Administrator albo roli moderatora tego serwera, aby używać tego panelu.",
+        "modNotAllowed": "Z rolą moderatora możesz ostrzegać, wyciszać, wyrzucać, cofać wyciszenie i usuwać ostrzeżenia. **{action}** wymaga uprawnienia Administrator.",
+        "accessUnavailable": "Nie udało się teraz sprawdzić twojej roli moderatora (baza danych nie odpowiada). Nic nie zostało zmienione. Spróbuj za chwilę."
     },
     "moderateuser": {
         "serverOnly": "To działa tylko na serwerze.",
@@ -299,7 +302,8 @@
         "noAdmin": "Potrzebujesz uprawnienia Administrator, aby ostrzegać członków.",
         "botMessage": "Nie można ostrzegać za wiadomości botów, webhooków ani systemowe.",
         "self": "Nie możesz ostrzec samego siebie.",
-        "notInServer": "**{name}** nie ma już na serwerze, więc ostrzeżenie do tej osoby nie dotrze."
+        "notInServer": "**{name}** nie ma już na serwerze, więc ostrzeżenie do tej osoby nie dotrze.",
+        "noAdminOrMod": "Potrzebujesz uprawnienia Administrator albo roli moderatora tego serwera, aby ostrzegać członków."
     },
     "reportmessage": {
         "serverOnly": "Zgłoszenia działają tylko na serwerze.",
@@ -1086,7 +1090,11 @@
             "titleBans": "Limit bezpieczeństwa: za dużo banów/wyrzuceń w {minutes} min, moderator zablokowany",
             "titleMutes": "Limit bezpieczeństwa: za dużo wyciszeń w {minutes} min, moderator zablokowany",
             "dmBans": "**Limit bezpieczeństwa (za dużo banów/wyrzuceń w {minutes} min) na {server}.** {summary} Dostęp do panelu jest zablokowany do <t:{until}:f>. Zdejmij blokadę wcześniej przez `/staff restore`.",
-            "dmMutes": "**Limit bezpieczeństwa (za dużo wyciszeń w {minutes} min) na {server}.** {summary} Dostęp do panelu jest zablokowany do <t:{until}:f>. Zdejmij blokadę wcześniej przez `/staff restore`."
+            "dmMutes": "**Limit bezpieczeństwa (za dużo wyciszeń w {minutes} min) na {server}.** {summary} Dostęp do panelu jest zablokowany do <t:{until}:f>. Zdejmij blokadę wcześniej przez `/staff restore`.",
+            "liftHome": "Właściciel serwera może zdjąć blokadę wcześniej przez `/staff restore`.",
+            "liftOther": "Administrator może zdjąć blokadę wcześniej przez `/staff restore`.",
+            "lastOneBans": "Uwaga: jeszcze 1 ban lub wyrzucenie w ciągu {minutes} min wstrzyma twój panel na {block} min.",
+            "lastOneMutes": "Uwaga: jeszcze 1 wyciszenie w ciągu {minutes} min wstrzyma twój panel na {block} min."
         }
     },
     "modmail": {
@@ -1121,5 +1129,56 @@
         "dmFailed": "Nie udało się wysłać DM do członka (opuścił serwer albo zamknął DM).",
         "transcript": "Modmail z <@{userId}> (`{userId}`) zamknął(-ęła) {closer}.",
         "transcriptReason": "Powód: {reason}"
+    },
+    "enfCheck": {
+        "perm": {
+            "BanMembers": "Banowanie członków",
+            "KickMembers": "Wyrzucanie członków",
+            "ManageRoles": "Zarządzanie rolami",
+            "ManageChannels": "Zarządzanie kanałami",
+            "CreateInstantInvite": "Tworzenie zaproszenia"
+        },
+        "missingPerms": "Brakuje mi tych uprawnień na serwerze: **{list}**. Nadaj je mojej roli w Ustawienia serwera → Role i spróbuj ponownie.",
+        "self": "Nie możesz użyć tego na sobie.",
+        "bot": "Nie mogę działać przeciwko sobie.",
+        "owner": "Nie możesz działać przeciwko właścicielowi serwera.",
+        "modTooLow": "Nie możesz działać przeciwko **{target}**: rola **{targetRole}** jest równa twojej (**{yourRole}**) lub wyższa. W **Ustawienia serwera → Role** przeciągnij swoją rolę nad **{targetRole}**.",
+        "botTooLow": "Nie mogę działać przeciwko **{target}**: moja rola **{botRole}** jest równa jego roli (**{targetRole}**) lub niższa. W **Ustawienia serwera → Role** przenieś rolę Mewvo nad **{targetRole}**.",
+        "hierarchyUnknown": "Nie udało się odczytać kolejności ról dla **{target}**. Sprawdź, czy rola Mewvo jest ustawiona na tym serwerze, i spróbuj ponownie.",
+        "botNotInServer": "Mewvo nie ma na tym serwerze.",
+        "cannotBanPerm": "Nadaj Mewvo uprawnienie **Banowanie członków** (Ustawienia serwera → Role → rola Mewvo) i spróbuj ponownie. Do członka nic nie zostało wysłane.",
+        "cannotKickPerm": "Nadaj Mewvo uprawnienie **Wyrzucanie członków** (Ustawienia serwera → Role → rola Mewvo) i spróbuj ponownie. Do członka nic nie zostało wysłane.",
+        "cannotBanRole": "Mewvo nie może zbanować tego członka: przenieś rolę Mewvo nad **{role}** w Ustawienia serwera → Role i spróbuj ponownie. Do członka nic nie zostało wysłane.",
+        "cannotKickRole": "Mewvo nie może wyrzucić tego członka: przenieś rolę Mewvo nad **{role}** w Ustawienia serwera → Role i spróbuj ponownie. Do członka nic nie zostało wysłane.",
+        "refusedMissing": "Discord odmówił: Mewvo brakuje uprawnienia. Nadaj Mewvo uprawnienie **{permission}** (Ustawienia serwera → Role) i spróbuj ponownie.",
+        "refusedMissingRole": "Discord odmówił: Mewvo brakuje uprawnienia. Nadaj Mewvo uprawnienie **{permission}** i przenieś rolę Mewvo nad **{role}** (Ustawienia serwera → Role), a potem spróbuj ponownie.",
+        "refused": {
+            "ban": "Discord odrzucił bana: {error}",
+            "kick": "Discord odrzucił wyrzucenie: {error}",
+            "mute": "Nie udało się nadać roli wyciszenia: {error}",
+            "unban": "Discord odrzucił odbanowanie: {error}",
+            "unmute": "Nie udało się zdjąć roli wyciszenia: {error}"
+        },
+        "alreadyBanned": "**{name}** ma już bana.",
+        "notInServer": "**{name}** nie ma na serwerze.",
+        "warnNotInServer": "**{name}** nie ma na serwerze, więc ostrzeżenie do tej osoby nie dotrze.",
+        "alreadyMuted": "**{name}** jest już wyciszony(-a). Najpierw cofnij wyciszenie, aby zmienić czas.",
+        "notBanned": "**{name}** nie ma bana.",
+        "notMuted": "**{name}** nie jest wyciszony(-a).",
+        "warnGone": "To ostrzeżenie nie jest już aktywne.",
+        "unknownAction": "Nieznana akcja: {action}",
+        "ladderNeedsAdmin": "To ostrzeżenie automatycznie zbanowałoby {name} (drabinka ostrzeżeń), więc wymaga administratora.",
+        "note": {
+            "noInvite": "Nie udało się utworzyć zaproszenia do powrotu (brak kanału, w którym mogę tworzyć zaproszenia).",
+            "ladderBan": "Osiągnięto limit ostrzeżeń: automatyczny ban na {length} `{code}`. Teraz: {stage}.",
+            "ladderBanPermanent": "Osiągnięto limit ostrzeżeń: automatyczny stały ban `{code}`. Teraz: {stage}.",
+            "ladderBanFailed": "Osiągnięto limit ostrzeżeń, ale automatyczny ban się nie udał: {error}. Członek jest teraz na etapie: {stage}; zbanuj ręcznie.",
+            "lifted": "Zdjęto: {codes}",
+            "unbanDm": "Użytkownik dostał wiadomość prywatną z zaproszeniem z powrotem.",
+            "unbanDmFailed": "Nie udało się dostarczyć wiadomości „ban zakończony”.",
+            "unmuteNoRole": "Użytkownika nie było na serwerze albo nie miał już roli; wpis i tak został zdjęty.",
+            "unmuteDmFailed": "Nie udało się dostarczyć wiadomości „wyciszenie zakończone”.",
+            "removed": "Usunięto `{code}`. Liczone ostrzeżenia: {count}."
+        }
     }
 }

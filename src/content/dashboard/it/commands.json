@@ -8,7 +8,7 @@
     "prefix": "Prefisso per i comandi testuali",
     "prefixHelp": "Alcuni comandi funzionano anche in un normale messaggio: scrivi questo segno e poi il nome del comando, invece di usare un comando slash. Da 1 a 10 caratteri, senza spazi.",
     "modRole": "Ruolo di moderatore",
-    "modRoleHelp": "I membri con questo ruolo possono usare i comandi di moderazione. Possono anche accedere a questa dashboard come moderatori: vedono membri, casi e ricorsi, e possono avvertire, silenziare, togliere il silenziamento, espellere e dare timeout. Non possono bannare né cambiare impostazioni. Mewvo non assegna mai questo ruolo a nessuno da solo.",
+    "modRoleHelp": "I membri con questo ruolo possono usare i comandi di moderazione. Possono anche accedere a questa dashboard come moderatori: vedono membri, casi e ricorsi, e possono avvertire, silenziare, togliere il silenziamento, espellere e dare timeout. Non possono bannare né cambiare impostazioni. Mewvo non assegna mai questo ruolo a nessuno da solo. Su Discord possono anche usare /enforcements, il menu «Moderate» e «Warn for this message» per avvertire, silenziare, espellere, togliere il silenziamento e rimuovere avvertimenti (non nei server di Mewvo); ban, revoca dei ban, modifica dei casi e impostazioni restano agli amministratori.",
     "needsAdmin": "Per cambiare le impostazioni del bot e usare gli strumenti qui ti serve il permesso Amministratore in questo server.",
     "saved": "Impostazioni del bot salvate.",
     "nothing": "Nessuna modifica.",

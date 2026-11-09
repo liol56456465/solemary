@@ -8,7 +8,7 @@
     "prefix": "Prefix for text commands",
     "prefixHelp": "Some commands also work in a normal message: type this sign and then the command name, instead of using a slash command. 1 to 10 characters, no spaces.",
     "modRole": "Moderator role",
-    "modRoleHelp": "Members with this role can use moderation commands. They can also log in to this dashboard as moderators: they see members, cases and appeals, and can warn, mute, unmute, kick and time out. They cannot ban or change settings. Mewvo never gives this role to anyone by itself.",
+    "modRoleHelp": "Members with this role can use moderation commands. They can also log in to this dashboard as moderators: they see members, cases and appeals, and can warn, mute, unmute, kick and time out. They cannot ban or change settings. Mewvo never gives this role to anyone by itself. In Discord they can also use /enforcements, the Moderate menu and Warn for this message to warn, mute, kick, unmute and remove warnings (not in Mewvo's own servers); ban, unban, case edits and settings stay with administrators.",
     "needsAdmin": "To change bot settings and use the utilities here you need the Administrator permission in this server.",
     "saved": "Bot settings saved.",
     "nothing": "Nothing changed.",

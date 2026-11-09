@@ -276,7 +276,10 @@
             "userId": "ID do usuário, para quem não está mais no servidor"
         },
         "serverOnly": "Este comando só funciona em um servidor.",
-        "noAdmin": "Você precisa da permissão de Administrador para usar este painel."
+        "noAdmin": "Você precisa da permissão de Administrador para usar este painel.",
+        "noAdminOrMod": "Você precisa da permissão de Administrador ou do cargo de moderador deste servidor para usar este painel.",
+        "modNotAllowed": "Com o cargo de moderador você pode advertir, silenciar, expulsar, remover o silenciamento e remover advertências. **{action}** precisa da permissão de Administrador.",
+        "accessUnavailable": "Não consegui verificar seu cargo de moderador agora (o banco de dados não está respondendo). Nada foi alterado. Tente de novo em instantes."
     },
     "moderateuser": {
         "serverOnly": "Isso só funciona em um servidor.",
@@ -287,7 +290,8 @@
         "noAdmin": "Você precisa da permissão de Administrador para advertir membros.",
         "botMessage": "Não é possível advertir por mensagens de bots, webhooks ou do sistema.",
         "self": "Você não pode advertir a si mesmo.",
-        "notInServer": "**{name}** não está mais no servidor, então uma advertência não chegaria até a pessoa."
+        "notInServer": "**{name}** não está mais no servidor, então uma advertência não chegaria até a pessoa.",
+        "noAdminOrMod": "Você precisa da permissão de Administrador ou do cargo de moderador deste servidor para advertir membros."
     },
     "reportmessage": {
         "serverOnly": "Denúncias só funcionam em um servidor.",
@@ -1063,7 +1067,11 @@
             "titleBans": "Limite de segurança: banimentos/expulsões demais em {minutes} minutos, moderador bloqueado",
             "titleMutes": "Limite de segurança: silenciamentos demais em {minutes} minutos, moderador bloqueado",
             "dmBans": "**Limite de segurança (banimentos/expulsões demais em {minutes} minutos) em {server}.** {summary} O acesso ao painel está bloqueado até <t:{until}:f>. Retire antes com `/staff restore`.",
-            "dmMutes": "**Limite de segurança (silenciamentos demais em {minutes} minutos) em {server}.** {summary} O acesso ao painel está bloqueado até <t:{until}:f>. Retire antes com `/staff restore`."
+            "dmMutes": "**Limite de segurança (silenciamentos demais em {minutes} minutos) em {server}.** {summary} O acesso ao painel está bloqueado até <t:{until}:f>. Retire antes com `/staff restore`.",
+            "liftHome": "O dono do servidor pode liberar antes com `/staff restore`.",
+            "liftOther": "Um administrador pode liberar antes com `/staff restore`.",
+            "lastOneBans": "Atenção: mais 1 banimento ou expulsão em {minutes} minutos pausa seu painel por {block} minutos.",
+            "lastOneMutes": "Atenção: mais 1 silenciamento em {minutes} minutos pausa seu painel por {block} minutos."
         }
     },
     "modmail": {
@@ -1098,5 +1106,56 @@
         "dmFailed": "Não foi possível mandar DM ao membro (ele saiu do servidor ou fechou as DMs).",
         "transcript": "Modmail com <@{userId}> (`{userId}`) fechado por {closer}.",
         "transcriptReason": "Motivo: {reason}"
+    },
+    "enfCheck": {
+        "perm": {
+            "BanMembers": "Banir membros",
+            "KickMembers": "Expulsar membros",
+            "ManageRoles": "Gerenciar cargos",
+            "ManageChannels": "Gerenciar canais",
+            "CreateInstantInvite": "Criar convite"
+        },
+        "missingPerms": "Estão faltando estas permissões do servidor: **{list}**. Dê essas permissões ao meu cargo em Configurações do servidor → Cargos e tente de novo.",
+        "self": "Você não pode usar isto em si mesmo.",
+        "bot": "Não posso agir contra mim mesmo.",
+        "owner": "Você não pode agir contra o dono do servidor.",
+        "modTooLow": "Você não pode agir contra **{target}**: o cargo **{targetRole}** é igual ou superior ao seu (**{yourRole}**). Em **Configurações do servidor → Cargos**, arraste seu cargo para cima de **{targetRole}**.",
+        "botTooLow": "Não posso agir contra **{target}**: meu cargo **{botRole}** é igual ou inferior ao dele (**{targetRole}**). Em **Configurações do servidor → Cargos**, mova o cargo do Mewvo para cima de **{targetRole}**.",
+        "hierarchyUnknown": "Não consegui ler a ordem dos cargos de **{target}**. Verifique se o cargo do Mewvo está configurado neste servidor e tente de novo.",
+        "botNotInServer": "O Mewvo não está neste servidor.",
+        "cannotBanPerm": "Dê ao Mewvo a permissão **Banir membros** (Configurações do servidor → Cargos → cargo do Mewvo) e tente de novo. Nada foi enviado ao membro.",
+        "cannotKickPerm": "Dê ao Mewvo a permissão **Expulsar membros** (Configurações do servidor → Cargos → cargo do Mewvo) e tente de novo. Nada foi enviado ao membro.",
+        "cannotBanRole": "O Mewvo não pode banir este membro: mova o cargo do Mewvo para cima de **{role}** em Configurações do servidor → Cargos e tente de novo. Nada foi enviado ao membro.",
+        "cannotKickRole": "O Mewvo não pode expulsar este membro: mova o cargo do Mewvo para cima de **{role}** em Configurações do servidor → Cargos e tente de novo. Nada foi enviado ao membro.",
+        "refusedMissing": "O Discord recusou: falta uma permissão ao Mewvo. Dê ao Mewvo a permissão **{permission}** (Configurações do servidor → Cargos) e tente de novo.",
+        "refusedMissingRole": "O Discord recusou: falta uma permissão ao Mewvo. Dê ao Mewvo a permissão **{permission}** e mova o cargo do Mewvo para cima de **{role}** (Configurações do servidor → Cargos); depois tente de novo.",
+        "refused": {
+            "ban": "O Discord recusou o banimento: {error}",
+            "kick": "O Discord recusou a expulsão: {error}",
+            "mute": "Não foi possível dar o cargo de silenciado: {error}",
+            "unban": "O Discord recusou o desbanimento: {error}",
+            "unmute": "Não foi possível remover o cargo de silenciado: {error}"
+        },
+        "alreadyBanned": "**{name}** já está banido.",
+        "notInServer": "**{name}** não está no servidor.",
+        "warnNotInServer": "**{name}** não está no servidor, então uma advertência não chegaria até ele.",
+        "alreadyMuted": "**{name}** já está silenciado. Remova o silenciamento primeiro para mudar a duração.",
+        "notBanned": "**{name}** não está banido.",
+        "notMuted": "**{name}** não está silenciado.",
+        "warnGone": "Essa advertência não está mais ativa.",
+        "unknownAction": "Ação desconhecida: {action}",
+        "ladderNeedsAdmin": "Esta advertência baniria {name} automaticamente (escada de advertências), então precisa de um administrador.",
+        "note": {
+            "noInvite": "Não foi possível criar um convite para voltar (nenhum canal onde eu possa criar convites).",
+            "ladderBan": "Limite de advertências atingido: banimento automático de {length} `{code}`. Agora em {stage}.",
+            "ladderBanPermanent": "Limite de advertências atingido: banimento automático permanente `{code}`. Agora em {stage}.",
+            "ladderBanFailed": "Limite de advertências atingido, mas o banimento automático falhou: {error}. O membro agora está em {stage}; bana manualmente.",
+            "lifted": "Removido: {codes}",
+            "unbanDm": "O usuário foi avisado por DM, com um convite para voltar.",
+            "unbanDmFailed": "A DM de \"banimento encerrado\" não pôde ser entregue.",
+            "unmuteNoRole": "O usuário não estava no servidor ou não tinha mais o cargo; o registro foi removido mesmo assim.",
+            "unmuteDmFailed": "A DM de \"silenciamento encerrado\" não pôde ser entregue.",
+            "removed": "`{code}` removida. Advertências contadas: {count}."
+        }
     }
 }
