@@ -40,6 +40,7 @@
     },
     "privacy": {
         "oauth": "A verificação guarda seu ID do Discord, um token de login criptografado (para adicionar você ao servidor de suporte do Mewvo) e uma impressão embaralhada do seu endereço IP para detectar quem burla banimentos.",
+        "oauthServer": "Verificar com o Discord compartilha com o Mewvo só o seu perfil público do Discord (ID, nome, avatar): sem e-mail, sem lista de servidores e nenhum token de login é guardado. O Mewvo guarda seu ID do Discord e uma impressão embaralhada do seu endereço IP, comparada só com membros banidos deste servidor, para detectar quem burla banimentos.",
         "direct": "A verificação guarda seu ID do Discord e o momento em que você se verificou.",
         "link": "Privacidade: {url}"
     },

@@ -134,11 +134,16 @@
   },
   "panels": {
     "title": "Painéis de apelação",
+    "titleServer": "Painel de apelação",
     "help": "Publica o painel de apelação aqui e no servidor de suporte, e remove os antigos. Você também pode fazer isso com /setappeal no Discord.",
+    "helpServer": "Publica o painel de apelação no canal que você escolher e remove o antigo desse canal. Os membros o usam para apelar de uma punição deste servidor ou denunciar alguém da equipe; cada apelação abre em um canal privado da sua categoria de apelações. Ainda não há categoria? O Mewvo cria uma categoria privada “Appeals”. Você também pode fazer isso com /setappeal no Discord.",
     "channel": "Canal do painel de apelação",
     "channelHelp": "O painel de apelação é uma mensagem com um botão que os membros apertam para apelar. Um segundo painel vai para #appeals no servidor de suporte, que o Mewvo cria se não existir.",
+    "channelHelpServer": "O painel de apelação é uma mensagem com um botão que os membros clicam para apelar. Escolha um canal que seus membros possam ler.",
     "submit": "Publicar os painéis de apelação",
-    "confirm": "Publicar os painéis de apelação agora? Os painéis anteriores nesses canais serão substituídos."
+    "submitServer": "Publicar o painel de apelação",
+    "confirm": "Publicar os painéis de apelação agora? Os painéis anteriores nesses canais serão substituídos.",
+    "confirmServer": "Publicar o painel de apelação agora? Um painel de apelação anterior neste canal será substituído."
   },
   "pages": {
     "transparencyTitle": "Relatório de transparência",
@@ -178,6 +183,8 @@
   "result": {
     "panelsPosted": "Painéis de apelação publicados em #{main} e em #{support} do servidor de suporte.",
     "panelsPostedCreated": "Painéis de apelação publicados em #{main} e em #{support} do servidor de suporte (criado).",
+    "panelPostedServer": "Painel de apelação publicado em #{channel}. As apelações abrem em {category}.",
+    "panelPostedServerCreated": "Painel de apelação publicado em #{channel}. O Mewvo criou a categoria privada {category} para apelações e a salvou como sua categoria de apelações.",
     "templateInvalid": "Esse modelo não é válido.",
     "templateAdded": "Modelo “{name}” adicionado.",
     "templateGone": "Esse modelo já não existe. Recarregue a página.",
@@ -189,12 +196,12 @@
   },
   "appealsHome": {
     "title": "Onde os membros recorrem",
-    "help": "As mensagens de punição (DMs) dizem aos membros onde podem pedir que uma punição seja retirada. Suporte do Mewvo: recorrem no servidor de suporte do Mewvo. Nosso próprio servidor: a DM traz um convite para um servidor que vocês administram.",
+    "help": "As mensagens de punição (DMs) dizem aos membros onde pedir para tirar uma punição. Nosso próprio servidor (padrão): a DM mostra seu convite abaixo e a página web de apelação do Mewvo quando disponível; sem nenhum dos dois, diz para falarem com a sua equipe. Suporte do Mewvo: eles apelam no servidor de suporte do Mewvo.",
     "choice": "Os membros recorrem em",
     "mewvo": "Suporte do Mewvo",
     "own": "Nosso próprio servidor",
     "invite": "Convite para o nosso próprio servidor",
-    "inviteHelp": "Um convite discord.gg que não expira. Usado só com \"Nosso próprio servidor\". Vazio: a DM não tem linha de convite.",
+    "inviteHelp": "Um convite discord.gg que não expira. Usado só com “Nosso próprio servidor”. Vazio: a DM não tem linha de convite (ainda mostra a página web de apelação quando disponível; senão, diz aos membros para falarem com a sua equipe).",
     "badInvite": "Convite para o nosso próprio servidor: precisa ser um link de convite discord.gg. Nada foi alterado.",
     "homeNote": "Isto não se aplica aqui: membros dos servidores do próprio Mewvo sempre recorrem no servidor de suporte do Mewvo.",
     "homeOnlyAction": "Esta configuração não se aplica aos servidores do próprio Mewvo. Nada foi alterado."

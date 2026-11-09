@@ -12,6 +12,7 @@
         "rejoin": "Voltar: {invite}",
         "record": "Seu histórico completo: <{url}>",
         "appealWeb": "**Recorra on-line:** <{url}>",
+        "appealAskStaff": "**Para apelar:** fale com a equipe de {server}.",
         "appealDeniedWeb": "Depois do tempo de espera, você pode recorrer de novo on-line: <{url}>",
         "privacy": "-# Privacidade: <{url}>",
         "thisServer": "servidor",

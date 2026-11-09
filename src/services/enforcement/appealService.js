@@ -126,7 +126,8 @@ export async function assertAppealable(record, userId) {
     }
 }
 
-function privateOverwrites(guild) {
+/** Admin-only overwrites: @everyone cannot see it, the bot can (also for an auto-created appeals category). */
+export function privateOverwrites(guild) {
     // Administrators see every channel anyway; the user is never added.
     return [
         { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
@@ -191,7 +192,7 @@ function channelName(name) {
  */
 async function createPrivateChannel(guild, name, reason, findCategory = getAppealsCategory) {
     const category = await findCategory(guild);
-    if (!category) throw configError('No category for this channel in the main server: set it in the dashboard (Enforcement & appeals) or set the /ticket category');
+    if (!category) throw configError(`No category for this channel in ${isHomeGuild(guild.id) ? 'the main server' : 'this server'}: set it in the dashboard (Enforcement & appeals) or set the /ticket category`);
     return guild.channels.create({
         name: channelName(name),
         type: ChannelType.GuildText,
@@ -869,7 +870,7 @@ async function liftCaseEntries(client, record, admin, { reason, via }) {
     let ladderBan = null;
 
     if (liftedBan) {
-        if (!mainGuild) throw createError('Main guild unavailable', ErrorTypes.CONFIGURATION, 'I cannot reach the main server to unban.');
+        if (!mainGuild) throw createError('Main guild unavailable', ErrorTypes.CONFIGURATION, isHomeGuild(record.guild_id) ? 'I cannot reach the main server to unban.' : 'I cannot reach this server to unban.');
         await mainGuild.members.unban(record.target_user_id, reason).catch((error) => {
             if (error?.code !== UNKNOWN_BAN) throw error;
         });

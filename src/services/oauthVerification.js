@@ -5,12 +5,19 @@
 // pressed the button, and expires after 10 minutes. Discord sends the user back to
 // GET /oauth/callback; the bot exchanges the code, checks the authorizing account is
 // the one that pressed Verify, gives the verified role, stores the OAuth tokens
-// encrypted (AES-256-GCM with OAUTH_TOKEN_KEY) so guilds.join can be used later, and
+// encrypted (AES-256-GCM with OAUTH_TOKEN_KEY) so guilds.join can be used later (Mewvo's own servers only), and
 // records which server the authorization was given in (oauth_verified_guilds, schema v12: a
 // member restore only uses it for that server), and sends the browser on to the Mewvo invite (VERIFY_SUCCESS_REDIRECT; another server: only the
 // link it stored, else a "You are verified" page — successRedirectFor). Accounts under
 // 7 days old and likely ban-evasion alts are held for staff approval instead
 // (see verificationGuard.js).
+//
+// Scopes per server (owner decision D3, 2026-11-09): Mewvo's own servers (main, support,
+// MEMBER_RESTORE_GUILD_IDS) ask for `identify guilds.join` and keep the token for the member
+// backup, exactly as before; any other server asks for `identify` only and keeps nothing of the
+// token (no row in oauth_verified_guilds either: the member restore is home-only). The result
+// pages are in the language stored in the state (the member's Discord language), else the
+// mewvo_lang cookie / Accept-Language (site i18n, catalog site/<lang>/verify.json).
 //
 // Enabled when DISCORD_CLIENT_SECRET and PUBLIC_URL are set; otherwise the button
 // verifies directly as before. The redirect URL <PUBLIC_URL>/oauth/callback must be
@@ -26,14 +33,19 @@ import { enforcementConfig } from '../config/enforcement.js';
 import { assessVerification, postVerificationHold } from './verificationGuard.js';
 import { getGuildConfig } from './config/guildConfig.js';
 import { getConfiguredSetting, isHomeGuild, resolveSetting } from './settings/guildSettings.js';
-import { oauthVerifyPrivacyNote, privacyUrl } from '../utils/privacyNotice.js';
+import { privacyUrl } from '../utils/privacyNotice.js';
 import { clearExpectedBotAdd, expectBotAdd } from './invites/expectedAdds.js';
+import { allowedRestoreGuildIds } from './memberBackupService.js';
+import { DEFAULT_LANG, isLanguage, translator } from './site/i18n.js';
+import { requestLanguage } from './site/language.js';
+import { botText } from '../utils/botText.js';
 
 const AUTHORIZE_URL = 'https://discord.com/oauth2/authorize';
 const TOKEN_KEY_PREFIX = 'oauth:tokens:';
 const TOKEN_URL = 'https://discord.com/api/v10/oauth2/token';
 const ME_URL = 'https://discord.com/api/v10/users/@me';
-const SCOPES = ['identify', 'guilds.join'];
+const HOME_SCOPES = Object.freeze(['identify', 'guilds.join']);
+const SERVER_SCOPES = Object.freeze(['identify']);
 // Where the browser goes after a successful verification in one of Mewvo's own servers: the main
 // Mewvo server's invite. Never used for any other server (successRedirectFor).
 const DEFAULT_SUCCESS_REDIRECT = 'https://discord.gg/WyceK9YENP';
@@ -66,34 +78,66 @@ function sign(payload, secret) {
     return crypto.createHmac('sha256', secret).update(payload).digest('base64url');
 }
 
-function createState(guildId, userId) {
+/**
+ * Whether a verification in `guildId` asks for guilds.join and keeps the token: Mewvo's own
+ * servers (MAIN_GUILD_ID / SUPPORT_GUILD_ID) and the member-restore targets
+ * (MEMBER_RESTORE_GUILD_IDS, memberBackupService.js). Any other server: false (identify only).
+ */
+export function keepsVerifyToken(guildId, env = process.env) {
+    const id = String(guildId || '');
+    if (!id) return false;
+    return isHomeGuild(id, env) || allowedRestoreGuildIds(enforcementConfig, env).has(id);
+}
+
+/** The OAuth scopes a verification in `guildId` asks for (see keepsVerifyToken). */
+export function oauthScopesFor(guildId, env = process.env) {
+    return [...(keepsVerifyToken(guildId, env) ? HOME_SCOPES : SERVER_SCOPES)];
+}
+
+function createState(guildId, userId, lang = null) {
     const payload = Buffer.from(JSON.stringify({
         g: guildId,
         u: userId,
         e: Date.now() + STATE_TTL_MS,
         n: crypto.randomBytes(8).toString('hex'),
+        // The member's language for the result pages (only a known code; never shown raw).
+        ...(isLanguage(lang) ? { l: lang } : {}),
     })).toString('base64url');
     return `${payload}.${sign(payload, settings().clientSecret)}`;
 }
 
-/**
- * Returns { guildId, userId } for a valid, unexpired, unused state, else null, and marks it
- * used. Throws when the store cannot be read or written (the link is then burned in memory:
- * the member presses Verify again).
- */
-export async function readState(state, { getStored = getFromDb, setStored = setInDb } = {}) {
+/** The decoded payload of a correctly signed state (expired or used ones too), else null. */
+function signedPayload(state) {
     const [payload, signature] = String(state || '').split('.');
     if (!payload || !signature) return null;
     const expected = Buffer.from(sign(payload, settings().clientSecret));
     const given = Buffer.from(signature);
     if (expected.length !== given.length || !crypto.timingSafeEqual(expected, given)) return null;
-
-    let data;
     try {
-        data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+        const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+        return data && typeof data === 'object' ? data : null;
     } catch {
         return null;
     }
+}
+
+/**
+ * The language a signed state carries (also an expired or used one: the "link expired" page is
+ * still in the member's language), else null. Only a known language code is ever returned.
+ */
+export function stateLanguage(state) {
+    const lang = signedPayload(state)?.l;
+    return isLanguage(lang) ? lang : null;
+}
+
+/**
+ * Returns { guildId, userId, lang } for a valid, unexpired, unused state, else null, and marks it
+ * used. Throws when the store cannot be read or written (the link is then burned in memory:
+ * the member presses Verify again).
+ */
+export async function readState(state, { getStored = getFromDb, setStored = setInDb } = {}) {
+    const data = signedPayload(state);
+    if (!data) return null;
     const now = Date.now();
     if (!data?.g || !data?.u || !(data.e > now) || usedStates.has(data.n)) return null;
 
@@ -106,7 +150,7 @@ export async function readState(state, { getStored = getFromDb, setStored = setI
     const key = `${USED_STATE_KEY_PREFIX}${data.n}`;
     if (await getStored(key, null)) return null;
     await setStored(key, true, Math.ceil((data.e - now) / 1000) + 60);
-    return { guildId: data.g, userId: data.u };
+    return { guildId: data.g, userId: data.u, ...(isLanguage(data.l) ? { lang: data.l } : {}) };
 }
 
 /**
@@ -121,15 +165,18 @@ export function successRedirectFor(guildId, env = process.env) {
     return resolveSetting(guildId, 'verifySuccessRedirect', env) || null;
 }
 
-/** The Discord authorize link for this user to verify in this guild. */
-export function buildVerifyUrl(guildId, userId) {
+/**
+ * The Discord authorize link for this user to verify in this guild. Scopes per server
+ * (oauthScopesFor); `lang` (the member's language) goes into the signed state for the result pages.
+ */
+export function buildVerifyUrl(guildId, userId, { lang = null } = {}) {
     const { clientId, redirectUri } = settings();
     const params = new URLSearchParams({
         client_id: clientId,
         response_type: 'code',
         redirect_uri: redirectUri,
-        scope: SCOPES.join(' '),
-        state: createState(guildId, userId),
+        scope: oauthScopesFor(guildId).join(' '),
+        state: createState(guildId, userId, lang),
         prompt: 'consent',
     });
     return `${AUTHORIZE_URL}?${params}`;
@@ -197,19 +244,35 @@ async function storeTokens(userId, token) {
 
 const escapeHtml = (text) => String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-/** The privacy line on a callback page: the sentence, plus a link when PUBLIC_URL is set. */
-export function privacyNoteHtml(env = process.env) {
-    const sentence = escapeHtml(oauthVerifyPrivacyNote({}));
+/**
+ * The privacy line on a callback page, in `lang`: the sentence for this kind of server (`home`:
+ * Mewvo's own servers keep a token; any other server does not), plus a link when PUBLIC_URL is set.
+ */
+export function privacyNoteHtml(env = process.env, { lang = DEFAULT_LANG, home = true } = {}) {
+    const sentence = escapeHtml(botText(lang).t(home ? 'verification.privacy.oauth' : 'verification.privacy.oauthServer'));
     const url = privacyUrl(env);
-    return url ? `${sentence} <a href="${escapeHtml(url)}">Privacy Policy</a>` : sentence;
+    return url ? `${sentence} <a href="${escapeHtml(url)}">${escapeHtml(translator(lang).t('verify.privacyLink'))}</a>` : sentence;
 }
 
-export function errorPage(title, message, accent = '#ed4245', { note = null } = {}) {
-    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${title}</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#1e1f22;color:#f2f3f5;font:16px/1.5 system-ui,sans-serif}
-main{max-width:420px;padding:32px 24px;text-align:center}h1{color:${accent};font-size:22px;margin:0 0 8px}p{margin:0;color:#b5bac1}
-p.note{margin-top:16px;font-size:13px}a{color:#c9cdfb}</style></head>
-<body><main><h1>${title}</h1><p>${message}</p>${note ? `<p class="note">${note}</p>` : ''}</main></body></html>`;
+// The result pages' one stylesheet. Fixed text, so the page's CSP allows exactly this style by its
+// hash (no 'unsafe-inline', no script, nothing loaded from anywhere).
+const PAGE_STYLE = 'body{margin:0;min-height:100vh;display:grid;place-items:center;background:#1e1f22;color:#f2f3f5;font:16px/1.5 system-ui,sans-serif}'
+    + 'main{max-width:420px;padding:32px 24px;text-align:center}h1{color:#ed4245;font-size:22px;margin:0 0 8px}h1.ok{color:#57f287}h1.wait{color:#fee75c}'
+    + 'p{margin:0;color:#b5bac1}p.note{margin-top:16px;font-size:13px}a{color:#c9cdfb}';
+const PAGE_STYLE_HASH = crypto.createHash('sha256').update(PAGE_STYLE).digest('base64');
+/** The Content-Security-Policy of the /oauth/callback pages. */
+export const RESULT_PAGE_CSP = `default-src 'none'; style-src 'sha256-${PAGE_STYLE_HASH}'; img-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`;
+const ACCENT_CLASS = { '#57f287': 'ok', '#fee75c': 'wait' };
+
+/**
+ * A result page. `title` and `message` are HTML (callers escape what they did not write);
+ * `accent`: '#57f287' green, '#fee75c' yellow, anything else red. `lang`: the <html lang>.
+ */
+export function errorPage(title, message, accent = '#ed4245', { note = null, lang = DEFAULT_LANG } = {}) {
+    const tone = ACCENT_CLASS[accent];
+    return `<!doctype html><html lang="${isLanguage(lang) ? lang : DEFAULT_LANG}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title}</title><style>${PAGE_STYLE}</style></head>
+<body><main><h1${tone ? ` class="${tone}"` : ''}>${title}</h1><p>${message}</p>${note ? `<p class="note">${note}</p>` : ''}</main></body></html>`;
 }
 
 async function isAlreadyVerified(client, guildId, userId) {
@@ -233,6 +296,100 @@ async function holdForStaff(client, guildId, userId, reasons, items = null) {
     logger.info(`Verification of ${userId} in ${guildId} held for staff: ${reasons.join('; ')}`);
 }
 
+/**
+ * GET /oauth/callback (exported for tests). Every page is in the member's language and sent with
+ * RESULT_PAGE_CSP. Mewvo's own servers: identify + guilds.join, the token kept for the member
+ * backup. Any other server: identify only; nothing of the token is read, recorded or stored
+ * (owner decision D3).
+ */
+export async function handleOAuthCallback(client, req, res, deps = {}) {
+    const {
+        read = readState, setupProblem = verificationSetupProblem, exchange = exchangeCode, fetchMe = (token) => discordFetch(ME_URL, { headers: { Authorization: `Bearer ${token.access_token}` } }),
+        getStored = getFromDb, record = recordAuthorization, store = storeTokens, alreadyVerified = isAlreadyVerified,
+        assess = assessVerification, hold = holdForStaff, verify = verifyUser, markVerified = markVerifiedIn, redirectFor = successRedirectFor,
+        env = process.env,
+    } = deps;
+    res.set('Cache-Control', 'no-store');
+    res.set('Content-Security-Policy', RESULT_PAGE_CSP);
+    res.set('X-Content-Type-Options', 'nosniff');
+    res.set('Referrer-Policy', 'no-referrer');
+    // The member's language from the signed state (set when the link was built), else the
+    // website's cookie / Accept-Language. Only known codes; nothing from the request is echoed.
+    let lang = stateLanguage(req.query?.state) || requestLanguage(req);
+    let tr = translator(lang);
+    const send = (status, key, accent, { note = null, message = null } = {}) => res.status(status).type('html')
+        .send(errorPage(escapeHtml(tr.t(`verify.${key}.title`)), message ?? escapeHtml(tr.t(`verify.${key}.message`)), accent, { note, lang }));
+
+    if (req.query?.error) return send(400, 'cancelled');
+    let state;
+    try {
+        state = await read(req.query?.state);
+    } catch (error) {
+        logger.warn(`OAuth verification: could not check the link (database): ${error.message}`);
+        return send(503, 'unavailable');
+    }
+    if (!state || typeof req.query?.code !== 'string') return send(400, 'expired');
+    // The state that was read is the authority (readState only returns known codes).
+    if (state.lang && state.lang !== lang) {
+        lang = state.lang;
+        tr = translator(lang);
+    }
+    const home = keepsVerifyToken(state.guildId, env);
+    const note = () => privacyNoteHtml(env, { lang, home });
+
+    try {
+        // Read first: a server whose settings cannot be read fails here, before anything changed.
+        const redirect = redirectFor(state.guildId);
+        // That server's own verification must be set up, before anything is stored.
+        const problem = await setupProblem(client, state.guildId, { lang });
+        if (problem) return send(409, 'notSetUp', undefined, { message: escapeHtml(problem.replace(/`/g, '')) });
+        const token = await exchange(req.query.code);
+        const me = await fetchMe(token);
+        if (me.id !== state.userId) return send(403, 'wrongAccount');
+
+        // Mewvo's own servers. The server comes first: a token is only stored once the server it
+        // was given in is recorded, so a stored token always says where it may be used (member
+        // restore). If the stored token cannot even be read, nothing is recorded or stored: the rows
+        // could not be kept consistent with it (a pre-v12 token would lose its home server, stale
+        // rows could stay). Any other server: nothing (an identify-only token cannot add anyone
+        // anywhere, and must never replace a member's home-server token).
+        let recorded = false;
+        if (home) {
+            const hadToken = await getStored(`${TOKEN_KEY_PREFIX}${me.id}`, null).then(Boolean, () => null);
+            recorded = hadToken !== null && await record(me.id, state.guildId, { hadToken })
+                .then(() => true, (error) => {
+                    logger.error(`Could not record the OAuth authorization of ${me.id} in ${state.guildId}; token not stored: ${error.message}`);
+                    return false;
+                });
+            if (hadToken === null) logger.error(`Could not read the stored OAuth token of ${me.id}; authorization in ${state.guildId} not recorded, token not stored`);
+            if (recorded) {
+                await store(me.id, token).catch((error) => logger.error(`Could not store OAuth tokens for ${me.id}: ${error.message}`));
+            }
+        }
+
+        if (!(await alreadyVerified(client, state.guildId, me.id))) {
+            const assessment = await assess(state.guildId, me.id, req.ip);
+            if (assessment.hold) {
+                await hold(client, state.guildId, me.id, assessment.reasons, assessment.items);
+                return send(202, 'held', '#fee75c', { note: note() });
+            }
+        }
+
+        await verify(client, state.guildId, me.id, { source: 'oauth', moderatorId: null });
+        if (recorded) {
+            await markVerified(me.id, state.guildId)
+                .catch((error) => logger.error(`Could not record the verification of ${me.id} in ${state.guildId}: ${error.message}`));
+        }
+        if (redirect) return res.redirect(303, redirect);
+        return send(200, 'verified', '#57f287', { note: note() });
+    } catch (error) {
+        logger.error(`OAuth verification failed for state user ${state.userId}: ${error.message}`);
+        // A service's own message is English: shown only on an English page; otherwise the translated one.
+        const own = lang === DEFAULT_LANG && error.userMessage ? escapeHtml(String(error.userMessage).replace(/[<>&"]/g, '')) : null;
+        return send(error.status === 400 ? 400 : 500, 'failed', undefined, { message: own });
+    }
+}
+
 /** Adds GET /oauth/callback to the bot's web server. */
 export function registerOAuthRoutes(app, client) {
     if (!isOAuthVerificationEnabled()) {
@@ -240,75 +397,7 @@ export function registerOAuthRoutes(app, client) {
         return;
     }
 
-    app.get('/oauth/callback', async (req, res) => {
-        res.set('Cache-Control', 'no-store');
-        const send = (status, title, message, accent, options) => res.status(status).type('html').send(errorPage(title, message, accent, options));
-
-        if (req.query.error) {
-            return send(400, 'Verification cancelled', 'You did not authorize the bot. Go back to Discord and press Verify again if you want to verify.');
-        }
-        let state;
-        try {
-            state = await readState(req.query.state);
-        } catch (error) {
-            logger.warn(`OAuth verification: could not check the link (database): ${error.message}`);
-            return send(503, 'Try again', 'Verification is not available right now. Go back to Discord and press Verify again in a minute.');
-        }
-        if (!state || typeof req.query.code !== 'string') {
-            return send(400, 'Link expired', 'This verification link is invalid, expired or already used. Go back to Discord and press Verify again.');
-        }
-
-        try {
-            // Read first: a server whose settings cannot be read fails here, before anything changed.
-            const redirect = successRedirectFor(state.guildId);
-            // That server's own verification must be set up, before anything is stored.
-            const problem = await verificationSetupProblem(client, state.guildId);
-            if (problem) return send(409, 'Verification is not set up', escapeHtml(problem.replace(/`/g, '')));
-            const token = await exchangeCode(req.query.code);
-            const me = await discordFetch(ME_URL, { headers: { Authorization: `Bearer ${token.access_token}` } });
-            if (me.id !== state.userId) {
-                return send(403, 'Wrong account', 'You authorized with a different Discord account than the one that pressed Verify. Log in with the right account and try again.');
-            }
-
-            // The server comes first: a token is only stored once the server it was given in is
-            // recorded, so a stored token always says where it may be used (member restore).
-            // If the stored token cannot even be read, nothing is recorded or stored: the rows could not
-            // be kept consistent with it (a pre-v12 token would lose its home server, stale rows could stay).
-            const hadToken = await getFromDb(`${TOKEN_KEY_PREFIX}${me.id}`, null).then(Boolean, () => null);
-            const recorded = hadToken !== null && await recordAuthorization(me.id, state.guildId, { hadToken })
-                .then(() => true, (error) => {
-                    logger.error(`Could not record the OAuth authorization of ${me.id} in ${state.guildId}; token not stored: ${error.message}`);
-                    return false;
-                });
-            if (hadToken === null) logger.error(`Could not read the stored OAuth token of ${me.id}; authorization in ${state.guildId} not recorded, token not stored`);
-            if (recorded) {
-                await storeTokens(me.id, token).catch((error) => logger.error(`Could not store OAuth tokens for ${me.id}: ${error.message}`));
-            }
-
-            if (!(await isAlreadyVerified(client, state.guildId, me.id))) {
-                const assessment = await assessVerification(state.guildId, me.id, req.ip);
-                if (assessment.hold) {
-                    await holdForStaff(client, state.guildId, me.id, assessment.reasons, assessment.items);
-                    return send(202, 'Waiting for approval',
-                        'Thanks. A staff member needs to approve your verification first. You will get a DM when it is done.', '#fee75c',
-                        { note: privacyNoteHtml() });
-                }
-            }
-
-            await verifyUser(client, state.guildId, me.id, { source: 'oauth', moderatorId: null });
-            if (recorded) {
-                await markVerifiedIn(me.id, state.guildId)
-                    .catch((error) => logger.error(`Could not record the verification of ${me.id} in ${state.guildId}: ${error.message}`));
-            }
-            if (redirect) return res.redirect(303, redirect);
-            return send(200, 'You are verified', 'Thanks. You can close this page and go back to Discord.', '#57f287',
-                { note: privacyNoteHtml() });
-        } catch (error) {
-            logger.error(`OAuth verification failed for state user ${state.userId}: ${error.message}`);
-            const message = (error.userMessage || 'Something went wrong. Go back to Discord and press Verify again.').replace(/[<>&"]/g, '');
-            return send(error.status === 400 ? 400 : 500, 'Verification failed', message);
-        }
-    });
+    app.get('/oauth/callback', (req, res) => handleOAuthCallback(client, req, res));
     logger.info('OAuth verification enabled at /oauth/callback');
 }
 

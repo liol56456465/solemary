@@ -21,7 +21,7 @@
             "mewvo": "Members appeal in the Mewvo support server.",
             "mewvoChoice": "Members appeal in the Mewvo support server. You can use your own server instead (dashboard).",
             "own": "Members appeal in your own server: {invite}",
-            "ownMissing": "Your own server is chosen, but no invite is set. Add one on the dashboard (Enforcement)."
+            "ownMissing": "Members appeal in your own server (the default). Add an invite on the dashboard (Enforcement), so members who were kicked or banned know where to go."
         },
         "automod": {
             "label": "Automod",

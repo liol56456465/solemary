@@ -910,6 +910,7 @@
             "serverTitle": "Panel odwołań opublikowany",
             "serverPanel": "**Panel:** <#{channelId}>, do odwołań od kar tego serwera i zgłoszeń na zespół.",
             "category": "Każde odwołanie i zgłoszenie otwiera się w **{category}**, widoczne tylko dla administratorów.",
+            "categoryCreated": "Utworzyłem prywatną kategorię **{category}** na odwołania i zgłoszenia (widzą ją tylko administratorzy i Mewvo) i zapisałem ją jako kategorię odwołań tego serwera.",
             "serverDecide": "Decyduj o odwołaniach przyciskami Przyjmij / Odrzuć przy każdym odwołaniu.",
             "homeTitle": "Panele odwołań opublikowane",
             "main": "**Serwer główny:** <#{channelId}>, do wyciszeń i ostrzeżeń.",
@@ -918,7 +919,8 @@
             "homeDecide": "Rozpatruj je i decyduj przez **/appeals**."
         },
         "error": {
-            "noServerCategory": "Nie ma kategorii, w której można otwierać odwołania i zgłoszenia. Najpierw ustaw kategorię zgłoszeń (/ticket), potem uruchom /setappeal ponownie.",
+            "noServerCategory": "Nie ma kategorii, w której można otwierać odwołania i zgłoszenia, i nie udało mi się jej utworzyć. Daj Mewvo uprawnienie **Zarządzanie kanałami** (Ustawienia serwera → Role → Mewvo) i uruchom /setappeal ponownie albo wybierz kategorię odwołań w panelu (Kary i odwołania).",
+            "categoryNotSaved": "Nie udało się zapisać nowej kategorii odwołań, bo baza danych nie odpowiada. Spróbuj /setappeal ponownie za minutę.",
             "noMainCategory": "Nie ma kategorii, w której można otwierać odwołania. Ustaw kategorię odwołań w panelu (Egzekwowanie i odwołania) albo kategorię zgłoszeń.",
             "categoryPermissions": "Potrzebuję „Wyświetlanie kanału” i „Zarządzanie kanałami” w kategorii **{category}**, by otwierać tam kanały odwołań.",
             "channelPermissions": "Potrzebuję „Wyświetlanie kanału”, „Wysyłanie wiadomości” i „Osadzanie linków” na <#{channelId}>, by opublikować panel odwołań.",

@@ -40,6 +40,7 @@
     },
     "privacy": {
         "oauth": "La verifica salva il tuo ID Discord, un token di accesso cifrato (per aggiungerti al server di supporto Mewvo) e un'impronta offuscata del tuo indirizzo IP per individuare chi aggira un ban.",
+        "oauthServer": "Verifica con Discord condivide con Mewvo solo il tuo profilo Discord pubblico (ID, nome, avatar): niente email, niente elenco dei server e nessun token di accesso viene conservato. Mewvo salva il tuo ID Discord e un'impronta offuscata del tuo indirizzo IP, confrontata solo con i membri bannati da questo server, per individuare chi aggira un ban.",
         "direct": "La verifica salva il tuo ID Discord e il momento in cui ti sei verificato.",
         "link": "Privacy: {url}"
     },

@@ -13,8 +13,9 @@ import { ErrorTypes, TitanBotError } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { botText, resolveBotLanguage } from '../../utils/botText.js';
-import { getAppealsCategory } from './appealService.js';
+import { getAppealsCategory, privateOverwrites } from './appealService.js';
 import { getFromDb, setInDb } from '../../utils/database.js';
+import { updateSettings } from '../settings/guildSettings.js';
 
 /** A panel's language: the server it is posted in. */
 const panelLanguage = (guildId) => resolveBotLanguage({ guildId, purpose: 'public' });
@@ -129,31 +130,81 @@ export function serverAppealPanel(guildName, { lang = 'en' } = {}) {
     };
 }
 
+/** The name of the category Mewvo creates for appeals in a server that has none (2.4). */
+export const APPEALS_CATEGORY_NAME = 'Appeals';
+const creatingCategory = new Map(); // guildId → the running creation (two posts at once make one category)
+
+/**
+ * The category appeals open in, in a server that is not Mewvo's: its appeals category, else its
+ * /ticket one; with neither, a private "Appeals" category is created (admin-only overwrites:
+ * @everyone cannot see it, Mewvo can) and saved as the server's appealsCategoryId. Resolves
+ * { category, created }. Throws a configuration error with the exact fix when Mewvo cannot create
+ * it (no Manage Channels, or Discord refuses), and a database error when it cannot be saved (the
+ * new category is removed again, best effort). `actor`: { userId, username } for the settings audit.
+ */
+export async function ensureServerAppealsCategory(guild, {
+    reason = '/setappeal', lang = 'en', actor = {}, find = getAppealsCategory, save = updateSettings,
+} = {}) {
+    const existing = await find(guild);
+    if (existing) return { category: existing, created: false };
+    const running = creatingCategory.get(guild.id);
+    if (running) return running;
+    const job = createServerAppealsCategory(guild, { reason, tr: botText(lang), actor, save })
+        .finally(() => creatingCategory.delete(guild.id));
+    creatingCategory.set(guild.id, job);
+    return job;
+}
+
+async function createServerAppealsCategory(guild, { reason, tr, actor, save }) {
+    const cannot = () => configError(tr.t('staff.setappeal.error.noServerCategory'));
+    if (!guild.members?.me?.permissions?.has?.(PermissionFlagsBits.ManageChannels)) throw cannot();
+    let category;
+    try {
+        category = await guild.channels.create({
+            name: APPEALS_CATEGORY_NAME,
+            type: ChannelType.GuildCategory,
+            permissionOverwrites: privateOverwrites(guild),
+            reason: `${reason}: category for appeals and reports`,
+        });
+    } catch (error) {
+        logger.warn(`Could not create the appeals category in ${guild.id}: ${error.message}`);
+        throw cannot();
+    }
+    try {
+        await save(guild.id, { appealsCategoryId: category.id }, { userId: actor.userId ?? null, username: actor.username ?? 'Mewvo', module: 'appeals' });
+    } catch (error) {
+        logger.error(`Created appeals category ${category.id} in ${guild.id} but could not save it: ${error.message}`);
+        await category.delete('Appeals category could not be saved').catch((cleanup) => logger.warn(`Could not remove the unsaved appeals category ${category.id}: ${cleanup.message}`));
+        const message = tr.t('staff.setappeal.error.categoryNotSaved');
+        throw new TitanBotError(message, ErrorTypes.DATABASE, message, { expected: true });
+    }
+    return { category, created: true };
+}
+
 /**
  * Posts (or re-posts) the panel of a server that is not Mewvo's, in `channel` of that server.
- * Checks first: a category to open appeals in (its appeals category, else its /ticket one) the
- * bot can open channels in, and the bot able to post in the channel. Never touches the Support
- * server. Resolves { channel, category }.
+ * Checks first: the bot able to post in the channel, then a category to open appeals in (its
+ * appeals category, else its /ticket one, else a private "Appeals" category created and saved
+ * now: ensureServerAppealsCategory) the bot can open channels in. Never touches the Support
+ * server. Resolves { channel, category, categoryCreated }.
  */
-export async function postServerAppealPanel(guild, channel, { reason = '/setappeal', lang = 'en' } = {}) {
+export async function postServerAppealPanel(guild, channel, { reason = '/setappeal', lang = 'en', actor = {}, ensureCategory = ensureServerAppealsCategory } = {}) {
     const tr = botText(lang);
-    const category = await getAppealsCategory(guild);
-    if (!category) {
-        throw configError(tr.t('staff.setappeal.error.noServerCategory'));
+    // The channel first: a category is never created for a panel that cannot be posted.
+    const postable = typeof channel?.permissionsFor === 'function' ? channel.permissionsFor(guild.members.me) : null;
+    if (!postable?.has?.([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks])) {
+        throw configError(tr.t('staff.setappeal.error.channelPermissions', { channelId: channel?.id }));
     }
+    const { category, created: categoryCreated } = await ensureCategory(guild, { reason, lang, actor });
     const botPermissions = category.permissionsFor(guild.members.me);
     if (!botPermissions?.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ManageChannels])) {
         throw configError(tr.t('staff.setappeal.error.categoryPermissions', { category: category.name }));
     }
-    const here = typeof channel?.permissionsFor === 'function' ? channel.permissionsFor(guild.members.me) : null;
-    if (!here?.has?.([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks])) {
-        throw configError(tr.t('staff.setappeal.error.channelPermissions', { channelId: channel?.id }));
-    }
     await removeOldAppealPanels(channel);
-    await channel.send(serverAppealPanel(guild.name, { lang: panelLanguage(guild.id) }));
+    await channel.send({ ...serverAppealPanel(guild.name, { lang: panelLanguage(guild.id) }), allowedMentions: { parse: [] } });
     await setInDb(appealPanelKey(guild.id), { at: new Date().toISOString(), mainChannelId: channel.id, supportChannelId: null, reason })
         .catch((error) => logger.warn(`Could not remember the appeal panel posting: ${error.message}`));
-    return { channel, category };
+    return { channel, category, categoryCreated };
 }
 
 /** The support server's #appeals channel, created read-only for members if it doesn't exist. */
@@ -217,9 +268,9 @@ export async function postAppealPanels(client, mainGuild, mainChannel, { reason 
 
     // Each panel in the language of the server it is posted in.
     await removeOldAppealPanels(mainChannel);
-    await mainChannel.send(mainAppealPanel({ lang: panelLanguage(mainGuild.id) }));
+    await mainChannel.send({ ...mainAppealPanel({ lang: panelLanguage(mainGuild.id) }), allowedMentions: { parse: [] } });
     await removeOldAppealPanels(supportChannel);
-    await supportChannel.send(supportAppealPanel({ lang: panelLanguage(supportGuild.id) }));
+    await supportChannel.send({ ...supportAppealPanel({ lang: panelLanguage(supportGuild.id) }), allowedMentions: { parse: [] } });
     // Remembered for the dashboard checklist only: a failed write must not undo the posting.
     await setInDb(appealPanelKey(mainGuild.id), { at: new Date().toISOString(), mainChannelId: mainChannel.id, supportChannelId: supportChannel.id })
         .catch((error) => logger.warn(`Could not remember the appeal panel posting: ${error.message}`));

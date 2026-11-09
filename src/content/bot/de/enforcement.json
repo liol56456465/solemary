@@ -12,6 +12,7 @@
         "rejoin": "Wieder beitreten: {invite}",
         "record": "Deine ganze Akte: <{url}>",
         "appealWeb": "**Online Einspruch einlegen:** <{url}>",
+        "appealAskStaff": "**Einspruch:** wende dich an das Team von {server}.",
         "appealDeniedWeb": "Nach der Wartezeit kannst du online erneut Einspruch einlegen: <{url}>",
         "privacy": "-# Datenschutz: <{url}>",
         "thisServer": "dem Server",

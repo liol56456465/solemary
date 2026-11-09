@@ -40,6 +40,7 @@
     },
     "privacy": {
         "oauth": "Beim Verifizieren werden deine Discord-ID, ein verschlüsselter Login-Token (um dich zum Mewvo-Support-Server hinzuzufügen) und ein unkenntlicher Fingerabdruck deiner IP-Adresse gespeichert, um Bann-Umgehung zu erkennen.",
+        "oauthServer": "„Mit Discord verifizieren“ teilt nur dein öffentliches Discord-Profil (ID, Name, Avatar) mit Mewvo: keine E-Mail, keine Serverliste, und es wird kein Login-Token behalten. Mewvo speichert deine Discord-ID und einen unkenntlichen Fingerabdruck deiner IP-Adresse, der nur mit gebannten Mitgliedern dieses Servers verglichen wird, um Bann-Umgehung zu erkennen.",
         "direct": "Beim Verifizieren werden deine Discord-ID und der Zeitpunkt deiner Verifizierung gespeichert.",
         "link": "Datenschutz: {url}"
     },

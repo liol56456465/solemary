@@ -12,6 +12,7 @@
         "rejoin": "Revenir : {invite}",
         "record": "Ton dossier complet : <{url}>",
         "appealWeb": "**Faire appel en ligne :** <{url}>",
+        "appealAskStaff": "**Pour faire appel :** contacte l'équipe de {server}.",
         "appealDeniedWeb": "Tu pourras refaire appel en ligne après le délai d'attente : <{url}>",
         "privacy": "-# Confidentialité : <{url}>",
         "thisServer": "ce serveur",

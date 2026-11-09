@@ -1,0 +1,35 @@
+{
+  "privacyLink": "Polityka prywatności",
+  "cancelled": {
+    "title": "Weryfikacja anulowana",
+    "message": "Nie autoryzowałeś bota. Wróć do Discorda i naciśnij ponownie przycisk weryfikacji, jeśli chcesz się zweryfikować."
+  },
+  "unavailable": {
+    "title": "Spróbuj ponownie",
+    "message": "Weryfikacja jest teraz niedostępna. Wróć do Discorda i za minutę naciśnij ponownie przycisk weryfikacji."
+  },
+  "expired": {
+    "title": "Link wygasł",
+    "message": "Ten link weryfikacyjny jest nieprawidłowy, wygasł albo został już użyty. Wróć do Discorda i naciśnij ponownie przycisk weryfikacji."
+  },
+  "notSetUp": {
+    "title": "Weryfikacja nie jest skonfigurowana",
+    "message": "Weryfikacja nie jest skonfigurowana na tym serwerze. Zapytaj kogoś z administracji."
+  },
+  "wrongAccount": {
+    "title": "Niewłaściwe konto",
+    "message": "Autoryzowałeś innym kontem Discord niż to, które nacisnęło przycisk weryfikacji. Zaloguj się właściwym kontem i spróbuj ponownie."
+  },
+  "held": {
+    "title": "Czeka na zatwierdzenie",
+    "message": "Dzięki. Ktoś z administracji musi najpierw zatwierdzić twoją weryfikację. Dostaniesz wiadomość prywatną, gdy to się stanie."
+  },
+  "verified": {
+    "title": "Jesteś zweryfikowany",
+    "message": "Dzięki. Możesz zamknąć tę stronę i wrócić do Discorda."
+  },
+  "failed": {
+    "title": "Weryfikacja nie powiodła się",
+    "message": "Coś poszło nie tak. Wróć do Discorda i naciśnij ponownie przycisk weryfikacji."
+  }
+}

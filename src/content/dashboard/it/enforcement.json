@@ -134,11 +134,16 @@
   },
   "panels": {
     "title": "Pannelli di ricorso",
+    "titleServer": "Pannello dei ricorsi",
     "help": "Pubblica il pannello di ricorso qui e nel server di supporto, e rimuove quelli vecchi. Puoi farlo anche con /setappeal su Discord.",
+    "helpServer": "Pubblica il pannello dei ricorsi nel canale scelto e rimuove quello vecchio in quel canale. I membri lo usano per fare ricorso contro una sanzione di questo server o segnalare un membro dello staff; ogni ricorso si apre in un canale privato della tua categoria dei ricorsi. Nessuna categoria? Mewvo crea una categoria privata “Appeals”. Puoi farlo anche con /setappeal su Discord.",
     "channel": "Canale per il pannello di ricorso",
     "channelHelp": "Il pannello di ricorso è un messaggio con un pulsante che i membri premono per fare ricorso. Un secondo pannello va in #appeals nel server di supporto, che Mewvo crea se non esiste.",
+    "channelHelpServer": "Il pannello dei ricorsi è un messaggio con un pulsante che i membri premono per fare ricorso. Scegli un canale che i tuoi membri possono leggere.",
     "submit": "Pubblica i pannelli di ricorso",
-    "confirm": "Pubblicare ora i pannelli di ricorso? I pannelli precedenti in questi canali vengono sostituiti."
+    "submitServer": "Pubblica il pannello dei ricorsi",
+    "confirm": "Pubblicare ora i pannelli di ricorso? I pannelli precedenti in questi canali vengono sostituiti.",
+    "confirmServer": "Pubblicare ora il pannello dei ricorsi? Un pannello dei ricorsi precedente in questo canale viene sostituito."
   },
   "pages": {
     "transparencyTitle": "Rapporto di trasparenza",
@@ -178,6 +183,8 @@
   "result": {
     "panelsPosted": "Pannelli di ricorso pubblicati in #{main} e in #{support} nel server di supporto.",
     "panelsPostedCreated": "Pannelli di ricorso pubblicati in #{main} e in #{support} nel server di supporto (creato).",
+    "panelPostedServer": "Pannello dei ricorsi pubblicato in #{channel}. I ricorsi si aprono in {category}.",
+    "panelPostedServerCreated": "Pannello dei ricorsi pubblicato in #{channel}. Mewvo ha creato la categoria privata {category} per i ricorsi e l’ha salvata come tua categoria dei ricorsi.",
     "templateInvalid": "Questo modello non è valido.",
     "templateAdded": "Modello «{name}» aggiunto.",
     "templateGone": "Questo modello non c’è più. Ricarica la pagina.",
@@ -189,12 +196,12 @@
   },
   "appealsHome": {
     "title": "Dove i membri fanno ricorso",
-    "help": "I messaggi sulle sanzioni (DM) dicono ai membri dove possono chiedere di togliere una sanzione. Supporto Mewvo: fanno ricorso nel server di supporto di Mewvo. Il nostro server: il DM indica un invito a un server che gestite voi.",
+    "help": "I messaggi di sanzione (DM) dicono ai membri dove chiedere di togliere una sanzione. Il nostro server (predefinito): il DM indica il tuo invito qui sotto e la pagina web dei ricorsi di Mewvo quando è disponibile; senza nessuno dei due, dice loro di contattare il tuo staff. Supporto Mewvo: fanno ricorso nel server di supporto di Mewvo.",
     "choice": "I membri fanno ricorso in",
     "mewvo": "Supporto Mewvo",
     "own": "Il nostro server",
     "invite": "Invito al nostro server",
-    "inviteHelp": "Un invito discord.gg che non scade. Usato solo con \"Il nostro server\". Vuoto: il DM non ha la riga con l'invito.",
+    "inviteHelp": "Un invito discord.gg che non scade. Usato solo con “Il nostro server”. Vuoto: il DM non ha la riga dell’invito (indica comunque la pagina web dei ricorsi se disponibile, altrimenti dice ai membri di contattare il tuo staff).",
     "badInvite": "Invito al nostro server: deve essere un link di invito discord.gg. Non è stato cambiato nulla.",
     "homeNote": "Qui non si applica: i membri dei server di Mewvo fanno sempre ricorso nel server di supporto di Mewvo.",
     "homeOnlyAction": "Questa impostazione non si applica ai server di Mewvo. Non è stato cambiato nulla."

@@ -1,0 +1,35 @@
+{
+  "privacyLink": "Política de Privacidade",
+  "cancelled": {
+    "title": "Verificação cancelada",
+    "message": "Você não autorizou o bot. Volte ao Discord e clique de novo no botão de verificação se quiser se verificar."
+  },
+  "unavailable": {
+    "title": "Tente de novo",
+    "message": "A verificação não está disponível agora. Volte ao Discord e clique de novo no botão de verificação daqui a um minuto."
+  },
+  "expired": {
+    "title": "Link expirado",
+    "message": "Este link de verificação é inválido, expirou ou já foi usado. Volte ao Discord e clique de novo no botão de verificação."
+  },
+  "notSetUp": {
+    "title": "A verificação não está configurada",
+    "message": "A verificação não está configurada neste servidor. Fale com alguém da equipe."
+  },
+  "wrongAccount": {
+    "title": "Conta errada",
+    "message": "Você autorizou com uma conta do Discord diferente da que clicou no botão de verificação. Entre com a conta certa e tente de novo."
+  },
+  "held": {
+    "title": "Aguardando aprovação",
+    "message": "Obrigado. Alguém da equipe precisa aprovar sua verificação primeiro. Você vai receber uma DM quando estiver pronto."
+  },
+  "verified": {
+    "title": "Você está verificado",
+    "message": "Obrigado. Você pode fechar esta página e voltar ao Discord."
+  },
+  "failed": {
+    "title": "A verificação falhou",
+    "message": "Algo deu errado. Volte ao Discord e clique de novo no botão de verificação."
+  }
+}

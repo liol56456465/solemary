@@ -868,6 +868,7 @@
             "serverTitle": "Einspruchspanel gepostet",
             "serverPanel": "**Panel:** <#{channelId}>, für Einsprüche gegen Strafen dieses Servers und Meldungen über Teammitglieder.",
             "category": "Jeder Einspruch und jede Meldung öffnet sich in **{category}**, nur für Administratoren sichtbar.",
+            "categoryCreated": "Ich habe die private Kategorie **{category}** für Einsprüche und Meldungen erstellt (nur Administratoren und Mewvo sehen sie) und als Einspruchskategorie dieses Servers gespeichert.",
             "serverDecide": "Entscheide Einsprüche mit den Buttons Annehmen / Ablehnen an jedem Einspruch.",
             "homeTitle": "Einspruchspanels gepostet",
             "main": "**Hauptserver:** <#{channelId}>, für Stummschaltungen und Verwarnungen.",
@@ -876,7 +877,8 @@
             "homeDecide": "Prüfe und entscheide sie mit **/appeals**."
         },
         "error": {
-            "noServerCategory": "Es gibt keine Kategorie, in der Einsprüche und Meldungen geöffnet werden können. Lege zuerst eine Ticketkategorie fest (/ticket) und führe dann /setappeal noch einmal aus.",
+            "noServerCategory": "Es gibt keine Kategorie, in der Einsprüche und Meldungen geöffnet werden können, und ich konnte keine erstellen. Gib Mewvo die Berechtigung **Kanäle verwalten** (Servereinstellungen → Rollen → Mewvo) und führe /setappeal noch einmal aus, oder wähle im Dashboard eine Einspruchskategorie (Strafen & Einsprüche).",
+            "categoryNotSaved": "Die neue Einspruchskategorie konnte nicht gespeichert werden, weil die Datenbank nicht antwortet. Versuch /setappeal in einer Minute noch einmal.",
             "noMainCategory": "Es gibt keine Kategorie, in der Einsprüche geöffnet werden können. Lege die Einspruchskategorie im Dashboard fest (Durchsetzung & Einsprüche) oder eine Ticketkategorie.",
             "categoryPermissions": "Ich brauche „Kanal ansehen“ und „Kanäle verwalten“ in der Kategorie **{category}**, um dort Einspruchskanäle zu öffnen.",
             "channelPermissions": "Ich brauche „Kanal ansehen“, „Nachrichten senden“ und „Links einbetten“ in <#{channelId}>, um das Einspruchspanel zu posten.",

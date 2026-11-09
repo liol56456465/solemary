@@ -138,11 +138,16 @@
   },
   "panels": {
     "title": "Panele odwołań",
+    "titleServer": "Panel odwołań",
     "help": "Publikuje panel odwołań tutaj i na serwerze wsparcia oraz usuwa stare. Możesz to też zrobić przez /setappeal w Discordzie.",
+    "helpServer": "Publikuje panel odwołań na wybranym kanale i usuwa stary z tego kanału. Członkowie używają go, aby odwołać się od kary z tego serwera albo zgłosić kogoś z administracji; każde odwołanie otwiera się na prywatnym kanale w twojej kategorii odwołań. Nie ma jeszcze kategorii? Mewvo tworzy prywatną kategorię „Appeals”. Możesz to też zrobić przez /setappeal na Discordzie.",
     "channel": "Kanał na panel odwołań",
     "channelHelp": "Panel odwołań to wiadomość z przyciskiem, który członkowie naciskają, żeby się odwołać. Drugi panel trafia do #appeals na serwerze wsparcia; Mewvo tworzy ten kanał, jeśli nie istnieje.",
+    "channelHelpServer": "Panel odwołań to wiadomość z przyciskiem, który członkowie naciskają, aby się odwołać. Wybierz kanał, który twoi członkowie mogą czytać.",
     "submit": "Opublikuj panele",
-    "confirm": "Opublikować teraz panele odwołań? Wcześniejsze panele w tych kanałach zostaną zastąpione."
+    "submitServer": "Opublikuj panel odwołań",
+    "confirm": "Opublikować teraz panele odwołań? Wcześniejsze panele w tych kanałach zostaną zastąpione.",
+    "confirmServer": "Opublikować teraz panel odwołań? Wcześniejszy panel odwołań na tym kanale zostanie zastąpiony."
   },
   "pages": {
     "transparencyTitle": "Raport przejrzystości",
@@ -182,6 +187,8 @@
   "result": {
     "panelsPosted": "Panele odwołań opublikowane w #{main} i w #{support} na serwerze wsparcia.",
     "panelsPostedCreated": "Panele odwołań opublikowane w #{main} i w #{support} na serwerze wsparcia (utworzony).",
+    "panelPostedServer": "Panel odwołań opublikowany na #{channel}. Odwołania otwierają się w {category}.",
+    "panelPostedServerCreated": "Panel odwołań opublikowany na #{channel}. Mewvo utworzył prywatną kategorię {category} na odwołania i zapisał ją jako twoją kategorię odwołań.",
     "templateInvalid": "Ten szablon jest nieprawidłowy.",
     "templateAdded": "Dodano szablon „{name}”.",
     "templateGone": "Tego szablonu już nie ma. Odśwież stronę.",
@@ -193,12 +200,12 @@
   },
   "appealsHome": {
     "title": "Gdzie członkowie składają odwołania",
-    "help": "Wiadomości o karach (DM) mówią członkom, gdzie mogą poprosić o zdjęcie kary. Wsparcie Mewvo: odwołują się na serwerze wsparcia Mewvo. Nasz własny serwer: DM podaje zaproszenie na serwer, który prowadzicie.",
+    "help": "Wiadomości o karach (DM) mówią członkom, gdzie mogą poprosić o zdjęcie kary. Nasz własny serwer (domyślnie): DM podaje twoje zaproszenie poniżej i stronę odwołań Mewvo w przeglądarce, gdy jest dostępna; bez obu mówi im, żeby skontaktowali się z twoją administracją. Wsparcie Mewvo: odwołują się na serwerze wsparcia Mewvo.",
     "choice": "Członkowie odwołują się na",
     "mewvo": "Wsparcie Mewvo",
     "own": "Nasz własny serwer",
     "invite": "Zaproszenie na nasz własny serwer",
-    "inviteHelp": "Zaproszenie discord.gg, które nie wygasa. Używane tylko z opcją „Nasz własny serwer”. Puste: DM nie ma linii z zaproszeniem.",
+    "inviteHelp": "Zaproszenie discord.gg, które nie wygasa. Używane tylko z „Nasz własny serwer”. Puste: DM nie ma linii z zaproszeniem (nadal podaje stronę odwołań, gdy jest dostępna, a jeśli nie, mówi członkom, żeby skontaktowali się z twoją administracją).",
     "badInvite": "Zaproszenie na nasz własny serwer: musi to być link z zaproszeniem discord.gg. Nic nie zostało zmienione.",
     "homeNote": "Tu to nie ma zastosowania: członkowie serwerów Mewvo zawsze odwołują się na serwerze wsparcia Mewvo.",
     "homeOnlyAction": "To ustawienie nie dotyczy serwerów Mewvo. Nic nie zostało zmienione."

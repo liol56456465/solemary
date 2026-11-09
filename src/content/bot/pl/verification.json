@@ -40,6 +40,7 @@
     },
     "privacy": {
         "oauth": "Weryfikacja zapisuje twoje ID Discord, zaszyfrowany token logowania (aby dodać cię do serwera wsparcia Mewvo) i zanonimizowany odcisk twojego adresu IP, aby wykrywać omijanie bana.",
+        "oauthServer": "Weryfikacja przez Discord udostępnia Mewvo tylko twój publiczny profil Discord (ID, nazwa, awatar): bez e-maila, bez listy serwerów i bez przechowywania tokenu logowania. Mewvo zapisuje twoje ID Discord i zanonimizowany odcisk twojego adresu IP, porównywany tylko z osobami zbanowanymi na tym serwerze, aby wykrywać omijanie bana.",
         "direct": "Weryfikacja zapisuje twoje ID Discord i czas weryfikacji.",
         "link": "Prywatność: {url}"
     },

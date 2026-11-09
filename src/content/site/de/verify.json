@@ -1,0 +1,35 @@
+{
+  "privacyLink": "Datenschutzerklärung",
+  "cancelled": {
+    "title": "Verifizierung abgebrochen",
+    "message": "Du hast den Bot nicht autorisiert. Geh zurück zu Discord und drück noch einmal auf den Verifizierungs-Button, wenn du dich verifizieren möchtest."
+  },
+  "unavailable": {
+    "title": "Versuch es noch einmal",
+    "message": "Die Verifizierung ist gerade nicht verfügbar. Geh zurück zu Discord und drück in einer Minute noch einmal auf den Verifizierungs-Button."
+  },
+  "expired": {
+    "title": "Link abgelaufen",
+    "message": "Dieser Verifizierungslink ist ungültig, abgelaufen oder wurde schon benutzt. Geh zurück zu Discord und drück noch einmal auf den Verifizierungs-Button."
+  },
+  "notSetUp": {
+    "title": "Verifizierung ist nicht eingerichtet",
+    "message": "Die Verifizierung ist auf diesem Server nicht eingerichtet. Frag ein Teammitglied."
+  },
+  "wrongAccount": {
+    "title": "Falsches Konto",
+    "message": "Du hast mit einem anderen Discord-Konto autorisiert als dem, das den Verifizierungs-Button gedrückt hat. Melde dich mit dem richtigen Konto an und versuch es noch einmal."
+  },
+  "held": {
+    "title": "Wartet auf Freigabe",
+    "message": "Danke. Ein Teammitglied muss deine Verifizierung zuerst freigeben. Du bekommst eine DM, sobald das passiert ist."
+  },
+  "verified": {
+    "title": "Du bist verifiziert",
+    "message": "Danke. Du kannst diese Seite schließen und zu Discord zurückgehen."
+  },
+  "failed": {
+    "title": "Verifizierung fehlgeschlagen",
+    "message": "Etwas ist schiefgelaufen. Geh zurück zu Discord und drück noch einmal auf den Verifizierungs-Button."
+  }
+}

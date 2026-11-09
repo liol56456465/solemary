@@ -889,6 +889,7 @@
             "serverTitle": "Panneau d'appels publié",
             "serverPanel": "**Panneau :** <#{channelId}>, pour les appels contre les sanctions de ce serveur et les signalements de l'équipe.",
             "category": "Chaque appel et signalement s'ouvre dans **{category}**, visible seulement par les administrateurs.",
+            "categoryCreated": "J'ai créé la catégorie privée **{category}** pour les appels et signalements (seuls les administrateurs et Mewvo la voient) et je l'ai enregistrée comme catégorie d'appels de ce serveur.",
             "serverDecide": "Décide des appels avec les boutons Accepter / Refuser de chaque appel.",
             "homeTitle": "Panneaux d'appels publiés",
             "main": "**Serveur principal :** <#{channelId}>, pour les mises en sourdine et les avertissements.",
@@ -897,7 +898,8 @@
             "homeDecide": "Examine-les et décide avec **/appeals**."
         },
         "error": {
-            "noServerCategory": "Il n'y a pas de catégorie où ouvrir les appels et signalements. Définis d'abord une catégorie de tickets (/ticket), puis relance /setappeal.",
+            "noServerCategory": "Il n'y a pas de catégorie où ouvrir les appels et signalements, et je n'ai pas pu en créer une. Donne à Mewvo la permission **Gérer les salons** (Paramètres du serveur → Rôles → Mewvo) et relance /setappeal, ou choisis une catégorie d'appels sur le tableau de bord (Sanctions et appels).",
+            "categoryNotSaved": "La nouvelle catégorie d'appels n'a pas pu être enregistrée car la base de données ne répond pas. Relance /setappeal dans une minute.",
             "noMainCategory": "Il n'y a pas de catégorie où ouvrir les appels. Définis la catégorie d'appels dans le tableau de bord (Sanctions et appels), ou une catégorie de tickets.",
             "categoryPermissions": "J'ai besoin de « Voir le salon » et « Gérer les salons » dans la catégorie **{category}** pour y ouvrir des salons d'appel.",
             "channelPermissions": "J'ai besoin de « Voir le salon », « Envoyer des messages » et « Intégrer des liens » dans <#{channelId}> pour publier le panneau d'appels.",

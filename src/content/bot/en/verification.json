@@ -40,6 +40,7 @@
     },
     "privacy": {
         "oauth": "Verifying stores your Discord ID, an encrypted login token (to add you to the Mewvo support server) and a scrambled fingerprint of your IP address to spot ban evasion.",
+        "oauthServer": "Verify with Discord only shares your public Discord profile (ID, name, avatar) with Mewvo: no email, no server list, and no login token is kept. Mewvo stores your Discord ID and a scrambled fingerprint of your IP address, compared only with members banned from this server, to spot ban evasion.",
         "direct": "Verifying stores your Discord ID and a record of when you verified.",
         "link": "Privacy: {url}"
     },
