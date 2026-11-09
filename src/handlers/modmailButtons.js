@@ -1,9 +1,9 @@
 import { MessageFlags } from 'discord.js';
 import { logger } from '../utils/logger.js';
-import { textForInteraction } from '../utils/botText.js';
+import { botText, textForInteraction } from '../utils/botText.js';
 import { getGuildConfig } from '../services/config/guildConfig.js';
 import {
-    MODMAIL_BUTTONS, MODMAIL_PICK, closeModmail, isModmailStaff, modmailUserId, openModmail,
+    MODMAIL_BUTTONS, MODMAIL_PICK, closeModmail, isModmailStaff, memberModmailLang, modmailUserId, openModmail,
 } from '../services/modmailService.js';
 
 const SNOWFLAKE = /^\d{17,20}$/;
@@ -15,11 +15,13 @@ const SNOWFLAKE = /^\d{17,20}$/;
  */
 export async function openFromPrompt(interaction, client, messageId, guildId, { open = openModmail } = {}) {
     await interaction.deferUpdate();
+    // Like the prompt it replaces: the member's language for that server (none: personal, else English).
+    const mt = botText(memberModmailLang(interaction.user.id, SNOWFLAKE.test(guildId ?? '') ? client?.guilds?.cache?.get?.(guildId) ?? null : null));
     let status;
     try {
         const dmChannel = interaction.channel ?? await interaction.user.createDM();
         if (!SNOWFLAKE.test(messageId ?? '') || (guildId !== undefined && !SNOWFLAKE.test(guildId ?? ''))) {
-            status = 'That prompt is broken. Send your message again.';
+            status = mt.t('member.modmail.broken');
         } else {
             status = guildId === undefined
                 ? await open(client, interaction.user, dmChannel, messageId)
@@ -27,7 +29,7 @@ export async function openFromPrompt(interaction, client, messageId, guildId, { 
         }
     } catch (error) {
         logger.error(`Opening modmail for ${interaction.user.id} failed:`, error);
-        status = 'Could not reach the staff right now. Please try again later.';
+        status = mt.t('member.modmail.failed');
     }
     await interaction.editReply({ content: status, components: [] }).catch(() => {});
 }
@@ -55,7 +57,8 @@ export const pickModmailServerHandler = {
 export const cancelModmailHandler = {
     name: MODMAIL_BUTTONS.cancel,
     async execute(interaction) {
-        await interaction.update({ content: 'Not sent.', components: [] }).catch(() => {});
+        // No server in this button: the member's personal language, else their Discord language.
+        await interaction.update({ content: textForInteraction(interaction).t('member.modmail.notSent'), components: [] }).catch(() => {});
     },
 };
 

@@ -256,19 +256,24 @@ test('panel: one button per language with a role, native names, no flags, at mos
     }
 });
 
-test('/language set: a private select of the offered languages; none set up → a clear message', () => {
+test('/language set: a private select of all 8 languages (no role here → personal); no roles at all is no dead end (audit 4.6)', () => {
     const interaction = { locale: 'en-US', guildId: GUILD, member: memberWith(R.ru), user: { id: '300000000000000001' } };
-    const reply = languageSetReply(interaction, { resolve: resolver() });
+    const reply = languageSetReply(interaction, { resolve: resolver(), personal: () => null });
     const menu = reply.components[0].toJSON().components[0];
-    assert.equal(menu.custom_id, 'langrole:pick:300000000000000001');
-    assert.deepEqual(menu.options.map((o) => o.value), ['en', 'ru', 'de', 'pl', 'pt-BR']);
+    assert.equal(menu.custom_id, 'langrole:pick:300000000000000001', 'customId unchanged');
+    assert.deepEqual(menu.options.map((o) => o.value), ['en', 'ru', 'de', 'fr', 'it', 'pl', 'es', 'pt-BR']);
     assert.equal(menu.options.find((o) => o.default)?.value, 'ru');
+    assert.deepEqual(menu.options.filter((o) => o.description).map((o) => o.value), ['fr', 'it', 'es'], 'the ones without a role say they are personal');
     assert.deepEqual(reply.allowedMentions, { parse: [] });
-    const none = languageSetReply(interaction, { resolve: resolver({}) });
-    assert.equal(none.components.length, 0);
-    assert.match(none.embeds[0].toJSON().description, /no language roles/);
+    const none = languageSetReply(interaction, { resolve: resolver({}), personal: () => 'it' });
+    const noneMenu = none.components[0].toJSON().components[0];
+    assert.equal(noneMenu.options.length, 9, '8 languages + clear my personal language');
+    assert.equal(noneMenu.options.at(-1).value, 'reset');
+    assert.equal(noneMenu.options.find((o) => o.default)?.value, 'it', 'the personal language is preselected');
+    assert.match(none.embeds[0].toJSON().description, /no language roles, so it is saved as your personal language/);
+    assert.match(none.embeds[0].toJSON().description, /Your personal language: \*\*Italiano\*\*/);
     const picker = languagePickerRow(botText('en'), MAP, { userId: '1' }).toJSON();
-    assert.equal(picker.components[0].options.length, 5);
+    assert.equal(picker.components[0].options.length, 8);
 });
 
 function fakeInteraction({ member, values = null, userId = '300000000000000001', guild = makeGuild() } = {}) {

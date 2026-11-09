@@ -5,7 +5,8 @@
 // login token stored by "Verify with Discord" (oauth:tokens:<userId>; without it the bot can
 // no longer add them to the support server) with the list of servers it was given in
 // (oauth_verified_guilds), and the log of the bot's DMs to them that a language change can
-// re-edit (bot_dm_log, every server), and the ticket ratings they gave lose their name and
+// re-edit (bot_dm_log, every server), the personal language they picked for Mewvo's DMs
+// (user:<id>:lang, every server; services/personalLanguage.js), and the ticket ratings they gave lose their name and
 // comment (ticket_ratings, every server; the stars stay). Invite tracking in this server (owner
 // decision 4): the member's own join rows and their bonus/reset row are deleted, and they are
 // blanked as the inviter in other members' join rows and in the invite code list. Moderation, appeal, report and verification
@@ -21,6 +22,7 @@ import { pgConfig } from '../config/database/postgres.js';
 import { deleteDmLogForUser } from './botDm/dmLog.js';
 import { clearRatingsGivenBy } from './ticketRatingService.js';
 import { hideChannelSurveysOf } from './ticketRatingEffects.js';
+import { forgetPersonalLanguage, personalLanguageKey } from './personalLanguage.js';
 
 // Voice XP: the member's voice time in this server goes with their levels.
 async function deleteVoiceTime(guildId, userId) {
@@ -51,6 +53,8 @@ export const WIPE_ITEMS = [
     { id: 'reminders', label: 'Reminders' },
     { id: 'oauth', label: 'Stored Discord login token (from Verify with Discord)' },
     { id: 'dmlog', label: 'Saved copies of bot DMs (to re-translate them when you change language)' },
+    // Every server: one value per Discord account (/language without a role, the website).
+    { id: 'language', label: 'Your personal language for Mewvo (from /language)' },
     // Every server: the stars stay (staff stats), without who gave them and without the comment.
     { id: 'ticketRatings', label: 'Ticket ratings you gave (your name and comment; the stars stay)' },
     { id: 'invites', label: 'Invite tracking: how you joined, and your name as the inviter of others' },
@@ -97,6 +101,11 @@ export async function wipeMemberData(client, guildId, userId, {
             await removeVerifiedGuilds(userId);
         },
         dmlog: () => removeDmLog(userId),
+        // The stored key first; the in-memory copy only once that worked (a failed delete keeps both).
+        language: async () => {
+            await deleteKey(personalLanguageKey(userId));
+            forgetPersonalLanguage(userId);
+        },
         // Hide open channel surveys first: once opener_id is blank, the access sweep can't find them.
         ticketRatings: async () => { await hideSurveys(client, userId); return removeTicketRatings(userId); },
         invites: () => removeInvites(guildId, userId),

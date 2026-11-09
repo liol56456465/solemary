@@ -150,7 +150,14 @@
     "unlink": "Dissocier Discord",
     "unlinkFoot": "Un compte Mewvo a besoin d’un compte Discord associé : après la dissociation, tu peux seulement en associer un de nouveau (ou supprimer le compte). Une formule reste liée à ton compte Discord. Un compte Discord ne reçoit le bonus des premiers comptes qu’une seule fois.",
     "yourData": "Tes données",
-    "download": "Télécharger mes données"
+    "download": "Télécharger mes données",
+    "language": {
+      "heading": "Langue des DM de Mewvo",
+      "lead": "Mewvo t’écrit en DM dans cette langue et l’utilise sur Discord pour les réponses que toi seul vois, sur tous les serveurs. Un rôle de langue sur un serveur reste prioritaire sur celui-ci.",
+      "label": "Langue",
+      "server": "La langue de chaque serveur (par défaut)",
+      "submit": "Enregistrer la langue"
+    }
   },
   "password": {
     "heading": "Changer le mot de passe",
@@ -201,7 +208,8 @@
     "wrongTwoStepOff": "Le mot de passe ou le code est incorrect. La connexion en deux étapes est toujours activée.",
     "confirmDelete": "Coche la case pour confirmer que tu veux supprimer ton compte.",
     "wrongDeleteWithCode": "Le mot de passe ou le code est incorrect. Rien n’a été supprimé.",
-    "wrongDelete": "Le mot de passe est incorrect. Rien n’a été supprimé."
+    "wrongDelete": "Le mot de passe est incorrect. Rien n’a été supprimé.",
+    "languageNotSaved": "Ta langue n’a pas pu être enregistrée pour le moment (la base de données ne répond pas). Rien n’a été modifié."
   },
   "flash": {
     "passwordReset": "Ton nouveau mot de passe est enregistré. Toutes les autres connexions ont été fermées.",
@@ -211,7 +219,9 @@
     "twoStepAlreadyOn": "La connexion en deux étapes est déjà activée.",
     "twoStepAlreadyOff": "La connexion en deux étapes est déjà désactivée.",
     "twoStepOff": "La connexion en deux étapes est désactivée.",
-    "unlinked": "Ton compte Discord a été dissocié. Associe de nouveau un compte Discord pour continuer à utiliser ton compte Mewvo."
+    "unlinked": "Ton compte Discord a été dissocié. Associe de nouveau un compte Discord pour continuer à utiliser ton compte Mewvo.",
+    "languageSaved": "Enregistré : Mewvo t’écrira en DM en {language}.",
+    "languageCleared": "Effacé : Mewvo utilise de nouveau la langue de chaque serveur pour tes DM."
   },
   "errorCodes": {
     "usernameLength": "Le nom d’utilisateur doit faire entre {min} et {max} caractères.",

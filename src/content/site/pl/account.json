@@ -156,7 +156,14 @@
     "unlink": "Odłącz Discorda",
     "unlinkFoot": "Konto Mewvo potrzebuje połączonego konta Discord: po odłączeniu możesz tylko ponownie połączyć konto (albo usunąć konto). Plan zostaje przy twoim koncie Discord. Konto Discord dostaje bonus dla wczesnych kont tylko raz.",
     "yourData": "Twoje dane",
-    "download": "Pobierz moje dane"
+    "download": "Pobierz moje dane",
+    "language": {
+      "heading": "Język wiadomości DM od Mewvo",
+      "lead": "Mewvo pisze do ciebie w DM w tym języku i używa go na Discordzie w odpowiedziach widocznych tylko dla ciebie, na wszystkich serwerach. Rola językowa na danym serwerze ma tam pierwszeństwo.",
+      "label": "Język",
+      "server": "Język danego serwera (domyślnie)",
+      "submit": "Zapisz język"
+    }
   },
   "password": {
     "heading": "Zmień hasło",
@@ -207,7 +214,8 @@
     "wrongTwoStepOff": "Hasło lub kod jest nieprawidłowe. Logowanie dwuetapowe jest nadal włączone.",
     "confirmDelete": "Zaznacz pole, aby potwierdzić, że chcesz usunąć konto.",
     "wrongDeleteWithCode": "Hasło lub kod jest nieprawidłowe. Nic nie zostało usunięte.",
-    "wrongDelete": "Hasło jest nieprawidłowe. Nic nie zostało usunięte."
+    "wrongDelete": "Hasło jest nieprawidłowe. Nic nie zostało usunięte.",
+    "languageNotSaved": "Nie udało się teraz zapisać twojego języka (baza danych nie odpowiada). Nic nie zostało zmienione."
   },
   "flash": {
     "passwordReset": "Nowe hasło zostało zapisane. Wszystkie inne logowania zostały zakończone.",
@@ -217,7 +225,9 @@
     "twoStepAlreadyOn": "Logowanie dwuetapowe jest już włączone.",
     "twoStepAlreadyOff": "Logowanie dwuetapowe jest już wyłączone.",
     "twoStepOff": "Logowanie dwuetapowe jest wyłączone.",
-    "unlinked": "Twoje konto Discord zostało odłączone. Połącz ponownie konto Discord, aby dalej korzystać z konta Mewvo."
+    "unlinked": "Twoje konto Discord zostało odłączone. Połącz ponownie konto Discord, aby dalej korzystać z konta Mewvo.",
+    "languageSaved": "Zapisano: Mewvo będzie pisać do ciebie w DM w języku {language}.",
+    "languageCleared": "Usunięto: w twoich DM Mewvo znowu używa języka danego serwera."
   },
   "errorCodes": {
     "usernameLength": "Nazwa użytkownika musi mieć od {min} do {max} znaków.",

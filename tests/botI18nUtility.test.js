@@ -53,7 +53,7 @@ test('other languages: translated, with markup, links and values kept', () => {
         }
         assert.ok(tr.t('utility.cooldown.started', { duration: durationLabel('1d', tr), date: '<t:9:F>', relative: '<t:9:R>' }).includes('<t:9:F>'), lang);
         assert.notEqual(durationLabel('6h', tr), '6 hours', lang);
-        assert.ok(wipeWarningText(tr).includes('**') && wipeWarningText(tr).split('\n- ').length === 9, `${lang} wipe list`);
+        assert.ok(wipeWarningText(tr).includes('**') && wipeWarningText(tr).split('\n- ').length === 10, `${lang} wipe list (9 items, with the personal language)`);
         assert.ok(tr.t('utility.todo.created', { name: 'N', id: 'abc' }).includes('`/todo share add list_id:abc user:@username`'), lang);
         assert.ok(tr.t('utility.report.ownerPing', { ownerId: '42' }).startsWith('<@42> '), lang);
         for (const label of confirmButtons('1', 'n', tr).toJSON().components.map((c) => c.label)) assert.ok(label.length <= 80, lang);

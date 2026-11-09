@@ -7,6 +7,8 @@
 // Which language (owner's "mixed" rule), decided in ONE place: resolveBotLanguage().
 //   step 1 (purposes 'reply', 'dm', 'member'): the member's language role (setting
 //                            languageRoles, /language), when a member object is passed
+//   step 2 (purposes 'reply', 'dm'): the member's personal language (services/personalLanguage.js:
+//                            /language without a role for it, or the website), by user id
 //   purpose 'reply'          an ephemeral / private answer to the person who ran the command:
 //                            their Discord language (interaction.locale). A prefix command's
 //                            answer is a channel post: the server's language.
@@ -25,6 +27,7 @@ import { DEFAULT_LANG, LANG_CODES, createCatalog, formatNumberIn } from '../serv
 import { languageFromDiscordLocale } from '../services/dashboard/language.js';
 import { isHomeGuild, resolveSetting, resolvedSource } from '../services/settings/guildSettings.js';
 import { logger } from './logger.js';
+import { personalLanguageOf } from '../services/personalLanguage.js';
 
 export { LANG_CODES };
 export const BOT_LANGUAGE_KEY = 'botLanguage';
@@ -32,6 +35,11 @@ export const BOT_PURPOSES = Object.freeze(['reply', 'dm', 'member', 'public']);
 export const LANGUAGE_ROLES_KEY = 'languageRoles';
 /** Purposes where a member's language role wins (a channel-wide 'public' post never). */
 const MEMBER_PURPOSES = new Set(['reply', 'dm', 'member']);
+/**
+ * Purposes where the member's personal language (no role) counts: what only they read (DMs,
+ * private answers). A post in a channel for one member ('member') keeps the server's language.
+ */
+const PERSONAL_PURPOSES = new Set(['reply', 'dm']);
 
 /** The bot's own catalog (src/content/bot/<lang>/*.json); no owner edits. */
 export const BOT_CATALOG = createCatalog({ dir: fileURLToPath(new URL('../content/bot/', import.meta.url)) });
@@ -116,6 +124,17 @@ export function serverLanguage(guildId, { resolve, source, locale, isHome = isHo
 
 let languageRolesReadFailed = false;
 
+/** The personal language step: never throws (a broken lookup means the next step decides). */
+function personalOf(personal, userId) {
+    try {
+        const code = personal(String(userId));
+        return LANG_CODES.includes(code) ? code : null;
+    } catch (error) {
+        logger.debug(`Personal language of ${userId} not read: ${error?.message || error}`);
+        return null;
+    }
+}
+
 /** The member's role ids (a GuildMember: roles.cache; an API member: roles is an array of ids). */
 function memberRoleIds(member) {
     const roles = member?.roles;
@@ -166,14 +185,21 @@ export function memberLanguage(guildId, member, { resolve = resolveSetting } = {
  * @param {object|null} [p.interaction]  the interaction being answered (reply: its locale)
  * @param {'reply'|'dm'|'member'|'public'} [p.purpose]
  * @param {object} [p.resolve]        tests: replaces resolveSetting
+ * @param {Function} [p.personal]     tests: replaces personalLanguageOf (userId → code | null)
  */
-export function resolveBotLanguage({ guildId = null, member = null, userId = null, interaction = null, purpose = 'reply', resolve } = {}) {
-    void userId;
+export function resolveBotLanguage({ guildId = null, member = null, userId = null, interaction = null, purpose = 'reply', resolve, personal = personalLanguageOf } = {}) {
     const opts = resolve ? { resolve } : {};
     const guild = guildId ?? interaction?.guildId ?? null;
+    const who = member ?? (purpose === 'reply' ? interaction?.member ?? null : null);
     if (MEMBER_PURPOSES.has(purpose)) {
-        const chosen = memberLanguage(guild, member ?? (purpose === 'reply' ? interaction?.member ?? null : null), opts);
+        const chosen = memberLanguage(guild, who, opts);
         if (chosen) return chosen;
+    }
+    // A prefix command's answer is a channel post, not a private one: no personal language.
+    if (PERSONAL_PURPOSES.has(purpose) && !(purpose === 'reply' && interaction?._isPrefixCommand)) {
+        const id = userId ?? who?.id ?? who?.user?.id ?? (purpose === 'reply' ? interaction?.user?.id : null) ?? null;
+        const own = id ? personalOf(personal, id) : null;
+        if (own) return own;
     }
     // A prefix command's "reply" is a message in the channel (no locale): the server's language.
     if (purpose === 'reply' && !interaction?._isPrefixCommand) return languageFromLocale(interaction?.locale);

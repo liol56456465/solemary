@@ -7,8 +7,12 @@
     },
     "pick": {
         "title": "Your language",
-        "text": "Pick the language Mewvo should use for messages meant for you. You get the matching role; your other language roles are removed.",
-        "placeholder": "Choose a language"
+        "text": "Pick the language Mewvo should use for messages meant for you. A language with a role here gives you that role (your other language roles are removed); one without a role is saved as your personal language.",
+        "placeholder": "Choose a language",
+        "textPersonal": "Pick the language Mewvo should use for your DMs and for answers only you see. This server has no language roles, so it is saved as your personal language, in every server (a language role in a server still comes first there).",
+        "personalNow": "Your personal language: **{language}**.",
+        "personalOption": "No role here: saved as your personal language",
+        "resetOption": "Clear my personal language"
     },
     "panel": {
         "title": "Choose your language",
@@ -31,6 +35,10 @@
         "dangerous": "The role **{role}** has staff permissions, so I won't hand it out. Ask an admin to pick another language role.",
         "hierarchy": "The role **{role}** is not below my highest role, so I can't give or remove it. Ask an admin to move my role up.",
         "failed": "Discord refused the role change. Try again in a moment.",
-        "dbDown": "The settings can't be read right now (database not responding). Nothing was changed."
-    }
+        "dbDown": "The settings can't be read right now (database not responding). Nothing was changed.",
+        "saveFailed": "Your language could not be saved (database not responding). Nothing was changed."
+    },
+    "saved": "Saved: Mewvo will DM you in {language} and use it for answers only you see. A language role in a server still comes first there.",
+    "resetDone": "Cleared: Mewvo uses each server's language for your DMs again.",
+    "roleKept": "-# Your language role in this server still comes first here: {reason}"
 }

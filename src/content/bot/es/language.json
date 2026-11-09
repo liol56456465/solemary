@@ -7,8 +7,12 @@
     },
     "pick": {
         "title": "Tu idioma",
-        "text": "Elige el idioma que Mewvo debe usar en los mensajes para ti. Recibes el rol correspondiente; tus otros roles de idioma se quitan.",
-        "placeholder": "Elige un idioma"
+        "text": "Elige el idioma que Mewvo debe usar en los mensajes para ti. Un idioma con rol aquí te da ese rol (tus otros roles de idioma se quitan); uno sin rol se guarda como tu idioma personal.",
+        "placeholder": "Elige un idioma",
+        "textPersonal": "Elige el idioma que Mewvo debe usar en tus DM y en las respuestas que solo ves tú. Este servidor no tiene roles de idioma, así que se guarda como tu idioma personal, en todos los servidores (un rol de idioma en un servidor sigue teniendo prioridad allí).",
+        "personalNow": "Tu idioma personal: **{language}**.",
+        "personalOption": "Sin rol aquí: se guarda como tu idioma personal",
+        "resetOption": "Borrar mi idioma personal"
     },
     "panel": {
         "title": "Elige tu idioma",
@@ -31,6 +35,10 @@
         "dangerous": "El rol **{role}** tiene permisos de staff, así que no lo reparto. Pide a un admin que elija otro rol de idioma.",
         "hierarchy": "El rol **{role}** no está por debajo de mi rol más alto, así que no puedo darlo ni quitarlo. Pide a un admin que suba mi rol.",
         "failed": "Discord rechazó el cambio de rol. Inténtalo de nuevo en un momento.",
-        "dbDown": "Ahora mismo no se pueden leer los ajustes (la base de datos no responde). No se cambió nada."
-    }
+        "dbDown": "Ahora mismo no se pueden leer los ajustes (la base de datos no responde). No se cambió nada.",
+        "saveFailed": "No se pudo guardar tu idioma (la base de datos no responde). No se cambió nada."
+    },
+    "saved": "Guardado: Mewvo te escribirá por DM en {language} y lo usará en las respuestas que solo ves tú. Un rol de idioma en un servidor sigue teniendo prioridad allí.",
+    "resetDone": "Borrado: Mewvo vuelve a usar el idioma de cada servidor para tus DM.",
+    "roleKept": "-# Tu rol de idioma en este servidor sigue teniendo prioridad aquí: {reason}"
 }

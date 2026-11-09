@@ -7,8 +7,12 @@
     },
     "pick": {
         "title": "Twój język",
-        "text": "Wybierz język, którego Mewvo ma używać w wiadomościach do ciebie. Dostaniesz pasującą rolę; twoje inne role językowe zostaną usunięte.",
-        "placeholder": "Wybierz język"
+        "text": "Wybierz język, którego Mewvo ma używać w wiadomościach do ciebie. Język z rolą na tym serwerze daje ci tę rolę (twoje inne role językowe zostaną usunięte); język bez roli zostanie zapisany jako twój osobisty język.",
+        "placeholder": "Wybierz język",
+        "textPersonal": "Wybierz język, którego Mewvo ma używać w twoich DM i w odpowiedziach widocznych tylko dla ciebie. Ten serwer nie ma ról językowych, więc zostanie zapisany jako twój osobisty język, na wszystkich serwerach (rola językowa na danym serwerze nadal ma tam pierwszeństwo).",
+        "personalNow": "Twój osobisty język: **{language}**.",
+        "personalOption": "Bez roli tutaj: zapisany jako osobisty język",
+        "resetOption": "Usuń mój osobisty język"
     },
     "panel": {
         "title": "Wybierz swój język",
@@ -31,6 +35,10 @@
         "dangerous": "Rola **{role}** ma uprawnienia administracji, więc jej nie nadaję. Poproś administratora o wybór innej roli językowej.",
         "hierarchy": "Rola **{role}** nie jest poniżej mojej najwyższej roli, więc nie mogę jej nadać ani zabrać. Poproś administratora o przesunięcie mojej roli wyżej.",
         "failed": "Discord odrzucił zmianę roli. Spróbuj ponownie za chwilę.",
-        "dbDown": "Nie można teraz odczytać ustawień (baza danych nie odpowiada). Nic nie zostało zmienione."
-    }
+        "dbDown": "Nie można teraz odczytać ustawień (baza danych nie odpowiada). Nic nie zostało zmienione.",
+        "saveFailed": "Nie udało się zapisać twojego języka (baza danych nie odpowiada). Nic nie zostało zmienione."
+    },
+    "saved": "Zapisano: Mewvo będzie pisać do ciebie w DM w języku {language} i używać go w odpowiedziach widocznych tylko dla ciebie. Rola językowa na danym serwerze nadal ma tam pierwszeństwo.",
+    "resetDone": "Usunięto: w twoich DM Mewvo znowu używa języka danego serwera.",
+    "roleKept": "-# Twoja rola językowa na tym serwerze nadal ma tu pierwszeństwo: {reason}"
 }

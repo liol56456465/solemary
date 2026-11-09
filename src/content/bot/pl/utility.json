@@ -120,6 +120,7 @@
             "reminders": "Przypomnienia",
             "oauth": "Zapisany token logowania Discord (z „Zweryfikuj przez Discord”)",
             "dmlog": "Zapisane kopie wiadomości prywatnych bota (aby przetłumaczyć je po zmianie języka)",
+            "language": "Twój osobisty język dla Mewvo (z /language)",
             "ticketRatings": "Twoje oceny zgłoszeń (Twoja nazwa i komentarz; gwiazdki zostają)",
             "invites": "Śledzenie zaproszeń: jak dołączyłeś i twoje imię jako zapraszającego innych"
         },

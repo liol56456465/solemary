@@ -7,8 +7,12 @@
     },
     "pick": {
         "title": "Ta langue",
-        "text": "Choisis la langue que Mewvo doit utiliser pour les messages qui te sont destinés. Tu reçois le rôle correspondant ; tes autres rôles de langue sont retirés.",
-        "placeholder": "Choisir une langue"
+        "text": "Choisis la langue que Mewvo doit utiliser pour les messages qui te sont destinés. Une langue avec un rôle ici te donne ce rôle (tes autres rôles de langue sont retirés) ; une langue sans rôle est enregistrée comme ta langue personnelle.",
+        "placeholder": "Choisir une langue",
+        "textPersonal": "Choisis la langue que Mewvo doit utiliser pour tes DM et pour les réponses que toi seul vois. Ce serveur n'a pas de rôles de langue, elle est donc enregistrée comme ta langue personnelle, sur tous les serveurs (un rôle de langue sur un serveur reste prioritaire sur celui-ci).",
+        "personalNow": "Ta langue personnelle : **{language}**.",
+        "personalOption": "Pas de rôle ici : enregistrée comme langue personnelle",
+        "resetOption": "Effacer ma langue personnelle"
     },
     "panel": {
         "title": "Choisis ta langue",
@@ -31,6 +35,10 @@
         "dangerous": "Le rôle **{role}** a des permissions de staff, je ne le distribue donc pas. Demande à un admin de choisir un autre rôle de langue.",
         "hierarchy": "Le rôle **{role}** n'est pas sous mon rôle le plus haut, je ne peux donc ni le donner ni le retirer. Demande à un admin de monter mon rôle.",
         "failed": "Discord a refusé le changement de rôle. Réessaie dans un instant.",
-        "dbDown": "Les paramètres ne peuvent pas être lus pour le moment (la base de données ne répond pas). Rien n'a été modifié."
-    }
+        "dbDown": "Les paramètres ne peuvent pas être lus pour le moment (la base de données ne répond pas). Rien n'a été modifié.",
+        "saveFailed": "Ta langue n'a pas pu être enregistrée (la base de données ne répond pas). Rien n'a été modifié."
+    },
+    "saved": "Enregistré : Mewvo t'écrira en DM en {language} et l'utilisera pour les réponses que toi seul vois. Un rôle de langue sur un serveur reste prioritaire sur celui-ci.",
+    "resetDone": "Effacé : Mewvo utilise de nouveau la langue de chaque serveur pour tes DM.",
+    "roleKept": "-# Ton rôle de langue sur ce serveur reste prioritaire ici : {reason}"
 }

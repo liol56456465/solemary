@@ -12,7 +12,9 @@
 //   GET      /me/linked            the bonus result + the 1-letter claim
 //   POST     /me/letter[/decline]  claim or decline a 1-letter username
 //   GET      /me/account           settings; POST /me/account/{password,2fa/start,
-//                                  2fa/enable,2fa/disable,unlink,delete}
+//                                  2fa/enable,2fa/disable,unlink,delete,language}
+//                                  (language: the member's personal language for Mewvo's DMs,
+//                                  services/personalLanguage.js; no password needed)
 //
 // Linking Discord is required: until the account has a Discord id, every /me page except the
 // link step, the OAuth callback, logout and delete account redirects to /me/link
@@ -36,7 +38,8 @@ import {
     accountErrorText, accountMessagePage, accountSettingsPage, bonusLength, deletedPage, doneLoginPage, forgotPage, linkDiscordPage, linkedPage, passwordLoginPage,
     recoveryCodesPage, resetPage, signupPage, totpSetupPage, twoStepPage,
 } from './accountPages.js';
-import { textOf, translator } from './i18n.js';
+import { LANGUAGES, LANG_CODES, textOf, translator } from './i18n.js';
+import { clearPersonalLanguage, readPersonalLanguage, setPersonalLanguage } from '../personalLanguage.js';
 
 export const FORM_COOKIE = 'mewvo_me_form';
 export const TWO_STEP_COOKIE = 'mewvo_me_2fa';
@@ -97,13 +100,21 @@ export function bonusText(bonus, text = translator()) {
  * The handlers. core: { settings (portal), accountSettings, store, sessions, ctx, send,
  * clientIp, cookieOptions, key, sessionCookie, cookieSessionId, readSession, startLink(req, res, accountId),
  * startReset(req, res) (a Discord login in reset mode), limits, hashParams (scrypt cost; tests
- * use a low one), after (premium follow-up) }.
+ * use a low one), after (premium follow-up), language ({ read, save, clear, afterChange(discordUserId) }:
+ * the personal language store; afterChange re-edits recent DMs when the bot runs) }.
  */
 export function createAccountHandlers(core) {
     const {
         settings, accountSettings, store, sessions, ctx, send, clientIp, cookieOptions, key, sessionCookie, cookieSessionId, readSession,
         startLink, startReset, limits = ACCOUNT_LIMITS, hashParams = SCRYPT_PARAMS, after = afterPremiumChange, sessionTtlMs,
+        language = {},
     } = core;
+    const personal = {
+        read: language.read || readPersonalLanguage,
+        save: language.save || setPersonalLanguage,
+        clear: language.clear || clearPersonalLanguage,
+        afterChange: language.afterChange || null,
+    };
     const formKey = hmac('mewvo member form v1', key);
     const twoStepKey = hmac('mewvo member 2fa v1', key);
     const resetKey = hmac('mewvo member reset v1', key);
@@ -477,8 +488,10 @@ export function createAccountHandlers(core) {
         }
         const recoveryLeft = me.account.totp_enabled_at ? await store.recoveryCodesLeft(me.account.id) : 0;
         const canClaim = Boolean(await letterOffer(me.account));
-        const [plan, bonus] = await Promise.all([store.planOf(me.account.discord_user_id), store.bonusOf(me.account.discord_user_id)]);
-        return page(res, status, accountSettingsPage(ctx(), { session: me.session, account: me.account, flash, error, recoveryLeft, canClaim, plan, bonus }));
+        const [plan, bonus, personalLanguage] = await Promise.all([
+            store.planOf(me.account.discord_user_id), store.bonusOf(me.account.discord_user_id), personal.read(me.account.discord_user_id),
+        ]);
+        return page(res, status, accountSettingsPage(ctx(), { session: me.session, account: me.account, flash, error, recoveryLeft, canClaim, plan, bonus, personalLanguage }));
     }
 
     async function settingsPage(req, res) {
@@ -573,6 +586,39 @@ export function createAccountHandlers(core) {
         return res.redirect(303, '/me/link');
     }
 
+    /**
+     * POST /me/account/language: the personal language (one of the 8) or '' (each server's).
+     * Logged in, same origin + CSRF; no password (a display preference). A failed save shows
+     * that nothing was changed (never a success flash).
+     */
+    async function languagePost(req, res) {
+        const me = await current(req);
+        if (!me) return toLogin(res);
+        if (!sessionOk(req, me.session)) return notAllowed(res);
+        const userId = me.account.discord_user_id;
+        if (!userId) return res.redirect(303, '/me/link');
+        const value = str(req.body?.language, 10);
+        const lang = LANG_CODES.find((code) => code === value) || null;
+        if (value && !lang) return notAllowed(res);
+        try {
+            if (lang) await personal.save(userId, lang);
+            else await personal.clear(userId);
+        } catch (error) {
+            logger.warn(`Member account ${me.account.id}: personal language not saved: ${error.message}`);
+            res.set('Retry-After', '60');
+            return page(res, 503, accountMessagePage(ctx(), t('account.settings.language.heading'), t('account.errors.languageNotSaved'),
+                { href: '/me/account', label: t('account.common.back') }));
+        }
+        try {
+            personal.afterChange?.(userId);
+        } catch (error) {
+            logger.debug(`Personal language re-edit not scheduled: ${error.message}`);
+        }
+        logger.info(`Member account ${me.account.id}: personal language ${lang || 'cleared'}`);
+        const name = LANGUAGES.find((l) => l.code === lang)?.name;
+        return flashBack(res, me, lang ? t('account.flash.languageSaved', { language: name }) : t('account.flash.languageCleared'));
+    }
+
     async function deletePost(req, res) {
         const me = await settingsGuard(req, res);
         if (!me) return undefined;
@@ -591,6 +637,6 @@ export function createAccountHandlers(core) {
     return {
         signupForm, signupPost, loginForm, loginPost, twoStepForm, twoStepPost, forgotForm, forgotPost, resetCallback, resetForm, resetPost,
         linkPage, linkPost, linkCallback, linked, letterPost, letterDecline, settingsPage, passwordPost, twoStepStart, twoStepEnable,
-        twoStepDisable, unlinkPost, deletePost, current, minAge: MIN_AGE,
+        twoStepDisable, unlinkPost, deletePost, languagePost, current, minAge: MIN_AGE,
     };
 }

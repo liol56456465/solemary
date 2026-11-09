@@ -7,7 +7,9 @@ dashboard: en, ru, de, fr, it, pl, es, pt-BR. They use the website's i18n core
 ## Which language a message gets (owner's "mixed" rule)
 
 First, for `'reply'`, `'dm'` and `'member'`: the member's **language role** (setting `languageRoles`,
-`/language`, see docs/language-roles.md), when the caller passes a `member` object. Without one:
+`/language`, see docs/language-roles.md), when the caller passes a `member` object. Then, for `'reply'` and
+`'dm'` only (not a prefix answer): the member's **personal language** (`/language` without a role for it, or
+Account settings on the website; `services/personalLanguage.js`, by user id). Without either:
 
 | Message | Language | `purpose` |
 | --- | --- | --- |
@@ -47,7 +49,12 @@ English: `banDm(record, { lang })`, `buildUserErrorEmbed(type, text, { lang })`,
 
 - Enforcement DMs (`src/services/enforcement/dmTemplates.js`): ban, kick, mute, warn, ban/mute ended
   (unban/unmute), case removed, appeal accepted/denied, durations (`durationIn`). `/test action` previews use
-  the server language too (what the member would get). Keep-apart DMs and the "Contest this" button: still English.
+  the server language too (what the member would get). Keep-apart DMs and the "Contest this" button: namespace
+  `member` (`keepApart.*`, `contest.*`).
+- Member flows (namespace `member`, audit 4.3): the appeal and staff-report forms, My record, My appeals and
+  `/appeal status`, the appeal refusals, the appellant's appeal-channel texts, modmail (prompt, buttons, status
+  lines, close notice, "(staff)" tag) and the "Contest this" form. Private answers use the reply language; what
+  the member reads in DMs or their appeal channel uses the DM rule. customIds never change.
 - `/setup` (namespace `setup`, reply language) and the join welcome post and DM (`setup.welcome.*`, the server's
   language; a new server is English until it picks one).
 - Error replies (`errorHandler.js` built-in messages, `embeds.js` error titles) and the Administrator and

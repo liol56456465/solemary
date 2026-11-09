@@ -150,7 +150,14 @@
     "unlink": "Discord-Verknüpfung aufheben",
     "unlinkFoot": "Ein Mewvo-Konto braucht ein verknüpftes Discord-Konto: Nach dem Aufheben kannst du nur wieder eins verknüpfen (oder das Konto löschen). Ein Plan bleibt bei deinem Discord-Konto. Ein Discord-Konto bekommt den Frühstarter-Bonus nur einmal.",
     "yourData": "Deine Daten",
-    "download": "Meine Daten herunterladen"
+    "download": "Meine Daten herunterladen",
+    "language": {
+      "heading": "Sprache der DMs von Mewvo",
+      "lead": "Mewvo schreibt dir DMs in dieser Sprache und benutzt sie auf Discord für Antworten, die nur du siehst, auf allen Servern. Eine Sprachrolle auf einem Server hat dort Vorrang.",
+      "label": "Sprache",
+      "server": "Sprache des jeweiligen Servers (Standard)",
+      "submit": "Sprache speichern"
+    }
   },
   "password": {
     "heading": "Passwort ändern",
@@ -201,7 +208,8 @@
     "wrongTwoStepOff": "Das Passwort oder der Code ist falsch. Die Zwei-Faktor-Anmeldung ist weiterhin aktiv.",
     "confirmDelete": "Setz das Häkchen, um zu bestätigen, dass du dein Konto löschen möchtest.",
     "wrongDeleteWithCode": "Das Passwort oder der Code ist falsch. Es wurde nichts gelöscht.",
-    "wrongDelete": "Das Passwort ist falsch. Es wurde nichts gelöscht."
+    "wrongDelete": "Das Passwort ist falsch. Es wurde nichts gelöscht.",
+    "languageNotSaved": "Deine Sprache konnte gerade nicht gespeichert werden (Datenbank antwortet nicht). Es wurde nichts geändert."
   },
   "flash": {
     "passwordReset": "Dein neues Passwort ist gespeichert. Alle anderen Anmeldungen wurden beendet.",
@@ -211,7 +219,9 @@
     "twoStepAlreadyOn": "Die Zwei-Faktor-Anmeldung ist bereits aktiv.",
     "twoStepAlreadyOff": "Die Zwei-Faktor-Anmeldung ist bereits aus.",
     "twoStepOff": "Die Zwei-Faktor-Anmeldung ist aus.",
-    "unlinked": "Die Verknüpfung deines Discord-Kontos wurde aufgehoben. Verknüpfe wieder ein Discord-Konto, um dein Mewvo-Konto weiter zu nutzen."
+    "unlinked": "Die Verknüpfung deines Discord-Kontos wurde aufgehoben. Verknüpfe wieder ein Discord-Konto, um dein Mewvo-Konto weiter zu nutzen.",
+    "languageSaved": "Gespeichert: Mewvo schreibt dir DMs auf {language}.",
+    "languageCleared": "Gelöscht: Mewvo benutzt für deine DMs wieder die Sprache des jeweiligen Servers."
   },
   "errorCodes": {
     "usernameLength": "Der Benutzername muss {min} bis {max} Zeichen lang sein.",

@@ -1,0 +1,191 @@
+{
+    "appeal": {
+        "modal": {
+            "title": "Einspruch gegen eine Strafe",
+            "reason": "Warum sollte sie aufgehoben werden?",
+            "reasonHint": "Warum sollte dein Bann, Mute oder deine Verwarnung aufgehoben werden?",
+            "code": "Fallcode",
+            "codeHint": "Aus der DM, die du bei der Strafe bekommen hast, z. B. k7m2qx.",
+            "more": "Weitere Infos (optional)",
+            "moreHint": "Alles andere, was die Administratoren wissen sollten."
+        },
+        "report": {
+            "title": "Ein Teammitglied melden",
+            "staff": "Benutzername des Teammitglieds",
+            "details": "Was ist passiert?",
+            "proof": "Links als Beweis",
+            "proofHint": "Links zu Screenshots oder Nachrichten, einer pro Zeile"
+        },
+        "wrongPlace": {
+            "report": "Meldungen über das Team werden über das Panel im Mewvo-Support-Server eingereicht.",
+            "panel": "Benutze das Einspruchs-Panel auf einem Server."
+        },
+        "badCode": "Das ist kein gültiger Fallcode. Er hat 5–7 Buchstaben und Ziffern und steht in der DM, die du bekommen hast.",
+        "submitted": {
+            "title": "Einspruch eingereicht",
+            "text": "Die Administratoren sehen ihn sich an. Du bekommst die Entscheidung per DM."
+        },
+        "reportSent": {
+            "title": "Meldung eingereicht",
+            "text": "Deine Meldung wurde an die Administratoren geschickt. Wenn sie nach Screenshots als Beweis fragen, schick sie ihnen bitte in den DMs."
+        },
+        "formGone": "Dieses Formular ist hier nicht mehr verfügbar. Öffne es noch einmal über das Panel.",
+        "type": {
+            "ban": "Bann",
+            "kick": "Kick",
+            "mute": "Mute",
+            "warn": "Verwarnung"
+        },
+        "error": {
+            "notFound": "Dieser Fallcode wurde für dein Konto nicht gefunden. Prüfe den Code in deiner DM.",
+            "unappealable": "Gegen diesen Fall ist kein Einspruch möglich.",
+            "lifted": "Dieser Fall wurde bereits aufgehoben.",
+            "endedBan": "Dieser Bann ist schon vorbei, es gibt also nichts zum Einspruch.",
+            "endedMute": "Dieser Mute ist schon vorbei, es gibt also nichts zum Einspruch.",
+            "windowClosed": "Die Frist für einen Einspruch gegen diesen Bann ist abgelaufen.",
+            "windowKick": {
+                "one": "Gegen Kicks kann man nur innerhalb von {count} Tag Einspruch einlegen.",
+                "other": "Gegen Kicks kann man nur innerhalb von {count} Tagen Einspruch einlegen."
+            },
+            "windowWarn": {
+                "one": "Gegen Verwarnungen kann man nur innerhalb von {count} Tag Einspruch einlegen.",
+                "other": "Gegen Verwarnungen kann man nur innerhalb von {count} Tagen Einspruch einlegen."
+            },
+            "pending": "Du hast für diesen Fall schon einen offenen Einspruch. Du bekommst die Entscheidung per DM.",
+            "cooldown": "Dein letzter Einspruch für diesen Fall wurde abgelehnt. Du kannst {when} wieder Einspruch einlegen.",
+            "reportsToday": "Du hast heute schon die maximale Zahl an Meldungen über das Team geschickt. Versuch es bitte morgen wieder.",
+            "reportOpen": "Du hast schon eine offene Meldung über das Team. Die Administratoren melden sich deswegen bei dir.",
+            "serverUnavailable": "Dieser Server ist gerade nicht verfügbar. Es wurde nichts gesendet."
+        },
+        "channel": {
+            "received": "<@{userId}>, dein Einspruch ist eingegangen.",
+            "title": "Dein Einspruch zu {code}",
+            "caseCode": "**Fallcode:** `{code}`",
+            "type": "**Art:** {type}",
+            "when": "**Wann:** {date}",
+            "reason": "**Grund:** {reason}",
+            "ends": "**Endet:** {date}",
+            "permanent": "**Dauer:** dauerhaft",
+            "footer": "Das Team prüft ihn hier. Du kannst in diesem Kanal weitere Details oder Screenshots hinzufügen. Die Entscheidung bekommst du per DM."
+        },
+        "result": {
+            "acceptedTitle": "Einspruch angenommen",
+            "deniedTitle": "Einspruch abgelehnt",
+            "accepted": "Dein Einspruch zu `{code}` wurde angenommen.",
+            "denied": "Dein Einspruch zu `{code}` wurde abgelehnt.",
+            "dm": "Die Details hast du per DM bekommen.",
+            "noDm": "Du bekommst die Details nicht per DM (deine DMs sind geschlossen).",
+            "deleted": "-# Dieser Kanal wird in {seconds} Sekunden gelöscht."
+        }
+    },
+    "record": {
+        "title": "Meine Akte auf {server}",
+        "thisServer": "diesem Server",
+        "onlyYou": "Nur du kannst das sehen.",
+        "field": {
+            "warns": "Gezählte Verwarnungen",
+            "ladder": "Verwarnungsstufen",
+            "active": "Aktive Strafen",
+            "appeals": "Einsprüche"
+        },
+        "counted": "**{n}** gezählt (Grenze auf dieser Stufe: {threshold}).",
+        "noneCounted": "Gerade wird keine gezählt.",
+        "andMore": "…und {n} weitere",
+        "expiry": "-# Verwarnungen laufen nicht ab. Eine zählt nicht mehr, wenn das Team sie entfernt, sie per Einspruch aufgehoben wird oder du die Grenze erreichst (dann beginnt die Zählung auf der nächsten Stufe neu).",
+        "stage": "**{stage}**.",
+        "next": "**Deine nächste Verwarnung:** {text}",
+        "banEnds": "Bann `{code}` · endet {date} ({relative})",
+        "banPermanent": "Bann `{code}` · dauerhaft",
+        "muteEnds": "Mute `{code}` · endet {date} ({relative})",
+        "none": "Keine.",
+        "noneFiled": "Keine eingereicht.",
+        "appealLine": "`{code}` {type} · {status} · eingereicht {date}{decided}",
+        "appealDecided": ", entschieden {date}",
+        "status": {
+            "pending": "⏳ offen",
+            "accepted": "angenommen",
+            "denied": "abgelehnt",
+            "closed": "geschlossen"
+        },
+        "ladderOff": "Verwarnungen werden gespeichert, führen auf diesem Server aber nie zu einem automatischen Bann (die Verwarnungsstufen sind aus).",
+        "would": "Es wäre Verwarnung {n} von {max}.",
+        "oneAfter": "Die danach würde einen automatischen Bann bedeuten ({ban}).",
+        "moreAfter": {
+            "one": "Noch {count} weitere danach würde einen automatischen Bann bedeuten ({ban}).",
+            "other": "Noch {count} weitere danach würden einen automatischen Bann bedeuten ({ban})."
+        },
+        "limit": "Damit wäre die Grenze erreicht: ein automatischer Bann ({ban}, Verwarnungsstufe {stage} von 3).",
+        "permanent": "dauerhaft"
+    },
+    "myAppeals": {
+        "title": "Meine Einsprüche",
+        "none": "Du hast noch keinen Einspruch eingereicht. Drücke im Einspruchs-Panel auf **Einspruch**, um einen einzureichen; dafür brauchst du den Fallcode aus der DM, die du bekommen hast.",
+        "status": {
+            "pending": "Wartet auf eine Entscheidung",
+            "accepted": "Angenommen",
+            "denied": "Abgelehnt",
+            "closed": "Geschlossen"
+        },
+        "claimed": "Wartet auf eine Entscheidung. Jemand aus dem Team sieht ihn sich gerade an.",
+        "head": "**`{code}`**: {type} ({name})",
+        "line": "{status} · eingereicht {filed}{decided}",
+        "decided": " · entschieden {date}"
+    },
+    "modmail": {
+        "staffMain": "das Mewvo-Team",
+        "staffOf": "das Team von {server}",
+        "promptOne": "Möchtest du diese Nachricht an {staff} schicken? Die Antwort kommt hier in den DMs.",
+        "promptSeveral": "An das Team welches Servers soll diese Nachricht gehen? Die Antwort kommt hier in den DMs.",
+        "promptMore": "-# Nur die ersten {count} Server werden angezeigt.",
+        "placeholder": "Server wählen",
+        "send": "An das Team schicken",
+        "cancel": "Abbrechen",
+        "notSent": "Nicht gesendet.",
+        "none": "Keiner der Server, die du mit diesem Bot teilst, nimmt Modmail an (oder du bist dort kein Mitglied mehr). Wende dich auf anderem Weg an das Team des Servers. Wenn du vom Mewvo-Server gebannt wurdest, benutze das Einspruchs-Panel im Support-Server.",
+        "blocked": "Du kannst Modmail nicht benutzen.",
+        "unavailable": "Modmail ist gerade nicht verfügbar.",
+        "notMemberMain": "Modmail ist für Mitglieder des Mewvo-Servers. Wenn du gebannt wurdest, benutze das Einspruchs-Panel im Support-Server.",
+        "notMember": "Du bist kein Mitglied von {server}, deshalb erreichst du das Team dort nicht über Modmail.",
+        "alreadyOpen": "Du hast schon ein offenes Gespräch. Schick deine Nachrichten einfach hier.",
+        "opening": "Dein Gespräch wird geöffnet.",
+        "notTaking": "{server} nimmt gerade keine Modmail an.",
+        "gone": "Diese Nachricht ist weg. Schick sie noch einmal.",
+        "sentMain": "An das Team geschickt. Die Antwort kommt hier; alles, was du hier noch schreibst, geht auch an das Team.",
+        "sentOther": "An das Team von {server} geschickt. Die Antwort kommt hier; alles, was du hier noch schreibst, geht auch an das Team.",
+        "broken": "Diese Abfrage funktioniert nicht mehr. Schick deine Nachricht noch einmal.",
+        "failed": "Das Team ist gerade nicht erreichbar. Versuch es bitte später noch einmal.",
+        "closed": "Dein Gespräch (an {staff}) wurde geschlossen.",
+        "closedReason": "Grund: {reason}",
+        "closedAgain": "Schick hier jederzeit eine neue Nachricht, um ein neues Gespräch zu beginnen.",
+        "staffName": "**{name} (Team):**"
+    },
+    "contest": {
+        "button": "Widersprechen",
+        "title": "Dieser Entscheidung widersprechen",
+        "label": "Warum war das in Ordnung?",
+        "hint": "Ein Moderator liest das und entscheidet.",
+        "broken": "Dieser Button funktioniert nicht (kein Fallcode).",
+        "already": "Du hast dieser Entscheidung schon widersprochen. Die Moderatoren sehen es sich an.",
+        "unknownAction": "Unbekannte Aktion.",
+        "unknownForm": "Unbekanntes Formular.",
+        "sentTitle": "An die Moderatoren geschickt",
+        "sent": "Ein Moderator prüft Fall {code} mit deiner Erklärung. Du bekommst eine DM, wenn die Entscheidung zurückgenommen wird.",
+        "gone": "Diesen Fall gibt es nicht mehr.",
+        "notYours": "Nur das Mitglied, um das es bei dieser Entscheidung ging, kann widersprechen.",
+        "notAuto": "Hier kann man nur automatischen Entscheidungen widersprechen. Benutze stattdessen das Einspruchsformular.",
+        "reversed": "Diese Entscheidung wurde schon zurückgenommen."
+    },
+    "keepApart": {
+        "startedTitle": "**Kontaktverbot: eine Anordnung auf {server}**",
+        "asked": "Das Team hat dich und {other} gebeten, bis {until} keinen Kontakt miteinander zu haben.",
+        "rule": "Bis dahin erwähne die Person auf dem Server nicht und antworte ihr nicht: solche Nachrichten werden entfernt.",
+        "reason": "Grund: {reason}",
+        "notPunishment": "Das ist keine Strafe und zählt nicht als Verwarnung.",
+        "anotherMember": "ein anderes Mitglied",
+        "endedTitle": "**Dein Kontaktverbot auf {server} ist vorbei**",
+        "early": "Das Team hat es früher beendet.",
+        "expired": "Es ist abgelaufen.",
+        "contact": "Du darfst {other} wieder kontaktieren.",
+        "theOtherMember": "das andere Mitglied"
+    }
+}

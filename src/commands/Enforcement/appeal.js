@@ -25,7 +25,7 @@ export default {
             embeds: [createEmbed({ title: tr.t('staff.appeal.title'), description, color })], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] },
         });
         try {
-            return reply(myAppealsText(await list(interaction.user.id)));
+            return reply(myAppealsText(await list(interaction.user.id), { lang: tr.lang }).slice(0, 4096));
         } catch (error) {
             logger.error(`/appeal status failed for ${interaction.user.id}: ${error.message}`);
             return reply(tr.t('staff.appeal.dbDown'), 'error');

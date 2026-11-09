@@ -20,7 +20,7 @@ import { enforcementConfig } from '../config/enforcement.js';
 import { createEmbed, successEmbed } from '../utils/embeds.js';
 import { ErrorTypes, replyUserError } from '../utils/errorHandler.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
-import { textForInteraction } from '../utils/botText.js';
+import { botText, textForInteraction } from '../utils/botText.js';
 import { normalizeCaseCode, truncate } from '../services/enforcement/format.js';
 import { getCaseByCode, listUserAppeals } from '../services/enforcement/caseService.js';
 import {
@@ -36,52 +36,57 @@ function textLabel(label, input, description = null) {
     return description ? builder.setDescription(description) : builder;
 }
 
-function appealModal() {
+// Discord's modal limits: title and labels 45, descriptions 100 (translations run longer).
+const cut = (text, max) => String(text).slice(0, max);
+
+/** The appeal form in the member's language (`tr`; customIds unchanged). Exported for tests. */
+export function appealModal(tr = botText('en')) {
     return new ModalBuilder()
         .setCustomId('appealmodal:submit')
-        .setTitle('Appeal a punishment')
+        .setTitle(cut(tr.t('member.appeal.modal.title'), 45))
         .addLabelComponents(
-            textLabel('Why should it be lifted?', new TextInputBuilder()
+            textLabel(cut(tr.t('member.appeal.modal.reason'), 45), new TextInputBuilder()
                 .setCustomId('reason')
                 .setStyle(TextInputStyle.Paragraph)
                 .setMinLength(20)
                 .setMaxLength(1000)
-                .setRequired(true), 'Why should you be unbanned, unmuted or unwarned?'),
-            textLabel('Case code', new TextInputBuilder()
+                .setRequired(true), cut(tr.t('member.appeal.modal.reasonHint'), 100)),
+            textLabel(cut(tr.t('member.appeal.modal.code'), 45), new TextInputBuilder()
                 .setCustomId('code')
                 .setStyle(TextInputStyle.Short)
                 .setMinLength(5)
                 .setMaxLength(7)
-                .setRequired(true), 'From the DM you got when you were punished, e.g. k7m2qx.'),
-            textLabel('More info (optional)', new TextInputBuilder()
+                .setRequired(true), cut(tr.t('member.appeal.modal.codeHint'), 100)),
+            textLabel(cut(tr.t('member.appeal.modal.more'), 45), new TextInputBuilder()
                 .setCustomId('moreinfo')
                 .setStyle(TextInputStyle.Paragraph)
                 .setMaxLength(1000)
-                .setRequired(false), 'Anything else the administrators should know.'),
+                .setRequired(false), cut(tr.t('member.appeal.modal.moreHint'), 100)),
         );
 }
 
-function reportModal() {
+/** The staff report form in the member's language (customIds unchanged). Exported for tests. */
+export function reportModal(tr = botText('en')) {
     return new ModalBuilder()
         .setCustomId('appealmodal:report')
-        .setTitle('Report a staff member')
+        .setTitle(cut(tr.t('member.appeal.report.title'), 45))
         .addLabelComponents(
-            textLabel('Staff member username', new TextInputBuilder()
+            textLabel(cut(tr.t('member.appeal.report.staff'), 45), new TextInputBuilder()
                 .setCustomId('staff')
                 .setStyle(TextInputStyle.Short)
                 .setMaxLength(100)
                 .setRequired(true)),
-            textLabel('What happened?', new TextInputBuilder()
+            textLabel(cut(tr.t('member.appeal.report.details'), 45), new TextInputBuilder()
                 .setCustomId('details')
                 .setStyle(TextInputStyle.Paragraph)
                 .setMinLength(20)
                 .setMaxLength(1000)
                 .setRequired(true)),
-            textLabel('Proof links', new TextInputBuilder()
+            textLabel(cut(tr.t('member.appeal.report.proof'), 45), new TextInputBuilder()
                 .setCustomId('proof')
                 .setStyle(TextInputStyle.Paragraph)
                 .setMaxLength(1000)
-                .setRequired(false), 'Links to screenshots or messages, one per line'),
+                .setRequired(false), cut(tr.t('member.appeal.report.proofHint'), 100)),
         );
 }
 
@@ -97,9 +102,9 @@ export function panelServer(interaction) {
 }
 
 /** Outside a server (or a report button in Mewvo's main server, where reports are not filed). */
-export function wrongPlaceMessage(server, step) {
-    if (server === 'main' && step === 'report') return 'Staff reports are filed from the panel in the Mewvo support server.';
-    return 'Use the appeal panel in a server.';
+export function wrongPlaceMessage(server, step, tr = botText('en')) {
+    if (server === 'main' && step === 'report') return tr.t('member.appeal.wrongPlace.report');
+    return tr.t('member.appeal.wrongPlace.panel');
 }
 
 /** Staff reports: the support server's panel (for Mewvo) or another server's own panel; never the main one. */
@@ -108,11 +113,13 @@ const takesReports = (server) => server === 'support' || server === 'other';
 export async function handleAppealButton(interaction, client, args) {
     const server = panelServer(interaction);
     const [step] = args;
+    // Private answers and forms: the member's language (role, personal language, Discord language).
+    const tr = textForInteraction(interaction);
     if (!server || (step === 'report' && !takesReports(server))) {
-        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: wrongPlaceMessage(server, step) });
+        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: wrongPlaceMessage(server, step, tr) });
     }
-    if (step === 'open') return InteractionHelper.safeShowModal(interaction, appealModal());
-    if (step === 'report') return InteractionHelper.safeShowModal(interaction, reportModal());
+    if (step === 'open') return InteractionHelper.safeShowModal(interaction, appealModal(tr));
+    if (step === 'report') return InteractionHelper.safeShowModal(interaction, reportModal(tr));
     if (step === 'status') return showMyAppeals(interaction);
     if (step === 'standing') return showMyStanding(interaction, server);
 }
@@ -128,34 +135,40 @@ async function showMyStanding(interaction, server = 'main') {
     const other = server === 'other';
     const guildId = other ? interaction.guildId : enforcementConfig.mainGuildId;
     const standing = await getMemberStanding(guildId, interaction.user.id);
+    const tr = textForInteraction(interaction);
     return InteractionHelper.safeEditReply(interaction, {
         embeds: [createEmbed({
-            title: `My record in ${other ? (interaction.guild?.name || 'this server') : enforcementConfig.serverName}`,
-            description: 'Only you can see this.',
-            fields: standingFields(standing),
+            title: tr.t('member.record.title', { server: other ? (interaction.guild?.name || tr.t('member.record.thisServer')) : enforcementConfig.serverName }).slice(0, 256),
+            description: tr.t('member.record.onlyYou'),
+            fields: standingFields(standing, { lang: tr.lang }),
             color: standing.activeBan || standing.activeMute ? 'warning' : 'primary',
         })],
     });
 }
 
-const MY_APPEAL_STATUS = {
-    pending: 'Waiting for a decision',
-    accepted: 'Accepted',
-    denied: 'Denied',
-    closed: 'Closed',
-};
+const MY_APPEAL_STATUSES = new Set(['pending', 'accepted', 'denied', 'closed']);
 
-/** The text of a member's own appeals (the My appeals button and /appeal status). Pure. */
-export function myAppealsText(appeals) {
-    if (!appeals.length) return 'You have not filed any appeals. Press **Appeal** on the appeal panel to file one; you need the case code from the DM you got.';
+/** A case type (ban, kick, mute, warn) in a language; anything else as stored. */
+export function caseTypeIn(type, tr = botText('en')) {
+    const key = `member.appeal.type.${type}`;
+    return tr.has(key) ? tr.t(key) : String(type ?? '');
+}
+
+/** The text of a member's own appeals (the My appeals button and /appeal status), in `lang`. Pure. */
+export function myAppealsText(appeals, { lang = 'en' } = {}) {
+    const tr = botText(lang);
+    if (!appeals.length) return tr.t('member.myAppeals.none');
     const stamp = (date) => `<t:${Math.floor(new Date(date).getTime() / 1000)}:d>`;
     return appeals.map((appeal) => {
         const status = appeal.status === 'pending' && appeal.claimed_at
-            ? 'Waiting for a decision. Someone on the staff team is looking at it.'
-            : (MY_APPEAL_STATUS[appeal.status] ?? appeal.status);
+            ? tr.t('member.myAppeals.claimed')
+            : (MY_APPEAL_STATUSES.has(appeal.status) ? tr.t(`member.myAppeals.status.${appeal.status}`) : appeal.status);
         return [
-            `**\`${appeal.case_code}\`**: ${appeal.type} (${appeal.name})`,
-            `${status} · filed ${stamp(appeal.created_at)}${appeal.decided_at ? ` · decided ${stamp(appeal.decided_at)}` : ''}`,
+            tr.t('member.myAppeals.head', { code: appeal.case_code, type: caseTypeIn(appeal.type, tr), name: appeal.name }),
+            tr.t('member.myAppeals.line', {
+                status, filed: stamp(appeal.created_at),
+                decided: appeal.decided_at ? tr.t('member.myAppeals.decided', { date: stamp(appeal.decided_at) }) : '',
+            }),
         ].join('\n');
     }).join('\n\n');
 }
@@ -165,10 +178,11 @@ async function showMyAppeals(interaction) {
     const deferred = await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
     if (!deferred) return;
     const appeals = await listUserAppeals(interaction.user.id);
+    const tr = textForInteraction(interaction);
     return InteractionHelper.safeEditReply(interaction, {
         embeds: [createEmbed({
-            title: 'My appeals',
-            description: myAppealsText(appeals),
+            title: tr.t('member.myAppeals.title'),
+            description: truncate(myAppealsText(appeals, { lang: tr.lang }), 4096),
             color: 'primary',
         })],
     });
@@ -176,8 +190,9 @@ async function showMyAppeals(interaction) {
 
 export async function handleAppealModal(interaction, client, args) {
     const server = panelServer(interaction);
+    const tr = textForInteraction(interaction);
     if (!server) {
-        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: wrongPlaceMessage(server, args?.[0]) });
+        return replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: wrongPlaceMessage(server, args?.[0], tr) });
     }
 
     await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral });
@@ -188,20 +203,21 @@ export async function handleAppealModal(interaction, client, args) {
         if (!caseCode) {
             return replyUserError(interaction, {
                 type: ErrorTypes.USER_INPUT,
-                message: 'That is not a valid case code. It is 5–7 letters and digits, from the DM you received.',
+                message: tr.t('member.appeal.badCode'),
             });
         }
         await submitAppeal({
             client,
             user: interaction.user,
             caseCode,
+            lang: tr.lang,
             answers: {
                 reason: interaction.fields.getTextInputValue('reason').trim(),
                 moreInfo: interaction.fields.getTextInputValue('moreinfo')?.trim() || '',
             },
         });
         return InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed('Appeal submitted', "The administrators will review it. You'll get a DM with the decision.")],
+            embeds: [successEmbed(tr.t('member.appeal.submitted.title'), tr.t('member.appeal.submitted.text'))],
         });
     }
 
@@ -213,18 +229,16 @@ export async function handleAppealModal(interaction, client, args) {
             staffMember: interaction.fields.getTextInputValue('staff').trim(),
             details: interaction.fields.getTextInputValue('details').trim(),
             proof: interaction.fields.getTextInputValue('proof')?.trim() || '',
+            lang: tr.lang,
         });
         return InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed(
-                'Report submitted',
-                'Your report was submitted to the administrators. If they ask for screenshot proof, please post it in your DMs with them.'
-            )],
+            embeds: [successEmbed(tr.t('member.appeal.reportSent.title'), tr.t('member.appeal.reportSent.text'))],
         });
     }
 
     // An unknown step, or a report form in a server that takes no reports: answer instead of
     // leaving the member at "thinking…".
-    return replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: 'This form is not available here any more. Open it again from the panel.' });
+    return replyUserError(interaction, { type: ErrorTypes.USER_INPUT, message: tr.t('member.appeal.formGone') });
 }
 
 // ── Accept / Deny on an appeal (admins of the case's staff server) ──────────

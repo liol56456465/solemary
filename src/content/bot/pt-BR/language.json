@@ -7,8 +7,12 @@
     },
     "pick": {
         "title": "Seu idioma",
-        "text": "Escolha o idioma que o Mewvo deve usar nas mensagens para você. Você recebe o cargo correspondente; seus outros cargos de idioma são removidos.",
-        "placeholder": "Escolha um idioma"
+        "text": "Escolha o idioma que o Mewvo deve usar nas mensagens para você. Um idioma com cargo aqui te dá esse cargo (seus outros cargos de idioma são removidos); um sem cargo é salvo como seu idioma pessoal.",
+        "placeholder": "Escolha um idioma",
+        "textPersonal": "Escolha o idioma que o Mewvo deve usar nas suas DMs e nas respostas que só você vê. Este servidor não tem cargos de idioma, então ele é salvo como seu idioma pessoal, em todos os servidores (um cargo de idioma em um servidor continua tendo prioridade lá).",
+        "personalNow": "Seu idioma pessoal: **{language}**.",
+        "personalOption": "Sem cargo aqui: salvo como seu idioma pessoal",
+        "resetOption": "Limpar meu idioma pessoal"
     },
     "panel": {
         "title": "Escolha seu idioma",
@@ -31,6 +35,10 @@
         "dangerous": "O cargo **{role}** tem permissões de equipe, então não o distribuo. Peça a um admin para escolher outro cargo de idioma.",
         "hierarchy": "O cargo **{role}** não está abaixo do meu cargo mais alto, então não posso dá-lo nem removê-lo. Peça a um admin para subir meu cargo.",
         "failed": "O Discord recusou a mudança de cargo. Tente de novo daqui a pouco.",
-        "dbDown": "As configurações não podem ser lidas agora (o banco de dados não responde). Nada foi alterado."
-    }
+        "dbDown": "As configurações não podem ser lidas agora (o banco de dados não responde). Nada foi alterado.",
+        "saveFailed": "Não foi possível salvar seu idioma (o banco de dados não responde). Nada foi alterado."
+    },
+    "saved": "Salvo: o Mewvo vai te mandar DMs em {language} e usar esse idioma nas respostas que só você vê. Um cargo de idioma em um servidor continua tendo prioridade lá.",
+    "resetDone": "Limpo: o Mewvo volta a usar o idioma de cada servidor nas suas DMs.",
+    "roleKept": "-# Seu cargo de idioma neste servidor continua tendo prioridade aqui: {reason}"
 }

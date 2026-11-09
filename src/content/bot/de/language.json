@@ -7,8 +7,12 @@
     },
     "pick": {
         "title": "Deine Sprache",
-        "text": "Wähle die Sprache, die Mewvo für Nachrichten an dich benutzen soll. Du bekommst die passende Rolle; deine anderen Sprachrollen werden entfernt.",
-        "placeholder": "Sprache wählen"
+        "text": "Wähle die Sprache, die Mewvo für Nachrichten an dich benutzen soll. Eine Sprache mit Rolle hier gibt dir diese Rolle (deine anderen Sprachrollen werden entfernt); eine ohne Rolle wird als deine persönliche Sprache gespeichert.",
+        "placeholder": "Sprache wählen",
+        "textPersonal": "Wähle die Sprache, die Mewvo für deine DMs und für Antworten benutzen soll, die nur du siehst. Dieser Server hat keine Sprachrollen, daher wird sie als deine persönliche Sprache gespeichert, auf allen Servern (eine Sprachrolle auf einem Server hat dort weiter Vorrang).",
+        "personalNow": "Deine persönliche Sprache: **{language}**.",
+        "personalOption": "Hier ohne Rolle: als persönliche Sprache gespeichert",
+        "resetOption": "Meine persönliche Sprache löschen"
     },
     "panel": {
         "title": "Wähle deine Sprache",
@@ -31,6 +35,10 @@
         "dangerous": "Die Rolle **{role}** hat Team-Berechtigungen, daher vergebe ich sie nicht. Bitte einen Admin, eine andere Sprachrolle zu wählen.",
         "hierarchy": "Die Rolle **{role}** liegt nicht unter meiner höchsten Rolle, daher kann ich sie weder geben noch entfernen. Bitte einen Admin, meine Rolle höher zu schieben.",
         "failed": "Discord hat die Rollenänderung abgelehnt. Versuch es gleich noch einmal.",
-        "dbDown": "Die Einstellungen können gerade nicht gelesen werden (Datenbank antwortet nicht). Nichts wurde geändert."
-    }
+        "dbDown": "Die Einstellungen können gerade nicht gelesen werden (Datenbank antwortet nicht). Nichts wurde geändert.",
+        "saveFailed": "Deine Sprache konnte nicht gespeichert werden (Datenbank antwortet nicht). Nichts wurde geändert."
+    },
+    "saved": "Gespeichert: Mewvo schreibt dir DMs auf {language} und benutzt die Sprache für Antworten, die nur du siehst. Eine Sprachrolle auf einem Server hat dort weiter Vorrang.",
+    "resetDone": "Gelöscht: Mewvo benutzt für deine DMs wieder die Sprache des jeweiligen Servers.",
+    "roleKept": "-# Deine Sprachrolle auf diesem Server hat hier weiter Vorrang: {reason}"
 }

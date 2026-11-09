@@ -1,0 +1,194 @@
+{
+    "appeal": {
+        "modal": {
+            "title": "Apelar una sanción",
+            "reason": "¿Por qué debería quitarse?",
+            "reasonHint": "¿Por qué deberían quitarte el baneo, el silencio o la advertencia?",
+            "code": "Código del caso",
+            "codeHint": "Del DM que recibiste con la sanción, p. ej. k7m2qx.",
+            "more": "Más información (opcional)",
+            "moreHint": "Cualquier otra cosa que los administradores deban saber."
+        },
+        "report": {
+            "title": "Denunciar a un miembro del equipo",
+            "staff": "Usuario del miembro del equipo",
+            "details": "¿Qué pasó?",
+            "proof": "Enlaces a pruebas",
+            "proofHint": "Enlaces a capturas de pantalla o mensajes, uno por línea"
+        },
+        "wrongPlace": {
+            "report": "Las denuncias sobre el equipo se envían desde el panel del servidor de soporte de Mewvo.",
+            "panel": "Usa el panel de apelaciones en un servidor."
+        },
+        "badCode": "Ese no es un código del caso válido. Tiene 5–7 letras y números y está en el DM que recibiste.",
+        "submitted": {
+            "title": "Apelación enviada",
+            "text": "Los administradores la revisarán. Recibirás la decisión por DM."
+        },
+        "reportSent": {
+            "title": "Denuncia enviada",
+            "text": "Tu denuncia se envió a los administradores. Si te piden capturas de pantalla como prueba, envíaselas por DM."
+        },
+        "formGone": "Este formulario ya no está disponible aquí. Ábrelo de nuevo desde el panel.",
+        "type": {
+            "ban": "baneo",
+            "kick": "expulsión",
+            "mute": "silencio",
+            "warn": "advertencia"
+        },
+        "error": {
+            "notFound": "No se encontró ese código del caso para tu cuenta. Revisa el código en tu DM.",
+            "unappealable": "Este caso no se puede apelar.",
+            "lifted": "Esta sanción ya se quitó.",
+            "endedBan": "Este baneo ya terminó, así que no hay nada que apelar.",
+            "endedMute": "Este silencio ya terminó, así que no hay nada que apelar.",
+            "windowClosed": "El plazo para apelar este baneo ha terminado.",
+            "windowKick": {
+                "one": "Las expulsiones solo se pueden apelar en un plazo de {count} día.",
+                "many": "Las expulsiones solo se pueden apelar en un plazo de {count} de días.",
+                "other": "Las expulsiones solo se pueden apelar en un plazo de {count} días."
+            },
+            "windowWarn": {
+                "one": "Las advertencias solo se pueden apelar en un plazo de {count} día.",
+                "many": "Las advertencias solo se pueden apelar en un plazo de {count} de días.",
+                "other": "Las advertencias solo se pueden apelar en un plazo de {count} días."
+            },
+            "pending": "Ya tienes una apelación pendiente para este caso. Recibirás la decisión por DM.",
+            "cooldown": "Tu última apelación para este caso fue rechazada. Puedes volver a apelar {when}.",
+            "reportsToday": "Ya enviaste el máximo de denuncias sobre el equipo por hoy. Vuelve a intentarlo mañana.",
+            "reportOpen": "Ya tienes una denuncia sobre el equipo abierta. Los administradores se pondrán en contacto contigo.",
+            "serverUnavailable": "Ese servidor no está disponible ahora. No se envió nada."
+        },
+        "channel": {
+            "received": "<@{userId}>, recibimos tu apelación.",
+            "title": "Tu apelación de {code}",
+            "caseCode": "**Código del caso:** `{code}`",
+            "type": "**Tipo:** {type}",
+            "when": "**Cuándo:** {date}",
+            "reason": "**Motivo:** {reason}",
+            "ends": "**Termina:** {date}",
+            "permanent": "**Duración:** permanente",
+            "footer": "El equipo la revisará aquí. Puedes añadir más detalles o capturas de pantalla en este canal. Recibirás la decisión por DM."
+        },
+        "result": {
+            "acceptedTitle": "Apelación aceptada",
+            "deniedTitle": "Apelación rechazada",
+            "accepted": "Tu apelación de `{code}` fue aceptada.",
+            "denied": "Tu apelación de `{code}` fue rechazada.",
+            "dm": "Recibiste los detalles por DM.",
+            "noDm": "No recibirás los detalles por DM (tienes los DM cerrados).",
+            "deleted": "-# Este canal se borrará en {seconds} segundos."
+        }
+    },
+    "record": {
+        "title": "Mi historial en {server}",
+        "thisServer": "este servidor",
+        "onlyYou": "Solo tú puedes ver esto.",
+        "field": {
+            "warns": "Advertencias contadas",
+            "ladder": "Escala de advertencias",
+            "active": "Sanciones activas",
+            "appeals": "Apelaciones"
+        },
+        "counted": "**{n}** contadas (límite en esta etapa: {threshold}).",
+        "noneCounted": "Ahora mismo no se cuenta ninguna.",
+        "andMore": "…y {n} más",
+        "expiry": "-# Las advertencias no caducan. Una deja de contar cuando el equipo la quita, se anula en una apelación o llegas al límite (entonces la cuenta vuelve a empezar en la siguiente etapa).",
+        "stage": "**{stage}**.",
+        "next": "**Tu próxima advertencia:** {text}",
+        "banEnds": "Baneo `{code}` · termina {date} ({relative})",
+        "banPermanent": "Baneo `{code}` · permanente",
+        "muteEnds": "Silencio `{code}` · termina {date} ({relative})",
+        "none": "Ninguna.",
+        "noneFiled": "No has presentado ninguna.",
+        "appealLine": "`{code}` {type} · {status} · presentada el {date}{decided}",
+        "appealDecided": ", decidida el {date}",
+        "status": {
+            "pending": "⏳ pendiente",
+            "accepted": "aceptada",
+            "denied": "rechazada",
+            "closed": "cerrada"
+        },
+        "ladderOff": "Las advertencias se registran, pero en este servidor nunca llevan a un baneo automático (la escala de advertencias está desactivada).",
+        "would": "Sería la advertencia {n} de {max}.",
+        "oneAfter": "La siguiente supondría un baneo automático ({ban}).",
+        "moreAfter": {
+            "one": "{count} más después de esa supondría un baneo automático ({ban}).",
+            "many": "{count} más después de esa supondrían un baneo automático ({ban}).",
+            "other": "{count} más después de esa supondrían un baneo automático ({ban})."
+        },
+        "limit": "Llegarías al límite de advertencias: un baneo automático ({ban}, etapa de advertencias {stage} de 3).",
+        "permanent": "permanente"
+    },
+    "myAppeals": {
+        "title": "Mis apelaciones",
+        "none": "No has presentado ninguna apelación. Pulsa **Apelar** en el panel de apelaciones para presentar una; necesitas el código del caso del DM que recibiste.",
+        "status": {
+            "pending": "Esperando una decisión",
+            "accepted": "Aceptada",
+            "denied": "Rechazada",
+            "closed": "Cerrada"
+        },
+        "claimed": "Esperando una decisión. Alguien del equipo la está revisando.",
+        "head": "**`{code}`**: {type} ({name})",
+        "line": "{status} · presentada el {filed}{decided}",
+        "decided": " · decidida el {date}"
+    },
+    "modmail": {
+        "staffMain": "el equipo de Mewvo",
+        "staffOf": "el equipo de {server}",
+        "promptOne": "¿Quieres enviar este mensaje? Lo recibirá {staff}. Te responderán aquí, por DM.",
+        "promptSeveral": "¿Al equipo de qué servidor quieres enviar este mensaje? Te responderán aquí, por DM.",
+        "promptMore": "-# Solo se muestran los primeros {count} servidores.",
+        "placeholder": "Elige un servidor",
+        "send": "Enviar al equipo",
+        "cancel": "Cancelar",
+        "notSent": "No enviado.",
+        "none": "Ninguno de los servidores que compartes con este bot acepta modmail (o ya no eres miembro). Contacta con el equipo de ese servidor de otra forma. Si te banearon del servidor de Mewvo, usa el panel de apelaciones del servidor de soporte.",
+        "blocked": "No puedes usar el modmail.",
+        "unavailable": "El modmail no está disponible ahora.",
+        "notMemberMain": "El modmail es para miembros del servidor de Mewvo. Si te banearon, usa el panel de apelaciones del servidor de soporte.",
+        "notMember": "No eres miembro de {server}, así que no puedes contactar con su equipo por modmail.",
+        "alreadyOpen": "Ya tienes una conversación abierta. Escribe tus mensajes aquí.",
+        "opening": "Estamos abriendo tu conversación.",
+        "notTaking": "{server} no acepta modmail ahora mismo.",
+        "gone": "Ese mensaje ya no existe. Envíalo de nuevo.",
+        "sentMain": "Enviado al equipo. Te responderán aquí; todo lo que escribas aquí también les llegará.",
+        "sentOther": "Enviado al equipo de {server}. Te responderán aquí; todo lo que escribas aquí también les llegará.",
+        "broken": "Esta pregunta ya no funciona. Envía tu mensaje de nuevo.",
+        "failed": "No se pudo contactar con el equipo ahora. Vuelve a intentarlo más tarde.",
+        "closed": "Se cerró tu conversación con {staff}.",
+        "closedReason": "Motivo: {reason}",
+        "closedAgain": "Envía un mensaje nuevo aquí cuando quieras para empezar otra.",
+        "staffName": "**{name} (equipo):**"
+    },
+    "contest": {
+        "button": "Impugnar",
+        "title": "Impugnar esta decisión",
+        "label": "¿Por qué estaba bien?",
+        "hint": "Un moderador lo leerá y decidirá.",
+        "broken": "Este botón no funciona (no hay código del caso).",
+        "already": "Ya impugnaste esta decisión. Los moderadores la revisarán.",
+        "unknownAction": "Acción desconocida.",
+        "unknownForm": "Formulario desconocido.",
+        "sentTitle": "Enviado a los moderadores",
+        "sent": "Un moderador revisará el caso {code} con tu explicación. Recibirás un DM si se revierte.",
+        "gone": "Ese caso ya no existe.",
+        "notYours": "Solo el miembro al que afecta esta decisión puede impugnarla.",
+        "notAuto": "Aquí solo se pueden impugnar decisiones automáticas. Usa el formulario de apelación.",
+        "reversed": "Esta decisión ya se revirtió."
+    },
+    "keepApart": {
+        "startedTitle": "**Prohibición de contacto: una orden en {server}**",
+        "asked": "El equipo os ha pedido a ti y a {other} que no os pongáis en contacto hasta {until}.",
+        "rule": "Hasta entonces, no menciones a esa persona ni le respondas en el servidor: esos mensajes se eliminan.",
+        "reason": "Motivo: {reason}",
+        "notPunishment": "No es una sanción y no cuenta como advertencia.",
+        "anotherMember": "otro miembro",
+        "endedTitle": "**Tu prohibición de contacto en {server} ha terminado**",
+        "early": "El equipo la terminó antes de tiempo.",
+        "expired": "Ha caducado.",
+        "contact": "Ya puedes volver a contactar con {other}.",
+        "theOtherMember": "el otro miembro"
+    }
+}

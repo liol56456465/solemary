@@ -120,8 +120,43 @@ test('/wipedata deletes the member\'s logged DMs (every server), nobody else\'s'
     assert.deepEqual(rows.map((r) => r.user_id), [u(31)]);
 });
 
+test('personal language (audit 4.6): the servers with logged DMs (last 30 days) for a re-edit', { skip }, async () => {
+    const user = u(40);
+    await add(40, { user });
+    await add(41, { user, guild: g(2) });
+    await add(42, { user, guild: g(3), daysAgo: 31 });
+    await add(43, { user: u(41), guild: g(4) });
+    assert.deepEqual((await dmLog.listDmGuildsForUser(user)).sort(), [g(1), g(2)].sort());
+    assert.deepEqual(await dmLog.listDmGuildsForUser(u(49)), []);
+});
+
+test('personal language (audit 4.6): stored in the key-value store, read back, removed by /wipedata (memory too)', { skip }, async () => {
+    const personal = await import('../../src/services/personalLanguage.js');
+    const { db } = await import('../../src/utils/database/wrapper.js');
+    const me = u(50);
+    personal.setPersonalLanguagesForTests({}, { loaded: false, database: db });
+    try {
+        await personal.setPersonalLanguage(me, 'pl', { database: db });
+        assert.equal(await personal.readPersonalLanguage(me, { database: db }), 'pl');
+        personal.setPersonalLanguagesForTests({}, { loaded: false, database: db });
+        assert.ok((await personal.loadPersonalLanguages(db)) >= 1, 'the startup load finds it');
+        assert.equal(personal.personalLanguageOf(me), 'pl');
+        const result = await wipe.wipeMemberData({ db }, g(1), me, {
+            removeBirthday: async () => {}, removeReminders: async () => {}, removeVerifiedGuilds: async () => {},
+            removeTicketRatings: async () => {}, hideSurveys: async () => {}, removeInvites: async () => {}, removeVoiceTime: async () => {},
+        });
+        assert.ok(result.deleted.includes('language'), JSON.stringify(result.failed.map((f) => [f.id, f.error?.message])));
+        assert.equal(await personal.readPersonalLanguage(me, { database: db }), null);
+        assert.equal(personal.personalLanguageOf(me), null);
+    } finally {
+        await db.delete(personal.personalLanguageKey(me)).catch(() => {});
+        personal.setPersonalLanguagesForTests();
+    }
+});
+
 test('a database error throws (never an empty list that looks like "nothing to edit")', { skip }, async () => {
     const tables = { bot_dm_log: 'bot_dm_log_does_not_exist' };
+    await assert.rejects(dmLog.listDmGuildsForUser(u(1), { tables }));
     await assert.rejects(dmLog.listDmsToRelang({ guildId: g(1), userId: u(1), lang: 'fr' }, { tables }));
     await assert.rejects(dmLog.pruneDmLog({ tables }));
     await assert.rejects(dmLog.deleteDmLogForUser(u(1), { tables }));

@@ -5,7 +5,7 @@
 import { html } from '../dashboard/html.js';
 import { portalTime } from './shell.js';
 import { layout } from './shell.js';
-import { hasKey, textOf, translator } from './i18n.js';
+import { LANGUAGES, hasKey, textOf, translator } from './i18n.js';
 import { MIN_AGE, PASSWORD_MAX, PASSWORD_MIN, PRO_BONUS_LIMIT, PRO_BONUS_MONTHS, USERNAME_MAX, USERNAME_MIN } from '../accounts/accountCore.js';
 import { planName } from '../billing/premiumService.js';
 
@@ -207,7 +207,21 @@ ${bonusLine ? html`<div><dt>${t('account.plan.bonus')}</dt><dd>${bonusLine}</dd>
 <p class="note account-foot">${t('account.plan.foot')}</p></section>`;
 }
 
-export function accountSettingsPage(ctx, { session, account, flash = null, error = null, recoveryLeft = 0, canClaim = false, plan = null, bonus = null, now = Date.now() }) {
+/**
+ * "Language of Mewvo's DMs": the member's personal language (services/personalLanguage.js), the
+ * same setting as /language without a role. Empty = each server's language. Native names.
+ */
+function languageSection(ctx, { session, personalLanguage = null }) {
+    const { t } = textOf(ctx);
+    const option = (value, label, code = null) => html`<option value="${value}"${code ? html` lang="${code}"` : ''}${(personalLanguage || '') === value ? html` selected` : ''}>${label}</option>`;
+    return html`<section class="account-section"><h2>${t('account.settings.language.heading')}</h2>
+<p>${t('account.settings.language.lead')}</p>
+<form class="form-stack" method="post" action="/me/account/language">${csrfField(session.csrf)}
+${field('pl-language', t('account.settings.language.label'), html`<select id="pl-language" name="language">${option('', t('account.settings.language.server'))}${LANGUAGES.map((l) => option(l.code, l.name, l.code))}</select>`)}
+<p class="form-actions"><button class="button" type="submit">${t('account.settings.language.submit')}</button></p></form></section>`;
+}
+
+export function accountSettingsPage(ctx, { session, account, flash = null, error = null, recoveryLeft = 0, canClaim = false, plan = null, bonus = null, personalLanguage = null, now = Date.now() }) {
     const { t, ti } = textOf(ctx);
     const twoStep = Boolean(account.totp_enabled_at);
     const pw = (id) => html`<input id="${id}" name="password" type="password" required maxlength="${PASSWORD_MAX}" autocomplete="current-password">`;
@@ -225,6 +239,8 @@ ${notices({ flash, error })}
 <p class="note account-foot">${t('account.settings.unlinkFoot')}</p></section>
 
 ${planSection(ctx, { plan, bonus, now })}
+
+${languageSection(ctx, { session, personalLanguage })}
 
 <section class="account-section"><h2>${t('account.password.heading')}</h2>
 <form class="form-stack" method="post" action="/me/account/password">${csrfField(session.csrf)}

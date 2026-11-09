@@ -120,6 +120,7 @@
             "reminders": "Lembretes",
             "oauth": "Token de login do Discord salvo (de \"Verificar com o Discord\")",
             "dmlog": "Cópias salvas das DMs do bot (para traduzi-las de novo quando você muda de idioma)",
+            "language": "Seu idioma pessoal para o Mewvo (do /language)",
             "ticketRatings": "Avaliações de tickets que você deu (seu nome e comentário; as estrelas ficam)",
             "invites": "Rastreio de convites: como você entrou, e seu nome como quem convidou outros"
         },

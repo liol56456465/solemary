@@ -18,7 +18,8 @@
 import { logger } from '../../utils/logger.js';
 import { LANGUAGE_ROLES_KEY, resolveBotLanguage } from '../../utils/botText.js';
 import { resolveSetting } from '../settings/guildSettings.js';
-import { deleteDmLogRow, listDmsToRelang, setDmLogLang } from './dmLog.js';
+import { personalLanguageOf } from '../personalLanguage.js';
+import { deleteDmLogRow, listDmGuildsForUser, listDmsToRelang, setDmLogLang } from './dmLog.js';
 import { DM_RENDERERS, renderDm } from './dmRenderers.js';
 
 export const DEBOUNCE_MS = 60 * 1000;
@@ -55,10 +56,12 @@ export function createDmRelang({
     setLang = setDmLogLang,
     render = renderDm,
     renderers = DM_RENDERERS,
-    resolveLanguage = (guildId, member) => resolveBotLanguage({ guildId, member, userId: member?.id, purpose: 'dm' }),
+    resolveLanguage = (guildId, member, userId = member?.id) => resolveBotLanguage({ guildId, member, userId, purpose: 'dm' }),
+    hasPersonal = (userId) => Boolean(personalLanguageOf(userId)),
 } = {}) {
     const timers = new Map();      // guildId:userId → timer
     const generation = new Map();  // guildId:userId → n (a newer change → a higher n)
+    const personalChange = new Set(); // guildId:userId: a personal language change (set or cleared)
     let chain = Promise.resolve();
     let lastEditAt = -Infinity;
 
@@ -93,9 +96,12 @@ export function createDmRelang({
         try {
             if (stale(key, gen)) return { ...result, stopped: true };
             const member = await fetchMember(client, guildId, userId);
-            // Not in the server any more (or not fetchable now): no language to go by.
-            if (!member) return result;
-            const lang = resolveLanguage(guildId, member);
+            // Not in the server any more (or not fetchable now): no language role to go by; only
+            // a personal language still decides (e.g. the DM about a ban from that server), and so
+            // does clearing one (back to the server language).
+            const personal = personalChange.delete(key);
+            if (!member && !personal && !hasPersonal(userId)) return result;
+            const lang = resolveLanguage(guildId, member, userId);
             result.lang = lang;
             const rows = await listRows({ guildId, userId, lang, limit: maxEdits });
             for (const row of rows) {
@@ -151,9 +157,10 @@ export function createDmRelang({
      * A member's language may have changed: (re)starts the quiet window; returns the promise of
      * the run that follows (tests). Never throws.
      */
-    function schedule(client, guildId, userId) {
+    function schedule(client, guildId, userId, { personal = false } = {}) {
         if (!client || !guildId || !userId) return Promise.resolve(null);
         const key = keyOf(String(guildId), String(userId));
+        if (personal) personalChange.add(key);
         const gen = (generation.get(key) || 0) + 1;
         generation.set(key, gen);
         const previous = timers.get(key);
@@ -182,8 +189,27 @@ export function createDmRelang({
 const defaultRelang = createDmRelang();
 
 /** The bot's re-editor (events/guildMemberUpdate.js, handlers/languageRoles.js). */
-export function scheduleDmRelang(client, guildId, userId) {
-    return defaultRelang.schedule(client, guildId, userId);
+export function scheduleDmRelang(client, guildId, userId, options) {
+    return defaultRelang.schedule(client, guildId, userId, options);
+}
+
+/**
+ * A member changed their personal language (/language without a role, the website): their DMs
+ * about every server with logged DMs (and `guildId`, where they made the change) are re-edited
+ * the same way as after a language-role change. Each server's run still applies that server's
+ * order (a language role there comes first). Returns the number of servers scheduled; never throws.
+ */
+export async function schedulePersonalRelang(client, userId, guildId = null, { listGuilds = listDmGuildsForUser, schedule = scheduleDmRelang } = {}) {
+    if (!client || !userId) return 0;
+    let guilds = [];
+    try {
+        guilds = await listGuilds(userId);
+    } catch (error) {
+        logger.warn(`Personal language change: the DM log of ${userId} could not be read (${error?.message || error}); only the current server is re-edited.`);
+    }
+    const all = new Set([...(guildId ? [String(guildId)] : []), ...guilds.map(String)]);
+    for (const id of all) schedule(client, id, userId, { personal: true });
+    return all.size;
 }
 
 /**

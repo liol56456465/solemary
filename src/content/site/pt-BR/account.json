@@ -156,7 +156,14 @@
     "unlink": "Desvincular Discord",
     "unlinkFoot": "Uma conta Mewvo precisa de uma conta do Discord vinculada: depois de desvincular, você só pode vincular uma de novo (ou excluir a conta). O plano fica com a sua conta do Discord. Uma conta do Discord só recebe o bônus de conta antecipada uma vez.",
     "yourData": "Seus dados",
-    "download": "Baixar meus dados"
+    "download": "Baixar meus dados",
+    "language": {
+      "heading": "Idioma das DMs do Mewvo",
+      "lead": "O Mewvo te manda DMs neste idioma e o usa no Discord nas respostas que só você vê, em todos os servidores. Um cargo de idioma em um servidor tem prioridade lá.",
+      "label": "Idioma",
+      "server": "O idioma de cada servidor (padrão)",
+      "submit": "Salvar idioma"
+    }
   },
   "password": {
     "heading": "Alterar senha",
@@ -207,7 +214,8 @@
     "wrongTwoStepOff": "A senha ou o código está errado. O login em duas etapas continua ativado.",
     "confirmDelete": "Marque a caixa para confirmar que você quer excluir a sua conta.",
     "wrongDeleteWithCode": "A senha ou o código está errado. Nada foi excluído.",
-    "wrongDelete": "A senha está errada. Nada foi excluído."
+    "wrongDelete": "A senha está errada. Nada foi excluído.",
+    "languageNotSaved": "Não foi possível salvar seu idioma agora (o banco de dados não responde). Nada foi alterado."
   },
   "flash": {
     "passwordReset": "Sua nova senha foi salva. Todos os outros logins foram encerrados.",
@@ -217,7 +225,9 @@
     "twoStepAlreadyOn": "O login em duas etapas já está ativado.",
     "twoStepAlreadyOff": "O login em duas etapas já está desativado.",
     "twoStepOff": "O login em duas etapas está desativado.",
-    "unlinked": "Sua conta do Discord foi desvinculada. Vincule uma conta do Discord de novo para continuar usando a sua conta Mewvo."
+    "unlinked": "Sua conta do Discord foi desvinculada. Vincule uma conta do Discord de novo para continuar usando a sua conta Mewvo.",
+    "languageSaved": "Salvo: o Mewvo vai te mandar DMs em {language}.",
+    "languageCleared": "Limpo: o Mewvo volta a usar o idioma de cada servidor nas suas DMs."
   },
   "errorCodes": {
     "usernameLength": "O nome de usuário precisa ter de {min} a {max} caracteres.",

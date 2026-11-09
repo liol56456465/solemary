@@ -1,0 +1,197 @@
+{
+    "appeal": {
+        "modal": {
+            "title": "Odwołaj się od kary",
+            "reason": "Dlaczego kara powinna zostać zdjęta?",
+            "reasonHint": "Dlaczego ban, wyciszenie lub ostrzeżenie powinno zostać zdjęte?",
+            "code": "Kod sprawy",
+            "codeHint": "Z wiadomości DM, którą dostałeś przy karze, np. k7m2qx.",
+            "more": "Więcej informacji (opcjonalnie)",
+            "moreHint": "Wszystko inne, co administratorzy powinni wiedzieć."
+        },
+        "report": {
+            "title": "Zgłoś członka ekipy",
+            "staff": "Nazwa użytkownika członka ekipy",
+            "details": "Co się stało?",
+            "proof": "Linki do dowodów",
+            "proofHint": "Linki do zrzutów ekranu lub wiadomości, jeden w wierszu"
+        },
+        "wrongPlace": {
+            "report": "Zgłoszenia na ekipę wysyła się przez panel na serwerze pomocy Mewvo.",
+            "panel": "Użyj panelu odwołań na serwerze."
+        },
+        "badCode": "To nie jest prawidłowy kod sprawy. Ma 5–7 liter i cyfr i znajdziesz go w wiadomości DM, którą dostałeś.",
+        "submitted": {
+            "title": "Odwołanie wysłane",
+            "text": "Administratorzy je sprawdzą. Decyzję dostaniesz w DM."
+        },
+        "reportSent": {
+            "title": "Zgłoszenie wysłane",
+            "text": "Twoje zgłoszenie trafiło do administratorów. Jeśli poproszą o zrzuty ekranu jako dowód, wyślij je w DM z nimi."
+        },
+        "formGone": "Ten formularz nie jest tu już dostępny. Otwórz go ponownie z panelu.",
+        "type": {
+            "ban": "ban",
+            "kick": "wyrzucenie",
+            "mute": "wyciszenie",
+            "warn": "ostrzeżenie"
+        },
+        "error": {
+            "notFound": "Nie znaleziono tego kodu sprawy dla twojego konta. Sprawdź kod w wiadomości DM.",
+            "unappealable": "Od tej sprawy nie można się odwołać.",
+            "lifted": "Ta kara została już zdjęta.",
+            "endedBan": "Ten ban już się skończył, więc nie ma od czego się odwoływać.",
+            "endedMute": "To wyciszenie już się skończyło, więc nie ma od czego się odwoływać.",
+            "windowClosed": "Termin na odwołanie od tego bana minął.",
+            "windowKick": {
+                "one": "Od wyrzucenia można się odwołać tylko w ciągu {count} dnia.",
+                "few": "Od wyrzucenia można się odwołać tylko w ciągu {count} dni.",
+                "many": "Od wyrzucenia można się odwołać tylko w ciągu {count} dni.",
+                "other": "Od wyrzucenia można się odwołać tylko w ciągu {count} dnia."
+            },
+            "windowWarn": {
+                "one": "Od ostrzeżenia można się odwołać tylko w ciągu {count} dnia.",
+                "few": "Od ostrzeżenia można się odwołać tylko w ciągu {count} dni.",
+                "many": "Od ostrzeżenia można się odwołać tylko w ciągu {count} dni.",
+                "other": "Od ostrzeżenia można się odwołać tylko w ciągu {count} dnia."
+            },
+            "pending": "Masz już oczekujące odwołanie w tej sprawie. Decyzję dostaniesz w DM.",
+            "cooldown": "Twoje ostatnie odwołanie w tej sprawie zostało odrzucone. Możesz odwołać się ponownie {when}.",
+            "reportsToday": "Wysłałeś już dziś maksymalną liczbę zgłoszeń na ekipę. Spróbuj ponownie jutro.",
+            "reportOpen": "Masz już otwarte zgłoszenie na ekipę. Administratorzy skontaktują się z tobą w tej sprawie.",
+            "serverUnavailable": "Ten serwer jest teraz niedostępny. Nic nie zostało wysłane."
+        },
+        "channel": {
+            "received": "<@{userId}>, twoje odwołanie dotarło.",
+            "title": "Twoje odwołanie w sprawie {code}",
+            "caseCode": "**Kod sprawy:** `{code}`",
+            "type": "**Rodzaj:** {type}",
+            "when": "**Kiedy:** {date}",
+            "reason": "**Powód:** {reason}",
+            "ends": "**Kończy się:** {date}",
+            "permanent": "**Czas trwania:** na stałe",
+            "footer": "Ekipa sprawdzi je tutaj. Na tym kanale możesz dodać więcej szczegółów lub zrzuty ekranu. Decyzję dostaniesz w DM."
+        },
+        "result": {
+            "acceptedTitle": "Odwołanie przyjęte",
+            "deniedTitle": "Odwołanie odrzucone",
+            "accepted": "Twoje odwołanie w sprawie `{code}` zostało przyjęte.",
+            "denied": "Twoje odwołanie w sprawie `{code}` zostało odrzucone.",
+            "dm": "Szczegóły dostałeś w DM.",
+            "noDm": "Nie dostaniesz szczegółów w DM (masz zamknięte DM).",
+            "deleted": "-# Ten kanał zostanie usunięty za {seconds} s."
+        }
+    },
+    "record": {
+        "title": "Moja historia na {server}",
+        "thisServer": "tym serwerze",
+        "onlyYou": "Tylko ty to widzisz.",
+        "field": {
+            "warns": "Liczone ostrzeżenia",
+            "ladder": "Drabina ostrzeżeń",
+            "active": "Aktywne kary",
+            "appeals": "Odwołania"
+        },
+        "counted": "Liczone: **{n}** (limit na tym etapie: {threshold}).",
+        "noneCounted": "Teraz żadne nie jest liczone.",
+        "andMore": "…i jeszcze {n}",
+        "expiry": "-# Ostrzeżenia nie wygasają. Ostrzeżenie przestaje się liczyć, gdy ekipa je usunie, zostanie zdjęte po odwołaniu albo dojdziesz do limitu (wtedy liczenie zaczyna się od nowa na następnym etapie).",
+        "stage": "**{stage}**.",
+        "next": "**Twoje następne ostrzeżenie:** {text}",
+        "banEnds": "Ban `{code}` · kończy się {date} ({relative})",
+        "banPermanent": "Ban `{code}` · na stałe",
+        "muteEnds": "Wyciszenie `{code}` · kończy się {date} ({relative})",
+        "none": "Brak.",
+        "noneFiled": "Nie złożono żadnego.",
+        "appealLine": "`{code}` {type} · {status} · złożone {date}{decided}",
+        "appealDecided": ", rozpatrzone {date}",
+        "status": {
+            "pending": "⏳ oczekuje",
+            "accepted": "przyjęte",
+            "denied": "odrzucone",
+            "closed": "zamknięte"
+        },
+        "ladderOff": "Ostrzeżenia są zapisywane, ale na tym serwerze nigdy nie prowadzą do automatycznego bana (drabina ostrzeżeń jest wyłączona).",
+        "would": "Byłoby to ostrzeżenie {n} z {max}.",
+        "oneAfter": "Kolejne po nim oznaczałoby automatycznego bana ({ban}).",
+        "moreAfter": {
+            "one": "Jeszcze {count} po nim oznaczałoby automatycznego bana ({ban}).",
+            "few": "Jeszcze {count} po nim oznaczałyby automatycznego bana ({ban}).",
+            "many": "Jeszcze {count} po nim oznaczałoby automatycznego bana ({ban}).",
+            "other": "Jeszcze {count} po nim oznaczałoby automatycznego bana ({ban})."
+        },
+        "limit": "Osiągnąłbyś limit ostrzeżeń: automatyczny ban ({ban}, etap ostrzeżeń {stage} z 3).",
+        "permanent": "na stałe"
+    },
+    "myAppeals": {
+        "title": "Moje odwołania",
+        "none": "Nie złożyłeś jeszcze żadnego odwołania. Aby je złożyć, kliknij **Odwołaj się** na panelu odwołań; potrzebujesz kodu sprawy z wiadomości DM, którą dostałeś.",
+        "status": {
+            "pending": "Czeka na decyzję",
+            "accepted": "Przyjęte",
+            "denied": "Odrzucone",
+            "closed": "Zamknięte"
+        },
+        "claimed": "Czeka na decyzję. Ktoś z ekipy już się nim zajmuje.",
+        "head": "**`{code}`**: {type} ({name})",
+        "line": "{status} · złożone {filed}{decided}",
+        "decided": " · rozpatrzone {date}"
+    },
+    "modmail": {
+        "staffMain": "ekipa Mewvo",
+        "staffOf": "ekipa serwera {server}",
+        "promptOne": "Wysłać tę wiadomość? Otrzyma ją {staff}. Odpowiedź przyjdzie tutaj, w DM.",
+        "promptSeveral": "Do ekipy którego serwera wysłać tę wiadomość? Odpowiedź przyjdzie tutaj, w DM.",
+        "promptMore": "-# Pokazano tylko pierwsze {count} serwerów.",
+        "placeholder": "Wybierz serwer",
+        "send": "Wyślij do ekipy",
+        "cancel": "Anuluj",
+        "notSent": "Nie wysłano.",
+        "none": "Żaden z serwerów, które dzielisz z tym botem, nie przyjmuje modmaila (albo nie jesteś już tam członkiem). Skontaktuj się z ekipą serwera w inny sposób. Jeśli dostałeś bana na serwerze Mewvo, użyj panelu odwołań na serwerze pomocy.",
+        "blocked": "Nie możesz korzystać z modmaila.",
+        "unavailable": "Modmail jest teraz niedostępny.",
+        "notMemberMain": "Modmail jest dla członków serwera Mewvo. Jeśli dostałeś bana, użyj panelu odwołań na serwerze pomocy.",
+        "notMember": "Nie jesteś członkiem serwera {server}, więc nie skontaktujesz się z jego ekipą przez modmail.",
+        "alreadyOpen": "Masz już otwartą rozmowę. Po prostu pisz tutaj.",
+        "opening": "Otwieramy twoją rozmowę.",
+        "notTaking": "{server} nie przyjmuje teraz modmaila.",
+        "gone": "Ta wiadomość zniknęła. Wyślij ją ponownie.",
+        "sentMain": "Wysłano do ekipy. Odpowiedź przyjdzie tutaj; wszystko, co jeszcze tu napiszesz, też trafi do ekipy.",
+        "sentOther": "Wysłano do ekipy serwera {server}. Odpowiedź przyjdzie tutaj; wszystko, co jeszcze tu napiszesz, też trafi do ekipy.",
+        "broken": "To pytanie nie działa. Wyślij wiadomość ponownie.",
+        "failed": "Nie udało się teraz skontaktować z ekipą. Spróbuj ponownie później.",
+        "closed": "Twoja rozmowa została zamknięta ({staff}).",
+        "closedReason": "Powód: {reason}",
+        "closedAgain": "Wyślij tu nową wiadomość w dowolnej chwili, aby zacząć nową rozmowę.",
+        "staffName": "**{name} (ekipa):**"
+    },
+    "contest": {
+        "button": "Zakwestionuj",
+        "title": "Zakwestionuj tę decyzję",
+        "label": "Dlaczego to było w porządku?",
+        "hint": "Moderator to przeczyta i zdecyduje.",
+        "broken": "Ten przycisk nie działa (brak kodu sprawy).",
+        "already": "Już zakwestionowałeś tę decyzję. Moderatorzy się nią zajmą.",
+        "unknownAction": "Nieznana akcja.",
+        "unknownForm": "Nieznany formularz.",
+        "sentTitle": "Wysłano do moderatorów",
+        "sent": "Moderator sprawdzi sprawę {code} razem z twoim wyjaśnieniem. Jeśli decyzja zostanie cofnięta, dostaniesz DM.",
+        "gone": "Ta sprawa już nie istnieje.",
+        "notYours": "Zakwestionować decyzję może tylko osoba, której ona dotyczy.",
+        "notAuto": "Tutaj można kwestionować tylko automatyczne decyzje. Użyj zamiast tego formularza odwołania.",
+        "reversed": "Ta decyzja została już cofnięta."
+    },
+    "keepApart": {
+        "startedTitle": "**Zakaz kontaktu: polecenie na {server}**",
+        "asked": "Ekipa poprosiła ciebie i {other}, żebyście nie kontaktowali się ze sobą do {until}.",
+        "rule": "Do tego czasu nie oznaczaj tej osoby i nie odpowiadaj jej na serwerze: takie wiadomości są usuwane.",
+        "reason": "Powód: {reason}",
+        "notPunishment": "To nie jest kara i nie liczy się jako ostrzeżenie.",
+        "anotherMember": "inną osobę",
+        "endedTitle": "**Twój zakaz kontaktu na {server} się skończył**",
+        "early": "Ekipa zakończyła go wcześniej.",
+        "expired": "Wygasł.",
+        "contact": "Znowu możesz kontaktować się z {other}.",
+        "theOtherMember": "drugą osobą"
+    }
+}

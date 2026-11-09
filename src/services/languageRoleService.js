@@ -10,6 +10,9 @@
 //
 // Custom IDs: langrole:set:<code> (persistent panel button), langrole:pick:<userId> (the select
 // of /language set, ephemeral).
+//
+// A language without a role here (or a server without language roles) is saved as the member's
+// personal language instead (services/personalLanguage.js, handlers/languageRoles.js).
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, StringSelectMenuBuilder } from 'discord.js';
 import { LANGUAGES, LANG_CODES } from './site/i18n.js';
@@ -103,20 +106,57 @@ export async function switchLanguageRole({ guild, member, lang, map, reason = 'L
     return { lang, added: add, removed: others.map((role) => role.id) };
 }
 
+/**
+ * Removes all of the member's language roles (a personal language was picked that has no role
+ * here, so a role must not keep winning). Same checks as the switch; returns the removed role
+ * ids ([] = none held). Throws LanguageRoleError (nothing changed).
+ */
+export async function removeLanguageRoles({ guild, member, map, reason = 'Personal language picked by the member' }) {
+    if (!member?.roles?.cache) throw new LanguageRoleError('memberMissing');
+    const held = [...new Set(offeredLanguages(map).filter((code) => hasRole(member, map[code])).map((code) => map[code]))]
+        .map((id) => guild?.roles?.cache?.get(id))
+        .filter(Boolean);
+    if (!held.length) return [];
+    const me = guild?.members?.me;
+    if (!me?.permissions?.has?.(PermissionFlagsBits.ManageRoles)) throw new LanguageRoleError('noManageRoles');
+    const problem = held.map((role) => roleProblem(role, me, { add: false })).find(Boolean);
+    if (problem) throw problem;
+    try {
+        await member.roles.remove(held.map((role) => role.id), reason);
+    } catch (error) {
+        throw Object.assign(new LanguageRoleError('failed'), { cause: error });
+    }
+    return held.map((role) => role.id);
+}
+
 /** The text of a LanguageRoleError (or the generic failure) in a translator. */
 export function languageErrorText(tr, error) {
     const code = error instanceof LanguageRoleError ? error.code : 'failed';
     return tr.t(`language.error.${code}`, error?.params || {});
 }
 
-/** The select of /language set (only the languages with a role). */
-export function languagePickerRow(tr, map, { userId, current = null }) {
+/** The select value that clears a personal language ("use the server's language"). */
+export const PERSONAL_RESET = 'reset';
+
+/**
+ * The select of /language set: every language. One with a role here gives that role; one
+ * without is saved as the member's personal language (its option says so). With a personal
+ * language saved, a last option clears it. customId unchanged (langrole:pick:<userId>).
+ */
+export function languagePickerRow(tr, map, { userId, current = null, personal = null }) {
+    const options = LANG_CODES.map((code) => ({
+        label: nativeLanguageName(code),
+        value: code,
+        default: code === current,
+        ...(map?.[code] ? {} : { description: tr.t('language.pick.personalOption').slice(0, 100) }),
+    }));
+    if (personal) options.push({ label: tr.t('language.pick.resetOption').slice(0, 100), value: PERSONAL_RESET, default: false });
     const menu = new StringSelectMenuBuilder()
         .setCustomId(`${LANGUAGE_ROLE_PREFIX}:pick:${userId}`)
         .setPlaceholder(tr.t('language.pick.placeholder'))
         .setMinValues(1)
         .setMaxValues(1)
-        .addOptions(offeredLanguages(map).map((code) => ({ label: nativeLanguageName(code), value: code, default: code === current })));
+        .addOptions(options);
     return new ActionRowBuilder().addComponents(menu);
 }
 

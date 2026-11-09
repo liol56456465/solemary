@@ -246,7 +246,9 @@ test('M7: join/leave renames counters at most once per server per 5 minutes, wit
 // L1 ------------------------------------------------------------------------------------------
 test('L1: appeal forms and decision buttons always answer after deferring', () => {
   const s = src('handlers/appealsHandler.js');
-  assert.match(s, /This form is not available here any more/);
+  // The text moved to the catalog (member.json, audit 4.3): the handler still answers with it.
+  assert.match(s, /member\.appeal\.formGone/);
+  assert.match(readFileSync(new URL('../src/content/bot/en/member.json', import.meta.url), 'utf8'), /This form is not available here any more/);
   assert.doesNotMatch(s, /if \(!DECISIONS\.has\(decision\) \|\| !caseCode\) return;/);
 });
 

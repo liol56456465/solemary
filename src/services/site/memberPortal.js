@@ -60,6 +60,7 @@ import { premiumSettings, premiumStore } from '../billing/premiumService.js';
 import { ACCOUNT_EXPORT_NOTE, EXPORT_FORMAT, buildDataExport, exportFileName } from '../privacy/dataExport.js';
 import { getFromDb } from '../../utils/database/wrapper.js';
 import { createAccountHandlers, memberAccountSettings } from './accountRoutes.js';
+import { schedulePersonalRelang } from '../botDm/dmRelang.js';
 import { DEFAULT_LANG, LANG_CODES, hasKey, textOf, translator } from './i18n.js';
 import { languageCookie, requestLanguage } from './language.js';
 import { accountStore as defaultAccountStore } from '../accounts/accountStore.js';
@@ -703,6 +704,7 @@ export function createMemberPortal({
         startReset: (req, res) => startOAuth(req, res, { forgot: true }),
         ...(accounts.limits ? { limits: accounts.limits } : {}), ...(accounts.hashParams ? { hashParams: accounts.hashParams } : {}),
         ...(accounts.after ? { after: accounts.after } : {}),
+        ...(accounts.language ? { language: accounts.language } : {}),
     }) : null;
 
     // Web appeals (portalAppeals.js): only with the appeal data (the bot client) passed in.
@@ -802,6 +804,7 @@ export function createMemberPortal({
             post('/account/password', a.passwordPost);
             post('/account/2fa/start', a.twoStepStart); post('/account/2fa/enable', a.twoStepEnable); post('/account/2fa/disable', a.twoStepDisable);
             post('/account/unlink', a.unlinkPost); post('/account/delete', a.deletePost);
+            post('/account/language', a.languagePost);
         }
         if (billing) {
             const form = express.urlencoded({ extended: false, limit: '2kb' });
@@ -844,7 +847,7 @@ export function portalAppealData(client) {
  */
 export function registerMemberPortal(app, {
     env = process.env, dashboardEnabled = false, supportInvite = () => null, sessions = null, data, fetchImpl, limits, premium,
-    accountStore = null, accountLimits = null, hashParams = null, accountAfter = null, client = null, appeals = null,
+    accountStore = null, accountLimits = null, hashParams = null, accountAfter = null, client = null, appeals = null, personalLanguage = null,
 } = {}) {
     const settings = memberPortalSettings(env);
     if (!settings.requested) return false;
@@ -875,6 +878,12 @@ export function registerMemberPortal(app, {
         ...(accountLimits ? { limits: accountLimits } : {}),
         ...(hashParams ? { hashParams } : {}),
         ...(accountAfter ? { after: accountAfter } : {}),
+        // A personal language change re-edits the member's recent DMs (needs the bot client).
+        // `personalLanguage` (tests): { read, save, clear } in place of services/personalLanguage.js.
+        language: {
+            ...(personalLanguage || {}),
+            ...(client ? { afterChange: (userId) => { schedulePersonalRelang(client, userId).catch(() => {}); } } : {}),
+        },
     } : null;
     const portal = createMemberPortal({
         settings,
