@@ -56,7 +56,7 @@ import { html, layout, path, queryString } from './html.js';
 import { isSnowflake } from './security.js';
 import { currentLanguage, currentText, dashboardText } from './language.js';
 import { parseUserRef } from './memberSearch.js';
-import { MODERATOR, mayRun, moderatorActionTypes, requiredLevel } from './permissions.js';
+import { MODERATOR, MODERATOR_OUTSIDE_HOME, mayRun, moderatorActionTypes, requiredLevel } from './permissions.js';
 import { memberHasConfiguredModeratorRole } from '../../utils/permissionGuard.js';
 import { fetchAllMembers } from '../../utils/memberFetchGate.js';
 import { caseActions as caseActionForms } from './enforcementPages.js';
@@ -258,7 +258,8 @@ export function createEnforcementHandlers(core) {
             req.dashboard.fresh = { level: 'admin', roleId: null };
             return member;
         }
-        if (member && requiredLevel(key) === MODERATOR) {
+        // Moderator-level keys, plus Remove warn outside Mewvo's servers (permissions.js MODERATOR_OUTSIDE_HOME).
+        if (member && (requiredLevel(key) === MODERATOR || (!isHomeServer() && MODERATOR_OUTSIDE_HOME.has(key)))) {
             const roleId = await moderatorRoleId();
             if (roleId && memberHasConfiguredModeratorRole(member, { modRole: roleId })) {
                 req.dashboard.fresh = { level: MODERATOR, roleId };

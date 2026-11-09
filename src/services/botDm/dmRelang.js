@@ -77,7 +77,12 @@ export function createDmRelang({
     async function fetchMember(client, guildId, userId) {
         const guild = client?.guilds?.cache?.get?.(guildId);
         if (!guild) return null;
-        return guild.members?.cache?.get?.(userId) ?? await guild.members?.fetch?.(userId).catch(() => null) ?? null;
+        const cached = guild.members?.cache?.get?.(userId);
+        if (cached) return cached;
+        return await guild.members?.fetch?.(userId).catch((error) => {
+            if (error?.code === 10007) return null; // Unknown Member: left the server
+            throw new Error(`member not fetchable right now (${error?.code ?? error?.message ?? 'error'})`);
+        }) ?? null;
     }
 
     async function fetchMessage(client, row) {

@@ -523,3 +523,26 @@ test('watchlist: Administrator-only to view and to end (a moderator may be on it
     // OWNER_IDS without Administrator are view + settings only; the watchlist follows Discord (/case watch is admin-only).
     assert.equal(mayRun(OWNER_DECISION, 'watchlist.view'), false);
 });
+
+// Review of beginner wave 2: outside Mewvo's servers the Moderator role may Remove warn on the dashboard
+// (permissions.js MODERATOR_OUTSIDE_HOME); the fresh role check in the route must accept it there too.
+test('moderator outside Mewvo servers: remove warn preview passes the route (home stays 403)', async () => {
+    const { enforcementConfig } = await import('../src/config/enforcement.js');
+    const h = await setup();
+    const form = { type: 'removewarn', reason: 'mistake', warn: 'wrn2345' };
+    const home = await post(h, h.d.enforcement.actionPreview, `/users/${TARGET}/action/preview`, { params: { id: TARGET }, form });
+    assert.equal(home.statusCode, 403, 'home server: Administrator only');
+    const saved = { main: enforcementConfig.mainGuildId, support: enforcementConfig.supportGuildId, env: process.env.MAIN_GUILD_ID };
+    try {
+        enforcementConfig.mainGuildId = '199999999999999991';
+        enforcementConfig.supportGuildId = '199999999999999992';
+        process.env.MAIN_GUILD_ID = '199999999999999991';
+        const other = await post(h, h.d.enforcement.actionPreview, `/users/${TARGET}/action/preview`, { params: { id: TARGET }, form });
+        assert.notEqual(other.statusCode, 403, `other server: not refused as "needs Administrator" (${String(other.body).slice(-300)})`);
+        assert.doesNotMatch(String(other.body), /needs Administrator in this server/);
+    } finally {
+        enforcementConfig.mainGuildId = saved.main;
+        enforcementConfig.supportGuildId = saved.support;
+        process.env.MAIN_GUILD_ID = saved.env;
+    }
+});
