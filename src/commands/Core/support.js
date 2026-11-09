@@ -6,7 +6,7 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { inviteOrNull, siteOrigin } from '../../services/site/shell.js';
 import { botText } from '../../utils/botText.js';
-import { localized, replyText } from './modules/commandText.js';
+import { localized, replyText } from '../../utils/commandLocalizations.js';
 
 // The same invite the website and the home servers' DMs use (setting supportServerInvite of Mewvo's
 // main server, dashboard-editable). Home-only by design (owner, 2026-11-07): /support is the bot's

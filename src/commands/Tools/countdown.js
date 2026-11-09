@@ -3,7 +3,7 @@ import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 import { activeCountdowns, startCountdownMessage } from '../../services/botMessageService.js';
-import { localized, publicText, replyText } from '../Core/modules/commandText.js';
+import { localized, publicText, replyText } from '../../utils/commandLocalizations.js';
 
 // The map lives in the service (the dashboard starts countdowns too); the buttons import it from here.
 export { activeCountdowns };

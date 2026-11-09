@@ -5,7 +5,7 @@
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { textForInteraction } from '../../utils/botText.js';
-import { localized } from './modules/commandText.js';
+import { localized } from '../../utils/commandLocalizations.js';
 import { collectSetupState, defaultSetupData, setupReply } from '../../services/setup/setupGuide.js';
 
 /** Runs /setup. `data` is injectable for tests (services/setup/setupGuide.js defaultSetupData). */

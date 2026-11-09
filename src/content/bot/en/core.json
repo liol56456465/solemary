@@ -38,7 +38,12 @@
             "back": "Back",
             "noDescription": "No description",
             "allTitle": "All commands",
-            "changePage": "Use the buttons below to change page."
+            "changePage": "Use the buttons below to change page.",
+            "first": "First",
+            "previous": "Previous",
+            "next": "Next",
+            "last": "Last",
+            "pageOf": "Page {page} of {total}"
         }
     },
     "commands": {

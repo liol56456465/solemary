@@ -3,7 +3,7 @@ import { successEmbed } from '../../../utils/embeds.js';
 import { setLogChannel } from '../../../services/loggingService.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { logger } from '../../../utils/logger.js';
-import { replyText } from '../../Core/modules/commandText.js';
+import { replyText } from '../../../utils/commandLocalizations.js';
 
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { hasAdminAccess } from '../../../utils/commandGate.js';

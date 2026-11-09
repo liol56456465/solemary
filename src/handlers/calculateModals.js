@@ -3,7 +3,7 @@ import { logger } from '../utils/logger.js';
 import { evaluateMathExpression } from '../utils/safeMathParser.js';
 
 import { replyUserError, ErrorTypes } from '../utils/errorHandler.js';
-import { publicText, replyText } from '../commands/Core/modules/commandText.js';
+import { publicText, replyText } from '../utils/commandLocalizations.js';
 function evaluate(expression) {
     return evaluateMathExpression(expression);
 }

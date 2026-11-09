@@ -4,7 +4,7 @@ import { logger } from '../../../utils/logger.js';
 import { TitanBotError, ErrorTypes } from '../../../utils/errorHandler.js';
 
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
-import { localized, publicText, replyText } from '../../Core/modules/commandText.js';
+import { localized, publicText, replyText } from '../../../utils/commandLocalizations.js';
 export default {
     data: new SlashCommandBuilder()
     .setName("roll")

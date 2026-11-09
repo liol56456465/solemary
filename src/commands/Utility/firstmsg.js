@@ -2,7 +2,7 @@ import { SlashCommandBuilder, PermissionsBitField, ChannelType } from 'discord.j
 import { createEmbed, errorEmbed, successEmbed } from '../../utils/embeds.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { logger } from '../../utils/logger.js';
-import { localized, publicText } from '../Core/modules/commandText.js';
+import { localized, publicText } from '../../utils/commandLocalizations.js';
 
 export default {
     data: new SlashCommandBuilder()

@@ -5,7 +5,7 @@ import { logger } from '../../utils/logger.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import crypto from 'crypto';
-import { localized, publicText, replyText } from '../Core/modules/commandText.js';
+import { localized, publicText, replyText } from '../../utils/commandLocalizations.js';
 
 /** The Add / Complete / Remove task buttons under a shared list (labels in the post's language). */
 function sharedListButtons(listId, tr) {

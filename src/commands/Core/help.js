@@ -11,7 +11,7 @@ import { isCommandAvailableInGuild, canSeeAdminCommands } from '../../utils/comm
 import { hasEveryoneAccess } from '../../config/commands/commandAccess.js';
 import { createEmbed } from "../../utils/embeds.js";
 import { botText } from '../../utils/botText.js';
-import { localized, replyText } from './modules/commandText.js';
+import { localized, replyText } from '../../utils/commandLocalizations.js';
 import {
     createSelectMenu,
 } from "../../utils/components.js";

@@ -5,7 +5,7 @@ import { createEmbed, successEmbed, infoEmbed, warningEmbed } from '../../../uti
 import { logger } from '../../../utils/logger.js';
 import { replyUserError, ErrorTypes } from '../../../utils/errorHandler.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
-import { localized, replyText } from '../../Core/modules/commandText.js';
+import { localized, replyText } from '../../../utils/commandLocalizations.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('generatepassword')

@@ -16,7 +16,7 @@ import { premiumErrorText } from '../../services/site/billing.js';
 import { BoundedMap } from '../../utils/boundedMap.js';
 import { botText, textForGuild } from '../../utils/botText.js';
 import { sendLoggedDm } from '../../services/botDm/dmLog.js';
-import { localized, replyText } from './modules/commandText.js';
+import { localized, replyText } from '../../utils/commandLocalizations.js';
 
 const REDEEM_LIMIT = 5;
 const REDEEM_WINDOW_MS = 60_000;

@@ -7,7 +7,7 @@ import { logger } from '../utils/logger.js';
 import { replyUserError, ErrorTypes } from '../utils/errorHandler.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
 import { botText, textForGuild } from '../utils/botText.js';
-import { replyText } from '../commands/Core/modules/commandText.js';
+import { replyText } from '../utils/commandLocalizations.js';
 // User text goes into embed markdown; escape it (escapeMarkdown also escapes backslashes) so it
 // cannot form masked links or formatting.
 function escapeUserText(text) {

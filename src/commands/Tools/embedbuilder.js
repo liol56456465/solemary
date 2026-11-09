@@ -24,7 +24,7 @@ import { TitanBotError, replyUserError, ErrorTypes } from '../../utils/errorHand
 import { getColor } from '../../config/bot.js';
 import { fillTemplate, messageTemplate, templatesByGroup } from '../../config/messageTemplates.js';
 import { EMBED_COLOURS } from '../../services/botMessageService.js';
-import { localized, replyText } from '../Core/modules/commandText.js';
+import { localized, replyText } from '../../utils/commandLocalizations.js';
 
 const MAX_FIELDS = 25;
 const IDLE_TIMEOUT = 900_000; 

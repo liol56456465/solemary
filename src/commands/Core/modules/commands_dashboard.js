@@ -16,7 +16,7 @@ import {
 } from '../../../services/commandAccessService.js';
 import { getGuildConfig } from '../../../services/config/guildConfig.js';
 import { botText } from '../../../utils/botText.js';
-import { replyText } from './commandText.js';
+import { replyText } from '../../../utils/commandLocalizations.js';
 
 export const DASHBOARD_CATEGORY_SELECT = 'cmdaccess_category';
 export const DASHBOARD_COMMAND_SELECT = 'cmdaccess_command';

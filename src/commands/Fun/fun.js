@@ -4,7 +4,7 @@ import { mergeSubcommands } from '../../utils/mergedCommand.js';
 import fight from './modules/fun_fight.js';
 import flip from './modules/fun_flip.js';
 import roll from './modules/fun_roll.js';
-import { localized, replyText } from '../Core/modules/commandText.js';
+import { localized, replyText } from '../../utils/commandLocalizations.js';
 
 // /fun fight|flip|roll replaces /fight, /flip and /roll (same options).
 const merged = mergeSubcommands(
