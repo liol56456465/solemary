@@ -212,7 +212,7 @@
     "titlePaged": "Bestenliste, Seite {page}",
     "description": "Die Level-Bestenliste von Mewvos eigenem Community-Server.",
     "heading": "Bestenliste",
-    "lead": "Die aktivsten Mitglieder von Mewvos eigenem Community-Server nach Level und Gesamt-XP. XP bekommst du durchs Schreiben; Mitglieder, die ihre Daten mit `/wipedata` löschen, werden nicht aufgeführt.",
+    "lead": "Die aktivsten Mitglieder von Mewvos eigenem Community-Server nach Level und Gesamt-XP. XP bekommst du durchs Schreiben (und, wenn ein Server es einschaltet, für Zeit in Sprachkanälen); Mitglieder, die ihre Daten mit `/wipedata` löschen, werden nicht aufgeführt.",
     "unavailable": "Die Bestenliste konnte gerade nicht geladen werden. Es wurde nichts geändert; bitte versuch es in einer Minute noch einmal.",
     "off": "Das Levelsystem ist auf Mewvos Community-Server ausgeschaltet, daher gibt es gerade keine Bestenliste.",
     "empty": {

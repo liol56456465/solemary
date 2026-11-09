@@ -8,6 +8,8 @@ import { TitanBotError, ErrorTypes } from '../../utils/errorHandler.js';
 import { addXp } from './xpSystem.js';
 import { getUserLevelKey, getUserLevelPrefix } from '../../utils/database/keys.js';
 import { BOOST_MAX, BOOST_MIN, MAX_BOOSTS, REWARD_MODES, isValidBoost } from './levelBoosts.js';
+import { VOICE_DEFAULTS, voiceConfigOf, voiceConfigProblems } from './voiceConfig.js';
+import { deleteVoiceActivity, topVoiceRows } from './voiceStore.js';
 
 const SNOWFLAKE = /^\d{17,20}$/;
 const BASE_XP = 100;
@@ -129,7 +131,9 @@ export function memberCacheComplete(guild) {
 // fetchMissing: false never asks the gateway for members (the public website: page views must not
 // trigger Discord requests); members not in the cache keep the fallback name unless the cache is
 // complete, in which case they are skipped as gone.
-export async function getLeaderboard(client, guildId, limit = 10, offset = 0, { fetchMissing = true } = {}) {
+// type: 'xp' (level and XP, default) or 'voice' (time in voice, voice_activity; Postgres only,
+// a read error throws). Members who left are skipped the same way for both.
+export async function getLeaderboard(client, guildId, limit = 10, offset = 0, { fetchMissing = true, type = 'xp', readVoiceRows = topVoiceRows } = {}) {
   try {
     
     if (!guildId || typeof guildId !== 'string') {
@@ -155,7 +159,9 @@ export async function getLeaderboard(client, guildId, limit = 10, offset = 0, { 
     }
 
     const pg = client.db.rows?.();
-    const readRows = typeof pg?.topUserLevels === 'function'
+    const readRows = type === 'voice'
+      ? (count, from) => readVoiceRows(guildId, count, from)
+      : typeof pg?.topUserLevels === 'function'
       ? (count, from) => pg.topUserLevels(guildId, count, from)
       : (() => {
           let all = null;
@@ -287,7 +293,9 @@ function defaultLevelingConfig() {
     // Image card with the level-up message (off until an admin turns it on); accent '#RRGGBB'.
     levelUpCard: false,
     cardAccent: null,
-    xpMultiplier: 1
+    xpMultiplier: 1,
+    // Voice XP (voiceConfig.js): off until an admin turns it on.
+    voice: { ...VOICE_DEFAULTS, excludedChannels: [] }
   };
 }
 
@@ -412,6 +420,11 @@ function assertLevelingConfigValid(config) {
     }
   }
 
+  const voiceProblem = voiceConfigProblems(config.voice)[0];
+  if (voiceProblem) {
+    throw validationError(`Invalid voice XP setting ${voiceProblem[0]}`, voiceProblem[1]);
+  }
+
   if (config.levelUpCard !== undefined && typeof config.levelUpCard !== 'boolean') {
     throw validationError('levelUpCard must be true or false', 'The level-up card setting must be on or off.');
   }
@@ -514,6 +527,32 @@ export async function updateLevelingConfig(client, guildId, patch) {
     assertLevelingConfigValid(patch);
     const result = await mutateLevelingConfig(client, guildId, (current) => ({ ...current, ...cloneConfig(patch) }));
     logger.info(`Leveling config updated for guild ${guildId}`, { fields: Object.keys(patch) });
+    return result;
+  } catch (error) {
+    throw wrapSaveError(error, guildId);
+  }
+}
+
+/**
+ * Atomically merges `patch` into the stored Voice XP settings (leveling.voice), under the
+ * guild-config row lock, so two admins saving different voice fields cannot undo each other.
+ * The merged result is validated (min <= max included). Returns { before, after } (whole
+ * leveling configs).
+ */
+export async function updateVoiceXpConfig(client, guildId, patch) {
+  try {
+    if (!guildId || !patch || typeof patch !== 'object' || Array.isArray(patch)) {
+      throw validationError('Guild ID and patch object are required', 'Invalid voice XP settings update.');
+    }
+    const problem = voiceConfigProblems(patch)[0];
+    if (problem) throw validationError(`Invalid voice XP setting ${problem[0]}`, problem[1]);
+    const result = await mutateLevelingConfig(client, guildId, (current) => {
+      const voice = { ...voiceConfigOf(current), ...cloneConfig(patch) };
+      const merged = voiceConfigProblems(voice)[0];
+      if (merged) throw validationError(`Invalid voice XP setting ${merged[0]}`, merged[1]);
+      return { ...current, voice };
+    });
+    logger.info(`Voice XP settings updated for guild ${guildId}`, { fields: Object.keys(patch) });
     return result;
   } catch (error) {
     throw wrapSaveError(error, guildId);
@@ -757,7 +796,12 @@ export async function setUserLevel(client, guildId, userId, level) {
   }
 }
 
-export async function deleteUserLevelData(client, guildId, userId) {
+/**
+ * Deletes a member's level data and their voice time in one server (Voice XP decision 8: a
+ * level reset clears voice time too). Throws when either delete fails (data layer rule:
+ * never report a reset that did not happen). `removeVoice` is injectable for tests.
+ */
+export async function deleteUserLevelData(client, guildId, userId, { removeVoice = deleteVoiceActivity } = {}) {
   try {
     if (!guildId || !userId) {
       throw new TitanBotError(
@@ -767,12 +811,18 @@ export async function deleteUserLevelData(client, guildId, userId) {
     }
 
     const key = getUserLevelKey(guildId, userId);
-    await client.db.delete(key);
-    
+    const result = await client.db.delete(key);
+    if (result === false && (typeof client.db.exists !== 'function' || await client.db.exists(key))) throw new Error('level data delete returned false');
+    await removeVoice(guildId, userId);
+
     logger.debug(`Deleted level data for user ${userId} in guild ${guildId}`);
   } catch (error) {
     logger.error(`Error deleting level data for user ${userId}:`, error);
     if (error instanceof TitanBotError) throw error;
-    logger.warn(`Could not delete level data for user ${userId} in guild ${guildId}`);
+    throw new TitanBotError(
+      `Failed to delete level data: ${error.message}`,
+      ErrorTypes.DATABASE,
+      'Could not delete level data at this time. Nothing was reported as deleted.'
+    );
   }
 }

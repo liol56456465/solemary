@@ -145,7 +145,8 @@
       "other": "{count} boosts de rôle au maximum."
     },
     "memberMissing": "Ce membre n’est pas sur le serveur.",
-    "catName": "Nom : utilise des lettres, des chiffres et des espaces."
+    "catName": "Nom : utilise des lettres, des chiffres et des espaces.",
+    "voiceMinMax": "L’XP minimum par minute ne peut pas dépasser l’XP maximum par minute."
   },
   "action": {
     "nothing": "Rien n’a changé.",
@@ -172,6 +173,25 @@
     "rewardAdded": "Le niveau {level} donne maintenant ce rôle.",
     "rewardRemoved": "La récompense du niveau {level} a été retirée.",
     "noReward": "Il n’y avait pas de récompense pour ce niveau.",
-    "memberDone": "{name} est maintenant niveau {level}."
+    "memberDone": "{name} est maintenant niveau {level}.",
+    "voiceSaved": "Réglages de l’XP vocale enregistrés."
+  },
+  "voice": {
+    "title": "XP vocale",
+    "help": "Les membres gagnent de l’XP pour le temps passé en vocal avec d’autres personnes.",
+    "more": "Une minute compte quand un membre est en vocal avec assez d’autres personnes, n’est ni en sourdine audio ni rendu muet par le serveur, et n’est pas dans le salon AFK. Les boosts de salon et de rôle et la liste Pas d’XP dans s’appliquent comme pour le chat. Seules les minutes sont enregistrées : jamais qui a parlé avec qui, jamais de son.",
+    "enabled": "Donner de l’XP pour le temps en vocal",
+    "enabledHelp": "Désactivé : personne ne gagne d’XP ni de temps vocal dans les salons vocaux.",
+    "xpMin": "XP minimum par minute",
+    "xpMinHelp": "Chaque minute comptée donne une quantité d’XP aléatoire entre ces deux nombres, avant les boosts.",
+    "xpMax": "XP maximum par minute",
+    "cap": "Limite par jour (minutes)",
+    "capHelp": "Minutes comptées par membre et par jour (UTC) qui donnent de l’XP. Ensuite, le temps est encore compté mais ne donne plus d’XP. 0 : le vocal ne donne pas d’XP.",
+    "minHumans": "Personnes nécessaires dans le salon",
+    "minHumansHelp": "Le temps ne compte qu’avec au moins ce nombre de personnes dans le salon (les bots ne comptent pas), pour que personne ne gagne seul.",
+    "requireUnmuted": "Les membres qui se sont rendus muets ne comptent pas",
+    "requireUnmutedHelp": "Désactivé : les membres qui ont coupé leur micro pour écouter comptent quand même. Ceux rendus muets par le serveur ou en sourdine audio ne comptent jamais.",
+    "excluded": "Salons sans XP vocale",
+    "excludedHelp": "Maintiens Ctrl (Cmd sur Mac) pour en choisir plusieurs. Les salons de la liste Pas d’XP dans sont aussi exclus."
   }
 }

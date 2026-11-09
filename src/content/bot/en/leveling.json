@@ -7,7 +7,10 @@
         },
         "leaderboard": {
             "description": "Shows the server's level leaderboard",
-            "page": "Page to show (10 members per page)"
+            "page": "Page to show (10 members per page)",
+            "type": "Rank by XP or by time in voice",
+            "typeXp": "XP",
+            "typeVoice": "Voice time"
         },
         "profile": {
             "description": "Your level, rank, birthday and plan in one card",
@@ -52,7 +55,8 @@
         "xp": "XP",
         "totalXp": "Total XP",
         "progress": "Progress to Level {level}",
-        "boost": "XP boost"
+        "boost": "XP boost",
+        "voice": "Voice time"
     },
     "boost": {
         "role": "role {name}",
@@ -69,7 +73,11 @@
         "title": "Level Leaderboard",
         "ranks": "Ranks {from}-{to} in this server:",
         "top": "Top 10 in this server:",
-        "rankings": "Rankings"
+        "rankings": "Rankings",
+        "voiceTitle": "Voice Leaderboard",
+        "voiceLine": "**{rank}.** <@{userId}> - {time} in voice",
+        "voiceEmpty": "Nobody has voice time yet.",
+        "voiceOff": "Voice XP is off on this server. An admin can turn it on in the dashboard's leveling settings."
     },
     "profile": {
         "othersAdminOnly": "Only admins can see someone else's profile. Use `/profile` without a user to see yours.",
@@ -85,7 +93,8 @@
         "birthday": "Birthday",
         "plan": "Mewvo plan",
         "joined": "Joined",
-        "created": "Account created"
+        "created": "Account created",
+        "voice": "Voice time"
     },
     "setup": {
         "manageServer": "You need the **Manage Server** permission to use this command.",
@@ -235,5 +244,9 @@
             "other": "XP cooldown set to **{count} seconds**."
         },
         "cooldownZero": "\n> A cooldown of 0 means every message gives XP."
+    },
+    "voiceTime": {
+        "hours": "{hours} h {minutes} min",
+        "minutes": "{minutes} min"
     }
 }

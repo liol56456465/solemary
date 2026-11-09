@@ -14,8 +14,10 @@ import { botText, textForGuild } from '../../utils/botText.js';
 /**
  * Award XP to a member. Returns null when XP is skipped (disabled/invalid amount).
  * Throws on storage or unexpected failures.
+ * options.source: 'message' (default) stamps lastMessage, which the chat XP cooldown reads
+ * (messageCreate.js); 'voice' (voiceXp.js) leaves it as stored, so voice XP never blocks chat XP.
  */
-export const addXp = wrapServiceBoundary(async function addXp(client, guild, member, xpToAdd) {
+export const addXp = wrapServiceBoundary(async function addXp(client, guild, member, xpToAdd, { source = 'message' } = {}) {
   const lockKey = `leveling:${guild.id}:${member.user.id}`;
   // The level-up post is sent after the level is saved and the lock is released, so a slow
   // card (avatar fetch, upload) never delays the save or other XP for this member.
@@ -35,7 +37,7 @@ export const addXp = wrapServiceBoundary(async function addXp(client, guild, mem
 
     levelData.xp += xpToAdd;
     levelData.totalXp += xpToAdd;
-    levelData.lastMessage = Date.now();
+    if (source !== 'voice') levelData.lastMessage = Date.now();
 
     let xpNeededForNextLevel = getXpForLevel(levelData.level);
     let didLevelUp = false;

@@ -142,7 +142,8 @@
       "other": "Höchstens {count} Rollen-Boosts."
     },
     "memberMissing": "Dieses Mitglied ist nicht auf dem Server.",
-    "catName": "Name: Verwende Buchstaben, Ziffern und Leerzeichen."
+    "catName": "Name: Verwende Buchstaben, Ziffern und Leerzeichen.",
+    "voiceMinMax": "Wenigste XP pro Minute kann nicht mehr sein als Meiste XP pro Minute."
   },
   "action": {
     "nothing": "Nichts geändert.",
@@ -169,6 +170,25 @@
     "rewardAdded": "Level {level} gibt jetzt diese Rolle.",
     "rewardRemoved": "Die Belohnung für Level {level} wurde entfernt.",
     "noReward": "Für dieses Level gab es keine Belohnung.",
-    "memberDone": "{name} ist jetzt Level {level}."
+    "memberDone": "{name} ist jetzt Level {level}.",
+    "voiceSaved": "Sprach-XP-Einstellungen gespeichert."
+  },
+  "voice": {
+    "title": "Sprach-XP",
+    "help": "Mitglieder bekommen XP für Zeit in Sprachkanälen mit anderen Leuten.",
+    "more": "Eine Minute zählt, wenn ein Mitglied mit genug anderen Leuten im Sprachkanal ist, nicht taub gestellt oder vom Server stummgeschaltet ist und nicht im AFK-Kanal sitzt. Kanal- und Rollen-Boosts und die Liste „Keine XP in“ gelten wie im Chat. Gespeichert werden nur Minuten: nie, wer mit wem gesprochen hat, nie Ton.",
+    "enabled": "XP für Zeit im Sprachkanal geben",
+    "enabledHelp": "Aus: in Sprachkanälen bekommt niemand XP oder Sprachzeit.",
+    "xpMin": "Wenigste XP pro Minute",
+    "xpMinHelp": "Jede gezählte Minute gibt eine zufällige Menge XP zwischen diesen beiden Zahlen, vor Boosts.",
+    "xpMax": "Meiste XP pro Minute",
+    "cap": "Tageslimit (Minuten)",
+    "capHelp": "Gezählte Minuten pro Mitglied und Tag (UTC), die XP geben. Danach wird die Zeit weiter gezählt, gibt aber keine XP. 0: Sprachkanäle geben keine XP.",
+    "minHumans": "Benötigte Leute im Kanal",
+    "minHumansHelp": "Zeit zählt nur mit mindestens so vielen Leuten im Kanal (Bots zählen nicht), damit niemand allein XP sammelt.",
+    "requireUnmuted": "Selbst stummgeschaltete Mitglieder zählen nicht",
+    "requireUnmutedHelp": "Aus: Mitglieder, die sich zum Zuhören selbst stummgeschaltet haben, zählen trotzdem. Vom Server stummgeschaltete und taub gestellte Mitglieder zählen nie.",
+    "excluded": "Kanäle ohne Sprach-XP",
+    "excludedHelp": "Halte Strg (auf dem Mac Cmd) gedrückt, um mehrere zu wählen. Kanäle auf der Liste „Keine XP in“ sind auch ausgenommen."
   }
 }

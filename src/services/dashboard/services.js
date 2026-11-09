@@ -34,7 +34,7 @@ import { findModmailChannel, setModmailBlocked } from '../modmailService.js';
 import { isBuiltInCanned, listCanned, removeCanned, saveCanned } from '../cannedService.js';
 // Leveling
 import {
-    addLevels, getLevelingConfig, getUserLevelData, removeLevels, setLevelBoost, setLevelRoleReward, setUserLevel, updateLevelIgnoreList, updateLevelingConfig,
+    addLevels, getLevelingConfig, getUserLevelData, removeLevels, setLevelBoost, setLevelRoleReward, setUserLevel, updateLevelIgnoreList, updateLevelingConfig, updateVoiceXpConfig,
 } from '../leveling/leveling.js';
 import { syncLevelRolesForMember } from '../leveling/levelRoleSyncService.js';
 // Verification
@@ -110,7 +110,7 @@ export const defaultServices = {
     getLoggingStatus, resolveLogChannel, setLogChannel, setLogChannels, setLoggingEnabled, toggleEventLogging, updateEventLogging, updateIgnoreList,
     addAutoRole, getWelcomeSettings, removeAutoRole, updateWelcomeSettings, storeWelcomeImage, resolveWelcomeImageUrl,
     getTicketSettings, updateTicketSettings, setModmailBlocked, findModmailChannel, isBuiltInCanned, listCanned, removeCanned, saveCanned,
-    addLevels, getLevelingConfig, getUserLevelData, removeLevels, setLevelBoost, setLevelRoleReward, setUserLevel, updateLevelingConfig, updateLevelIgnoreList,
+    addLevels, getLevelingConfig, getUserLevelData, removeLevels, setLevelBoost, setLevelRoleReward, setUserLevel, updateLevelingConfig, updateLevelIgnoreList, updateVoiceXpConfig,
     syncLevelRolesForMember,
     getVerificationSettings, updateVerificationSettings, validateAutoVerifyCriteria,
     addPanelRole, deletePanel, getAllReactionRoleMessages, removePanelRole,

@@ -7,7 +7,10 @@
         },
         "leaderboard": {
             "description": "Mostra la classifica dei livelli del server",
-            "page": "Pagina da mostrare (10 membri per pagina)"
+            "page": "Pagina da mostrare (10 membri per pagina)",
+            "type": "Classifica per XP o per tempo in vocale",
+            "typeXp": "XP",
+            "typeVoice": "Tempo in vocale"
         },
         "profile": {
             "description": "Il tuo livello, rango, compleanno e piano in una scheda",
@@ -52,7 +55,8 @@
         "xp": "XP",
         "totalXp": "XP totali",
         "progress": "Progresso verso il livello {level}",
-        "boost": "Bonus XP"
+        "boost": "Bonus XP",
+        "voice": "Tempo in vocale"
     },
     "boost": {
         "role": "ruolo {name}",
@@ -69,7 +73,11 @@
         "title": "Classifica livelli",
         "ranks": "Posizioni {from}-{to} in questo server:",
         "top": "Top 10 in questo server:",
-        "rankings": "Classifica"
+        "rankings": "Classifica",
+        "voiceTitle": "Classifica vocale",
+        "voiceLine": "**{rank}.** <@{userId}> - {time} in vocale",
+        "voiceEmpty": "Nessuno ha ancora tempo in vocale.",
+        "voiceOff": "L’XP vocale è disattivata su questo server. Un admin può attivarla nelle impostazioni dei livelli della dashboard."
     },
     "profile": {
         "othersAdminOnly": "Solo gli admin possono vedere il profilo di qualcun altro. Usa `/profile` senza membro per vedere il tuo.",
@@ -85,7 +93,8 @@
         "birthday": "Compleanno",
         "plan": "Piano Mewvo",
         "joined": "Entrata nel server",
-        "created": "Account creato"
+        "created": "Account creato",
+        "voice": "Tempo in vocale"
     },
     "setup": {
         "manageServer": "Ti serve il permesso **Gestisci server** per usare questo comando.",
@@ -238,5 +247,9 @@
             "other": "Attesa tra gli XP: **{count} secondi**."
         },
         "cooldownZero": "\n> Un'attesa di 0 vuol dire che ogni messaggio dà XP."
+    },
+    "voiceTime": {
+        "hours": "{hours} h {minutes} min",
+        "minutes": "{minutes} min"
     }
 }

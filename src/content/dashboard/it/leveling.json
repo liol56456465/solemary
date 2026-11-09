@@ -145,7 +145,8 @@
       "other": "Al massimo {count} boost di ruolo."
     },
     "memberMissing": "Questo membro non è nel server.",
-    "catName": "Nome: usa lettere, numeri e spazi."
+    "catName": "Nome: usa lettere, numeri e spazi.",
+    "voiceMinMax": "Gli XP minimi al minuto non possono superare gli XP massimi al minuto."
   },
   "action": {
     "nothing": "Nessuna modifica.",
@@ -172,6 +173,25 @@
     "rewardAdded": "Il livello {level} ora dà quel ruolo.",
     "rewardRemoved": "Ricompensa del livello {level} rimossa.",
     "noReward": "Non c'era nessuna ricompensa per quel livello.",
-    "memberDone": "{name} ora è al livello {level}."
+    "memberDone": "{name} ora è al livello {level}.",
+    "voiceSaved": "Impostazioni XP vocale salvate."
+  },
+  "voice": {
+    "title": "XP vocale",
+    "help": "I membri guadagnano XP per il tempo nei canali vocali con altre persone.",
+    "more": "Un minuto conta quando un membro è in vocale con abbastanza altre persone, non ha l’audio disattivato né è silenziato dal server e non è nel canale AFK. I boost di canale e di ruolo e l’elenco Niente XP in valgono come per la chat. Si salvano solo i minuti: mai chi ha parlato con chi, mai l’audio.",
+    "enabled": "Dai XP per il tempo in vocale",
+    "enabledHelp": "Disattivato: nessuno guadagna XP o tempo vocale nei canali vocali.",
+    "xpMin": "XP minimi al minuto",
+    "xpMinHelp": "Ogni minuto contato dà una quantità casuale di XP tra questi due numeri, prima dei boost.",
+    "xpMax": "XP massimi al minuto",
+    "cap": "Limite giornaliero (minuti)",
+    "capHelp": "Minuti contati per membro al giorno (UTC) che danno XP. Dopo, il tempo si conta ancora ma non dà XP. 0: la vocale non dà XP.",
+    "minHumans": "Persone necessarie nel canale",
+    "minHumansHelp": "Il tempo conta solo con almeno questo numero di persone nel canale (i bot non contano), così nessuno guadagna da solo.",
+    "requireUnmuted": "Chi si è silenziato da solo non conta",
+    "requireUnmutedHelp": "Disattivato: chi ha silenziato il microfono per ascoltare conta comunque. Chi è silenziato dal server o ha l’audio disattivato non conta mai.",
+    "excluded": "Canali senza XP vocale",
+    "excludedHelp": "Tieni premuto Ctrl (Cmd su Mac) per sceglierne più di uno. Anche i canali nell’elenco Niente XP in sono esclusi."
   }
 }

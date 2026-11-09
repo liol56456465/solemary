@@ -218,7 +218,7 @@
     "titlePaged": "Ranking, strona {page}",
     "description": "Ranking poziomów własnego serwera społeczności Mewvo.",
     "heading": "Ranking",
-    "lead": "Najaktywniejsi członkowie własnego serwera społeczności Mewvo według poziomu i łącznego XP. XP zdobywasz, pisząc na czacie; osoby, które usunęły dane przez `/wipedata`, nie są wymienione.",
+    "lead": "Najaktywniejsi członkowie własnego serwera społeczności Mewvo według poziomu i łącznego XP. XP zdobywasz, pisząc na czacie (i, jeśli serwer to włączy, za czas na kanałach głosowych); osoby, które usunęły dane przez `/wipedata`, nie są wymienione.",
     "unavailable": "Nie udało się teraz wczytać rankingu. Nic nie zostało zmienione; spróbuj ponownie za minutę.",
     "off": "Poziomy są wyłączone na serwerze społeczności Mewvo, więc teraz nie ma rankingu.",
     "empty": {

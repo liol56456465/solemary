@@ -7,7 +7,10 @@
         },
         "leaderboard": {
             "description": "Muestra la clasificación de niveles del servidor",
-            "page": "Página que mostrar (10 miembros por página)"
+            "page": "Página que mostrar (10 miembros por página)",
+            "type": "Ordenar por XP o por tiempo en voz",
+            "typeXp": "XP",
+            "typeVoice": "Tiempo en voz"
         },
         "profile": {
             "description": "Tu nivel, rango, cumpleaños y plan en una sola tarjeta",
@@ -52,7 +55,8 @@
         "xp": "XP",
         "totalXp": "XP total",
         "progress": "Progreso al nivel {level}",
-        "boost": "Bonus de XP"
+        "boost": "Bonus de XP",
+        "voice": "Tiempo en voz"
     },
     "boost": {
         "role": "rol {name}",
@@ -69,7 +73,11 @@
         "title": "Clasificación de niveles",
         "ranks": "Puestos {from}-{to} en este servidor:",
         "top": "Top 10 en este servidor:",
-        "rankings": "Clasificación"
+        "rankings": "Clasificación",
+        "voiceTitle": "Clasificación de voz",
+        "voiceLine": "**{rank}.** <@{userId}> - {time} en voz",
+        "voiceEmpty": "Nadie tiene tiempo en voz todavía.",
+        "voiceOff": "La XP por voz está desactivada en este servidor. Un admin puede activarla en los ajustes de niveles del panel."
     },
     "profile": {
         "othersAdminOnly": "Solo los admins pueden ver el perfil de otra persona. Usa `/profile` sin miembro para ver el tuyo.",
@@ -85,7 +93,8 @@
         "birthday": "Cumpleaños",
         "plan": "Plan de Mewvo",
         "joined": "Se unió",
-        "created": "Cuenta creada"
+        "created": "Cuenta creada",
+        "voice": "Tiempo en voz"
     },
     "setup": {
         "manageServer": "Necesitas el permiso **Gestionar servidor** para usar este comando.",
@@ -238,5 +247,9 @@
             "other": "Espera entre XP: **{count} segundos**."
         },
         "cooldownZero": "\n> Una espera de 0 significa que cada mensaje da XP."
+    },
+    "voiceTime": {
+        "hours": "{hours} h {minutes} min",
+        "minutes": "{minutes} min"
     }
 }

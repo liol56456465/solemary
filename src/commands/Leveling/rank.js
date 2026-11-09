@@ -10,6 +10,9 @@ import { hasOwnerPower } from '../../utils/ownerPower.js';
 import { CARD_FILE_NAME, cardAvatarUrl, tryLevelCard } from '../../services/leveling/levelCard.js';
 import { botText, textForInteraction } from '../../utils/botText.js';
 import { describe } from '../../utils/commandLocalizations.js';
+import { readVoiceStats } from '../../services/leveling/voiceStore.js';
+import { voiceConfigOf } from '../../services/leveling/voiceConfig.js';
+import { voiceTimeValue } from '../../services/leveling/voiceText.js';
 
 /**
  * "x2 (role Booster) in <#channel>" for an xpBoostBreakdown result, or null. With more than
@@ -168,6 +171,14 @@ export default {
     // Shown only when the member's boost here is above x1 (the same math as messageCreate).
     const boostLine = rankBoostLine(levelingConfig, member, interaction.channel, { lang: pub.lang });
     if (boostLine) embed.addFields({ name: pub.t('leveling.rank.boost'), value: boostLine });
+
+    // Voice time (Voice XP): an extra line; if it can't be read it is left out, never shown as 0.
+    const voiceStats = await readVoiceStats(interaction.guildId, targetUser.id).then((stats) => ({ stats }), (error) => {
+      logger.warn(`/rank: voice time not available: ${error.message}`);
+      return null;
+    });
+    const voiceValue = voiceStats ? voiceTimeValue(voiceStats.stats, voiceConfigOf(levelingConfig).enabled, pub.lang) : null;
+    if (voiceValue) embed.addFields({ name: pub.t('leveling.rank.voice'), value: voiceValue, inline: true });
 
     await InteractionHelper.safeEditReply(interaction, { embeds: [embed], allowedMentions: { parse: [] } });
     logger.debug(`Rank checked for user ${targetUser.id} in guild ${interaction.guildId}`);

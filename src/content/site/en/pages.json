@@ -212,7 +212,7 @@
     "titlePaged": "Leaderboard, page {page}",
     "description": "The leveling leaderboard of Mewvo’s own community server.",
     "heading": "Leaderboard",
-    "lead": "The most active members of Mewvo’s own community server by level and total XP. You earn XP by chatting; members who delete their data with `/wipedata` are not listed.",
+    "lead": "The most active members of Mewvo’s own community server by level and total XP. You earn XP by chatting (and, where a server turns it on, by time in voice channels); members who delete their data with `/wipedata` are not listed.",
     "unavailable": "The leaderboard could not be loaded right now. Nothing was changed; please try again in a minute.",
     "off": "Leveling is turned off on Mewvo’s community server, so there is no leaderboard right now.",
     "empty": {

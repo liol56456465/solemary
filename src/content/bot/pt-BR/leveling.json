@@ -7,7 +7,10 @@
         },
         "leaderboard": {
             "description": "Mostra o ranking de níveis do servidor",
-            "page": "Página a mostrar (10 membros por página)"
+            "page": "Página a mostrar (10 membros por página)",
+            "type": "Classificar por XP ou por tempo em voz",
+            "typeXp": "XP",
+            "typeVoice": "Tempo em voz"
         },
         "profile": {
             "description": "Seu nível, rank, aniversário e plano em um só cartão",
@@ -52,7 +55,8 @@
         "xp": "XP",
         "totalXp": "XP total",
         "progress": "Progresso até o nível {level}",
-        "boost": "Bônus de XP"
+        "boost": "Bônus de XP",
+        "voice": "Tempo em voz"
     },
     "boost": {
         "role": "cargo {name}",
@@ -69,7 +73,11 @@
         "title": "Ranking de níveis",
         "ranks": "Posições {from}-{to} neste servidor:",
         "top": "Top 10 neste servidor:",
-        "rankings": "Ranking"
+        "rankings": "Ranking",
+        "voiceTitle": "Ranking de voz",
+        "voiceLine": "**{rank}.** <@{userId}> - {time} em voz",
+        "voiceEmpty": "Ninguém tem tempo em voz ainda.",
+        "voiceOff": "O XP por voz está desligado neste servidor. Um admin pode ligá-lo nas configurações de níveis do painel."
     },
     "profile": {
         "othersAdminOnly": "Só admins podem ver o perfil de outra pessoa. Use `/profile` sem membro para ver o seu.",
@@ -85,7 +93,8 @@
         "birthday": "Aniversário",
         "plan": "Plano Mewvo",
         "joined": "Entrou",
-        "created": "Conta criada"
+        "created": "Conta criada",
+        "voice": "Tempo em voz"
     },
     "setup": {
         "manageServer": "Você precisa da permissão **Gerenciar servidor** para usar este comando.",
@@ -239,5 +248,9 @@
             "other": "Espera entre XP: **{count} segundos**."
         },
         "cooldownZero": "\n> Uma espera de 0 significa que toda mensagem dá XP."
+    },
+    "voiceTime": {
+        "hours": "{hours} h {minutes} min",
+        "minutes": "{minutes} min"
     }
 }

@@ -19,6 +19,9 @@ import { query } from '../../services/enforcement/db.js';
 import { getServerCat } from '../../services/community/catService.js';
 import { botText, textForInteraction } from '../../utils/botText.js';
 import { describe } from '../../utils/commandLocalizations.js';
+import { readVoiceStats } from '../../services/leveling/voiceStore.js';
+import { voiceConfigOf } from '../../services/leveling/voiceConfig.js';
+import { voiceTimeValue } from '../../services/leveling/voiceText.js';
 
 const ts = (date, style) => `<t:${Math.floor(new Date(date).getTime() / 1000)}:${style}>`;
 
@@ -55,7 +58,7 @@ function birthdayText(birthday, lang) {
     }
 }
 
-export function profileFields({ level, rank, rankAllTime = false, birthday, planId, joinedAt, createdAt, reward = null, lang = 'en' }) {
+export function profileFields({ level, rank, rankAllTime = false, birthday, planId, joinedAt, createdAt, reward = null, voiceTime = null, lang = 'en' }) {
     const tr = botText(lang);
     const fields = [];
     if (level) {
@@ -65,6 +68,8 @@ export function profileFields({ level, rank, rankAllTime = false, birthday, plan
         // "All-time rank" also counts members who left (level data is kept), so it may differ
         // from /leaderboard, which skips them.
         if (rank) fields.push({ name: rankAllTime ? tr.t('leveling.profile.allTimeRank') : tr.t('leveling.profile.rank'), value: `#${rank}`, inline: true });
+        // Voice time (Voice XP): text from voiceTimeValue, or null when there is nothing to show.
+        if (voiceTime) fields.push({ name: tr.t('leveling.profile.voice'), value: voiceTime, inline: true });
         if (reward) fields.push({ name: tr.t('leveling.profile.nextReward'), value: tr.t('leveling.profile.nextRewardValue', { roleId: reward.roleId, level: reward.level, xp: reward.xp }), inline: false });
     }
     if (birthday) fields.push({ name: tr.t('leveling.profile.birthday'), value: birthdayText(birthday, tr.lang), inline: true });
@@ -146,6 +151,8 @@ export default {
         }) : null;
         const rank = level ? await part('rank', () => rankOf(interaction.guild, target.id)) : null;
         const reward = level ? nextReward(level, leveling?.roleRewards) : null;
+        const voiceStats = level ? await part('voice time', async () => ({ stats: await readVoiceStats(guildId, target.id) })) : null;
+        const voiceTime = voiceStats ? voiceTimeValue(voiceStats.stats, voiceConfigOf(leveling).enabled, pub.lang) : null;
         const birthday = await part('birthday', async () => (await getGuildBirthdays(client, guildId))?.[target.id] || null);
         // The server cat: a read that fails only leaves the line out (logged by part()).
         const cat = await part('server cat', () => getServerCat(guildId));
@@ -153,7 +160,7 @@ export default {
         const embed = createEmbed({
             title: member.displayName,
             description: [target.id === interaction.user.id ? null : `<@${target.id}>`, catLine(cat, { lang: pub.lang })].filter(Boolean).join('\n') || null,
-            fields: profileFields({ level, rank: rank?.rank ?? null, rankAllTime: rank?.allTime ?? false, reward, birthday, planId: planOf(target.id), joinedAt: member.joinedAt, createdAt: target.createdAt, lang: pub.lang }),
+            fields: profileFields({ level, rank: rank?.rank ?? null, rankAllTime: rank?.allTime ?? false, reward, voiceTime, birthday, planId: planOf(target.id), joinedAt: member.joinedAt, createdAt: target.createdAt, lang: pub.lang }),
             color: 'primary',
         });
         embed.setThumbnail(member.displayAvatarURL({ size: 128 }));

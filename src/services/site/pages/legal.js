@@ -18,8 +18,8 @@
 import { html } from '../../dashboard/html.js';
 import { layout } from '../shell.js';
 
-export const LEGAL_UPDATED = '2026-11-04';
-const UPDATED_TEXT = '4 November 2026';
+export const LEGAL_UPDATED = '2026-11-09';
+const UPDATED_TEXT = '9 November 2026';
 
 const EMAIL = /^[^\s@<>"]{1,64}@[a-z0-9.-]{1,190}\.[a-z]{2,}$/i;
 
@@ -104,6 +104,7 @@ ${updatedLine()}
 <thead><tr><th scope="col">Data</th><th scope="col">Why</th><th scope="col">Kept</th></tr></thead>
 <tbody>
 ${row('Levels: XP, level and when your last message counted', 'To run leveling and the leaderboards you see on Discord and on this website (server display name, level and total XP). The text of your messages is not saved.', 'Until you run /wipedata or ask for them to be deleted. Leaving the server does not delete them, so your level and level roles come back if you rejoin. If you have left, ask for deletion using the contact under “Who is responsible”, or rejoin and run /wipedata.')}
+${row('Voice time (only if the server turns on Voice XP): the minutes you spent in voice channels in each server, the XP they gave and today’s count for the daily limit. Not who you talked with, and no audio: Mewvo never listens to or records voice.', 'To give XP for time in voice, keep the daily limit and show voice time in /rank, /profile and the voice leaderboard.', 'Until you run /wipedata or ask for it to be deleted (it is deleted with your level data). Leaving the server does not delete it.')}
 ${row('Economy: your balance and bank in each server', 'To run the server’s economy commands.', 'Until you run /wipedata or ask.')}
 ${row('Moderation cases: code, type, reason, moderator, time, duration, whether it can be appealed, whether the DM arrived, and the edit history', 'To enforce server rules, to show you why you were punished, and to let decisions be checked and appealed.', 'As long as the server uses Mewvo. A voided case stays on record so decisions can be reviewed. You can ask for a case to be removed: the owner can erase it or remove your name and ID from it.')}
 ${row('Evidence attached by staff: message links, a short excerpt of the text, images (re-posted in a staff-only channel)', 'So a case can still be checked if the original message is deleted. This is the only place a piece of message text is kept, and only because a staff member attached it.', 'With the case.')}

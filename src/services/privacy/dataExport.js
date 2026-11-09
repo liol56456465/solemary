@@ -21,6 +21,8 @@ const ROW_LIMIT = 5000;
 /** Each section: [name, sql builder (tables) → text, uses $1 = user id]. */
 export const EXPORT_SECTIONS = [
     ['levels', (t) => `SELECT guild_id, xp, level, total_xp, last_message FROM ${t.user_levels} WHERE user_id = $1 ORDER BY guild_id`],
+    // Voice XP: counted voice time per server (only minutes; never who was in the channel).
+    ['voiceActivity', (t) => `SELECT guild_id, voice_seconds, voice_xp, day, day_minutes, updated_at FROM ${t.voice_activity} WHERE user_id = $1 ORDER BY guild_id LIMIT ${ROW_LIMIT}`],
     ['economy', (t) => `SELECT guild_id, balance, bank FROM ${t.economy} WHERE user_id = $1 ORDER BY guild_id`],
     ['afk', (t) => `SELECT guild_id, reason, status_at, expires_at FROM ${t.afk_status} WHERE user_id = $1 ORDER BY guild_id`],
     ['birthdays', (t) => `SELECT guild_id, month, day FROM ${t.birthdays} WHERE user_id = $1 ORDER BY guild_id`],

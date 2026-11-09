@@ -145,7 +145,8 @@
       "other": "Como máximo {count} multiplicadores de rol."
     },
     "memberMissing": "Ese miembro no está en el servidor.",
-    "catName": "Nombre: usa letras, números y espacios."
+    "catName": "Nombre: usa letras, números y espacios.",
+    "voiceMinMax": "El mínimo de XP por minuto no puede ser mayor que el máximo."
   },
   "action": {
     "nothing": "No ha cambiado nada.",
@@ -172,6 +173,25 @@
     "rewardAdded": "El nivel {level} ahora da ese rol.",
     "rewardRemoved": "Recompensa del nivel {level} quitada.",
     "noReward": "No había ninguna recompensa para ese nivel.",
-    "memberDone": "{name} ahora es nivel {level}."
+    "memberDone": "{name} ahora es nivel {level}.",
+    "voiceSaved": "Ajustes de XP por voz guardados."
+  },
+  "voice": {
+    "title": "XP por voz",
+    "help": "Los miembros ganan XP por el tiempo en canales de voz con otras personas.",
+    "more": "Un minuto cuenta cuando un miembro está en voz con suficientes personas, no está ensordecido ni silenciado por el servidor y no está en el canal AFK. Los aumentos de canal y de rol y la lista Sin XP en se aplican como en el chat. Solo se guardan minutos: nunca quién habló con quién, nunca audio.",
+    "enabled": "Dar XP por el tiempo en voz",
+    "enabledHelp": "Desactivado: nadie gana XP ni tiempo de voz en los canales de voz.",
+    "xpMin": "Mínimo de XP por minuto",
+    "xpMinHelp": "Cada minuto contado da una cantidad aleatoria de XP entre estos dos números, antes de los aumentos.",
+    "xpMax": "Máximo de XP por minuto",
+    "cap": "Límite diario (minutos)",
+    "capHelp": "Minutos contados por miembro y día (UTC) que dan XP. Después, el tiempo se sigue contando pero no da XP. 0: la voz no da XP.",
+    "minHumans": "Personas necesarias en el canal",
+    "minHumansHelp": "El tiempo solo cuenta con al menos esta cantidad de personas en el canal (los bots no cuentan), así nadie gana solo.",
+    "requireUnmuted": "Los miembros silenciados por sí mismos no cuentan",
+    "requireUnmutedHelp": "Desactivado: los miembros que se silenciaron para escuchar siguen contando. Los silenciados por el servidor y los ensordecidos nunca cuentan.",
+    "excluded": "Canales sin XP por voz",
+    "excludedHelp": "Mantén Ctrl (Cmd en Mac) para elegir varios. Los canales de la lista Sin XP en también quedan fuera."
   }
 }

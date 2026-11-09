@@ -215,7 +215,7 @@
     "titlePaged": "Clasificación, página {page}",
     "description": "La clasificación de niveles del servidor de comunidad propio de Mewvo.",
     "heading": "Clasificación",
-    "lead": "Los miembros más activos del servidor de comunidad propio de Mewvo por nivel y XP total. Ganas XP chateando; los miembros que borran sus datos con `/wipedata` no aparecen.",
+    "lead": "Los miembros más activos del servidor de comunidad propio de Mewvo por nivel y XP total. Ganas XP chateando (y, si el servidor lo activa, por el tiempo en canales de voz); los miembros que borran sus datos con `/wipedata` no aparecen.",
     "unavailable": "No se ha podido cargar la clasificación en este momento. No se ha cambiado nada; vuelve a intentarlo en un minuto.",
     "off": "Los niveles están desactivados en el servidor de comunidad de Mewvo, así que ahora no hay clasificación.",
     "empty": {

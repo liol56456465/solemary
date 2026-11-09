@@ -273,6 +273,12 @@ function makeServices() {
         },
         getLevelingConfig: async () => clone(s.leveling),
         updateLevelingConfig: async (c, g, patch) => { record('updateLevelingConfig', [patch]); return merge('leveling', patch); },
+        updateVoiceXpConfig: async (c, g, patch) => {
+            record('updateVoiceXpConfig', [patch]);
+            const before = clone(s.leveling);
+            s.leveling.voice = { ...(s.leveling.voice || {}), ...clone(patch) };
+            return { before, after: clone(s.leveling) };
+        },
         updateLevelIgnoreList: async (c, g, field, action, id) => {
             record('updateLevelIgnoreList', [field, action, id]);
             const before = clone(s.leveling);
@@ -878,6 +884,8 @@ const CASES = {
         'boost-add': { form: { type: 'channel', id: TEXT, multiplier: '1.5' }, service: 'setLevelBoost', bad: { form: { type: 'role', id: ROLE_OK, multiplier: '5.5' }, message: /between 1.1 and 5/ } },
         'boost-remove': { seed: (s) => { s.leveling.roleMultipliers = { [ROLE_OK]: 2 }; }, form: { type: 'role', id: ROLE_OK }, service: 'setLevelBoost' },
         'reward-mode': { form: { rewardMode: 'highest' }, service: 'updateLevelingConfig', admin: true, bad: { form: { rewardMode: 'all' }, message: /unknown choice/ } },
+        voice: { form: { voiceEnabled: '1', voiceXpMin: '3', voiceXpMax: '7', voiceCap: '120', voiceMinHumans: '2' }, service: 'updateVoiceXpConfig',
+            bad: { form: { voiceEnabled: '1', voiceXpMin: '9', voiceXpMax: '7', voiceCap: '120', voiceMinHumans: '2' }, message: /Least XP per minute cannot be more than Most XP per minute/ } },
         card: { form: { levelUpCard: '1', colour: 'purple', hex: '' }, service: 'updateLevelingConfig', bad: { form: { levelUpCard: '1', hex: '#12' }, message: /colour code like #9B59B6/ } },
         member: { form: { userId: MEMBER, op: 'add', levels: '2' }, service: 'addLevels', bad: { form: { userId: STRANGER, op: 'add', levels: '2' }, message: /not in the server/ }, admin: true },
         'cat-name': { form: { catName: 'Mochi <b>' }, service: 'updateSettings', admin: true, bad: { form: { catName: '@@ <>' }, message: /use letters, numbers and spaces/ } },
@@ -3929,4 +3937,46 @@ test('D17: the counter type select in the list has a (screen-reader) label; type
     assert.ok(!page.body.includes('<label><select name="type"'), 'no empty label');
     assert.match(page.body, /<label><span class="sr">What it counts<\/span><select name="type">/);
     assert.match(page.body, /Members \+ Bots/);
+});
+
+test('leveling: Voice XP is off by default; a save sends only the changed fields, audited as leveling.voice.*; bad input refused', async () => {
+    const h = await setup();
+    const page = await get(h, 'leveling');
+    assert.equal(page.statusCode, 200);
+    assert.ok(page.body.includes('action="/dashboard/leveling/voice"'), 'voice form');
+    assert.match(page.body, /name="voiceEnabled" value="1">/, 'switch is off when nothing is saved');
+    assert.match(page.body, /name="voiceCap"[^>]*value="120"|value="120"[^>]*name="voiceCap"/, 'daily cap default 120');
+    const voiceSection = page.body.match(/id="s-voice-xp"[\s\S]*?<\/section>/)?.[0] || '';
+    assert.ok(voiceSection, 'voice section is on the page');
+    assert.ok(voiceSection.includes(`value="${VOICE}"`), 'voice channels are offered in the excluded picker');
+    assert.ok(!voiceSection.includes(`<option value="${TEXT}"`), 'text channels are not offered');
+    assert.ok(!/—/.test(voiceSection), 'no em dash in the voice section');
+
+    const defaults = { voiceXpMin: '3', voiceXpMax: '7', voiceCap: '120', voiceMinHumans: '2' };
+    const same = await post(h, 'leveling', 'voice', defaults);
+    assert.equal(same.statusCode, 303);
+    assert.equal(h.calls.filter((c) => c.name === 'updateVoiceXpConfig').length, 0, 'defaults: nothing saved');
+
+    const on = await post(h, 'leveling', 'voice', { ...defaults, voiceEnabled: '1', voiceCap: '60', voiceExcluded: [VOICE] });
+    assert.equal(on.statusCode, 303);
+    const sent = h.calls.filter((c) => c.name === 'updateVoiceXpConfig').at(-1).args[0];
+    assert.deepEqual(sent, { enabled: true, dailyCapMinutes: 60, excludedChannels: [VOICE] }, 'only the changed fields');
+    assert.equal(h.state.leveling.voice.enabled, true);
+    assert.ok(h.auditRows.some((r) => r.key === 'leveling.voice.enabled' && r.new === true));
+    assert.ok(h.auditRows.some((r) => r.key === 'leveling.voice.dailyCapMinutes' && r.old === 120 && r.new === 60));
+    assert.ok(h.auditRows.some((r) => r.key === 'leveling.voice.excludedChannels'));
+
+    const writes = h.calls.filter((c) => c.name === 'updateVoiceXpConfig').length;
+    for (const [form, message] of [
+        [{ ...defaults, voiceCap: '1441' }, /between 0 and 1,?440/],
+        [{ ...defaults, voiceMinHumans: '1' }, /between 2 and 10/],
+        [{ ...defaults, voiceXpMax: '51' }, /between 1 and 50/],
+        [{ ...defaults, voiceXpMin: '8' }, /Least XP per minute cannot be more than Most XP per minute/],
+        [{ ...defaults, voiceExcluded: [TEXT] }, /voice/i],
+    ]) {
+        const res = await post(h, 'leveling', 'voice', form);
+        assert.equal(res.statusCode, 400, JSON.stringify(form));
+        assert.match(res.body, message);
+    }
+    assert.equal(h.calls.filter((c) => c.name === 'updateVoiceXpConfig').length, writes, 'nothing saved after bad input');
 });

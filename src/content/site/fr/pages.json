@@ -212,7 +212,7 @@
     "titlePaged": "Classement, page {page}",
     "description": "Le classement des niveaux du serveur communautaire de Mewvo.",
     "heading": "Classement",
-    "lead": "Les membres les plus actifs du serveur communautaire de Mewvo, par niveau et XP total. Tu gagnes de l’XP en discutant ; les membres qui suppriment leurs données avec `/wipedata` ne sont pas listés.",
+    "lead": "Les membres les plus actifs du serveur communautaire de Mewvo, par niveau et XP total. Tu gagnes de l’XP en discutant (et, si le serveur l’active, avec le temps passé en vocal) ; les membres qui suppriment leurs données avec `/wipedata` ne sont pas listés.",
     "unavailable": "Impossible de charger le classement pour le moment. Rien n’a été modifié ; réessaie dans une minute.",
     "off": "Les niveaux sont désactivés sur le serveur communautaire de Mewvo, il n’y a donc pas de classement pour le moment.",
     "empty": {
