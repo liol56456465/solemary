@@ -31,6 +31,8 @@ const LINE_LIMIT = 200;
 export const defaultSetupData = {
     settingsFor: (guildId) => settingsFor(guildId),
     languageSource: (guildId) => resolvedSource(guildId, 'botLanguage'),
+    // Whether "where members appeal" was chosen on purpose (saved), like the dashboard checklist.
+    appealsSource: (guildId) => resolvedSource(guildId, 'appealsHome'),
     isHomeGuild: (guildId) => isHomeGuild(guildId),
     // The server's Discord language, for a server that never chose a bot language (botText.js).
     detectedLanguage: (guildId, guild) => detectedServerLanguage(guildId, { locale: guild?.preferredLocale ?? null }),
@@ -48,6 +50,7 @@ export const defaultSetupData = {
 export async function collectSetupState({ client, guildId, config = null, data = defaultSetupData }) {
     const settings = data.settingsFor(guildId);
     const languageSource = data.languageSource(guildId);
+    const appealsSaved = data.appealsSource ? data.appealsSource(guildId) === 'database' : true;
     const [guildConfig, welcome, automod] = await Promise.all([
         config ? Promise.resolve(config) : data.getGuildConfig(client, guildId),
         data.getWelcomeConfig(client, guildId),
@@ -63,6 +66,7 @@ export async function collectSetupState({ client, guildId, config = null, data =
     }
     return {
         settings,
+        appealsSaved,
         languageSource,
         detectedLanguage: home || languageSource !== 'default' ? null : data.detectedLanguage?.(guildId, guild) ?? null,
         reach,
@@ -76,7 +80,7 @@ const languageName = (code) => LANGUAGES.find((l) => l.code === code)?.name || '
 
 /** The checklist rows: [{ key, done, text }], text in `tr`'s language. */
 export function checklistRows(state, tr) {
-    const { settings, modules, home, languageSource, detectedLanguage = null, reach = null } = state;
+    const { settings, modules, home, languageSource, detectedLanguage = null, reach = null, appealsSaved = true } = state;
     const t = (key, params) => tr.t(`setup.item.${key}`, params);
     const onOff = (key, on) => ({ key, done: Boolean(on), text: on ? tr.t('setup.on') : `${tr.t('setup.off')}. ${t(`${key}.next`)}` });
 
@@ -98,6 +102,7 @@ export function checklistRows(state, tr) {
         : { key: 'staff', done: false, text: settings.modLogChannelId ? t('staff.fallback') : t('staff.next') });
     // Mewvo's own servers always use the Mewvo support server; other servers choose (appealsHome).
     if (home) rows.push({ key: 'appeals', done: true, text: t('appeals.mewvo') });
+    else if (!appealsSaved) rows.push({ key: 'appeals', done: false, text: t('appeals.notChosen') });
     else if (settings.appealsHome === 'own') {
         rows.push(settings.appealsInvite
             ? { key: 'appeals', done: true, text: t('appeals.own', { invite: settings.appealsInvite }) }

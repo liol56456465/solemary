@@ -449,7 +449,8 @@ test('/setup on an empty non-home server: ➖ lines with what to do next; the ma
     assert.ok(d.includes('➖ **Mod log channel**: Pick a channel on the dashboard (Enforcement).'));
     assert.ok(d.includes('➖ **Staff review channel**: Pick a channel on the dashboard (Automod).'));
     // Owner decision D2: a new server appeals in its own server; an invite is the next step.
-    assert.ok(d.includes('➖ **Appeals**: Members appeal in your own server (the default). Add an invite on the dashboard (Enforcement), so members who were kicked or banned know where to go.'));
+    // Same rule as the dashboard checklist: not chosen on purpose yet → not done (own server is the default).
+    assert.ok(d.includes('➖ **Appeals**: Not chosen yet: members appeal in your own server by default. Pick Mewvo support or your own server (with an invite) on the dashboard (Enforcement).'));
     assert.ok(d.includes('➖ **Automod**: off. Turn it on on the dashboard (Automod).'));
     assert.ok(d.includes('➖ **Tickets**: off. Set them up with /ticket or on the dashboard.'));
     assert.ok(d.includes('➖ **Bot language**: English (default).'));

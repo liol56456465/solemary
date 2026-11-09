@@ -21,7 +21,8 @@
             "mewvo": "Les membres font appel sur le serveur de support Mewvo.",
             "mewvoChoice": "Les membres font appel sur le serveur de support Mewvo. Tu peux utiliser ton propre serveur à la place (tableau de bord).",
             "own": "Les membres font appel sur ton propre serveur : {invite}",
-            "ownMissing": "Les membres font appel sur ton propre serveur (par défaut). Ajoute une invitation sur le tableau de bord (Sanctions), pour que les membres expulsés ou bannis sachent où aller."
+            "ownMissing": "Les membres font appel sur ton propre serveur (par défaut). Ajoute une invitation sur le tableau de bord (Sanctions), pour que les membres expulsés ou bannis sachent où aller.",
+            "notChosen": "Pas encore choisi : par défaut, les membres font appel sur ton propre serveur. Choisis le support Mewvo ou ton propre serveur (avec une invitation) dans le tableau de bord (Enforcement)."
         },
         "automod": {
             "label": "Automod",

@@ -21,7 +21,8 @@
             "mewvo": "Os membros recorrem no servidor de suporte do Mewvo.",
             "mewvoChoice": "Os membros recorrem no servidor de suporte do Mewvo. Você pode usar o seu próprio servidor (painel).",
             "own": "Os membros recorrem no seu próprio servidor: {invite}",
-            "ownMissing": "Os membros apelam no seu próprio servidor (padrão). Adicione um convite no painel (Punições), para que membros expulsos ou banidos saibam aonde ir."
+            "ownMissing": "Os membros apelam no seu próprio servidor (padrão). Adicione um convite no painel (Punições), para que membros expulsos ou banidos saibam aonde ir.",
+            "notChosen": "Ainda não escolhido: por padrão, os membros recorrem no seu próprio servidor. Escolha o suporte do Mewvo ou o seu próprio servidor (com um convite) no painel (Enforcement)."
         },
         "automod": {
             "label": "Automod",

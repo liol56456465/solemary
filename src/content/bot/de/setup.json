@@ -21,7 +21,8 @@
             "mewvo": "Mitglieder legen Einspruch im Mewvo-Support-Server ein.",
             "mewvoChoice": "Mitglieder legen Einspruch im Mewvo-Support-Server ein. Du kannst stattdessen deinen eigenen Server nutzen (Dashboard).",
             "own": "Mitglieder legen Einspruch in deinem eigenen Server ein: {invite}",
-            "ownMissing": "Mitglieder legen Einspruch auf deinem eigenen Server ein (Standard). Füge im Dashboard (Durchsetzung) eine Einladung hinzu, damit gekickte oder gebannte Mitglieder wissen, wohin."
+            "ownMissing": "Mitglieder legen Einspruch auf deinem eigenen Server ein (Standard). Füge im Dashboard (Durchsetzung) eine Einladung hinzu, damit gekickte oder gebannte Mitglieder wissen, wohin.",
+            "notChosen": "Noch nicht gewählt: Standardmäßig legen Mitglieder Einspruch in deinem eigenen Server ein. Wähle im Dashboard (Enforcement) Mewvo-Support oder deinen eigenen Server (mit Einladung)."
         },
         "automod": {
             "label": "Automod",

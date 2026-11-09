@@ -21,7 +21,8 @@
             "mewvo": "Członkowie odwołują się na serwerze wsparcia Mewvo.",
             "mewvoChoice": "Członkowie odwołują się na serwerze wsparcia Mewvo. Zamiast tego możesz użyć własnego serwera (panel).",
             "own": "Członkowie odwołują się na Twoim serwerze: {invite}",
-            "ownMissing": "Członkowie odwołują się na twoim serwerze (domyślnie). Dodaj zaproszenie w panelu (Kary), żeby wyrzuceni lub zbanowani członkowie wiedzieli, dokąd iść."
+            "ownMissing": "Członkowie odwołują się na twoim serwerze (domyślnie). Dodaj zaproszenie w panelu (Kary), żeby wyrzuceni lub zbanowani członkowie wiedzieli, dokąd iść.",
+            "notChosen": "Jeszcze nie wybrano: domyślnie członkowie odwołują się na twoim serwerze. Wybierz wsparcie Mewvo albo własny serwer (z zaproszeniem) w panelu (Enforcement)."
         },
         "automod": {
             "label": "Automod",
