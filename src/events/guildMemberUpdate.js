@@ -7,6 +7,7 @@ import { endTempRoles } from '../services/members/tempRoleService.js';
 import { applyRoleRulesToMember } from '../services/members/roleRuleService.js';
 import { isEnforcementDbAvailable } from '../services/enforcement/db.js';
 import { onMemberRolesChanged } from '../services/botDm/dmRelang.js';
+import { dropOldLanguageRoles } from '../services/languageRoleService.js';
 import { handleMemberUpdate as mirrorRoles } from '../services/homeServers/roleMirror.js';
 
 export default {
@@ -48,6 +49,8 @@ export default {
       // A language role changed (Onboarding, a staff change, /language): the bot's DMs to this
       // member from the last 30 days are edited into the new language (debounced, in the background).
       if (rolesChanged) onMemberRolesChanged(oldMember, newMember);
+      // One language role at a time, also when Discord (Onboarding) gives the new one.
+      if (rolesChanged) await dropOldLanguageRoles(oldMember, newMember);
 
       if (oldMember.nickname !== newMember.nickname) {
         await checkImpersonation(newMember);

@@ -14,6 +14,7 @@
 // A language without a role here (or a server without language roles) is saved as the member's
 // personal language instead (services/personalLanguage.js, handlers/languageRoles.js).
 
+import { logger } from '../utils/logger.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, StringSelectMenuBuilder } from 'discord.js';
 import { LANGUAGES, LANG_CODES } from './site/i18n.js';
 import { resolveSetting } from './settings/guildSettings.js';
@@ -174,4 +175,29 @@ export function languagePanelRows(map) {
 /** The member's current language role (fixed order), or null. */
 export function currentLanguageRole(member, map) {
     return offeredLanguages(map).find((code) => hasRole(member, map[code])) || null;
+}
+
+/**
+ * One language at a time, also when Discord gives the role (Onboarding, a staff member): when
+ * exactly one language role was just added and the member still has others, the others are
+ * removed (owner, 2026-11-10: "the old one is left there"). Several added at once (a multi-choice
+ * Onboarding question) are left alone: there is no way to tell which one they meant.
+ * Returns the removed role ids. Never throws.
+ */
+export async function dropOldLanguageRoles(oldMember, newMember, { rolesFor = languageRolesFor } = {}) {
+    try {
+        if (!newMember?.guild || oldMember?.partial) return [];
+        const map = rolesFor(newMember.guild.id);
+        const roleIds = Object.values(map);
+        if (roleIds.length < 2) return [];
+        const added = roleIds.filter((id) => newMember.roles.cache.has(id) && !oldMember.roles.cache.has(id));
+        if (added.length !== 1) return [];
+        const old = roleIds.filter((id) => id !== added[0] && newMember.roles.cache.has(id));
+        if (!old.length) return [];
+        await newMember.roles.remove(old, 'Language changed: one language role at a time');
+        return old;
+    } catch (error) {
+        logger.warn(`Could not remove old language roles of ${newMember?.id}: ${error.message}`);
+        return [];
+    }
 }
