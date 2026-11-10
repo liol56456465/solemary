@@ -205,7 +205,7 @@ export async function buildRecordList(guildId, viewerId, targetUser, page, { lan
             `\`${row.case_code}\` · ${dateStamp(row.created_at)}${row.is_imported ? tr.t('staff.background.list.imported') : ''}`,
             tr.t('staff.background.list.reason', { reason: row.reason }),
             row.expires_at ? tr.t('staff.background.list.ends', { date: stamp(row.expires_at) }) : null,
-            // A warn that does not count toward the ladder (D4): "automod warning — doesn't count toward bans".
+            // A warn that does not count toward the ladder (D4): "automod warning, doesn't count toward bans".
             uncountedLabelKey(row) ? `-# ${tr.t(uncountedLabelKey(row))}` : null,
         ].filter(Boolean).join('\n'), 1024),
     }));

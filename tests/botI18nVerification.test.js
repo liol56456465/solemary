@@ -41,7 +41,7 @@ test('English unchanged: privacy notes, setup problem, quiz messages, panel defa
     assert.ok(question.description.endsWith('-# Answer all 2 questions to continue to verification. The quiz expires after 10 minutes.'), question.description);
     const one = embed(questionPayload({ ...attempt, questions: attempt.questions.slice(0, 1) }));
     assert.ok(one.description.endsWith('-# Answer this question to continue to verification. The quiz expires after 10 minutes.'));
-    assert.ok(embed(failedPayload(1, '<#1>')).description.includes('Not quite — read the rules in <#1> and try again in 1 minute.'));
+    assert.ok(embed(failedPayload(1, '<#1>')).description.includes('Not quite. Read the rules in <#1> and try again in 1 minute.'));
     assert.ok(embed(cooldownPayload(5 * 60000, '<#1>')).description.includes('Read the rules in <#1> and try again in 5 minutes.'));
 
     const panel = buildVerificationPanelPayload({});

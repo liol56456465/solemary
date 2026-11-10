@@ -141,6 +141,27 @@ export const MEWVO_TEMPLATES = Object.freeze([
         ru: { title: 'Помогите перевести Mewvo', text: lines('Mewvo говорит на 8 языках, и некоторые тексты можно сделать лучше.', '', 'Если вы хорошо знаете [язык] и хотите помочь, откройте тикет и укажите язык. Уметь программировать не нужно.') },
     }),
 
+    H('mewvo-appeals-open', 'Appeals and staff reports open', 'blurple', {
+        title: 'Appeals and staff reports are open',
+        text: lines(
+            '**Think a ban, kick, mute or warning was wrong?**',
+            'Press Appeal on the panel in #[appeals channel]. Your case code is in the DM Mewvo sent you. Lost it? Leave the code empty and we use your latest case.',
+            '',
+            '**Problem with a staff member?**',
+            'Press Report staff on the same panel. Only administrators see reports.',
+            '',
+            'We usually answer within 48 hours. One appeal or report per issue, please.',
+        ),
+    }, {
+        de: { title: 'Einsprüche und Staff-Meldungen sind offen', text: lines('**Findest du einen Bann, Kick, Mute oder eine Verwarnung falsch?**', 'Drück auf Einspruch im Panel in #[Einspruchskanal]. Deinen Fallcode findest du in der DM von Mewvo. Verloren? Lass das Feld leer, dann nehmen wir deinen letzten Fall.', '', '**Ärger mit einem Teammitglied?**', 'Drück im selben Panel auf Staff melden. Nur Administratoren sehen Meldungen.', '', 'Wir antworten meist innerhalb von 48 Stunden. Bitte nur ein Einspruch oder eine Meldung pro Sache.') },
+        fr: { title: 'Les appels et les signalements du staff sont ouverts', text: lines('**Un ban, un kick, un mute ou un avertissement te semble injuste ?**', 'Appuie sur Faire appel dans le panneau de #[salon des appels]. Ton code de dossier est dans le MP de Mewvo. Perdu ? Laisse le champ vide, on prendra ton dernier dossier.', '', '**Un problème avec un membre du staff ?**', 'Appuie sur Signaler un membre du staff dans le même panneau. Seuls les administrateurs voient les signalements.', '', 'On répond en général sous 48 heures. Un seul appel ou signalement par problème, merci.') },
+        es: { title: 'Las apelaciones y los reportes al staff están abiertos', text: lines('**¿Crees que un ban, kick, mute o advertencia fue injusto?**', 'Pulsa Apelar en el panel de #[canal de apelaciones]. Tu código de caso está en el MD que te envió Mewvo. ¿Lo perdiste? Deja el campo vacío y usamos tu último caso.', '', '**¿Problemas con alguien del staff?**', 'Pulsa Reportar staff en el mismo panel. Solo los administradores ven los reportes.', '', 'Solemos responder en 48 horas. Una apelación o reporte por problema, por favor.') },
+        it: { title: 'Ricorsi e segnalazioni dello staff aperti', text: lines('**Pensi che un ban, kick, mute o avvertimento fosse sbagliato?**', 'Premi Ricorso nel pannello in #[canale ricorsi]. Il codice del caso è nel DM che ti ha mandato Mewvo. Perso? Lascia vuoto il campo e useremo il tuo ultimo caso.', '', '**Un problema con qualcuno dello staff?**', 'Premi Segnala staff nello stesso pannello. Solo gli amministratori vedono le segnalazioni.', '', 'Di solito rispondiamo entro 48 ore. Un ricorso o una segnalazione per problema, grazie.') },
+        pl: { title: 'Odwołania i zgłoszenia na administrację są otwarte', text: lines('**Uważasz, że ban, kick, wyciszenie albo ostrzeżenie było niesłuszne?**', 'Kliknij Odwołanie w panelu na #[kanał odwołań]. Kod sprawy jest w wiadomości od Mewvo. Zgubiłeś ją? Zostaw pole puste, weźmiemy twoją ostatnią sprawę.', '', '**Problem z kimś z administracji?**', 'Kliknij Zgłoś członka ekipy w tym samym panelu. Zgłoszenia widzą tylko administratorzy.', '', 'Zwykle odpowiadamy w ciągu 48 godzin. Jedno odwołanie albo zgłoszenie na sprawę.') },
+        'pt-BR': { title: 'Apelações e denúncias da staff estão abertas', text: lines('**Acha que um ban, kick, mute ou aviso foi injusto?**', 'Clique em Apelar no painel em #[canal de apelações]. O código do caso está na DM que o Mewvo te mandou. Perdeu? Deixe o campo vazio e usamos seu último caso.', '', '**Problema com alguém da staff?**', 'Clique em Denunciar staff no mesmo painel. Só administradores veem as denúncias.', '', 'Costumamos responder em até 48 horas. Uma apelação ou denúncia por problema, por favor.') },
+        ru: { title: 'Апелляции и жалобы на персонал открыты', text: lines('**Считаете бан, кик, мут или предупреждение несправедливым?**', 'Нажмите «Апелляция» на панели в #[канал апелляций]. Код дела есть в личном сообщении от Mewvo. Потеряли? Оставьте поле пустым, мы возьмём ваше последнее дело.', '', '**Проблема с кем-то из персонала?**', 'Нажмите «Жалоба на персонал» на той же панели. Жалобы видят только администраторы.', '', 'Обычно отвечаем в течение 48 часов. Одна апелляция или жалоба на один случай.') },
+    }),
+
     H('mewvo-server-event', 'Server event', 'purple', {
         title: '[Event name]',
         text: lines('Join us for [event] in {server} on [day] at [time] ([time zone]).', '', '[What happens, in one or two sentences.]', '', 'Where: #[channel]'),

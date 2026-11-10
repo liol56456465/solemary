@@ -42,7 +42,7 @@
       "activeAppealDenied": "active, appeal denied",
       "active": "active"
     },
-    "automodNotCounted": "automod warning — doesn't count toward bans",
+    "automodNotCounted": "automod warning, doesn't count toward bans",
     "notCounted": "on record, doesn't count toward bans"
   },
   "login": {

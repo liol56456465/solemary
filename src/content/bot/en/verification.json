@@ -77,7 +77,7 @@
         },
         "rulesChannel": "the rules channel",
         "failedTitle": "Not quite",
-        "failedText": "Not quite — read the rules in {where} and try again in {wait}.",
+        "failedText": "Not quite. Read the rules in {where} and try again in {wait}.",
         "cooldownTitle": "Rules quiz",
         "cooldownText": "Read the rules in {where} and try again in {wait}."
     },

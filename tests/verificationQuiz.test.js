@@ -296,7 +296,7 @@ test('button: next question, then pass → the normal verification step; fail �
     await handleQuizButton(last, null, argsFor(f, 1, wrong), { store: failing, proceed });
     assert.equal(proceeded, 1, 'a failed quiz never verifies');
     const text = json(last.log[1][1]);
-    assert.match(text, /Not quite — read the rules in the rules channel and try again in 5 minutes\./);
+    assert.match(text, /Not quite. Read the rules in the rules channel and try again in 5 minutes\./);
     assert.ok(!text.includes('Staff'), 'the right answer is not revealed');
     assert.deepEqual(last.log[1][1].components, []);
     assert.deepEqual(last.log[1][1].allowedMentions, { parse: [] });

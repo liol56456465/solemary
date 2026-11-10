@@ -99,7 +99,7 @@
         }
     },
     "uncounted": {
-        "automod": "Automod warning — doesn't count toward bans",
-        "ladderOff": "Warning — doesn't count toward bans (warn ladder off)"
+        "automod": "Automod warning. It doesn't count toward bans",
+        "ladderOff": "Warning. It doesn't count toward bans (warn ladder off)"
     }
 }

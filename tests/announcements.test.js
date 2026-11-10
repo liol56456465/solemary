@@ -138,7 +138,7 @@ test('templates: 25+ new general ones (76+ in all), grouped, each group fits a D
 });
 
 test('home-only templates: 10, never in the default list or lookups; listed first and found with { home: true }', () => {
-    assert.equal(MEWVO_TEMPLATES.length, 10);
+    assert.equal(MEWVO_TEMPLATES.length, 11);
     const ids = MEWVO_TEMPLATES.map((t) => t.id);
     for (const id of ['mewvo-new-mods', 'mewvo-changelog', 'mewvo-new-feature', 'mewvo-maintenance', 'mewvo-downtime-resolved', 'mewvo-premium', 'mewvo-staff-changes', 'mewvo-server-count', 'mewvo-translation-help', 'mewvo-server-event']) {
         assert.ok(ids.includes(id), id);

@@ -366,7 +366,7 @@ test('D4 labels: uncounted automod warns are shown distinctly in /background and
         standing: { ladder: { level: 0, warns_since_level: 1 }, warns: [countedWarn], activeBan: null, activeMute: null },
         cases: [automodWarn, ladderOffWarn, countedWarn], appeals: [], config: { warnsPerLevel: 3, appealWindowMs: 1, appealCooldownMs: 1 },
     });
-    assert.deepEqual(view.cases.map((c) => c.status), ["automod warning — doesn't count toward bans", "on record, doesn't count toward bans", 'counts now']);
+    assert.deepEqual(view.cases.map((c) => c.status), ["automod warning, doesn't count toward bans", "on record, doesn't count toward bans", 'counts now']);
 
     // /background list.
     const fake = fakeEnforcementDb();
@@ -374,6 +374,6 @@ test('D4 labels: uncounted automod warns are shown distinctly in /background and
     pgDb.pool = { query: async (text) => ({ rows: /FROM \S*mod_cases/.test(text) ? [{ ...automodWarn, total_count: 2 }, { ...countedWarn, total_count: 2 }] : [] }), connect: async () => ({ query: async () => ({ rows: [] }), release() {} }) };
     const list = await buildRecordList(OTHER, MOD, { id: TARGET, username: 'target' }, 0);
     const json = JSON.stringify(list);
-    assert.match(json, /Automod warning — doesn't count toward bans/);
+    assert.match(json, /Automod warning. It doesn't count toward bans/);
     assert.equal((json.match(/doesn't count toward bans/g) || []).length, 1, 'only the uncounted warn is labelled');
 });
