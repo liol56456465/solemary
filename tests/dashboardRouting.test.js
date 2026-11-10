@@ -469,3 +469,15 @@ test('picker after a restart: "Refresh server list" logs in again with prompt=no
         await h.close();
     }
 });
+
+test('Support dashboard: an admin of Support only (not of main) is refused; an admin of both gets in', async () => {
+    const h = await serve({ admins: new Map([[MAIN, new Set([ADMIN])], [SUPPORT, new Set([ADMIN, STRANGER])], [A, new Set()], [B, new Set()]]) });
+    try {
+        const stranger = await h.loginAs(STRANGER);
+        assert.equal((await h.request(`/dashboard/${SUPPORT}/help`, { cookie: stranger.cookie })).status, 404, 'Support-only admin never reaches the shared settings');
+        const admin = await h.loginAs(ADMIN);
+        assert.equal((await h.request(`/dashboard/${SUPPORT}/help`, { cookie: admin.cookie })).status, 200);
+    } finally {
+        await h.close();
+    }
+});
