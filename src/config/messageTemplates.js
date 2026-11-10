@@ -165,7 +165,7 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         '- reporting something you do not want to post in public',
         '',
         'One topic per ticket. Staff close it when it is sorted.',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
     T('modmail-howto', 'support', 'How modmail works', 'Message the staff team', [
         'You can talk to staff in private by sending Mewvo a DM.',
         '',
@@ -176,7 +176,7 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         'Everything you send after that goes to staff until they close the conversation. Only staff can see it.',
         '',
         'You need to be in {server} for this to work.',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
     T('staff-reports', 'support', 'Reporting a staff member', 'Reporting a staff member', [
         'If a staff member broke the rules or treated you unfairly, you can report them.',
         '',
@@ -214,7 +214,7 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         '- [change]',
         '',
         'The new rules apply from now on. Take a minute to read them. If something is unclear, open a ticket and ask.',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
     T('changelog', 'news', 'Server update / changelog', 'Server update', [
         'A few changes to {server}:',
         '',
@@ -339,7 +339,7 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         '- [option]: [number] votes',
         '',
         'So we are going with **[result]**. [What happens next.]',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
 
     // ── Community ─────────────────────────────────────────────────────────
     T('roles-menu', 'community', 'Pick your roles', 'Pick your roles', [
@@ -349,12 +349,12 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         '- **Interest roles** open the channels for those topics.',
         '',
         'You can change them any time by picking again.',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
     T('new-role', 'community', 'New role', 'New role: [role name]', [
         'There is a new role, **[role name]**.',
         '',
         '[What it is for and how to get it.]',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
     T('introduce-yourself', 'community', 'Introduce yourself', 'Introduce yourself', [
         'New here? Say hi in #[intro channel].',
         '',
@@ -418,7 +418,7 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         '- Small mistakes: a talk with an admin',
         '- Repeated or careless mistakes: demotion',
         '- Abusing moderation powers, leaking staff info or raiding: demotion and a ban',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
     T('staff-rules-admins', 'staff', 'Staff rules: administrators', 'Rules for administrators', [
         'These apply to everyone with Administrator, on top of the moderator rules.',
         '',
@@ -445,7 +445,7 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         'Apply with `/apply submit` or in #[applications channel] before [date]. We read every application and answer by DM.',
         '',
         'Asking staff about your application does not speed it up.',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
     T('staff-apps-closed', 'staff', 'Staff applications closed', 'Staff applications are closed', [
         'Applications are closed. Thanks to everyone who applied.',
         '',
@@ -485,7 +485,7 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         'Go to #[verify channel] and press Verify. It takes a few seconds.',
         '',
         'This helps keep raid bots and spam accounts out.',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
     T('scam-dm', 'safety', 'Scam DM warning', 'Watch out for scam DMs', [
         'Some members are getting DMs from accounts pretending to be from {server} or Discord.',
         '',
@@ -559,7 +559,7 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         'Why: [the reason, for example what kept happening].',
         '',
         'It applies from now on. Nothing posted before today counts against you.',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
     T('rule-removed', 'reminders', 'Rule removed', 'A rule was removed', [
         'Rule [number] ([rule title]) is gone. [Why it was removed.]',
         '',
@@ -572,7 +572,7 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         '**Not allowed:** [example]',
         '',
         'The rule itself did not change. Ask staff if something is still unclear.',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
     T('no-ping-staff', 'reminders', 'Do not ping staff', 'Please do not ping staff', [
         'Pinging staff for every question slows everyone down.',
         '',
@@ -624,7 +624,7 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         'Voice channel: #[voice channel]',
         '',
         'Everyone is welcome, new players too. React below if you want to join, so we know how many groups to make.',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
     T('movie-night', 'voice', 'Movie night', 'Movie night', [
         'We are watching [movie] together on [day] at [time] ([time zone]).',
         '',
@@ -636,12 +636,12 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         'Hang out with us in #[voice channel] tonight from [time] ([time zone]).',
         '',
         'No plan, just talking. Drop in and leave whenever you like.',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
     T('stage-talk', 'voice', 'Stage talk / Q&A', 'Q&A on stage: [topic]', [
         '[Name] answers your questions about [topic] on [day] at [time] ([time zone]) in #[stage channel].',
         '',
         'Post questions in #[questions channel] before it starts. Raise your hand on stage to ask live.',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
     T('karaoke-night', 'voice', 'Karaoke night', 'Karaoke night', [
         'Karaoke in #[voice channel] on [day] at [time] ([time zone]).',
         '',
@@ -655,7 +655,7 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         'Prize: [prize, if any]',
         '',
         'Sign up in #[signup channel]. Read the tournament rules there first.',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
 
     // ── Maintenance and downtime ──────────────────────────────────────────
     T('maintenance-extended', 'downtime', 'Maintenance takes longer', 'Maintenance is taking longer', [
@@ -706,7 +706,7 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         'Thanks to everyone who applied. Everyone has their answer by DM now.',
         '',
         'If you were not picked this time, you can apply again when applications open next. We will post it here.',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
 
     // ── Partnerships ──────────────────────────────────────────────────────
     T('partner-requirements', 'partners', 'Partnership requirements', 'Want to partner with us?', [
@@ -728,12 +728,12 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         'We want to hear what you think about [topic].',
         '',
         'Answer in #[feedback channel] or in the poll below. Every answer is read by staff.',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
     T('suggestions-open', 'polls', 'Suggestions channel', 'Have an idea for the server?', [
         'Post it in #[suggestions channel]. One idea per message, so people can vote on each.',
         '',
         'Staff look at the top ideas every [week / month] and say what will happen with them.',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
     T('poll-reminder', 'polls', 'Poll closes soon', 'The poll closes soon', [
         'The poll about [topic] closes on [date]. If you have not voted yet, find it in #[channel].',
     ].join('\n'), 'yellow'),
@@ -753,7 +753,7 @@ export const MESSAGE_TEMPLATES = Object.freeze([
         'Happy holidays from the {server} staff team.',
         '',
         'Staff may answer slower until [date]. Tickets and appeals stay open.',
-    ].join('\n'), 'blurple'),
+    ].join('\n'), 'primary'),
     T('summer-break', 'holidays', 'Summer break', 'Summer break', [
         'Many of us are away over the summer, so events pause until [date].',
         '',

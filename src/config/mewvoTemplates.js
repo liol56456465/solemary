@@ -50,7 +50,7 @@ export const MEWVO_TEMPLATES = Object.freeze([
         ru: { title: 'Обновление Mewvo', text: lines('Что изменилось в Mewvo:', '', '{changes}', '', 'Полный список есть на странице изменений на сайте Mewvo.') },
     }, { changelog: true }),
 
-    H('mewvo-new-feature', 'New feature', 'blurple', {
+    H('mewvo-new-feature', 'New feature', 'primary', {
         title: 'New in Mewvo: [feature]',
         text: lines('[What it does, in one or two sentences.]', '', 'How to use it: [command or dashboard page].', '', 'Questions or problems? Open a ticket in the support server.'),
     }, {
@@ -128,7 +128,7 @@ export const MEWVO_TEMPLATES = Object.freeze([
         ru: { title: 'Mewvo теперь на {count} серверах', text: 'Mewvo теперь помогает {count} серверам. Спасибо всем, кто его добавил, сообщал об ошибках и предлагал идеи.' },
     }, { serverCount: true, celebrate: true }),
 
-    H('mewvo-translation-help', 'Translation help wanted', 'blurple', {
+    H('mewvo-translation-help', 'Translation help wanted', 'primary', {
         title: 'Help translate Mewvo',
         text: lines('Mewvo speaks 8 languages, and some of the text could read better.', '', 'If you speak [language] well and want to help, open a ticket and say which language. You do not need to know how to code.'),
     }, {
@@ -141,7 +141,7 @@ export const MEWVO_TEMPLATES = Object.freeze([
         ru: { title: 'Помогите перевести Mewvo', text: lines('Mewvo говорит на 8 языках, и некоторые тексты можно сделать лучше.', '', 'Если вы хорошо знаете [язык] и хотите помочь, откройте тикет и укажите язык. Уметь программировать не нужно.') },
     }),
 
-    H('mewvo-appeals-open', 'Appeals and staff reports open', 'blurple', {
+    H('mewvo-appeals-open', 'Appeals and staff reports open', 'primary', {
         title: 'Appeals and staff reports are open',
         text: lines(
             '**Think a ban, kick, mute or warning was wrong?**',

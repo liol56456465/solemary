@@ -59,7 +59,7 @@ const hexOf = (value) => `#${Number(getColor(value)).toString(16).padStart(6, '0
 
 /** The fixed colour choices: [key, label, '#RRGGBB']. */
 export const EMBED_COLOURS = [
-    ['primary', 'Mewvo blue', hexOf('primary')],
+    ['primary', 'White (default)', hexOf('primary')],
     ['purple', 'Purple', '#9B59B6'],
     ['blurple', 'Discord blurple', '#5865F2'],
     ['green', 'Green', hexOf('success')],
