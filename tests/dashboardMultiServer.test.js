@@ -579,7 +579,7 @@ test("B's audit page lists only B's rows; a change saved in B is audited in B", 
     }
 });
 
-test('bad ids and variants → 404; bot not in the server or blacklisted → 404; blacklisted user → 403; the support id → main', async () => {
+test('bad ids and variants → 404; bot not in the server or blacklisted → 404; blacklisted user → 403; the support id has its own dashboard', async () => {
     const h = await serve();
     try {
         const { cookie, csrf } = await h.loginAs(ADMIN);
@@ -612,14 +612,10 @@ test('bad ids and variants → 404; bot not in the server or blacklisted → 404
         assert.equal((await g.request(`/dashboard/${A}/help`, { cookie })).status, 403);
         assert.equal((await g.request(`/dashboard/${A}/handover`, { method: 'POST', cookie, form: { csrf, text: 'x' } })).status, 403);
         blocked.users.clear();
-        // Support id: GET 302 and POST 307 to the same page of the main server.
+        // Support id: its own dashboard now (owner, 2026-11-10), never a redirect to the main server.
         const get = await g.request(`/dashboard/${SUPPORT}/cases?member=${A_MEMBER}`, { cookie });
-        assert.equal(get.status, 302);
-        assert.equal(get.location, `/dashboard/${MAIN}/cases?member=${A_MEMBER}`);
-        const post307 = await g.request(`/dashboard/${SUPPORT}/handover`, { method: 'POST', cookie, form: { csrf, text: 'x' } });
-        assert.equal(post307.status, 307);
-        assert.equal(post307.location, `/dashboard/${MAIN}/handover`);
-        assert.equal((await g.request(`/dashboard/${SUPPORT}//evil.example`, { cookie })).location, `/dashboard/${MAIN}`, 'never //host after the redirect');
+        assert.notEqual(get.location, `/dashboard/${MAIN}/cases?member=${A_MEMBER}`);
+        assert.notEqual(get.status, 307);
         assert.deepEqual(g.writes().map((c) => c.fn), []);
     } finally {
         await g.close();

@@ -250,7 +250,7 @@ test('[I2] /dashboard/<id>/… reaches that server\'s instance with the suffix a
     }
 });
 
-test('old links: GET 302 and POST 307 to the same page of the main server; the support id 302s to main', async () => {
+test('old links: GET 302 and POST 307 to the same page of the main server; the support id is not redirected', async () => {
     const h = await serve();
     try {
         const get = await h.request('/dashboard/cases/abcde?tab=1');
@@ -259,13 +259,11 @@ test('old links: GET 302 and POST 307 to the same page of the main server; the s
         const post = await h.request('/dashboard/leveling/save', { method: 'POST', form: { a: '1' } });
         assert.equal(post.status, 307);
         assert.equal(post.location, `/dashboard/${MAIN}/leveling/save`);
+        // The Support server has its own dashboard (owner, 2026-11-10): no redirect to main.
         const support = await h.request(`/dashboard/${SUPPORT}/cases?member=1`);
-        assert.equal(support.status, 302);
-        assert.equal(support.location, `/dashboard/${MAIN}/cases?member=1`);
+        assert.ok(!String(support.location || '').startsWith(`/dashboard/${MAIN}`));
         const supportRoot = await h.request(`/dashboard/${SUPPORT}`);
-        assert.equal(supportRoot.location, `/dashboard/${MAIN}`);
-        const supportPost = await h.request(`/dashboard/${SUPPORT}/handover`, { method: 'POST', form: { text: 'x' } });
-        assert.equal(supportPost.status, 307);
+        assert.ok(!String(supportRoot.location || '').startsWith(`/dashboard/${MAIN}`));
         // The 307'd POST still needs its CSRF token and origin at the target (checkPost runs there).
         const { cookie } = await h.loginAs();
         const noCsrf = await h.request(`/dashboard/${MAIN}/handover`, { method: 'POST', cookie, form: { text: 'x' } });

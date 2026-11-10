@@ -1473,7 +1473,7 @@ function redirectKeepingMethod(req, res, location, notFound) {
 /**
  * The multi-server router (mounted at /dashboard): global routes first, then
  * /:guildId → validation → that server's instance (runInGuild: path() keeps the prefix).
- * Old links and the support server's id redirect to the main server.
+ * Old links redirect to the main server. The Support server has its own dashboard (owner, 2026-11-10).
  */
 export function dashboardAppRouter({ home, registry, settings, client, blacklist = blacklistHit, limiters = home.limiters, accessOf = null }) {
     const router = express.Router();
@@ -1483,7 +1483,6 @@ export function dashboardAppRouter({ home, registry, settings, client, blacklist
     addGlobalRoutes(router, home);
     const notFound = (req, res) => home.serverNotFound(req, res);
     const mainId = settings.mainGuildId;
-    const supportId = settings.supportGuildId && settings.supportGuildId !== mainId ? settings.supportGuildId : null;
 
     async function guildDispatch(req, res, next) {
         const segment = typeof req.params?.guildId === 'string' ? req.params.guildId : '';
@@ -1494,9 +1493,6 @@ export function dashboardAppRouter({ home, registry, settings, client, blacklist
             // An old link (/dashboard/cases/abcde): the same page of the main server. 302 for now
             // (owner decision 5: 301 in a later release), 307 for a POST so the form is re-sent.
             return redirectKeepingMethod(req, res, `${guildPath(mainId)}${restOf(req, BASE)}`, notFound);
-        }
-        if (supportId && guildId === supportId) {
-            return redirectKeepingMethod(req, res, `${guildPath(mainId)}${restOf(req, guildPath(supportId))}`, notFound);
         }
         const session = await home.readSession(req);
         if (!session) {
