@@ -134,10 +134,11 @@ export const giveawayLeaveHandler = {
             if (!interaction.inGuild() || !MESSAGE_ID.test(messageId)) {
                 return replyUserError(interaction, { type: ErrorTypes.VALIDATION, message: tr.t('giveaway.button.notActive') });
             }
-            if (isUserRateLimited(interaction.user.id, messageId)) {
+            // Its own limit (not Join's): Leave right after Join is not "too fast".
+            if (isUserRateLimited(interaction.user.id, `${messageId}:leave`)) {
                 return replyUserError(interaction, { type: ErrorTypes.RATE_LIMIT, message: tr.t('giveaway.button.slowDown') });
             }
-            await recordUserInteraction(interaction.user.id, messageId);
+            await recordUserInteraction(interaction.user.id, `${messageId}:leave`);
             if (!(await InteractionHelper.safeDefer(interaction, { flags: MessageFlags.Ephemeral }))) return;
 
             await Mutex.runExclusive(`giveaway:${messageId}`, async () => {
