@@ -27,3 +27,11 @@ test('automod on administrators: watch-mode rule only reports; no hit does nothi
     assert.equal(await handleAdminHits(message('3'), [], deps), false);
     assert.equal(posts.length, 1);
 });
+
+test('automod on administrators: the default staff post is wired (no injected post)', async () => {
+    const removed = [];
+    // No client guilds: postModLog finds no channel and returns; it must not throw.
+    const msg = { ...message('4'), client: { guilds: { cache: new Map() } } };
+    assert.equal(await handleAdminHits(msg, [{ rule: 'slurs', mode: 'enforce' }], { deleteQuietly: async (m) => removed.push(m.id) }), true);
+    assert.deepEqual(removed, ['4']);
+});

@@ -1527,8 +1527,13 @@ export function dashboardAppRouter({ home, registry, settings, client, blacklist
             // The Support server shares the main server's settings (home values): its dashboard
             // also needs main-server access, so a Support-only admin never changes main settings.
             if (supportId && guildId === supportId) {
-                const main = await accessOf(mainId).check(session.userId, { guildId: mainId });
-                if (!main?.allowed) return notFound(req, res);
+                // Administrator (or OWNER_IDS) in main, never a lower main role; fresh on a POST.
+                const write = String(req.method || 'GET').toUpperCase() !== 'GET' && String(req.method || '').toUpperCase() !== 'HEAD';
+                const checker = accessOf(mainId);
+                const main = write && checker.checkFresh
+                    ? await checker.checkFresh(session.userId, { guildId: mainId })
+                    : await checker.check(session.userId, { guildId: mainId });
+                if (!main?.allowed || !['admin', 'owner'].includes(main.role)) return notFound(req, res);
             }
         }
         const instance = registry.get(guildId);

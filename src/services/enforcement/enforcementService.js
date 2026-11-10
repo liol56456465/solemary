@@ -295,32 +295,36 @@ export async function postModLog(client, action, fields, {
     } catch (error) {
         if (!isSettingsUnavailable(error)) throw error;
         noteSettingsUnavailable(sourceGuildId, `staff ${purpose} post (${action})`);
-        return;
+        return false;
     }
     const guildId = staffGuildId(sourceGuildId);
     // Not posting is recorded (postFailures.js), so the dashboard Overview can show it.
     if (!channelId) {
         recordPostFailure({ guildId, purpose, reason: 'notSet' });
-        return;
+        return false;
     }
     const guild = client.guilds.cache.get(guildId);
     const channel = guild && (guild.channels.cache.get(channelId) || await guild.channels.fetch(channelId).catch(() => null));
     if (!channel?.isTextBased?.()) {
         logger.warn(`Staff ${purpose} channel ${channelId} is not a text channel in guild ${guildId}`);
         if (guild) recordPostFailure({ guildId, purpose, channelId, reason: 'missing' });
-        return;
+        return false;
     }
     const [defaultTitle, color] = MOD_LOG_TITLES[action] || [action, 'primary'];
     const embed = ACTION_KINDS.has(action) && !title
         ? createEmbed({ description: formatModLogLine(action, fields), color, timestamp: true })
         : createEmbed({ title: title || defaultTitle, description, fields, color, footer, timestamp: true });
-    await channel.send({
+    return channel.send({
         embeds: [embed],
         files,
         allowedMentions: { parse: [] },
-    }).then(() => clearPostFailures(guildId, purpose), (error) => {
+    }).then(() => {
+        clearPostFailures(guildId, purpose);
+        return true;
+    }, (error) => {
         logger.warn(`Staff ${purpose} post failed: ${error.message}`);
         recordSendError({ guildId, purpose, channel, error, files: files.length > 0 });
+        return false;
     });
 }
 
@@ -357,10 +361,8 @@ export async function logEnforcement(client, guildId, action, { record = null, t
     } catch {
         hasModLog = false;
     }
-    if (hasModLog && !record?.is_test) {
-        await postModLog(client, action, fields, { guildId });
-        return;
-    }
+    // Posted in the mod log: done. Not posted (channel gone, no access): the general log copy.
+    if (hasModLog && !record?.is_test && await postModLog(client, action, fields, { guildId })) return;
     await logEvent({
         client,
         guildId,

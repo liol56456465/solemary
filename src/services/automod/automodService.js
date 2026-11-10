@@ -26,7 +26,7 @@ import { isSettingsUnavailable, noteSettingsUnavailable, usesHomeValues } from '
 import { BoundedMap, BoundedSet } from '../../utils/boundedMap.js';
 import { logger } from '../../utils/logger.js';
 import { query, T, isEnforcementDbAvailable } from '../enforcement/db.js';
-import { executeSystemAction, isAdministrator } from '../enforcement/enforcementService.js';
+import { executeSystemAction, isAdministrator, postModLog } from '../enforcement/enforcementService.js';
 import { getAutomodSettings, isChannelExempt } from './automodSettings.js';
 import { featureAvailable } from '../../config/intents.js';
 import { isRaidJoiner, noteIncidentEvent } from './raidService.js';
