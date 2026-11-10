@@ -35,9 +35,35 @@ const SECRET_DIR = /(?:^|[^\w.-])\.config\/mewvo(?=$|[/\s;|&()<>,{}*?[])/g;
 // --env-file after any separator (also NODE_OPTIONS=--env-file=…), and Node's loadEnvFile API.
 const ENV_FILE_FLAG = /(?:^|[\s=;|&(:,])--env-file(?:-if-exists)?(?=[=\s]|$)|\bloadEnvFile\b/g;
 
+// Shell brace expansion: `.e{n,x}v` → `.env .exv`. Expands every {a,b,…} group (nested groups one
+// level at a time, capped) so the SECRET check sees the names the shell would produce.
+function expandBraces(text, limit = 64) {
+    let words = [text];
+    for (let round = 0; round < 8; round += 1) {
+        const next = [];
+        let changed = false;
+        for (const w of words) {
+            const m = w.match(/\{([^{}]*,[^{}]*)\}/);
+            if (!m) { next.push(w); continue; }
+            changed = true;
+            for (const alt of m[1].split(',')) next.push(w.slice(0, m.index) + alt + w.slice(m.index + m[0].length));
+        }
+        words = next.slice(0, limit);
+        if (!changed) break;
+    }
+    return words;
+}
+
 function secretHits(raw) {
     const text = normalize(raw);
     const hits = [...text.matchAll(SECRET)].map((m) => m[0].slice(m[1].length));
+    for (const token of text.split(/[\s;|&()<>=]+/)) {
+        if (!/\{[^{}]*,[^{}]*\}/.test(token)) continue;
+        for (const word of expandBraces(token)) {
+            if ([...word.matchAll(SECRET)].length || SECRET_DIR.test(word)) hits.push(token);
+            SECRET_DIR.lastIndex = 0;
+        }
+    }
     if (SECRET_DIR.test(text)) hits.push('~/.config/mewvo');
     SECRET_DIR.lastIndex = 0;
     if (ENV_FILE_FLAG.test(text)) hits.push('--env-file (use the npm scripts)');
@@ -47,7 +73,11 @@ function secretHits(raw) {
         if (!/[*?[]/.test(token)) continue;
         const base = token.split('/').pop();
         for (const part of base.split(/[{}]/)) {
-            if (/^[*?[]/.test(part)) continue; // like the shell: a leading wildcard skips dotfiles
+            // Like the shell, a glob only matches a dotfile when it starts with a literal dot: a part
+            // starting with a wildcard (`*`, `?`, `[`) or with any other character (code such as
+            // `rows[rows.length` or `steps[{store`) can never expand to .env, so it is skipped
+            // instead of falling into the strict "unparsable glob" branch below.
+            if (!part.startsWith('.')) continue;
             const re = globToRegex(part);
             if (SECRET_NAMES.some((n) => re.test(n))) hits.push(token);
         }
