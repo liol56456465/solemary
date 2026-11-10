@@ -48,6 +48,30 @@
     "lastRole": "Das war die letzte Rolle: Das Panel wurde gelöscht.",
     "roleRemoved": "Rolle aus dem Panel entfernt.",
     "panelGone": "Dieses Panel gibt es nicht mehr.",
-    "panelDeleted": "Panel gelöscht."
+    "panelDeleted": "Panel gelöscht.",
+    "onboardingEmpty": "Diese Onboarding-Frage hat keine Rollen, die Mewvo vergeben kann."
+  },
+  "presets": {
+    "label": "Vorlage",
+    "help": "Füllt Titel und Beschreibung aus, wenn du sie leer lässt.",
+    "none": "Keine (selbst schreiben)",
+    "language": {
+      "name": "Sprachen",
+      "title": "Wähl deine Sprache",
+      "description": "Wähl die Sprachen, die du sprichst. Du kannst sie jederzeit ändern."
+    },
+    "hobbies": {
+      "name": "Hobbys",
+      "title": "Wähl deine Hobbys",
+      "description": "Wähl, was dich interessiert, damit Leute mit den gleichen Interessen dich finden. Du kannst sie jederzeit ändern."
+    },
+    "identity": {
+      "name": "Über dich",
+      "title": "Über dich",
+      "description": "Wähl die Rollen, die zu dir passen, zum Beispiel Pronomen. Du kannst sie jederzeit ändern."
+    },
+    "onboarding": "Rollen aus einer Onboarding-Frage",
+    "onboardingHelp": "Nimmt nur die Rollen dieser Frage aus dem Discord-Onboarding. Lass es auf Keine, um Rollen selbst zu wählen.",
+    "onboardingNone": "Keine"
   }
 }

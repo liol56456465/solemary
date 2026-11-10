@@ -49,6 +49,30 @@
     "lastRole": "Era el último rol: el panel se ha borrado.",
     "roleRemoved": "Rol quitado del panel.",
     "panelGone": "Ese panel ya no existe.",
-    "panelDeleted": "Panel borrado."
+    "panelDeleted": "Panel borrado.",
+    "onboardingEmpty": "Esa pregunta de bienvenida no tiene roles que Mewvo pueda dar."
+  },
+  "presets": {
+    "label": "Empezar desde",
+    "help": "Rellena el título y la descripción si los dejas vacíos.",
+    "none": "Nada (escribir el mío)",
+    "language": {
+      "name": "Idiomas",
+      "title": "Elige tu idioma",
+      "description": "Elige los idiomas que hablas. Puedes cambiarlos cuando quieras."
+    },
+    "hobbies": {
+      "name": "Aficiones",
+      "title": "Elige tus aficiones",
+      "description": "Elige lo que te gusta para que la gente con los mismos intereses te encuentre. Puedes cambiarlos cuando quieras."
+    },
+    "identity": {
+      "name": "Sobre ti",
+      "title": "Sobre ti",
+      "description": "Elige los roles que te describen, como los pronombres. Puedes cambiarlos cuando quieras."
+    },
+    "onboarding": "Roles de una pregunta de bienvenida",
+    "onboardingHelp": "Usa solo los roles de esa pregunta de la bienvenida de Discord. Déjalo en Ninguna para elegir los roles tú.",
+    "onboardingNone": "Ninguna"
   }
 }

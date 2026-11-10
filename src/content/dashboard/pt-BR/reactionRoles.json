@@ -49,6 +49,30 @@
     "lastRole": "Era o último cargo: o painel foi apagado.",
     "roleRemoved": "Cargo removido do painel.",
     "panelGone": "Esse painel não existe mais.",
-    "panelDeleted": "Painel apagado."
+    "panelDeleted": "Painel apagado.",
+    "onboardingEmpty": "Essa pergunta de integração não tem cargos que o Mewvo possa dar."
+  },
+  "presets": {
+    "label": "Começar de",
+    "help": "Preenche o título e a descrição se você deixar em branco.",
+    "none": "Nada (escrever o meu)",
+    "language": {
+      "name": "Idiomas",
+      "title": "Escolha seu idioma",
+      "description": "Escolha os idiomas que você fala. Dá para mudar quando quiser."
+    },
+    "hobbies": {
+      "name": "Hobbies",
+      "title": "Escolha seus hobbies",
+      "description": "Escolha do que você gosta para quem tem os mesmos interesses te achar. Dá para mudar quando quiser."
+    },
+    "identity": {
+      "name": "Sobre você",
+      "title": "Sobre você",
+      "description": "Escolha os cargos que combinam com você, como pronomes. Dá para mudar quando quiser."
+    },
+    "onboarding": "Cargos de uma pergunta de integração",
+    "onboardingHelp": "Usa só os cargos dessa pergunta da integração do Discord. Deixe em Nenhuma para escolher os cargos você mesmo.",
+    "onboardingNone": "Nenhuma"
   }
 }

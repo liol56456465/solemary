@@ -50,6 +50,30 @@
     "lastRole": "To była ostatnia rola: panel został usunięty.",
     "roleRemoved": "Usunięto rolę z panelu.",
     "panelGone": "Ten panel już nie istnieje.",
-    "panelDeleted": "Panel usunięty."
+    "panelDeleted": "Panel usunięty.",
+    "onboardingEmpty": "To pytanie wdrożenia nie ma ról, które Mewvo może nadać."
+  },
+  "presets": {
+    "label": "Zacznij od",
+    "help": "Wypełnia tytuł i opis, jeśli zostawisz je puste.",
+    "none": "Nic (napiszę sam)",
+    "language": {
+      "name": "Języki",
+      "title": "Wybierz swój język",
+      "description": "Wybierz języki, którymi mówisz. Możesz je zmienić w każdej chwili."
+    },
+    "hobbies": {
+      "name": "Hobby",
+      "title": "Wybierz swoje hobby",
+      "description": "Wybierz, co cię interesuje, żeby ludzie o tych samych zainteresowaniach mogli cię znaleźć. Możesz je zmienić w każdej chwili."
+    },
+    "identity": {
+      "name": "O tobie",
+      "title": "O tobie",
+      "description": "Wybierz role, które do ciebie pasują, na przykład zaimki. Możesz je zmienić w każdej chwili."
+    },
+    "onboarding": "Role z pytania wdrożenia",
+    "onboardingHelp": "Bierze tylko role tego pytania z wdrożenia Discorda. Zostaw Brak, żeby wybrać role samemu.",
+    "onboardingNone": "Brak"
   }
 }

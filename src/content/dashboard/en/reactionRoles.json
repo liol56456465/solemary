@@ -48,6 +48,30 @@
     "lastRole": "That was the last role: the panel was deleted.",
     "roleRemoved": "Role removed from the panel.",
     "panelGone": "That panel no longer exists.",
-    "panelDeleted": "Panel deleted."
+    "panelDeleted": "Panel deleted.",
+    "onboardingEmpty": "That onboarding question has no roles Mewvo can give."
+  },
+  "presets": {
+    "label": "Start from",
+    "help": "Fills the title and description when you leave them empty.",
+    "none": "Nothing (write your own)",
+    "language": {
+      "name": "Languages",
+      "title": "Pick your language",
+      "description": "Choose the languages you speak. You can change them any time."
+    },
+    "hobbies": {
+      "name": "Hobbies",
+      "title": "Pick your hobbies",
+      "description": "Choose what you are into so people with the same interests can find you. You can change them any time."
+    },
+    "identity": {
+      "name": "About you",
+      "title": "About you",
+      "description": "Choose the roles that fit you, like pronouns. You can change them any time."
+    },
+    "onboarding": "Roles from an onboarding question",
+    "onboardingHelp": "Uses only the roles of that question in Discord onboarding. Leave it on None to pick roles yourself.",
+    "onboardingNone": "None"
   }
 }

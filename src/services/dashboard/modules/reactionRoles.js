@@ -6,13 +6,46 @@
 import { html } from '../html.js';
 import {
     InputError, PERMS, buttonForm, channelField, channelName, channelPicker, isSnowflake, list, postForm, rolePicker, roleName,
-    roleWarnings, text, textArea, textInput,
+    roleWarnings, selectInput, text, textArea, textInput,
 } from '../forms.js';
 import { section, table } from './common.js';
 import { MAX_PANELS_PER_GUILD, PANEL_DESCRIPTION_MAX, PANEL_TITLE_MAX } from '../../reactionRoleService.js';
 import { textFor } from '../language.js';
 
 // Words: src/content/dashboard/<lang>/reactionRoles.json.
+
+// Ready-made panels (owner, 2026-11-10): languages, hobbies, identity. A preset only fills the
+// title and description the admin left empty, in the dashboard's language.
+export const PANEL_PRESETS = Object.freeze(['language', 'hobbies', 'identity']);
+
+/**
+ * The server's Discord onboarding questions that give roles: [{ id, title, roleIds }].
+ * Empty when onboarding is off or cannot be read (never an error for the page).
+ */
+export async function onboardingPrompts(guild) {
+    try {
+        const onboarding = await guild?.fetchOnboarding?.();
+        if (!onboarding?.prompts) return [];
+        return [...onboarding.prompts.values()].map((prompt) => ({
+            id: String(prompt.id),
+            title: String(prompt.title || '').slice(0, 100),
+            roleIds: [...new Set([...prompt.options.values()].flatMap((option) => [...(option.roles?.keys?.() || [])]))],
+        })).filter((prompt) => prompt.roleIds.length);
+    } catch {
+        return [];
+    }
+}
+
+/** Title, description and roles for a new panel after the preset and onboarding choice. Pure. */
+export function resolvePanelInput({ title, description, roleIds, preset, promptRoleIds = null }, tr) {
+    const known = PANEL_PRESETS.includes(preset) ? preset : null;
+    return {
+        title: title || (known ? tr.t(`reactionRoles.presets.${known}.title`) : ''),
+        description: description || (known ? tr.t(`reactionRoles.presets.${known}.description`) : ''),
+        // An onboarding question chosen: only its roles (the panel matches onboarding).
+        roleIds: promptRoleIds ? promptRoleIds : roleIds,
+    };
+}
 
 function messageIdField(ctx, form) {
     const id = text(form, 'messageId', 25);
@@ -26,10 +59,14 @@ export default {
     help: 'Let members pick their own roles, like colours, pronouns or games. Mewvo posts a message (a panel) with a menu, and members choose the roles they want from it. Mewvo only offers roles below its own role in the role list, never roles with staff powers, and never roles that belong to another bot or app.',
 
     async load(ctx) {
-        return { panels: await ctx.services.getAllReactionRoleMessages(ctx.client, ctx.guildId) };
+        const [panels, prompts] = await Promise.all([
+            ctx.services.getAllReactionRoleMessages(ctx.client, ctx.guildId),
+            onboardingPrompts(ctx.guild),
+        ]);
+        return { panels, prompts };
     },
 
-    render(ctx, { panels }) {
+    render(ctx, { panels, prompts = [] }) {
         const g = ctx.guild;
         const tr = textFor(ctx);
         const canPost = ctx.canEdit && ctx.canAct;
@@ -37,6 +74,8 @@ export default {
             ? html`<p class="muted">${tr.tx('reactionRoles.create.max', { count: tr.fmtNumber(MAX_PANELS_PER_GUILD) })}</p>`
             : postForm(ctx, 'reaction-roles', 'panel-create', html`<div class="grid">
 ${channelPicker(g, 'channelId', null, { label: tr.t('reactionRoles.create.postIn'), perms: PERMS.post, optional: false, help: tr.t('reactionRoles.create.postInHelp') })}
+${selectInput('preset', '', [['', tr.t('reactionRoles.presets.none')], ...PANEL_PRESETS.map((key) => [key, tr.t(`reactionRoles.presets.${key}.name`)])], { label: tr.t('reactionRoles.presets.label'), help: tr.t('reactionRoles.presets.help') })}
+${prompts.length ? selectInput('promptId', '', [['', tr.t('reactionRoles.presets.onboardingNone')], ...prompts.map((p) => [p.id, p.title])], { label: tr.t('reactionRoles.presets.onboarding'), help: tr.t('reactionRoles.presets.onboardingHelp') }) : ''}
 ${textInput('title', '', { label: tr.t('reactionRoles.create.titleLabel'), max: PANEL_TITLE_MAX, help: tr.t('reactionRoles.create.titleHelp') })}
 ${textArea('description', '', { label: tr.t('reactionRoles.create.description'), max: PANEL_DESCRIPTION_MAX, rows: 3, help: tr.t('reactionRoles.create.descriptionHelp') })}
 ${rolePicker(g, 'roleIds', [], { label: tr.t('reactionRoles.create.roles'), autoAssign: true, multiple: true, help: tr.t('reactionRoles.create.rolesHelp') })}</div>`,
@@ -63,11 +102,22 @@ ${existing.length ? existing : section(tr.t('reactionRoles.panels.title'), html`
                 const g = ctx.guild;
                 const tr = textFor(ctx);
                 const channelId = channelField(g, form, 'channelId', { optional: false, label: tr.t('reactionRoles.create.postIn') });
-                const roleIds = list(form, 'roleIds', { max: 25 }).filter(isSnowflake);
+                const promptId = text(form, 'promptId', 25);
+                let promptRoleIds = null;
+                if (promptId) {
+                    const prompt = (await onboardingPrompts(g)).find((p) => p.id === promptId);
+                    promptRoleIds = (prompt?.roleIds || []).slice(0, 25);
+                    if (!promptRoleIds.length) throw new InputError(tr.t('reactionRoles.action.onboardingEmpty'));
+                }
+                const input = resolvePanelInput({
+                    title: text(form, 'title', PANEL_TITLE_MAX + 1), description: text(form, 'description', PANEL_DESCRIPTION_MAX + 1),
+                    roleIds: list(form, 'roleIds', { max: 25 }).filter(isSnowflake), preset: text(form, 'preset', 20), promptRoleIds,
+                }, tr);
+                const roleIds = input.roleIds;
                 if (!roleIds.length) throw new InputError(tr.t('reactionRoles.action.chooseRole'));
                 const { message, roles, rejected } = await ctx.services.createReactionRolePanel(ctx.client, g, {
-                    channel: g.channels.cache.get(channelId), title: text(form, 'title', PANEL_TITLE_MAX + 1),
-                    description: text(form, 'description', PANEL_DESCRIPTION_MAX + 1), roleIds,
+                    channel: g.channels.cache.get(channelId), title: input.title,
+                    description: input.description, roleIds,
                     actorId: ctx.actor.userId, actorTag: `${ctx.actor.username} (dashboard)`,
                 });
                 return {

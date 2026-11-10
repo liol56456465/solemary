@@ -49,6 +49,30 @@
     "lastRole": "C’était le dernier rôle : le panneau a été supprimé.",
     "roleRemoved": "Rôle retiré du panneau.",
     "panelGone": "Ce panneau n’existe plus.",
-    "panelDeleted": "Panneau supprimé."
+    "panelDeleted": "Panneau supprimé.",
+    "onboardingEmpty": "Cette question d'accueil n'a aucun rôle que Mewvo peut donner."
+  },
+  "presets": {
+    "label": "Partir de",
+    "help": "Remplit le titre et la description si tu les laisses vides.",
+    "none": "Rien (écrire soi-même)",
+    "language": {
+      "name": "Langues",
+      "title": "Choisis ta langue",
+      "description": "Choisis les langues que tu parles. Tu peux les changer quand tu veux."
+    },
+    "hobbies": {
+      "name": "Loisirs",
+      "title": "Choisis tes loisirs",
+      "description": "Choisis ce qui t'intéresse pour que les gens avec les mêmes goûts te trouvent. Tu peux les changer quand tu veux."
+    },
+    "identity": {
+      "name": "À propos de toi",
+      "title": "À propos de toi",
+      "description": "Choisis les rôles qui te correspondent, comme les pronoms. Tu peux les changer quand tu veux."
+    },
+    "onboarding": "Rôles d'une question d'accueil",
+    "onboardingHelp": "Utilise seulement les rôles de cette question de l'accueil Discord. Laisse sur Aucune pour choisir les rôles toi-même.",
+    "onboardingNone": "Aucune"
   }
 }
