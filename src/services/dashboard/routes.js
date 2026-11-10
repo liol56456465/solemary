@@ -1483,6 +1483,7 @@ export function dashboardAppRouter({ home, registry, settings, client, blacklist
     addGlobalRoutes(router, home);
     const notFound = (req, res) => home.serverNotFound(req, res);
     const mainId = settings.mainGuildId;
+    const supportId = settings.supportGuildId && settings.supportGuildId !== mainId ? settings.supportGuildId : null;
 
     async function guildDispatch(req, res, next) {
         const segment = typeof req.params?.guildId === 'string' ? req.params.guildId : '';
@@ -1523,6 +1524,12 @@ export function dashboardAppRouter({ home, registry, settings, client, blacklist
         if (accessOf) {
             const decision = await accessOf(guildId).check(session.userId, { guildId });
             if (!decision?.allowed) return notFound(req, res);
+            // The Support server shares the main server's settings (home values): its dashboard
+            // also needs main-server access, so a Support-only admin never changes main settings.
+            if (supportId && guildId === supportId) {
+                const main = await accessOf(mainId).check(session.userId, { guildId: mainId });
+                if (!main?.allowed) return notFound(req, res);
+            }
         }
         const instance = registry.get(guildId);
         req.dashboardSession = session; // read once: requireUser reuses it (and the limit is counted once)

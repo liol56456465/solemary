@@ -391,6 +391,22 @@ function excerpt(message) {
     return `${text}${files}`.trim();
 }
 
+/** An administrator's message broke a rule: removed (unless the rule only watches) and reported. */
+export async function handleAdminHits(message, hits, { deleteQuietly: remove = deleteQuietly, post = postModLog } = {}) {
+    if (!hits.length) return false;
+    handledMessages.add(message.id);
+    const enforced = hits.some((hit) => hit.mode !== 'monitor');
+    if (enforced) await remove(message);
+    const rules = [...new Set(hits.map((hit) => hit.rule))].join(', ');
+    await post(message.client, 'automod', [
+        { name: 'Administrator', value: `${message.author.username} (${message.author.id})` },
+        { name: 'Rule', value: String(rules).slice(0, 1024) || 'unknown' },
+        { name: 'Channel', value: `<#${message.channel.id}>` },
+        { name: 'Action', value: enforced ? 'Message removed (no warn, mute or ban for administrators)' : 'Only reported (rule is in watch mode)' },
+    ], { guildId: message.guild.id }).catch((error) => logger.warn(`Automod admin report failed: ${error.message}`));
+    return true;
+}
+
 async function deleteQuietly(message) {
     await message.delete().catch((error) => {
         if (error?.code !== 10008) logger.warn(`Automod could not delete message ${message.id}: ${error.message}`);
@@ -657,7 +673,10 @@ export async function moderateMessage(message, { edited = false } = {}) {
         if (!settings.enabled || await isChannelExempt(message.guild.id, message.channel)) return false;
 
         const member = message.member || await message.guild.members.fetch(message.author.id).catch(() => null);
-        if (!member || isAdministrator(member)) return false;
+        if (!member) return false;
+        // Owner (2026-11-10): the rules apply to administrators too, but only by removing the
+        // message and telling staff; never a warn, mute or ban (no ladder for staff).
+        const admin = isAdministrator(member);
 
         const now = Date.now();
         if (now - lastPrune > 60 * 1000) {
@@ -673,6 +692,7 @@ export async function moderateMessage(message, { edited = false } = {}) {
             if (detected === null) return false;
         }
         let hits = applyRuleModes(detected, settings, message.channel);
+        if (admin) return await handleAdminHits(message, hits, deps);
         // Channel mood from the same hits (in memory, no extra reads); runs alongside.
         if (!edited && hits.length) {
             noteMoodSignals(message, hits, settings).catch((error) => logger.warn(`Mood tracking failed: ${error.message}`));
