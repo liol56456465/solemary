@@ -342,6 +342,19 @@ export async function logEnforcement(client, guildId, action, { record = null, t
     }
     fields.push(...extra);
 
+    // Owner (2026-11-10): enforcements belong in the staff mod log only. The general log
+    // channel gets a copy only when no mod log channel is set (or for test records, which
+    // never reach the mod log), so nothing is posted twice.
+    let hasModLog = false;
+    try {
+        hasModLog = Boolean(resolveChannelId(guildId, channelPurposeFor(action)));
+    } catch {
+        hasModLog = false;
+    }
+    if (hasModLog && !record?.is_test) {
+        await postModLog(client, action, fields, { guildId });
+        return;
+    }
     await logEvent({
         client,
         guildId,
