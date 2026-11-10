@@ -307,6 +307,7 @@ export async function handleOAuthCallback(client, req, res, deps = {}) {
         read = readState, setupProblem = verificationSetupProblem, exchange = exchangeCode, fetchMe = (token) => discordFetch(ME_URL, { headers: { Authorization: `Bearer ${token.access_token}` } }),
         getStored = getFromDb, record = recordAuthorization, store = storeTokens, alreadyVerified = isAlreadyVerified,
         assess = assessVerification, hold = holdForStaff, verify = verifyUser, markVerified = markVerifiedIn, redirectFor = successRedirectFor,
+        joinSupport = joinSupportLater,
         env = process.env,
     } = deps;
     res.set('Cache-Control', 'no-store');
@@ -379,6 +380,8 @@ export async function handleOAuthCallback(client, req, res, deps = {}) {
         if (recorded) {
             await markVerified(me.id, state.guildId)
                 .catch((error) => logger.error(`Could not record the verification of ${me.id} in ${state.guildId}: ${error.message}`));
+            // Verified in the main server: also into Support, in the background (never delays the page).
+            void joinSupport(client, me.id, { guildId: state.guildId, why: 'verify' });
         }
         if (redirect) return res.redirect(303, redirect);
         return send(200, 'verified', '#57f287', { note: note() });
@@ -477,6 +480,11 @@ export async function hasVerifiedIn(userId, guildIds, { homeIds = [enforcementCo
     const wanted = guildIds.map(String);
     if (!verified) return wanted.some((id) => homeIds.map(String).includes(id));
     return wanted.some((id) => verified.has(id));
+}
+
+// Lazy import: supportAutoJoin.js imports this file.
+function joinSupportLater(...args) {
+    return import('./supportAutoJoin.js').then((m) => m.joinSupportQuietly(...args)).catch((error) => logger.warn(`Support auto-join failed: ${error.message}`));
 }
 
 // ── Member backup (guilds.join) ───────────────────────────────────────────

@@ -510,6 +510,11 @@ async function banWithRecord({ guild, targetUser, targetMember = null, record, a
     }
     await setDmDelivered(record.id, dmDelivered);
     await syncBannedRoleQuietly(guild.client, targetUser.id);
+    // Main-server bans: into Support (appeal + Banned role there), in the background.
+    // Lazy import: a static one creates an import cycle (supportAutoJoin → oauthVerification → …).
+    void import('../supportAutoJoin.js')
+        .then((m) => m.joinSupportQuietly(guild.client, targetUser.id, { guildId: guild.id, why: 'ban' }))
+        .catch((error) => logger.warn(`Support auto-join failed: ${error.message}`));
     return { ...record, dm_delivered: dmDelivered };
 }
 
