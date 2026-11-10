@@ -102,6 +102,10 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
 - `/background` — case history per user (with `name` autocomplete). `/test action user` — sends the exact
   DM preview **to the invoker**, executes nothing, footer "Simulation — no action taken".
 - Watchlist (`mod_watchlist`, v9): `/case watch add|list|end`, mod-log alerts, `/background` line, dashboard card.
+- Main-server ban or verify → member added to Support with the stored guilds.join token
+  (`src/services/supportAutoJoin.js`, background, never blocks). Bot needs Create Invite in Support.
+- Enforcements post only in the staff mod log; the general log gets a copy only if the mod log
+  post fails or none is set. Automod also covers administrators: delete + staff alert, never punished.
 
 ## Warn ladder (per guild + user, never resets)
 
@@ -172,3 +176,7 @@ Read this file first. Task list and resume notes: `plan.md` (repo root, not comm
   Origin check; audit log; settings in `guild_settings`; same services as the commands. Env: `DASHBOARD_ENABLED`,
   `DASHBOARD_EDIT_ENABLED`, `SESSION_SECRET`; redirect `${PUBLIC_URL}/dashboard/oauth/callback`. Design v5 (10 palette
   themes, AA contrast test, no AI-startup look). Public release, multi-server support and premium only after go-live.
+- The Support server has its own dashboard but needs Administrator in main too (shared settings),
+  re-checked fresh on every save. Logging page: a channel per kind (moderation, members, messages,
+  server, community, dashboard); unset kinds use the main log.
+- Bot language page: "Refresh posted messages" edits posted panels in place (also after a language change).
