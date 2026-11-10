@@ -123,7 +123,7 @@ export async function pruneDmLog({ query = dbQuery, tables, now = Date.now(), li
  * @param {string} [o.label]        what the DM is, for the failure log line
  * @param {object} [deps]           tests: { insert, dbAvailable, hasLanguageRoles, hasPersonal, resolveLanguage, render }
  */
-export async function sendLoggedDm(user, { key, params = {}, guildId = null, member = null, components = null, files = null, label = key } = {}, deps = {}) {
+export async function sendLoggedDm(user, { key, params = {}, guildId = null, member = null, components = null, files = null, label = key, onError = null } = {}, deps = {}) {
     const {
         insert = insertDmLog,
         dbAvailable = isEnforcementDbAvailable,
@@ -147,6 +147,8 @@ export async function sendLoggedDm(user, { key, params = {}, guildId = null, mem
         });
     } catch (error) {
         logger.info(`DM ${label} to ${user.id} failed: ${error?.message || error}`);
+        // The caller may want the reason (50007 = the member's DMs are closed: don't try again).
+        try { onError?.(error); } catch { /* the caller's note never breaks the send */ }
         return false;
     }
     try {

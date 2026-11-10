@@ -466,6 +466,10 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
     // is made here, before the "closed" post; the staff copy below is made afterwards, as before.
     const serverName = safeServerName(channel.guild.name) || null;
     let transcriptInClosureDm = false;
+    // 50007: the member's DMs are closed. One refusal is enough: no retry, no survey DM, no
+    // separate transcript DM (each would fail the same way).
+    let dmsClosed = false;
+    const noteDmError = (error) => { if (Number(error?.code) === 50007) dmsClosed = true; };
     if (dmOnClose && ticketCreator) {
       const transcript = await generateTranscript(channel);
       const sendClosure = (withTranscript) => sendLoggedDm(ticketCreator, {
@@ -475,7 +479,7 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
           transcript: withTranscript,
         },
         guildId: channel.guild.id, member: creatorMember, label: 'ticket closure',
-        files: withTranscript ? [buildTranscriptAttachment(transcript)] : null,
+        files: withTranscript ? [buildTranscriptAttachment(transcript)] : null, onError: noteDmError,
       }).catch((error) => {
         logger.warn(`Ticket DM to ${ticketData.userId} not built: ${error.message}`);
         return false;
@@ -484,22 +488,22 @@ export async function closeTicket(channel, closer, reason = 'No reason provided'
       transcriptInClosureDm = Boolean(transcript && closeNotificationSent);
       // The file can be what failed (over the upload limit): the closure notice still goes out
       // without it, and the transcript is tried as its own DM below, as before.
-      if (transcript && !closeNotificationSent) closeNotificationSent = await sendClosure(false);
+      if (transcript && !closeNotificationSent && !dmsClosed) closeNotificationSent = await sendClosure(false);
     }
 
     // Rating survey (ticketRatingService.js): a pending row first (the claimer at close, else the
     // closer), then the DM. No row (ratings off, already rated before a reopen, database down): no survey.
     const rating = await prepareTicketRating(channel, ticketData, closer, config);
-    if (rating && ticketCreator) {
+    if (rating && ticketCreator && !dmsClosed) {
       feedbackSurveySent = await sendLoggedDm(ticketCreator, {
         key: 'ticket.feedback',
         params: { channelName: channel.name, serverName, guildId: channel.guild.id, channelId: channel.id },
-        guildId: channel.guild.id, member: creatorMember, label: 'ticket feedback survey',
+        guildId: channel.guild.id, member: creatorMember, label: 'ticket feedback survey', onError: noteDmError,
       }).catch((error) => {
         logger.warn(`Ticket DM to ${ticketData.userId} not built: ${error.message}`);
         return false;
       });
-    } else if (rating) {
+    } else if (rating && !dmsClosed) {
       logger.warn(`Could not deliver feedback survey by DM; ticket creator ${ticketData.userId} could not be fetched`);
     }
     // O2: the DM failed → the survey goes into the ticket channel, the opener keeps a read-only view.
@@ -591,7 +595,7 @@ components: []
     });
 
     try {
-      await deliverTicketTranscript(channel, ticketData, closer, { persist: true, dmAlreadySent: transcriptInClosureDm });
+      await deliverTicketTranscript(channel, ticketData, closer, { persist: true, dmAlreadySent: transcriptInClosureDm, dmsClosed });
     } catch (transcriptError) {
       logger.error('Ticket closed, but transcript delivery failed', {
         guildId: channel.guild.id,
@@ -946,7 +950,7 @@ function buildTranscriptAttachment(transcript) {
  * The transcript to the staff transcript channel and, by DM, to the opener. `dmAlreadySent`: the
  * closure DM already carried it (closeTicket), so no second DM; it still counts as delivered by DM.
  */
-async function deliverTicketTranscript(channel, ticketData, executor, { persist = false, dmAlreadySent = false } = {}) {
+async function deliverTicketTranscript(channel, ticketData, executor, { persist = false, dmAlreadySent = false, dmsClosed = false } = {}) {
   const transcript = await generateTranscript(channel);
   if (!transcript) {
     // The closure DM already carried a transcript: record that delivery even though the staff copy failed.
@@ -1029,7 +1033,7 @@ async function deliverTicketTranscript(channel, ticketData, executor, { persist 
   }
 
     try {
-      const ticketCreator = dmAlreadySent ? null : await channel.client.users.fetch(ticketData.userId).catch(() => null);
+      const ticketCreator = dmAlreadySent || dmsClosed ? null : await channel.client.users.fetch(ticketData.userId).catch(() => null);
       if (dmAlreadySent) dmSent = true;
       if (ticketCreator) {
         dmSent = await sendLoggedDm(ticketCreator, {
