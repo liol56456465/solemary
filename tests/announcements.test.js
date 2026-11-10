@@ -178,7 +178,7 @@ test('fillTemplate: language choice (English fallback), {count} and {changes} fi
     assert.equal(fillTemplate(count, { lang: 'xx' }).lang, 'en');
     assert.match(fillTemplate(count, {}).title, /\[number\]/, 'no count → a bracket to fill');
     const general = messageTemplate('game-night');
-    assert.equal(fillTemplate(general, { lang: 'de', server: 'Cats' }).lang, 'en', 'general templates are English only');
+    assert.equal(fillTemplate(general, { lang: 'de', server: 'Cats' }).lang, 'de', 'general templates come in 8 languages too (2026-11-10)');
     assert.match(fillTemplate(messageTemplate('mewvo-new-mods', { home: true }), { lang: 'ru' }).text, /\{mods\}/);
 });
 
@@ -215,8 +215,8 @@ test('chosenTemplate: home-only ids refused outside Mewvo\'s servers, language f
     assert.equal(chosenTemplate({ template: 'mewvo-maintenance' }, 'Main', { home: true, lang: 'pl' }).lang, 'pl');
     assert.equal(chosenTemplate({ template: 'mewvo-maintenance', lang: 'fr' }, 'Main', { home: true, lang: 'pl' }).lang, 'fr');
     const general = chosenTemplate({ template: 'game-night', lang: 'de' }, 'Cats', { home: false });
-    assert.equal(general.lang, 'en');
-    assert.equal(general.wanted, 'de', 'the page says the German text is missing');
+    assert.equal(general.lang, 'de', 'general templates are translated too');
+    assert.equal(chosenTemplate({ template: 'game-night', lang: 'xx' }, 'Cats', { home: false }).lang, 'en', 'unknown language → English');
 });
 
 // ── the send/schedule actions refuse home-only ids in another server ──────

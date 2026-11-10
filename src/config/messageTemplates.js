@@ -20,6 +20,7 @@
 // the appeal window (appealWindowMs, 30 days by default). A server that changes those
 // settings on the Enforcement page should edit the numbers before posting.
 
+import { readFileSync } from 'node:fs';
 import { MEWVO_TEMPLATES, MEWVO_TEMPLATE_GROUP } from './mewvoTemplates.js';
 
 export const MESSAGE_TEMPLATE_GROUPS = Object.freeze([
@@ -38,7 +39,23 @@ export const MESSAGE_TEMPLATE_GROUPS = Object.freeze([
     { key: 'safety', label: 'Safety and scams' },
 ]);
 
-const T = (id, group, name, title, text, colour = 'primary', extra = {}) => Object.freeze({ id, group, name, title, text, colour, ...extra });
+// Translations (owner, 2026-11-10): messageTemplates/<lang>.json, { id: { title, text } }. A
+// template with one is filled in the server's language on the Messages page (fillTemplate);
+// a missing file or entry: English.
+const TEMPLATE_LANGS = ['de', 'fr', 'es', 'it', 'pl', 'pt-BR', 'ru'];
+const TEMPLATE_TRANSLATIONS = Object.freeze(Object.fromEntries(TEMPLATE_LANGS.map((lang) => {
+    try {
+        return [lang, JSON.parse(readFileSync(new URL(`./messageTemplates/${lang}.json`, import.meta.url), 'utf8'))];
+    } catch {
+        return [lang, {}];
+    }
+})));
+const translationsOf = (id) => Object.freeze(Object.fromEntries(TEMPLATE_LANGS
+    .map((lang) => [lang, TEMPLATE_TRANSLATIONS[lang]?.[id]])
+    .filter(([, t]) => t && typeof t.title === 'string' && typeof t.text === 'string')
+    .map(([lang, t]) => [lang, Object.freeze({ title: t.title, text: t.text })])));
+
+const T = (id, group, name, title, text, colour = 'primary', extra = {}) => Object.freeze({ id, group, name, title, text, colour, translations: translationsOf(id), ...extra });
 
 export const MESSAGE_TEMPLATES = Object.freeze([
     // ── Support server ────────────────────────────────────────────────────
@@ -765,7 +782,7 @@ export function templatesByGroup({ home = false } = {}) {
     return home ? [{ ...MEWVO_TEMPLATE_GROUP, templates: [...MEWVO_TEMPLATES] }, ...groups] : groups;
 }
 
-/** The languages a template's text comes in: English, plus its translations (home templates). */
+/** The languages a template's text comes in: English, plus its translations. */
 export function templateLanguages(template) {
     return ['en', ...Object.keys(template?.translations || {})];
 }

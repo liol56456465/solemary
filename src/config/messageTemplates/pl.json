@@ -1,0 +1,354 @@
+{
+  "appeal-overview": {
+    "title": "Jak się odwołać",
+    "text": "Jeśli na {server} masz bana, kicka, wyciszenie albo ostrzeżenie i uważasz, że niesłusznie, możesz się odwołać.\n\n**1. Znajdź kod sprawy**\nJest w wiadomości prywatnej, którą Mewvo wysłał ci, gdy to się stało. Wygląda tak: `k7m2qx`. Nie masz już tej wiadomości? Zapytaj ekipę, a my go sprawdzimy.\n\n**2. Naciśnij Odwołaj się**\nUżyj przycisku Odwołaj się na panelu w #appeals.\n\n**3. Wypełnij formularz**\nNapisz, dlaczego kara powinna zostać zdjęta, i dodaj kod sprawy. Napisz szczerze, co się stało. Ekipa widzi logi, a odwołanie, w którym przyznajesz się do błędu, ma dużo większe szanse niż takie, które wszystkiemu zaprzecza.\n\n**Co dalej**\nPrzy banie lub kicku otwiera się tutaj prywatny kanał, na którym możesz porozmawiać z ekipą. Przy wyciszeniu lub ostrzeżeniu ekipa sprawdza sprawę u siebie. W obu przypadkach decyzję dostajesz w DM. Na większość odwołań odpowiadamy w ciągu kilku dni.\n\n**Warto wiedzieć**\n- Jedno odwołanie na sprawę naraz.\n- Jeśli odwołanie zostanie odrzucone, możesz spróbować ponownie po 7 dniach.\n- Od bana i wyciszenia możesz się odwołać, dopóki trwają. Od ostrzeżenia i kicka w ciągu 30 dni.\n- Od niektórych spraw nie można się odwołać. Jeśli tak jest, piszemy o tym w twojej wiadomości.\n- Naciśnij Moje odwołania na panelu, żeby sprawdzić, na jakim etapie jest twoje."
+  },
+  "appeal-ban": {
+    "title": "Odwołanie od bana",
+    "text": "Masz bana na {server}? Możesz się odwołać z tego serwera.\n\n1. Weź kod sprawy z wiadomości o banie, którą wysłał ci Mewvo.\n2. Naciśnij Odwołaj się na panelu w #appeals.\n3. Wyjaśnij, dlaczego ban powinien zostać zdjęty, i wklej kod sprawy.\n\nOtwiera się prywatny kanał, na którym możesz porozmawiać o tym z ekipą. Tam odpowiadaj na ich pytania. Decyzję dostaniesz w DM.\n\nJeśli odwołanie zostanie przyjęte, ban zostaje zdjęty, a w DM dostajesz jednorazowe zaproszenie z powrotem na serwer. Działa przez 7 dni.\n\nNa jeden ban możesz mieć tylko jedno otwarte odwołanie. Jeśli zostanie odrzucone, możesz odwołać się ponownie po 7 dniach. Od niektórych banów nie można się odwołać wcale albo tylko do określonej daty. Wiadomość o banie mówi, czy dotyczy to twojego."
+  },
+  "appeal-kick": {
+    "title": "Odwołanie od kicka",
+    "text": "Kick to nie ban. Możesz wrócić na {server} przez zaproszenie z wiadomości o kicku.\n\nJeśli nadal uważasz, że kick był niesłuszny, i chcesz go usunąć ze swojej historii, możesz się odwołać w ciągu 30 dni:\n1. Naciśnij Odwołaj się na panelu w #appeals.\n2. Wklej kod sprawy z wiadomości o kicku.\n3. Wyjaśnij, co się stało.\n\nOtwiera się prywatny kanał, na którym ekipa może cię o to zapytać. Decyzję dostaniesz w DM."
+  },
+  "appeal-mute": {
+    "title": "Odwołanie od wyciszenia",
+    "text": "Masz wyciszenie na {server}? Możesz się odwołać, dopóki trwa.\n\n1. Naciśnij Odwołaj się na panelu odwołań, tutaj albo na głównym serwerze.\n2. Wklej kod sprawy z wiadomości o wyciszeniu.\n3. Napisz, dlaczego wyciszenie powinno zostać zdjęte.\n\nEkipa sprawdza sprawę i wiadomości, które do niej doprowadziły. Decyzję dostaniesz w DM. Jeśli odwołanie zostanie przyjęte, wyciszenie znika od razu."
+  },
+  "appeal-warn": {
+    "title": "Odwołanie od ostrzeżenia",
+    "text": "Od ostrzeżenia możesz się odwołać w ciągu 30 dni od jego otrzymania.\n\n1. Naciśnij Odwołaj się na panelu odwołań.\n2. Wklej kod sprawy z wiadomości o ostrzeżeniu.\n3. Napisz, dlaczego ostrzeżenie powinno zostać usunięte.\n\nJeśli odwołanie zostanie przyjęte, ostrzeżenie znika i nie liczy się już do bana. Naciśnij Moja historia na panelu, żeby zobaczyć, ile masz teraz ostrzeżeń."
+  },
+  "appeal-honest": {
+    "title": "Zanim się odwołasz",
+    "text": "Kilka rzeczy, które pomagają w odwołaniu:\n\n- Najpierw przeczytaj powód w wiadomości i sprawdź zasadę, do której się odnosi.\n- Opisz własnymi słowami, co się stało.\n- Jeśli złamałeś zasadę, przyznaj to. Przeprosiny i wyjaśnienie, co zrobisz inaczej, działają lepiej niż kłótnia.\n- Jeśli uważasz, że ekipa się pomyliła, napisz dlaczego i dodaj linki do wiadomości, jeśli je masz.\n- Pisz spokojnie. Obrażanie ekipy w odwołaniu kończy się jego odrzuceniem.\n\nPytanie o postęp na innych kanałach niczego nie przyspieszy. Naciśnij Moje odwołania na panelu, żeby sprawdzić, na jakim etapie jest twoje."
+  },
+  "appeal-status": {
+    "title": "O twoich odwołaniach",
+    "text": "Czytamy każde odwołanie, także te długie.\n\nObecnie na odpowiedź czeka się około [liczba] dni. Dostaniesz DM, gdy tylko zapadnie decyzja.\n\nNie wysyłaj drugiego odwołania w tej samej sprawie i nie oznaczaj w tej sprawie ekipy. Naciśnij Moje odwołania na panelu odwołań, żeby sprawdzić, na jakim etapie jest twoje."
+  },
+  "appeals-paused": {
+    "title": "Odwołania są wstrzymane",
+    "text": "Do [data] nie przyjmujemy nowych odwołań.\n\nPowód: [krótki powód, na przykład ekipa sprząta po raidzie].\n\nOdwołania wysłane wcześniej są nadal otwarte i dostaną odpowiedź. Nic nie przepada. Gdy odwołania znów ruszą, napiszemy o tym tutaj."
+  },
+  "banned-role": {
+    "title": "Dlaczego widzę tylko kilka kanałów?",
+    "text": "Jeśli masz bana na {server}, dostajesz tutaj rolę Banned. Z nią widzisz tylko kanały odwołań.\n\nRola znika sama, gdy ban się skończy albo zostanie zdjęty.\n\nŻeby się odwołać, naciśnij Odwołaj się na panelu w #appeals."
+  },
+  "ticket-howto": {
+    "title": "Potrzebujesz pomocy ekipy?",
+    "text": "Naciśnij przycisk na panelu ticketów w #[kanał ticketów], żeby otworzyć ticket.\n\nOtwiera się prywatny kanał, który widzisz tylko ty i ekipa. W pierwszej wiadomości napisz, czego potrzebujesz, żebyśmy mogli szybciej pomóc.\n\nTicket przyda się na przykład do:\n- pytań o zasady\n- problemów z rolami albo kanałami\n- zgłoszenia czegoś, czego nie chcesz pisać publicznie\n\nJeden temat na ticket. Ekipa zamyka go, gdy sprawa jest załatwiona."
+  },
+  "modmail-howto": {
+    "title": "Napisz do ekipy",
+    "text": "Możesz porozmawiać z ekipą prywatnie, wysyłając Mewvo wiadomość prywatną.\n\n1. Wyślij swoją wiadomość do Mewvo w DM.\n2. Naciśnij Wyślij do ekipy.\n3. Ekipa odpowiada w tym samym DM.\n\nWszystko, co wyślesz potem, trafia do ekipy, dopóki nie zamknie rozmowy. Widzi to tylko ekipa.\n\nŻeby to działało, musisz być na {server}."
+  },
+  "staff-reports": {
+    "title": "Zgłoszenie członka ekipy",
+    "text": "Jeśli ktoś z ekipy złamał zasady albo potraktował cię niesprawiedliwie, możesz go zgłosić.\n\nNaciśnij Zgłoś członka ekipy na panelu odwołań w #appeals. Podaj jego nazwę użytkownika, co się stało i linki do wiadomości, jeśli je masz.\n\nZgłoszenia widzą tylko administratorzy. Osoba, którą zgłaszasz, ich nie widzi.\n\nMożesz mieć jedno otwarte zgłoszenie naraz i wysłać maksymalnie trzy dziennie. Zmyślone zgłoszenia, żeby się na kimś odegrać, traktujemy jak złamanie zasad."
+  },
+  "support-hours": {
+    "title": "Kiedy ekipa jest dostępna",
+    "text": "Ekipa jest zwykle online:\n- W dni robocze: [godzina] do [godzina] ([strefa czasowa])\n- W weekendy: [godzina] do [godzina] ([strefa czasowa])\n\nTicket albo odwołanie możesz wysłać o każdej porze. Poza tymi godzinami odpowiedź może zająć dłużej.\n\nJeśli sprawa jest pilna, na przykład raid albo ktoś jest w niebezpieczeństwie, oznacz @[rola]."
+  },
+  "support-welcome": {
+    "title": "Witaj na {server}",
+    "text": "Ten serwer służy do pomocy z odwołaniami, zgłoszeniami i pytaniami.\n\n- Żeby odwołać się od kary, przejdź do #appeals.\n- Żeby zgłosić członka ekipy, użyj Zgłoś członka ekipy na tym samym panelu.\n- Z każdą inną sprawą pytaj na #[kanał pomocy].\n\nBądź kulturalny. Zasady głównego serwera obowiązują też tutaj."
+  },
+  "rules-updated": {
+    "title": "Zasady się zmieniły",
+    "text": "Zaktualizowaliśmy zasady na #[kanał zasad].\n\nCo się zmieniło:\n- [zmiana]\n- [zmiana]\n\nNowe zasady obowiązują od teraz. Poświęć minutę, żeby je przeczytać. Jeśli coś jest niejasne, otwórz ticket i zapytaj."
+  },
+  "changelog": {
+    "title": "Aktualizacja serwera",
+    "text": "Kilka zmian na {server}:\n\n**Nowe**\n- [co dodano]\n\n**Zmienione**\n- [co się zmieniło]\n\n**Usunięte**\n- [co usunięto]\n\nPytania i opinie piszcie na #[kanał opinii]."
+  },
+  "maintenance": {
+    "title": "Planowana przerwa techniczna",
+    "text": "[data] od [godzina] do [godzina] ([strefa czasowa]) będziemy pracować nad serwerem.\n\nW tym czasie [co nie będzie działać, na przykład niektóre kanały będą zablokowane].\n\nNie musisz nic robić. Napiszemy tutaj, gdy skończymy."
+  },
+  "maintenance-done": {
+    "title": "Przerwa techniczna zakończona",
+    "text": "Wszystko powinno działać normalnie.\n\nJeśli coś nadal wygląda na zepsute, napisz nam na #[kanał pomocy] albo otwórz ticket."
+  },
+  "bot-outage": {
+    "title": "Mewvo ma problemy",
+    "text": "Mewvo nie działa teraz poprawnie. Komendy mogą nie odpowiadać, a poziomy mogą się nie naliczać.\n\nWiemy o tym i nad tym pracujemy. Nie musisz tego zgłaszać.\n\nJeśli w międzyczasie potrzebujesz ekipy, oznacz @[rola]."
+  },
+  "new-channel": {
+    "title": "Nowy kanał: #[kanał]",
+    "text": "Dodaliśmy #[kanał] do [do czego służy].\n\nTrzymaj się tematu. Zwykłe zasady obowiązują też tam."
+  },
+  "channel-cleanup": {
+    "title": "Porządki na kanałach",
+    "text": "Niektóre kanały od dawna są puste, więc robimy porządki.\n\n[data] usuniemy albo zarchiwizujemy:\n- #[kanał]\n- #[kanał]\n\nJeśli chcesz zachować któryś z nich, napisz o tym wcześniej na #[kanał opinii]."
+  },
+  "partnership": {
+    "title": "Nowy partner: [nazwa serwera]",
+    "text": "{server} jest teraz partnerem serwera [nazwa serwera].\n\n[Jedno lub dwa zdania o tym, czym są.]\n\nMożesz do nich dołączyć tutaj: [link z zaproszeniem]\n\nPosty partnerskie tylko na #[kanał partnerów]. Reklamowanie się na innych kanałach nadal jest zabronione."
+  },
+  "milestone": {
+    "title": "Mamy [liczba] członków",
+    "text": "{server} właśnie przekroczył [liczba] członków. Dzięki wszystkim, którzy tu piszą i zapraszają znajomych.\n\n[Opcjonalnie: jak to uczcimy, na przykład giveaway albo wydarzenie.]"
+  },
+  "holiday": {
+    "title": "Wesołych [święto]",
+    "text": "Wesołych [święto] od ekipy {server}.\n\nPrzez najbliższe dni ekipa może odpowiadać wolniej. Tickety i odwołania zostają otwarte i dostaną odpowiedź."
+  },
+  "weekly-reminder": {
+    "title": "Cotygodniowe przypomnienie",
+    "text": "Kilka rzeczy do zapamiętania:\n\n- Przeczytaj zasady na #[kanał zasad], jeśli jeszcze tego nie zrobiłeś.\n- Pisz na kanale pasującym do tematu.\n- Problemy zgłaszaj ticketem, zamiast kłócić się na czacie.\n- Ekipa nigdy nie napisze do ciebie pierwsza z prośbą o hasło albo kod.\n\nUdanego tygodnia."
+  },
+  "event-announce": {
+    "title": "[Nazwa wydarzenia]",
+    "text": "**Kiedy:** [data], [godzina] ([strefa czasowa])\n**Gdzie:** #[kanał tekstowy lub głosowy]\n\n[Czym jest wydarzenie, w jednym lub dwóch zdaniach.]\n\nDodaj reakcję albo naciśnij Zainteresowany przy wydarzeniu na Discordzie, jeśli planujesz przyjść, żebyśmy wiedzieli, ilu osób się spodziewać."
+  },
+  "event-reminder": {
+    "title": "[Nazwa wydarzenia] zaczyna się niedługo",
+    "text": "[Nazwa wydarzenia] zaczyna się za [czas] na #[kanał].\n\nJeśli zapowiedziałeś, że przyjdziesz, to dobry moment, żeby się przygotować."
+  },
+  "event-start": {
+    "title": "[Nazwa wydarzenia] się zaczyna",
+    "text": "[Nazwa wydarzenia] zaczyna się teraz na #[kanał]. Dołącz do nas.\n\nNa kanałach wydarzenia obowiązują zwykłe zasady."
+  },
+  "event-cancelled": {
+    "title": "[Nazwa wydarzenia] zostaje przeniesione",
+    "text": "[Nazwa wydarzenia] nie odbędzie się [data], jak planowaliśmy.\n\nNowa data: [nowa data albo „nową datę podamy wkrótce”].\n\nPrzepraszamy za zmianę."
+  },
+  "giveaway-winner": {
+    "title": "Zwycięzca giveawayu",
+    "text": "Giveaway o **[nagroda]** się zakończył. Gratulacje dla [zwycięzca].\n\nZwycięzco: napisz do [organizator] w ciągu 48 godzin, żeby odebrać nagrodę, inaczej wybierzemy kogoś innego.\n\nDzięki wszystkim, którzy wzięli udział."
+  },
+  "giveaway-rules": {
+    "title": "Jak działają nasze giveawaye",
+    "text": "- Żeby wziąć udział, naciśnij przycisk Dołącz przy giveawayu.\n- Zwycięzcy są losowani, gdy giveaway się kończy.\n- Zwycięzcy mają 48 godzin, żeby napisać do organizatora, inaczej losujemy ponownie.\n- Alty są zabronione. Udział z altem oznacza usunięcie wszystkich twoich kont z giveawayu.\n- Ekipa nigdy nie poprosi cię o zapłatę ani logowanie się gdzieś, żeby odebrać nagrodę."
+  },
+  "poll-results": {
+    "title": "Wyniki ankiety: [pytanie]",
+    "text": "Dzięki za głosy. Tak to wyszło:\n\n- [opcja]: [liczba] głosów\n- [opcja]: [liczba] głosów\n\nWybieramy więc **[wynik]**. [Co dalej.]"
+  },
+  "roles-menu": {
+    "title": "Wybierz swoje role",
+    "text": "Przejdź do #[kanał ról] i wybierz role, które chcesz.\n\n- **Role powiadomień** decydują, o których ogłoszeniach dostajesz powiadomienie.\n- **Role zainteresowań** otwierają kanały na te tematy.\n\nMożesz je zmienić w każdej chwili, wybierając ponownie."
+  },
+  "new-role": {
+    "title": "Nowa rola: [nazwa roli]",
+    "text": "Jest nowa rola, **[nazwa roli]**.\n\n[Do czego służy i jak ją dostać.]"
+  },
+  "introduce-yourself": {
+    "title": "Przedstaw się",
+    "text": "Jesteś tu nowy? Przywitaj się na #[kanał powitań].\n\nKilka pomysłów, co napisać:\n- jak chcesz, żeby się do ciebie zwracać\n- jak trafiłeś na {server}\n- jakie gry, seriale albo hobby lubisz\n\nNie podawaj danych osobowych, takich jak adres, szkoła albo numer telefonu."
+  },
+  "level-rewards": {
+    "title": "Poziomy i nagrody",
+    "text": "Za pisanie na czacie dostajesz XP. Spamowanie, żeby wbić poziom, nie działa i może skończyć się wyciszeniem.\n\nUżyj `/rank`, żeby zobaczyć swój poziom, i `/leaderboard`, żeby zobaczyć najlepszych.\n\nNagrody:\n- Poziom [liczba]: [rola]\n- Poziom [liczba]: [rola]\n- Poziom [liczba]: [rola]"
+  },
+  "boost-thanks": {
+    "title": "Dzięki dla naszych boosterów",
+    "text": "Dzięki wszystkim, którzy boostują {server}. Boosty dają nam [co odblokowują, na przykład lepszą jakość dźwięku i więcej miejsc na emoji].\n\nBoosterzy dostają [bonus, na przykład kolorową rolę i dostęp do #[kanał]]."
+  },
+  "mewvo-features": {
+    "title": "Komendy Mewvo, których możesz używać",
+    "text": "Mewvo to bot, który obsługuje tutaj moderację i poziomy. Kilka rzeczy, których możesz używać sam:\n\n- `/rank`: twój poziom i XP\n- `/leaderboard`: najbardziej aktywni członkowie\n- `/appeal status`: na jakim etapie są twoje odwołania\n- `/report file`: prywatne zgłoszenie członka do ekipy\n- DM do Mewvo: prywatna rozmowa z ekipą (modmail)\n\nNa stronie Moja historia pokazuje twoje ostrzeżenia, sprawy i odwołania: [link do strony]/me"
+  },
+  "quiet-hours": {
+    "title": "Trzymajmy przyjazny czat",
+    "text": "Ostatnio na czacie robi się gorąco.\n\nRóżnica zdań jest w porządku. Obrażanie, prowokowanie i zbiorowe naskakiwanie na kogoś już nie. Jeśli ktoś cię denerwuje, zablokuj go albo otwórz ticket, zamiast kłócić się publicznie.\n\nOd teraz ekipa będzie dawać wyciszenia, jeśli to nie ustanie."
+  },
+  "staff-rules-mods": {
+    "title": "Zasady dla moderatorów",
+    "text": "Obowiązują każdego z rolą moderatora, oprócz zasad serwera.\n\n**1. Najpierw przestrzegaj zasad serwera.** Od ekipy wymagamy więcej, nie mniej.\n**2. Dawaj właściwą karę.** Stosuj karę przypisaną do zasady. Nie masz pewności? Zapytaj na czacie ekipy, zanim zareagujesz.\n**3. Zawsze podawaj powód.** Każde ostrzeżenie, wyciszenie, kick i ban wymaga prawdziwego powodu i dowodów, jeśli są.\n**4. Bez osobistych urazów.** Nie karz kogoś, z kim się kłócisz. Zostaw to innemu moderatorowi.\n**5. Sprawy ekipy zostają w ekipie.** Nie udostępniaj spraw, zgłoszeń, odwołań ani czatu ekipy poza kanałami ekipy.\n**6. Zachowuj spokój publicznie.** Z innym członkiem ekipy spieraj się na czacie ekipy, nie przy członkach serwera.\n**7. Nie nadużywaj bota ani uprawnień roli.** Żadnych żartów, fałszywych kar ani dawania ról znajomym.\n**8. Daj znać, gdy cię nie ma.** Będziesz nieaktywny dłużej niż [czas]? Napisz o tym na #[kanał ekipy].\n\n**Konsekwencje**\n- Drobne błędy: rozmowa z administratorem\n- Powtarzające się albo niedbałe błędy: degradacja\n- Nadużywanie uprawnień moderatora, wynoszenie informacji ekipy albo raidowanie: degradacja i ban"
+  },
+  "staff-rules-admins": {
+    "title": "Zasady dla administratorów",
+    "text": "Obowiązują każdego z uprawnieniem Administrator, oprócz zasad dla moderatorów.\n\n**1. Zmiany idą przez czat ekipy.** Nie zmieniaj kanałów, ról, botów ani ustawień serwera bez informowania innych administratorów.\n**2. Nigdy nie dawaj uprawnień ekipy samodzielnie.** O nowych moderatorach i administratorach decyduje [kto decyduje].\n**3. Chroń serwer.** Nigdy nie dodawaj niezaufanych botów i nigdy nikomu nie udostępniaj tokenów botów, danych logowania ani panelu.\n**4. Sprawdzaj, nie uchylaj po cichu.** Cofnięcie akcji innego moderatora wymaga notatki w sprawie i wiadomości do niego.\n**5. Odwołania i zgłoszenia na ekipę rozpatrujemy uczciwie.** Nie rozpatruj odwołania ani zgłoszenia dotyczącego ciebie albo twojego znajomego.\n**6. Akcje masowe wymagają powodu.** Masowe bany, czyszczenia i blokady są tylko na raidy i sytuacje awaryjne.\n\n**Konsekwencje**\n- Błędy: rozmowa z właścicielem\n- Ignorowanie tych zasad: degradacja do moderatora albo usunięcie z ekipy\n- Nadużywanie uprawnienia Administrator, nukowanie albo pomoc w raidzie: usunięcie z ekipy i permanentny ban"
+  },
+  "staff-apps-open": {
+    "title": "Rekrutacja do ekipy otwarta",
+    "text": "Szukamy [liczba] nowych moderatorów.\n\nPowinieneś:\n- być tu aktywny od co najmniej [czas]\n- nie mieć ostatnio ostrzeżeń\n- być online przynajmniej kilka godzin w tygodniu\n\nZgłoś się przez `/apply submit` albo na #[kanał rekrutacji] przed [data]. Czytamy każde zgłoszenie i odpowiadamy w DM.\n\nPytanie ekipy o twoje zgłoszenie niczego nie przyspieszy."
+  },
+  "staff-apps-closed": {
+    "title": "Rekrutacja do ekipy zamknięta",
+    "text": "Rekrutacja jest zamknięta. Dzięki wszystkim, którzy się zgłosili.\n\nPrzejrzymy zgłoszenia w ciągu najbliższych [liczba] dni i każdemu odpowiemy w DM, także jeśli odpowiedź jest odmowna."
+  },
+  "staff-welcome": {
+    "title": "Nowa osoba w ekipie",
+    "text": "Przywitajcie [nazwa] w ekipie moderacji.\n\nMoże pomagać z ticketami, zgłoszeniami i pilnowaniem porządku na czacie. Dajcie trochę czasu na wdrożenie się."
+  },
+  "staff-leaving": {
+    "title": "Dzięki, [nazwa]",
+    "text": "[nazwa] odchodzi z ekipy.\n\nDzięki za cały czas, który poświęciłeś {server}. Będzie nam ciebie brakować.\n\nOtwarte tickety po tej osobie przejmuje reszta ekipy."
+  },
+  "lockdown-active": {
+    "title": "Serwer jest zablokowany",
+    "text": "Zablokowaliśmy serwer z powodu [raid / spam / powód].\n\nWiększość kanałów jest na razie tylko do odczytu. Nie musisz nic robić.\n\nNie klikaj linków od nieznanych kont i nie odpisuj raiderom. Napiszemy tutaj, gdy będzie po wszystkim."
+  },
+  "raid-ended": {
+    "title": "Blokada zdjęta",
+    "text": "Raid się skończył i kanały są znowu otwarte.\n\nKonta biorące udział dostały bana, a ich wiadomości zostały usunięte. Jeśli nadal widzisz coś, co przeoczyliśmy, zgłoś to ticketem i dodaj link do wiadomości.\n\nDzięki, że zachowaliście spokój."
+  },
+  "verification-required": {
+    "title": "Zweryfikuj się, żeby dostać dostęp",
+    "text": "Nowi członkowie muszą się teraz zweryfikować, zanim zobaczą resztę {server}.\n\nPrzejdź do #[kanał weryfikacji] i naciśnij Zweryfikuj. To zajmuje kilka sekund.\n\nDzięki temu boty raidujące i konta spamujące zostają za drzwiami."
+  },
+  "scam-dm": {
+    "title": "Uważaj na oszukańcze DM",
+    "text": "Niektórzy członkowie dostają DM od kont, które podszywają się pod {server} albo Discorda.\n\nMogą pisać, że coś wygrałeś, że twoje konto dostanie bana, albo prosić o „weryfikację” na jakiejś stronie.\n\n- Nie klikaj linków.\n- Nie skanuj kodów QR, które wysyłają.\n- Nie wysyłaj kodów, haseł ani pieniędzy.\n\nZablokuj konto, a jeśli jest na tym serwerze, zgłoś je ticketem."
+  },
+  "nitro-scam": {
+    "title": "Linki do darmowego Nitro to oszustwo",
+    "text": "Jeśli ktoś wysyła ci link do darmowego Nitro, to prawie zawsze oszustwo, żeby ukraść twoje konto.\n\nPrawdziwe prezenty Nitro pokazują się jako pudełko z prezentem w Discordzie, a nie jako link do strony. Jeśli strona prosi o zalogowanie albo zeskanowanie kodu QR, zamknij ją.\n\nJeśli już kliknąłeś taki link i się zalogowałeś, zmień teraz hasło i włącz uwierzytelnianie dwuskładnikowe."
+  },
+  "never-dm-first": {
+    "title": "Ekipa nigdy nie pisze pierwsza",
+    "text": "Nikt z ekipy {server} nie napisze do ciebie pierwszy z prośbą o:\n- hasło albo kod logowania\n- pieniądze, karty podarunkowe albo Nitro\n- pobranie czegoś albo „przetestowanie gry”\n\nJeśli ktoś tak robi, to nie jest ekipa. Sprawdź prawdziwe role ekipy na liście członków i zgłoś to konto ticketem."
+  },
+  "phishing-link": {
+    "title": "Nie klikaj tego linku",
+    "text": "Wcześniej na #[kanał] pojawił się link phishingowy. Usunęliśmy go i zbanowaliśmy konto.\n\nJeśli go kliknąłeś i wpisałeś dane logowania do Discorda:\n1. Od razu zmień hasło.\n2. Włącz uwierzytelnianie dwuskładnikowe.\n3. Sprawdź Ustawienia > Urządzenia i wyloguj wszystko, czego nie znasz.\n\nKonta, które zostały przejęte i zaczynają spamować, są kickowane, dopóki nie zostaną zabezpieczone. Napisz do ekipy, gdy twoje będzie znowu bezpieczne."
+  },
+  "compromised-account": {
+    "title": "O przejętych kontach",
+    "text": "Jeśli twoje konto zostanie przejęte i wrzuca linki do oszustw, kickujemy je, żeby chronić innych. To nie jest kara.\n\nŻeby wrócić:\n1. Zmień hasło i włącz uwierzytelnianie dwuskładnikowe.\n2. Napisz do kogoś z ekipy albo otwórz ticket na serwerze wsparcia.\n3. Wyślemy ci nowe zaproszenie."
+  },
+  "welcome-new-members": {
+    "title": "Witamy wszystkich nowych",
+    "text": "Ciepło witamy wszystkich, którzy dołączyli do {server} w tym tygodniu.\n\n- Przeczytaj zasady na #[kanał zasad].\n- Wybierz role na #[kanał ról].\n- Przywitaj się na #[kanał czatu].\n\nJeśli masz pytanie, zadaj je na #[kanał pomocy] albo otwórz ticket."
+  },
+  "rules-reminder": {
+    "title": "Krótkie przypomnienie zasad",
+    "text": "Ostatnio jest trochę głośno, więc krótkie przypomnienie.\n\n- Bądźcie dla siebie mili.\n- Na każdym kanale trzymajcie się jego tematu.\n- Bez spamu i bez autopromocji poza #[kanał promocji].\n\nPełne zasady są na #[kanał zasad]. W razie potrzeby ekipa da ostrzeżenie albo wyciszenie."
+  },
+  "rule-added": {
+    "title": "Nowa zasada: [krótka nazwa]",
+    "text": "Dodaliśmy zasadę na {server}:\n\n**[Numer zasady]. [Tytuł zasady]**\n[Co mówi zasada, w jednym lub dwóch zdaniach.]\n\nDlaczego: [powód, na przykład co ciągle się powtarzało].\n\nObowiązuje od teraz. Nic, co napisałeś przed dzisiaj, nie liczy się przeciwko tobie."
+  },
+  "rule-removed": {
+    "title": "Usunęliśmy zasadę",
+    "text": "Zasada [numer] ([tytuł zasady]) zniknęła. [Dlaczego ją usunięto.]\n\nPozostałe zasady mają nowe numery, więc sprawdź #[kanał zasad], jeśli linkujesz do zasady po numerze."
+  },
+  "rule-clarified": {
+    "title": "Zasada [numer] wyjaśniona",
+    "text": "Kilka osób pytało o zasadę [numer], więc oto co oznacza w praktyce.\n\n**Dozwolone:** [przykład]\n**Niedozwolone:** [przykład]\n\nSama zasada się nie zmieniła. Zapytaj ekipę, jeśli coś jest nadal niejasne."
+  },
+  "no-ping-staff": {
+    "title": "Nie oznaczaj ekipy",
+    "text": "Oznaczanie ekipy przy każdym pytaniu spowalnia wszystkich.\n\n- Po pomoc idź na #[kanał pomocy].\n- Z problemem z innym członkiem otwórz ticket.\n- Oznaczaj ekipę tylko wtedy, gdy coś dzieje się właśnie teraz, na przykład raid."
+  },
+  "spoiler-reminder": {
+    "title": "Używaj tagów spoilera",
+    "text": "[Rzecz] właśnie wyszło, więc nie każdy już to widział.\n\nSpoilery oznaczaj tak: ||spoiler||. Swobodnie rozmawiaj o tym na #[kanał spoilerów].\n\nNieoznaczone spoilery na innych kanałach będą usuwane."
+  },
+  "giveaway-start": {
+    "title": "Giveaway: [nagroda]",
+    "text": "Rozdajemy [nagroda] na {server}.\n\nJak wziąć udział: [reakcja / naciśnij przycisk / wiadomość na #channel].\nKoniec: [data i godzina].\nZwycięzcy: [liczba].\n\nJeden udział na osobę. Alty są usuwane z losowania."
+  },
+  "giveaway-ending": {
+    "title": "Ostatnia szansa: [nagroda]",
+    "text": "Giveaway o [nagroda] kończy się za [czas].\n\nJeśli jeszcze nie bierzesz udziału, [jak wziąć udział]."
+  },
+  "giveaway-reroll": {
+    "title": "Nowy zwycięzca: [nagroda]",
+    "text": "Pierwszy zwycięzca nie odebrał [nagroda] na czas, więc losowaliśmy ponownie.\n\nNowy zwycięzca to [nazwa]. Otwórz ticket w ciągu [48 godzin], żeby odebrać nagrodę."
+  },
+  "event-recap": {
+    "title": "Dzięki, że byliście",
+    "text": "Dzięki wszystkim, którzy wczoraj dołączyli do [wydarzenie]. Wzięło udział [liczba] osób.\n\n[Krótkie podsumowanie: zwycięzcy, najlepszy moment, kanał ze zrzutami ekranu.]\n\nMasz pomysły na następne? Napisz je na #[kanał propozycji]."
+  },
+  "game-night": {
+    "title": "Wieczór gier: [gra]",
+    "text": "Wieczór gier na {server} w [dzień] o [godzina] ([strefa czasowa]).\n\nGra: [gra]\nKanał głosowy: #[kanał głosowy]\n\nKażdy jest mile widziany, nowi gracze też. Dodaj reakcję poniżej, jeśli chcesz dołączyć, żebyśmy wiedzieli, ile grup zrobić."
+  },
+  "movie-night": {
+    "title": "Wieczór filmowy",
+    "text": "Oglądamy razem [film] w [dzień] o [godzina] ([strefa czasowa]).\n\nWejdź na #[kanał głosowy] kilka minut wcześniej. Transmisja zaczyna się punktualnie.\n\nRozmawiaj o filmie na #[kanał czatu]. Nie wrzucaj spoilerów na inne kanały."
+  },
+  "voice-hangout": {
+    "title": "Wieczorem posiedzenie na głosowym",
+    "text": "Posiedź z nami dziś wieczorem na #[kanał głosowy] od [godzina] ([strefa czasowa]).\n\nBez planu, po prostu gadamy. Wpadaj i wychodź, kiedy chcesz."
+  },
+  "stage-talk": {
+    "title": "Q&A na scenie: [temat]",
+    "text": "[Imię] odpowiada na wasze pytania o [temat] w [dzień] o [godzina] ([strefa czasowa]) na #[kanał sceny].\n\nPytania wrzucaj na #[kanał pytań] przed startem. Podnieś rękę na scenie, żeby zapytać na żywo."
+  },
+  "karaoke-night": {
+    "title": "Wieczór karaoke",
+    "text": "Karaoke na #[kanał głosowy] w [dzień] o [godzina] ([strefa czasowa]).\n\nZapisz się na #[kanał wydarzenia] z piosenką, którą chcesz zaśpiewać. Słuchacze też są mile widziani."
+  },
+  "tournament-signup": {
+    "title": "Turniej: [gra]",
+    "text": "Zapisy na turniej [gra] są otwarte do [data].\n\nFormat: [drużyny 2-osobowe / 1v1 / ...]\nStart: [data i godzina] ([strefa czasowa])\nNagroda: [nagroda, jeśli jest]\n\nZapisz się na #[kanał zapisów]. Najpierw przeczytaj tam zasady turnieju."
+  },
+  "maintenance-extended": {
+    "title": "Przerwa techniczna się przedłuża",
+    "text": "Prace na serwerze trwają dłużej, niż planowaliśmy. Teraz zakładamy, że skończymy do [godzina] ([strefa czasowa]).\n\nPrzepraszamy za czekanie. Napiszemy tutaj, gdy skończymy."
+  },
+  "emergency-maintenance": {
+    "title": "Nieplanowana przerwa techniczna",
+    "text": "Musimy coś od razu naprawić, więc [co nie działa] na razie nie działa.\n\nSpodziewamy się, że zajmie to około [czas]. Nie musisz nic robić."
+  },
+  "discord-outage": {
+    "title": "Discord ma problemy",
+    "text": "Sam Discord ma teraz problemy. Wiadomości mogą się nie wysyłać, a boty mogą nie odpowiadać.\n\nNie mamy na to wpływu. Możesz to śledzić na discordstatus.com. Wszystko powinno znowu działać, gdy Discord to naprawi."
+  },
+  "channel-readonly": {
+    "title": "#[kanał] jest na razie tylko do odczytu",
+    "text": "#[kanał] jest tylko do odczytu, dopóki [powód].\n\nW międzyczasie używaj #[inny kanał]. Otworzymy go ponownie [data]."
+  },
+  "server-anniversary": {
+    "title": "{server} ma już [liczba] lat",
+    "text": "{server} powstał dokładnie [liczba] lat temu.\n\nDzięki wszystkim, którzy pomogli mu urosnąć, od pierwszych członków po osoby, które dołączyły w zeszłym tygodniu.\n\n[Opcjonalnie: wydarzenie albo giveaway z tej okazji.]"
+  },
+  "boost-level": {
+    "title": "Osiągnęliśmy poziom boosta [liczba]",
+    "text": "Dzięki naszym boosterom {server} osiągnął poziom boosta [liczba].\n\nDzięki temu mamy [bonusy, na przykład lepszą jakość głosu i więcej miejsc na emoji]."
+  },
+  "message-milestone": {
+    "title": "[Liczba] wiadomości",
+    "text": "Członkowie {server} wysłali już [liczba] wiadomości. Dzięki, że czat żyje."
+  },
+  "staff-apps-deadline": {
+    "title": "Rekrutacja do ekipy niedługo się kończy",
+    "text": "Rekrutacja do ekipy kończy się [data]. Jeśli chcesz się zgłosić, [jak się zgłosić].\n\nCzytamy każde zgłoszenie. Odpowiedzi wyślemy w DM do [data]."
+  },
+  "staff-apps-results": {
+    "title": "Rekrutacja do ekipy: wyniki",
+    "text": "Dzięki wszystkim, którzy się zgłosili. Każdy dostał już odpowiedź w DM.\n\nJeśli tym razem cię nie wybraliśmy, możesz zgłosić się ponownie przy następnej rekrutacji. Ogłosimy ją tutaj."
+  },
+  "partner-requirements": {
+    "title": "Chcesz zostać naszym partnerem?",
+    "text": "Współpracujemy z serwerami, które:\n- mają co najmniej [liczba] członków,\n- przestrzegają Warunków korzystania z usługi Discorda,\n- mają aktywną ekipę i jasne zasady.\n\nŻeby zapytać, otwórz ticket i wybierz Partnerstwo. Dołącz swój link z zaproszeniem."
+  },
+  "partnership-ended": {
+    "title": "Koniec partnerstwa z [nazwa serwera]",
+    "text": "Nie jesteśmy już partnerem serwera [nazwa serwera]. [Opcjonalnie: krótki powód.]\n\nIch posty na #[kanał partnerów] zostały usunięte."
+  },
+  "feedback-wanted": {
+    "title": "Powiedz nam, co myślisz",
+    "text": "Chcemy wiedzieć, co myślisz o [temat].\n\nOdpowiedz na #[kanał opinii] albo w ankiecie poniżej. Ekipa czyta każdą odpowiedź."
+  },
+  "suggestions-open": {
+    "title": "Masz pomysł na serwer?",
+    "text": "Napisz go na #[kanał propozycji]. Jeden pomysł na wiadomość, żeby dało się głosować na każdy osobno.\n\nCo [tydzień / miesiąc] ekipa przegląda najlepsze pomysły i pisze, co z nimi będzie."
+  },
+  "poll-reminder": {
+    "title": "Ankieta niedługo się zamyka",
+    "text": "Ankieta o [temat] zamyka się [data]. Jeśli jeszcze nie głosowałeś, znajdziesz ją na #[kanał]."
+  },
+  "new-year": {
+    "title": "Szczęśliwego Nowego Roku",
+    "text": "Szczęśliwego Nowego Roku od ekipy {server}.\n\nDzięki, że byłeś z nami w tym roku. Do zobaczenia w następnym."
+  },
+  "halloween": {
+    "title": "Wesołego Halloween",
+    "text": "Wesołego Halloween od {server}.\n\n[Opcjonalnie: konkurs na przebranie na #channel, straszne role, godzina wydarzenia.]"
+  },
+  "winter-holidays": {
+    "title": "Wesołych Świąt",
+    "text": "Wesołych Świąt od ekipy {server}.\n\nDo [data] ekipa może odpowiadać wolniej. Tickety i odwołania zostają otwarte."
+  },
+  "summer-break": {
+    "title": "Przerwa wakacyjna",
+    "text": "Latem wielu z nas wyjeżdża, więc wydarzenia mają przerwę do [data].\n\nSerwer zostaje otwarty, a ekipa nadal odpowiada na tickety."
+  }
+}

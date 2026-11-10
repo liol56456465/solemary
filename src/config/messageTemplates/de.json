@@ -1,0 +1,354 @@
+{
+  "appeal-overview": {
+    "title": "So legst du Einspruch ein",
+    "text": "Wenn du in {server} gebannt, gekickt, gemutet oder verwarnt wurdest und du denkst, dass das falsch war, kannst du Einspruch einlegen.\n\n**1. Finde deinen Fallcode**\nEr steht in der DM, die Mewvo dir damals geschickt hat. Er sieht so aus: `k7m2qx`. DM verloren? Frag das Team, wir suchen ihn raus.\n\n**2. Drück auf Einspruch**\nNimm den Einspruch-Button auf dem Panel in #appeals.\n\n**3. Füll das Formular aus**\nSchreib, warum die Strafe aufgehoben werden sollte, und gib deinen Fallcode an. Sei ehrlich, was passiert ist. Das Team kann die Logs sehen, und ein Einspruch, der einen Fehler zugibt, kommt viel weiter als einer, der alles abstreitet.\n\n**Wie es weitergeht**\nBei einem Bann oder Kick öffnet sich hier ein privater Kanal, in dem du mit dem Team reden kannst. Bei einem Mute oder einer Verwarnung prüft das Team den Fall intern. So oder so bekommst du die Entscheidung per DM. Die meisten Einsprüche werden innerhalb von ein paar Tagen beantwortet.\n\n**Gut zu wissen**\n- Pro Fall ist immer nur ein Einspruch gleichzeitig möglich.\n- Wird ein Einspruch abgelehnt, kannst du es nach 7 Tagen nochmal versuchen.\n- Gegen Banns und Mutes kannst du Einspruch einlegen, solange sie laufen. Gegen Verwarnungen und Kicks innerhalb von 30 Tagen.\n- Gegen manche Fälle ist kein Einspruch möglich. Das steht dann in deiner DM.\n- Drück auf Meine Einsprüche auf dem Panel, um zu sehen, wie es um deinen steht."
+  },
+  "appeal-ban": {
+    "title": "Einspruch gegen einen Bann",
+    "text": "Von {server} gebannt? Du kannst von diesem Server aus Einspruch einlegen.\n\n1. Hol dir den Fallcode aus der Bann-DM, die Mewvo dir geschickt hat.\n2. Drück auf Einspruch auf dem Panel in #appeals.\n3. Erklär, warum der Bann aufgehoben werden sollte, und füge den Fallcode ein.\n\nEs öffnet sich ein privater Kanal, in dem du und das Team darüber reden könnt. Beantworte dort ihre Fragen. Die Entscheidung bekommst du per DM.\n\nWird der Einspruch angenommen, wird der Bann aufgehoben und du bekommst per DM eine einmalige Einladung zurück auf den Server. Sie gilt 7 Tage.\n\nPro Bann kannst du nur einen offenen Einspruch haben. Wird er abgelehnt, kannst du nach 7 Tagen erneut Einspruch einlegen. Gegen manche Banns ist gar kein Einspruch möglich, oder nur bis zu einem bestimmten Datum. Die Bann-DM sagt dir, ob das für deinen gilt."
+  },
+  "appeal-kick": {
+    "title": "Einspruch gegen einen Kick",
+    "text": "Ein Kick ist kein Bann. Mit der Einladung aus deiner Kick-DM kannst du {server} wieder beitreten.\n\nWenn du trotzdem findest, dass der Kick falsch war, und ihn aus deiner Akte haben willst, kannst du innerhalb von 30 Tagen Einspruch einlegen:\n1. Drück auf Einspruch auf dem Panel in #appeals.\n2. Füge den Fallcode aus der Kick-DM ein.\n3. Erklär, was passiert ist.\n\nEs öffnet sich ein privater Kanal, in dem das Team dir Fragen dazu stellen kann. Die Entscheidung bekommst du per DM."
+  },
+  "appeal-mute": {
+    "title": "Einspruch gegen einen Mute",
+    "text": "In {server} gemutet? Du kannst Einspruch einlegen, solange der Mute noch läuft.\n\n1. Drück auf Einspruch auf dem Einspruch-Panel, hier oder auf dem Hauptserver.\n2. Füge den Fallcode aus der Mute-DM ein.\n3. Schreib, warum der Mute aufgehoben werden sollte.\n\nDas Team schaut sich den Fall und die Nachrichten dahinter an. Die Entscheidung bekommst du per DM. Wird er angenommen, wird der Mute sofort entfernt."
+  },
+  "appeal-warn": {
+    "title": "Einspruch gegen eine Verwarnung",
+    "text": "Gegen eine Verwarnung kannst du innerhalb von 30 Tagen Einspruch einlegen.\n\n1. Drück auf Einspruch auf dem Einspruch-Panel.\n2. Füge den Fallcode aus der Verwarnungs-DM ein.\n3. Schreib, warum die Verwarnung entfernt werden sollte.\n\nWird der Einspruch angenommen, wird die Verwarnung entfernt und zählt nicht mehr für einen Bann. Drück auf Meine Akte auf dem Panel, um zu sehen, wie viele Verwarnungen du gerade hast."
+  },
+  "appeal-honest": {
+    "title": "Bevor du Einspruch einlegst",
+    "text": "Ein paar Dinge, die deinem Einspruch helfen:\n\n- Lies zuerst den Grund in deiner DM und schau dir die Regel an, auf die er verweist.\n- Erzähl uns in deinen eigenen Worten, was passiert ist.\n- Wenn du die Regel gebrochen hast, sag das. Dich zu entschuldigen und zu erklären, was du anders machen wirst, bringt mehr als Diskutieren.\n- Wenn du denkst, dass das Team falschlag, sag warum und füge Links zu den Nachrichten hinzu, falls du welche hast.\n- Bleib ruhig. Wer im Einspruch das Team beleidigt, wird abgelehnt.\n\nIn anderen Kanälen nach dem Stand zu fragen, macht es nicht schneller. Drück auf Meine Einsprüche auf dem Panel, um zu sehen, wie es um deinen steht."
+  },
+  "appeal-status": {
+    "title": "Zu deinen Einsprüchen",
+    "text": "Wir lesen jeden Einspruch, auch die langen.\n\nGerade dauert es etwa [Anzahl] Tage bis zu einer Antwort. Sobald es eine Entscheidung gibt, bekommst du eine DM.\n\nBitte schick keinen zweiten Einspruch für denselben Fall und ping das Team nicht deswegen. Drück auf Meine Einsprüche auf dem Einspruch-Panel, um zu sehen, wie es um deinen steht."
+  },
+  "appeals-paused": {
+    "title": "Einsprüche sind pausiert",
+    "text": "Bis [Datum] nehmen wir keine neuen Einsprüche an.\n\nGrund: [kurzer Grund, zum Beispiel das Team ist mit dem Aufräumen nach einem Raid beschäftigt].\n\nEinsprüche, die schon geschickt wurden, bleiben offen und werden beantwortet. Es geht nichts verloren. Wenn Einsprüche wieder offen sind, posten wir es hier."
+  },
+  "banned-role": {
+    "title": "Warum sehe ich nur ein paar Kanäle?",
+    "text": "Wenn du von {server} gebannt bist, bekommst du hier die Rolle Gebannt. Damit siehst du nur die Einspruch-Kanäle.\n\nDie Rolle wird von selbst entfernt, wenn dein Bann endet oder aufgehoben wird.\n\nUm Einspruch einzulegen, drück auf Einspruch auf dem Panel in #appeals."
+  },
+  "ticket-howto": {
+    "title": "Brauchst du Hilfe vom Team?",
+    "text": "Drück auf den Button auf dem Ticket-Panel in #[Ticket-Kanal], um ein Ticket zu öffnen.\n\nEs öffnet sich ein privater Kanal, den nur du und das Team sehen können. Schreib in deiner ersten Nachricht, was du brauchst, dann können wir schneller helfen.\n\nNimm ein Ticket für Sachen wie:\n- Fragen zu den Regeln\n- Probleme mit Rollen oder Kanälen\n- etwas melden, das du nicht öffentlich posten willst\n\nEin Thema pro Ticket. Das Team schließt es, wenn alles geklärt ist."
+  },
+  "modmail-howto": {
+    "title": "Schreib dem Team",
+    "text": "Du kannst privat mit dem Team reden, indem du Mewvo eine DM schickst.\n\n1. Schick Mewvo deine Nachricht per DM.\n2. Drück auf An das Team senden.\n3. Das Team antwortet in derselben DM.\n\nAlles, was du danach schickst, geht ans Team, bis es die Unterhaltung schließt. Nur das Team kann es sehen.\n\nDafür musst du auf {server} sein."
+  },
+  "staff-reports": {
+    "title": "Ein Teammitglied melden",
+    "text": "Wenn ein Teammitglied die Regeln gebrochen oder dich unfair behandelt hat, kannst du es melden.\n\nDrück auf Team melden auf dem Einspruch-Panel in #appeals. Gib den Benutzernamen an, was passiert ist und Links zu den Nachrichten, falls du welche hast.\n\nNur Administratoren sehen Meldungen. Das Teammitglied, das du meldest, nicht.\n\nDu kannst immer nur eine offene Meldung haben und bis zu drei pro Tag schicken. Meldungen, die nur ausgedacht sind, um jemandem eins auszuwischen, zählen als Regelbruch."
+  },
+  "support-hours": {
+    "title": "Wann das Team da ist",
+    "text": "Das Team ist meistens online:\n- Wochentags: [Uhrzeit] bis [Uhrzeit] ([Zeitzone])\n- Am Wochenende: [Uhrzeit] bis [Uhrzeit] ([Zeitzone])\n\nDu kannst jederzeit ein Ticket öffnen oder Einspruch einlegen. Außerhalb dieser Zeiten kann eine Antwort länger dauern.\n\nWenn etwas dringend ist, zum Beispiel ein Raid oder jemand in Gefahr, ping @[Rolle]."
+  },
+  "support-welcome": {
+    "title": "Willkommen auf {server}",
+    "text": "Dieser Server ist für Hilfe bei Einsprüchen, Meldungen und Fragen da.\n\n- Um Einspruch gegen eine Strafe einzulegen, geh zu #appeals.\n- Um ein Teammitglied zu melden, nimm Team melden auf demselben Panel.\n- Für alles andere frag in #[Hilfe-Kanal].\n\nBleib freundlich. Die Regeln des Hauptservers gelten auch hier."
+  },
+  "rules-updated": {
+    "title": "Die Regeln haben sich geändert",
+    "text": "Wir haben die Regeln in #[Regel-Kanal] aktualisiert.\n\nWas sich geändert hat:\n- [Änderung]\n- [Änderung]\n\nDie neuen Regeln gelten ab jetzt. Nimm dir kurz Zeit, sie zu lesen. Wenn etwas unklar ist, öffne ein Ticket und frag nach."
+  },
+  "changelog": {
+    "title": "Server-Update",
+    "text": "Ein paar Änderungen auf {server}:\n\n**Neu**\n- [was dazugekommen ist]\n\n**Geändert**\n- [was sich geändert hat]\n\n**Entfernt**\n- [was entfernt wurde]\n\nFragen oder Feedback bitte in #[Feedback-Kanal]."
+  },
+  "maintenance": {
+    "title": "Geplante Wartung",
+    "text": "Wir arbeiten am [Datum] von [Uhrzeit] bis [Uhrzeit] ([Zeitzone]) am Server.\n\nIn der Zeit [was nicht funktioniert, zum Beispiel sind einige Kanäle gesperrt].\n\nDu musst nichts tun. Wir posten hier, wenn wir fertig sind."
+  },
+  "maintenance-done": {
+    "title": "Die Wartung ist fertig",
+    "text": "Alles sollte wieder normal laufen.\n\nWenn noch etwas kaputt aussieht, sag uns in #[Hilfe-Kanal] Bescheid oder öffne ein Ticket."
+  },
+  "bot-outage": {
+    "title": "Mewvo hat Probleme",
+    "text": "Mewvo funktioniert gerade nicht richtig. Befehle antworten vielleicht nicht und Level werden vielleicht nicht gezählt.\n\nWir wissen davon und kümmern uns darum. Du musst es nicht melden.\n\nAlles, wofür du in der Zwischenzeit das Team brauchst: ping @[Rolle]."
+  },
+  "new-channel": {
+    "title": "Neuer Kanal: #[Kanal]",
+    "text": "Wir haben #[Kanal] für [wofür er da ist] hinzugefügt.\n\nBleib beim Thema. Die normalen Regeln gelten dort auch."
+  },
+  "channel-cleanup": {
+    "title": "Kanäle aufräumen",
+    "text": "Einige Kanäle sind schon lange still, deshalb räumen wir auf.\n\nAm [Datum] entfernen oder archivieren wir:\n- #[Kanal]\n- #[Kanal]\n\nWenn du einen davon behalten willst, sag es vorher in #[Feedback-Kanal]."
+  },
+  "partnership": {
+    "title": "Neuer Partner: [Servername]",
+    "text": "{server} ist jetzt Partner von [Servername].\n\n[Ein oder zwei Sätze darüber, was sie sind.]\n\nHier kannst du ihnen beitreten: [Einladungslink]\n\nPartner-Posts gehören nur in #[Partner-Kanal]. Werbung in anderen Kanälen ist weiterhin nicht erlaubt."
+  },
+  "milestone": {
+    "title": "Wir haben [Anzahl] Mitglieder",
+    "text": "{server} hat gerade [Anzahl] Mitglieder überschritten. Danke an alle, die hier schreiben und ihre Freunde einladen.\n\n[Optional: was wir deshalb machen, zum Beispiel ein Giveaway oder ein Event.]"
+  },
+  "holiday": {
+    "title": "Alles Gute zu [Feiertag]",
+    "text": "Alles Gute zu [Feiertag] vom Team von {server}.\n\nDas Team antwortet in den nächsten Tagen vielleicht langsamer. Tickets und Einsprüche bleiben offen und werden beantwortet."
+  },
+  "weekly-reminder": {
+    "title": "Wöchentliche Erinnerung",
+    "text": "Ein paar Dinge, an die du denken solltest:\n\n- Lies die Regeln in #[Regel-Kanal], falls du das noch nicht gemacht hast.\n- Nimm den passenden Kanal für das Thema.\n- Melde Probleme mit einem Ticket, statt im Chat zu streiten.\n- Das Team schreibt dir nie zuerst per DM und fragt nach deinem Passwort oder einem Code.\n\nSchöne Woche noch."
+  },
+  "event-announce": {
+    "title": "[Eventname]",
+    "text": "**Wann:** [Datum], [Uhrzeit] ([Zeitzone])\n**Wo:** #[Kanal oder Sprachkanal]\n\n[Worum es beim Event geht, in ein oder zwei Sätzen.]\n\nReagiere oder drück beim Discord-Event auf Interessiert, wenn du kommen willst, damit wir wissen, mit wie vielen Leuten wir rechnen können."
+  },
+  "event-reminder": {
+    "title": "[Eventname] fängt bald an",
+    "text": "[Eventname] fängt in [Zeit] in #[Kanal] an.\n\nWenn du zugesagt hast, ist jetzt ein guter Moment, dich bereitzumachen."
+  },
+  "event-start": {
+    "title": "[Eventname] fängt an",
+    "text": "[Eventname] fängt jetzt in #[Kanal] an. Komm dazu.\n\nDie üblichen Regeln gelten auch in den Event-Kanälen."
+  },
+  "event-cancelled": {
+    "title": "[Eventname] wird verschoben",
+    "text": "[Eventname] findet nicht wie geplant am [Datum] statt.\n\nNeues Datum: [neues Datum, oder „wir posten bald ein neues Datum“].\n\nSorry für die Änderung."
+  },
+  "giveaway-winner": {
+    "title": "Giveaway-Gewinner",
+    "text": "Das Giveaway für **[Preis]** ist vorbei. Glückwunsch an [Gewinner].\n\nGewinner: Schreib [Host] innerhalb von 48 Stunden, um deinen Preis abzuholen, sonst ziehen wir jemand anderen.\n\nDanke an alle, die mitgemacht haben."
+  },
+  "giveaway-rules": {
+    "title": "So laufen unsere Giveaways",
+    "text": "- Drück beim Giveaway auf den Teilnehmen-Button, um mitzumachen.\n- Die Gewinner werden am Ende zufällig gezogen.\n- Gewinner haben 48 Stunden Zeit, dem Host zu schreiben, sonst ziehen wir neu.\n- Zweitaccounts sind nicht erlaubt. Wer mit einem mitmacht, fliegt mit allen seinen Accounts aus dem Giveaway.\n- Das Team wird dich nie bitten, zu bezahlen oder dich irgendwo einzuloggen, um einen Preis abzuholen."
+  },
+  "poll-results": {
+    "title": "Umfrage-Ergebnis: [Frage]",
+    "text": "Danke fürs Abstimmen. So ist es ausgegangen:\n\n- [Option]: [Anzahl] Stimmen\n- [Option]: [Anzahl] Stimmen\n\nWir nehmen also **[Ergebnis]**. [Wie es weitergeht.]"
+  },
+  "roles-menu": {
+    "title": "Such dir deine Rollen aus",
+    "text": "Geh zu #[Rollen-Kanal] und such dir die Rollen aus, die du willst.\n\n- **Ping-Rollen** legen fest, bei welchen Ankündigungen du benachrichtigt wirst.\n- **Interessen-Rollen** schalten die Kanäle für diese Themen frei.\n\nDu kannst sie jederzeit ändern, indem du neu auswählst."
+  },
+  "new-role": {
+    "title": "Neue Rolle: [Rollenname]",
+    "text": "Es gibt eine neue Rolle, **[Rollenname]**.\n\n[Wofür sie ist und wie man sie bekommt.]"
+  },
+  "introduce-yourself": {
+    "title": "Stell dich vor",
+    "text": "Neu hier? Sag hallo in #[Vorstellungs-Kanal].\n\nEin paar Ideen, was du schreiben kannst:\n- wie du genannt werden willst\n- wie du {server} gefunden hast\n- auf welche Games, Serien oder Hobbys du stehst\n\nTeil keine persönlichen Daten wie deine Adresse, Schule oder Handynummer."
+  },
+  "level-rewards": {
+    "title": "Level und Belohnungen",
+    "text": "Fürs Schreiben bekommst du XP. Spammen, um aufzuleveln, bringt nichts und kann dir einen Mute einbringen.\n\nMit `/rank` siehst du dein Level und mit `/leaderboard` die Top-Mitglieder.\n\nBelohnungen:\n- Level [Zahl]: [Rolle]\n- Level [Zahl]: [Rolle]\n- Level [Zahl]: [Rolle]"
+  },
+  "boost-thanks": {
+    "title": "Danke an unsere Booster",
+    "text": "Danke an alle, die {server} boosten. Die Boosts bezahlen [was sie freischalten, zum Beispiel bessere Soundqualität und mehr Emoji-Plätze].\n\nBooster bekommen [Vorteil, zum Beispiel eine Farbrolle und Zugang zu #[Kanal]]."
+  },
+  "mewvo-features": {
+    "title": "Mewvo-Befehle, die du nutzen kannst",
+    "text": "Mewvo ist der Bot, der hier Moderation und Level übernimmt. Ein paar Sachen kannst du selbst nutzen:\n\n- `/rank`: dein Level und deine XP\n- `/leaderboard`: die aktivsten Mitglieder\n- `/appeal status`: wie es um deine Einsprüche steht\n- `/report file`: ein Mitglied privat beim Team melden\n- DM an Mewvo: privat mit dem Team reden (Modmail)\n\nAuf der Website zeigt Meine Akte deine eigenen Verwarnungen, Fälle und Einsprüche: [Website-Link]/me"
+  },
+  "quiet-hours": {
+    "title": "Bleibt freundlich im Chat",
+    "text": "Im Chat geht es in letzter Zeit ziemlich hitzig zu.\n\nAnderer Meinung zu sein ist okay. Beleidigungen, Provokationen und zu mehreren auf jemanden losgehen nicht. Wenn dich jemand nervt, blockier die Person oder öffne ein Ticket, statt dich öffentlich zu streiten.\n\nWenn es so weitergeht, verteilt das Team ab jetzt Mutes."
+  },
+  "staff-rules-mods": {
+    "title": "Regeln für Moderatoren",
+    "text": "Diese Regeln gelten für alle mit einer Moderatorrolle, zusätzlich zu den Serverregeln.\n\n**1. Halte dich zuerst an die Serverregeln.** Für das Team gelten höhere Maßstäbe, keine niedrigeren.\n**2. Nimm die richtige Strafe.** Halte dich an die Konsequenz, die bei der Regel steht. Unsicher? Frag im Team-Chat, bevor du handelst.\n**3. Gib immer einen Grund an.** Jede Verwarnung, jeder Mute, Kick und Bann braucht einen echten Grund und Beweise, falls es welche gibt.\n**4. Keine persönlichen Fehden.** Bestraf niemanden, mit dem du gerade streitest. Lass das einen anderen Moderator machen.\n**5. Team-Sachen bleiben privat.** Teil keine Fälle, Meldungen, Einsprüche oder den Team-Chat außerhalb der Team-Kanäle.\n**6. Bleib öffentlich ruhig.** Wenn du mit jemandem aus dem Team nicht einverstanden bist, klär das im Team-Chat, nicht vor den Mitgliedern.\n**7. Missbrauch keine Bot- oder Rollenrechte.** Keine Streiche, keine Fake-Strafen, keine Rollen für Freunde.\n**8. Sag Bescheid, wenn du weg bist.** Du bist länger als [Zeit] inaktiv? Poste es in #[Team-Kanal].\n\n**Konsequenzen**\n- Kleine Fehler: ein Gespräch mit einem Admin\n- Wiederholte oder nachlässige Fehler: Degradierung\n- Missbrauch von Moderationsrechten, Leaken von Team-Infos oder Raiden: Degradierung und ein Bann"
+  },
+  "staff-rules-admins": {
+    "title": "Regeln für Administratoren",
+    "text": "Diese Regeln gelten für alle mit Administrator, zusätzlich zu den Moderatorregeln.\n\n**1. Änderungen laufen über den Team-Chat.** Ändere keine Kanäle, Rollen, Bots oder Servereinstellungen, ohne den anderen Admins Bescheid zu sagen.\n**2. Vergib Team-Rechte nie allein.** Über neue Moderatoren und Admins entscheidet [wer entscheidet].\n**3. Schütz den Server.** Füg nie Bots hinzu, denen du nicht vertraust, und teil nie Bot-Tokens, Logins oder das Dashboard mit irgendwem.\n**4. Prüfen statt heimlich überstimmen.** Wer die Aktion eines anderen Moderators rückgängig macht, schreibt eine Notiz in den Fall und eine Nachricht an ihn.\n**5. Einsprüche und Team-Meldungen werden fair behandelt.** Entscheide keinen Einspruch und keine Meldung, die dich selbst oder einen Freund betrifft.\n**6. Massenaktionen brauchen einen Grund.** Massenbanns, Purges und Lockdowns sind nur für Raids und Notfälle.\n\n**Konsequenzen**\n- Fehler: ein Gespräch mit dem Owner\n- Ignorieren dieser Regeln: Degradierung zum Moderator oder Entfernung aus dem Team\n- Missbrauch von Administrator, Nuken oder Hilfe bei einem Raid: Entfernung aus dem Team und ein permanenter Bann"
+  },
+  "staff-apps-open": {
+    "title": "Team-Bewerbungen sind offen",
+    "text": "Wir suchen [Anzahl] neue Moderatoren.\n\nDu solltest:\n- seit mindestens [Zeit] hier aktiv sein\n- keine aktuellen Verwarnungen haben\n- mindestens ein paar Stunden pro Woche online sein\n\nBewirb dich bis [Datum] mit `/apply submit` oder in #[Bewerbungs-Kanal]. Wir lesen jede Bewerbung und antworten per DM.\n\nDas Team nach deiner Bewerbung zu fragen, macht es nicht schneller."
+  },
+  "staff-apps-closed": {
+    "title": "Team-Bewerbungen sind geschlossen",
+    "text": "Die Bewerbungen sind geschlossen. Danke an alle, die sich beworben haben.\n\nWir gehen sie in den nächsten [Anzahl] Tagen durch und antworten allen per DM, auch wenn die Antwort nein ist."
+  },
+  "staff-welcome": {
+    "title": "Neu im Team",
+    "text": "Bitte begrüßt [Name] im Moderationsteam.\n\nDie neue Verstärkung hilft bei Tickets, Meldungen und dabei, den Chat in der Spur zu halten. Gebt ihr ein bisschen Zeit, sich einzuarbeiten."
+  },
+  "staff-leaving": {
+    "title": "Danke, [Name]",
+    "text": "[Name] verlässt das Team.\n\nDanke für all die Zeit, die du in {server} gesteckt hast. Du wirst uns fehlen.\n\nOffene Tickets werden vom Rest des Teams übernommen."
+  },
+  "lockdown-active": {
+    "title": "Der Server ist gesperrt",
+    "text": "Wir haben den Server wegen [eines Raids / Spam / des Grunds] gesperrt.\n\nDie meisten Kanäle sind vorerst nur lesbar. Du musst nichts tun.\n\nKlick keine Links von Accounts, die du nicht kennst, und antworte den Raidern nicht. Wir posten hier, wenn es vorbei ist."
+  },
+  "raid-ended": {
+    "title": "Lockdown aufgehoben",
+    "text": "Der Raid ist vorbei und die Kanäle sind wieder offen.\n\nDie beteiligten Accounts wurden gebannt und ihre Nachrichten entfernt. Wenn du noch etwas siehst, das wir übersehen haben, melde es mit einem Ticket und füge den Nachrichtenlink hinzu.\n\nDanke, dass ihr ruhig geblieben seid."
+  },
+  "verification-required": {
+    "title": "Verifiziere dich für Zugang",
+    "text": "Neue Mitglieder müssen sich jetzt verifizieren, bevor sie den Rest von {server} sehen können.\n\nGeh zu #[Verifizierungs-Kanal] und drück auf Verifizieren. Das dauert ein paar Sekunden.\n\nSo halten wir Raid-Bots und Spam-Accounts draußen."
+  },
+  "scam-dm": {
+    "title": "Vorsicht vor Scam-DMs",
+    "text": "Einige Mitglieder bekommen DMs von Accounts, die so tun, als wären sie von {server} oder Discord.\n\nSie behaupten vielleicht, dass du etwas gewonnen hast, dass dein Account gebannt wird, oder sie wollen, dass du dich auf einer Website „verifizierst“.\n\n- Klick die Links nicht an.\n- Scann keine QR-Codes, die sie schicken.\n- Schick keine Codes, Passwörter oder Geld.\n\nBlockier den Account, und wenn er auf diesem Server ist, melde ihn mit einem Ticket."
+  },
+  "nitro-scam": {
+    "title": "Gratis-Nitro-Links sind Scams",
+    "text": "Wenn dir jemand einen Link für Gratis-Nitro schickt, ist das fast immer ein Scam, um deinen Account zu klauen.\n\nEchte Nitro-Geschenke erscheinen als Geschenkbox in Discord, nicht als Link zu einer Website. Wenn eine Seite will, dass du dich einloggst oder einen QR-Code scannst, schließ sie.\n\nWenn du schon auf so einen Link geklickt und dich eingeloggt hast, ändere jetzt dein Passwort und schalte die Zwei-Faktor-Authentifizierung ein."
+  },
+  "never-dm-first": {
+    "title": "Das Team schreibt dir nie zuerst",
+    "text": "Niemand aus dem Team von {server} schreibt dir zuerst per DM und fragt nach:\n- deinem Passwort oder einem Login-Code\n- Geld, Geschenkkarten oder Nitro\n- dem Download von etwas oder ob du „ein Spiel testen“ willst\n\nWenn das jemand macht, ist es nicht das Team. Schau in der Mitgliederliste nach den echten Team-Rollen und melde den Account mit einem Ticket."
+  },
+  "phishing-link": {
+    "title": "Klick nicht auf diesen Link",
+    "text": "Vorhin wurde in #[Kanal] ein Phishing-Link gepostet. Wir haben ihn entfernt und den Account gebannt.\n\nWenn du ihn angeklickt und deine Discord-Logindaten eingegeben hast:\n1. Ändere sofort dein Passwort.\n2. Schalte die Zwei-Faktor-Authentifizierung ein.\n3. Schau unter Einstellungen > Geräte nach und meld alles ab, was du nicht kennst.\n\nAccounts, die gehackt werden und anfangen zu spammen, werden gekickt, bis sie gesichert sind. Schreib dem Team, wenn deiner wieder sicher ist."
+  },
+  "compromised-account": {
+    "title": "Zu gehackten Accounts",
+    "text": "Wenn dein Account gehackt wird und Scam-Links postet, kicken wir ihn, um alle anderen zu schützen. Das ist keine Strafe.\n\nSo kommst du zurück:\n1. Ändere dein Passwort und schalte die Zwei-Faktor-Authentifizierung ein.\n2. Schreib einem Teammitglied oder öffne ein Ticket auf dem Support-Server.\n3. Wir schicken dir eine neue Einladung."
+  },
+  "welcome-new-members": {
+    "title": "Willkommen an alle Neuen",
+    "text": "Ein herzliches Willkommen an alle, die diese Woche {server} beigetreten sind.\n\n- Lies die Regeln in #[Regel-Kanal].\n- Such dir deine Rollen in #[Rollen-Kanal] aus.\n- Sag hallo in #[Chat-Kanal].\n\nWenn du eine Frage hast, frag in #[Hilfe-Kanal] oder öffne ein Ticket."
+  },
+  "rules-reminder": {
+    "title": "Kurze Erinnerung an die Regeln",
+    "text": "In letzter Zeit war es etwas laut, deshalb hier eine kurze Erinnerung.\n\n- Seid nett zueinander.\n- Bleibt in jedem Kanal beim Thema.\n- Kein Spam, keine Eigenwerbung außerhalb von #[Werbe-Kanal].\n\nDie vollständigen Regeln stehen in #[Regel-Kanal]. Das Team verwarnt oder mutet, wenn nötig."
+  },
+  "rule-added": {
+    "title": "Neue Regel: [Kurzname]",
+    "text": "Wir haben auf {server} eine Regel hinzugefügt:\n\n**[Regelnummer]. [Regeltitel]**\n[Was die Regel sagt, in ein oder zwei Sätzen.]\n\nWarum: [der Grund, zum Beispiel was immer wieder passiert ist].\n\nSie gilt ab jetzt. Nichts, was vor heute gepostet wurde, wird dir angerechnet."
+  },
+  "rule-removed": {
+    "title": "Eine Regel wurde entfernt",
+    "text": "Regel [Nummer] ([Regeltitel]) ist weg. [Warum sie entfernt wurde.]\n\nDie anderen Regeln sind neu nummeriert, also schau in #[Regel-Kanal] nach, wenn du per Nummer auf eine Regel verlinkst."
+  },
+  "rule-clarified": {
+    "title": "Regel [Nummer], erklärt",
+    "text": "Ein paar Leute haben nach Regel [Nummer] gefragt, deshalb hier, was sie in der Praxis bedeutet.\n\n**Erlaubt:** [Beispiel]\n**Nicht erlaubt:** [Beispiel]\n\nDie Regel selbst hat sich nicht geändert. Frag das Team, wenn noch etwas unklar ist."
+  },
+  "no-ping-staff": {
+    "title": "Bitte pingt das Team nicht",
+    "text": "Das Team bei jeder Frage zu pingen, bremst alle aus.\n\n- Für Hilfe frag in #[Hilfe-Kanal].\n- Bei einem Problem mit einem Mitglied öffne ein Ticket.\n- Ping das Team nur, wenn gerade akut etwas passiert, zum Beispiel ein Raid."
+  },
+  "spoiler-reminder": {
+    "title": "Nutzt Spoiler-Tags",
+    "text": "[Ding] ist gerade erschienen, also haben es noch nicht alle gesehen.\n\nMarkier Spoiler so: ||spoiler||. In #[Spoiler-Kanal] könnt ihr frei darüber reden.\n\nUnmarkierte Spoiler in anderen Kanälen werden entfernt."
+  },
+  "giveaway-start": {
+    "title": "Giveaway: [Preis]",
+    "text": "Wir verlosen [Preis] auf {server}.\n\nSo machst du mit: [reagieren / auf den Button drücken / in #Kanal schreiben].\nEndet: [Datum und Uhrzeit].\nGewinner: [Anzahl].\n\nEine Teilnahme pro Person. Zweitaccounts werden aus der Ziehung entfernt."
+  },
+  "giveaway-ending": {
+    "title": "Letzte Chance: [Preis]",
+    "text": "Das Giveaway für [Preis] endet in [Zeit].\n\nWenn du noch nicht mitmachst, [wie man mitmacht]."
+  },
+  "giveaway-reroll": {
+    "title": "Neuer Gewinner für [Preis]",
+    "text": "Der erste Gewinner hat [Preis] nicht rechtzeitig abgeholt, deshalb haben wir neu gezogen.\n\nDer neue Gewinner ist [Name]. Öffne innerhalb von [48 Stunden] ein Ticket, um ihn abzuholen."
+  },
+  "event-recap": {
+    "title": "Danke fürs Kommen",
+    "text": "Danke an alle, die gestern bei [Event] dabei waren. [Anzahl] Leute haben mitgemacht.\n\n[Kurzer Rückblick: Gewinner, bester Moment, Screenshot-Kanal.]\n\nIdeen fürs nächste Mal? Poste sie in #[Vorschlags-Kanal]."
+  },
+  "game-night": {
+    "title": "Spieleabend: [Spiel]",
+    "text": "Spieleabend auf {server} am [Tag] um [Uhrzeit] ([Zeitzone]).\n\nSpiel: [Spiel]\nSprachkanal: #[Sprachkanal]\n\nAlle sind willkommen, auch neue Spieler. Reagiere unten, wenn du mitmachen willst, damit wir wissen, wie viele Gruppen wir brauchen."
+  },
+  "movie-night": {
+    "title": "Filmabend",
+    "text": "Wir schauen am [Tag] um [Uhrzeit] ([Zeitzone]) zusammen [Film].\n\nKomm ein paar Minuten früher in #[Sprachkanal]. Der Stream startet pünktlich.\n\nReden könnt ihr darüber in #[Chat-Kanal]. Haltet Spoiler aus anderen Kanälen raus."
+  },
+  "voice-hangout": {
+    "title": "Voice-Hangout heute Abend",
+    "text": "Häng heute Abend ab [Uhrzeit] ([Zeitzone]) mit uns in #[Sprachkanal] ab.\n\nKein Plan, einfach quatschen. Komm rein und geh, wann du willst."
+  },
+  "stage-talk": {
+    "title": "Fragerunde auf der Stage: [Thema]",
+    "text": "[Name] beantwortet am [Tag] um [Uhrzeit] ([Zeitzone]) in #[Stage-Kanal] eure Fragen zu [Thema].\n\nPostet Fragen vorher in #[Fragen-Kanal]. Meldet euch auf der Stage, um live zu fragen."
+  },
+  "karaoke-night": {
+    "title": "Karaoke-Abend",
+    "text": "Karaoke in #[Sprachkanal] am [Tag] um [Uhrzeit] ([Zeitzone]).\n\nMeld dich in #[Event-Kanal] mit dem Song an, den du singen willst. Zuhörer sind auch willkommen."
+  },
+  "tournament-signup": {
+    "title": "Turnier: [Spiel]",
+    "text": "Die Anmeldung für das [Spiel]-Turnier ist bis [Datum] offen.\n\nFormat: [2er-Teams / 1v1 / ...]\nStart: [Datum und Uhrzeit] ([Zeitzone])\nPreis: [Preis, falls es einen gibt]\n\nMeld dich in #[Anmelde-Kanal] an. Lies dort zuerst die Turnierregeln."
+  },
+  "maintenance-extended": {
+    "title": "Die Wartung dauert länger",
+    "text": "Die Arbeiten am Server dauern länger als geplant. Wir rechnen jetzt damit, dass wir bis [Uhrzeit] ([Zeitzone]) fertig sind.\n\nSorry fürs Warten. Wir posten hier, wenn es erledigt ist."
+  },
+  "emergency-maintenance": {
+    "title": "Ungeplante Wartung",
+    "text": "Wir müssen sofort etwas reparieren, deshalb funktioniert [was betroffen ist] gerade nicht.\n\nWir rechnen mit etwa [Zeit]. Du musst nichts tun."
+  },
+  "discord-outage": {
+    "title": "Discord hat Probleme",
+    "text": "Discord selbst hat gerade Probleme. Nachrichten werden vielleicht nicht gesendet und Bots antworten vielleicht nicht.\n\nDas können wir nicht beheben. Du kannst es auf discordstatus.com verfolgen. Sobald Discord das behoben hat, sollte alles wieder laufen."
+  },
+  "channel-readonly": {
+    "title": "#[Kanal] ist vorerst nur lesbar",
+    "text": "#[Kanal] ist nur lesbar, solange wir [Grund].\n\nNimm in der Zwischenzeit #[anderer Kanal]. Am [Datum] machen wir ihn wieder auf."
+  },
+  "server-anniversary": {
+    "title": "{server} wird [Zahl] Jahre alt",
+    "text": "{server} ist heute vor [Zahl] Jahren gestartet.\n\nDanke an alle, die geholfen haben, ihn wachsen zu lassen, von den ersten Mitgliedern bis zu denen, die letzte Woche dazugekommen sind.\n\n[Optional: ein Event oder Giveaway dazu.]"
+  },
+  "boost-level": {
+    "title": "Boost-Level [Zahl] erreicht",
+    "text": "Dank unserer Booster hat {server} Boost-Level [Zahl] erreicht.\n\nDamit bekommen wir [Vorteile, zum Beispiel bessere Sprachqualität und mehr Emoji-Plätze]."
+  },
+  "message-milestone": {
+    "title": "[Anzahl] Nachrichten",
+    "text": "Die Mitglieder von {server} haben jetzt [Anzahl] Nachrichten geschickt. Danke, dass ihr den Chat am Leben haltet."
+  },
+  "staff-apps-deadline": {
+    "title": "Team-Bewerbungen schließen bald",
+    "text": "Team-Bewerbungen schließen am [Datum]. Wenn du dich bewerben willst, [wie man sich bewirbt].\n\nWir lesen jede Bewerbung. Die Antworten gehen bis [Datum] per DM raus."
+  },
+  "staff-apps-results": {
+    "title": "Team-Bewerbungen: Ergebnisse",
+    "text": "Danke an alle, die sich beworben haben. Alle haben ihre Antwort jetzt per DM.\n\nWenn du diesmal nicht ausgewählt wurdest, kannst du dich wieder bewerben, wenn die Bewerbungen das nächste Mal öffnen. Wir posten es hier."
+  },
+  "partner-requirements": {
+    "title": "Willst du Partner werden?",
+    "text": "Wir gehen Partnerschaften mit Servern ein, die:\n- mindestens [Anzahl] Mitglieder haben,\n- sich an die Discord-Nutzungsbedingungen halten,\n- ein aktives Team und klare Regeln haben.\n\nUm anzufragen, öffne ein Ticket und wähle Partnerschaft. Füge deinen Einladungslink hinzu."
+  },
+  "partnership-ended": {
+    "title": "Partnerschaft mit [Servername] beendet",
+    "text": "Wir sind nicht mehr Partner von [Servername]. [Optional: kurzer Grund.]\n\nIhre Posts in #[Partner-Kanal] wurden entfernt."
+  },
+  "feedback-wanted": {
+    "title": "Sag uns deine Meinung",
+    "text": "Wir wollen wissen, was du über [Thema] denkst.\n\nAntworte in #[Feedback-Kanal] oder in der Umfrage unten. Das Team liest jede Antwort."
+  },
+  "suggestions-open": {
+    "title": "Hast du eine Idee für den Server?",
+    "text": "Poste sie in #[Vorschlags-Kanal]. Eine Idee pro Nachricht, damit man über jede einzeln abstimmen kann.\n\nDas Team schaut sich jede(n) [Woche / Monat] die Top-Ideen an und sagt, was damit passiert."
+  },
+  "poll-reminder": {
+    "title": "Die Umfrage endet bald",
+    "text": "Die Umfrage zu [Thema] endet am [Datum]. Wenn du noch nicht abgestimmt hast, findest du sie in #[Kanal]."
+  },
+  "new-year": {
+    "title": "Frohes neues Jahr",
+    "text": "Frohes neues Jahr vom Team von {server}.\n\nDanke, dass du dieses Jahr Teil des Servers warst. Wir sehen uns im nächsten."
+  },
+  "halloween": {
+    "title": "Happy Halloween",
+    "text": "Happy Halloween von {server}.\n\n[Optional: Kostümwettbewerb in #Kanal, gruselige Rollen, Uhrzeit des Events.]"
+  },
+  "winter-holidays": {
+    "title": "Schöne Feiertage",
+    "text": "Schöne Feiertage vom Team von {server}.\n\nBis [Datum] antwortet das Team vielleicht langsamer. Tickets und Einsprüche bleiben offen."
+  },
+  "summer-break": {
+    "title": "Sommerpause",
+    "text": "Viele von uns sind über den Sommer weg, deshalb pausieren Events bis [Datum].\n\nDer Server bleibt offen und das Team beantwortet weiter Tickets."
+  }
+}
