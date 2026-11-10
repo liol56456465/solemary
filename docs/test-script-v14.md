@@ -77,3 +77,29 @@ the language steps). Use an alt account as the member. Expected result after eac
 3. `/remind me in:1m text:test` → "⏰ Reminder you set 1 minute ago: test". `/report` → "Report sent".
 4. `/wipedata` → 9 items incl. personal language; plain "what stays" text.
 5. A non-admin running `/ban`-type commands → "Only server admins can use this…".
+
+## 10. Added 2026-11-10 (Home unless noted; alt = a test account)
+1. **Support auto-add:** alt verifies with Discord in main → a few seconds later it is in Support. Ban the alt in
+   main → it is (still) in Support with the Banned role; ban DM arrives. Ban in X → nothing happens in Support.
+2. **Mod log only:** ban/warn the alt from the dashboard → one line in staff logs, nothing in the automod/general
+   log. Delete the mod log channel (or remove the bot's access), warn again → the general log gets it instead.
+3. **Log channels:** Dashboard → Logging → set Members and Dashboard channels. Alt joins → Members channel.
+   Change any setting → line in the Dashboard channel. Messages (unset) → main log channel.
+4. **Automod on admins:** admin alt posts a blocked word → message deleted, staff alert "no warn, mute or ban";
+   `/background` of the admin shows no new case. Rule set to Report only → alert, message stays.
+5. **Support dashboard:** pick Support in the server picker → stays on Support (no jump to main). An account
+   that is admin only in Support → "not found".
+6. **Punishments:** `/enforcements` → Ban → Harassment → "cannot be appealed" unticked; Raiding → ticked.
+   New reasons in the list: Impersonation, Punishment evasion, Wrong channel or off-topic, Begging,
+   Mini-modding, Mic or soundboard spam, Inappropriate name or profile, Sharing personal information (ticked).
+   Rules page → add "No raiding" from the library → "Leading a raid: permanent ban. Taking part or helping: 90-day ban".
+7. **Templates:** Messages → Mewvo group → "Appeals and staff reports open" (Support in German shows German).
+   Staff group → "Staff rules: moderators/administrators" → post in the staff channel, edit later via Edit.
+8. **Reaction roles:** Start from "Languages", leave title empty → panel "Pick your language". With Discord
+   Onboarding on: pick the language question → only its roles in the menu.
+9. **Refresh posted messages:** change Bot language to German → verification, ticket, appeal and reaction role
+   panels switch to German without new messages. Bot language → "Refresh now" → "Updated N posted messages".
+10. **Language switch:** `/language set` → old language role removed, new one given; DMs switch language,
+    the Contest button under an automod DM too.
+11. **Small fixes:** giveaway Join then Leave at once → left, no "slow down". Close a ticket for an alt with DMs
+    off → bot log shows one failed DM; the rating survey appears in the ticket channel.
