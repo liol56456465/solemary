@@ -26,7 +26,7 @@ const permBan = { type: 'ban', durationMs: null };
  */
 export const AUTOMOD_RULES = {
     scam: { label: 'Scam or phishing link', group: 'scam', severity: 100, deleteMessage: true, steps: [permBan] },
-    nsfw: { label: 'NSFW content', group: 'nsfw', severity: 90, deleteMessage: true, steps: [ban(7 * DAY), ban(30 * DAY), permBan] },
+    nsfw: { label: 'NSFW content', group: 'nsfw', severity: 90, deleteMessage: true, steps: [ban(DAY), ban(30 * DAY), ban(90 * DAY)] },
     sexual: { label: 'Sexual harassment or references', group: 'sexual', severity: 85, deleteMessage: true, steps: [mute(DAY), ban(7 * DAY), ban(30 * DAY)] },
     harassment: { label: 'Harassment', group: 'harassment', severity: 80, deleteMessage: true, steps: [mute(HOUR), mute(DAY), ban(7 * DAY)] },
     privacy: { label: 'Sharing personal info', group: 'privacy', severity: 75, deleteMessage: true, steps: [mute(HOUR), mute(DAY), ban(7 * DAY)] },

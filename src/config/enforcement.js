@@ -81,6 +81,14 @@ export const ENFORCEMENT_REASONS = [
     { key: 'raiding', label: 'Raiding', severe: true },
     { key: 'scamming', label: 'Scamming', severe: true },
     { key: 'staff_disrespect', label: 'Staff disrespect', severe: false },
+    { key: 'impersonation', label: 'Impersonation', severe: false },
+    { key: 'evasion', label: 'Punishment evasion (alt account)', severe: false },
+    { key: 'off_topic', label: 'Wrong channel or off-topic', severe: false },
+    { key: 'begging', label: 'Begging', severe: false },
+    { key: 'minimod', label: 'Mini-modding', severe: false },
+    { key: 'voice', label: 'Mic or soundboard spam', severe: false },
+    { key: 'names', label: 'Inappropriate name or profile', severe: false },
+    { key: 'doxxing', label: 'Sharing personal information', severe: true },
 ];
 
 export const CUSTOM_REASON_KEY = 'custom';
