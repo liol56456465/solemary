@@ -15,7 +15,7 @@ import { memberField, pickedFromQuery } from '../memberSearch.js';
 import { textFor } from '../language.js';
 import { registryValue, section, table } from './common.js';
 
-const DESTINATION_LABEL = { audit: 'logging.channels.audit', applications: 'logging.channels.applications', reports: 'logging.channels.reports' };
+const DESTINATION_LABEL = Object.fromEntries(LOG_DESTINATIONS.map((d) => [d, `logging.channels.${d}`]));
 const IGNORE_TYPES = { channel: 'channels', role: 'roles', user: 'users' };
 const IGNORE_TYPE_LABEL = { channel: 'logging.ignore.typeChannel', role: 'logging.ignore.typeRole', user: 'logging.ignore.typeUser' };
 const IGNORING = { channel: 'logging.action.ignoringChannel', role: 'logging.action.ignoringRole', user: 'logging.action.ignoringUser' };

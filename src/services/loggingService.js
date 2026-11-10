@@ -13,7 +13,9 @@ import {
   splitComparisonFields,
 } from '../utils/logging/logEmbeds.js';
 
-const LOG_DESTINATIONS = ['audit', 'applications', 'reports'];
+// Owner (2026-11-10): a channel per kind of log. Not set: the main log channel (audit).
+// 'dashboard' = web dashboard / website changes (postModLog kind 'dashboard', else the mod log).
+const LOG_DESTINATIONS = ['audit', 'moderation', 'members', 'messages', 'server', 'community', 'dashboard', 'applications', 'reports'];
 
 const EVENT_TYPES = {
   MODERATION_BAN: 'moderation.ban',
@@ -238,6 +240,15 @@ const EVENT_TITLES = {
 const CATEGORY_DESTINATION = {
   application: 'applications',
   report: 'reports',
+  moderation: 'moderation',
+  member: 'members',
+  message: 'messages',
+  channel: 'server',
+  role: 'server',
+  leveling: 'community',
+  giveaway: 'community',
+  counter: 'community',
+  reactionrole: 'community',
 };
 
 export function resolveLogChannel(config, destination) {
@@ -248,7 +259,11 @@ export function resolveLogChannel(config, destination) {
   if (destination === 'audit') {
     return channels.audit ?? config?.logging?.channelId ?? config?.logChannelId ?? null;
   }
-  return channels[destination] ?? null;
+  if (destination === 'applications' || destination === 'reports' || destination === 'dashboard') {
+    return channels[destination] ?? null;
+  }
+  // A per-kind channel not set: the main log channel, as before.
+  return channels[destination] ?? resolveLogChannel(config, 'audit');
 }
 
 export function getIgnoreList(config) {

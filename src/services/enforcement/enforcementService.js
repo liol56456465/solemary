@@ -5,7 +5,8 @@
 import { ChannelType, PermissionFlagsBits } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { ModerationService } from '../moderation/moderationService.js';
-import { logEvent, EVENT_TYPES } from '../loggingService.js';
+import { logEvent, EVENT_TYPES, resolveLogChannel } from '../loggingService.js';
+import { getGuildConfig } from '../config/guildConfig.js';
 import { Mutex } from '../../utils/mutex.js';
 import { logger } from '../../utils/logger.js';
 import { createError, ErrorTypes } from '../../utils/errorHandler.js';
@@ -286,6 +287,11 @@ export async function postModLog(client, action, fields, {
     let channelId;
     try {
         channelId = resolveChannelId(sourceGuildId, purpose);
+        // Dashboard/website changes: their own log channel when one is set (Logging page).
+        if (action === 'dashboard') {
+            const own = await getGuildConfig(client, staffGuildId(sourceGuildId)).then((config) => resolveLogChannel(config, 'dashboard'), () => null);
+            if (own) channelId = own;
+        }
     } catch (error) {
         if (!isSettingsUnavailable(error)) throw error;
         noteSettingsUnavailable(sourceGuildId, `staff ${purpose} post (${action})`);

@@ -14,7 +14,13 @@
     "audit": "Główny kanał dziennika (wszystko inne)",
     "applications": "Podania",
     "reports": "Zgłoszenia",
-    "submit": "Zapisz kanały"
+    "submit": "Zapisz kanały",
+    "moderation": "Moderacja (czyszczenie, blokada, tryb powolny…; bany i ostrzeżenia idą do logu moderacji)",
+    "members": "Członkowie (wejścia, wyjścia, zmiany nazw)",
+    "messages": "Wiadomości (edycje i usunięcia)",
+    "server": "Serwer (kanały i role)",
+    "community": "Społeczność (poziomy, konkursy, liczniki, role za reakcje)",
+    "dashboard": "Zmiany z panelu i strony"
   },
   "events": {
     "title": "Zdarzenia",

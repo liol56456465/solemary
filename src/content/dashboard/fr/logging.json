@@ -14,7 +14,13 @@
     "audit": "Salon de journal principal (tout le reste)",
     "applications": "Candidatures",
     "reports": "Signalements",
-    "submit": "Enregistrer les salons"
+    "submit": "Enregistrer les salons",
+    "moderation": "Modération (purge, verrouillage, mode lent… ; bans et avertissements vont dans le journal de modération)",
+    "members": "Membres (arrivées, départs, changements de nom)",
+    "messages": "Messages (modifications et suppressions)",
+    "server": "Serveur (salons et rôles)",
+    "community": "Communauté (niveaux, concours, compteurs, rôles par réaction)",
+    "dashboard": "Changements depuis le tableau de bord et le site"
   },
   "events": {
     "title": "Événements",

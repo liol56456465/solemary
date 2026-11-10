@@ -14,7 +14,13 @@
     "audit": "Canal de registro principal (todo o resto)",
     "applications": "Candidaturas",
     "reports": "Denúncias",
-    "submit": "Salvar canais"
+    "submit": "Salvar canais",
+    "moderation": "Moderação (limpeza, bloqueio, modo lento…; bans e avisos vão para o log de moderação)",
+    "members": "Membros (entradas, saídas, mudanças de nome)",
+    "messages": "Mensagens (edições e exclusões)",
+    "server": "Servidor (canais e cargos)",
+    "community": "Comunidade (níveis, sorteios, contadores, cargos por reação)",
+    "dashboard": "Mudanças pelo painel e pelo site"
   },
   "events": {
     "title": "Eventos",

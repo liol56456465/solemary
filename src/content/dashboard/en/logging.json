@@ -14,7 +14,13 @@
     "audit": "Main log channel (everything else)",
     "applications": "Applications",
     "reports": "Reports",
-    "submit": "Save channels"
+    "submit": "Save channels",
+    "moderation": "Moderation (purge, lock, slowmode…; bans and warns go to the mod log)",
+    "members": "Members (joins, leaves, name changes)",
+    "messages": "Messages (edits and deletes)",
+    "server": "Server (channels and roles)",
+    "community": "Community (levels, giveaways, counters, reaction roles)",
+    "dashboard": "Dashboard and website changes"
   },
   "events": {
     "title": "Events",

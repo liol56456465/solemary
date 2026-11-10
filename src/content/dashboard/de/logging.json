@@ -14,7 +14,13 @@
     "audit": "Haupt-Log-Kanal (alles andere)",
     "applications": "Bewerbungen",
     "reports": "Meldungen",
-    "submit": "Kanäle speichern"
+    "submit": "Kanäle speichern",
+    "moderation": "Moderation (Purge, Sperren, Slowmode…; Banns und Verwarnungen gehen ins Mod-Log)",
+    "members": "Mitglieder (Beitritte, Austritte, Namensänderungen)",
+    "messages": "Nachrichten (Bearbeitungen und Löschungen)",
+    "server": "Server (Kanäle und Rollen)",
+    "community": "Community (Level, Gewinnspiele, Zähler, Reaktionsrollen)",
+    "dashboard": "Änderungen über Dashboard und Website"
   },
   "events": {
     "title": "Ereignisse",

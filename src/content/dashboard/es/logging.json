@@ -14,7 +14,13 @@
     "audit": "Canal de registro principal (todo lo demás)",
     "applications": "Solicitudes",
     "reports": "Reportes",
-    "submit": "Guardar canales"
+    "submit": "Guardar canales",
+    "moderation": "Moderación (purga, bloqueo, modo lento…; bans y advertencias van al registro de moderación)",
+    "members": "Miembros (entradas, salidas, cambios de nombre)",
+    "messages": "Mensajes (ediciones y borrados)",
+    "server": "Servidor (canales y roles)",
+    "community": "Comunidad (niveles, sorteos, contadores, roles por reacción)",
+    "dashboard": "Cambios desde el panel y la web"
   },
   "events": {
     "title": "Eventos",
