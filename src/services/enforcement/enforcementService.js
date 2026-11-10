@@ -38,10 +38,13 @@ import { caseParams } from '../botDm/dmRenderers.js';
  */
 export function sendCaseDm(user, key, record, { guild = null, guildId = null, member = null, components = null, ...extra } = {}) {
     const gid = guildId ?? guild?.id ?? record?.guild_id ?? null;
+    // The "Contest this" button is rendered from the stored params (contestCode), not passed as
+    // extra components, so the DM language re-edit (dmRelang.js) translates its label too.
+    const contestCode = components?.contestCode ?? null;
     return sendLoggedDm(user, {
         key,
-        params: { rec: caseParams(record), guildId: gid, serverName: guild?.name ?? null, ...extra },
-        guildId: gid, member, components, label: `${key}${record?.case_code ? ` (${record.case_code})` : ''}`,
+        params: { rec: caseParams(record), guildId: gid, serverName: guild?.name ?? null, ...(contestCode ? { contestCode } : {}), ...extra },
+        guildId: gid, member, components: contestCode ? null : components, label: `${key}${record?.case_code ? ` (${record.case_code})` : ''}`,
     });
 }
 
@@ -500,7 +503,11 @@ function baseRecord(guild, targetUser, flow, moderatorInfo) {
  * language: sendLoggedDm builds it once it knows the language (the button label follows it).
  */
 function dmComponentsFor(flow, record) {
-    return flow?.contestable && record?.case_code ? (lang) => contestComponents(record.case_code, { lang }) : null;
+    if (!(flow?.contestable && record?.case_code)) return null;
+    const build = (lang) => contestComponents(record.case_code, { lang });
+    // Marks the button as the renderer's (dmRenderers withContest): a language re-edit relabels it.
+    build.contestCode = record.case_code;
+    return build;
 }
 
 /** Rolls back a case whose Discord action failed (never throws: the action's error matters). */

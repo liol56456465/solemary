@@ -27,8 +27,7 @@
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import {
-    appealAcceptedDm, appealDeniedDm, banDm, banEndedDm, caseVoidedDm, kickDm, muteDm, muteEndedDm, warnDm,
-} from '../enforcement/dmTemplates.js';
+    appealAcceptedDm, appealDeniedDm, banDm, banEndedDm, caseVoidedDm, kickDm, muteDm, muteEndedDm, warnDm, contestComponents } from '../enforcement/dmTemplates.js';
 import { botText } from '../../utils/botText.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { getApplicationStatusColor } from '../../config/bot.js';
@@ -82,11 +81,16 @@ export function ticketFeedbackRows(tr, guildId, channelId) {
  * moved on since it was sent (the feedback survey after an answer: its buttons are gone) and
  * must not be put back.
  */
+/** The automod "Contest this" button under a punishment DM, in the DM's language (contestCode in params). */
+function withContest(payload, p, lang) {
+    return p?.contestCode ? { ...payload, components: contestComponents(p.contestCode, { lang }) } : payload;
+}
+
 export const DM_RENDERERS = Object.freeze({
-    'enf.ban': { render: (p, lang) => ({ content: banDm(p.rec, opts(p, lang)) }) },
-    'enf.kick': { render: (p, lang) => ({ content: kickDm(p.rec, p.invite ?? null, opts(p, lang)) }) },
-    'enf.mute': { render: (p, lang) => ({ content: muteDm(p.rec, opts(p, lang)) }) },
-    'enf.warn': { render: (p, lang) => ({ content: warnDm(p.rec, p.warnNumber, opts(p, lang)) }) },
+    'enf.ban': { render: (p, lang) => withContest({ content: banDm(p.rec, opts(p, lang)) }, p, lang) },
+    'enf.kick': { render: (p, lang) => withContest({ content: kickDm(p.rec, p.invite ?? null, opts(p, lang)) }, p, lang) },
+    'enf.mute': { render: (p, lang) => withContest({ content: muteDm(p.rec, opts(p, lang)) }, p, lang) },
+    'enf.warn': { render: (p, lang) => withContest({ content: warnDm(p.rec, p.warnNumber, opts(p, lang)) }, p, lang) },
     'enf.banEnded': { render: (p, lang) => ({ content: banEndedDm(p.rec ?? null, p.invite ?? null, opts(p, lang, { early: Boolean(p.early) })) }) },
     'enf.muteEnded': { render: (p, lang) => ({ content: muteEndedDm(p.rec ?? null, opts(p, lang, { early: Boolean(p.early) })) }) },
     'enf.appealAccepted': { render: (p, lang) => ({ content: appealAcceptedDm(p.adminUsername, p.invite ?? null, opts(p, lang, { rec: p.rec ?? null })) }) },
