@@ -27,5 +27,12 @@
     "none": "No role",
     "duplicate": "{first} and {second} have the same role. Each language needs its own role.",
     "saved": "Language roles saved."
+  },
+  "refresh": {
+    "title": "Refresh posted messages",
+    "help": "Rewrites the verification, ticket, appeal and reaction role panels Mewvo already posted, in the bot language above. Nothing is reposted, and text you typed yourself stays as it is. Mewvo also does this when you change the language.",
+    "button": "Refresh now",
+    "done": "Updated {count} posted messages.",
+    "auto": "Posted panels are being updated to it."
   }
 }

@@ -277,3 +277,38 @@ export async function postAppealPanels(client, mainGuild, mainChannel, { reason 
 
     return { mainChannel, supportChannel, created, category: appealsCategory };
 }
+
+/** The bot's newest appeal panel in a channel (the one with the appeal:open button), or null. */
+async function findAppealPanel(channel) {
+    const messages = await channel?.messages?.fetch?.({ limit: 50 }).catch(() => null);
+    if (!messages) return null;
+    return [...messages.values()].find((message) => message.author?.id === channel.client.user.id
+        && message.components?.some((row) => row.components?.some((component) => component.customId === 'appeal:open'))) || null;
+}
+
+/**
+ * Rewrites the posted appeal panel(s) of `guild` in place, in each server's current language
+ * (owner, 2026-11-10: "update without reposting"). Main server: its panel and the Support one;
+ * any other server: its own. Returns how many were edited. Never throws.
+ */
+export async function refreshAppealPanels(client, guild) {
+    let edited = 0;
+    try {
+        const posting = await getAppealPanelPosting(guild.id);
+        if (!posting?.mainChannelId) return 0;
+        const isMain = guild.id === enforcementConfig.mainGuildId;
+        const targets = [[guild, posting.mainChannelId, isMain ? mainAppealPanel : (opts) => serverAppealPanel(guild.name, opts)]];
+        const support = posting.supportChannelId ? client.guilds.cache.get(enforcementConfig.supportGuildId) : null;
+        if (isMain && support) targets.push([support, posting.supportChannelId, supportAppealPanel]);
+        for (const [g, channelId, build] of targets) {
+            const channel = g.channels.cache.get(channelId);
+            const panel = await findAppealPanel(channel);
+            if (!panel) continue;
+            await panel.edit({ ...build({ lang: panelLanguage(g.id) }), allowedMentions: { parse: [] } })
+                .then(() => { edited += 1; }, (error) => logger.warn(`Could not refresh appeal panel ${panel.id}: ${error.message}`));
+        }
+    } catch (error) {
+        logger.warn(`Could not refresh the appeal panels of ${guild.id}: ${error.message}`);
+    }
+    return edited;
+}

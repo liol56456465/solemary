@@ -12,7 +12,8 @@
 // languages cannot share a role.
 
 import { html } from '../html.js';
-import { InputError, autoRoleField, choiceField, postForm, rolePicker, selectInput } from '../forms.js';
+import { InputError, autoRoleField, buttonForm, choiceField, postForm, rolePicker, selectInput } from '../forms.js';
+import { logger } from '../../../utils/logger.js';
 import { textFor } from '../language.js';
 import { LANGUAGES, LANG_CODES } from '../../site/i18n.js';
 import { changedOnly, registrySaved, registryValue, saveRegistry, section } from './common.js';
@@ -54,6 +55,7 @@ export default {
 ${section(tr.t('botLanguage.roles.title'), postForm(ctx, 'bot-language', 'language-roles', LANGUAGES.map((l) => rolePicker(ctx.guild, roleFieldName(l.code), roles[l.code] || null, {
             label: l.name, autoAssign: true, noneLabel: tr.t('botLanguage.roles.none'),
         })), { canEdit: ctx.canEdit && ctx.canAct }), tr.t('botLanguage.roles.help'), { key: 'language-roles' })}
+${section(tr.t('botLanguage.refresh.title'), buttonForm(ctx, 'bot-language', 'refresh-posted', tr.t('botLanguage.refresh.button'), {}, { canEdit: ctx.canEdit && ctx.canAct }), tr.t('botLanguage.refresh.help'), { key: 'refresh-posted' })}
 ${section(tr.t('botLanguage.rule.title'), html`<ul><li>${tr.t('botLanguage.rule.public')}</li><li>${tr.t('botLanguage.rule.private')}</li><li>${tr.t('botLanguage.rule.done')}</li></ul>`, '', { key: 'rule' })}`;
     },
 
@@ -65,7 +67,18 @@ ${section(tr.t('botLanguage.rule.title'), html`<ul><li>${tr.t('botLanguage.rule.
             // saving the shown language (even English) makes it this server's choice.
             if (botLanguage === registryValue(ctx, 'botLanguage') && (isHomeScope(ctx) || registrySaved(ctx, 'botLanguage'))) return { changes: [] };
             const result = await saveRegistry(ctx, { botLanguage }, 'botLanguage');
-            return { ...result, message: tr.t('botLanguage.saved.done', { language: languageName(botLanguage) }) };
+            // The posted panels follow the new language, in the background (edited, not reposted).
+            if (ctx.guild && ctx.services?.refreshPostedMessages) void Promise.resolve(ctx.services.refreshPostedMessages(ctx.client, ctx.guild)).catch((error) => logger.warn(`Refresh after language change failed: ${error.message}`));
+            return { ...result, message: `${tr.t('botLanguage.saved.done', { language: languageName(botLanguage) })} ${tr.t('botLanguage.refresh.auto')}` };
+        },
+        // Edits messages the bot posted: Administrator-only, like posting as the bot.
+        'refresh-posted': {
+            admin: true,
+            async run(ctx) {
+                const tr = textFor(ctx);
+                const done = await ctx.services.refreshPostedMessages(ctx.client, ctx.guild);
+                return { changes: [{ key: 'postedMessages.refresh', old: null, new: done }], message: tr.t('botLanguage.refresh.done', { count: String(done.total) }) };
+            },
         },
         // Role-granting: Administrator-only (tests/helpers/privilegedActions.js).
         'language-roles': {

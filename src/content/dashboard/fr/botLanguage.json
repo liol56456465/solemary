@@ -27,5 +27,12 @@
     "none": "Aucun rôle",
     "duplicate": "{first} et {second} ont le même rôle. Chaque langue a besoin de son propre rôle.",
     "saved": "Rôles de langue enregistrés."
+  },
+  "refresh": {
+    "title": "Mettre à jour les messages publiés",
+    "help": "Réécrit les panneaux de vérification, de tickets, d'appels et de rôles par réaction déjà publiés par Mewvo, dans la langue du bot ci-dessus. Rien n'est republié, et le texte que tu as écrit toi-même reste tel quel. Mewvo le fait aussi quand tu changes la langue.",
+    "button": "Mettre à jour",
+    "done": "{count} messages publiés mis à jour.",
+    "auto": "Les panneaux publiés sont mis à jour."
   }
 }

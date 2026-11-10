@@ -431,6 +431,7 @@ function makeServices() {
             if (s.noAppealsCategory) throw userErr('There is no ticket category to open appeals in.', 'configuration');
             return { mainChannel: { id: channel.id, name: channel.name }, supportChannel: { id: '710000000000000004', name: 'appeals' }, created: false };
         },
+        refreshPostedMessages: async (c, guild) => { record('refreshPostedMessages', [guild.id]); return { verification: 1, tickets: 0, appeals: 0, reactionRoles: 0, total: 1 }; },
         createReactionRolePanel: async (c, guild, { channel, roleIds, title }) => {
             record('createReactionRolePanel', [channel.id, roleIds, title]);
             const roles = roleIds.filter((id) => id !== ROLE_DANGER).map((id) => ({ id }));
@@ -819,6 +820,8 @@ const CASES = {
     'bot-language': {
         language: { form: { botLanguage: 'de' }, service: 'updateSettings', bad: { form: { botLanguage: 'xx' }, message: /Language for posts and DMs/ } },
         // Role-granting: Administrator-only; two languages on one role are refused.
+        // Edits the bot's own posted panels: Administrator-only.
+        'refresh-posted': { admin: true, form: {}, service: 'refreshPostedMessages' },
         'language-roles': { admin: true, form: { role_en: ROLE_OK, role_de: ROLE_OK2 }, service: 'updateSettings',
             bad: { form: { role_en: ROLE_OK, role_de: ROLE_OK }, message: /same role/ } },
     },

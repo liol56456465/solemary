@@ -78,6 +78,7 @@ import { publishTicketPanel, setupTicketSystem } from '../ticketPanelService.js'
 import { publishVerificationPanel, setupVerification } from '../verificationPanelService.js';
 import { postAppealPanels, postServerAppealPanel } from '../enforcement/appealPanelService.js';
 import { createReactionRolePanel } from '../reactionRoleService.js';
+import { refreshPostedMessages } from '../postedMessagesRefresh.js';
 import { createNativePoll, createPoll, endPoll, postBotMessage, startCountdownMessage } from '../botMessageService.js';
 import { openPollsFor } from './pollList.js';
 import { postRulesMessages, updateRulesMessages } from '../rules/rulesPost.js';
@@ -128,7 +129,7 @@ export const defaultServices = {
     purgeChannelMessages, lockChannel, unlockChannel, fixBotChannelPermissions,
     postModLog,
     publishTicketPanel, setupTicketSystem, publishVerificationPanel, setupVerification, postAppealPanels, postServerAppealPanel,
-    createReactionRolePanel, createGiveaway, deleteGiveawayNow, createServerCounter, setupJoinToCreate, editTag,
+    createReactionRolePanel, refreshPostedMessages, createGiveaway, deleteGiveawayNow, createServerCounter, setupJoinToCreate, editTag,
     createApplicationRole, deleteApplicationRole, listApplicationRoles, updateApplicationRole,
     postBotMessage, createPoll, createNativePoll, endPoll, openPollsFor, startCountdownMessage, postRulesMessages, updateRulesMessages,
     listScheduledMessages, createScheduledMessage, updateScheduledMessage, setScheduledMessagePaused, runScheduledMessageNow, deleteScheduledMessage,

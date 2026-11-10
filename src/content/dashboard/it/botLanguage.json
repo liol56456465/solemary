@@ -27,5 +27,12 @@
     "none": "Nessun ruolo",
     "duplicate": "{first} e {second} hanno lo stesso ruolo. Ogni lingua ha bisogno di un ruolo suo.",
     "saved": "Ruoli di lingua salvati."
+  },
+  "refresh": {
+    "title": "Aggiorna i messaggi pubblicati",
+    "help": "Riscrive i pannelli di verifica, ticket, ricorsi e ruoli a reazione già pubblicati da Mewvo, nella lingua del bot qui sopra. Non viene ripubblicato nulla e il testo scritto da te resta com'è. Mewvo lo fa anche quando cambi la lingua.",
+    "button": "Aggiorna ora",
+    "done": "{count} messaggi pubblicati aggiornati.",
+    "auto": "I pannelli pubblicati vengono aggiornati."
   }
 }

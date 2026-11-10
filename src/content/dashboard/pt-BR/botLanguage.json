@@ -27,5 +27,12 @@
     "none": "Sem cargo",
     "duplicate": "{first} e {second} têm o mesmo cargo. Cada idioma precisa do próprio cargo.",
     "saved": "Cargos de idioma salvos."
+  },
+  "refresh": {
+    "title": "Atualizar mensagens publicadas",
+    "help": "Reescreve os painéis de verificação, tickets, apelações e cargos por reação que o Mewvo já publicou, no idioma do bot acima. Nada é publicado de novo, e o texto que você escreveu continua igual. O Mewvo também faz isso quando você muda o idioma.",
+    "button": "Atualizar agora",
+    "done": "{count} mensagens publicadas atualizadas.",
+    "auto": "Os painéis publicados estão sendo atualizados."
   }
 }

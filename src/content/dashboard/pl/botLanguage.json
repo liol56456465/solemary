@@ -27,5 +27,12 @@
     "none": "Brak roli",
     "duplicate": "{first} i {second} mają tę samą rolę. Każdy język potrzebuje własnej roli.",
     "saved": "Role językowe zapisane."
+  },
+  "refresh": {
+    "title": "Odśwież opublikowane wiadomości",
+    "help": "Przepisuje panele weryfikacji, ticketów, odwołań i ról za reakcje, które Mewvo już opublikowało, w języku bota powyżej. Nic nie jest publikowane od nowa, a tekst wpisany przez ciebie zostaje bez zmian. Mewvo robi to też po zmianie języka.",
+    "button": "Odśwież teraz",
+    "done": "Zaktualizowano opublikowane wiadomości: {count}.",
+    "auto": "Opublikowane panele są aktualizowane."
   }
 }

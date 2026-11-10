@@ -27,5 +27,12 @@
     "none": "Keine Rolle",
     "duplicate": "{first} und {second} haben dieselbe Rolle. Jede Sprache braucht eine eigene Rolle.",
     "saved": "Sprachrollen gespeichert."
+  },
+  "refresh": {
+    "title": "Gepostete Nachrichten aktualisieren",
+    "help": "Schreibt die Verifizierungs-, Ticket-, Einspruchs- und Reaktionsrollen-Panels, die Mewvo schon gepostet hat, in der Bot-Sprache oben neu. Nichts wird neu gepostet, und selbst geschriebener Text bleibt, wie er ist. Mewvo macht das auch, wenn du die Sprache änderst.",
+    "button": "Jetzt aktualisieren",
+    "done": "{count} gepostete Nachrichten aktualisiert.",
+    "auto": "Die geposteten Panels werden angepasst."
   }
 }

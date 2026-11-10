@@ -27,5 +27,12 @@
     "none": "Sin rol",
     "duplicate": "{first} y {second} tienen el mismo rol. Cada idioma necesita su propio rol.",
     "saved": "Roles de idioma guardados."
+  },
+  "refresh": {
+    "title": "Actualizar mensajes publicados",
+    "help": "Reescribe los paneles de verificación, tickets, apelaciones y roles por reacción que Mewvo ya publicó, en el idioma del bot de arriba. No se vuelve a publicar nada, y el texto que escribiste tú queda igual. Mewvo también lo hace cuando cambias el idioma.",
+    "button": "Actualizar ahora",
+    "done": "{count} mensajes publicados actualizados.",
+    "auto": "Los paneles publicados se están actualizando."
   }
 }
