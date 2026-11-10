@@ -252,8 +252,8 @@ test('flow builder parity: the dashboard builds the same flow as the panel for t
     const evidence = 'see https://discord.com/channels/100000000000000001/500000000000000001/700000000000000001 and https://example.com/x';
 
     // ban: severe prebuilt reason (unappealable by default), duration, custom name, two links
-    const panelBan = await panelFlow({ guild, moderator, targetUser, type: 'ban', reasonKey: 'harassment', modal: { durationInput: '7d', unappealable: true, evidenceInput: evidence, name: 'my ban' } });
-    const webBan = await buildRecordFlow({ guild, moderator, moderatorId: ADMIN, targetUser, type: 'ban', completeFlowDetails: complete, form: { reason: 'harassment', duration: '7d', unappealable: 'default', evidence, name: 'my ban' } });
+    const panelBan = await panelFlow({ guild, moderator, targetUser, type: 'ban', reasonKey: 'raiding', modal: { durationInput: '7d', unappealable: true, evidenceInput: evidence, name: 'my ban' } });
+    const webBan = await buildRecordFlow({ guild, moderator, moderatorId: ADMIN, targetUser, type: 'ban', completeFlowDetails: complete, form: { reason: 'raiding', duration: '7d', unappealable: 'default', evidence, name: 'my ban' } });
     assert.deepEqual(webBan, panelBan);
     assert.equal(webBan.unappealable, true);
     assert.equal(webBan.durationMs, 7 * 86400000);

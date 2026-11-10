@@ -75,8 +75,8 @@ bindSettingGetters(enforcementConfig, [
 export const ENFORCEMENT_REASONS = [
     { key: 'slurs', label: 'Swearing/slurs', severe: false },
     { key: 'spam', label: 'Spam', severe: false },
-    { key: 'harassment', label: 'Harassment', severe: true },
-    { key: 'nsfw', label: 'NSFW content', severe: true },
+    { key: 'harassment', label: 'Harassment', severe: false },
+    { key: 'nsfw', label: 'NSFW content', severe: false },
     { key: 'advertising', label: 'Advertising', severe: false },
     { key: 'raiding', label: 'Raiding', severe: true },
     { key: 'scamming', label: 'Scamming', severe: true },
