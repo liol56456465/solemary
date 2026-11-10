@@ -25,7 +25,11 @@
 // uploaded picture in Discord, and the audit/mod-log rows.
 
 import { ENFORCEMENT_REASONS } from '../../../config/enforcement.js';
-import { RULES_LIBRARY, libraryRule } from '../../../config/rulesLibrary.js';
+import { libraryIn, libraryRuleIn } from '../../../config/rulesLibrary.js';
+import { textForGuild } from '../../../utils/botText.js';
+
+// The library in the server's public language: a rule is posted for everyone there.
+const serverLang = (ctx) => { try { return textForGuild(ctx.guildId, { purpose: 'public' }).lang; } catch { return 'en'; } };
 import { html, raw } from '../html.js';
 import {
     InputError, PERMS, buttonForm, channelField, channelName, channelPicker, choiceField, pill, postForm, selectInput, text, textArea, textInput,
@@ -369,7 +373,7 @@ ${textArea('text', '', { label: tr.t('rules.rule.text'), max: textMax, rows: 4, 
 ${textInput('consequence', '', { label: tr.t('rules.rule.consequence'), max: consequenceMax, placeholder: tr.t('rules.rule.consequencePlaceholder'), help: consequenceHelp })}</div>`, { submit: tr.t('rules.rule.add'), inline: false });
 
         const added = new Set(d.rules.map((r) => r.preset).filter(Boolean));
-        const libraryRows = RULES_LIBRARY.map((entry) => [
+        const libraryRows = libraryIn(serverLang(ctx)).map((entry) => [
             html`<strong>${entry.title}</strong><br><span class="muted">${entry.text}</span>`,
             entry.consequence,
             entry.reason ? reasonLabel(entry.reason) : none,
@@ -424,7 +428,7 @@ ${section(tr.t('rules.post.sectionTitle'), postSection(ctx, d), [tr.t('rules.pos
         'library-add'(ctx, form) {
             const tr = textFor(ctx);
             const key = text(form, 'key', 40);
-            const entry = libraryRule(key);
+            const entry = libraryRuleIn(key, serverLang(ctx));
             if (!entry) throw new InputError(tr.t('rules.error.libraryGone'), 400, 'key');
             return serialized(async () => {
                 const { value, links } = current(ctx);

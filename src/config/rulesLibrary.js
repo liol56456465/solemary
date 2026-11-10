@@ -61,3 +61,33 @@ export const RULES_LIBRARY = Object.freeze([
 export function libraryRule(key) {
     return RULES_LIBRARY.find((entry) => entry.key === key) || null;
 }
+
+// Translations (owner, 2026-11-10: "most of the server translated"): rulesLibrary/<lang>.json,
+// { key: [title, text, consequence] }. "Add from the library" adds the rule in the server's
+// language; it is a normal, editable rule after that. A missing language or entry: English.
+import { readFileSync } from 'node:fs';
+
+const LIBRARY_LANGS = ['de', 'fr', 'es', 'it', 'pl', 'pt-BR', 'ru'];
+const translations = Object.freeze(Object.fromEntries(LIBRARY_LANGS.map((lang) => {
+    try {
+        return [lang, JSON.parse(readFileSync(new URL(`./rulesLibrary/${lang}.json`, import.meta.url), 'utf8'))];
+    } catch {
+        return [lang, {}];
+    }
+})));
+
+/** The library entry in `lang` (title, text, consequence translated; key, reason the same). */
+export function libraryRuleIn(key, lang = 'en') {
+    const entry = libraryRule(key);
+    if (!entry) return null;
+    const t = translations[lang]?.[key];
+    if (!Array.isArray(t) || t.length !== 3) return entry;
+    return Object.freeze({ ...entry, title: t[0], text: t[1], consequence: t[2] });
+}
+
+/** Every library entry in `lang`, in the library order. */
+export function libraryIn(lang = 'en') {
+    return RULES_LIBRARY.map((entry) => libraryRuleIn(entry.key, lang));
+}
+
+export const RULES_LIBRARY_TRANSLATIONS = translations;
