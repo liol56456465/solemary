@@ -395,5 +395,8 @@
         "Utility": "Przydatne",
         "Verification": "Weryfikacja",
         "Welcome": "Powitania"
+    },
+    "rules": {
+        "consequence": "Konsekwencja"
     }
 }

@@ -20,6 +20,7 @@ import { createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { RULES_POST_DEFAULT, RULES_POST_LIMITS } from '../settings/settingsRegistry.js';
 import { isExpiredDiscordCdnUrl } from '../../utils/welcomeImageStore.js';
 import { assertCanPost, colourFromKey, noMentions, permissionsForPost } from '../botMessageService.js';
+import { textForGuild } from '../../utils/botText.js';
 
 export const DESCRIPTION_MAX = 4096;
 export const FIELD_NAME_MAX = 256;
@@ -34,10 +35,10 @@ const validation = (message) => createError(message, ErrorTypes.VALIDATION, mess
 const oneLine = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
 
 /** "**1. No spam**\nText\n*Consequence: Warning*" for the list layout. */
-export function ruleBlock(rule) {
+export function ruleBlock(rule, label = 'Consequence') {
     const lines = [`**${rule.number}. ${oneLine(rule.title)}**`];
     if (rule.text) lines.push(rule.text);
-    if (rule.consequence) lines.push(`*Consequence: ${oneLine(rule.consequence)}*`);
+    if (rule.consequence) lines.push(`*${label}: ${oneLine(rule.consequence)}*`);
     return lines.join('\n');
 }
 
@@ -60,7 +61,7 @@ export function embedLength(data) {
  * messages as possible. `reserved` = what the title and footer may add; `firstTaken` = the
  * embeds already in the first message (the banner). Pure.
  */
-function packChunks(rules, layout, intro, reserved, firstTaken) {
+function packChunks(rules, layout, intro, reserved, firstTaken, label = 'Consequence') {
     const messages = [[]];
     let used = 0;
     let count = firstTaken;
@@ -87,7 +88,7 @@ function packChunks(rules, layout, intro, reserved, firstTaken) {
                 continue;
             }
         } else {
-            item = ruleBlock(rule);
+            item = ruleBlock(rule, label);
             add = current.size ? item.length + 2 : item.length;
             if (current.size + add <= room()) {
                 current.description = current.size ? `${current.description}\n\n${item}` : item;
@@ -117,7 +118,8 @@ function packChunks(rules, layout, intro, reserved, firstTaken) {
  * attach), or null. Throws a user error when there is nothing to post or more than
  * RULES_POST_LIMITS.maxMessages would be needed. Pure.
  */
-export function buildRulesMessages(rules, design, images = {}) {
+// `label`: the word before a rule's consequence, in the server's language (rulesLabel).
+export function buildRulesMessages(rules, design, images = {}, { label = 'Consequence' } = {}) {
     if (!rules.length) throw validation('There are no rules to post yet. Add a rule first.');
     const colour = Number.isInteger(design.colour) ? design.colour : colourFromKey('primary');
     const title = String(design.title ?? '').trim();
@@ -127,7 +129,7 @@ export function buildRulesMessages(rules, design, images = {}) {
     const bannerUrl = imageRef(images.banner);
     const thumbnailUrl = imageRef(images.thumbnail);
 
-    const grouped = packChunks(rules, design.layout === 'fields' ? 'fields' : 'list', String(design.intro ?? '').trim(), title.length + footer.length, bannerUrl ? 1 : 0);
+    const grouped = packChunks(rules, design.layout === 'fields' ? 'fields' : 'list', String(design.intro ?? '').trim(), title.length + footer.length, bannerUrl ? 1 : 0, label);
     const total = grouped.reduce((sum, chunks) => sum + chunks.length, 0);
     let index = 0;
     const messages = grouped.map((chunks, m) => {
@@ -273,7 +275,16 @@ export function rulesPostDesign(value) {
  */
 export async function rulesMessagesFor({ client, guildId, rules, design, resolve }) {
     const images = await resolveRulesImages(client, guildId, design, resolve);
-    return buildRulesMessages(rules, design, images);
+    return buildRulesMessages(rules, design, images, { label: rulesLabel(guildId) });
+}
+
+/** "Consequence" in the server's public language (the rules post is one message for everyone). */
+export function rulesLabel(guildId) {
+    try {
+        return textForGuild(guildId, { purpose: 'public' }).t('core.rules.consequence');
+    } catch {
+        return 'Consequence';
+    }
 }
 
 /**

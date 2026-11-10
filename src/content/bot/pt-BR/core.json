@@ -389,5 +389,8 @@
         "Utility": "Utilidades",
         "Verification": "Verificação",
         "Welcome": "Boas-vindas"
+    },
+    "rules": {
+        "consequence": "Consequência"
     }
 }

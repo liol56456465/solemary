@@ -395,5 +395,8 @@
         "Utility": "Утилиты",
         "Verification": "Верификация",
         "Welcome": "Приветствие"
+    },
+    "rules": {
+        "consequence": "Наказание"
     }
 }

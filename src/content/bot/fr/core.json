@@ -389,5 +389,8 @@
         "Utility": "Utilitaires",
         "Verification": "Vérification",
         "Welcome": "Bienvenue"
+    },
+    "rules": {
+        "consequence": "Sanction"
     }
 }
