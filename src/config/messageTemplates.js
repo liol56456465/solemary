@@ -383,6 +383,40 @@ export const MESSAGE_TEMPLATES = Object.freeze([
     ].join('\n'), 'yellow'),
 
     // ── Staff ─────────────────────────────────────────────────────────────
+    // Staff rules (owner, 2026-11-10): posted in a staff-only channel. The usual consequence is a
+    // demotion (staff role removed); abuse of moderation powers can also mean a ban.
+    T('staff-rules-mods', 'staff', 'Staff rules: moderators', 'Rules for moderators', [
+        'These apply to everyone with a moderator role, on top of the server rules.',
+        '',
+        '**1. Follow the server rules first.** Staff are held to a higher standard, not a lower one.',
+        '**2. Use the right punishment.** Follow the listed consequence for the rule. Not sure? Ask in staff chat before you act.',
+        '**3. Always give a reason.** Every warn, mute, kick and ban needs a real reason and evidence if there is any.',
+        '**4. No personal grudges.** Do not punish someone you are arguing with. Let another moderator handle it.',
+        '**5. Keep staff matters private.** Do not share cases, reports, appeals or staff chat outside the staff channels.',
+        '**6. Stay calm in public.** Disagree with another staff member in staff chat, not in front of members.',
+        '**7. Do not abuse bot or role powers.** No pranks, no fake punishments, no giving roles to friends.',
+        '**8. Tell us when you are away.** Going inactive for more than [time]? Post it in #[staff channel].',
+        '',
+        '**Consequences**',
+        '- Small mistakes: a talk with an admin',
+        '- Repeated or careless mistakes: demotion',
+        '- Abusing moderation powers, leaking staff info or raiding: demotion and a ban',
+    ].join('\n'), 'blurple'),
+    T('staff-rules-admins', 'staff', 'Staff rules: administrators', 'Rules for administrators', [
+        'These apply to everyone with Administrator, on top of the moderator rules.',
+        '',
+        '**1. Changes go through staff chat.** Do not change channels, roles, bots or server settings without telling the other admins.',
+        '**2. Never hand out staff permissions alone.** New moderators and admins are agreed on by [who decides].',
+        '**3. Protect the server.** Never add untrusted bots, never share bot tokens, logins or the dashboard with anyone.',
+        '**4. Review, do not overrule quietly.** Undoing another moderator\'s action needs a note in the case and a message to them.',
+        '**5. Appeals and staff reports are handled fairly.** Do not decide an appeal or report about yourself or a friend.',
+        '**6. Mass actions need a reason.** Mass bans, purges and lockdowns are for raids and emergencies only.',
+        '',
+        '**Consequences**',
+        '- Mistakes: a talk with the owner',
+        '- Ignoring these rules: demotion to moderator or removal from staff',
+        '- Abusing Administrator, nuking or helping a raid: removal from staff and a permanent ban',
+    ].join('\n'), 'red'),
     T('staff-apps-open', 'staff', 'Staff applications open', 'Staff applications are open', [
         'We are looking for [number] new moderators.',
         '',
