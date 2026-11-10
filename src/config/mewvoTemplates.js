@@ -144,13 +144,13 @@ export const MEWVO_TEMPLATES = Object.freeze([
     H('mewvo-appeals-open', 'Appeals and staff reports open', 'primary', {
         title: 'Appeals and staff reports are open',
         text: lines(
-            '**Think a ban, kick, mute or warning was wrong?**',
-            'Press Appeal on the panel in #[appeals channel]. Your case code is in the DM Mewvo sent you. Lost it? Leave the code empty and we use your latest case.',
+            '**Appeals**',
+            'If you think a ban, kick, mute or warning was a mistake, press Appeal on the panel in #[appeals channel]. The case code is in the DM Mewvo sent you. If you lost it, leave the code empty and we use your latest case.',
             '',
-            '**Problem with a staff member?**',
-            'Press Report staff on the same panel. Only administrators see reports.',
+            '**Staff reports**',
+            'Had a problem with a staff member? Press Report staff on the same panel. Only admins can see reports.',
             '',
-            'We usually answer within 48 hours. One appeal or report per issue, please.',
+            'We usually reply within 48 hours. Please open one appeal or report per issue.',
         ),
     }, {
         de: { title: 'Einsprüche und Staff-Meldungen sind offen', text: lines('**Findest du einen Bann, Kick, Mute oder eine Verwarnung falsch?**', 'Drück auf Einspruch im Panel in #[Einspruchskanal]. Deinen Fallcode findest du in der DM von Mewvo. Verloren? Lass das Feld leer, dann nehmen wir deinen letzten Fall.', '', '**Ärger mit einem Teammitglied?**', 'Drück im selben Panel auf Staff melden. Nur Administratoren sehen Meldungen.', '', 'Wir antworten meist innerhalb von 48 Stunden. Bitte nur ein Einspruch oder eine Meldung pro Sache.') },
