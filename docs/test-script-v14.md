@@ -103,3 +103,24 @@ the language steps). Use an alt account as the member. Expected result after eac
     the Contest button under an automod DM too.
 11. **Small fixes:** giveaway Join then Leave at once → left, no "slow down". Close a ticket for an alt with DMs
     off → bot log shows one failed DM; the rating survey appears in the ticket channel.
+
+## 11. Added 2026-11-11 (Home; alt = a test account, admin alt = an alt with Administrator, not the server owner)
+1. **Multi-select click:** Dashboard → Tickets → staff roles: click role A, then role B → both stay selected;
+   click A again → only B. Save, reload → the saved roles are still selected.
+2. **Several ticket staff roles:** save two roles (A, B). Alt opens a ticket → the ping names A and B only
+   (no @everyone); a member with only role B sees the channel and can claim and close it.
+3. **Modmail with several roles:** alt DMs the bot → "Send to staff" → a member with only role B sees the
+   modmail channel and can reply.
+4. **`/ticket setup`** with @everyone or a bot role as staff role → refused with an error.
+5. **Deleted log message comes back:** admin alt deletes a fresh Mewvo message (under 1 hour old) in a log
+   channel (e.g. Members log) → within a few seconds it is posted again marked "Restored", naming the admin alt;
+   the staff mod log gets a line. You (server owner) delete one → not reposted, only a mod-log note.
+6. **Restore without the permission:** remove View Audit Log from Mewvo, admin alt deletes a log message →
+   mod-log note only, nothing reposted. Give the permission back afterwards.
+7. **/purge in a log channel:** you (server owner) purge 3 Mewvo messages there → nothing reposted; the mod-log
+   line says "Deleted by (/purge)" with your name. Admin alt does the same → the messages come back "Restored"
+   (at most 5 per purge), mod-log line names the admin alt.
+8. **Languages in the dashboard:** Bot language German → Rules page library rules in German; Messages → a general
+   template (e.g. Staff rules: moderators) in German; new embeds use the white default colour.
+9. **Language role from staff:** alt has the English language role; give it the German role by hand →
+   English is removed a moment later.
