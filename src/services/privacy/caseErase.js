@@ -18,6 +18,7 @@
 import { pgConfig } from '../../config/database/postgres.js';
 import { OPEN_STATUSES } from '../enforcement/caseService.js';
 import { normalizeCaseCode } from '../enforcement/format.js';
+import { markOwnDelete } from '../logTamperService.js';
 
 export const REMOVED = '[removed on request]';
 
@@ -124,6 +125,7 @@ export async function deleteEvidenceMessages(client, messages = []) {
         try {
             const channel = await client?.channels?.fetch?.(channelId);
             if (!channel?.messages?.delete) throw new Error('channel not found');
+            markOwnDelete(messageId);
             await channel.messages.delete(messageId);
             deleted += 1;
         } catch (error) {

@@ -37,6 +37,7 @@ import { ruleDefinition } from './customRules.js';
 import { restoreIfContested } from './automodContest.js';
 import { canGiveSecondOpinion, secondOpinionPayload, shouldAskSecondOpinion } from './secondOpinion.js';
 import { alertWatched } from '../enforcement/watchlistService.js';
+import { markOwnDelete } from '../logTamperService.js';
 
 export { describeStep };
 
@@ -442,7 +443,10 @@ export async function handleReviewAction(interaction, args) {
         const { guild: messageGuild } = await actingGuild(interaction, channelGuildId);
         const channel = messageGuild.channels.cache.get(channelId) || await messageGuild.channels.fetch(channelId).catch(() => null);
         const target = channel?.isTextBased?.() ? await channel.messages.fetch(messageId).catch(() => null) : null;
-        if (target) await target.delete().catch(() => {});
+        if (target) {
+            markOwnDelete(target.id);
+            await target.delete().catch(() => {});
+        }
         await close(message, target
             ? cardTr.t('automod.review.outcome2.deletedBy', { name: by })
             : cardTr.t('automod.review.outcome2.alreadyGone', { name: by }), { status: 'deleted', by });

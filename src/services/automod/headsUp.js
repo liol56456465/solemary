@@ -34,6 +34,7 @@ import { closeCard, postReviewCard } from './reviewCards.js';
 import { Mutex } from '../../utils/mutex.js';
 import { headsUpDm, headsUpNotice, privacyHeadsUpDm, privacyHeadsUpNotice } from './policy.js';
 import { BoundedMap } from '../../utils/boundedMap.js';
+import { markOwnDelete } from '../logTamperService.js';
 
 const DAY = 24 * 60 * 60 * 1000;
 const LEGACY_INDEX_KEY = 'automod:headsup:index';
@@ -78,7 +79,7 @@ const graceMinutes = () => Math.round(automodConfig.headsUpGraceMs / 60000);
 function sendNotice(message, content) {
     return message.channel?.send?.({ content, allowedMentions: { users: [message.author.id] } })
         .then((notice) => {
-            if (notice) setTimeout(() => notice.delete().catch(() => {}), automodConfig.headsUpNoticeMs).unref?.();
+            if (notice) setTimeout(() => { markOwnDelete(notice.id); notice.delete().catch(() => {}); }, automodConfig.headsUpNoticeMs).unref?.();
             return notice;
         })
         .catch(() => null);

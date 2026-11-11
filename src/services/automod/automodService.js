@@ -42,6 +42,7 @@ import { getFromDb, setInDb } from '../../utils/database.js';
 import { noteRepeatHit, postReviewCard } from './reviewCards.js';
 import * as reasons from './reasons.js';
 import { customRuleDefinition, customRuleKey, findCustomRuleHit, resetCustomRulesCache, ruleDefinition } from './customRules.js';
+import { markOwnDelete } from '../logTamperService.js';
 import {
     countMentions,
     detectCrossChannelSpam,
@@ -444,7 +445,7 @@ async function giveSecondChance(message, hit, { settings, offences, card, probat
         content: secondChanceNotice(hit.rule, author.id, deleted),
         allowedMentions: { users: [author.id] },
     }).catch(() => null);
-    if (notice) setTimeout(() => notice.delete().catch(() => {}), automodConfig.secondChanceNoticeMs).unref?.();
+    if (notice) setTimeout(() => { markOwnDelete(notice.id); notice.delete().catch(() => {}); }, automodConfig.secondChanceNoticeMs).unref?.();
     await postReviewCard({ ...card, note: { title: 'Friendly notice (first small offence)' }, deleted });
     return true;
 }
@@ -590,7 +591,7 @@ async function applyNewMemberLimits(message, member, now) {
         content: `<@${message.author.id}> ${reason}`,
         allowedMentions: { users: [message.author.id] },
     }).catch(() => null);
-    if (notice) setTimeout(() => notice.delete().catch(() => {}), 8000).unref?.();
+    if (notice) setTimeout(() => { markOwnDelete(notice.id); notice.delete().catch(() => {}); }, 8000).unref?.();
     return true;
 }
 

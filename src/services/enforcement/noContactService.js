@@ -17,6 +17,7 @@ import { postModLog, sendDm } from './enforcementService.js';
 import { noContactEndedDm, noContactStartedDm } from './dmTemplates.js';
 import { truncate } from './format.js';
 import { botText, resolveBotLanguage } from '../../utils/botText.js';
+import { markOwnDelete } from '../logTamperService.js';
 
 export const NO_CONTACT_MAX_DAYS = 365;
 const NOTICE_DELETE_MS = 8000;
@@ -120,7 +121,7 @@ export async function enforceNoContact(message) {
                 + `until <t:${Math.floor(order.until / 1000)}:f>. Don't mention or reply to them${deleted ? '; your message was removed' : ''}.`,
             allowedMentions: { users: [message.author.id], parse: [] },
         }).catch(() => null);
-        if (notice) setTimeout(() => notice.delete().catch(() => {}), NOTICE_DELETE_MS).unref?.();
+        if (notice) setTimeout(() => { markOwnDelete(notice.id); notice.delete().catch(() => {}); }, NOTICE_DELETE_MS).unref?.();
 
         const key = `${order.id}:${message.author.id}`;
         if (Date.now() - (lastLogged.get(key) || 0) >= LOG_COOLDOWN_MS) {

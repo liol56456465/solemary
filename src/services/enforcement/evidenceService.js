@@ -17,6 +17,7 @@ import { isHomeGuild, resolveSetting } from '../settings/guildSettings.js';
 import { staffGuildId } from '../automod/channelRouting.js';
 import { dateStamp, fitWholeLines, truncate } from './format.js';
 import { botText } from '../../utils/botText.js';
+import { markOwnDelete } from '../logTamperService.js';
 
 export const EXCERPT_MAX = 500;
 export const NOTE_MAX = 300;
@@ -260,6 +261,7 @@ export async function addImageEvidence(client, caseCode, attachment, { note = nu
             addedBy,
         });
     } catch (error) {
+        markOwnDelete(stored.id);
         await stored.delete().catch(() => {});
         throw error;
     }

@@ -12,6 +12,7 @@ import { textForInteraction } from '../../../utils/botText.js';
 import { logEvent } from '../../../utils/moderation.js';
 import { TOOL_PERMS, missingBotPerms } from '../../../services/channelToolsService.js';
 import { PURGE_BUTTON, deletePreviewed, purgePreviews, resultText } from '../../../services/moderation/purgePreview.js';
+import { markOwnDelete } from '../../../services/logTamperService.js';
 
 const NO_MENTIONS = Object.freeze({ parse: [] });
 
@@ -61,6 +62,8 @@ export async function handlePurgeButton(interaction, client, args = [], deps = {
 
     let result;
     try {
+        // A purge in a log channel counts as this moderator's delete (logTamperService.js).
+        markOwnDelete((entry.fresh || []).map((m) => m.id), interaction.user.id);
         result = await deletePreviewed(channel, entry, now);
     } catch (error) {
         logger.error('Purge confirm error:', error);

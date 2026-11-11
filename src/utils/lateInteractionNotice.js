@@ -9,6 +9,7 @@
 import { MessageFlags } from 'discord.js';
 import { logger } from './logger.js';
 import { canSeeAdminCommands } from './commandGate.js';
+import { markOwnDelete } from '../services/logTamperService.js';
 
 const ACK_DEADLINE_MS = 3000;
 const CHANNEL_NOTICE_TTL_MS = 15 * 1000;
@@ -88,7 +89,7 @@ export async function sendLateInteractionNotice(interaction, { actionTaken = fal
             content: `<@${userId}> ${content}`,
             allowedMentions: { users: [userId] },
         });
-        setTimeout(() => message.delete().catch(() => {}), CHANNEL_NOTICE_TTL_MS).unref?.();
+        setTimeout(() => { markOwnDelete(message.id); message.delete().catch(() => {}); }, CHANNEL_NOTICE_TTL_MS).unref?.();
         return true;
     } catch (error) {
         logger.debug('Could not deliver late interaction notice:', error?.message);

@@ -273,6 +273,7 @@ const MOD_LOG_TITLES = {
     system: ['Bot problem', 'error'],
     revert: ['Server structure reverted', 'success'],
     dashboard: ['Dashboard change', 'secondary'],
+    logDeleted: ['Log message deleted', 'warning'],
 };
 
 /**

@@ -24,6 +24,7 @@ import { lookupDbError, lookupMessage } from '../../handlers/databaseLookupView.
 import { textForInteraction } from '../../utils/botText.js';
 import { descriptionLocalizations } from '../../utils/commandLocalizations.js';
 import { homeServers } from '../../config/homeServers.js';
+import { markOwnDelete } from '../../services/logTamperService.js';
 
 export const PROFILE_DELETE_MS = 2 * 60_000;
 
@@ -72,6 +73,7 @@ const defaultSchedule = (fn, ms) => {
  */
 export function scheduleProfileDelete(interaction, messageId, { ms = PROFILE_DELETE_MS, schedule = defaultSchedule, log = logger } = {}) {
     return schedule(async () => {
+        markOwnDelete(messageId);
         try {
             await interaction.deleteReply();
         } catch (error) {
