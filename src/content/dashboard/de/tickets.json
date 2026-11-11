@@ -30,6 +30,8 @@
     "closedCategoryHelp": "Geschlossene Tickets werden hierhin verschoben.",
     "staffRole": "Ticket-Teamrolle",
     "staffRoleHelp": "Mitglieder mit dieser Rolle sehen und beantworten alle Tickets.",
+    "staffRoles": "Ticket-Teamrollen (bis zu {max})",
+    "staffRolesHelp": "Mitglieder mit einer dieser Rollen sehen alle Tickets und Modmail-Gespräche und können antworten. Halte Strg (Cmd auf dem Mac) gedrückt, um mehrere auszuwählen.",
     "maxPerUser": "Offene Tickets pro Mitglied",
     "maxPerUserHelp": "Wie viele Tickets ein Mitglied gleichzeitig offen haben kann. Von 1 bis 10.",
     "maxRange": "Von 1 bis 10.",

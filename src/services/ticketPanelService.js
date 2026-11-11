@@ -58,13 +58,18 @@ export function assertCanPostPanel(guild, channel, { lang = 'en' } = {}) {
  * First-time setup (one ticket system per server): validates every option BEFORE the
  * panel is posted, posts it, saves the settings with the panel message id.
  * options: { panelChannel, panelMessage, buttonLabel, categoryId, closedCategoryId,
- * staffRoleId, maxTicketsPerUser, dmOnClose, lang }. Resolves { message, settings }.
+ * staffRoleId | staffRoleIds, maxTicketsPerUser, dmOnClose, lang }. Resolves { message, settings }.
  * `lang`: the language of a refusal (the person setting it up); the panel is in the server's language.
  */
 export async function setupTicketSystem(client, guild, {
-    panelChannel, panelMessage, buttonLabel, categoryId = null, closedCategoryId = null, staffRoleId = null,
+    panelChannel, panelMessage, buttonLabel, categoryId = null, closedCategoryId = null, staffRoleId = null, staffRoleIds = null,
     maxTicketsPerUser = 3, dmOnClose = true, lang = 'en',
 }) {
+    // @everyone (every member holds it) or a bot's role would make the wrong people ticket staff.
+    const staffIds = Array.isArray(staffRoleIds) ? staffRoleIds : [staffRoleId].filter(Boolean);
+    for (const id of staffIds) {
+        if (id === guild.id || guild.roles?.cache?.get(id)?.managed) throw refused(botText(lang).t('ticket.dash.staffRoleNone'));
+    }
     const existing = await getGuildConfig(client, guild.id);
     if (existing?.ticketPanelChannelId) {
         throw refused(botText(lang).t('ticket.panel.exists', { channelId: existing.ticketPanelChannelId }));
@@ -72,7 +77,8 @@ export async function setupTicketSystem(client, guild, {
     const patch = validateTicketSettingsPatch({
         ticketCategoryId: categoryId,
         ticketClosedCategoryId: closedCategoryId,
-        ticketStaffRoleId: staffRoleId,
+        // A list (dashboard) wins over the single role (/ticket setup); the service keeps both keys in step.
+        ...(Array.isArray(staffRoleIds) ? { ticketStaffRoleIds: staffRoleIds } : { ticketStaffRoleId: staffRoleId }),
         ticketPanelChannelId: panelChannel?.id,
         ticketPanelMessage: panelMessage || DEFAULT_TICKET_PANEL_MESSAGE,
         ticketButtonLabel: buttonLabel || DEFAULT_TICKET_BUTTON_LABEL,

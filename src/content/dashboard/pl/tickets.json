@@ -30,6 +30,8 @@
     "closedCategoryHelp": "Zamknięte tickety są tu przenoszone.",
     "staffRole": "Rola ekipy ticketów",
     "staffRoleHelp": "Członkowie z tą rolą widzą każdy ticket i mogą w nim odpowiadać.",
+    "staffRoles": "Role obsługi zgłoszeń (do {max})",
+    "staffRolesHelp": "Członkowie z którąkolwiek z tych ról widzą wszystkie zgłoszenia i rozmowy modmail i mogą na nie odpowiadać. Przytrzymaj Ctrl (Cmd na Macu), aby wybrać kilka.",
     "maxPerUser": "Otwarte tickety na członka",
     "maxPerUserHelp": "Ile ticketów jeden członek może mieć otwartych naraz. Od 1 do 10.",
     "maxRange": "Od 1 do 10.",

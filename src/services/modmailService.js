@@ -23,6 +23,7 @@
 // else their personal language, else that server's language; before a server is picked, their
 // personal language or English. customIds never change.
 
+import { memberHasTicketStaffRole, ticketStaffRoleIds, ticketStaffMentions } from '../utils/ticket/staffRoles.js';
 import {
     ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ChannelType,
     EmbedBuilder, PermissionFlagsBits, StringSelectMenuBuilder,
@@ -137,13 +138,13 @@ export async function setModmailBlocked(client, guildId, userId, blocked) {
     }, { operation: 'setModmailBlocked' });
 }
 
-/** Staff = Administrator, Manage Channels, or the ticket staff role. */
+/** Staff = Administrator, Manage Channels, or one of the ticket staff roles. */
 export function isModmailStaff(member, config) {
     if (!member) return false;
     if (member.guild?.ownerId === member.id) return true;
     if (member.permissions?.has?.(PermissionFlagsBits.Administrator)) return true;
     if (member.permissions?.has?.(PermissionFlagsBits.ManageChannels)) return true;
-    return Boolean(config?.ticketStaffRoleId && member.roles?.cache?.has(config.ticketStaffRoleId));
+    return memberHasTicketStaffRole(member, config);
 }
 
 /** Splits text into chunks Discord accepts, preferring line breaks. */
@@ -477,7 +478,7 @@ export async function openModmail(client, user, dmChannel, messageId, guildId = 
     try {
         const config = setupConfig;
         const member = await guild.members.fetch(user.id);
-        const staffRoleId = config.ticketStaffRoleId || null;
+        const staffRoleIds = ticketStaffRoleIds(config);
         const staffAccess = [
             PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages,
             PermissionFlagsBits.AttachFiles, PermissionFlagsBits.ReadMessageHistory,
@@ -497,7 +498,7 @@ export async function openModmail(client, user, dmChannel, messageId, guildId = 
                 permissionOverwrites: [
                     { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
                     { id: client.user.id, allow: [...staffAccess, PermissionFlagsBits.ManageChannels] },
-                    ...(staffRoleId ? [{ id: staffRoleId, allow: staffAccess }] : []),
+                    ...staffRoleIds.map((id) => ({ id, allow: staffAccess })),
                 ],
                 reason: `Modmail from ${user.tag} (${user.id})`,
             });
@@ -526,10 +527,10 @@ export async function openModmail(client, user, dmChannel, messageId, guildId = 
                 tr.t('staff.modmail.header.notes'),
             ].join('\n'));
         await channel.send({
-            content: staffRoleId ? `<@&${staffRoleId}> ${tr.t('staff.modmail.newPing')}` : tr.t('staff.modmail.new'),
+            content: staffRoleIds.length ? `${ticketStaffMentions(config)} ${tr.t('staff.modmail.newPing')}` : tr.t('staff.modmail.new'),
             embeds: [header],
             components: [closeRow(tr.lang)],
-            allowedMentions: { roles: staffRoleId ? [staffRoleId] : [] },
+            allowedMentions: { roles: staffRoleIds },
         });
         await postStaffReminder(channel, tr);
         await relay(channel, `**${user.username}:**`, original);

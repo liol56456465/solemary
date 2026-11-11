@@ -9,6 +9,7 @@
 //     message, staff get one reminder in the staff channel (main server; for ban/kick
 //     appeals never in the support-server channel where the appellant reads).
 
+import { ticketStaffRoleIds, ticketStaffMentions } from '../../utils/ticket/staffRoles.js';
 import { AttachmentBuilder, SnowflakeUtil } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { db } from '../../utils/database/wrapper.js';
@@ -78,14 +79,14 @@ async function remindStaff(client, guild, channel, row, reminderMs) {
         if (!channel) return;
     }
     const config = await getGuildConfig(client, guild.id);
-    const staffRoleId = config.ticketStaffRoleId;
+    const staffRoleIds = ticketStaffRoleIds(config);
     const days = Math.round(reminderMs / 86400000);
     const tr = textForGuild(guild.id, { userId: row.user_id, purpose: 'public' });
     const reminder = tr.tp(isHomeGuild(guild.id) ? 'staff.dossier.stale.reminderHome' : 'staff.dossier.stale.reminder', days, { code: row.case_code });
     await channel.send({
         // /appeals exists in the main server only; another server decides with the buttons.
-        content: `${staffRoleId ? `<@&${staffRoleId}> ` : ''}${reminder}`,
-        allowedMentions: { roles: staffRoleId ? [staffRoleId] : [] },
+        content: `${staffRoleIds.length ? `${ticketStaffMentions(config)} ` : ''}${reminder}`,
+        allowedMentions: { roles: staffRoleIds },
     });
     await db.set(reminderKey(row.id), { at: new Date().toISOString() });
 }

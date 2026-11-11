@@ -5,12 +5,14 @@
 import { z } from 'zod';
 import { getGuildConfig } from './config/guildConfig.js';
 import { updateGuildConfigAtomic } from '../utils/database/guildConfigStorage.js';
+import { MAX_TICKET_STAFF_ROLES } from '../utils/ticket/staffRoles.js';
 import { nullableSnowflake, parseSettingsPatch, pickKeys, stripUndefined, trimmedText, validationError } from '../utils/settingsValidation.js';
 
 export const TICKET_SETTING_KEYS = [
     'ticketPanelChannelId',
     'ticketPanelMessageId',
     'ticketStaffRoleId',
+    'ticketStaffRoleIds',
     'ticketCategoryId',
     'ticketClosedCategoryId',
     'ticketPanelMessage',
@@ -30,6 +32,7 @@ const LABELS = {
     ticketPanelChannelId: 'Ticket panel channel',
     ticketPanelMessageId: 'Ticket panel message',
     ticketStaffRoleId: 'Ticket staff role',
+    ticketStaffRoleIds: 'Ticket staff roles',
     ticketCategoryId: 'Open tickets category',
     ticketClosedCategoryId: 'Closed tickets category',
     ticketPanelMessage: 'Panel message',
@@ -48,6 +51,10 @@ const TicketSettingsPatchSchema = z.strictObject({
     ticketPanelChannelId: nullableSnowflake(LABELS.ticketPanelChannelId).optional(),
     ticketPanelMessageId: nullableSnowflake(LABELS.ticketPanelMessageId).optional(),
     ticketStaffRoleId: nullableSnowflake(LABELS.ticketStaffRoleId).optional(),
+    ticketStaffRoleIds: z
+        .array(z.string().regex(/^\d{17,20}$/, `${LABELS.ticketStaffRoleIds} must be role ids.`), { error: `${LABELS.ticketStaffRoleIds} must be a list of roles.` })
+        .max(MAX_TICKET_STAFF_ROLES, `${LABELS.ticketStaffRoleIds}: at most ${MAX_TICKET_STAFF_ROLES} roles.`)
+        .optional(),
     ticketCategoryId: nullableSnowflake(LABELS.ticketCategoryId).optional(),
     ticketClosedCategoryId: nullableSnowflake(LABELS.ticketClosedCategoryId).optional(),
     ticketPanelMessage: trimmedText(LABELS.ticketPanelMessage, 2000).optional(),
@@ -74,11 +81,26 @@ const TicketSettingsPatchSchema = z.strictObject({
 
 /** Validates a ticket settings patch without writing it; returns the parsed patch. */
 export function validateTicketSettingsPatch(patch, guildId) {
-    return stripUndefined(parseSettingsPatch(TicketSettingsPatchSchema, patch, {
+    return syncStaffRoleKeys(stripUndefined(parseSettingsPatch(TicketSettingsPatchSchema, patch, {
         service: 'ticketSettingsService',
         labels: LABELS,
         guildId,
-    }));
+    })));
+}
+
+/**
+ * Keeps the list and the old single key in step: a list sets the single key to its first role;
+ * a single key alone (older callers) replaces the list with just that role (none → empty list).
+ */
+function syncStaffRoleKeys(parsed) {
+    if (Object.hasOwn(parsed, 'ticketStaffRoleIds')) {
+        const ids = [...new Set(parsed.ticketStaffRoleIds)];
+        return { ...parsed, ticketStaffRoleIds: ids, ticketStaffRoleId: ids[0] || null };
+    }
+    if (Object.hasOwn(parsed, 'ticketStaffRoleId')) {
+        return { ...parsed, ticketStaffRoleIds: parsed.ticketStaffRoleId ? [parsed.ticketStaffRoleId] : [] };
+    }
+    return parsed;
 }
 
 export async function getTicketSettings(client, guildId) {

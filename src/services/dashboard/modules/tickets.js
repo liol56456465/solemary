@@ -2,12 +2,13 @@
 // block list (view / block / unblock) and canned answers (list / add / remove). Writes go
 // through ticketSettingsService, modmailService and cannedService, as the commands do.
 
+import { MAX_TICKET_STAFF_ROLES, ticketStaffRoleIds } from '../../../utils/ticket/staffRoles.js';
 import { CANNED_MAX_LENGTH, CANNED_NAME } from '../../cannedService.js';
 import { html, path } from '../html.js';
 import { memberField, pickedFromQuery } from '../memberSearch.js';
 import {
     InputError, PERMS, buttonForm, channelField, channelName, channelPicker, channelWarnings, checkbox, switchInput, intField,
-    multiline, numberInput, postForm, roleField, rolePicker, text, textArea, textInput, userIdField,
+    list, multiline, numberInput, postForm, roleField, rolePicker, text, textArea, textInput, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
 import { changedOnly, section, table, topic } from './common.js';
@@ -79,6 +80,22 @@ ${section(tr.t('tickets.ratings.response'), response, tr.t('tickets.ratings.resp
 ${section(tr.t('tickets.ratings.low'), table([tr.t('tickets.ratings.when'), tr.t('tickets.ratings.ticket'), tr.t('tickets.ratings.staff'), tr.t('tickets.ratings.stars'), tr.t('tickets.ratings.comment')], lowRows, tr.t('tickets.ratings.lowEmpty')), tr.t('tickets.ratings.lowHelp'), { key: 'rating-low', size: 'full' })}`, { key: 'ticket-ratings' });
 }
 
+/** The staff roles from the multi-select: each must be a real role (not @everyone, not a bot's role). */
+function staffRoleListField(g, form, name, tr) {
+    const label = tr.t('tickets.settings.staffRoles', { max: tr.fmtNumber(MAX_TICKET_STAFF_ROLES) });
+    return list(form, name, { max: MAX_TICKET_STAFF_ROLES })
+        .map((id) => roleField(g, { [name]: id }, name, { optional: false, label }));
+}
+
+/**
+ * The form posts roles sorted by name; the saved list keeps its own order (its first role is the
+ * old single key). Roles still picked stay in saved order, new ones go after, so a re-save with
+ * the same roles is "nothing changed" and the first role does not move.
+ */
+function keepStoredOrder(posted, stored) {
+    return [...stored.filter((id) => posted.includes(id)), ...posted.filter((id) => !stored.includes(id))];
+}
+
 export default {
     key: 'tickets',
     label: 'Tickets & modmail',
@@ -102,7 +119,7 @@ export default {
         const form = postForm(ctx, 'tickets', 'settings', html`<div class="grid">
 ${channelPicker(g, 'ticketCategoryId', t.ticketCategoryId, { label: tr.t('tickets.settings.openCategory'), kinds: ['category'], perms: PERMS.category, help: tr.t('tickets.settings.openCategoryHelp') })}
 ${channelPicker(g, 'ticketClosedCategoryId', t.ticketClosedCategoryId, { label: tr.t('tickets.settings.closedCategory'), kinds: ['category'], perms: PERMS.category, help: tr.t('tickets.settings.closedCategoryHelp') })}
-${rolePicker(g, 'ticketStaffRoleId', t.ticketStaffRoleId, { label: tr.t('tickets.settings.staffRole'), assign: false, help: tr.t('tickets.settings.staffRoleHelp') })}
+${rolePicker(g, 'ticketStaffRoleIds', ticketStaffRoleIds(t), { label: tr.t('tickets.settings.staffRoles', { max: tr.fmtNumber(MAX_TICKET_STAFF_ROLES) }), assign: false, multiple: true, help: tr.t('tickets.settings.staffRolesHelp') })}
 ${numberInput('maxTicketsPerUser', t.maxTicketsPerUser ?? 3, { label: tr.t('tickets.settings.maxPerUser'), min: 1, max: 10, help: tr.t('tickets.settings.maxPerUserHelp') })}
 ${switchInput('dmOnClose', t.dmOnClose !== false, { label: tr.t('tickets.settings.dmOnClose'), help: tr.t('tickets.settings.dmOnCloseHelp') })}
 ${channelPicker(g, 'ticketLogsChannelId', t.ticketLogsChannelId, { label: tr.t('tickets.settings.logChannel'), perms: PERMS.post, help: tr.t('tickets.settings.logChannelHelp') })}
@@ -119,7 +136,7 @@ ${channelPicker(g, 'panelChannelId', null, { label: tr.t('tickets.panel.postIn')
 ${textInput('buttonLabel', tr.t('tickets.defaults.buttonLabel'), { label: tr.t('tickets.settings.buttonText'), max: 80 })}
 ${channelPicker(g, 'categoryId', null, { label: tr.t('tickets.settings.openCategory'), kinds: ['category'], perms: PERMS.category, noneLabel: tr.t('tickets.panel.newCategory'), help: tr.t('tickets.settings.openCategoryHelp') })}
 ${channelPicker(g, 'closedCategoryId', null, { label: tr.t('tickets.settings.closedCategory'), kinds: ['category'], perms: PERMS.category, help: tr.t('tickets.settings.closedCategoryHelp') })}
-${rolePicker(g, 'staffRoleId', null, { label: tr.t('tickets.settings.staffRole'), assign: false, help: tr.t('tickets.settings.staffRoleHelp') })}
+${rolePicker(g, 'staffRoleIds', [], { label: tr.t('tickets.settings.staffRoles', { max: tr.fmtNumber(MAX_TICKET_STAFF_ROLES) }), assign: false, multiple: true, help: tr.t('tickets.settings.staffRolesHelp') })}
 ${numberInput('maxTicketsPerUser', 3, { label: tr.t('tickets.settings.maxPerUser'), min: 1, max: 10, help: tr.t('tickets.settings.maxRange') })}
 ${switchInput('dmOnClose', true, { label: tr.t('tickets.settings.dmOnClose') })}
 ${textArea('panelMessage', tr.t('tickets.defaults.panelMessage'), { label: tr.t('tickets.settings.panelMessage'), max: 2000 })}</div>`, { submit: tr.t('tickets.panel.submit'), canEdit: canPost })}`;
@@ -158,7 +175,7 @@ ${renderRatings(ctx, tr, t, ratings)}`;
                     buttonLabel: text(form, 'buttonLabel', 80),
                     categoryId: channelField(g, form, 'categoryId', { kinds: ['category'], label: tr.t('tickets.settings.openCategory') }),
                     closedCategoryId: channelField(g, form, 'closedCategoryId', { kinds: ['category'], label: tr.t('tickets.settings.closedCategory') }),
-                    staffRoleId: roleField(g, form, 'staffRoleId', { label: tr.t('tickets.settings.staffRole') }),
+                    staffRoleIds: staffRoleListField(g, form, 'staffRoleIds', tr),
                     maxTicketsPerUser: intField(form, 'maxTicketsPerUser', { min: 1, max: 10, label: tr.t('tickets.settings.maxPerUser') }),
                     dmOnClose: checkbox(form, 'dmOnClose'),
                 });
@@ -203,7 +220,7 @@ ${renderRatings(ctx, tr, t, ratings)}`;
             const patch = changedOnly({
                 ticketCategoryId: channelField(g, form, 'ticketCategoryId', { kinds: ['category'], label: tr.t('tickets.settings.openCategory') }),
                 ticketClosedCategoryId: channelField(g, form, 'ticketClosedCategoryId', { kinds: ['category'], label: tr.t('tickets.settings.closedCategory') }),
-                ticketStaffRoleId: roleField(g, form, 'ticketStaffRoleId', { label: tr.t('tickets.settings.staffRole') }),
+                ticketStaffRoleIds: keepStoredOrder(staffRoleListField(g, form, 'ticketStaffRoleIds', tr), ticketStaffRoleIds(current)),
                 maxTicketsPerUser: intField(form, 'maxTicketsPerUser', { min: 1, max: 10, label: tr.t('tickets.settings.maxPerUser') }),
                 dmOnClose: checkbox(form, 'dmOnClose'),
                 ticketLogsChannelId: channelField(g, form, 'ticketLogsChannelId', { label: tr.t('tickets.settings.logChannel') }),
@@ -211,10 +228,10 @@ ${renderRatings(ctx, tr, t, ratings)}`;
                 // Cleared = back to the default text (in the dashboard language).
                 ticketButtonLabel: text(form, 'ticketButtonLabel', 80) || tr.t('tickets.defaults.buttonLabel'),
                 ticketPanelMessage: multiline(form, 'ticketPanelMessage', 2000) || tr.t('tickets.defaults.panelMessage'),
-            }, { ...current, dmOnClose: current.dmOnClose !== false, maxTicketsPerUser: current.maxTicketsPerUser ?? 3, ticketButtonLabel: current.ticketButtonLabel || 'Open ticket' });
+            }, { ...current, ticketStaffRoleIds: ticketStaffRoleIds(current), dmOnClose: current.dmOnClose !== false, maxTicketsPerUser: current.maxTicketsPerUser ?? 3, ticketButtonLabel: current.ticketButtonLabel || 'Open ticket' });
             if (!Object.keys(patch).length) return { changes: [], message: tr.t('errors.nothingChanged') };
-            // The staff role opens every ticket channel to its members: changing it needs Administrator.
-            if (Object.hasOwn(patch, 'ticketStaffRoleId')) requireCanAct(ctx, tr.t('tickets.staffRoleNeedsAdmin'), 'ticketStaffRoleId');
+            // The staff roles open every ticket channel to their members: changing them needs Administrator.
+            if (Object.hasOwn(patch, 'ticketStaffRoleIds')) requireCanAct(ctx, tr.t('tickets.staffRoleNeedsAdmin'), 'ticketStaffRoleIds');
 
             const { before, after } = await ctx.services.updateTicketSettings(ctx.client, ctx.guildId, patch);
             return { changes: diffSnapshots(before, after, Object.keys(patch)), message: tr.t('tickets.action.settingsSaved') };

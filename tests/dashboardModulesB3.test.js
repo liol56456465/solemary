@@ -137,7 +137,7 @@ test('birthday role: changing it needs Administrator (403, nothing saved); the t
 test('ticket staff role: changing it needs Administrator (403, nothing saved)', async () => {
     const tickets = getAction(getModule('tickets'), 'settings');
     const current = { ticketCategoryId: null, ticketClosedCategoryId: null, ticketStaffRoleId: '600000000000000001', maxTicketsPerUser: 3, dmOnClose: true, ticketLogsChannelId: null, ticketTranscriptChannelId: null, ticketButtonLabel: 'Open ticket', ticketPanelMessage: 'x' };
-    const form = { ticketCategoryId: '', ticketClosedCategoryId: '', ticketStaffRoleId: '', maxTicketsPerUser: '3', dmOnClose: '1', ticketLogsChannelId: '', ticketTranscriptChannelId: '', ticketButtonLabel: 'Open ticket', ticketPanelMessage: 'x' };
+    const form = { ticketCategoryId: '', ticketClosedCategoryId: '', maxTicketsPerUser: '3', dmOnClose: '1', ticketLogsChannelId: '', ticketTranscriptChannelId: '', ticketButtonLabel: 'Open ticket', ticketPanelMessage: 'x' };
     const make = (canAct, now = current) => {
         const ctx = ctxFor(OTHER, { canAct });
         ctx.services.getTicketSettings = async () => ({ ...now });
@@ -152,7 +152,7 @@ test('ticket staff role: changing it needs Administrator (403, nothing saved)', 
     assert.deepEqual(noRole.calls.map((c) => c.patch), [{ maxTicketsPerUser: 5 }], 'other ticket settings stay open to managers');
     const admin = make(true);
     await tickets.run(admin, form);
-    assert.deepEqual(admin.calls.map((c) => c.patch), [{ ticketStaffRoleId: null }]);
+    assert.deepEqual(admin.calls.map((c) => c.patch), [{ ticketStaffRoleIds: [] }]);
 });
 
 // ── appeals home ──────────────────────────────────────────────────────────

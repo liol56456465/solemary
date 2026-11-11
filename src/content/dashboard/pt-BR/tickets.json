@@ -30,6 +30,8 @@
     "closedCategoryHelp": "Os tickets fechados são movidos para cá.",
     "staffRole": "Cargo da equipe de tickets",
     "staffRoleHelp": "Membros com este cargo veem e respondem todos os tickets.",
+    "staffRoles": "Cargos da equipe de tickets (até {max})",
+    "staffRolesHelp": "Membros com qualquer um destes cargos veem e respondem todos os tickets e conversas de modmail. Segure Ctrl (Cmd no Mac) para escolher vários.",
     "maxPerUser": "Tickets abertos por membro",
     "maxPerUserHelp": "Quantos tickets um membro pode ter abertos ao mesmo tempo. De 1 a 10.",
     "maxRange": "De 1 a 10.",

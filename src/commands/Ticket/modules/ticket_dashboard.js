@@ -1,3 +1,4 @@
+import { MAX_TICKET_STAFF_ROLES, ticketStaffMentions } from '../../../utils/ticket/staffRoles.js';
 import { getColor } from '../../../config/bot.js';
 import {
     ActionRowBuilder,
@@ -100,7 +101,7 @@ function formatCloseDuration(ms, tr = botText('en')) {
 function buildDashboardEmbed(config, guild, panelStatus = null, ticketStats = null, tr = botText('en')) {
     const notSet = `\`${tr.t('ticket.dash.notSet')}\``;
     const panelChannel = config.ticketPanelChannelId ? `<#${config.ticketPanelChannelId}>` : notSet;
-    const staffRole = config.ticketStaffRoleId ? `<@&${config.ticketStaffRoleId}>` : notSet;
+    const staffRole = ticketStaffMentions(config) || notSet;
     const ticketLogsChannel = config.ticketLogsChannelId ? `<#${config.ticketLogsChannelId}>` : notSet;
     const transcriptChannel = config.ticketTranscriptChannelId ? `<#${config.ticketTranscriptChannelId}>` : notSet;
 
@@ -415,7 +416,8 @@ async function handleStaffRole(selectInteraction, rootInteraction, guildConfig, 
     const roleSelect = new RoleSelectMenuBuilder()
         .setCustomId('ticket_cfg_staff_role')
         .setPlaceholder(tr.t('ticket.dash.staffRolePlaceholder'))
-        .setMaxValues(1);
+        .setMinValues(1)
+        .setMaxValues(MAX_TICKET_STAFF_ROLES);
 
     const row = new ActionRowBuilder().addComponents(roleSelect);
 
@@ -424,7 +426,7 @@ async function handleStaffRole(selectInteraction, rootInteraction, guildConfig, 
             new EmbedBuilder()
                 .setTitle(tr.t('ticket.dash.staffRoleTitle'))
                 .setDescription(
-                    tr.t('ticket.dash.staffRoleBody', { current: guildConfig.ticketStaffRoleId ? `<@&${guildConfig.ticketStaffRoleId}>` : `\`${tr.t('ticket.dash.notSet')}\`` }),
+                    tr.t('ticket.dash.staffRoleBody', { current: ticketStaffMentions(guildConfig) || `\`${tr.t('ticket.dash.notSet')}\``, max: MAX_TICKET_STAFF_ROLES }),
                 )
                 .setColor(getColor('info')),
         ],
@@ -442,13 +444,25 @@ async function handleStaffRole(selectInteraction, rootInteraction, guildConfig, 
 
     roleCollector.on('collect', async roleInteraction => {
         await roleInteraction.deferUpdate();
-        const role = roleInteraction.roles.first();
-
-        guildConfig.ticketStaffRoleId = role.id;
-        await updateTicketSettings(client, guildId, { ticketStaffRoleId: guildConfig.ticketStaffRoleId });
+        // @everyone and bot-managed roles are never staff roles.
+        const roles = [...roleInteraction.roles.values()].filter((r) => r.id !== guildId && !r.managed);
+        if (!roles.length) {
+            await roleInteraction.followUp({ content: tr.t('ticket.dash.staffRoleNone'), flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+            return;
+        }
+        let after;
+        try {
+            ({ after } = await updateTicketSettings(client, guildId, { ticketStaffRoleIds: roles.map((r) => r.id) }));
+        } catch (error) {
+            logger.error('Ticket staff roles: save failed', { guildId, error: error?.message });
+            await replyUserError(roleInteraction, { type: ErrorTypes.DATABASE, message: tr.t('ticket.dash.staffRoleSaveFailed') }).catch(() => {});
+            return;
+        }
+        guildConfig.ticketStaffRoleIds = after.ticketStaffRoleIds;
+        guildConfig.ticketStaffRoleId = after.ticketStaffRoleId;
 
         await roleInteraction.followUp({
-            embeds: [successEmbed(tr.t('ticket.dash.staffRoleUpdatedTitle'), tr.t('ticket.dash.staffRoleUpdated', { role: String(role) }))],
+            embeds: [successEmbed(tr.t('ticket.dash.staffRoleUpdatedTitle'), tr.t('ticket.dash.staffRoleUpdated', { role: roles.map(String).join(', ') }))],
             flags: MessageFlags.Ephemeral,
         });
 
@@ -964,6 +978,7 @@ async function handleDeleteSystem(btnInteraction, rootInteraction, guildConfig, 
         'ticketPanelChannelId',
         'ticketPanelMessageId',
         'ticketStaffRoleId',
+        'ticketStaffRoleIds',
         'ticketCategoryId',
         'ticketClosedCategoryId',
         'ticketPanelMessage',

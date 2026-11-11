@@ -30,6 +30,8 @@
     "closedCategoryHelp": "Les tickets fermés sont déplacés ici.",
     "staffRole": "Rôle de l’équipe des tickets",
     "staffRoleHelp": "Les membres qui ont ce rôle voient tous les tickets et peuvent y répondre.",
+    "staffRoles": "Rôles de l'équipe des tickets (jusqu'à {max})",
+    "staffRolesHelp": "Les membres ayant l'un de ces rôles voient tous les tickets et conversations modmail et peuvent y répondre. Maintiens Ctrl (Cmd sur Mac) pour en choisir plusieurs.",
     "maxPerUser": "Tickets ouverts par membre",
     "maxPerUserHelp": "Combien de tickets un membre peut avoir ouverts en même temps. De 1 à 10.",
     "maxRange": "De 1 à 10.",

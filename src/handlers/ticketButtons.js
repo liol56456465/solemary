@@ -1,3 +1,4 @@
+import { ticketStaffRoleIds } from '../utils/ticket/staffRoles.js';
 import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, AttachmentBuilder, MessageFlags, PermissionFlagsBits, ChannelType } from 'discord.js';
 import { createEmbed, successEmbed } from '../utils/embeds.js';
 import { createTicket, closeTicket, closedReplyText, claimTicket, updateTicketPriority } from '../services/ticket.js';
@@ -114,7 +115,7 @@ async function replyTicketActionError(interaction, error, { fallback, action, bo
 
 function ticketAccessMessage(context, actionLabel, allowTicketCreator, { lang = 'en' } = {}) {
   const tr = botText(lang);
-  const staffRole = context.config?.ticketStaffRoleId ? tr.t('ticket.buttons.staffRole') : tr.t('ticket.buttons.staffRoleNone');
+  const staffRole = ticketStaffRoleIds(context.config).length ? tr.t('ticket.buttons.staffRole') : tr.t('ticket.buttons.staffRoleNone');
   const action = actionText(tr, actionLabel);
   return allowTicketCreator
     ? tr.t('ticket.buttons.accessWithCreator', { staffRole, action })

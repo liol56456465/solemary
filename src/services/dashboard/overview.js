@@ -4,6 +4,7 @@
 // Every number is gathered separately: one failing source shows "unavailable" and
 // never breaks the page.
 
+import { ticketStaffRoleIds } from '../../utils/ticket/staffRoles.js';
 import { getGuildConfig } from '../config/guildConfig.js';
 import { getWelcomeConfig } from '../../utils/database.js';
 import { listPendingAppeals } from '../enforcement/appealService.js';
@@ -169,7 +170,7 @@ export function gettingStarted({ config, welcome, settings, mutedRole, permissio
         ...(home ? [] : [appealsCategory]),
         ['welcome', Boolean(welcome?.enabled && welcome?.channelId), '/welcome'],
         ['ticketCategory', Boolean(config?.ticketCategoryId), '/tickets'],
-        ['ticketStaff', Boolean(config?.ticketStaffRoleId), '/tickets'],
+        ['ticketStaff', ticketStaffRoleIds(config).length > 0, '/tickets'],
         ['verification', Boolean(config?.verification?.enabled), '/verification'],
         // Leveling runs by default; level-up posts wait for an admin (off outside Mewvo's own servers).
         ['leveling', Boolean(config?.leveling), '/leveling'],

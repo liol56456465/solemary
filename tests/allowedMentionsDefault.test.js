@@ -14,9 +14,9 @@ test('client default allowedMentions parses users only (no roles, no everyone)',
 });
 
 test('intentional staff-role pings list the role in their own allowedMentions', () => {
-    assert.match(source('src/services/ticket.js'), /allowedMentions:\s*\{\s*users:\s*\[member\.id\],\s*roles:\s*config\.ticketStaffRoleId/);
+    assert.match(source('src/services/ticket.js'), /allowedMentions:\s*\{\s*users:\s*\[member\.id\],\s*roles:\s*staffRoles\s*\}/);
     for (const file of ['src/services/modmailService.js', 'src/services/ticketReminderService.js', 'src/services/enforcement/staleAppealService.js']) {
-        assert.match(source(file), /allowedMentions:\s*\{\s*roles:\s*staffRoleId/, file);
+        assert.match(source(file), /allowedMentions:\s*\{\s*roles:\s*staffRoleIds\s*\}/, file);
     }
 });
 

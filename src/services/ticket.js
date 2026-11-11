@@ -1,5 +1,6 @@
 // ticket.js
 
+import { ticketStaffRoleIds, ticketStaffMentions } from '../utils/ticket/staffRoles.js';
 import {
   ChannelType,
   ActionRowBuilder,
@@ -134,13 +135,14 @@ const TICKET_BOT_ALLOW = [
   PermissionFlagsBits.ManageChannels,
 ];
 
-/** Overwrites for a new ticket channel: @everyone denied; the opener, the bot and the staff role allowed. */
-export function buildTicketPermissionOverwrites({ guildId, memberId, botId = null, staffRoleId = null }) {
+/** Overwrites for a new ticket channel: @everyone denied; the opener, the bot and every staff role allowed. */
+export function buildTicketPermissionOverwrites({ guildId, memberId, botId = null, staffRoleId = null, staffRoleIds = [] }) {
+  const roles = [...new Set([...(staffRoleIds || []), staffRoleId].filter(Boolean))];
   return [
     { id: guildId, deny: [PermissionFlagsBits.ViewChannel] },
     { id: memberId, allow: [...TICKET_MEMBER_ALLOW] },
     ...(botId ? [{ id: botId, allow: [...TICKET_BOT_ALLOW] }] : []),
-    ...(staffRoleId ? [{ id: staffRoleId, allow: [...TICKET_MEMBER_ALLOW] }] : []),
+    ...roles.map((id) => ({ id, allow: [...TICKET_MEMBER_ALLOW] })),
   ];
 }
 
@@ -234,7 +236,7 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
         guildId: guild.id,
         memberId: member.id,
         botId: guild.members?.me?.id ?? guild.client?.user?.id ?? null,
-        staffRoleId: config.ticketStaffRoleId || null,
+        staffRoleIds: ticketStaffRoleIds(config),
       }),
     });
     
@@ -281,7 +283,8 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
       );
     }
     
-    const staffMention = config.ticketStaffRoleId ? ` <@&${config.ticketStaffRoleId}>` : '';
+    const staffRoles = ticketStaffRoleIds(config);
+    const staffMention = staffRoles.length ? ` ${ticketStaffMentions(config)}` : '';
     const messageContent = `${member.toString()}${staffMention}`;
     
     // The row is saved and the opening message posted together: if either fails the channel and
@@ -294,8 +297,8 @@ export async function createTicket(guild, member, categoryId, reason = 'No reaso
         content: messageContent,
         embeds: [embed],
         components: [row],
-        // The client default pings no roles; the staff role is pinged here on purpose.
-        allowedMentions: { users: [member.id], roles: config.ticketStaffRoleId ? [config.ticketStaffRoleId] : [] },
+        // The client default pings no roles; the staff roles are pinged here on purpose.
+        allowedMentions: { users: [member.id], roles: staffRoles },
       },
     });
 

@@ -6,6 +6,7 @@
 //     a note that staff can close it, once (it resets when the creator writes again).
 // Each reminder is remembered on the ticket record, so a restart doesn't repeat it.
 
+import { ticketStaffRoleIds, ticketStaffMentions } from '../utils/ticket/staffRoles.js';
 import { PermissionFlagsBits } from 'discord.js';
 import { logger } from '../utils/logger.js';
 import { getGuildConfig } from './config/guildConfig.js';
@@ -25,9 +26,9 @@ async function openTickets() {
     return rows;
 }
 
-function isStaffAuthor(message, staffRoleId, ticketUserId) {
+function isStaffAuthor(message, staffRoleIds, ticketUserId) {
     if (!message.member || message.author.bot || message.author.id === ticketUserId) return false;
-    return (staffRoleId && message.member.roles.cache.has(staffRoleId))
+    return staffRoleIds.some((id) => message.member.roles.cache.has(id))
         || message.member.permissions.has(PermissionFlagsBits.ManageMessages)
         || message.member.permissions.has(PermissionFlagsBits.Administrator);
 }
@@ -40,11 +41,11 @@ async function checkTicket(client, guildId, channelId) {
     if (!ticket || ticket.status !== 'open') return;
 
     const config = await getGuildConfig(client, guildId).catch(() => ({}));
-    const staffRoleId = config.ticketStaffRoleId || null;
+    const staffRoleIds = ticketStaffRoleIds(config);
     const messages = await channel.messages.fetch({ limit: 50 }).catch(() => null);
     if (!messages) return;
     const human = [...messages.values()].filter((m) => !m.author.bot).sort((a, b) => a.createdTimestamp - b.createdTimestamp);
-    const staffReplied = human.some((m) => isStaffAuthor(m, staffRoleId, ticket.userId));
+    const staffReplied = human.some((m) => isStaffAuthor(m, staffRoleIds, ticket.userId));
     const now = Date.now();
     let changed = false;
     // Posted in the ticket channel: the server's language.
@@ -53,15 +54,15 @@ async function checkTicket(client, guildId, channelId) {
     const openedAt = new Date(ticket.createdAt || channel.createdTimestamp).getTime();
     if (!ticket.claimedBy && !staffReplied && !ticket.remindedUnansweredAt && now - openedAt >= UNANSWERED_MS) {
         await channel.send({
-            content: `${staffRoleId ? `<@&${staffRoleId}> ` : ''}${tr.tp('ticket.reminder.unanswered', Math.round((now - openedAt) / 60000))}`,
-            allowedMentions: { roles: staffRoleId ? [staffRoleId] : [] },
+            content: `${staffRoleIds.length ? `${ticketStaffMentions(config)} ` : ''}${tr.tp('ticket.reminder.unanswered', Math.round((now - openedAt) / 60000))}`,
+            allowedMentions: { roles: staffRoleIds },
         }).catch(() => {});
         ticket.remindedUnansweredAt = new Date().toISOString();
         changed = true;
     }
 
     const last = human[human.length - 1];
-    if (last && isStaffAuthor(last, staffRoleId, ticket.userId)) {
+    if (last && isStaffAuthor(last, staffRoleIds, ticket.userId)) {
         if (now - last.createdTimestamp >= INACTIVE_MS && ticket.remindedInactiveFor !== last.id) {
             await channel.send({
                 content: tr.t('ticket.reminder.inactive', { userId: ticket.userId }),

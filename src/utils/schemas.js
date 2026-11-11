@@ -118,6 +118,7 @@ export const GuildConfigSchema = z
     ticketPanelChannelId: z.string().nullable().optional(),
     ticketPanelMessageId: z.string().nullable().optional(),
     ticketStaffRoleId: z.string().nullable().optional(),
+    ticketStaffRoleIds: z.array(z.string()).optional(),
     ticketCategoryId: z.string().nullable().optional(),
     ticketClosedCategoryId: z.string().nullable().optional(),
     ticketLogsChannelId: z.string().nullable().optional(),
