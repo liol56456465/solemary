@@ -117,6 +117,24 @@
         });
     }
 
+    // ── Multi-selects: a plain click adds or removes one option ──────────
+    // A native <select multiple> replaces the whole choice on a plain click (Ctrl/Cmd
+    // adds); people picking several roles or channels lost the earlier ones. Mouse only:
+    // keyboard and touch keep the browser's own behaviour.
+    function toggleOnClick(select) {
+        select.addEventListener('mousedown', (event) => {
+            const option = event.target.closest('option');
+            if (!option || option.matches(':disabled') || event.button !== 0) return;
+            event.preventDefault();
+            const top = select.scrollTop;
+            option.selected = !option.selected;
+            select.focus({ preventScroll: true });
+            select.scrollTop = top;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            select.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+    }
+
     // ── Confirm before destructive submits ───────────────────────────────
     // A <dialog> titled with the form's own question (data-confirm, plus an optional
     // data-confirm-detail line); the confirm button repeats the action ("Delete panel")
@@ -768,6 +786,7 @@
         openSectionFromHash();
         window.addEventListener('hashchange', openSectionFromHash);
         document.querySelectorAll('select[data-search]').forEach(enhanceSelect);
+        document.querySelectorAll('select[multiple]').forEach(toggleOnClick);
         document.querySelectorAll('input[data-member-search]').forEach(setupMemberSearch);
         document.querySelectorAll('[data-copy]').forEach(addCopyButton);
         document.querySelectorAll('details[data-key]').forEach(rememberDetails);

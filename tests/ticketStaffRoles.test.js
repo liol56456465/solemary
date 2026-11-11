@@ -56,3 +56,24 @@ test('Delete System clears the list too; /ticket setup refuses @everyone and bot
             (e) => /not @everyone or a bot's role/.test(`${e.userMessage || ''} ${e.message}`));
     }
 });
+
+test('dashboard Tickets settings: two picked roles are saved; both show as selected', async () => {
+    const { getAction, getModule } = await import('../src/services/dashboard/modules/index.js');
+    const G = '300000000000000003';
+    const role = (id, name, position) => ({ id, name, position, managed: false, editable: true, hexColor: '#000000', permissions: { has: () => false } });
+    const roles = new Map([[G, role(G, '@everyone', 0)], [A, role(A, 'Mods', 2)], [B, role(B, 'Helpers', 1)]]);
+    const current = { ticketStaffRoleId: null, maxTicketsPerUser: 3, dmOnClose: true, ticketButtonLabel: 'Open ticket', ticketPanelMessage: 'x' };
+    const calls = [];
+    const ctx = {
+        lang: 'en', guildId: G, env: { NODE_ENV: 'test' }, calls, canEdit: true, canAct: true, query: {},
+        guild: { id: G, ownerId: 'o', channels: { cache: new Map() }, roles: { cache: roles }, members: { me: null } },
+        client: {}, csrf: 'c'.repeat(32), actor: { userId: 'u', username: 'u' },
+        services: {
+            getTicketSettings: async () => ({ ...current }),
+            updateTicketSettings: async (c, gid, patch) => { calls.push(patch); return { before: current, after: { ...current, ...patch } }; },
+        },
+    };
+    const form = { ticketStaffRoleIds: [B, A], maxTicketsPerUser: '3', dmOnClose: '1', ticketButtonLabel: 'Open ticket', ticketPanelMessage: 'x' };
+    await getAction(getModule('tickets'), 'settings').run(ctx, form);
+    assert.deepEqual(calls, [{ ticketStaffRoleIds: [B, A] }]);
+});

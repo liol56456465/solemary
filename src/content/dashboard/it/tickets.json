@@ -31,7 +31,7 @@
     "staffRole": "Ruolo dello staff dei ticket",
     "staffRoleHelp": "I membri con questo ruolo vedono tutti i ticket e possono rispondere.",
     "staffRoles": "Ruoli dello staff dei ticket (fino a {max})",
-    "staffRolesHelp": "I membri con uno di questi ruoli vedono tutti i ticket e le conversazioni modmail e possono rispondere. Tieni premuto Ctrl (Cmd su Mac) per sceglierne più di uno.",
+    "staffRolesHelp": "I membri con uno di questi ruoli vedono tutti i ticket e le conversazioni modmail e possono rispondere. Clicca su un ruolo per aggiungerlo o toglierlo.",
     "maxPerUser": "Ticket aperti per membro",
     "maxPerUserHelp": "Quanti ticket un membro può avere aperti contemporaneamente. Da 1 a 10.",
     "maxRange": "Da 1 a 10.",
