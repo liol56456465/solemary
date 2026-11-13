@@ -104,6 +104,7 @@ export async function recordDashboardChange({ store, postModLog, client, guildId
         await store.writeRows(guildId, actor, module, changes).catch((error) => logger.error(`Dashboard audit write failed (${module}): ${error.message}`));
     }
     const line = `${actor.username || actor.userId} (${actor.userId}) changed ${moduleLabel || module}: ${changeSummary(changes)}`;
-    await Promise.resolve(postModLog(client, 'dashboard', [], { guildId, description: line }))
+    // subject: the person who made the change (their own post when the website log is "Advanced").
+    await Promise.resolve(postModLog(client, 'dashboard', [], { guildId, description: line, subject: { id: actor.userId, username: actor.username || null } }))
         .catch((error) => logger.warn(`Dashboard mod log post failed: ${error.message}`));
 }

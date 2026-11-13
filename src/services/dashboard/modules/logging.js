@@ -2,13 +2,19 @@ import { adminOnlyActions } from './serverScope.js';
 // logging.js — Logging: on/off, a channel per log category (audit, applications,
 // reports), event toggles and the ignore lists. Writes go through loggingService
 // (the functions /logging uses).
+//
+// Advanced logs (owner, 2026-11-13; services/logForum.js): per kind Normal (its text channel) or
+// Advanced (a forum: one post per member, "<username> logs <id>"), including the mod log and the
+// website/dashboard log. Choosing Advanced shows a short how-to (static script); a user can hide it
+// for good ("Don't show again", tips.js) or just close it.
 // Words: src/content/dashboard/<lang>/logging.json (event and category names stay as the bot names them).
 
 import { EVENT_TYPES, LOG_DESTINATIONS } from '../../loggingService.js';
+import { LOG_FORUM_KINDS } from '../../logForum.js';
 import { html, path } from '../html.js';
 import {
     InputError, PERMS, boolField, buttonForm, channelField, channelName, channelPicker, checkbox, checkboxInput,
-    choiceField, postForm, roleName, text, userIdField, roleList,
+    choiceField, postForm, roleName, selectInput, text, userIdField, roleList,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
 import { memberField, pickedFromQuery } from '../memberSearch.js';
@@ -22,6 +28,32 @@ const IGNORING = { channel: 'logging.action.ignoringChannel', role: 'logging.act
 
 /** The label of a log destination in the request's language (the destination key when unknown). */
 const destinationLabel = (tr, d) => (DESTINATION_LABEL[d] ? tr.t(DESTINATION_LABEL[d]) : d);
+
+/** What Mewvo needs in a log forum: see it, start posts and write in them, with embeds. */
+const FORUM_PERMS = ['ViewChannel', 'SendMessages', 'SendMessagesInThreads', 'EmbedLinks', 'ReadMessageHistory'];
+
+/** A forum kind's label: the Logging channel label, or the mod log's own. */
+const forumKindLabel = (tr, kind) => (kind === 'modlog' ? tr.t('logging.forums.modlog') : destinationLabel(tr, kind));
+
+/** The Advanced logs card: Normal / Advanced and a forum per kind, plus the how-to box. */
+function forumsSection(ctx, status, tipHidden) {
+    const tr = textFor(ctx);
+    const g = ctx.guild;
+    const forums = status.forums || {};
+    const modes = [['normal', tr.t('logging.forums.normal')], ['advanced', tr.t('logging.forums.advanced')]];
+    const rows = LOG_FORUM_KINDS.map((kind) => html`<div class="grid">${selectInput(`mode:${kind}`, forums[kind] ? 'advanced' : 'normal', modes, { label: forumKindLabel(tr, kind) })}
+${channelPicker(g, `forum:${kind}`, forums[kind] || null, { label: tr.t('logging.forums.forum'), kinds: ['forum'], perms: FORUM_PERMS, help: tr.t('logging.forums.forumHelp') })}</div>`);
+    const form = postForm(ctx, 'logging', 'forums', html`${rows}`, { submit: tr.t('logging.forums.submit'), reset: true, className: 'log-forums' });
+    // The how-to: open while a kind is Advanced, else hidden until one is picked (static script); never
+    // rendered once this user hid it for good.
+    const anyAdvanced = LOG_FORUM_KINDS.some((kind) => forums[kind]);
+    const tip = tipHidden ? '' : html`<div class="notice tip" id="log-forum-tip" data-tip="logForum"${anyAdvanced ? '' : html` hidden`}>
+<p><strong>${tr.t('logging.forums.tip.title')}</strong></p>
+<ol>${['step1', 'step2', 'step3', 'step4', 'step5'].map((step) => html`<li>${tr.t(`logging.forums.tip.${step}`)}</li>`)}</ol>
+<div class="tip-actions"><button type="button" class="secondary" data-tip-close>${tr.t('logging.forums.tip.close')}</button>
+${buttonForm(ctx, 'logging', 'tip-hide', tr.t('logging.forums.tip.hide'), { tip: 'logForum' })}</div></div>`;
+    return html`${tip}${form}`;
+}
 
 /** Event types (strings) grouped by their category prefix. */
 export function eventCategories() {
@@ -55,10 +87,14 @@ export default {
 
     async load(ctx) {
         const status = await ctx.services.getLoggingStatus(ctx.client, ctx.guildId);
-        return { status, modLogChannelId: registryValue(ctx, 'modLogChannelId') };
+        // Only decides whether a how-to box is shown: a read error shows it (harmless).
+        const tipHidden = typeof ctx.services.isTipHidden === 'function'
+            ? await ctx.services.isTipHidden(ctx.actor?.userId, 'logForum').catch(() => false)
+            : false;
+        return { status, modLogChannelId: registryValue(ctx, 'modLogChannelId'), tipHidden };
     },
 
-    render(ctx, { status, modLogChannelId }) {
+    render(ctx, { status, modLogChannelId, tipHidden = false }) {
         const tr = textFor(ctx);
         const g = ctx.guild;
         const events = status.enabledEvents || {};
@@ -93,6 +129,7 @@ ${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" v
         });
         return html`${section(tr.t('logging.modLog.title'), html`<p class="muted">${modLog}</p>`, '', { key: 'mod-log' })}
 ${section(tr.t('logging.channels.title'), channels, tr.t('logging.channels.help'), { key: 'channels' })}
+${section(tr.t('logging.forums.title'), forumsSection(ctx, status, tipHidden), tr.t('logging.forums.help'), { key: 'advanced-logs', size: 'full' })}
 ${section(tr.t('logging.events.title'), toggles, tr.t('logging.events.help'), { key: 'events', size: 'full' })}
 ${section(tr.t('logging.ignore.title'), ignoreForms, tr.t('logging.ignore.help'), { key: 'ignore-lists', size: 'full' })}`;
     },
@@ -120,6 +157,30 @@ ${section(tr.t('logging.ignore.title'), ignoreForms, tr.t('logging.ignore.help')
             const saved = await ctx.services.setLogChannels(ctx.client, ctx.guildId, wanted);
             if (!saved.length) return nothing(ctx);
             return { changes: saved.map((c) => ({ key: `logging.channels.${c.destination}`, old: c.old, new: c.new })), message: tr.t('logging.action.channelsSaved') };
+        },
+        // Advanced logs: one locked write (loggingService setLogForums); Advanced needs a forum channel.
+        async forums(ctx, form) {
+            const tr = textFor(ctx);
+            const wanted = {};
+            for (const kind of LOG_FORUM_KINDS) {
+                if (form?.[`mode:${kind}`] === undefined) continue; // absent from the form: unchanged
+                const label = forumKindLabel(tr, kind);
+                const mode = choiceField(form, `mode:${kind}`, ['normal', 'advanced'], label);
+                wanted[kind] = mode === 'advanced'
+                    ? channelField(ctx.guild, form, `forum:${kind}`, { kinds: ['forum'], optional: false, label: `${label}: ${tr.t('logging.forums.forum')}` })
+                    : null;
+            }
+            if (!Object.keys(wanted).length) return nothing(ctx);
+            const saved = await ctx.services.setLogForums(ctx.client, ctx.guildId, wanted);
+            if (!saved.length) return nothing(ctx);
+            return { changes: saved.map((c) => ({ key: `logging.forums.${c.kind}`, old: c.old, new: c.new })), message: tr.t('logging.forums.saved') };
+        },
+        // "Don't show again" on the how-to box: this user only; not a server setting (no audit row).
+        async 'tip-hide'(ctx, form) {
+            const tr = textFor(ctx);
+            choiceField(form, 'tip', ['logForum'], tr.t('logging.forums.tip.title'));
+            await ctx.services.hideTip(ctx.actor.userId, 'logForum');
+            return { changes: [], message: tr.t('logging.forums.tip.hidden') };
         },
         async events(ctx, form) {
             const changes = [];

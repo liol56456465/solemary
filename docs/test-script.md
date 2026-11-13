@@ -413,3 +413,35 @@ the clean-up from "Before testing in Discord".
 | 29.3 | `/me` My record for an account with cases in two servers | Both servers listed |
 | 29.4 | Republish on Replit | Log shows a clean shutdown order; no "pool ended" errors |
 | 29.5 | Owner → Recent errors after a failing event | The event error appears |
+
+## 30. Website phone menu (2026-11-13; phone ≤ 760px wide, e.g. Galaxy S22)
+| # | Step | Expected |
+|---|---|---|
+| 30.1 | Open the site logged out | One bar row: Mewvo, "Add Mewvo", ☰ |
+| 30.2 | Tap ☰ | Log in / Sign up, Dashboard, page links, languages; icon becomes ✕ |
+| 30.3 | Tap Pricing, then ☰ again | Menu closed after the tap; Pricing highlighted |
+| 30.4 | Scroll down a long page | Bar stays at the top |
+| 30.5 | Pick Deutsch in the menu | Page and menu in German |
+
+## 31. Automod immune members (2026-11-13; alt account without Administrator)
+| # | Step | Expected |
+|---|---|---|
+| 31.1 | Dashboard → Automod → Immune members → add the alt's user ID (as the server owner) | "… is now immune to automod" |
+| 31.2 | Alt posts a blocked link/word | Message stays; 🛡 "Immune member, message kept" line with Jump to message in the review channel |
+| 31.3 | Alt posts it 3 more times | Same line shows "4 messages", no new lines |
+| 31.4 | Open the card as an admin who is not the owner | List visible, "Only the server owner can change this list", no buttons |
+| 31.5 | Remove the alt, post again | Deleted and handled as usual |
+
+## 32. Per-kind log channels and Advanced logs (2026-11-13)
+| # | Step | Expected |
+|---|---|---|
+| 32.1 | Logging → Channels: set "Dashboard and website changes" to a new channel, save; change any setting | The change line appears in the new channel, not the old one (bug fix) |
+| 32.2 | Same for Members: set its own channel, have the alt leave and rejoin | Join/leave logs in the Members channel |
+| 32.3 | Create a forum channel; Logging → Advanced logs: pick Advanced for "Punishments (mod log)" | The how-to box opens when Advanced is picked |
+| 32.4 | Choose the forum, save; warn the alt | Forum post "altname logs <alt id>" with the warning |
+| 32.5 | Warn the alt again, then mute | Both added to the same post, no new post |
+| 32.6 | Search the forum for the alt's ID | The post is found |
+| 32.7 | Set "Dashboard and website changes" to Advanced (forum), change a setting | Post "yourname logs <your id>" with the change |
+| 32.8 | How-to: Close | Box hides; comes back on the next visit |
+| 32.9 | How-to: Don't show again | Box gone for good for you (other admins still see it) |
+| 32.10 | Take Mewvo's Send Messages in Posts away in the forum, warn the alt | Warning appears in the normal mod log channel instead |

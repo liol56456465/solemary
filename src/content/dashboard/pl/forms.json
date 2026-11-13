@@ -71,7 +71,8 @@
     "ManageMessages": "Zarządzanie wiadomościami",
     "ManageRoles": "Zarządzanie rolami",
     "AddReactions": "Dodawanie reakcji",
-    "SendPolls": "Tworzenie ankiet"
+    "SendPolls": "Tworzenie ankiet",
+    "SendMessagesInThreads": "Wysyłanie wiadomości w wątkach i postach"
   },
   "fixPerms": "Napraw uprawnienia",
   "mark": {

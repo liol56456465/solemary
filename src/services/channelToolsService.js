@@ -148,6 +148,7 @@ export async function unlockChannel({ client, guild, channel, moderator, auditRe
 const FIX_LABEL = {
     ...PERM_LABEL, SendMessages: 'Send Messages', EmbedLinks: 'Embed Links', AttachFiles: 'Attach Files', AddReactions: 'Add Reactions',
     SendPolls: 'Create Polls', Connect: 'Connect', MoveMembers: 'Move Members', ManageRoles: 'Manage Permissions',
+    SendMessagesInThreads: 'Send Messages in Threads and Posts',
 };
 const fixLabel = (p) => FIX_LABEL[p] || p;
 
@@ -156,7 +157,7 @@ const fixLabel = (p) => FIX_LABEL[p] || p;
  * never management ones (Manage Channels / Manage Permissions stay the owner's choice).
  */
 export const FIXABLE_PERMS = Object.freeze(['ViewChannel', 'SendMessages', 'EmbedLinks', 'AttachFiles', 'ReadMessageHistory',
-    'AddReactions', 'SendPolls', 'Connect', 'ManageMessages', 'MoveMembers']);
+    'AddReactions', 'SendPolls', 'Connect', 'ManageMessages', 'MoveMembers', 'SendMessagesInThreads']);
 
 /** Changing a channel's permission overwrites needs Manage Permissions (ManageRoles) in that channel. */
 export const FIX_EDIT_PERMS = Object.freeze(['ManageRoles']);

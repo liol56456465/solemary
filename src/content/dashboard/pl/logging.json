@@ -22,6 +22,28 @@
     "community": "Społeczność (poziomy, konkursy, liczniki, role za reakcje)",
     "dashboard": "Zmiany z panelu i strony"
   },
+  "forums": {
+    "title": "Zaawansowane logi (forum)",
+    "help": "Normalne: logi trafiają na kanał powyżej. Zaawansowane: logi trafiają na kanał forum z jednym postem na członka, więc możesz wyszukać członka i zobaczyć wszystko o nim w jednym miejscu.",
+    "normal": "Normalne (kanał tekstowy)",
+    "advanced": "Zaawansowane (forum, post na członka)",
+    "forum": "Kanał forum",
+    "forumHelp": "Używany tylko przy wyborze Zaawansowane.",
+    "submit": "Zapisz zaawansowane logi",
+    "saved": "Zaawansowane logi zapisane.",
+    "modlog": "Kary (log moderacji)",
+    "tip": {
+      "title": "Jak działają zaawansowane logi",
+      "step1": "Utwórz kanał forum w Discordzie i pozwól Mewvo go widzieć, tworzyć posty i pisać w postach.",
+      "step2": "Wybierz Zaawansowane dla rodzaju logów, wskaż forum i zapisz.",
+      "step3": "Mewvo tworzy jeden post na członka o nazwie „nazwa użytkownika logs ID użytkownika” i dodaje tam każdy log o nim. Logi bez członka trafiają do posta „Server logs”.",
+      "step4": "Aby kogoś znaleźć, otwórz forum i wyszukaj jego nazwę lub ID użytkownika.",
+      "step5": "Jeśli forum nie da się użyć, logi trafiają na zwykły kanał tego rodzaju, więc nic nie ginie.",
+      "close": "Zamknij",
+      "hide": "Nie pokazuj ponownie",
+      "hidden": "Ten poradnik nie pojawi się ponownie."
+    }
+  },
   "events": {
     "title": "Zdarzenia",
     "help": "Wybierz, co ma być zapisywane. Otwórz grupę, żeby zobaczyć jej zdarzenia. Odznaczenie całej grupy wyłącza wszystkie jej zdarzenia.",

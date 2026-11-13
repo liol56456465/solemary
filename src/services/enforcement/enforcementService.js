@@ -6,6 +6,7 @@ import { ChannelType, PermissionFlagsBits } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { ModerationService } from '../moderation/moderationService.js';
 import { logEvent, EVENT_TYPES, resolveLogChannel } from '../loggingService.js';
+import { logForumId, sendToLogForum } from '../logForum.js';
 import { getGuildConfig } from '../config/guildConfig.js';
 import { Mutex } from '../../utils/mutex.js';
 import { logger } from '../../utils/logger.js';
@@ -284,17 +285,42 @@ const MOD_LOG_TITLES = {
  * server's channels, as before; any other server only in its own (not set: recorded, skipped).
  * Its settings not readable (database down at boot): skipped, logged once in a while.
  */
+const SUBJECT_FIELDS = new Set(['User', 'Member', 'Target', 'Appellant']);
+
+/** { id, username } from a "User" / "Member" / "Target" / "Appellant" field shaped "name (id)" or "<@id> (id)", else null. Pure. */
+export function subjectFromFields(fields) {
+    for (const field of Array.isArray(fields) ? fields : []) {
+        if (!SUBJECT_FIELDS.has(field?.name)) continue;
+        const match = /^([^()]*?)\s*\((\d{17,20})\)\s*$/.exec(String(field.value || ''));
+        if (!match) continue;
+        const name = match[1].trim();
+        return { id: match[2], username: name && !/^<@!?\d+>$/.test(name) ? name : null };
+    }
+    return null;
+}
+
 export async function postModLog(client, action, fields, {
     title = null, files = [], description = null, footer = null, guildId: sourceGuildId = enforcementConfig.mainGuildId,
+    // { id, username } of the member the entry is about (the punished member, the dashboard user):
+    // picks their post when this kind is "Advanced" (logForum.js); without it the "Server logs" post.
+    subject = null,
 } = {}) {
     const purpose = channelPurposeFor(action);
     let channelId;
+    let forumId = null;
     try {
         channelId = resolveChannelId(sourceGuildId, purpose);
-        // Dashboard/website changes: their own log channel when one is set (Logging page).
-        if (action === 'dashboard') {
-            const own = await getGuildConfig(client, staffGuildId(sourceGuildId)).then((config) => resolveLogChannel(config, 'dashboard'), () => null);
-            if (own) channelId = own;
+        // Records in the mod log (punishments, case edits, appeals) and dashboard/website changes may
+        // be "Advanced" (a forum, one post per member; Logging page). A config read error keeps the normal channel.
+        const forumKind = action === 'dashboard' ? 'dashboard' : purpose === 'modlog' ? 'modlog' : null;
+        if (forumKind) {
+            const config = await getGuildConfig(client, staffGuildId(sourceGuildId)).catch(() => null);
+            // Dashboard/website changes: their own log channel when one is set (Logging page).
+            if (action === 'dashboard') {
+                const own = config ? resolveLogChannel(config, 'dashboard') : null;
+                if (own) channelId = own;
+            }
+            forumId = logForumId(config, forumKind);
         }
     } catch (error) {
         if (!isSettingsUnavailable(error)) throw error;
@@ -302,6 +328,21 @@ export async function postModLog(client, action, fields, {
         return false;
     }
     const guildId = staffGuildId(sourceGuildId);
+    // No subject passed (appeals, case edits, watchlist…): the member of the usual "User: name (id)" field.
+    const about = subject || subjectFromFields(fields);
+    const [defaultTitle, color] = MOD_LOG_TITLES[action] || [action, 'primary'];
+    const embed = ACTION_KINDS.has(action) && !title
+        ? createEmbed({ description: formatModLogLine(action, fields), color, timestamp: true })
+        : createEmbed({ title: title || defaultTitle, description, fields, color, footer, timestamp: true });
+    if (forumId) {
+        const forumGuild = client.guilds?.cache?.get(guildId);
+        const posted = forumGuild ? await sendToLogForum({ guild: forumGuild, forumId, subject: about, payload: { embeds: [embed], files } }) : null;
+        if (posted) {
+            clearPostFailures(guildId, purpose);
+            return true;
+        }
+        // Not possible (missing forum, permissions): the normal channel below.
+    }
     // Not posting is recorded (postFailures.js), so the dashboard Overview can show it.
     if (!channelId) {
         recordPostFailure({ guildId, purpose, reason: 'notSet' });
@@ -314,10 +355,6 @@ export async function postModLog(client, action, fields, {
         if (guild) recordPostFailure({ guildId, purpose, channelId, reason: 'missing' });
         return false;
     }
-    const [defaultTitle, color] = MOD_LOG_TITLES[action] || [action, 'primary'];
-    const embed = ACTION_KINDS.has(action) && !title
-        ? createEmbed({ description: formatModLogLine(action, fields), color, timestamp: true })
-        : createEmbed({ title: title || defaultTitle, description, fields, color, footer, timestamp: true });
     return channel.send({
         embeds: [embed],
         files,
@@ -365,16 +402,22 @@ export async function logEnforcement(client, guildId, action, { record = null, t
     } catch {
         hasModLog = false;
     }
+    // An "Advanced" mod log (a forum, Logging page) counts as a mod log too.
+    if (!hasModLog) {
+        hasModLog = Boolean(logForumId(await getGuildConfig(client, staffGuildId(guildId)).catch(() => null), 'modlog'));
+    }
+    // The member's post when the mod log is "Advanced" (logForum.js).
+    const subject = { id: target.id, username: target.username };
     // Posted in the mod log: done. Not posted (channel gone, no access): the general log copy.
-    if (hasModLog && !record?.is_test && await postModLog(client, action, fields, { guildId })) return;
+    if (hasModLog && !record?.is_test && await postModLog(client, action, fields, { guildId, subject })) return;
     await logEvent({
         client,
         guildId,
         eventType: LOG_TYPES[action],
-        data: { userId: target.id, fields },
+        data: { userId: target.id, username: target.username, fields },
     }).catch((error) => logger.warn(`Enforcement log failed: ${error.message}`));
     if (record?.is_test) return;
-    await postModLog(client, action, fields, { guildId });
+    await postModLog(client, action, fields, { guildId, subject });
 }
 
 function moderatorFields(moderator) {

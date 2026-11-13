@@ -28,6 +28,8 @@ export const LoggingConfigSchema = z
     channels: LoggingChannelsSchema.optional(),
     ignore: LogIgnoreSchema.optional(),
     enabledEvents: z.record(z.string(), z.boolean()).default({}),
+    // "Advanced" log kinds: kind → forum channel id (services/logForum.js); unset = normal channel.
+    forums: z.record(z.string(), z.string().nullable()).optional(),
     // legacy flat fields — accepted on parse, stripped on normalize
     channelId: z.string().nullable().optional(),
   })

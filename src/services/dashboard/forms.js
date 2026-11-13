@@ -212,7 +212,7 @@ export const PERMS = {
 };
 
 const PERM_NAMES = new Set(['ViewChannel', 'SendMessages', 'EmbedLinks', 'AttachFiles', 'ReadMessageHistory', 'ManageChannels', 'Connect',
-    'MoveMembers', 'ManageMessages', 'ManageRoles', 'AddReactions', 'SendPolls']);
+    'MoveMembers', 'ManageMessages', 'ManageRoles', 'AddReactions', 'SendPolls', 'SendMessagesInThreads']);
 const permLabel = (perm) => (PERM_NAMES.has(perm) ? ft().t(`forms.perm.${perm}`) : perm);
 
 /**

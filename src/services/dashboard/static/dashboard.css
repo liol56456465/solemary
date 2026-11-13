@@ -1470,3 +1470,9 @@ details.section.is-changed > summary h2[data-unsaved]::after { content: attr(dat
     .queue > li > :nth-child(2):not(:last-child) { grid-column: 1; grid-row: 2; }
     .queue > li > :last-child:not(.what) { grid-column: 2; grid-row: 1 / span 2; }
 }
+
+/* How-to boxes (Logging page, Advanced logs; dashboard.js setupTips). */
+.tip ol { margin: 8px 0 12px; padding-left: 20px; }
+.tip li { margin-bottom: 4px; }
+.tip-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tip[hidden] { display: none; }

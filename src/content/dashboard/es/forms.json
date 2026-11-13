@@ -70,7 +70,8 @@
     "ManageMessages": "Gestionar mensajes",
     "ManageRoles": "Gestionar roles",
     "AddReactions": "Añadir reacciones",
-    "SendPolls": "Crear encuestas"
+    "SendPolls": "Crear encuestas",
+    "SendMessagesInThreads": "Enviar mensajes en hilos y publicaciones"
   },
   "fixPerms": "Arreglar permisos",
   "mark": {

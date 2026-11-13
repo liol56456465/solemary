@@ -22,8 +22,9 @@ import { endProbation, listProbations } from '../automod/probationService.js';
 import { getAutomodBacktest, startAutomodBacktest } from '../automod/backtest.js';
 // Logging
 import {
-    getLoggingStatus, resolveLogChannel, setLogChannel, setLogChannels, setLoggingEnabled, toggleEventLogging, updateEventLogging, updateIgnoreList,
+    getLoggingStatus, resolveLogChannel, setLogChannel, setLogChannels, setLogForums, setLoggingEnabled, toggleEventLogging, updateEventLogging, updateIgnoreList,
 } from '../loggingService.js';
+import { hideTip, isTipHidden } from './tips.js';
 // Welcome
 import { addAutoRole, getWelcomeSettings, removeAutoRole, updateWelcomeSettings } from '../welcomeService.js';
 // The image store of /greet dashboard: re-posts an upload so its link keeps working.
@@ -111,7 +112,8 @@ export const defaultServices = {
     loadNativePolicies, setNativePolicy, automodStats, automodRuleStats, headsUpStats,
     endLockdown, getLockdownState, collectOpenReviews, endProbation, listProbations,
     startAutomodBacktest, getAutomodBacktest,
-    getLoggingStatus, resolveLogChannel, setLogChannel, setLogChannels, setLoggingEnabled, toggleEventLogging, updateEventLogging, updateIgnoreList,
+    getLoggingStatus, resolveLogChannel, setLogChannel, setLogChannels, setLogForums, setLoggingEnabled, toggleEventLogging, updateEventLogging, updateIgnoreList,
+    isTipHidden, hideTip,
     addAutoRole, getWelcomeSettings, removeAutoRole, updateWelcomeSettings, storeWelcomeImage, resolveWelcomeImageUrl,
     getTicketSettings, updateTicketSettings, ticketRatingDashboard, setModmailBlocked, findModmailChannel, isBuiltInCanned, listCanned, removeCanned, saveCanned,
     addLevels, getLevelingConfig, getUserLevelData, removeLevels, setLevelBoost, setLevelRoleReward, setUserLevel, updateLevelingConfig, updateLevelIgnoreList, updateVoiceXpConfig,

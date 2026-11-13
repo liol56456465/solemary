@@ -22,6 +22,28 @@
     "community": "Community (levels, giveaways, counters, reaction roles)",
     "dashboard": "Dashboard and website changes"
   },
+  "forums": {
+    "title": "Advanced logs (forum)",
+    "help": "Normal: logs go to the channel above. Advanced: logs go to a forum channel with one post per member, so you can search a member and see everything about them in one place.",
+    "normal": "Normal (text channel)",
+    "advanced": "Advanced (forum, a post per member)",
+    "forum": "Forum channel",
+    "forumHelp": "Used only when Advanced is picked.",
+    "submit": "Save advanced logs",
+    "saved": "Advanced logs saved.",
+    "modlog": "Punishments (mod log)",
+    "tip": {
+      "title": "How advanced logs work",
+      "step1": "Create a forum channel in Discord and let Mewvo see it, create posts and send messages in posts.",
+      "step2": "Pick Advanced for a kind of log, choose the forum and save.",
+      "step3": "Mewvo makes one post per member, named \"username logs user ID\", and adds every log about them there. Logs about no member go to a \"Server logs\" post.",
+      "step4": "To find someone, open the forum and search their name or user ID.",
+      "step5": "If the forum cannot be used, the logs go to the normal channel of that kind, so nothing is lost.",
+      "close": "Close",
+      "hide": "Don't show again",
+      "hidden": "This how-to will not show again."
+    }
+  },
   "events": {
     "title": "Events",
     "help": "Pick which things get logged. Open a group to see its events. Unticking the whole group turns every event in it off.",

@@ -71,7 +71,8 @@
     "ManageMessages": "Управлять сообщениями",
     "ManageRoles": "Управлять ролями",
     "AddReactions": "Добавлять реакции",
-    "SendPolls": "Создавать опросы"
+    "SendPolls": "Создавать опросы",
+    "SendMessagesInThreads": "Отправлять сообщения в ветках и публикациях"
   },
   "fixPerms": "Исправить права",
   "mark": {

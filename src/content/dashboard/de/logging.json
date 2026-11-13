@@ -22,6 +22,28 @@
     "community": "Community (Level, Gewinnspiele, Zähler, Reaktionsrollen)",
     "dashboard": "Änderungen über Dashboard und Website"
   },
+  "forums": {
+    "title": "Erweiterte Logs (Forum)",
+    "help": "Normal: Logs gehen in den Kanal oben. Erweitert: Logs gehen in einen Forumkanal mit einem Beitrag pro Mitglied, damit du nach einem Mitglied suchen und alles über es an einem Ort sehen kannst.",
+    "normal": "Normal (Textkanal)",
+    "advanced": "Erweitert (Forum, ein Beitrag pro Mitglied)",
+    "forum": "Forumkanal",
+    "forumHelp": "Wird nur bei Erweitert genutzt.",
+    "submit": "Erweiterte Logs speichern",
+    "saved": "Erweiterte Logs gespeichert.",
+    "modlog": "Strafen (Mod-Log)",
+    "tip": {
+      "title": "So funktionieren erweiterte Logs",
+      "step1": "Erstelle in Discord einen Forumkanal und erlaube Mewvo, ihn zu sehen, Beiträge zu erstellen und in Beiträgen zu schreiben.",
+      "step2": "Wähle Erweitert für eine Log-Art, wähle das Forum und speichere.",
+      "step3": "Mewvo erstellt einen Beitrag pro Mitglied mit dem Namen „Nutzername logs Nutzer-ID“ und fügt dort jedes Log über das Mitglied hinzu. Logs ohne Mitglied gehen in einen Beitrag „Server logs“.",
+      "step4": "Um jemanden zu finden, öffne das Forum und suche nach dem Namen oder der Nutzer-ID.",
+      "step5": "Wenn das Forum nicht nutzbar ist, gehen die Logs in den normalen Kanal dieser Art, damit nichts verloren geht.",
+      "close": "Schließen",
+      "hide": "Nicht mehr anzeigen",
+      "hidden": "Diese Anleitung wird nicht mehr angezeigt."
+    }
+  },
   "events": {
     "title": "Ereignisse",
     "help": "Wähle, was geloggt wird. Öffne eine Gruppe, um ihre Ereignisse zu sehen. Wenn du die ganze Gruppe abwählst, werden alle Ereignisse darin ausgeschaltet.",

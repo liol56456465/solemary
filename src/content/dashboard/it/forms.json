@@ -70,7 +70,8 @@
     "ManageMessages": "Gestisci messaggi",
     "ManageRoles": "Gestisci ruoli",
     "AddReactions": "Aggiungi reazioni",
-    "SendPolls": "Crea sondaggi"
+    "SendPolls": "Crea sondaggi",
+    "SendMessagesInThreads": "Inviare messaggi nei thread e nei post"
   },
   "fixPerms": "Correggi i permessi",
   "mark": {

@@ -24,6 +24,7 @@ import { resolveSetting } from './settings/guildSettings.js';
 import { postModLog } from './enforcement/enforcementService.js';
 import { botConfig } from '../config/bot.js';
 import { logger } from '../utils/logger.js';
+import { logForumIds } from './logForum.js';
 
 export const AUDIT_FRESH_MS = 20_000;
 export const AUDIT_WAIT_MS = 1_500;
@@ -202,7 +203,10 @@ async function checkDeleted(client, guild, channel, messages, bulk) {
     });
     if (!ours.length) return;
     const config = await getGuildConfig(client, guild.id).catch(() => null);
-    if (!config || !logChannelIds(config, guild.id).has(channel.id)) return;
+    if (!config) return;
+    // A log channel, or a post in a log forum (Advanced logs: logForum.js).
+    const inLogForum = Boolean(channel.isThread?.() && channel.parentId && logForumIds(config).includes(channel.parentId));
+    if (!logChannelIds(config, guild.id).has(channel.id) && !inLogForum) return;
 
     let executorId = purgedBy;
     let certain = Boolean(purgedBy);

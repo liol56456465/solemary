@@ -4,6 +4,7 @@ import { ChannelType } from 'discord.js';
 import { getGuildConfig } from './config/guildConfig.js';
 import { updateGuildConfigAtomic } from '../utils/database/guildConfigStorage.js';
 import { LOG_CHANNEL_KEYS } from '../utils/schemas.js';
+import { LOG_FORUM_KINDS, logForumId, sendToLogForum } from './logForum.js';
 import { logger } from '../utils/logger.js';
 import { BoundedMap } from '../utils/boundedMap.js';
 import {
@@ -325,14 +326,22 @@ export function isEventEnabled(config, eventType) {
   return true;
 }
 
+/** The Logging page destination of an event type ('audit' when its category has none). */
+function destinationForEvent(eventType) {
+  const category = eventType?.split('.')[0];
+  return CATEGORY_DESTINATION[category] || 'audit';
+}
+
 function getLogChannelForEvent(config, eventType, overrideChannelId = null) {
   if (overrideChannelId) {
     return overrideChannelId;
   }
+  return resolveLogChannel(config, destinationForEvent(eventType));
+}
 
-  const category = eventType?.split('.')[0];
-  const destination = CATEGORY_DESTINATION[category] || 'audit';
-  return resolveLogChannel(config, destination);
+/** "Advanced" log kind (logForum.js): the forum of this event's kind, or null (each kind on its own). */
+function forumForEvent(config, eventType) {
+  return logForumId(config, destinationForEvent(eventType));
 }
 
 // 403 backoff (B5): a log channel Mewvo can't see or post in is skipped for a while instead of
@@ -416,6 +425,20 @@ export async function logEvent({
 
     if (!isEventEnabled(config, eventType)) {
       return null;
+    }
+
+    // Advanced (a forum with one post per member): tried first; on any failure the normal channel below.
+    const forumId = overrideChannelId ? null : forumForEvent(config, eventType);
+    if (forumId) {
+      const payload = { embeds: [createLogEmbed(guild, eventType, data)] };
+      if (content) payload.content = content;
+      if (attachments.length > 0) payload.files = attachments;
+      const subjectId = data?.userId ? String(data.userId) : null;
+      const posted = await sendToLogForum({
+        guild, forumId, payload,
+        subject: subjectId ? { id: subjectId, username: data?.username || client.users?.cache?.get(subjectId)?.username || null } : null,
+      });
+      if (posted) return posted;
     }
 
     const logChannelId = getLogChannelForEvent(config, eventType, overrideChannelId);
@@ -574,6 +597,8 @@ export async function getLoggingStatus(client, guildId) {
     ignore: getIgnoreList(config),
     enabledEvents: logging.enabledEvents || {},
     allEventTypes: EVENT_TYPES,
+    // Advanced kinds: kind → forum channel id (logForum.js); a kind without one is normal.
+    forums: Object.fromEntries(LOG_FORUM_KINDS.map((kind) => [kind, logForumId(config, kind)])),
   };
 }
 
@@ -653,6 +678,31 @@ export async function setLogChannels(client, guildId, wanted) {
   }, { operation: 'setLogChannels' });
   // A newly chosen channel is tried right away, even if it was paused after a refusal.
   for (const change of changes) if (change.new) logChannelBackoff.delete(backoffKey(guildId, change.new));
+  return changes;
+}
+
+/**
+ * "Advanced" (forum) log kinds in ONE locked write (the dashboard's Advanced logs form):
+ * wanted = { kind: forumChannelId | null } (null = normal). Returns [{ kind, old, new }] for the
+ * ones that changed against the locked stored value. Throws on a database error (nothing saved).
+ */
+export async function setLogForums(client, guildId, wanted) {
+  for (const kind of Object.keys(wanted)) {
+    if (!LOG_FORUM_KINDS.includes(kind)) throw new Error(`Invalid log forum kind: ${kind}`);
+  }
+  let changes = [];
+  await updateGuildConfigAtomic(client, guildId, (config) => {
+    const forums = { ...(config.logging?.forums || {}) };
+    changes = [];
+    for (const [kind, forumId] of Object.entries(wanted)) {
+      const old = forums[kind] || null;
+      if ((forumId || null) === old) continue;
+      if (forumId) forums[kind] = forumId; else delete forums[kind];
+      changes.push({ kind, old, new: forumId || null });
+    }
+    if (!changes.length) return config;
+    return { ...config, logging: { ...config.logging, forums } };
+  }, { operation: 'setLogForums' });
   return changes;
 }
 

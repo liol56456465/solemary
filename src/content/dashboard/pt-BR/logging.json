@@ -22,6 +22,28 @@
     "community": "Comunidade (níveis, sorteios, contadores, cargos por reação)",
     "dashboard": "Mudanças pelo painel e pelo site"
   },
+  "forums": {
+    "title": "Registros avançados (fórum)",
+    "help": "Normal: os registros vão para o canal acima. Avançado: os registros vão para um canal de fórum com uma postagem por membro, para você pesquisar um membro e ver tudo sobre ele em um só lugar.",
+    "normal": "Normal (canal de texto)",
+    "advanced": "Avançado (fórum, uma postagem por membro)",
+    "forum": "Canal de fórum",
+    "forumHelp": "Usado só quando Avançado está escolhido.",
+    "submit": "Salvar registros avançados",
+    "saved": "Registros avançados salvos.",
+    "modlog": "Punições (registro de moderação)",
+    "tip": {
+      "title": "Como os registros avançados funcionam",
+      "step1": "Crie um canal de fórum no Discord e deixe o Mewvo vê-lo, criar postagens e enviar mensagens nas postagens.",
+      "step2": "Escolha Avançado para um tipo de registro, selecione o fórum e salve.",
+      "step3": "O Mewvo cria uma postagem por membro, chamada \"nome de usuário logs ID do usuário\", e adiciona lá cada registro sobre ele. Registros sem membro vão para uma postagem \"Server logs\".",
+      "step4": "Para achar alguém, abra o fórum e pesquise o nome ou o ID do usuário.",
+      "step5": "Se o fórum não puder ser usado, os registros vão para o canal normal desse tipo, então nada se perde.",
+      "close": "Fechar",
+      "hide": "Não mostrar de novo",
+      "hidden": "Este guia não vai aparecer de novo."
+    }
+  },
   "events": {
     "title": "Eventos",
     "help": "Escolha o que é registrado. Abra um grupo para ver os eventos dele. Desmarcar o grupo inteiro desliga todos os eventos dele.",

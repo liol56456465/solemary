@@ -22,6 +22,28 @@
     "community": "Communauté (niveaux, concours, compteurs, rôles par réaction)",
     "dashboard": "Changements depuis le tableau de bord et le site"
   },
+  "forums": {
+    "title": "Journaux avancés (forum)",
+    "help": "Normal : les journaux vont dans le salon ci-dessus. Avancé : les journaux vont dans un salon forum avec un post par membre, pour chercher un membre et tout voir le concernant au même endroit.",
+    "normal": "Normal (salon textuel)",
+    "advanced": "Avancé (forum, un post par membre)",
+    "forum": "Salon forum",
+    "forumHelp": "Utilisé seulement si Avancé est choisi.",
+    "submit": "Enregistrer les journaux avancés",
+    "saved": "Journaux avancés enregistrés.",
+    "modlog": "Sanctions (journal de modération)",
+    "tip": {
+      "title": "Comment fonctionnent les journaux avancés",
+      "step1": "Crée un salon forum dans Discord et laisse Mewvo le voir, créer des posts et envoyer des messages dans les posts.",
+      "step2": "Choisis Avancé pour un type de journal, sélectionne le forum et enregistre.",
+      "step3": "Mewvo crée un post par membre, nommé « pseudo logs ID utilisateur », et y ajoute chaque journal le concernant. Les journaux sans membre vont dans un post « Server logs ».",
+      "step4": "Pour trouver quelqu’un, ouvre le forum et cherche son nom ou son ID utilisateur.",
+      "step5": "Si le forum n’est pas utilisable, les journaux vont dans le salon normal de ce type, donc rien n’est perdu.",
+      "close": "Fermer",
+      "hide": "Ne plus afficher",
+      "hidden": "Ce guide ne s’affichera plus."
+    }
+  },
   "events": {
     "title": "Événements",
     "help": "Choisis ce qui est journalisé. Ouvre un groupe pour voir ses événements. Décocher le groupe entier désactive tous ses événements.",

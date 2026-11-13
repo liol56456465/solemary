@@ -2,6 +2,8 @@ import { Events } from 'discord.js';
 import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 import { threadUpdateLines } from '../utils/logging/channelLogLines.js';
 import { logger } from '../utils/logger.js';
+import { getGuildConfig } from '../services/config/guildConfig.js';
+import { isLogForumPost } from '../services/logForum.js';
 
 // Server log: a thread was archived or reopened, locked or unlocked, or renamed.
 export default {
@@ -13,6 +15,9 @@ export default {
       if (!after.guild) return;
       const lines = threadUpdateLines(before, after);
       if (!lines.length) return;
+      // Mewvo's own log posts archive after an hour and reopen on the next log: not worth a line each time.
+      if (after.ownerId && after.ownerId === after.client.user?.id
+        && isLogForumPost(after, await getGuildConfig(after.client, after.guild.id).catch(() => null))) return;
       await logEvent({
         client: after.client,
         guildId: after.guild.id,

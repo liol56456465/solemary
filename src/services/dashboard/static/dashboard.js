@@ -18,6 +18,8 @@
 //   [data-theme-pick]       the theme picker (radio group) switches in place (same cookie)
 //   main .flash             "Saved." becomes a toast that closes itself
 //   form[data-dirty]        also shows a Discard / Save bar at the bottom while changed
+//   [data-tip]              a how-to box: shown when a select of its form is set to "advanced"
+//                           (form.log-forums), hidden again by its [data-tip-close] button
 //   [data-module-search]    a search box above the module cards
 //   #s-<section> links      open the collapsible section they point to; the topic or card in view is marked
 //   [data-quick-find]       "/" focuses the top bar search
@@ -796,6 +798,20 @@
         window.setInterval(updateTimes, 60 * 1000);
         setupDrawer();
         setupMenus();
+        setupTips();
+    }
+
+    // How-to boxes (Logging page, Advanced logs): picking "advanced" shows the box; Close hides it on
+    // this page only ("Don't show again" is a normal form post).
+    function setupTips() {
+        const tip = document.getElementById('log-forum-tip');
+        if (!tip) return;
+        document.querySelectorAll('form.log-forums select[name^="mode:"]').forEach((select) => {
+            select.addEventListener('change', () => { if (select.value === 'advanced') tip.hidden = false; });
+        });
+        tip.querySelectorAll('[data-tip-close]').forEach((button) => {
+            button.addEventListener('click', () => { tip.hidden = true; });
+        });
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

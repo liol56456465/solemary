@@ -69,7 +69,8 @@
     "ManageMessages": "Nachrichten verwalten",
     "ManageRoles": "Rollen verwalten",
     "AddReactions": "Reaktionen hinzufügen",
-    "SendPolls": "Umfragen erstellen"
+    "SendPolls": "Umfragen erstellen",
+    "SendMessagesInThreads": "Nachrichten in Threads und Beiträgen senden"
   },
   "fixPerms": "Berechtigungen reparieren",
   "mark": {

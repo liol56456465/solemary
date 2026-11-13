@@ -69,7 +69,8 @@
     "ManageMessages": "Manage Messages",
     "ManageRoles": "Manage Roles",
     "AddReactions": "Add Reactions",
-    "SendPolls": "Send Polls"
+    "SendPolls": "Send Polls",
+    "SendMessagesInThreads": "Send Messages in Threads and Posts"
   },
   "fixPerms": "Fix permissions",
   "mark": {

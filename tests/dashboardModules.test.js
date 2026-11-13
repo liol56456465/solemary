@@ -38,6 +38,7 @@ const TEXT2 = '500000000000000002';
 const POLL_LINK = `https://discord.com/channels/${'100000000000000001'}/${'500000000000000001'}/710000000000000015`;
 const CAT = '500000000000000003';
 const VOICE = '500000000000000004';
+const FORUM = '500000000000000077';
 const ROLE_OK = '600000000000000001';
 const ROLE_DANGER = '600000000000000002';
 const ROLE_HIGH = '600000000000000003';
@@ -91,7 +92,7 @@ function makeGuild() {
     };
     guild.channels = { cache: new Map([
         [TEXT, ch(TEXT, 'general', 0, CAT)], [TEXT2, ch(TEXT2, '<script>x</script>', 0)],
-        [CAT, ch(CAT, 'Support', 4)], [VOICE, ch(VOICE, 'Join to create', 2, CAT)],
+        [CAT, ch(CAT, 'Support', 4)], [VOICE, ch(VOICE, 'Join to create', 2, CAT)], [FORUM, ch(FORUM, 'member-logs', 15)],
     ]) };
     const role = (id, name, position, permissionNames = [], managed = false) => ({ id, name, position, managed, permissions: perms(permissionNames), guild });
     guild.roles = { cache: new Map([
@@ -249,6 +250,21 @@ function makeServices() {
             }
             return changes;
         },
+        // Advanced logs (logForum.js): kind → forum id; the how-to box hidden per user.
+        setLogForums: async (c, g, wanted) => {
+            record('setLogForums', [wanted]);
+            s.logging.forums = { ...(s.logging.forums || {}) };
+            const changes = [];
+            for (const [kind, id] of Object.entries(wanted)) {
+                const old = s.logging.forums[kind] || null;
+                if ((id || null) === old) continue;
+                if (id) s.logging.forums[kind] = id; else delete s.logging.forums[kind];
+                changes.push({ kind, old, new: id || null });
+            }
+            return changes;
+        },
+        isTipHidden: async (userId, tip) => Boolean(s.hiddenTips?.has(`${userId}:${tip}`)),
+        hideTip: async (userId, tip) => { record('hideTip', [userId, tip]); s.hiddenTips = new Set([...(s.hiddenTips || []), `${userId}:${tip}`]); return true; },
         updateEventLogging: async (c, g, plan) => {
             const steps = await plan(clone(s.logging.enabledEvents));
             record('updateEventLogging', [steps]);
@@ -879,6 +895,11 @@ const CASES = {
         enabled: { admin: true, form: { enabled: 'true' }, service: 'setLoggingEnabled', bad: { form: { enabled: 'x' }, message: /on or off/ } },
         channels: { admin: true, form: { audit: TEXT, applications: '', reports: '' }, service: 'setLogChannels', bad: { form: { audit: VOICE }, message: /must be a text channel/ } },
         events: { admin: true, form: {}, service: 'updateEventLogging' },
+        // Advanced logs: Advanced needs a forum channel; Normal clears it.
+        forums: { admin: true, form: { 'mode:modlog': 'advanced', 'forum:modlog': FORUM, 'mode:dashboard': 'normal', 'forum:dashboard': '' }, service: 'setLogForums',
+            bad: { form: { 'mode:modlog': 'advanced', 'forum:modlog': TEXT }, message: /must be a forum/ } },
+        // The how-to's "Don't show again": this user's preference, no audit row or mod log (readOnly).
+        'tip-hide': { admin: true, form: { tip: 'logForum' }, service: 'hideTip', readOnly: true, bad: { form: { tip: 'other' }, message: /unknown choice/ } },
         'ignore-add': { form: { type: 'role', id: ROLE_OK }, service: 'updateIgnoreList', admin: true, bad: { form: { type: 'user', id: 'abc' }, message: /Discord user ID/ } },
         'ignore-remove': { admin: true, form: { type: 'channel', id: TEXT2 }, service: 'updateIgnoreList', bad: { form: { type: 'planet', id: TEXT2 }, message: /unknown choice/ } },
     },
@@ -2801,6 +2822,51 @@ test('Automod probation end: ends it early (audited); a member not on probation 
     assert.equal(h.auditRows.length, 1);
     const owner = await setup({ userId: OWNER });
     assert.equal((await post(owner, 'automod', 'probation-end', { user: MEMBER })).statusCode, 403);
+});
+
+// ── Logging: Advanced logs (forum) and its how-to (owner, 2026-11-13) ──
+
+const forumsCard = (body) => body.slice(body.indexOf('id="s-advanced-logs"'), body.indexOf('</section>', body.indexOf('id="s-advanced-logs"')));
+
+test('Advanced logs card: a row per kind (mod log and website included), forum pickers list forum channels only', async () => {
+    const h = await setup();
+    const card = forumsCard((await get(h, 'logging')).body);
+    for (const kind of ['audit', 'moderation', 'members', 'messages', 'server', 'community', 'dashboard', 'modlog']) {
+        assert.match(card, new RegExp(`name="mode:${kind}"`), kind);
+        assert.match(card, new RegExp(`name="forum:${kind}"`), kind);
+    }
+    assert.match(card, /Punishments \(mod log\)/);
+    assert.match(card, /member-logs/, 'the forum channel is offered');
+    const picker = card.slice(card.indexOf('name="forum:members"'), card.indexOf('</select>', card.indexOf('name="forum:members"')));
+    assert.doesNotMatch(picker, /general/, 'text channels are not offered as a forum');
+    assert.match(card, /action="\/dashboard\/logging\/forums"/);
+});
+
+test('Advanced logs how-to: hidden until Advanced is picked, open while a kind is Advanced, gone after "Don\'t show again"', async () => {
+    const h = await setup();
+    let card = forumsCard((await get(h, 'logging')).body);
+    assert.match(card, /id="log-forum-tip" data-tip="logForum" hidden/, 'nothing Advanced yet: hidden (the script shows it on picking Advanced)');
+    assert.match(card, /How advanced logs work/);
+    assert.match(card, /data-tip-close/);
+    assert.equal((await post(h, 'logging', 'forums', { 'mode:modlog': 'advanced', 'forum:modlog': FORUM })).statusCode, 303);
+    assert.deepEqual(h.auditRows.map((r) => [r.key, r.new]), [['logging.forums.modlog', FORUM]]);
+    card = forumsCard((await get(h, 'logging')).body);
+    assert.match(card, /id="log-forum-tip" data-tip="logForum">/, 'a kind is Advanced: shown');
+    assert.match(card, /<option value="advanced" selected>/);
+    const hide = await post(h, 'logging', 'tip-hide', { tip: 'logForum' });
+    assert.equal(hide.statusCode, 303);
+    assert.deepEqual(h.calls.find((c) => c.name === 'hideTip').args, [ADMIN, 'logForum'], 'this user only');
+    assert.equal(h.auditRows.length, 1, 'not a server setting: no audit row');
+    card = forumsCard((await get(h, 'logging')).body);
+    assert.doesNotMatch(card, /log-forum-tip/);
+    assert.match(card, /name="mode:modlog"/, 'the settings stay');
+    // Normal again clears the forum.
+    await post(h, 'logging', 'forums', { 'mode:modlog': 'normal', 'forum:modlog': FORUM });
+    assert.equal(h.state.logging.forums.modlog, undefined);
+    // Advanced without a forum is refused.
+    const missing = await post(h, 'logging', 'forums', { 'mode:members': 'advanced', 'forum:members': '' });
+    assert.equal(missing.statusCode, 400);
+    assert.match(missing.body, /pick a channel/);
 });
 
 // ── Automod immune members (owner, 2026-11-13) ──

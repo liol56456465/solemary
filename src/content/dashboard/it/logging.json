@@ -22,6 +22,28 @@
     "community": "Community (livelli, giveaway, contatori, ruoli a reazione)",
     "dashboard": "Modifiche da dashboard e sito"
   },
+  "forums": {
+    "title": "Log avanzati (forum)",
+    "help": "Normale: i log vanno nel canale sopra. Avanzato: i log vanno in un canale forum con un post per membro, così puoi cercare un membro e vedere tutto su di lui in un unico posto.",
+    "normal": "Normale (canale testuale)",
+    "advanced": "Avanzato (forum, un post per membro)",
+    "forum": "Canale forum",
+    "forumHelp": "Usato solo se scegli Avanzato.",
+    "submit": "Salva log avanzati",
+    "saved": "Log avanzati salvati.",
+    "modlog": "Punizioni (log di moderazione)",
+    "tip": {
+      "title": "Come funzionano i log avanzati",
+      "step1": "Crea un canale forum su Discord e lascia che Mewvo lo veda, crei post e invii messaggi nei post.",
+      "step2": "Scegli Avanzato per un tipo di log, seleziona il forum e salva.",
+      "step3": "Mewvo crea un post per membro, chiamato \"nome utente logs ID utente\", e ci aggiunge ogni log su di lui. I log senza membro vanno in un post \"Server logs\".",
+      "step4": "Per trovare qualcuno, apri il forum e cerca il suo nome o ID utente.",
+      "step5": "Se il forum non si può usare, i log vanno nel canale normale di quel tipo, quindi non si perde nulla.",
+      "close": "Chiudi",
+      "hide": "Non mostrare più",
+      "hidden": "Questa guida non verrà più mostrata."
+    }
+  },
   "events": {
     "title": "Eventi",
     "help": "Scegli cosa registrare. Apri un gruppo per vederne gli eventi. Togliendo la spunta all'intero gruppo si disattivano tutti i suoi eventi.",
