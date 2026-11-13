@@ -73,12 +73,12 @@
   "settings": {
     "title": "Ustawienia",
     "help": "Ustawienie tu kanału dziennika zmienia też kanał dziennika podań na stronie Dzienniki, i odwrotnie.",
-    "logChannel": "Kanał dziennika podań",
-    "logChannelHelp": "Gdzie nowe podania są publikowane do rozpatrzenia przez ekipę.",
     "pendingDays": "Przechowuj czekające podania (dni)",
     "pendingDaysHelp": "Podania, o których nikt nie zdecydował, są usuwane po tym czasie.",
     "reviewedDays": "Przechowuj rozpatrzone podania (dni)",
-    "reviewedDaysHelp": "Przyjęte i odrzucone podania są usuwane po tym czasie."
+    "reviewedDaysHelp": "Przyjęte i odrzucone podania są usuwane po tym czasie.",
+    "logLine": "Nowe podania trafiają do {channel} (rola może mieć niżej własny kanał). Ustawia się to na {link}.",
+    "logLineLink": "stronie Dzienniki"
   },
   "questions": {
     "title": "Domyślne pytania",

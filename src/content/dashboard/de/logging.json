@@ -4,9 +4,8 @@
   },
   "modLog": {
     "title": "Mod-Log",
-    "text": "Das Mod-Log listet jede Verwarnung, Stummschaltung, jeden Kick und Bann. Es geht nach {channel}. Du kannst es {change}. Ticket-Logs werden unter {tickets} festgelegt.",
-    "change": "unter Strafen & Einsprüche ändern",
-    "tickets": "Tickets & Modmail"
+    "text": "Das Mod-Log listet jede Verwarnung, Stummschaltung, jeden Kick und Bann. Es geht nach {channel}. Du kannst es {change}.",
+    "change": "unter Strafen & Einsprüche ändern"
   },
   "channels": {
     "title": "Kanäle",
@@ -21,7 +20,9 @@
     "server": "Server (Kanäle und Rollen)",
     "community": "Community (Level, Gewinnspiele, Zähler, Reaktionsrollen)",
     "dashboard": "Änderungen über Dashboard und Website",
-    "automod": "Automod (alles, was Automod getan hat)"
+    "automod": "Automod (alles, was Automod getan hat)",
+    "tickets": "Tickets (geöffnet, übernommen, geschlossen)",
+    "transcripts": "Ticket-Transkripte"
   },
   "forums": {
     "title": "Erweiterte Logs (Forum)",

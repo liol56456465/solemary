@@ -70,12 +70,12 @@
   "settings": {
     "title": "Ajustes",
     "help": "Configurar aquí el canal de registro también cambia el canal de registro de solicitudes en la página Registros, y al revés.",
-    "logChannel": "Canal de registro de solicitudes",
-    "logChannelHelp": "Dónde se publican las solicitudes nuevas para que el equipo las revise.",
     "pendingDays": "Guardar solicitudes en espera (días)",
     "pendingDaysHelp": "Las solicitudes sobre las que nadie ha decidido se borran pasado este tiempo.",
     "reviewedDays": "Guardar solicitudes decididas (días)",
-    "reviewedDaysHelp": "Las solicitudes aprobadas y rechazadas se borran pasado este tiempo."
+    "reviewedDaysHelp": "Las solicitudes aprobadas y rechazadas se borran pasado este tiempo.",
+    "logLine": "Las nuevas solicitudes se publican en {channel} (un rol puede tener su propio canal abajo). Se configura en la {link}.",
+    "logLineLink": "página de Registros"
   },
   "questions": {
     "title": "Preguntas predeterminadas",

@@ -70,12 +70,12 @@
   "settings": {
     "title": "Paramètres",
     "help": "Définir le salon de journal ici change aussi le salon de journal des candidatures sur la page Journaux, et inversement.",
-    "logChannel": "Salon de journal des candidatures",
-    "logChannelHelp": "Où les nouvelles candidatures sont publiées pour que l’équipe les examine.",
     "pendingDays": "Garder les candidatures en attente (jours)",
     "pendingDaysHelp": "Les candidatures sur lesquelles personne n’a décidé sont supprimées après ce délai.",
     "reviewedDays": "Garder les candidatures décidées (jours)",
-    "reviewedDaysHelp": "Les candidatures acceptées et refusées sont supprimées après ce délai."
+    "reviewedDaysHelp": "Les candidatures acceptées et refusées sont supprimées après ce délai.",
+    "logLine": "Les nouvelles candidatures sont publiées dans {channel} (un rôle peut avoir son propre salon plus bas). Cela se règle sur la {link}.",
+    "logLineLink": "page Journaux"
   },
   "questions": {
     "title": "Questions par défaut",

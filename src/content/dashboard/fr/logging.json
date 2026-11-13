@@ -4,9 +4,8 @@
   },
   "modLog": {
     "title": "Journal de modération",
-    "text": "Le journal de modération liste chaque avertissement, mute, kick et ban. Il est publié dans {channel}. Tu peux {change}. Les journaux des tickets se règlent sur {tickets}.",
-    "change": "le changer sur Sanctions et appels",
-    "tickets": "Tickets et modmail"
+    "text": "Le journal de modération liste chaque avertissement, mute, kick et ban. Il est publié dans {channel}. Tu peux {change}.",
+    "change": "le changer sur Sanctions et appels"
   },
   "channels": {
     "title": "Salons",
@@ -21,7 +20,9 @@
     "server": "Serveur (salons et rôles)",
     "community": "Communauté (niveaux, concours, compteurs, rôles par réaction)",
     "dashboard": "Changements depuis le tableau de bord et le site",
-    "automod": "Automod (tout ce que l’automod a fait)"
+    "automod": "Automod (tout ce que l’automod a fait)",
+    "tickets": "Tickets (ouverts, pris en charge, fermés)",
+    "transcripts": "Transcriptions des tickets"
   },
   "forums": {
     "title": "Journaux avancés (forum)",

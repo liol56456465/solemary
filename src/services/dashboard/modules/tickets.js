@@ -122,8 +122,7 @@ ${channelPicker(g, 'ticketClosedCategoryId', t.ticketClosedCategoryId, { label: 
 ${rolePicker(g, 'ticketStaffRoleIds', ticketStaffRoleIds(t), { label: tr.t('tickets.settings.staffRoles', { max: tr.fmtNumber(MAX_TICKET_STAFF_ROLES) }), assign: false, multiple: true, help: tr.t('tickets.settings.staffRolesHelp') })}
 ${numberInput('maxTicketsPerUser', t.maxTicketsPerUser ?? 3, { label: tr.t('tickets.settings.maxPerUser'), min: 1, max: 10, help: tr.t('tickets.settings.maxPerUserHelp') })}
 ${switchInput('dmOnClose', t.dmOnClose !== false, { label: tr.t('tickets.settings.dmOnClose'), help: tr.t('tickets.settings.dmOnCloseHelp') })}
-${channelPicker(g, 'ticketLogsChannelId', t.ticketLogsChannelId, { label: tr.t('tickets.settings.logChannel'), perms: PERMS.post, help: tr.t('tickets.settings.logChannelHelp') })}
-${channelPicker(g, 'ticketTranscriptChannelId', t.ticketTranscriptChannelId, { label: tr.t('tickets.settings.transcriptChannel'), perms: PERMS.postFiles, help: tr.t('tickets.settings.transcriptChannelHelp') })}
+<p class="muted">${tr.tx('tickets.settings.logLine', { logs: channelName(g, t.ticketLogsChannelId), transcripts: channelName(g, t.ticketTranscriptChannelId), link: html`<a href="${path('/logging')}#s-channels">${tr.t('tickets.settings.logLineLink')}</a>` })}</p>
 <p class="muted">${tr.tx('tickets.settings.advancedLogs', { link: html`<a href="${path('/logging')}#s-advanced-logs">${tr.t('tickets.settings.advancedLogsLink')}</a>` })}</p>
 ${textInput('ticketButtonLabel', t.ticketButtonLabel || tr.t('tickets.defaults.buttonLabel'), { label: tr.t('tickets.settings.buttonText'), max: 80, help: tr.t('tickets.settings.buttonTextHelp') })}
 ${textArea('ticketPanelMessage', t.ticketPanelMessage || '', { label: tr.t('tickets.settings.panelMessage'), max: 2000, help: tr.t('tickets.settings.panelMessageHelp') })}</div>`);
@@ -219,13 +218,11 @@ ${renderRatings(ctx, tr, t, ratings)}`;
             const tr = textFor(ctx);
             const current = await ctx.services.getTicketSettings(ctx.client, ctx.guildId);
             const patch = changedOnly({
-                ticketCategoryId: channelField(g, form, 'ticketCategoryId', { kinds: ['category'], label: tr.t('tickets.settings.openCategory') }),
-                ticketClosedCategoryId: channelField(g, form, 'ticketClosedCategoryId', { kinds: ['category'], label: tr.t('tickets.settings.closedCategory') }),
+                ticketCategoryId: channelField(g, form, 'ticketCategoryId', { kinds: ['category'], label: tr.t('tickets.settings.openCategory'), current: current.ticketCategoryId }),
+                ticketClosedCategoryId: channelField(g, form, 'ticketClosedCategoryId', { kinds: ['category'], label: tr.t('tickets.settings.closedCategory'), current: current.ticketClosedCategoryId }),
                 ticketStaffRoleIds: keepStoredOrder(staffRoleListField(g, form, 'ticketStaffRoleIds', tr), ticketStaffRoleIds(current)),
                 maxTicketsPerUser: intField(form, 'maxTicketsPerUser', { min: 1, max: 10, label: tr.t('tickets.settings.maxPerUser') }),
                 dmOnClose: checkbox(form, 'dmOnClose'),
-                ticketLogsChannelId: channelField(g, form, 'ticketLogsChannelId', { label: tr.t('tickets.settings.logChannel') }),
-                ticketTranscriptChannelId: channelField(g, form, 'ticketTranscriptChannelId', { label: tr.t('tickets.settings.transcriptChannel') }),
                 // Cleared = back to the default text (in the dashboard language).
                 ticketButtonLabel: text(form, 'ticketButtonLabel', 80) || tr.t('tickets.defaults.buttonLabel'),
                 ticketPanelMessage: multiline(form, 'ticketPanelMessage', 2000) || tr.t('tickets.defaults.panelMessage'),

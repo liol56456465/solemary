@@ -14,7 +14,16 @@
         "ignoreChannelOption": "Channel or category",
         "ignoreRole": "Ignore members with a role, or log them again (toggles).",
         "ignoreRoleOption": "Role",
-        "ignoreList": "Show the ignored channels, roles and users."
+        "ignoreList": "Show the ignored channels, roles and users.",
+        "choiceModeration": "Moderation (purge, lock, slowmode…)",
+        "choiceMembers": "Members (joins, leaves, names)",
+        "choiceMessages": "Messages (edits, deletes)",
+        "choiceServer": "Server (channels, roles)",
+        "choiceCommunity": "Community (levels, giveaways, counters)",
+        "choiceDashboard": "Dashboard and website changes",
+        "choiceAutomod": "Automod",
+        "choiceTickets": "Tickets (opened, claimed, closed)",
+        "choiceTranscripts": "Ticket transcripts"
     },
     "unknownSubcommand": "This subcommand is not recognised.",
     "unexpected": "An unexpected error occurred.",
@@ -102,7 +111,16 @@
         "destination": {
             "audit": "Audit Log",
             "applications": "Applications",
-            "reports": "Reports"
+            "reports": "Reports",
+            "moderation": "Moderation (purge, lock, slowmode…)",
+            "members": "Members (joins, leaves, names)",
+            "messages": "Messages (edits, deletes)",
+            "server": "Server (channels, roles)",
+            "community": "Community (levels, giveaways, counters)",
+            "dashboard": "Dashboard and website changes",
+            "automod": "Automod",
+            "tickets": "Tickets (opened, claimed, closed)",
+            "transcripts": "Ticket transcripts"
         },
         "noAdmin": "You need the **Administrator** permission to configure logging channels.",
         "clearFailed": "Couldn't clear the log channel. Try again.",

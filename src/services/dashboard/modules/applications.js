@@ -10,9 +10,9 @@ import { formatApplicationQuestionForEditing } from '../../../utils/applicationQ
 import { MAX_APPLICATION_QUESTIONS, parseQuestionLines } from '../../applicationSettingsService.js';
 import { APPLICATION_NAME_MAX } from '../../applicationRoleService.js';
 import { REVIEW_NOTE_MAX } from '../../applicationReviewService.js';
-import { html } from '../html.js';
+import { html, path } from '../html.js';
 import {
-    InputError, PERMS, boolField, buttonForm, channelField, channelPicker, checkbox, choiceField, switchInput, intField, isSnowflake, multiline,
+    InputError, PERMS, boolField, buttonForm, channelField, channelName, channelPicker, checkbox, choiceField, switchInput, intField, isSnowflake, multiline,
     numberInput, pill, postForm, roleField, rolePicker, roleName, selectInput, text, textArea, textInput,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
@@ -79,16 +79,19 @@ export default {
     help: 'Let members apply for a role, like moderator, by answering a few questions with /apply in Discord. Staff read the answers and approve or deny. Approving gives the role.',
 
     async load(ctx) {
-        const [s, roles, submitted] = await Promise.all([
+        const [s, roles, submitted, config] = await Promise.all([
             ctx.services.getApplicationSettings(ctx.client, ctx.guildId),
             ctx.services.listApplicationRoles(ctx.client, ctx.guildId),
             ctx.services.getApplications(ctx.client, ctx.guildId, { limit: APPLICATIONS_READ }),
+            ctx.services.getGuildConfig(ctx.client, ctx.guildId),
         ]);
         const list = submitted || [];
-        return { s, roles, submitted: { ...splitApplications(list), capped: list.length >= APPLICATIONS_READ } };
+        // Where applications go (the Logging page channel, else one set the old way here).
+        const appLogChannel = ctx.services.resolveLogChannel(config, 'applications') || s?.logChannelId || null;
+        return { s, roles, appLogChannel, submitted: { ...splitApplications(list), capped: list.length >= APPLICATIONS_READ } };
     },
 
-    render(ctx, { s, roles = [], submitted = splitApplications([]) }) {
+    render(ctx, { s, roles = [], appLogChannel = null, submitted = splitApplications([]) }) {
         const g = ctx.guild;
         const tr = textFor(ctx);
         const max = tr.fmtNumber(MAX_APPLICATION_QUESTIONS);
@@ -112,7 +115,7 @@ ${textInput('name', '', { label: tr.t('applications.roles.name'), max: APPLICATI
 ${textArea('questions', '', { label: tr.t('applications.roles.questions'), rows: 4, max: 1000, help: questionsHelp })}</div>`, { submit: tr.t('applications.roles.add'), canEdit: adminEdit });
         const managers = s.managerRoles || [];
         const settings = postForm(ctx, 'applications', 'settings', html`<div class="grid">
-${channelPicker(g, 'logChannelId', s.logChannelId || null, { label: tr.t('applications.settings.logChannel'), perms: PERMS.post, help: tr.t('applications.settings.logChannelHelp') })}
+<p class="muted">${tr.tx('applications.settings.logLine', { channel: channelName(g, appLogChannel), link: html`<a href="${path('/logging')}#s-channels">${tr.t('applications.settings.logLineLink')}</a>` })}</p>
 ${numberInput('pendingDays', s.pendingApplicationRetentionDays ?? 30, { label: tr.t('applications.settings.pendingDays'), min: 1, max: 3650, help: tr.t('applications.settings.pendingDaysHelp') })}
 ${numberInput('reviewedDays', s.reviewedApplicationRetentionDays ?? 14, { label: tr.t('applications.settings.reviewedDays'), min: 1, max: 3650, help: tr.t('applications.settings.reviewedDaysHelp') })}</div>`);
         const questions = postForm(ctx, 'applications', 'questions', textArea('questions', (s.questions || []).map(formatApplicationQuestionForEditing).join('\n'),
@@ -230,17 +233,11 @@ ${section(tr.t('applications.questions.title'), questions, tr.t('applications.qu
         async settings(ctx, form) {
             const tr = textFor(ctx);
             const s = await ctx.services.getApplicationSettings(ctx.client, ctx.guildId);
-            const logChannelId = channelField(ctx.guild, form, 'logChannelId', { label: tr.t('applications.action.logChannelLabel') });
             const patch = changedOnly({
-                logChannelId,
                 pendingApplicationRetentionDays: intField(form, 'pendingDays', { min: 1, max: 3650, label: tr.t('applications.action.pendingDaysLabel') }),
                 reviewedApplicationRetentionDays: intField(form, 'reviewedDays', { min: 1, max: 3650, label: tr.t('applications.action.reviewedDaysLabel') }),
             }, s);
-            // The logging destination first: a false return is a failed write, so nothing else is
-            // saved and no success is shown (data-layer rule).
-            if (Object.hasOwn(patch, 'logChannelId') && logChannelId) {
-                if (!(await ctx.services.setLogChannel(ctx.client, ctx.guildId, 'applications', logChannelId))) throw new Error('setLogChannel returned false');
-            }
+            // The log channel is set on the Logging page (one place for every log channel).
             return update(ctx, patch, tr.t('applications.action.settingsSaved'));
         },
         async questions(ctx, form) {

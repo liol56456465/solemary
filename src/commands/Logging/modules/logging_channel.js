@@ -1,5 +1,5 @@
 import { PermissionsBitField, ChannelType, MessageFlags } from 'discord.js';
-import { setLogChannel } from '../../../services/loggingService.js';
+import { LOG_DESTINATIONS, setLogChannel } from '../../../services/loggingService.js';
 import { successEmbed } from '../../../utils/embeds.js';
 import { InteractionHelper } from '../../../utils/interactionHelper.js';
 import { logger } from '../../../utils/logger.js';
@@ -10,12 +10,7 @@ import { textForInteraction } from '../../../utils/botText.js';
 
 // Ephemeral replies: the admin's Discord language.
 function destinationLabel(tr, destination) {
-  const labels = {
-    audit: () => tr.t('logging.channel.destination.audit'),
-    applications: () => tr.t('logging.channel.destination.applications'),
-    reports: () => tr.t('logging.channel.destination.reports'),
-  };
-  return labels[destination] ? labels[destination]() : String(destination);
+  return LOG_DESTINATIONS.includes(destination) ? tr.t(`logging.channel.destination.${destination}`) : String(destination);
 }
 
 export default {
@@ -51,7 +46,9 @@ export default {
       }
 
       const botPerms = channel.permissionsFor(interaction.guild.members.me);
-      if (!botPerms?.has(['ViewChannel', 'SendMessages', 'EmbedLinks'])) {
+      // Transcripts are files: Attach Files too.
+      const needed = ['ViewChannel', 'SendMessages', 'EmbedLinks', ...(destination === 'transcripts' ? ['AttachFiles'] : [])];
+      if (!botPerms?.has(needed)) {
         return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: tr.t('logging.channel.needPerms', { channel: String(channel) }) });
       }
 

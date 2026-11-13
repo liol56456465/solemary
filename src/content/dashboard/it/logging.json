@@ -4,9 +4,8 @@
   },
   "modLog": {
     "title": "Log di moderazione",
-    "text": "Il log di moderazione elenca ogni avvertimento, mute, kick e ban. Va in {channel}. Puoi {change}. I log dei ticket si impostano in {tickets}.",
-    "change": "cambiarlo in Sanzioni e ricorsi",
-    "tickets": "Ticket e modmail"
+    "text": "Il log di moderazione elenca ogni avvertimento, mute, kick e ban. Va in {channel}. Puoi {change}.",
+    "change": "cambiarlo in Sanzioni e ricorsi"
   },
   "channels": {
     "title": "Canali",
@@ -21,7 +20,9 @@
     "server": "Server (canali e ruoli)",
     "community": "Community (livelli, giveaway, contatori, ruoli a reazione)",
     "dashboard": "Modifiche da dashboard e sito",
-    "automod": "Automod (tutto quello che ha fatto automod)"
+    "automod": "Automod (tutto quello che ha fatto automod)",
+    "tickets": "Ticket (aperti, presi in carico, chiusi)",
+    "transcripts": "Trascrizioni dei ticket"
   },
   "forums": {
     "title": "Log avanzati (forum)",

@@ -4,9 +4,8 @@
   },
   "modLog": {
     "title": "Dziennik moderacji",
-    "text": "Dziennik moderacji zawiera każde ostrzeżenie, wyciszenie, kick i ban. Trafia do {channel}. Możesz {change}. Dzienniki ticketów ustawia się na stronie {tickets}.",
-    "change": "zmienić to na stronie Kary i odwołania",
-    "tickets": "Tickety i modmail"
+    "text": "Dziennik moderacji zawiera każde ostrzeżenie, wyciszenie, kick i ban. Trafia do {channel}. Możesz {change}.",
+    "change": "zmienić to na stronie Kary i odwołania"
   },
   "channels": {
     "title": "Kanały",
@@ -21,7 +20,9 @@
     "server": "Serwer (kanały i role)",
     "community": "Społeczność (poziomy, konkursy, liczniki, role za reakcje)",
     "dashboard": "Zmiany z panelu i strony",
-    "automod": "Automoderacja (wszystko, co zrobiła automoderacja)"
+    "automod": "Automoderacja (wszystko, co zrobiła automoderacja)",
+    "tickets": "Tickety (otwarte, przejęte, zamknięte)",
+    "transcripts": "Transkrypcje ticketów"
   },
   "forums": {
     "title": "Zaawansowane logi (forum)",

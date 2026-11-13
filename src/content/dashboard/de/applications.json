@@ -67,12 +67,12 @@
   "settings": {
     "title": "Einstellungen",
     "help": "Den Log-Kanal hier festzulegen ändert auch den Bewerbungs-Log-Kanal auf der Seite Logs, und umgekehrt.",
-    "logChannel": "Bewerbungs-Log-Kanal",
-    "logChannelHelp": "Wo neue Bewerbungen zur Prüfung für das Team gepostet werden.",
     "pendingDays": "Wartende Bewerbungen behalten (Tage)",
     "pendingDaysHelp": "Bewerbungen, über die niemand entschieden hat, werden nach dieser Zeit gelöscht.",
     "reviewedDays": "Entschiedene Bewerbungen behalten (Tage)",
-    "reviewedDaysHelp": "Angenommene und abgelehnte Bewerbungen werden nach dieser Zeit gelöscht."
+    "reviewedDaysHelp": "Angenommene und abgelehnte Bewerbungen werden nach dieser Zeit gelöscht.",
+    "logLine": "Neue Bewerbungen werden in {channel} gepostet (eine Rolle kann unten einen eigenen Kanal haben). Das stellst du auf der {link} ein.",
+    "logLineLink": "Logging-Seite"
   },
   "questions": {
     "title": "Standardfragen",

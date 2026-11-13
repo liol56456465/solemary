@@ -67,12 +67,12 @@
   "settings": {
     "title": "Settings",
     "help": "Setting the log channel here also changes the Applications log channel on the Logging page, and the other way round.",
-    "logChannel": "Application log channel",
-    "logChannelHelp": "Where new applications are posted for staff to review.",
     "pendingDays": "Keep waiting applications (days)",
     "pendingDaysHelp": "Applications nobody has decided on are deleted after this long.",
     "reviewedDays": "Keep decided applications (days)",
-    "reviewedDaysHelp": "Approved and denied applications are deleted after this long."
+    "reviewedDaysHelp": "Approved and denied applications are deleted after this long.",
+    "logLine": "New applications are posted in {channel} (a role can have its own channel below). It is set on the {link}.",
+    "logLineLink": "Logging page"
   },
   "questions": {
     "title": "Default questions",

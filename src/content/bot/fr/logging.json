@@ -14,7 +14,16 @@
         "ignoreChannelOption": "Salon ou catégorie",
         "ignoreRole": "Ignorer les membres ayant un rôle, ou les journaliser de nouveau (bascule).",
         "ignoreRoleOption": "Rôle",
-        "ignoreList": "Afficher les salons, rôles et utilisateurs ignorés."
+        "ignoreList": "Afficher les salons, rôles et utilisateurs ignorés.",
+        "choiceModeration": "Modération (purge, verrouillage, mode lent…)",
+        "choiceMembers": "Membres (arrivées, départs, noms)",
+        "choiceMessages": "Messages (modifications, suppressions)",
+        "choiceServer": "Serveur (salons, rôles)",
+        "choiceCommunity": "Communauté (niveaux, giveaways, compteurs)",
+        "choiceDashboard": "Changements du tableau de bord et du site",
+        "choiceAutomod": "Automod",
+        "choiceTickets": "Tickets (ouverts, pris en charge, fermés)",
+        "choiceTranscripts": "Transcriptions des tickets"
     },
     "unknownSubcommand": "Cette sous-commande n'est pas reconnue.",
     "unexpected": "Une erreur inattendue s'est produite.",
@@ -102,7 +111,16 @@
         "destination": {
             "audit": "Journal d'audit",
             "applications": "Candidatures",
-            "reports": "Signalements"
+            "reports": "Signalements",
+            "moderation": "Modération (purge, verrouillage, mode lent…)",
+            "members": "Membres (arrivées, départs, noms)",
+            "messages": "Messages (modifications, suppressions)",
+            "server": "Serveur (salons, rôles)",
+            "community": "Communauté (niveaux, giveaways, compteurs)",
+            "dashboard": "Changements du tableau de bord et du site",
+            "automod": "Automod",
+            "tickets": "Tickets (ouverts, pris en charge, fermés)",
+            "transcripts": "Transcriptions des tickets"
         },
         "noAdmin": "Il te faut la permission **Administrateur** pour configurer les salons des journaux.",
         "clearFailed": "Impossible de retirer le salon du journal. Réessaie.",

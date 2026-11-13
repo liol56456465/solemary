@@ -14,7 +14,16 @@
         "ignoreChannelOption": "Canale o categoria",
         "ignoreRole": "Ignora i membri con un ruolo, o registrali di nuovo (alterna).",
         "ignoreRoleOption": "Ruolo",
-        "ignoreList": "Mostra i canali, i ruoli e gli utenti ignorati."
+        "ignoreList": "Mostra i canali, i ruoli e gli utenti ignorati.",
+        "choiceModeration": "Moderazione (purge, blocco, slowmode…)",
+        "choiceMembers": "Membri (ingressi, uscite, nomi)",
+        "choiceMessages": "Messaggi (modifiche, eliminazioni)",
+        "choiceServer": "Server (canali, ruoli)",
+        "choiceCommunity": "Community (livelli, giveaway, contatori)",
+        "choiceDashboard": "Modifiche della dashboard e del sito",
+        "choiceAutomod": "Automod",
+        "choiceTickets": "Ticket (aperti, presi in carico, chiusi)",
+        "choiceTranscripts": "Trascrizioni dei ticket"
     },
     "unknownSubcommand": "Questo sottocomando non è riconosciuto.",
     "unexpected": "Si è verificato un errore imprevisto.",
@@ -102,7 +111,16 @@
         "destination": {
             "audit": "Log di audit",
             "applications": "Candidature",
-            "reports": "Segnalazioni"
+            "reports": "Segnalazioni",
+            "moderation": "Moderazione (purge, blocco, slowmode…)",
+            "members": "Membri (ingressi, uscite, nomi)",
+            "messages": "Messaggi (modifiche, eliminazioni)",
+            "server": "Server (canali, ruoli)",
+            "community": "Community (livelli, giveaway, contatori)",
+            "dashboard": "Modifiche della dashboard e del sito",
+            "automod": "Automod",
+            "tickets": "Ticket (aperti, presi in carico, chiusi)",
+            "transcripts": "Trascrizioni dei ticket"
         },
         "noAdmin": "Ti serve il permesso **Amministratore** per configurare i canali dei log.",
         "clearFailed": "Impossibile rimuovere il canale di log. Riprova.",

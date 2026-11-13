@@ -9,6 +9,13 @@ import ignore from './modules/logging_ignore.js';
 import { replyUserError, ErrorTypes } from '../../utils/errorHandler.js';
 import { textForInteraction } from '../../utils/botText.js';
 import { descriptionLocalizations } from '../../utils/commandLocalizations.js';
+
+// English choice names of the per-kind log channels (the other languages: content/bot/<lang>/logging.json).
+const CHOICE_NAMES = {
+    moderation: 'Moderation (purge, lock, slowmode…)', members: 'Members (joins, leaves, names)', messages: 'Messages (edits, deletes)',
+    server: 'Server (channels, roles)', community: 'Community (levels, giveaways, counters)', dashboard: 'Dashboard and website changes',
+    automod: 'Automod', tickets: 'Tickets (opened, claimed, closed)', transcripts: 'Ticket transcripts',
+};
 export default {
     data: new SlashCommandBuilder()
         .setName('logging')
@@ -37,6 +44,15 @@ export default {
                             { name: 'Audit (moderation, messages, members…)', name_localizations: descriptionLocalizations('logging.cmd.choiceAudit'), value: 'audit' },
                             { name: 'Applications', name_localizations: descriptionLocalizations('logging.cmd.choiceApplications'), value: 'applications' },
                             { name: 'Reports', name_localizations: descriptionLocalizations('logging.cmd.choiceReports'), value: 'reports' },
+                            { name: CHOICE_NAMES.moderation, name_localizations: descriptionLocalizations('logging.cmd.choiceModeration'), value: 'moderation' },
+                            { name: CHOICE_NAMES.members, name_localizations: descriptionLocalizations('logging.cmd.choiceMembers'), value: 'members' },
+                            { name: CHOICE_NAMES.messages, name_localizations: descriptionLocalizations('logging.cmd.choiceMessages'), value: 'messages' },
+                            { name: CHOICE_NAMES.server, name_localizations: descriptionLocalizations('logging.cmd.choiceServer'), value: 'server' },
+                            { name: CHOICE_NAMES.community, name_localizations: descriptionLocalizations('logging.cmd.choiceCommunity'), value: 'community' },
+                            { name: CHOICE_NAMES.dashboard, name_localizations: descriptionLocalizations('logging.cmd.choiceDashboard'), value: 'dashboard' },
+                            { name: CHOICE_NAMES.automod, name_localizations: descriptionLocalizations('logging.cmd.choiceAutomod'), value: 'automod' },
+                            { name: CHOICE_NAMES.tickets, name_localizations: descriptionLocalizations('logging.cmd.choiceTickets'), value: 'tickets' },
+                            { name: CHOICE_NAMES.transcripts, name_localizations: descriptionLocalizations('logging.cmd.choiceTranscripts'), value: 'transcripts' },
                         ),
                 )
                 .addChannelOption((option) =>

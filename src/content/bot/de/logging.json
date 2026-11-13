@@ -14,7 +14,16 @@
         "ignoreChannelOption": "Kanal oder Kategorie",
         "ignoreRole": "Mitglieder mit einer Rolle ignorieren oder wieder protokollieren (umschalten).",
         "ignoreRoleOption": "Rolle",
-        "ignoreList": "Die ignorierten Kanäle, Rollen und Nutzer anzeigen."
+        "ignoreList": "Die ignorierten Kanäle, Rollen und Nutzer anzeigen.",
+        "choiceModeration": "Moderation (Purge, Sperren, Slowmode…)",
+        "choiceMembers": "Mitglieder (Beitritte, Austritte, Namen)",
+        "choiceMessages": "Nachrichten (Bearbeitungen, Löschungen)",
+        "choiceServer": "Server (Kanäle, Rollen)",
+        "choiceCommunity": "Community (Level, Gewinnspiele, Zähler)",
+        "choiceDashboard": "Dashboard- und Website-Änderungen",
+        "choiceAutomod": "Automod",
+        "choiceTickets": "Tickets (geöffnet, übernommen, geschlossen)",
+        "choiceTranscripts": "Ticket-Transkripte"
     },
     "unknownSubcommand": "Dieser Unterbefehl ist unbekannt.",
     "unexpected": "Ein unerwarteter Fehler ist aufgetreten.",
@@ -102,7 +111,16 @@
         "destination": {
             "audit": "Audit-Protokoll",
             "applications": "Bewerbungen",
-            "reports": "Meldungen"
+            "reports": "Meldungen",
+            "moderation": "Moderation (Purge, Sperren, Slowmode…)",
+            "members": "Mitglieder (Beitritte, Austritte, Namen)",
+            "messages": "Nachrichten (Bearbeitungen, Löschungen)",
+            "server": "Server (Kanäle, Rollen)",
+            "community": "Community (Level, Gewinnspiele, Zähler)",
+            "dashboard": "Dashboard- und Website-Änderungen",
+            "automod": "Automod",
+            "tickets": "Tickets (geöffnet, übernommen, geschlossen)",
+            "transcripts": "Ticket-Transkripte"
         },
         "noAdmin": "Du brauchst die Berechtigung **Administrator**, um Protokollkanäle einzustellen.",
         "clearFailed": "Der Protokollkanal konnte nicht entfernt werden. Versuche es erneut.",

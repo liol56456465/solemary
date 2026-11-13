@@ -92,6 +92,9 @@ export default {
 
     async load(ctx) {
         const status = await ctx.services.getLoggingStatus(ctx.client, ctx.guildId);
+        // Applications set before 2026-11-14 kept their channel in the application settings: shown here.
+        const appLog = status.channels?.applications ? null : (await ctx.services.getApplicationSettings(ctx.client, ctx.guildId))?.logChannelId;
+        if (appLog) status.channels = { ...status.channels, applications: appLog };
         // Only decides whether a how-to box is shown: a read error shows it (harmless).
         const tipHidden = typeof ctx.services.isTipHidden === 'function'
             ? await ctx.services.isTipHidden(ctx.actor?.userId, 'logForum').catch(() => false)
@@ -104,7 +107,7 @@ export default {
         const g = ctx.guild;
         const events = status.enabledEvents || {};
         const channels = postForm(ctx, 'logging', 'channels', html`<div class="grid">
-${LOG_DESTINATIONS.map((d) => channelPicker(g, d, status.channels?.[d] || null, { label: destinationLabel(tr, d), perms: PERMS.post }))}</div>`,
+${LOG_DESTINATIONS.map((d) => channelPicker(g, d, status.channels?.[d] || null, { label: destinationLabel(tr, d), perms: d === 'transcripts' ? PERMS.postFiles : PERMS.post }))}</div>`,
         { submit: tr.t('logging.channels.submit'), reset: true });
         // One collapsible group per category (closed by default; the browser remembers which were open).
         const toggles = postForm(ctx, 'logging', 'events', html`${eventCategories().map(([category, types]) => {
@@ -130,7 +133,6 @@ ${postForm(ctx, 'logging', 'ignore-add', html`<input type="hidden" name="type" v
         const modLog = tr.tx('logging.modLog.text', {
             channel: channelName(g, modLogChannelId),
             change: html`<a href="${path('/enforcement')}">${tr.t('logging.modLog.change')}</a>`,
-            tickets: html`<a href="${path('/tickets')}">${tr.t('logging.modLog.tickets')}</a>`,
         });
         return html`${section(tr.t('logging.modLog.title'), html`<p class="muted">${modLog}</p>`, '', { key: 'mod-log' })}
 ${section(tr.t('logging.channels.title'), channels, tr.t('logging.channels.help'), { key: 'channels' })}
@@ -153,12 +155,16 @@ ${section(tr.t('logging.ignore.title'), ignoreForms, tr.t('logging.ignore.help')
         // is all or nothing, and the audit rows are the changes made against the locked values.
         async channels(ctx, form) {
             const tr = textFor(ctx);
+            const stored = (await ctx.services.getLoggingStatus(ctx.client, ctx.guildId)).channels || {};
+            const oldAppLog = (await ctx.services.getApplicationSettings(ctx.client, ctx.guildId))?.logChannelId || null;
             const wanted = {};
             for (const destination of LOG_DESTINATIONS) {
                 if (form?.[destination] === undefined) continue; // absent from the form: unchanged
-                wanted[destination] = channelField(ctx.guild, form, destination, { label: destinationLabel(tr, destination) });
+                const current = stored[destination] || (destination === 'applications' ? oldAppLog : null);
+                wanted[destination] = channelField(ctx.guild, form, destination, { label: destinationLabel(tr, destination), current });
             }
             if (!Object.keys(wanted).length) return nothing(ctx);
+            // The applications channel set the old way follows inside setLogChannels (loggingService).
             const saved = await ctx.services.setLogChannels(ctx.client, ctx.guildId, wanted);
             if (!saved.length) return nothing(ctx);
             return { changes: saved.map((c) => ({ key: `logging.channels.${c.destination}`, old: c.old, new: c.new })), message: tr.t('logging.action.channelsSaved') };

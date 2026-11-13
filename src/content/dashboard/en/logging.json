@@ -4,9 +4,8 @@
   },
   "modLog": {
     "title": "Mod log",
-    "text": "The mod log lists every warn, mute, kick and ban. It goes to {channel}. You can {change}. Ticket logs are set on {tickets}.",
-    "change": "change it on Enforcement & appeals",
-    "tickets": "Tickets"
+    "text": "The mod log lists every warn, mute, kick and ban. It goes to {channel}. You can {change}.",
+    "change": "change it on Enforcement & appeals"
   },
   "channels": {
     "title": "Channels",
@@ -21,7 +20,9 @@
     "server": "Server (channels and roles)",
     "community": "Community (levels, giveaways, counters, reaction roles)",
     "dashboard": "Dashboard and website changes",
-    "automod": "Automod (everything automod did)"
+    "automod": "Automod (everything automod did)",
+    "tickets": "Tickets (opened, claimed, closed)",
+    "transcripts": "Ticket transcripts"
   },
   "forums": {
     "title": "Advanced logs (forum)",

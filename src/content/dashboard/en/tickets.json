@@ -37,16 +37,14 @@
     "maxRange": "From 1 to 10.",
     "dmOnClose": "Message the member when their ticket closes",
     "dmOnCloseHelp": "Sent to them privately (a DM).",
-    "logChannel": "Ticket log channel",
-    "logChannelHelp": "Staff get a short line here when a ticket is opened, claimed, closed or deleted.",
-    "transcriptChannel": "Transcript channel",
-    "transcriptChannelHelp": "A transcript is a file with every message from a ticket. Mewvo posts it here when the ticket closes.",
     "advancedLogs": "Want each member's transcripts and reviews in one forum post? Pick {link} on the Logging page.",
     "advancedLogsLink": "Advanced logs",
     "buttonText": "Button text",
     "buttonTextHelp": "The words on the button members press to open a ticket.",
     "panelMessage": "Panel message",
-    "panelMessageHelp": "The text above the button. Tell members what tickets are for."
+    "panelMessageHelp": "The text above the button. Tell members what tickets are for.",
+    "logLine": "Ticket logs go to {logs} and transcripts to {transcripts}. Both are set on the {link}.",
+    "logLineLink": "Logging page"
   },
   "blocked": {
     "title": "Modmail blocked members",

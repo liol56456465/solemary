@@ -12,7 +12,7 @@ const { MemoryStorage } = await import('../src/utils/memoryStorage.js');
 const { logger } = await import('../src/utils/logger.js');
 const { LOG_FORUM_KINDS, isLogForumPost, logForumId, logPostName, resetLogForumState, sendToLogForum } = await import('../src/services/logForum.js');
 const { subjectFromFields } = await import('../src/services/enforcement/enforcementService.js');
-const { logEvent, resetLogChannelBackoff, setLogForums, getLoggingStatus } = await import('../src/services/loggingService.js');
+const { logEvent, resetLogChannelBackoff, setLogForums, setLogChannels, setLogChannel, getLoggingStatus } = await import('../src/services/loggingService.js');
 const { normalizeGuildConfig, validateGuildConfigOrThrow } = await import('../src/utils/schemas.js');
 const { GUILD_CONFIG_DEFAULTS } = await import('../src/config/guild/guildConfigDefaults.js');
 
@@ -253,4 +253,47 @@ test('mod log entries without a subject find the member in their "User (id)" fie
     assert.equal(isLogForumPost(thread('someone', '930000000000000002'), config), false, 'a member\'s own post is logged as usual');
     assert.equal(isLogForumPost(thread('bot', '930000000000000099'), config), false, 'another forum');
     assert.equal(isLogForumPost(thread('bot', '930000000000000002'), null), false);
+});
+
+// Owner (2026-11-14): ticket logs and transcripts are set with the other log channels, stored in their ticket keys.
+test('setLogChannels / setLogChannel: ticket kinds go to their ticket keys, not logging.channels; status shows them', async () => {
+    const guildId = nextGuild();
+    const client = { db: store({ [`guild:${guildId}:config`]: { logging: { enabled: false, channels: { audit: null } }, ticketLogsChannelId: '930000000000000001' } }), guilds: { cache: new Map() } };
+    const changes = await setLogChannels(client, guildId, { tickets: '930000000000000002', transcripts: '930000000000000003' });
+    assert.deepEqual(changes, [{ destination: 'tickets', old: '930000000000000001', new: '930000000000000002' }, { destination: 'transcripts', old: null, new: '930000000000000003' }]);
+    const status = await getLoggingStatus(client, guildId);
+    assert.equal(status.channels.tickets, '930000000000000002');
+    assert.equal(status.channels.transcripts, '930000000000000003');
+    assert.equal(status.enabled, false, 'ticket logs do not turn server logging on');
+    const { getGuildConfig } = await import('../src/services/config/guildConfig.js');
+    const config = await getGuildConfig(client, guildId);
+    assert.equal(config.ticketLogsChannelId, '930000000000000002');
+    assert.equal(config.ticketTranscriptChannelId, '930000000000000003');
+    assert.equal(config.logging.channels.tickets ?? null, null, 'no copy in logging.channels');
+    assert.deepEqual(await setLogChannels(client, guildId, { tickets: '930000000000000002' }), []);
+    assert.equal(await setLogChannel(client, guildId, 'tickets', null), true);
+    assert.equal((await getLoggingStatus(client, guildId)).channels.tickets, null);
+});
+
+// Review 2026-11-14: an applications channel set the old way (application settings) used to keep
+// receiving applications after "cleared"; it now follows the Logging page / /logging channel.
+test('setLogChannel / setLogChannels: clearing applications also clears the old application-settings channel', async () => {
+    const { getApplicationSettingsKey } = await import('../src/utils/database/keys.js');
+    const { resolveApplicationLogChannel } = await import('../src/services/loggingService.js');
+    const { getApplicationSettings } = await import('../src/utils/database.js');
+    const { getGuildConfig } = await import('../src/services/config/guildConfig.js');
+    const guildId = nextGuild();
+    const OLD = '930000000000000005';
+    const client = { db: store({
+        [`guild:${guildId}:config`]: { logging: { enabled: true, channels: { audit: null, applications: OLD } } },
+        [getApplicationSettingsKey(guildId)]: { logChannelId: OLD },
+    }), guilds: { cache: new Map() } };
+    assert.equal(await setLogChannel(client, guildId, 'applications', null), true);
+    const routed = () => Promise.all([getGuildConfig(client, guildId), getApplicationSettings(client, guildId)])
+        .then(([config, settings]) => resolveApplicationLogChannel(config, {}, settings));
+    assert.equal(await routed(), null, 'applications no longer go to the old channel');
+    // Only the old place set: the Logging page sees a change and clears it.
+    await client.db.update(getApplicationSettingsKey(guildId), (s) => ({ ...s, logChannelId: OLD }), {});
+    assert.deepEqual(await setLogChannels(client, guildId, { applications: null }), [{ destination: 'applications', old: OLD, new: null }]);
+    assert.equal(await routed(), null);
 });

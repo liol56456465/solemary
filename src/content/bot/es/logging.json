@@ -14,7 +14,16 @@
         "ignoreChannelOption": "Canal o categoría",
         "ignoreRole": "Ignorar a los miembros con un rol, o volver a registrarlos (alterna).",
         "ignoreRoleOption": "Rol",
-        "ignoreList": "Mostrar los canales, roles y usuarios ignorados."
+        "ignoreList": "Mostrar los canales, roles y usuarios ignorados.",
+        "choiceModeration": "Moderación (purga, bloqueo, modo lento…)",
+        "choiceMembers": "Miembros (entradas, salidas, nombres)",
+        "choiceMessages": "Mensajes (ediciones, borrados)",
+        "choiceServer": "Servidor (canales, roles)",
+        "choiceCommunity": "Comunidad (niveles, sorteos, contadores)",
+        "choiceDashboard": "Cambios del panel y del sitio web",
+        "choiceAutomod": "Automod",
+        "choiceTickets": "Tickets (abiertos, asignados, cerrados)",
+        "choiceTranscripts": "Transcripciones de tickets"
     },
     "unknownSubcommand": "Este subcomando no se reconoce.",
     "unexpected": "Ocurrió un error inesperado.",
@@ -102,7 +111,16 @@
         "destination": {
             "audit": "Registro de auditoría",
             "applications": "Solicitudes",
-            "reports": "Reportes"
+            "reports": "Reportes",
+            "moderation": "Moderación (purga, bloqueo, modo lento…)",
+            "members": "Miembros (entradas, salidas, nombres)",
+            "messages": "Mensajes (ediciones, borrados)",
+            "server": "Servidor (canales, roles)",
+            "community": "Comunidad (niveles, sorteos, contadores)",
+            "dashboard": "Cambios del panel y del sitio web",
+            "automod": "Automod",
+            "tickets": "Tickets (abiertos, asignados, cerrados)",
+            "transcripts": "Transcripciones de tickets"
         },
         "noAdmin": "Necesitas el permiso **Administrador** para configurar los canales de registro.",
         "clearFailed": "No se pudo quitar el canal de registro. Inténtalo de nuevo.",

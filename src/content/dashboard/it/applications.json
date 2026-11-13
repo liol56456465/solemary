@@ -70,12 +70,12 @@
   "settings": {
     "title": "Impostazioni",
     "help": "Impostare qui il canale di log cambia anche il canale di log delle candidature nella pagina Log, e viceversa.",
-    "logChannel": "Canale di log delle candidature",
-    "logChannelHelp": "Dove vengono pubblicate le nuove candidature da esaminare per lo staff.",
     "pendingDays": "Conserva le candidature in attesa (giorni)",
     "pendingDaysHelp": "Le candidature su cui nessuno ha deciso vengono eliminate dopo questo tempo.",
     "reviewedDays": "Conserva le candidature decise (giorni)",
-    "reviewedDaysHelp": "Le candidature approvate e rifiutate vengono eliminate dopo questo tempo."
+    "reviewedDaysHelp": "Le candidature approvate e rifiutate vengono eliminate dopo questo tempo.",
+    "logLine": "Le nuove candidature vengono pubblicate in {channel} (un ruolo può avere un canale suo qui sotto). Si imposta nella {link}.",
+    "logLineLink": "pagina Log"
   },
   "questions": {
     "title": "Domande predefinite",

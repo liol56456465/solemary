@@ -150,7 +150,9 @@ const kindLabel = (kind) => (KINDS.has(kind) ? ft().t(`forms.kind.${kind}`) : ki
  * A channel id from the form that exists in the guild and has one of `kinds`.
  * '' (or "none") → null when `optional`, else an InputError.
  */
-export function channelField(guild, form, name, { kinds = ['text'], optional = true, label = name } = {}) {
+// `current`: the stored value. Sent back unchanged while that channel no longer exists, it is kept
+// (the picker shows it as missing), so a deleted channel never blocks saving the form's other fields.
+export function channelField(guild, form, name, { kinds = ['text'], optional = true, label = name, current = null } = {}) {
     const raw = text(form, name, 25);
     if (raw === '' || raw === 'none') {
         if (optional) return null;
@@ -158,6 +160,7 @@ export function channelField(guild, form, name, { kinds = ['text'], optional = t
     }
     if (!isSnowflake(raw)) throw new InputError(ft().t('forms.error.notChannelId', { label }), 400, name);
     const channel = guild?.channels?.cache?.get(raw);
+    if (!channel && current && raw === String(current)) return raw;
     if (!channel) throw new InputError(ft().t('forms.error.channelMissing', { label }), 400, name);
     if (!typesFor(kinds).includes(channel.type)) {
         throw new InputError(ft().t('forms.error.channelKind', { label, kinds: kinds.map(kindLabel).join(ft().t('forms.or')) }), 400, name);

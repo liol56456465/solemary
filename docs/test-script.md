@@ -481,3 +481,16 @@ the clean-up from "Before testing in Discord".
 | 35.9 | Quarantine again → Ban → reason | Ban DM before the ban, case |
 | 35.10 | Alt posts a scam link (role set) | Quarantined instead of banned; without the role setting: banned; a spam first offence still warns |
 | 35.11 | An admin quarantines 6 members within 10 minutes | The 6th is blocked (mass-action guard) |
+
+## 36. One place for every log channel (2026-11-14)
+| # | Step | Expected |
+|---|---|---|
+| 36.1 | Open Tickets & modmail | No log/transcript pickers; a line "Ticket logs go to … and transcripts to …" with a link to the Logging page |
+| 36.2 | Change only the button text, save (even if the old ticket log channel was deleted) | Saved (bug: was blocked by the old log channel) |
+| 36.3 | Logging → Channels: Tickets and Ticket transcripts show the channels set before | Same channels as the old Tickets page had |
+| 36.4 | Set Tickets to a new channel, save; alt opens a ticket, staff claim it | "Ticket opened/claimed" lines in the new channel |
+| 36.5 | Close the ticket | Transcript in the Ticket transcripts channel |
+| 36.6 | Clear Tickets, save; open another ticket | No ticket line anywhere (not in the main log) |
+| 36.7 | `/logging channel destination:` | Lists every log channel (main, the per-kind ones, applications, reports, tickets, transcripts); setting Tickets shows on the Logging page |
+| 36.8 | Applications page | No log picker; line with the application log channel and a link; Logging → Channels → Applications shows the same channel |
+| 36.9 | Delete a channel used as mod log, then save Enforcement → Channels with only the evidence channel changed | Saved; mod log still shows "missing", pick a new one |

@@ -37,16 +37,14 @@
     "maxRange": "De 1 à 10.",
     "dmOnClose": "Écrire au membre quand son ticket est fermé",
     "dmOnCloseHelp": "Envoyé en privé (en MP).",
-    "logChannel": "Salon des logs de tickets",
-    "logChannelHelp": "L’équipe reçoit ici une courte ligne quand un ticket est ouvert, pris en charge, fermé ou supprimé.",
-    "transcriptChannel": "Salon des transcriptions",
-    "transcriptChannelHelp": "Une transcription est un fichier avec tous les messages d’un ticket. Mewvo la publie ici quand le ticket est fermé.",
     "advancedLogs": "Tu veux les transcriptions et avis de chaque membre dans un seul post de forum ? Choisis {link} sur la page Journaux.",
     "advancedLogsLink": "Journaux avancés",
     "buttonText": "Texte du bouton",
     "buttonTextHelp": "Les mots sur le bouton sur lequel les membres appuient pour ouvrir un ticket.",
     "panelMessage": "Message du panneau",
-    "panelMessageHelp": "Le texte au-dessus du bouton. Dis aux membres à quoi servent les tickets."
+    "panelMessageHelp": "Le texte au-dessus du bouton. Dis aux membres à quoi servent les tickets.",
+    "logLine": "Les journaux des tickets vont dans {logs} et les transcriptions dans {transcripts}. Les deux se règlent sur la {link}.",
+    "logLineLink": "page Journaux"
   },
   "blocked": {
     "title": "Membres bloqués du modmail",

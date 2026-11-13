@@ -70,12 +70,12 @@
   "settings": {
     "title": "Configurações",
     "help": "Definir o canal de registro aqui também muda o canal de registro de candidaturas na página Registros, e vice-versa.",
-    "logChannel": "Canal de registro de candidaturas",
-    "logChannelHelp": "Onde as novas candidaturas são publicadas para a equipe analisar.",
     "pendingDays": "Manter candidaturas aguardando (dias)",
     "pendingDaysHelp": "Candidaturas sem decisão são apagadas depois desse tempo.",
     "reviewedDays": "Manter candidaturas decididas (dias)",
-    "reviewedDaysHelp": "Candidaturas aprovadas e recusadas são apagadas depois desse tempo."
+    "reviewedDaysHelp": "Candidaturas aprovadas e recusadas são apagadas depois desse tempo.",
+    "logLine": "Novas candidaturas são postadas em {channel} (um cargo pode ter o próprio canal abaixo). Isso é definido na {link}.",
+    "logLineLink": "página de Registros"
   },
   "questions": {
     "title": "Perguntas padrão",

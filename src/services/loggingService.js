@@ -7,6 +7,8 @@ import { LOG_CHANNEL_KEYS } from '../utils/schemas.js';
 import { LOG_FORUM_KINDS, logForumId, sendToLogForum } from './logForum.js';
 import { logger } from '../utils/logger.js';
 import { BoundedMap } from '../utils/boundedMap.js';
+import { getApplicationSettings, unwrapReplitData } from '../utils/database.js';
+import { getApplicationSettingsKey } from '../utils/database/keys.js';
 import {
   appendContentSection,
   buildLogDescription,
@@ -19,7 +21,42 @@ import {
 // 'dashboard' = web dashboard / website changes (postModLog kind 'dashboard', else the mod log).
 // 'automod' = everything automod did (automod/automodLog.js; postModLog `automated` records).
 // One list with the config schema (schemas.js), so a destination can never be saved and then dropped.
-const LOG_DESTINATIONS = LOG_CHANNEL_KEYS;
+// 'tickets' (opened / claimed / closed lines) and 'transcripts' (ticket transcripts) are set with the
+// other log channels (owner, 2026-11-14) but stay stored in their ticket settings keys, which the
+// ticket code and the /ticket commands read: one stored value, no copy that can go stale.
+export const TICKET_LOG_KEYS = Object.freeze({ tickets: 'ticketLogsChannelId', transcripts: 'ticketTranscriptChannelId' });
+const LOG_DESTINATIONS = Object.freeze([...LOG_CHANNEL_KEYS, ...Object.keys(TICKET_LOG_KEYS)]);
+
+/** The channel set for a destination as stored (null when unset; no fallback). Pure. */
+function storedLogChannel(config, destination) {
+  if (TICKET_LOG_KEYS[destination]) return config?.[TICKET_LOG_KEYS[destination]] || null;
+  return config?.logging?.channels?.[destination] || null;
+}
+
+/**
+ * Applications: a channel set before 2026-11-14 may also sit in the application settings, and the
+ * application code falls back to it (resolveApplicationLogChannel). Before an applications change
+ * that one is set to the same value, so clearing or changing it really changes where applications
+ * go. Returns { old, restore }: old = that value; restore() puts it back (when the main write fails).
+ * Throws on a database error (nothing saved yet).
+ */
+async function followLegacyAppLog(client, guildId, channelId) {
+  if (!client?.db?.update) return { old: null, restore: async () => {} };
+  const old = (await getApplicationSettings(client, guildId))?.logChannelId || null;
+  if (!old || old === (channelId || null)) return { old, restore: async () => {} };
+  const set = (value) => client.db.update(getApplicationSettingsKey(guildId), (current) => ({
+    ...(unwrapReplitData(current) && typeof unwrapReplitData(current) === 'object' ? unwrapReplitData(current) : {}),
+    logChannelId: value,
+  }), {});
+  await set(channelId || null);
+  return { old, restore: () => set(old).catch((error) => logger.error(`Could not put back the old application log channel for ${guildId}:`, error)) };
+}
+
+/** config with one destination's channel set (a ticket key or logging.channels). Pure. */
+function withLogChannel(config, destination, channelId) {
+  if (TICKET_LOG_KEYS[destination]) return { ...config, [TICKET_LOG_KEYS[destination]]: channelId || null };
+  return { ...config, logging: { ...config.logging, channels: { ...(config.logging?.channels || {}), [destination]: channelId || null } } };
+}
 
 const EVENT_TYPES = {
   MODERATION_BAN: 'moderation.ban',
@@ -296,6 +333,8 @@ const CATEGORY_DESTINATION = {
 };
 
 export function resolveLogChannel(config, destination) {
+  // Ticket logs post only where a channel is set (as before): never the main log.
+  if (TICKET_LOG_KEYS[destination]) return storedLogChannel(config, destination);
   const channels = config?.logging?.channels || {};
   if (destination && channels[destination]) {
     return channels[destination];
@@ -674,7 +713,10 @@ export async function getLoggingStatus(client, guildId) {
 
   return {
     enabled: logging.enabled || false,
-    channels: logging.channels || { audit: null, applications: null, reports: null },
+    channels: {
+      ...(logging.channels || { audit: null, applications: null, reports: null }),
+      ...Object.fromEntries(Object.keys(TICKET_LOG_KEYS).map((d) => [d, storedLogChannel(config, d)])),
+    },
     channelId: logging.channels?.audit ?? null,
     ignore: getIgnoreList(config),
     enabledEvents: logging.enabledEvents || {},
@@ -744,20 +786,31 @@ export async function setLogChannels(client, guildId, wanted) {
     if (!LOG_DESTINATIONS.includes(destination)) throw new Error(`Invalid log destination: ${destination}`);
   }
   let changes = [];
+  const legacyApp = Object.hasOwn(wanted, 'applications') ? await followLegacyAppLog(client, guildId, wanted.applications) : null;
+  try {
   await updateGuildConfigAtomic(client, guildId, (config) => {
-    const channels = { ...(config.logging?.channels || {}) };
+    let next = config;
     changes = [];
     for (const [destination, channelId] of Object.entries(wanted)) {
-      const old = channels[destination] || null;
+      const old = storedLogChannel(next, destination);
       if ((channelId || null) === old) continue;
-      channels[destination] = channelId || null;
+      next = withLogChannel(next, destination, channelId);
       changes.push({ destination, old, new: channelId || null });
     }
     if (!changes.length) return config;
-    const logging = { ...config.logging, channels };
-    if (changes.some((c) => c.new)) logging.enabled = true;
-    return { ...config, logging };
+    // A server log channel chosen turns logging on (ticket logs do not need it).
+    if (changes.some((c) => c.new && !TICKET_LOG_KEYS[c.destination])) next = { ...next, logging: { ...next.logging, enabled: true } };
+    return next;
   }, { operation: 'setLogChannels' });
+  } catch (error) {
+    await legacyApp?.restore();
+    throw error;
+  }
+  // Only the old application-settings channel changed: still a real change of where applications go.
+  const appNew = wanted.applications || null;
+  if (legacyApp?.old && legacyApp.old !== appNew && !changes.some((c) => c.destination === 'applications')) {
+    changes.push({ destination: 'applications', old: legacyApp.old, new: appNew });
+  }
   // A newly chosen channel is tried right away, even if it was paused after a refusal.
   for (const change of changes) if (change.new) logChannelBackoff.delete(backoffKey(guildId, change.new));
   return changes;
@@ -801,21 +854,19 @@ export async function setLogChannel(client, guildId, destination, channelId) {
     return false;
   }
 
+  let legacyApp = null;
   try {
+    if (destination === 'applications') legacyApp = await followLegacyAppLog(client, guildId, channelId);
     await updateGuildConfigAtomic(client, guildId, (config) => {
-      const logging = {
-        ...config.logging,
-        channels: { ...(config.logging?.channels || {}), [destination]: channelId },
-      };
-      if (channelId) {
-        logging.enabled = true;
-      }
-      return { ...config, logging };
+      const next = withLogChannel(config, destination, channelId);
+      if (!channelId || TICKET_LOG_KEYS[destination]) return next;
+      return { ...next, logging: { ...next.logging, enabled: true } };
     });
     // A newly chosen channel is tried right away, even if it was paused after a refusal.
     if (channelId) logChannelBackoff.delete(backoffKey(guildId, channelId));
     return true;
   } catch (error) {
+    await legacyApp?.restore();
     logger.error('Error setting log channel:', error);
     return false;
   }

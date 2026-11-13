@@ -351,7 +351,9 @@ ${section(t('enforcement.rules.stepsTitle'), steps, t('enforcement.rules.stepsHe
                 throw new InputError(tr.t('enforcement.channels.inviteRequired'), 400, 'supportServerInvite');
             }
             // A field absent from the form stays unchanged (Setup step by step sends only its one field).
-            const sent = (name, opts) => (form[name] !== undefined ? { [name]: channelField(g, form, name, opts) } : {});
+            const stored = current(ctx);
+            // The stored channel sent back unchanged is kept even if it was deleted (forms.js channelField).
+            const sent = (name, opts) => (form[name] !== undefined ? { [name]: channelField(g, form, name, { ...opts, current: stored[name] }) } : {});
             const patch = changedOnly({
                 ...sent('modLogChannelId', { label: tr.t('enforcement.channels.modLog') }),
                 ...sent('evidenceChannelId', { label: tr.t('enforcement.channels.evidence') }),

@@ -4,9 +4,8 @@
   },
   "modLog": {
     "title": "Registro de moderação",
-    "text": "O registro de moderação lista cada advertência, silenciamento, expulsão e banimento. Ele vai para {channel}. Você pode {change}. Os registros de tickets são definidos em {tickets}.",
-    "change": "mudar isso em Punições e apelações",
-    "tickets": "Tickets e modmail"
+    "text": "O registro de moderação lista cada advertência, silenciamento, expulsão e banimento. Ele vai para {channel}. Você pode {change}.",
+    "change": "mudar isso em Punições e apelações"
   },
   "channels": {
     "title": "Canais",
@@ -21,7 +20,9 @@
     "server": "Servidor (canais e cargos)",
     "community": "Comunidade (níveis, sorteios, contadores, cargos por reação)",
     "dashboard": "Mudanças pelo painel e pelo site",
-    "automod": "Automod (tudo o que o automod fez)"
+    "automod": "Automod (tudo o que o automod fez)",
+    "tickets": "Tickets (abertos, assumidos, fechados)",
+    "transcripts": "Transcrições de tickets"
   },
   "forums": {
     "title": "Registros avançados (fórum)",

@@ -37,16 +37,14 @@
     "maxRange": "De 1 a 10.",
     "dmOnClose": "Escribir al miembro cuando se cierre su ticket",
     "dmOnCloseHelp": "Se le envía en privado (por MD).",
-    "logChannel": "Canal de registro de tickets",
-    "logChannelHelp": "El staff recibe aquí una línea corta cuando un ticket se abre, se asume, se cierra o se elimina.",
-    "transcriptChannel": "Canal de transcripciones",
-    "transcriptChannelHelp": "Una transcripción es un archivo con todos los mensajes de un ticket. Mewvo la publica aquí cuando se cierra el ticket.",
     "advancedLogs": "¿Quieres las transcripciones y valoraciones de cada miembro en una sola publicación de un foro? Elige {link} en la página Registros.",
     "advancedLogsLink": "Registros avanzados",
     "buttonText": "Texto del botón",
     "buttonTextHelp": "Las palabras del botón que pulsan los miembros para abrir un ticket.",
     "panelMessage": "Mensaje del panel",
-    "panelMessageHelp": "El texto encima del botón. Explica a los miembros para qué sirven los tickets."
+    "panelMessageHelp": "El texto encima del botón. Explica a los miembros para qué sirven los tickets.",
+    "logLine": "Los registros de tickets van a {logs} y las transcripciones a {transcripts}. Ambos se configuran en la {link}.",
+    "logLineLink": "página de Registros"
   },
   "blocked": {
     "title": "Miembros bloqueados del modmail",

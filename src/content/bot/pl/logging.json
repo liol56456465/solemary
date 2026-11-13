@@ -14,7 +14,16 @@
         "ignoreChannelOption": "Kanał lub kategoria",
         "ignoreRole": "Ignoruj członków z rolą albo znów ich loguj (przełącznik).",
         "ignoreRoleOption": "Rola",
-        "ignoreList": "Pokaż ignorowane kanały, role i użytkowników."
+        "ignoreList": "Pokaż ignorowane kanały, role i użytkowników.",
+        "choiceModeration": "Moderacja (czyszczenie, blokada, tryb powolny…)",
+        "choiceMembers": "Członkowie (dołączenia, wyjścia, nazwy)",
+        "choiceMessages": "Wiadomości (edycje, usunięcia)",
+        "choiceServer": "Serwer (kanały, role)",
+        "choiceCommunity": "Społeczność (poziomy, konkursy, liczniki)",
+        "choiceDashboard": "Zmiany w panelu i na stronie",
+        "choiceAutomod": "Automod",
+        "choiceTickets": "Tickety (otwarte, przejęte, zamknięte)",
+        "choiceTranscripts": "Transkrypcje ticketów"
     },
     "unknownSubcommand": "Ta podkomenda nie jest rozpoznawana.",
     "unexpected": "Wystąpił nieoczekiwany błąd.",
@@ -102,7 +111,16 @@
         "destination": {
             "audit": "Log audytu",
             "applications": "Podania",
-            "reports": "Zgłoszenia"
+            "reports": "Zgłoszenia",
+            "moderation": "Moderacja (czyszczenie, blokada, tryb powolny…)",
+            "members": "Członkowie (dołączenia, wyjścia, nazwy)",
+            "messages": "Wiadomości (edycje, usunięcia)",
+            "server": "Serwer (kanały, role)",
+            "community": "Społeczność (poziomy, konkursy, liczniki)",
+            "dashboard": "Zmiany w panelu i na stronie",
+            "automod": "Automod",
+            "tickets": "Tickety (otwarte, przejęte, zamknięte)",
+            "transcripts": "Transkrypcje ticketów"
         },
         "noAdmin": "Potrzebujesz uprawnienia **Administrator**, aby ustawiać kanały logów.",
         "clearFailed": "Nie udało się usunąć kanału logów. Spróbuj ponownie.",
