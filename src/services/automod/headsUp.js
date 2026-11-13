@@ -35,6 +35,9 @@ import { Mutex } from '../../utils/mutex.js';
 import { headsUpDm, headsUpNotice, privacyHeadsUpDm, privacyHeadsUpNotice } from './policy.js';
 import { BoundedMap } from '../../utils/boundedMap.js';
 import { markOwnDelete } from '../logTamperService.js';
+import { logAutomod, memberLine } from './automodLog.js';
+import { ruleDefinition } from './customRules.js';
+import { stripLeadingEmoji } from './reviewFormat.js';
 
 const DAY = 24 * 60 * 60 * 1000;
 const LEGACY_INDEX_KEY = 'automod:headsup:index';
@@ -63,6 +66,7 @@ const defaultDeps = {
     postReviewCard: (p) => postReviewCard(p),
     closeCard: (...args) => closeCard(...args),
     isRaidJoiner: (...args) => isRaidJoiner(...args),
+    logAutomod: (...args) => logAutomod(...args),
     now: () => Date.now(),
 };
 let deps = { ...defaultDeps };
@@ -170,7 +174,7 @@ async function giveHeadsUpNow(message, hit, { card, deleteMessage = async () => 
     const title = privacy
         ? `Warned privately (${how}): personal info removed, no warning`
         : `Warned privately first (${how}), ${graceMinutes()} min to fix`;
-    const cardMessage = await deps.postReviewCard({ ...card, note: { title }, deleted: privacy, noGroup: true })
+    const cardMessage = await deps.postReviewCard({ ...card, note: { title }, deleted: privacy, noGroup: true, logKind: 'headsup' })
         .catch((error) => {
             logger.warn(`Automod heads-up card failed: ${error.message}`);
             return null;
@@ -236,6 +240,31 @@ const OUTCOME_TEXT = {
     dropped: ['Closed', 'No action.'],
 };
 
+const END_TEXT = {
+    edited: 'Fixed by the member: they edited the message in time, nothing else done',
+    deleted: 'Fixed by the member: they deleted the message in time, nothing else done',
+    acted: 'Not fixed in time: the usual action ran (see its own record)',
+};
+
+/** The Automod log record of a finished heads-up (exported for tests). */
+export function headsUpEndRecord(client, record, outcome, note = null) {
+    const username = client?.users?.cache?.get?.(record.userId)?.username || null;
+    const rule = stripLeadingEmoji(record.hit?.ruleLabel || ruleDefinition(record.rule, null, record.guildId)?.label || record.rule || 'a rule');
+    return {
+        type: 'headsup',
+        title: `Automod: ${rule}`,
+        subject: { id: record.userId, username },
+        channelId: record.channelId || null,
+        fields: [
+            { name: 'Member', value: memberLine({ id: record.userId, username }) },
+            { name: 'Rule', value: rule },
+            record.channelId ? { name: 'Channel', value: `<#${record.channelId}>` } : null,
+            { name: 'Heads-up', value: END_TEXT[outcome] || `Closed, no action${note ? `: ${note}` : ''}` },
+            record.messageUrl && outcome !== 'deleted' ? { name: 'Message', value: `[jump to message](${record.messageUrl})` } : null,
+        ].filter(Boolean),
+    };
+}
+
 /**
  * Finishes a claimed heads-up: counts it (fixed / acted) and strikes through its review
  * line. outcome: 'edited' | 'deleted' (fixed), 'acted', or 'dropped' (`note` says why).
@@ -245,6 +274,14 @@ export async function finishHeadsUp(client, record, outcome, note = null) {
     if (outcome === 'edited' || outcome === 'deleted') await bumpHeadsUpStat(record.guildId, 'fixed');
     if (outcome === 'acted') await bumpHeadsUpStat(record.guildId, 'acted');
     logger.info(`Automod heads-up ${record.messageId} (${record.rule || 'unknown rule'}, user ${record.userId || '?'}): ${outcome}${note ? ` (${note})` : ''}`);
+    if (client && record.guildId && record.userId) {
+        // The Automod log: how the heads-up ended (not awaited; never throws).
+        try {
+            void deps.logAutomod(client, record.guildId, headsUpEndRecord(client, record, outcome, note));
+        } catch (error) {
+            logger.warn(`Automod log record of heads-up ${record.messageId} not built: ${error.message}`);
+        }
+    }
     if (!record.card?.channelId || !record.card?.messageId || !client) return;
     const channel = await client.channels?.fetch?.(record.card.channelId).catch(() => null);
     const cardMessage = await channel?.messages?.fetch?.(record.card.messageId).catch(() => null);

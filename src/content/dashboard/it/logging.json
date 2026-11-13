@@ -20,7 +20,8 @@
     "messages": "Messaggi (modifiche ed eliminazioni)",
     "server": "Server (canali e ruoli)",
     "community": "Community (livelli, giveaway, contatori, ruoli a reazione)",
-    "dashboard": "Modifiche da dashboard e sito"
+    "dashboard": "Modifiche da dashboard e sito",
+    "automod": "Automod (tutto quello che ha fatto automod)"
   },
   "forums": {
     "title": "Log avanzati (forum)",

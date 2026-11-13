@@ -11,6 +11,7 @@
 import { automodConfig } from '../../config/automod.js';
 import { logger } from '../../utils/logger.js';
 import { postModLog } from '../enforcement/enforcementService.js';
+import { logAutomod } from './automodLog.js';
 import { AUTO_SLOWMODE_SECONDS, startSlowmode } from './autoSlowmode.js';
 import { computeHeat, messageHeat, shouldCalmChannel } from './policy.js';
 import { BoundedMap } from '../../utils/boundedMap.js';
@@ -52,11 +53,13 @@ async function calmChannel(channel, heat) {
         return null;
     });
     await channel.send({ content: slowmode ? CALM_NOTE : CALM_NOTE_NO_SLOWMODE, allowedMentions: { parse: [] } }).catch(() => {});
-    await postModLog(channel.client, 'slowmode', [
+    const fields = [
         { name: 'Channel', value: `<#${channel.id}>` },
         { name: 'Why', value: `heat ${heat.score} from ${heat.members} members in ${Math.round(automodConfig.moodWindowMs / 60000)} min (insults, harassment, caps floods)` },
         { name: 'Done', value: slowmode ? `calm-down note posted; slowmode ${AUTO_SLOWMODE_SECONDS}s, lifted after a few quiet minutes` : 'calm-down note posted; slowmode was already set by a moderator or could not be set' },
-    ], { guildId: channel.guildId, title: 'Heated channel' });
+    ];
+    void logAutomod(channel.client, channel.guildId, { type: 'slowmode', title: 'Automod: heated channel', fields, channelId: channel.id });
+    await postModLog(channel.client, 'slowmode', fields, { guildId: channel.guildId, title: 'Heated channel' });
 }
 
 function prune(now) {

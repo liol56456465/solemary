@@ -7,7 +7,8 @@
 // Set per kind on the dashboard Logging page (config logging.forums: { kind: forumChannelId });
 // a kind without a forum is "Normal" (its text channel, as before). Kinds: the Logging page
 // destinations (loggingService.logEvent) plus 'modlog' (punishments) and 'dashboard' (website
-// and dashboard changes), both posted by enforcementService.postModLog.
+// and dashboard changes), both posted by enforcementService.postModLog. 'automod' (everything automod
+// did, automod/automodLog.js) is a destination too; postModLog's `automated` records also go there.
 //
 // Which post belongs to a member is stored per forum (key-value, no table): switching to another
 // forum starts new posts there. A post that was deleted is created again. An archived post is
@@ -22,7 +23,7 @@ import { Mutex } from '../utils/mutex.js';
 import { getFromDb, setInDb } from '../utils/database.js';
 
 /** The kinds that can be "Advanced" (Logging page order). */
-export const LOG_FORUM_KINDS = Object.freeze(['audit', 'moderation', 'members', 'messages', 'server', 'community', 'dashboard', 'modlog']);
+export const LOG_FORUM_KINDS = Object.freeze(['audit', 'moderation', 'members', 'messages', 'server', 'community', 'dashboard', 'automod', 'modlog']);
 
 const SNOWFLAKE = /^\d{17,20}$/;
 const SERVER_SUBJECT = 'server';

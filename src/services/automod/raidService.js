@@ -39,6 +39,7 @@ import { botText, textForGuild } from '../../utils/botText.js';
 import { buildIncidentReport, casesAgainst, recordIncident, releaseRow } from './raidIncidentService.js';
 import { recordEvent } from './reviewRegistry.js';
 import { addTimelineEvent, closeTimeline, linkTimelineReport, openTimeline } from './incidentTimeline.js';
+import { logAutomod } from './automodLog.js';
 
 // Bounded for any server count: a dropped lockdown entry is re-read from the database (it is
 // saved there first); a dropped join list only restarts that server's raid window.
@@ -184,7 +185,38 @@ export function lockdownOwnerText({ raised, panic, startedBy = null }, guildName
     return tr.t(startedBy ? 'automod.raid.owner.manual' : 'automod.raid.owner.raid', { server: guildName, summary, what });
 }
 
+/** The Automod log record of a lockdown that started or ended (pure, for tests). */
+export function lockdownRecord(event, d) {
+    if (event === 'start') {
+        return {
+            type: 'raid',
+            title: d.startedBy ? 'Automod: lockdown started by an administrator' : 'Automod: join raid, lockdown started',
+            fields: [
+                { name: 'Why', value: d.startedBy
+                    ? `Started by ${d.startedBy.username} (\`${d.startedBy.id}\`) from a nuke alert`
+                    : `${d.joinerCount} accounts joined within ${automodConfig.raidWindowMs / 1000} seconds` },
+                { name: 'Verification', value: d.raised ? 'Raised to High' : 'Not changed (already High, or the bot could not raise it)' },
+                { name: 'Invites and DMs', value: panicDetail(d.panic) },
+                { name: 'Raid joiners', value: 'Remembered: one who breaks a rule is kicked. End it with `/automod lockdown-end`.' },
+            ],
+        };
+    }
+    const { state = {}, resumed, restored, admin } = d;
+    return {
+        type: 'raid',
+        title: 'Automod: lockdown ended',
+        fields: [
+            { name: 'Ended by', value: admin ? `${admin.username} (\`${admin.id}\`)` : 'unknown' },
+            { name: 'Raid joiners', value: String((state.joinerIds || []).length) },
+            state.raisedVerification ? { name: 'Verification', value: restored ? 'Restored to the level before the raid' : 'Could not restore the level before the raid' } : null,
+            state.incidentActions?.applied ? { name: 'Invites and DMs', value: resumed ? 'Resumed' : 'Could not resume: lift the pause in Server Settings, Safety Setup' } : null,
+            (state.gateKicks || []).length ? { name: 'Join gate kicks', value: String(state.gateKicks.length) } : null,
+        ].filter(Boolean),
+    };
+}
+
 async function announceLockdown(guild, { joinerCount, raised, panic, startedBy = null }) {
+    void logAutomod(guild.client, guild.id, lockdownRecord('start', { joinerCount, raised, panic, startedBy }));
     // The mod log sits in the staff server (the main server for a home server): its language.
     const staff = textForGuild(staffGuildId(guild.id), { purpose: 'public' });
     const post = lockdownAnnouncement({ joinerCount, raised, panic, startedBy }, { lang: staff.lang });
@@ -297,6 +329,7 @@ async function recordJoinLocked(member) {
 export async function endLockdown(guild, admin) {
     const ended = await Mutex.runExclusive(`raid:${guild.id}`, () => endLockdownLocked(guild, admin));
     if (!ended) return false;
+    void logAutomod(guild.client, guild.id, lockdownRecord('end', { ...ended, admin }));
     const timelineId = ended.state.timelineId || null;
     // The timeline end (never throws) runs alongside the report, so it delays nothing.
     const [, report] = await Promise.all([

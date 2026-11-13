@@ -17,6 +17,7 @@ import { db, deleteFromDb, getFromDb, setInDb } from '../../utils/database.js';
 import { BoundedMap } from '../../utils/boundedMap.js';
 import { isEnforcementDbAvailable } from '../enforcement/db.js';
 import { postModLog } from '../enforcement/enforcementService.js';
+import { logAutomod } from './automodLog.js';
 import { isSettingsUnavailable, noteSettingsUnavailable } from '../settings/guildScoped.js';
 import { getAutomodSettings, isChannelExempt } from './automodSettings.js';
 
@@ -144,11 +145,13 @@ export async function trackChannelActivity(message) {
     recent.delete(channel.id);
     if (started !== 'started') return;
     await channel.send({ content: `Slowmode is on for a few minutes because this channel got very busy (${SLOWMODE_SECONDS}s between messages).` }).catch(() => {});
-    await postModLog(message.client, 'slowmode', [
+    const fields = [
         { name: 'Channel', value: `<#${channel.id}>` },
         { name: 'Why', value: `${list.length} messages from ${new Set(list.map((e) => e.authorId)).size} people in ${BUSY_WINDOW_MS / 1000}s` },
         { name: 'Ends', value: `after ${CALM_MS / 60000} quiet minutes` },
-    ], { guildId: message.guildId, title: 'Auto slowmode on' });
+    ];
+    void logAutomod(message.client, message.guildId, { type: 'slowmode', title: 'Automod: auto slowmode on', fields, channelId: channel.id });
+    await postModLog(message.client, 'slowmode', fields, { guildId: message.guildId, title: 'Auto slowmode on' });
 }
 
 /**

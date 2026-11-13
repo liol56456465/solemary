@@ -14,6 +14,8 @@ import { applyStep, isStaff } from './automodService.js';
 import { findForbiddenCharacters, findImpersonation, plainName } from './filters.js';
 import { postReviewCard } from './reviewCards.js';
 import { impersonationReason } from './reasons.js';
+import { logAutomod, memberLine } from './automodLog.js';
+import { spoilerExcerpt } from './reviewFormat.js';
 
 const RENAMED_NICKNAME = 'Renamed member';
 export const MEMBER_CHECKS_MAX = 5000;
@@ -45,8 +47,21 @@ export async function checkImpersonation(member) {
         const namesRule = isLegacyAutomodGuild(guild.id) || resolveRuleMode(settings, 'characters') !== 'off';
         if (namesRule && findForbiddenCharacters(member.displayName) && member.manageable) {
             const plain = plainName(member.displayName) || RENAMED_NICKNAME;
-            await member.setNickname(plain, 'Automod: English letters only in names').catch((error) =>
-                logger.warn(`Could not reset nickname of ${member.id}: ${error.message}`));
+            const reset = await member.setNickname(plain, 'Automod: English letters only in names').then(() => true, (error) => {
+                logger.warn(`Could not reset nickname of ${member.id}: ${error.message}`);
+                return false;
+            });
+            if (reset) {
+                void logAutomod(member.client, guild.id, {
+                    type: 'action',
+                    title: 'Automod: names in English letters',
+                    subject: { id: member.id, username: member.user.username },
+                    fields: [
+                        { name: 'Member', value: memberLine(member.user) },
+                        { name: 'Done', value: `Nickname reset to "${plain}" (no case)` },
+                    ],
+                });
+            }
         }
 
         const names = [member.nickname, member.user.globalName, member.user.username];
@@ -139,6 +154,20 @@ export async function handleReportReaction(reaction, user) {
             messageUrl: null,
             content: message.content || '',
             report: { reporter: reporters.map((u) => u.username).join(', '), messageId: message.id, removed: !immune },
+        });
+        // The Automod log (a review card for a report gets none: this is the automatic part).
+        void logAutomod(message.client, message.guild.id, {
+            type: 'report',
+            title: 'Automod: report reactions',
+            subject: { id: message.author.id, username: message.author.username },
+            channelId: message.channelId,
+            excerpt: message.content ? spoilerExcerpt(message.content, 300) : null,
+            fields: [
+                { name: 'Member', value: memberLine(message.author) },
+                { name: 'Channel', value: `<#${message.channelId}>` },
+                { name: 'Why', value: `${reporters.length} members reacted with ${automodConfig.reportEmoji}` },
+                { name: 'Done', value: immune ? 'Message kept (immune member), sent to staff to decide' : 'Message removed and sent to staff' },
+            ],
         });
     } catch (error) {
         logger.warn(`Report reaction failed: ${error.message}`);

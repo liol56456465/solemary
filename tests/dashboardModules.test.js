@@ -2869,6 +2869,26 @@ test('Advanced logs how-to: hidden until Advanced is picked, open while a kind i
     assert.match(missing.body, /pick a channel/);
 });
 
+// ── Logging: the Automod log (owner, 2026-11-13) ──
+
+test('Automod log: its own channel row and Advanced row on the Logging page; saving it is audited', async () => {
+    const h = await setup();
+    const body = (await get(h, 'logging')).body;
+    const channelsCard = body.slice(body.indexOf('id="s-channels"'), body.indexOf('</section>', body.indexOf('id="s-channels"')));
+    assert.match(channelsCard, /name="automod"/);
+    assert.match(channelsCard, /Automod \(everything automod did\)/);
+    const card = forumsCard(body);
+    assert.match(card, /name="mode:automod"/);
+    assert.match(card, /name="forum:automod"/);
+    assert.equal((await post(h, 'logging', 'channels', { automod: TEXT })).statusCode, 303);
+    assert.deepEqual(h.calls.find((c) => c.name === 'setLogChannels').args, [{ automod: TEXT }]);
+    assert.deepEqual(h.auditRows.map((r) => [r.key, r.new]), [['logging.channels.automod', TEXT]]);
+    assert.equal(h.state.logging.channels.automod, TEXT);
+    // Control: Advanced for automod saves a forum like the other kinds.
+    assert.equal((await post(h, 'logging', 'forums', { 'mode:automod': 'advanced', 'forum:automod': FORUM })).statusCode, 303);
+    assert.equal(h.state.logging.forums.automod, FORUM);
+});
+
 // ── Automod immune members (owner, 2026-11-13) ──
 
 const immuneCard = (body) => body.slice(body.indexOf('id="s-immune-members"'), body.indexOf('</section>', body.indexOf('id="s-immune-members"')));
