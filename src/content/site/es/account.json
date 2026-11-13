@@ -246,5 +246,13 @@
     "notEligible": "Esta cuenta no puede reclamar un nombre de usuario de 1 letra.",
     "allClaimed": "Ya se han reclamado todos los nombres de usuario de 1 letra.",
     "letterTaken": "Otra persona acaba de quedarse con esa letra. Elige otra."
+  },
+  "logoutAll": {
+    "heading": "Cerrar sesión",
+    "lead": "Cierra sesión aquí o en todos los dispositivos: eso cierra todas las sesiones de esta cuenta y de tu cuenta de Discord vinculada, en la web y en el panel, también esta.",
+    "submit": "Cerrar sesión en todos los dispositivos",
+    "doneTitle": "Sesión cerrada en todas partes",
+    "done": "Todas las sesiones de tu cuenta en esta web y en el panel se han cerrado, en todos los dispositivos.",
+    "logInAgain": "Volver a iniciar sesión"
   }
 }

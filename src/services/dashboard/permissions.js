@@ -117,6 +117,7 @@ export const PERMISSIONS = Object.freeze({
  */
 export const ROUTES = [
     ['POST', '/logout', 'session.logout'],
+    ['POST', '/logout-all', 'session.logout'],
     ['GET', '/removed/:id/data', 'serverdata.removed'],
     ['GET', '/removed/:id/data/verify', 'serverdata.removed'],
     ['POST', '/removed/:id/data/request', 'serverdata.removed'],

@@ -15,10 +15,14 @@
   "refresh": "Serverliste aktualisieren",
   "refreshHint": "Fehlt ein Server?",
   "refreshTitle": "Serverliste nicht geladen",
-  "refreshText": "Mewvo behält deine Serverliste nur im Arbeitsspeicher, höchstens 12 Stunden. Aktualisiere sie, um alle deine Server zu sehen.",
+  "refreshText": "Mewvo behält deine Serverliste höchstens 30 Tage (nie dein Discord-Anmeldetoken). Aktualisiere sie, um alle deine Server zu sehen.",
   "addTitle": "Mewvo zu einem Server hinzufügen",
   "addIntro": "Server, die du verwaltest und in denen Mewvo noch fehlt.",
   "add": "Mewvo hinzufügen",
   "addLabel": "Mewvo zu {name} hinzufügen",
-  "ownerArea": "Besitzerbereich"
+  "ownerArea": "Besitzerbereich",
+  "fromBotTitle": "Über Mewvo gefundene Server",
+  "fromBotText": "Du hast das Dashboard mit deiner Website-Anmeldung geöffnet, darum zeigt diese Liste nur Server mit Mewvo, in denen du Mitglied bist. Aktualisiere sie über Discord, um alle deine Server zu sehen, auch die, zu denen du Mewvo hinzufügen kannst.",
+  "refreshFromDiscord": "Serverliste über Discord aktualisieren",
+  "logoutAllHint": "„Auf allen Geräten abmelden“ beendet jede Dashboard-Anmeldung deines Discord-Kontos, auch diese."
 }

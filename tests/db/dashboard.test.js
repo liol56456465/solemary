@@ -172,6 +172,43 @@ test('Postgres session store: create, read, rotate, expire, logout, lazy cleanup
     assert.equal(left.length, 0, 'expired rows deleted');
 });
 
+test('Postgres session store: sliding renewal (hourly, 7 days idle, 30-day cap), authAt, destroyForUser', { skip }, async () => {
+    const { query } = await import('../../src/services/enforcement/db.js');
+    const sessions = store.createPgSessionStore({ query });
+    const HOUR = 60 * 60 * 1000;
+    const DAY = 24 * HOUR;
+    const now = Date.now();
+    const expiresOf = async (s) => new Date((await pgDb.pool.query('SELECT expires_at FROM dashboard_sessions WHERE id_hash = $1', [store.hashSessionId(s.id)])).rows[0].expires_at).getTime();
+    const s = await sessions.create({ userId: admin, username: 'admin' }, now - 2 * HOUR);
+    assert.equal(await expiresOf(s), now - 2 * HOUR + 7 * DAY);
+    const quick = await sessions.get(s.id, now - 2 * HOUR + 10 * 60 * 1000);
+    assert.equal(quick.renewed, false, 'control: within the hour, no renewal');
+    const read = await sessions.get(s.id, now);
+    assert.equal(read.renewed, true);
+    assert.equal(read.expiresAt, now + 7 * DAY);
+    assert.equal(await expiresOf(s), now + 7 * DAY, 'written to the row');
+    assert.equal((await sessions.get(s.id, now + 1000)).renewed, false, 'not renewed twice in a row');
+    assert.equal(await sessions.get(s.id, now + 7 * DAY), null, '7 days without use');
+    // The cap: a website login 29 days ago handed over an hour ago lives only up to day 30.
+    const old = await sessions.create({ userId: admin, username: 'admin', authAt: now - 29 * DAY }, now - HOUR);
+    assert.equal(old.createdAt, now - 29 * DAY);
+    const capped = await sessions.get(old.id, now);
+    assert.equal(capped.expiresAt, now + DAY, 'min(now + 7 days, login + 30 days)');
+    assert.equal(await sessions.get(old.id, now + DAY), null);
+    // destroyForUser: this user's sessions only, keepId kept.
+    const other = `6${runId}00000099`;
+    const a1 = await sessions.create({ userId: admin, username: 'a' });
+    const a2 = await sessions.create({ userId: admin, username: 'a' });
+    const o1 = await sessions.create({ userId: other, username: 'o' });
+    assert.ok(await sessions.destroyForUser(admin, a2.id) >= 1);
+    assert.equal(await sessions.get(a1.id), null);
+    assert.ok(await sessions.get(a2.id));
+    assert.ok(await sessions.get(o1.id), 'control: another user');
+    await sessions.destroyForUser(admin);
+    assert.equal(await sessions.get(a2.id), null);
+    await sessions.destroy(o1.id);
+});
+
 test('Postgres session store: one-shot flash message', { skip }, async () => {
     const query = (text, params) => pgDb.pool.query(text, params);
     const sessions = store.createPgSessionStore({ query });

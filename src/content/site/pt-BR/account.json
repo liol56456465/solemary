@@ -249,5 +249,13 @@
     "notEligible": "Esta conta não pode pegar um nome de usuário de 1 letra.",
     "allClaimed": "Todos os nomes de usuário de 1 letra já foram pegos.",
     "letterTaken": "Outra pessoa acabou de pegar essa letra. Escolha outra."
+  },
+  "logoutAll": {
+    "heading": "Sair",
+    "lead": "Saia aqui ou em todos os dispositivos: isso encerra todos os logins desta conta e da sua conta do Discord vinculada, no site e no painel, inclusive este.",
+    "submit": "Sair de todos os dispositivos",
+    "doneTitle": "Você saiu em todos os lugares",
+    "done": "Todos os logins da sua conta neste site e no painel foram encerrados, em todos os dispositivos.",
+    "logInAgain": "Entrar de novo"
   }
 }

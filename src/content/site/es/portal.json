@@ -50,7 +50,7 @@
     "lead": "Consulta tu propio historial de moderación en todos los servidores que usan Mewvo: tus advertencias, tu nivel, cualquier baneo o silencio activo, tus casos y tus apelaciones.",
     "withDiscord": "Iniciar sesión con Discord",
     "withAccount": "Iniciar sesión con una cuenta de Mewvo",
-    "note": "Mewvo solo le pregunta a Discord quién eres (el permiso identify): sin correo electrónico, sin servidores, nada más. Solo ves tu propio historial. La sesión dura una hora.",
+    "note": "Mewvo solo le pregunta a Discord quién eres (el permiso identify): sin correo electrónico, sin servidores, nada más. Solo ves tu propio historial. La sesión dura hasta 30 días y se cierra tras 7 días sin uso o cuando cierras sesión.",
     "signup": "¿Aún no tienes una cuenta de Mewvo? [Crea una]({href}) para iniciar sesión con nombre de usuario y contraseña.",
     "appealLead": "Inicia sesión con Discord para apelar una sanción de cualquier servidor que use Mewvo. Solo ves tus propios casos."
   },
@@ -172,6 +172,10 @@
     "appealsUnavailable": {
       "title": "Apelaciones no disponibles",
       "message": "No se pudieron cargar tus apelaciones porque la base de datos no responde. No se cambió nada: inténtalo de nuevo en unos minutos."
+    },
+    "handoffNotAllowed": {
+      "title": "No se abrió",
+      "message": "El panel no se abrió: la solicitud no procede de esta página, o ahora has iniciado sesión como otra persona. Vuelve a intentarlo desde la web."
     }
   },
   "viewer": {
@@ -277,5 +281,12 @@
       "logIn": "Volver a iniciar sesión",
       "copyHint": "Después de iniciar sesión vuelves a esta apelación con el formulario vacío."
     }
+  },
+  "dashboard": {
+    "title": "Abrir el panel",
+    "lead": "Has iniciado sesión en esta web como {name}. Abre el panel con esta sesión, sin volver a iniciar sesión con Discord.",
+    "continue": "Continuar como {name}",
+    "discord": "Iniciar sesión con Discord en su lugar",
+    "note": "El panel sigue comprobando tus permisos en cada servidor en cada página. Tu lista de servidores muestra entonces los servidores con Mewvo de los que eres miembro; allí puedes actualizarla desde Discord."
   }
 }

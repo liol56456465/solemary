@@ -43,5 +43,7 @@
   "serverNotFound": "Nie znaleziono serwera",
   "serverNotFoundText": "Nie znaleziono serwera albo nie możesz nim zarządzać. Wybierz serwer ze swojej listy.",
   "blockedText": "Nie możesz używać tego bota.",
-  "databaseDown": "Baza danych w tej chwili nie odpowiada, więc nic nie zmieniono. Spróbuj ponownie za minutę."
+  "databaseDown": "Baza danych w tej chwili nie odpowiada, więc nic nie zmieniono. Spróbuj ponownie za minutę.",
+  "ssoExpired": "Link wygasł",
+  "ssoExpiredText": "Logowanie na stronie nie otworzyło panelu: ten krok działa tylko raz i przez minutę. Otwórz ponownie {base}."
 }

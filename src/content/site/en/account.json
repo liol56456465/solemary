@@ -243,5 +243,13 @@
     "notEligible": "This account cannot claim a 1-letter username.",
     "allClaimed": "All 1-letter usernames have been claimed.",
     "letterTaken": "Someone else just took that letter. Choose another one."
+  },
+  "logoutAll": {
+    "heading": "Log out",
+    "lead": "Log out here, or on all devices: that ends every login of this account and of your linked Discord account, on the website and in the dashboard, this one too.",
+    "submit": "Log out on all devices",
+    "doneTitle": "Logged out everywhere",
+    "done": "Every login of your account on this website and in the dashboard has ended, on every device.",
+    "logInAgain": "Log in again"
   }
 }

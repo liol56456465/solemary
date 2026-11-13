@@ -38,6 +38,11 @@
 //   GET/POST /dashboard/fix-permissions  Mewvo gives itself missing permissions in one channel
 //                                   (permissionFixRoutes.js: confirm page, then Administrator-only POST)
 //   POST /dashboard/logout          CSRF token + same-origin check, then back to the website (/)
+//   POST /dashboard/logout-all      "Log out on all devices": every dashboard session of this Discord
+//                                   user ends (CSRF + same origin), then back to the website (/)
+//   GET  /dashboard/sso             a website login handed over (ssoHandoff.js: one-time grant in the
+//                                   mewvo_dash_sso cookie, 60 s, single use, bound to the user) → a
+//                                   dashboard session; refused for blacklisted users
 //   /dashboard/owner/…              the Owner area (ownerRoutes.js): bot profile, servers, users,
 //                                   blacklist, health + maintenance, command sync, announce, and
 //                                   the Website editor (websiteRoutes.js: site text and images).
@@ -54,9 +59,12 @@
 // session is kept. The login state is HMAC-signed, expires after 10 minutes, is single use,
 // bound to the browser by a nonce cookie and carries the return path (checked again with
 // safeBackPath). Sessions are in Postgres (sessionStore.js: hashed ids, rotated on login,
-// 12 h); the browser only gets a signed random id in an HttpOnly, SameSite=Lax cookie (Secure
-// in production / https). The Discord access token is used once to read the user and the
-// server list (/users/@me/guilds, kept in memory only: serverPicker.js) and then dropped.
+// sliding: 7 days without use, 30 days at most; the cookie's Max-Age follows each renewal); the
+// browser only gets a signed random id in an HttpOnly, SameSite=Lax cookie (Secure in
+// production / https). The Discord access token is used once to read the user and the server
+// list (/users/@me/guilds: id, name, icon; memory + key-value store, serverPicker.js) and then
+// dropped. A browser with a website login (hint cookie mewvo_dash_hint) is offered
+// /me/dashboard ("Continue as …") instead of Discord OAuth; ?discord=1 always uses Discord.
 //
 // Rate limits (owner decision 7): /dashboard is exempt from the app-wide per-IP limiter;
 // instead 300 requests/min per session, and 30/min per IP for the login routes.
@@ -104,7 +112,8 @@ import {
 } from './html.js';
 import { isHomeOnlyPage } from './homeOnly.js';
 import { createGuildDashboards, createLruCache, scopedConfirms } from './guildDashboards.js';
-import { collectPicker, createGuildListCache, guildListFrom, pickerPage } from './serverPicker.js';
+import { buildBotGuildList, collectPicker, createGuildListCache, createGuildListStore, dbGuildListKv, guildListFrom, pickerPage } from './serverPicker.js';
+import { SSO_COOKIE, SSO_HINT_COOKIE, SSO_PATH } from './ssoHandoff.js';
 import { blacklistHit } from '../owner/blacklistCache.js';
 import { getBotOwners } from '../../config/bot.js';
 import {
@@ -134,7 +143,7 @@ import { createConfirmStore } from './confirmTokens.js';
 import { createServerDataHandlers } from './serverDataRoutes.js';
 import { confirmPage } from './enforcementPages.js';
 import { createPermissionFixHandlers } from './permissionFixRoutes.js';
-import { createOwnerHandlers, defaultOwnerDeps } from './ownerRoutes.js';
+import { OWNER_SESSION_MAX_AGE_MS, createOwnerHandlers, defaultOwnerDeps } from './ownerRoutes.js';
 import { createWebsiteHandlers, defaultWebsiteDeps } from './websiteRoutes.js';
 import { createOwnerErrorsHandlers, defaultErrorPageDeps } from './ownerErrors.js';
 import { IMAGE_MAX_BYTES as SITE_IMAGE_MAX_BYTES } from '../site/siteImages.js';
@@ -146,8 +155,8 @@ import { createPgSessionStore } from './sessionStore.js';
 import { query } from '../enforcement/db.js';
 import { pgConfig } from '../../config/database/postgres.js';
 import {
-    MIN_SECRET_LENGTH, SESSION_COOKIE, SESSION_TTL_MS, STATE_COOKIE, STATE_TTL_MS,
-    clearCookie, createRateLimiter, createState, createStateStore, guildSegment,
+    MIN_SECRET_LENGTH, SESSION_COOKIE, STATE_COOKIE, STATE_TTL_MS,
+    clearCookie, sessionCookieAge, createRateLimiter, createState, createStateStore, guildSegment,
     isSameOrigin, isSnowflake, parseCookies, safeEqual, serializeCookie, signValue, verifySignedValue,
 } from './security.js';
 
@@ -158,7 +167,7 @@ const GUILDS_URL = 'https://discord.com/api/v10/users/@me/guilds';
 /** The OAuth2 scopes of the dashboard login: who you are, and which servers you are in (for the picker). */
 export const OAUTH_SCOPES = 'identify guilds';
 /** First path segments below /dashboard that are global routes, never a server or an old link. */
-export const GLOBAL_SEGMENTS = Object.freeze(['static', 'theme', 'lang', 'nav', 'oauth', 'logout', 'owner', 'removed']);
+export const GLOBAL_SEGMENTS = Object.freeze(['static', 'theme', 'lang', 'nav', 'oauth', 'logout', 'logout-all', 'sso', 'owner', 'removed']);
 const HTTP_TIMEOUT_MS = 10000;
 const CASES_PAGE_SIZE = 25;
 const MAX_PAGE = 10000;
@@ -368,8 +377,15 @@ export function createDashboard({
     memberTools = defaultMemberTools, incidents = defaultIncidents, website = defaultWebsiteDeps,
     // One ban list cache per dashboard, shared by the Banned page and the member search.
     banCache = createBanCache(), memberSearch = createMemberSearch({ banCache }), ownerErrors = defaultErrorPageDeps,
-    guildLists = createGuildListCache(), picker = null, settingsReady = ensureGuildSettings, serverData: serverDataDeps = undefined,
+    guildLists = createGuildListCache(), guildListStore = null, picker = null, settingsReady = ensureGuildSettings, serverData: serverDataDeps = undefined,
+    // The website → dashboard handoff (ssoHandoff.js createHandoffStore); null = off.
+    sso = null, blacklist = blacklistHit,
+    // The website's member sessions (memberPortal.js): "Log out on all devices" ends them too, or a
+    // device with a website login could open the dashboard again at once. null = portal off.
+    memberSessions = null,
 }) {
+    // The server lists: memory in front of the key-value store (createDashboardApp shares one).
+    const lists = guildListStore || createGuildListStore({ memory: guildLists });
     const secret = settings.sessionSecret;
     const guildId = boundGuildId || settings.mainGuildId;
     // Mewvo's own servers (main + support): the home-only pages (homeOnly.js) exist only here.
@@ -450,9 +466,19 @@ export function createDashboard({
         return verifySignedValue(cookies[SESSION_COOKIE], secret);
     }
 
-    async function readSession(req) {
+    /**
+     * The session of this request, or null. With `res`: a session the store just renewed
+     * (sliding expiry, sessionStore.js) gets its cookie again with the new Max-Age.
+     */
+    async function readSession(req, res = null) {
         const id = cookieSessionId(req);
-        return id ? sessions.get(id) : null;
+        const session = id ? await sessions.get(id) : null;
+        if (session?.renewed && res) setSessionCookie(res, session);
+        return session;
+    }
+
+    function setSessionCookie(res, session) {
+        res.append('Set-Cookie', serializeCookie(SESSION_COOKIE, signValue(session.id, secret), { ...cookieOptions, maxAgeMs: sessionCookieAge(session) }));
     }
 
     async function moduleStates() {
@@ -545,8 +571,16 @@ export function createDashboard({
      * reload the server list); else the Discord login, coming back to ?r=<dashboard path>.
      */
     async function index(req, res) {
-        const session = await readSession(req);
-        if (!session) return startLogin(req, res, { returnTo: str(req.query?.r, 300) || null });
+        const session = await readSession(req, res);
+        if (!session) {
+            const back = str(req.query?.r, 300) || null;
+            // A website login in this browser (hint cookie): "Continue as …" on /me instead of Discord.
+            if (sso && str(req.query?.discord, 1) !== '1' && parseCookies(req.headers?.cookie)[SSO_HINT_COOKIE] === '1') {
+                const target = back ? safeReturnPath(back) : null;
+                return res.redirect(302, `/me/dashboard${target && target !== rootPath() ? queryString({ r: target }) : ''}`);
+            }
+            return startLogin(req, res, { returnTo: back });
+        }
         if (str(req.query?.refresh, 1) === '1') return startLogin(req, res, { prompt: 'none' });
         if (typeof picker === 'function') return picker(req, res, session);
         return res.redirect(302, path('/overview'));
@@ -604,11 +638,49 @@ export function createDashboard({
             username: me.global_name || me.username || me.id,
             avatar: typeof me.avatar === 'string' ? me.avatar : null,
         });
-        res.append('Set-Cookie', serializeCookie(SESSION_COOKIE, signValue(session.id, secret), { ...cookieOptions, maxAgeMs: SESSION_TTL_MS }));
+        setSessionCookie(res, session);
         // Keyed by the user: a new login replaces the list (never one list per session).
-        if (guildList) guildLists.set(String(session.userId), guildList);
+        if (guildList) await lists.remember(String(session.userId), guildList);
         logger.info(`Dashboard login: ${me.id} (${guildList ? `${guildList.length} server(s) listed` : 'server list unavailable'})`);
         return res.redirect(303, safeReturnPath(taken.returnTo));
+    }
+
+    /**
+     * GET /dashboard/sso: the website login handed over (ssoHandoff.js). The grant comes only from
+     * the mewvo_dash_sso cookie (never the URL) and is used up here, whatever happens next.
+     * Blacklisted users are refused before a session exists. The server list: the user's stored
+     * OAuth list when there is one, else the servers Mewvo is in where the user is a member.
+     */
+    async function ssoLogin(req, res) {
+        res.append('Set-Cookie', clearCookie(SSO_COOKIE, { ...cookieOptions, path: SSO_PATH }));
+        const grant = sso ? sso.take(parseCookies(req.headers?.cookie)[SSO_COOKIE]) : null;
+        if (!grant) return failT(res, 400, 'ssoExpired', 'ssoExpiredText', null, { base: BASE }, req);
+        if (blacklist({ userId: grant.userId })?.kind === 'user') {
+            logger.info(`Dashboard login (website) refused for ${grant.userId}: blacklisted`);
+            return failT(res, 403, 'noAccess', 'blockedText', null, {}, req);
+        }
+        access.forget?.(grant.userId);
+        // created_at = the website login, so the 30-day cap counts from it. A Mewvo-account login
+        // (password, maybe 2FA) never proves a fresh DISCORD login: its session starts outside the
+        // Owner area's 12-hour window (ownerRoutes.js isSessionFresh), so owner POSTs still need
+        // a Discord login; everything else works as usual.
+        const now = Date.now();
+        const authAt = grant.accountId ? Math.min(grant.authAt ?? now, now - OWNER_SESSION_MAX_AGE_MS - 1000) : grant.authAt;
+        const session = await sessions.rotate(cookieSessionId(req), {
+            userId: grant.userId, username: grant.username || grant.userId, avatar: null, authAt,
+        }, now);
+        setSessionCookie(res, session);
+        let listed = 'stored list kept';
+        const stored = await lists.read(grant.userId);
+        if (!stored.list) {
+            const guilds = await buildBotGuildList(client, grant.userId, { mainGuildId: settings.mainGuildId });
+            // The store did not answer: memory only, never over a stored OAuth list.
+            if (stored.error) lists.keepInMemory(grant.userId, guilds);
+            else await lists.remember(grant.userId, guilds);
+            listed = `${guilds.length} server(s) found through the bot`;
+        }
+        logger.info(`Dashboard login (website${grant.accountId ? `, Mewvo account ${grant.accountId}` : ', Discord'}): ${grant.userId} (${listed})`);
+        return res.redirect(303, safeReturnPath(grant.returnTo));
     }
 
     /** One uniform 404 for a server that is not there for this user (bad id, bot absent, blacklisted, no access). */
@@ -625,7 +697,7 @@ export function createDashboard({
 
     /** Session + rate limit + live permission check for every page. */
     async function requireUser(req, res, next) {
-        const session = req.dashboardSession || await readSession(req);
+        const session = req.dashboardSession || await readSession(req, res);
         if (!session) {
             if (req.method === 'GET') return res.redirect(302, loginRedirect(req));
             return failT(res, 401, 'loggedOut', 'loggedOutText', null, { base: BASE }, req);
@@ -685,7 +757,7 @@ export function createDashboard({
      * req.dashboard.guildId is null and access is a no-access decision.
      */
     async function requireSession(req, res, next) {
-        const session = await readSession(req);
+        const session = await readSession(req, res);
         if (!session) {
             if (req.method === 'GET') return res.redirect(302, BASE);
             return failT(res, 401, 'loggedOut', 'loggedOutText', null, { base: BASE }, req);
@@ -1245,8 +1317,24 @@ export function createDashboard({
         if (!checkPost(req)) return failT(res, 403, 'notAllowed', 'logoutCsrf', req);
         await sessions.destroy(req.dashboard.session.id);
         res.append('Set-Cookie', clearCookie(SESSION_COOKIE, cookieOptions));
-        guildLists.delete(String(req.dashboard.session.userId));
+        await lists.forget(String(req.dashboard.session.userId));
         // To the website, not a dashboard page: one would start a new Discord login (often silent).
+        return res.redirect(303, '/');
+    }
+
+    /** POST /dashboard/logout-all: every dashboard session of this Discord user ends (this one too). */
+    async function logoutAll(req, res) {
+        if (!checkPost(req)) return failT(res, 403, 'notAllowed', 'logoutCsrf', req);
+        const { userId } = req.dashboard.session;
+        const ended = await sessions.destroyForUser(userId);
+        await sessions.destroy(req.dashboard.session.id);
+        // The website logins of this Discord id too: each could open the dashboard again (SSO).
+        const website = memberSessions ? await memberSessions.destroyForUser(userId) : 0;
+        res.append('Set-Cookie', clearCookie(SESSION_COOKIE, cookieOptions));
+        res.append('Set-Cookie', clearCookie(SSO_HINT_COOKIE, cookieOptions));
+        await lists.forget(String(userId));
+        access.forget?.(userId);
+        logger.info(`Dashboard: ${userId} logged out on all devices (${ended} dashboard, ${website} website session(s) ended)`);
         return res.redirect(303, '/');
     }
 
@@ -1332,15 +1420,15 @@ export function createDashboard({
 
     // "Delete this server's data" (server owner only; serverDataRoutes.js).
     const serverDataHandlers = createServerDataHandlers({
-        client, guildId, isHomeServer, settings, sessions, guildLists, startLogin, sendHtml, shellOf, fail, failT, textOfReq,
+        client, guildId, isHomeServer, settings, sessions, guildLists: lists, startLogin, sendHtml, shellOf, fail, failT, textOfReq,
         checkPost, postLimiter, serverNotFound, themeOf, path, ...(serverDataDeps ? { deps: serverDataDeps } : {}),
     });
 
     return {
         memberSearch: memberSearchHtml, memberSearchJson: memberSearchJsonHandler, serverData: serverDataHandlers,
-        guildId, isHomeServer, access, guildLists, startLogin, readSession, serverNotFound, requireSession, limiters: shared,
-        securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, requireUser, checkPost,
-        overview, handover, searchSave, searchDelete, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, notFound, setTheme, setNav, setLanguage, help, setup,
+        guildId, isHomeServer, access, guildLists, guildListStore: lists, startLogin, readSession, serverNotFound, requireSession, limiters: shared,
+        securityHeaders, limitByIp, stylesheet, staticFile, parseUpload, moduleUploadBody, index, callback, ssoLogin, requireUser, checkPost,
+        overview, handover, searchSave, searchDelete, modulesHub, cases, casesExport, caseDetail, appeals, staff, activity, audit, backup: (req, res) => backup(req, res), backupDownload, backupPreview, backupApply, modulePage, moduleAction, logout, logoutAll, notFound, setTheme, setNav, setLanguage, help, setup,
         sessions, states, confirms, permissionFix: permissionFixHandlers, enforcement: enforcementHandlers, owner: ownerHandlers, website: websiteHandlers, ownerErrors: ownerErrorsHandlers, inbox: inboxHandlers, badge, memberTools: memberToolsHandlers,
         incidents: createIncidentHandlers({ client, guildId, incidents, sendHtml, shellOf, notFound }),
     };
@@ -1392,19 +1480,23 @@ export function uploadBody(limitBytes, maxLabel = '8 MB') {
  * (guildDashboards.js), the picker and the router. `options` are createDashboard's (shared by
  * every instance). `accessFor(guildId)` builds a server's access checker (default
  * createAccessChecker(client, { guildId })); `blacklist` is blacklistHit (injectable).
- * Returns { router, registry, home, accessOf, guildLists, picker }.
+ * Returns { router, registry, home, accessOf, guildLists, guildListStore, picker }. `sso`: the
+ * website handoff store (ssoHandoff.js), passed on to every instance (GET /dashboard/sso).
  */
 export function createDashboardApp({
     client, settings, sessions, env = process.env, accessFor = null, blacklist = blacklistHit, owners = getBotOwners,
-    maxGuilds = undefined, idleMs = undefined, ...options
+    maxGuilds = undefined, idleMs = undefined, guildListKv = null, ...options
 }) {
+    const guildLists = options.guildLists || createGuildListCache();
     const shared = {
         states: options.states || createStateStore(),
         limiters: options.limiters || createDashboardLimiters(options.limits || DEFAULT_LIMITS),
         auditStore: options.auditStore || createAuditStore(),
         confirms: options.confirms || createConfirmStore(),
         memberSearch: options.memberSearch || createMemberSearch(),
-        guildLists: options.guildLists || createGuildListCache(),
+        guildLists,
+        // `guildListKv`: the key-value store behind the memory (registerDashboard: getFromDb / setInDb).
+        guildListStore: options.guildListStore || createGuildListStore({ memory: guildLists, kv: guildListKv }),
     };
     // One access checker per server (its own cache), kept like the instances (bounded, idle 2 h).
     const accessCheckers = createLruCache({ max: maxGuilds ?? 500, ttlMs: idleMs ?? 2 * 60 * 60 * 1000 });
@@ -1420,7 +1512,7 @@ export function createDashboardApp({
             return res.status(403).type('html').send(messagePage(tr.t('errors.noAccess'), tr.t('errors.blockedText'), null, { lang }));
         }
         const data = await collectPicker({
-            client, list: shared.guildLists.get(String(session.userId)) ?? null, mainGuildId: settings.mainGuildId,
+            client, list: await shared.guildListStore.load(String(session.userId)), mainGuildId: settings.mainGuildId,
             isOwner: isOwner(session.userId), checkAccess: (id) => accessOf(id).check(session.userId, { guildId: id, force: false }),
             isBlockedGuild: (id) => blacklist({ guildId: id })?.kind === 'guild', clientId: settings.clientId,
         });
@@ -1434,7 +1526,7 @@ export function createDashboardApp({
     }
 
     const build = (guildId) => {
-        const d = createDashboard({ ...options, client, settings, sessions, env, ...shared, guildId, access: accessOf(guildId), picker });
+        const d = createDashboard({ ...options, client, settings, sessions, env, ...shared, guildId, access: accessOf(guildId), picker, blacklist });
         d.router = guildRouter(d);
         return d;
     };
@@ -1445,11 +1537,15 @@ export function createDashboardApp({
         ...(maxGuilds ? { max: maxGuilds } : {}), ...(idleMs ? { idleMs } : {}),
     });
     const router = dashboardAppRouter({ home, registry, settings, client, blacklist, limiters: shared.limiters, accessOf });
-    return { router, registry, home, accessOf, guildLists: shared.guildLists, picker };
+    return { router, registry, home, accessOf, guildLists: shared.guildLists, guildListStore: shared.guildListStore, picker };
 }
 
 /** Adds the /dashboard routes (and the /staff redirect) when enabled. Returns true when registered. */
-export function registerDashboard(app, client, env = process.env, { sessions = null } = {}) {
+/**
+ * `sso`: the website → dashboard handoff store (ssoHandoff.js), shared with the member portal;
+ * only when the portal is on (app.js). `sessions`: the dashboard session store (tests).
+ */
+export function registerDashboard(app, client, env = process.env, { sessions = null, sso = null, memberSessions = null, guildListStore = null } = {}) {
     const settings = dashboardSettings(env);
     if (!settings.requested) return false;
     if (!settings.enabled) {
@@ -1457,7 +1553,12 @@ export function registerDashboard(app, client, env = process.env, { sessions = n
         return false;
     }
     const dashboard = createDashboardApp({
-        client, settings, env, sessions: sessions || createPgSessionStore({ query, table: pgConfig.tables.dashboard_sessions }), inboxBadge: true,
+        client, settings, env, sessions: sessions || createPgSessionStore({ query, table: pgConfig.tables.dashboard_sessions }), inboxBadge: true, sso,
+        // With SSO (the portal is on): the website sessions, for "Log out on all devices".
+        memberSessions: memberSessions || (sso ? createPgSessionStore({ query, table: pgConfig.tables.member_sessions, accounts: true }) : null),
+        // The server lists survive a restart (temp_data, 30 days; the OAuth token is never stored).
+        // app.js shares one store with the website (account deletion forgets the list).
+        ...(guildListStore ? { guildListStore } : { guildListKv: dbGuildListKv }),
     });
     app.use(BASE, dashboard.router);
     // The old read-only staff dashboard lived at /staff.
@@ -1509,7 +1610,7 @@ export function dashboardAppRouter({ home, registry, settings, client, blacklist
             // (owner decision 5: 301 in a later release), 307 for a POST so the form is re-sent.
             return redirectKeepingMethod(req, res, `${guildPath(mainId)}${restOf(req, BASE)}`, notFound);
         }
-        const session = await home.readSession(req);
+        const session = await home.readSession(req, res);
         if (!session) {
             const method = String(req.method || 'GET').toUpperCase();
             if (method === 'GET' || method === 'HEAD') {
@@ -1579,6 +1680,8 @@ function addGlobalRoutes(router, d) {
     router.post('/removed/:id/data/cancel', sdForm, safe(d.requireSession), safe(sd.removedCancel));
     // Logout needs a session, not access to any server.
     router.post('/logout', express.urlencoded({ extended: false, limit: '2kb' }), safe(d.requireSession), safe(d.logout));
+    router.post('/logout-all', express.urlencoded({ extended: false, limit: '2kb' }), safe(d.requireSession), safe(d.logoutAll));
+    router.get('/sso', d.limitByIp, safe(d.ssoLogin));
     const form = express.urlencoded({ extended: false, limit: '16kb' });
     // Owner area: login → live owner check (404 otherwise) → body. Image uploads: the owner check
     // runs before any of the body is read.

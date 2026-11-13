@@ -8,13 +8,21 @@
 //   GET  /me/callback  Discord comes back here; state checked (signed, 10 min, single use,
 //                      bound to this browser), then a fresh member session (rotation)
 //   POST /me/logout    CSRF token + same-origin check, then back to /me
+//   GET  /me/dashboard           "Continue as <name>": open the dashboard with this login (only
+//                                with the dashboard on and a Discord id on the session)
+//   POST /me/dashboard-handoff   same origin + CSRF + the shown user id → a one-time grant for
+//                                the dashboard (ssoHandoff.js), then 303 → /dashboard/sso
 //
 // Separate from the dashboard on every level, so a member login can never open the
 // dashboard and a dashboard login never opens this page:
 //   - own cookies (mewvo_me, mewvo_me_state) with Path=/me;
 //   - own signing key: an HMAC of SESSION_SECRET with a fixed label, so a value signed for
 //     the dashboard does not verify here (and the other way round), even under a renamed cookie;
-//   - own session table (member_sessions, same shape as dashboard_sessions, hashed ids, 1 h).
+//   - own session table (member_sessions, same shape as dashboard_sessions, hashed ids;
+//     sliding: 7 days without use, 30 days at most, sessionStore.js).
+// The one bridge is deliberate and one-way: /me/dashboard-handoff (ssoHandoff.js) lets a member
+// session with a Discord id open a NEW dashboard session for that same Discord user, after a
+// POST with CSRF + same origin; the dashboard still checks access on every page.
 //
 // What is shown (only for the user id from the OAuth session, never from the URL):
 // the counted warnings ("X of 3") and ladder level, the next-warning text of "My standing",
@@ -46,9 +54,10 @@ import { logger } from '../../utils/logger.js';
 import { html } from '../dashboard/html.js';
 import { portalTime } from './shell.js';
 import {
-    MIN_SECRET_LENGTH, STATE_TTL_MS, clearCookie, createRateLimiter, createState, createStateStore, hmac,
-    isSameOrigin, isSnowflake, parseCookies, safeEqual, serializeCookie, signValue, verifySignedValue,
+    MIN_SECRET_LENGTH, SESSION_IDLE_MS, STATE_TTL_MS, clearCookie, createRateLimiter, createState, createStateStore, hmac,
+    isSameOrigin, isSnowflake, parseCookies, safeEqual, serializeCookie, sessionCookieAge, signValue, verifySignedValue,
 } from '../dashboard/security.js';
+import { SSO_COOKIE, SSO_HINT_COOKIE, SSO_PATH, SSO_TTL_MS, handoffReturnPath } from '../dashboard/ssoHandoff.js';
 import { createPgSessionStore } from '../dashboard/sessionStore.js';
 import { query } from '../enforcement/db.js';
 import { OPEN_STATUSES, caseStatusCode, caseStatusLabel, listUserAppeals } from '../enforcement/caseService.js';
@@ -79,7 +88,8 @@ export const MEMBER_LINK_COOKIE = 'mewvo_me_link';
 export const MEMBER_FORGOT_COOKIE = 'mewvo_me_forgot';
 // What an account without Discord may still open (everything else redirects to /me/link).
 const LINK_STEP_OPEN = new Set(['GET /link', 'POST /link', 'GET /callback', 'POST /logout', 'POST /account/delete']);
-export const MEMBER_SESSION_TTL_MS = 60 * 60 * 1000;
+/** A new member session's lifetime (sliding: renewed on use, 30 days at most; sessionStore.js). */
+export const MEMBER_SESSION_TTL_MS = SESSION_IDLE_MS;
 // The label that turns SESSION_SECRET into this page's own signing key.
 const KEY_LABEL = 'mewvo member portal v1';
 const AUTHORIZE_URL = 'https://discord.com/oauth2/authorize';
@@ -386,6 +396,20 @@ ${ctx.accounts ? html`<p class="note">${ti('portal.login.signup', { href: `${MEM
     });
 }
 
+/** "Open the dashboard": Continue as <name> (POST with CSRF and the user id), or Discord instead. */
+export function dashboardHandoffPage(ctx, { session, back = null, discordLogin = '/dashboard?discord=1' }) {
+    const { t } = textOf(ctx);
+    const name = session.username || session.userId;
+    return layout(ctx, {
+        title: t('portal.dashboard.title'), active: 'me',
+        body: html`<div class="wrap page prose"><h1>${t('portal.dashboard.title')}</h1>
+<p class="lead">${t('portal.dashboard.lead', { name })}</p>
+<form method="post" action="${MEMBER_BASE}/dashboard-handoff"><input type="hidden" name="csrf" value="${session.csrf}"><input type="hidden" name="uid" value="${session.userId}">${back ? html`<input type="hidden" name="r" value="${back}">` : ''}
+<p><button class="button" type="submit">${t('portal.dashboard.continue', { name })}</button> <a class="button button-quiet" href="${discordLogin}">${t('portal.dashboard.discord')}</a></p></form>
+<p class="note">${t('portal.dashboard.note')}</p></div>`,
+    });
+}
+
 /** One server's summary cards: counted warnings, ladder level, active ban / mute. */
 function summaryCards(ctx, view) {
     const { t, ti } = textOf(ctx);
@@ -475,6 +499,9 @@ const clientIp = (req) => String(req.ip || req.socket?.remoteAddress || 'unknown
 export function createMemberPortal({
     settings, sessions, data = defaultData, fetchImpl = globalThis.fetch, states = createStateStore(),
     limits = MEMBER_LIMITS, context = () => ({}), premium = null, accounts = null, appeals = null,
+    // The dashboard handoff (ssoHandoff.js createHandoffStore) and the dashboard's session store
+    // ("Log out on all devices", password changes): only when the dashboard is on.
+    sso = null, dashboardSessions = null, guildLists = null,
 }) {
     const key = settings.signingKey;
     // Its own key for the return-path cookie, so it can never stand in for a session cookie.
@@ -529,6 +556,22 @@ export function createMemberPortal({
     async function readSession(req) {
         const id = cookieSessionId(req);
         return id ? sessions.get(id) : null;
+    }
+
+    // The dashboard hint (ssoHandoff.js): "this browser has a website login with Discord". Its
+    // Path is /dashboard, so /me never sees it: it is (re)set with the member cookie (login,
+    // rotation, hourly renewal) and lasts as long as the session.
+    const hintOptions = { secure: settings.secure, path: '/dashboard' };
+    const clearHint = (res) => { if (sso) res.append('Set-Cookie', clearCookie(SSO_HINT_COOKIE, hintOptions)); };
+    function setHint(res, session) {
+        if (!sso || !session?.userId) return;
+        res.append('Set-Cookie', serializeCookie(SSO_HINT_COOKIE, '1', { ...hintOptions, maxAgeMs: sessionCookieAge(session) }));
+    }
+
+    /** The member cookie with the session's remaining lifetime (sliding expiry), and the dashboard hint. */
+    function setSessionCookie(res, session) {
+        res.append('Set-Cookie', serializeCookie(MEMBER_SESSION_COOKIE, signValue(session.id, key), { ...cookieOptions, maxAgeMs: sessionCookieAge(session) }));
+        setHint(res, session);
     }
 
     /**
@@ -613,7 +656,7 @@ export function createMemberPortal({
         const session = await sessions.rotate(cookieSessionId(req), {
             userId: me.id, username: me.global_name || me.username || me.id, avatar: null,
         });
-        res.append('Set-Cookie', serializeCookie(MEMBER_SESSION_COOKIE, signValue(session.id, key), { ...cookieOptions, maxAgeMs: MEMBER_SESSION_TTL_MS }));
+        setSessionCookie(res, session);
         logger.info(`Member portal login: ${me.id}`);
         res.append('Set-Cookie', clearCookie(MEMBER_NEXT_COOKIE, cookieOptions));
         return res.redirect(303, safeNextPath(verifySignedValue(cookies[MEMBER_NEXT_COOKIE], nextKey) || MEMBER_BASE));
@@ -682,7 +725,44 @@ export function createMemberPortal({
         }
         await sessions.destroy(session.id);
         res.append('Set-Cookie', clearCookie(MEMBER_SESSION_COOKIE, cookieOptions));
+        clearHint(res);
         return res.redirect(303, MEMBER_BASE);
+    }
+
+    /**
+     * GET /me/dashboard: "Continue as <name>" for a member session with a Discord id. Without a
+     * session: the dashboard's own Discord login (the hint cookie was stale). ?r= a dashboard page.
+     */
+    async function dashboardPage(req, res) {
+        const back = handoffReturnPath(str(req.query?.r, 300));
+        const discordLogin = `/dashboard?discord=1${back ? `&r=${encodeURIComponent(back)}` : ''}`;
+        const session = await readSession(req);
+        if (!session?.userId) {
+            clearHint(res);
+            return res.redirect(302, discordLogin);
+        }
+        return send(res, 200, dashboardHandoffPage(ctx(), { session, back, discordLogin }));
+    }
+
+    /**
+     * POST /me/dashboard-handoff: same origin + this session's CSRF token + the user id the page
+     * showed (a login changed meanwhile → refused). The grant goes into a cookie for
+     * /dashboard/sso only (never the URL), 60 seconds, single use.
+     */
+    async function dashboardHandoff(req, res) {
+        const session = await readSession(req);
+        if (!session?.userId) return fail(res, 401, 'notLoggedIn', { login: true });
+        if (!isSameOrigin(req, settings.publicOrigin) || !safeEqual(str(req.body?.csrf, 100), session.csrf)
+            || !safeEqual(str(req.body?.uid, 25), session.userId)) {
+            return fail(res, 403, 'handoffNotAllowed');
+        }
+        const value = sso.issue({
+            userId: session.userId, accountId: session.accountId, username: session.username, authAt: session.createdAt,
+            returnTo: handoffReturnPath(str(req.body?.r, 300)),
+        });
+        res.append('Set-Cookie', serializeCookie(SSO_COOKIE, value, { secure: settings.secure, path: SSO_PATH, maxAgeMs: SSO_TTL_MS }));
+        logger.info(`Member portal: ${session.userId} opened the dashboard with the website login${session.accountId ? ` (account ${session.accountId})` : ''}`);
+        return res.redirect(303, SSO_PATH);
     }
 
     function notFound(req, res) {
@@ -700,6 +780,7 @@ export function createMemberPortal({
     const accountHandlers = accounts ? createAccountHandlers({
         settings, accountSettings: accounts.settings, store: accounts.store, sessions, ctx, send, clientIp, cookieOptions, key,
         sessionCookie: MEMBER_SESSION_COOKIE, cookieSessionId, readSession, sessionTtlMs: MEMBER_SESSION_TTL_MS,
+        dashboardSessions, clearHint, setSessionCookie, guildLists,
         startLink: (req, res, accountId) => startOAuth(req, res, { linkAccountId: accountId }),
         startReset: (req, res) => startOAuth(req, res, { forgot: true }),
         ...(accounts.limits ? { limits: accounts.limits } : {}), ...(accounts.hashParams ? { hashParams: accounts.hashParams } : {}),
@@ -746,6 +827,8 @@ export function createMemberPortal({
         } catch (error) {
             logger.warn(`Member portal: top bar could not read the session: ${error.message}`);
         }
+        // Sliding expiry: a renewed session gets its cookie again with the new Max-Age.
+        if (session?.renewed) setSessionCookie(res, session);
         const here = { lang: requestLanguage(req), path: memberPath(req), query: memberQuery(req) };
         return requests.run(here, () => {
             const who = session ? { name: session.username || textOf(ctx()).t('portal.viewer.fallbackName'), accountId: session.accountId || null, csrf: session.csrf } : null;
@@ -779,6 +862,10 @@ export function createMemberPortal({
         r.get('/callback', limitBy(loginLimiter), safe(callback));
         r.get('/data', limitBy(exportLimiter), safe(dataExport));
         r.post('/logout', limitBy(pageLimiter), express.urlencoded({ extended: false, limit: '2kb' }), safe(logout));
+        if (sso) {
+            r.get('/dashboard', limitBy(pageLimiter), safe(dashboardPage));
+            r.post('/dashboard-handoff', limitBy(loginLimiter), express.urlencoded({ extended: false, limit: '2kb' }), safe(dashboardHandoff));
+        }
         if (appealHandlers) {
             r.get('/appeals', limitBy(pageLimiter), safe(appealHandlers.list));
             r.get('/appeal/:code', limitBy(pageLimiter), safe(appealHandlers.form));
@@ -804,6 +891,7 @@ export function createMemberPortal({
             post('/account/password', a.passwordPost);
             post('/account/2fa/start', a.twoStepStart); post('/account/2fa/enable', a.twoStepEnable); post('/account/2fa/disable', a.twoStepDisable);
             post('/account/unlink', a.unlinkPost); post('/account/delete', a.deletePost);
+            post('/account/logout-all', a.logoutAllPost);
             post('/account/language', a.languagePost);
         }
         if (billing) {
@@ -824,7 +912,7 @@ export function createMemberPortal({
         return r;
     }
 
-    return { headers, login, callback, index, dataExport, logout, notFound, router, sessions, states, billing, accounts: accountHandlers, appeals: appealHandlers };
+    return { headers, login, callback, index, dataExport, logout, dashboardPage, dashboardHandoff, notFound, router, sessions, states, billing, accounts: accountHandlers, appeals: appealHandlers };
 }
 
 /**
@@ -848,6 +936,7 @@ export function portalAppealData(client) {
 export function registerMemberPortal(app, {
     env = process.env, dashboardEnabled = false, supportInvite = () => null, sessions = null, data, fetchImpl, limits, premium,
     accountStore = null, accountLimits = null, hashParams = null, accountAfter = null, client = null, appeals = null, personalLanguage = null,
+    sso = null, dashboardSessions = null, guildLists = null,
 } = {}) {
     const settings = memberPortalSettings(env);
     if (!settings.requested) return false;
@@ -890,7 +979,12 @@ export function registerMemberPortal(app, {
         accounts,
         // Web appeals need the bot (submitAppeal opens the staff channel, server names): on with a client.
         appeals: appeals || (client ? portalAppealData(client) : null),
-        sessions: sessions || createPgSessionStore({ query, table: pgConfig.tables.member_sessions, ttlMs: MEMBER_SESSION_TTL_MS, accounts: true }),
+        sessions: sessions || createPgSessionStore({ query, table: pgConfig.tables.member_sessions, accounts: true }),
+        // Website → dashboard (ssoHandoff.js): only with the dashboard on.
+        sso: dashboardEnabled ? sso : null,
+        // The dashboard's server lists (serverPicker.js createGuildListStore, shared by app.js).
+        guildLists: dashboardEnabled ? guildLists : null,
+        dashboardSessions: dashboardEnabled ? (dashboardSessions || createPgSessionStore({ query, table: pgConfig.tables.dashboard_sessions })) : null,
         context,
         // "My record" names each server from the bot's cache (portalAppeals.serverLabel).
         ...(data ? { data } : client ? { data: { ...defaultData, guildName: (id) => client.guilds?.cache?.get(id)?.name || null } } : {}),

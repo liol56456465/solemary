@@ -50,7 +50,7 @@
     "lead": "Guarda il tuo storico di moderazione in ogni server che usa Mewvo: i tuoi avvertimenti, il tuo livello, eventuali ban o silenziamenti attivi, i tuoi casi e i tuoi ricorsi.",
     "withDiscord": "Accedi con Discord",
     "withAccount": "Accedi con un account Mewvo",
-    "note": "Mewvo chiede a Discord solo chi sei (il permesso identify): niente email, niente server, nient'altro. Vedi sempre e solo il tuo storico. L'accesso dura un'ora.",
+    "note": "Mewvo chiede a Discord solo chi sei (il permesso identify): niente email, niente server, nient’altro. Vedi sempre e solo il tuo storico. L’accesso dura fino a 30 giorni e termina dopo 7 giorni senza uso, o quando esci.",
     "signup": "Non hai ancora un account Mewvo? [Creane uno]({href}) per accedere con nome utente e password.",
     "appealLead": "Accedi con Discord per fare ricorso contro una sanzione di qualsiasi server che usa Mewvo. Vedi sempre e solo i tuoi casi."
   },
@@ -172,6 +172,10 @@
     "appealsUnavailable": {
       "title": "Ricorsi non disponibili",
       "message": "Non è stato possibile caricare i tuoi ricorsi perché il database non risponde. Non è stato modificato nulla: riprova tra qualche minuto."
+    },
+    "handoffNotAllowed": {
+      "title": "Non aperta",
+      "message": "La dashboard non è stata aperta: la richiesta non proviene da questa pagina, oppure ora hai effettuato l’accesso come qualcun altro. Riprova dal sito."
     }
   },
   "viewer": {
@@ -277,5 +281,12 @@
       "logIn": "Accedi di nuovo",
       "copyHint": "Dopo l’accesso torni a questo ricorso con il modulo vuoto."
     }
+  },
+  "dashboard": {
+    "title": "Apri la dashboard",
+    "lead": "Hai effettuato l’accesso a questo sito come {name}. Apri la dashboard con questo accesso, senza accedere di nuovo con Discord.",
+    "continue": "Continua come {name}",
+    "discord": "Accedi invece con Discord",
+    "note": "La dashboard controlla comunque i tuoi permessi in ogni server, su ogni pagina. Il tuo elenco dei server mostra poi i server con Mewvo di cui sei membro; lì puoi aggiornarlo da Discord."
   }
 }

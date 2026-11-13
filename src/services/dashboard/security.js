@@ -7,7 +7,14 @@
 import crypto from 'crypto';
 
 export const BASE_PATH = '/dashboard';
-export const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+// Sessions (dashboard and website): sliding. A session ends after SESSION_IDLE_MS without use,
+// and at the latest SESSION_MAX_AGE_MS after the login; use renews it at most every
+// SESSION_RENEW_MS (sessionStore.js), and the cookie's Max-Age follows expires_at.
+export const SESSION_IDLE_MS = 7 * 24 * 60 * 60 * 1000;
+export const SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+export const SESSION_RENEW_MS = 60 * 60 * 1000;
+/** The longest a session can live (the server list is kept as long). */
+export const SESSION_TTL_MS = SESSION_MAX_AGE_MS;
 export const STATE_TTL_MS = 10 * 60 * 1000;
 export const SESSION_COOKIE = 'mewvo_dash';
 export const STATE_COOKIE = 'mewvo_dash_state';
@@ -162,6 +169,12 @@ export function serializeCookie(name, value, { maxAgeMs = null, secure = false, 
     if (maxAgeMs !== null) parts.push(`Max-Age=${Math.max(0, Math.floor(maxAgeMs / 1000))}`);
     if (secure) parts.push('Secure');
     return parts.join('; ');
+}
+
+/** A session cookie's Max-Age: the time left until the session's expires_at (never negative). */
+export function sessionCookieAge(session, now = Date.now()) {
+    // Whole seconds, rounded up: the milliseconds since the session was read never shave a second off.
+    return Math.ceil(Math.max(0, Number(session?.expiresAt) - now || 0) / 1000) * 1000;
 }
 
 export function clearCookie(name, { secure = false, path = BASE_PATH } = {}) {

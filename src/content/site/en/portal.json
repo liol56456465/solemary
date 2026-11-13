@@ -49,7 +49,7 @@
     "lead": "See your own moderation record in every server that uses Mewvo: your warnings, warning stage, any active ban or mute, your cases and your appeals.",
     "withDiscord": "Log in with Discord",
     "withAccount": "Log in with a Mewvo account",
-    "note": "Mewvo asks Discord only who you are (the identify permission): no email, no servers, nothing else. You only ever see your own record. The login lasts one hour.",
+    "note": "Mewvo asks Discord only who you are (the identify permission): no email, no servers, nothing else. You only ever see your own record. The login lasts up to 30 days and ends after 7 days without use, or when you log out.",
     "signup": "No Mewvo account yet? [Create one]({href}) to log in with a username and password.",
     "appealLead": "Log in with Discord to appeal a punishment from any server that uses Mewvo. You only ever see your own cases."
   },
@@ -119,7 +119,15 @@
     "tryLater": { "title": "Try again later", "message": "This page could not be loaded because the database is not responding. Nothing was changed." },
     "caseNotFound": { "title": "Case not found", "message": "That case code was not found for your account. Check the code in your DM." },
     "appealNotAllowed": { "title": "Not allowed", "message": "The appeal did not come from this page. Open the appeal page again and send it from there." },
-    "appealsUnavailable": { "title": "Appeals unavailable", "message": "Your appeals could not be loaded because the database is not responding. Nothing was changed: try again in a few minutes." }
+    "appealsUnavailable": { "title": "Appeals unavailable", "message": "Your appeals could not be loaded because the database is not responding. Nothing was changed: try again in a few minutes." },
+    "handoffNotAllowed": { "title": "Not opened", "message": "The dashboard was not opened: the request did not come from this page, or you are logged in as someone else now. Try again from the website." }
+  },
+  "dashboard": {
+    "title": "Open the dashboard",
+    "lead": "You are logged in on this website as {name}. Open the dashboard with this login, without logging in with Discord again.",
+    "continue": "Continue as {name}",
+    "discord": "Log in with Discord instead",
+    "note": "The dashboard still checks your permissions in each server on every page. Your server list then shows the servers with Mewvo where you are a member; you can refresh it from Discord there."
   },
   "viewer": {
     "fallbackName": "Account"

@@ -15,10 +15,14 @@
   "refresh": "Refresh server list",
   "refreshHint": "A server missing?",
   "refreshTitle": "Server list not loaded",
-  "refreshText": "Mewvo keeps your server list only in memory, for up to 12 hours. Refresh it to see all your servers.",
+  "refreshText": "Mewvo keeps your server list for up to 30 days (never your Discord login token). Refresh it to see all your servers.",
   "addTitle": "Add Mewvo to a server",
   "addIntro": "Servers you manage where Mewvo is not added yet.",
   "add": "Add Mewvo",
   "addLabel": "Add Mewvo to {name}",
-  "ownerArea": "Owner area"
+  "ownerArea": "Owner area",
+  "fromBotTitle": "Servers found through Mewvo",
+  "fromBotText": "You opened the dashboard with your website login, so this list shows only servers that have Mewvo and where you are a member. Refresh it from Discord to see all your servers, also the ones where you can add Mewvo.",
+  "refreshFromDiscord": "Refresh server list from Discord",
+  "logoutAllHint": "“Log out on all devices” ends every dashboard login of your Discord account, this one too."
 }

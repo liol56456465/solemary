@@ -775,9 +775,9 @@ test('CSRF and Origin on every per-server POST: missing, wrong or another sessio
     try {
         const { cookie, csrf } = await h.loginAs(ADMIN);
         const other = await h.loginAs(ADMIN);
-        // /logout is global (below); /backup is home-only (404 in A); /removed/<id>/data/… is global
+        // /logout and /logout-all are global (below; logout-all: dashboardSessions.test.js); /backup is home-only (404 in A); /removed/<id>/data/… is global
         // (a server Mewvo left; its CSRF check: tests/serverDataDeletion.test.js).
-        const posts = concreteRoutes().filter((r) => r.method === 'POST' && r.key !== OWNER_AREA && r.path !== '/logout' && !r.path.startsWith('/backup') && !r.path.startsWith('/removed/'));
+        const posts = concreteRoutes().filter((r) => r.method === 'POST' && r.key !== OWNER_AREA && r.path !== '/logout' && r.path !== '/logout-all' && !r.path.startsWith('/backup') && !r.path.startsWith('/removed/'));
         const bad = [
             ['no token', { form: { ...fullForm(csrf), csrf: undefined } }],
             ['wrong token', { form: { ...fullForm(csrf), csrf: 'w'.repeat(43) } }],

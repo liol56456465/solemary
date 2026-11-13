@@ -120,7 +120,8 @@
       "moderator": "Moderator",
       "ownerView": "Podgląd i ustawienia (właściciel bota)",
       "administrator": "Administrator"
-    }
+    },
+    "logoutAll": "Wyloguj się ze wszystkich urządzeń"
   },
   "message": {
     "backOverview": "Wróć do przeglądu",

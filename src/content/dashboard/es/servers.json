@@ -15,10 +15,14 @@
   "refresh": "Actualizar la lista de servidores",
   "refreshHint": "¿Falta un servidor?",
   "refreshTitle": "Lista de servidores no cargada",
-  "refreshText": "Mewvo guarda tu lista de servidores solo en memoria, hasta 12 horas. Actualízala para ver todos tus servidores.",
+  "refreshText": "Mewvo guarda tu lista de servidores hasta 30 días (nunca tu token de inicio de sesión de Discord). Actualízala para ver todos tus servidores.",
   "addTitle": "Añadir Mewvo a un servidor",
   "addIntro": "Servidores que gestionas donde Mewvo aún no está.",
   "add": "Añadir Mewvo",
   "addLabel": "Añadir Mewvo a {name}",
-  "ownerArea": "Área del propietario"
+  "ownerArea": "Área del propietario",
+  "fromBotTitle": "Servidores encontrados a través de Mewvo",
+  "fromBotText": "Abriste el panel con tu sesión de la web, así que esta lista solo muestra servidores que tienen Mewvo y de los que eres miembro. Actualízala desde Discord para ver todos tus servidores, también aquellos a los que puedes añadir Mewvo.",
+  "refreshFromDiscord": "Actualizar la lista de servidores desde Discord",
+  "logoutAllHint": "«Cerrar sesión en todos los dispositivos» cierra todas las sesiones del panel de tu cuenta de Discord, también esta."
 }

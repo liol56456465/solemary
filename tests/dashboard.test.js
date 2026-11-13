@@ -388,7 +388,7 @@ test('OAuth callback logs an admin in with a signed session cookie; no token rea
     assert.equal(res.statusCode, 303);
     assert.equal(res.redirectedTo, '/dashboard', 'no return path: the server picker');
     const sessionCookie = res.cookies.find((c) => c.startsWith(`${SESSION_COOKIE}=`));
-    assert.match(sessionCookie, /Path=\/dashboard; HttpOnly; SameSite=Lax; Max-Age=43200; Secure/);
+    assert.match(sessionCookie, /Path=\/dashboard; HttpOnly; SameSite=Lax; Max-Age=604800; Secure/);
     assert.ok(!res.cookies.join().includes('tok'), 'access token never set as cookie');
     assert.equal(fetchCalls.length, 3, 'token, /users/@me and /users/@me/guilds, once each');
     assert.equal(fetchCalls[2].url, 'https://discord.com/api/v10/users/@me/guilds');

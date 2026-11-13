@@ -106,7 +106,7 @@ test('every registered dashboard route has a table entry (the gate never falls b
     const { router } = mounted.find((m) => m.base === '/dashboard');
     const routes = router.stack.filter((layer) => layer.route).flatMap((layer) => Object.keys(layer.route.methods).map((m) => [m.toUpperCase(), layer.route.path]));
     assert.ok(routes.length > 50, `found ${routes.length}`);
-    const open = new Set(['/static/:file', '/theme', '/', '/oauth/callback']); // no login: never behind requireUser
+    const open = new Set(['/static/:file', '/theme', '/', '/oauth/callback', '/sso']); // no login: never behind requireUser
     const sample = (p) => p.replace(':id', TARGET).replace(':code', CODE).replace(':module', 'automod').replace(':action', 'enabled').replace(':job', 'j1').replace(':file', 'x');
     for (const [method, routePath] of routes) {
         if (open.has(routePath)) continue;

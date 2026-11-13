@@ -49,7 +49,7 @@
     "lead": "Consulte ton propre dossier de modération dans chaque serveur qui utilise Mewvo : tes avertissements, ton palier, un bannissement ou une mise en sourdine en cours, tes dossiers et tes appels.",
     "withDiscord": "Se connecter avec Discord",
     "withAccount": "Se connecter avec un compte Mewvo",
-    "note": "Mewvo demande seulement à Discord qui tu es (l’autorisation identify) : pas d’e-mail, pas de serveurs, rien d’autre. Tu ne vois jamais que ton propre dossier. La connexion dure une heure.",
+    "note": "Mewvo demande seulement à Discord qui tu es (l’autorisation identify) : pas d’e-mail, pas de serveurs, rien d’autre. Tu ne vois jamais que ton propre dossier. La connexion dure jusqu’à 30 jours et se termine après 7 jours sans utilisation, ou quand tu te déconnectes.",
     "signup": "Pas encore de compte Mewvo ? [Crée-en un]({href}) pour te connecter avec un nom d’utilisateur et un mot de passe.",
     "appealLead": "Connecte-toi avec Discord pour faire appel d'une sanction de n'importe quel serveur qui utilise Mewvo. Tu ne vois jamais que tes propres dossiers."
   },
@@ -170,6 +170,10 @@
     "appealsUnavailable": {
       "title": "Appels indisponibles",
       "message": "Tes appels n'ont pas pu être chargés car la base de données ne répond pas. Rien n'a été modifié : réessaie dans quelques minutes."
+    },
+    "handoffNotAllowed": {
+      "title": "Pas ouvert",
+      "message": "Le tableau de bord n’a pas été ouvert : la demande ne provient pas de cette page, ou tu es maintenant connecté en tant que quelqu’un d’autre. Réessaie depuis le site."
     }
   },
   "viewer": {
@@ -270,5 +274,12 @@
       "logIn": "Se reconnecter",
       "copyHint": "Après la connexion, tu reviens à cet appel avec un formulaire vide."
     }
+  },
+  "dashboard": {
+    "title": "Ouvrir le tableau de bord",
+    "lead": "Tu es connecté à ce site en tant que {name}. Ouvre le tableau de bord avec cette connexion, sans te reconnecter avec Discord.",
+    "continue": "Continuer en tant que {name}",
+    "discord": "Me connecter plutôt avec Discord",
+    "note": "Le tableau de bord vérifie toujours tes autorisations dans chaque serveur, sur chaque page. Ta liste de serveurs montre alors les serveurs avec Mewvo dont tu es membre ; tu peux l’actualiser depuis Discord là-bas."
   }
 }
