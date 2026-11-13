@@ -41,6 +41,8 @@
     "logChannelHelp": "Das Team bekommt hier eine kurze Zeile, wenn ein Ticket geöffnet, übernommen, geschlossen oder gelöscht wird.",
     "transcriptChannel": "Transkript-Kanal",
     "transcriptChannelHelp": "Ein Transkript ist eine Datei mit allen Nachrichten eines Tickets. Mewvo postet sie hier, wenn das Ticket geschlossen wird.",
+    "advancedLogs": "Transkripte und Bewertungen eines Mitglieds lieber in einem Forumbeitrag? Wähle {link} auf der Seite Logs.",
+    "advancedLogsLink": "Erweiterte Logs",
     "buttonText": "Button-Text",
     "buttonTextHelp": "Die Worte auf dem Button, mit dem Mitglieder ein Ticket öffnen.",
     "panelMessage": "Panel-Nachricht",

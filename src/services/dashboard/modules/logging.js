@@ -32,8 +32,13 @@ const destinationLabel = (tr, d) => (DESTINATION_LABEL[d] ? tr.t(DESTINATION_LAB
 /** What Mewvo needs in a log forum: see it, start posts and write in them, with embeds. */
 const FORUM_PERMS = ['ViewChannel', 'SendMessages', 'SendMessagesInThreads', 'EmbedLinks', 'ReadMessageHistory'];
 
-/** A forum kind's label: the Logging channel label, or the mod log's own. */
-const forumKindLabel = (tr, kind) => (kind === 'modlog' ? tr.t('logging.forums.modlog') : destinationLabel(tr, kind));
+/** Forum kinds that are not Logging page channels: their own label (logging.forums.<kind>). */
+const OWN_FORUM_LABEL = new Set(['modlog', 'tickets']);
+/** Forum kinds whose logs carry files (ticket/modmail transcripts, appeal transcripts in the mod log): Attach Files too. */
+const FILE_FORUM_KINDS = new Set(['modlog', 'tickets']);
+
+/** A forum kind's label: the Logging channel label, or the kind's own. */
+const forumKindLabel = (tr, kind) => (OWN_FORUM_LABEL.has(kind) ? tr.t(`logging.forums.${kind}`) : destinationLabel(tr, kind));
 
 /** The Advanced logs card: Normal / Advanced and a forum per kind, plus the how-to box. */
 function forumsSection(ctx, status, tipHidden) {
@@ -42,7 +47,7 @@ function forumsSection(ctx, status, tipHidden) {
     const forums = status.forums || {};
     const modes = [['normal', tr.t('logging.forums.normal')], ['advanced', tr.t('logging.forums.advanced')]];
     const rows = LOG_FORUM_KINDS.map((kind) => html`<div class="grid">${selectInput(`mode:${kind}`, forums[kind] ? 'advanced' : 'normal', modes, { label: forumKindLabel(tr, kind) })}
-${channelPicker(g, `forum:${kind}`, forums[kind] || null, { label: tr.t('logging.forums.forum'), kinds: ['forum'], perms: FORUM_PERMS, help: tr.t('logging.forums.forumHelp') })}</div>`);
+${channelPicker(g, `forum:${kind}`, forums[kind] || null, { label: tr.t('logging.forums.forum'), kinds: ['forum'], perms: FILE_FORUM_KINDS.has(kind) ? [...FORUM_PERMS, 'AttachFiles'] : FORUM_PERMS, help: tr.t('logging.forums.forumHelp') })}</div>`);
     const form = postForm(ctx, 'logging', 'forums', html`${rows}`, { submit: tr.t('logging.forums.submit'), reset: true, className: 'log-forums' });
     // The how-to: open while a kind is Advanced, else hidden until one is picked (static script); never
     // rendered once this user hid it for good.

@@ -124,6 +124,7 @@ ${numberInput('maxTicketsPerUser', t.maxTicketsPerUser ?? 3, { label: tr.t('tick
 ${switchInput('dmOnClose', t.dmOnClose !== false, { label: tr.t('tickets.settings.dmOnClose'), help: tr.t('tickets.settings.dmOnCloseHelp') })}
 ${channelPicker(g, 'ticketLogsChannelId', t.ticketLogsChannelId, { label: tr.t('tickets.settings.logChannel'), perms: PERMS.post, help: tr.t('tickets.settings.logChannelHelp') })}
 ${channelPicker(g, 'ticketTranscriptChannelId', t.ticketTranscriptChannelId, { label: tr.t('tickets.settings.transcriptChannel'), perms: PERMS.postFiles, help: tr.t('tickets.settings.transcriptChannelHelp') })}
+<p class="muted">${tr.tx('tickets.settings.advancedLogs', { link: html`<a href="${path('/logging')}#s-advanced-logs">${tr.t('tickets.settings.advancedLogsLink')}</a>` })}</p>
 ${textInput('ticketButtonLabel', t.ticketButtonLabel || tr.t('tickets.defaults.buttonLabel'), { label: tr.t('tickets.settings.buttonText'), max: 80, help: tr.t('tickets.settings.buttonTextHelp') })}
 ${textArea('ticketPanelMessage', t.ticketPanelMessage || '', { label: tr.t('tickets.settings.panelMessage'), max: 2000, help: tr.t('tickets.settings.panelMessageHelp') })}</div>`);
         const canPost = ctx.canEdit && ctx.canAct;

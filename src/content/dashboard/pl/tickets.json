@@ -41,6 +41,8 @@
     "logChannelHelp": "Ekipa dostaje tu krótką linijkę, gdy ticket zostanie otwarty, przejęty, zamknięty lub usunięty.",
     "transcriptChannel": "Kanał transkrypcji",
     "transcriptChannelHelp": "Transkrypcja to plik ze wszystkimi wiadomościami z ticketu. Mewvo publikuje go tutaj, gdy ticket się zamyka.",
+    "advancedLogs": "Chcesz mieć transkrypcje i oceny każdego członka w jednym poście na forum? Wybierz {link} na stronie Dzienniki.",
+    "advancedLogsLink": "Zaawansowane logi",
     "buttonText": "Tekst przycisku",
     "buttonTextHelp": "Słowa na przycisku, którym członkowie otwierają ticket.",
     "panelMessage": "Wiadomość panelu",

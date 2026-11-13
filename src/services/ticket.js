@@ -25,6 +25,8 @@ import { sendLoggedDm } from './botDm/dmLog.js';
 import { createPendingRating, handlingStaffId, ratingSettings, setRatingDelivery } from './ticketRatingService.js';
 import { channelSurveyPayload } from './ticketRatingEffects.js';
 import { safeServerName } from './enforcement/dmTemplates.js';
+import { logForumId, logForumMessageRef, sendToLogForum } from './logForum.js';
+import { formatDuration } from './enforcement/format.js';
 const TICKET_DELETE_DELAY_MS = 3000;
 const TICKET_DELETE_DELAY_SECONDS = Math.floor(TICKET_DELETE_DELAY_MS / 1000);
 const TICKET_SERVICE = 'ticketService';
@@ -950,18 +952,87 @@ function buildTranscriptAttachment(transcript) {
 }
 
 /**
+ * The close summary of a ticket for the Advanced tickets log: number, opener, who handled and closed
+ * it, the reason and how long it was open. English, like the other ticket logs.
+ */
+function ticketCloseSummaryEmbed(channel, ticketData, executor) {
+  const closerId = ticketData.closedBy || executor?.id || null;
+  const handler = handlingStaffId(ticketData, closerId);
+  const opened = Date.parse(ticketData.createdAt);
+  const closed = Date.parse(ticketData.closedAt) || Date.now();
+  const inlineFields = [
+    { name: 'Ticket', value: `#${ticketData.id}`, inline: true },
+    { name: 'Opened by', value: ticketData.userId ? `<@${ticketData.userId}>` : 'Unknown', inline: true },
+    { name: 'Closed by', value: closerId ? `<@${closerId}>` : 'Unknown', inline: true },
+  ];
+  if (handler && handler !== String(closerId)) inlineFields.push({ name: 'Handled by', value: `<@${handler}>`, inline: true });
+  if (Number.isFinite(opened)) inlineFields.push({ name: 'Open for', value: formatDuration(Math.max(0, closed - opened)), inline: true });
+  inlineFields.push({ name: 'Channel', value: `#${channel.name}`, inline: true });
+  return buildStandardLogEmbed({
+    color: 0xED4245,
+    title: 'Ticket closed',
+    inlineFields,
+    fields: [{ name: 'Reason', value: String(ticketData.closeReason || 'No reason given').slice(0, 1024), inline: false }],
+    footer: { text: 'Mewvo tickets' },
+    timestamp: true,
+  });
+}
+
+/**
+ * Advanced tickets log: the close summary (+ the transcript file) in the opener's post. Returns null
+ * when the tickets log is Normal, { ref, summary: true } when posted, { ref: null, summary: true }
+ * when the forum failed (the caller posts in the transcript channel instead). Never throws.
+ */
+async function postTicketToForum(channel, ticketData, executor, transcript) {
+  const config = await getGuildConfig(channel.client, channel.guild.id).catch(() => null);
+  const forumId = logForumId(config, 'tickets');
+  if (!forumId) return null;
+  const posted = await sendToLogForum({
+    guild: channel.guild,
+    forumId,
+    subject: ticketData.userId ? { id: String(ticketData.userId) } : null,
+    payload: {
+      embeds: [ticketCloseSummaryEmbed(channel, ticketData, executor)],
+      ...(transcript ? { files: [buildTranscriptAttachment(transcript)] } : {}),
+    },
+  });
+  return { ref: logForumMessageRef(posted), summary: true };
+}
+
+/** The close summary alone in the transcript channel (Advanced, no transcript, forum failed). Never throws. */
+async function sendSummaryFallback(channel, ticketData, executor) {
+  try {
+    const config = await getGuildConfig(channel.client, channel.guild.id);
+    const target = config.ticketTranscriptChannelId
+      ? await channel.client.channels.fetch(config.ticketTranscriptChannelId).catch(() => null)
+      : null;
+    if (!target?.isSendable?.() || target.guildId !== channel.guild.id) return;
+    await target.send({ embeds: [ticketCloseSummaryEmbed(channel, ticketData, executor)], allowedMentions: { parse: [] } });
+  } catch (error) {
+    logger.warn(`Ticket close summary not posted: ${error.message}`, { guildId: channel.guild.id, ticketId: ticketData.id });
+  }
+}
+
+/**
  * The transcript to the staff transcript channel and, by DM, to the opener. `dmAlreadySent`: the
  * closure DM already carried it (closeTicket), so no second DM; it still counts as delivered by DM.
  */
 async function deliverTicketTranscript(channel, ticketData, executor, { persist = false, dmAlreadySent = false, dmsClosed = false } = {}) {
   const transcript = await generateTranscript(channel);
+  // Advanced tickets log (logForum.js): the close summary, with the transcript file when there is one,
+  // in the opener's post; there the summary replaces the "closed" log (ticketLogging.js skips it).
+  const forum = await postTicketToForum(channel, ticketData, executor, transcript);
+  if (forum?.ref) ticketData.transcriptLog = forum.ref;
   if (!transcript) {
-    // The closure DM already carried a transcript: record that delivery even though the staff copy failed.
-    if (persist && dmAlreadySent) {
+    // No transcript and the forum failed: the summary still reaches staff, in the transcript channel.
+    if (forum && !forum.ref) await sendSummaryFallback(channel, ticketData, executor);
+    // The closure DM already carried a transcript, or the summary is in the forum: record that (a
+    // later rating edits the forum message; a delete does not post a second summary).
+    if (persist && (dmAlreadySent || forum?.ref)) {
       ticketData.transcriptSentAt = new Date().toISOString();
-      ticketData.transcriptDelivery = { channel: false, dm: true };
+      ticketData.transcriptDelivery = { channel: Boolean(forum?.ref), dm: dmAlreadySent };
       await saveTicketData(channel.guild.id, channel.id, ticketData).catch((error) => {
-        logger.warn('Transcript was delivered by DM but ticket metadata could not be saved', { guildId: channel.guild.id, ticketId: ticketData.id, error: error.message });
+        logger.warn('Transcript delivery could not be saved in the ticket metadata', { guildId: channel.guild.id, ticketId: ticketData.id, error: error.message });
       });
     }
     return { generated: false, channelSent: false, dmSent: dmAlreadySent };
@@ -980,7 +1051,27 @@ async function deliverTicketTranscript(channel, ticketData, executor, { persist 
   let channelSent = false;
   let dmSent = false;
 
-  if (config.ticketTranscriptChannelId) {
+  const transcriptEmbed = () => buildStandardLogEmbed({
+    color: 0x3498db,
+    title: 'Ticket transcript',
+    description: [
+      formatLogLine('Ticket', `#${ticketData.id}`),
+      formatLogLine('Channel', `#${channel.name}`),
+      formatLogLine('Generated', `<t:${Math.floor(Date.now() / 1000)}:F>`),
+    ].join('\n'),
+    footer: executor?.username
+      ? { text: `Generated by ${executor.username}`, iconURL: executor.displayAvatarURL?.() }
+      : undefined,
+    timestamp: true,
+  });
+
+  // Posted in the forum (above): not again in the transcript channel. A rating given later is added
+  // to that message (ticketRatingEffects.js). A forum failure: the transcript channel, with the
+  // summary in place of the usual embed (the "closed" log was skipped for the forum).
+  if (forum?.ref) channelSent = true;
+  const channelEmbed = () => (forum?.summary ? ticketCloseSummaryEmbed(channel, ticketData, executor) : transcriptEmbed());
+
+  if (!channelSent && config.ticketTranscriptChannelId) {
     try {
       const transcriptChannel = await channel.client.channels
         .fetch(config.ticketTranscriptChannelId)
@@ -997,22 +1088,8 @@ async function deliverTicketTranscript(channel, ticketData, executor, { persist 
           transcriptChannelId: transcriptChannel.id,
         });
       } else {
-        const transcriptEmbed = buildStandardLogEmbed({
-          color: 0x3498db,
-          title: 'Ticket transcript',
-          description: [
-            formatLogLine('Ticket', `#${ticketData.id}`),
-            formatLogLine('Channel', `#${channel.name}`),
-            formatLogLine('Generated', `<t:${Math.floor(Date.now() / 1000)}:F>`),
-          ].join('\n'),
-          footer: executor?.username
-            ? { text: `Generated by ${executor.username}`, iconURL: executor.displayAvatarURL?.() }
-            : undefined,
-          timestamp: true,
-        });
-
         const transcriptMessage = await transcriptChannel.send({
-          embeds: [transcriptEmbed],
+          embeds: [channelEmbed()],
           files: [buildTranscriptAttachment(transcript)],
           allowedMentions: { parse: [] },
         });
@@ -1028,7 +1105,7 @@ async function deliverTicketTranscript(channel, ticketData, executor, { persist 
         error: error.message,
       });
     }
-  } else {
+  } else if (!channelSent) {
     logger.warn('No transcript channel configured; transcript will only be delivered by DM when allowed', {
       guildId: channel.guild.id,
       ticketNumber: ticketData.id,

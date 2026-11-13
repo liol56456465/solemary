@@ -33,6 +33,7 @@
     "submit": "Save advanced logs",
     "saved": "Advanced logs saved.",
     "modlog": "Punishments (mod log)",
+    "tickets": "Tickets (transcripts and reviews, one post per member)",
     "tip": {
       "title": "How advanced logs work",
       "step1": "Create a forum channel in Discord and let Mewvo see it, create posts and send messages in posts.",

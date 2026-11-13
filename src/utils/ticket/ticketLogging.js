@@ -8,7 +8,8 @@ import {
   formatRatingStars,
   resolveUserAuthor,
 } from '../logging/logEmbeds.js';
-import { commentFieldName, commentFieldValue } from '../../services/ticketRatingService.js';
+import { LOW_RATING_MAX, commentFieldName, commentFieldValue } from '../../services/ticketRatingService.js';
+import { logForumId, sendToLogForum } from '../../services/logForum.js';
 
 export async function logTicketEvent({ client, guildId, event }) {
   try {
@@ -20,36 +21,63 @@ export async function logTicketEvent({ client, guildId, event }) {
 
     const config = await getGuildConfig(client, guildId);
 
+    // Advanced (logForum.js, owner 2026-11-13): the tickets forum keeps only a member's useful ticket
+    // history in their post: reviews here, the close summary + transcript in ticket.js. Routine events
+    // (opened, claimed, pinned, priority, deleted…) are not posted anywhere then, not even the channel.
+    const forumId = logForumId(config, 'tickets');
+    if (forumId && !FORUM_EVENTS.has(event.type)) {
+      return null;
+    }
     const logChannelId = getLogChannelForEventType(config, event.type);
+    if (!logChannelId && !forumId) {
+      return null;
+    }
+
+    const embed = await createTicketLogEmbed(guild, event, { forum: Boolean(forumId) });
+    const files = event.attachments?.length > 0 ? event.attachments : null;
+
+    if (forumId) {
+      // The member the ticket is about: its opener. On any failure the normal channel below.
+      const subjectId = event.userId || null;
+      const posted = await sendToLogForum({
+        guild, forumId,
+        subject: subjectId ? { id: String(subjectId) } : null,
+        payload: { embeds: [embed], ...(files ? { files } : {}) },
+      });
+      if (posted) {
+        logger.info(`Ticket event logged in the log forum: ${event.type} in guild ${guildId}`);
+        return posted;
+      }
+    }
     if (!logChannelId) {
-      return;
+      return null;
     }
 
     const channel = guild.channels.cache.get(logChannelId) || await guild.channels.fetch(logChannelId).catch(() => null);
     if (!channel) {
       logger.warn(`Ticket log channel not found: ${logChannelId} for event type: ${event.type}`);
-      return;
+      return null;
     }
 
     const permissions = channel.permissionsFor(guild.members.me);
     if (!permissions.has(['SendMessages', 'EmbedLinks'])) {
       logger.warn(`Missing permissions in ticket log channel: ${logChannelId}`);
-      return;
+      return null;
     }
-
-    const embed = await createTicketLogEmbed(guild, event);
 
     // Log embeds name members as mentions; nothing in a log ever pings.
     const messageOptions = { embeds: [embed], allowedMentions: { parse: [] } };
 
-    if (event.attachments && event.attachments.length > 0) {
-      messageOptions.files = event.attachments;
+    if (files) {
+      messageOptions.files = files;
     }
 
-    await channel.send(messageOptions);
+    const sent = await channel.send(messageOptions);
     logger.info(`Ticket event logged: ${event.type} in guild ${guildId}`);
+    return sent;
   } catch (error) {
     logger.error('Error logging ticket event:', error);
+    return null;
   }
 }
 
@@ -84,6 +112,9 @@ export async function logTicketFeedback({
   });
 }
 
+/** Ticket events that go in the member's post when the tickets log is Advanced (the rest are skipped). */
+const FORUM_EVENTS = new Set(['feedback', 'transcript']);
+
 function getLogChannelForEventType(config, eventType) {
   switch (eventType) {
     case 'transcript':
@@ -116,7 +147,7 @@ const TICKET_EVENT_STYLES = {
   feedback: { color: 0x57F287, title: 'Ticket feedback' },
 };
 
-async function createTicketLogEmbed(guild, event) {
+async function createTicketLogEmbed(guild, event, { forum = false } = {}) {
   const style = TICKET_EVENT_STYLES[event.type] || { color: 0x95a5a6, title: 'Ticket event' };
   const ticketNumber = event.ticketNumber || event.ticketId;
   const ticketRef = ticketNumber ? `#${ticketNumber}` : 'Unknown';
@@ -228,6 +259,11 @@ async function createTicketLogEmbed(guild, event) {
       ];
       if (staffId) {
         inlineFields.push({ name: 'Handled by', value: `<@${staffId}>`, inline: true });
+      }
+      // Advanced: the member's post is their record, so a low rating is said in so many words (the
+      // alert itself goes to the alerts channel, ticketRatingEffects.postLowRatingAlert).
+      if (forum && rating !== null && rating !== undefined && Number(rating) <= LOW_RATING_MAX) {
+        inlineFields.push({ name: 'Low rating', value: `Yes (${LOW_RATING_MAX}/5 or less)`, inline: true });
       }
 
       if (comment) {

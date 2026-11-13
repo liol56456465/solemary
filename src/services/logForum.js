@@ -9,6 +9,10 @@
 // destinations (loggingService.logEvent) plus 'modlog' (punishments) and 'dashboard' (website
 // and dashboard changes), both posted by enforcementService.postModLog. 'automod' (everything automod
 // did, automod/automodLog.js) is a destination too; postModLog's `automated` records also go there.
+// 'tickets': a member's ticket history in their post (owner, 2026-11-13): per closed ticket one
+// message with the close summary and the transcript file, per closed modmail its transcript, and
+// their reviews (ratings, comments). Routine ticket events (opened, claimed, pinned…) are not posted
+// at all in that mode.
 //
 // Which post belongs to a member is stored per forum (key-value, no table): switching to another
 // forum starts new posts there. A post that was deleted is created again. An archived post is
@@ -23,7 +27,7 @@ import { Mutex } from '../utils/mutex.js';
 import { getFromDb, setInDb } from '../utils/database.js';
 
 /** The kinds that can be "Advanced" (Logging page order). */
-export const LOG_FORUM_KINDS = Object.freeze(['audit', 'moderation', 'members', 'messages', 'server', 'community', 'dashboard', 'automod', 'modlog']);
+export const LOG_FORUM_KINDS = Object.freeze(['audit', 'moderation', 'members', 'messages', 'server', 'community', 'dashboard', 'automod', 'modlog', 'tickets']);
 
 const SNOWFLAKE = /^\d{17,20}$/;
 const SERVER_SUBJECT = 'server';
@@ -75,7 +79,7 @@ function warnOnce(guildId, forumId, message, now = Date.now()) {
 }
 
 /** The usable forum channel, or null (missing, not a forum, other server, missing permissions). */
-async function usableForum(guild, forumId) {
+async function usableForum(guild, forumId, { files = false } = {}) {
     const forum = guild.channels?.cache?.get(forumId) || await guild.channels?.fetch?.(forumId).catch(() => null);
     if (!forum || forum.type !== ChannelType.GuildForum || (forum.guildId && String(forum.guildId) !== String(guild.id))) {
         warnOnce(guild.id, forumId, `Log forum ${forumId} in guild ${guild.id} is missing or not a forum; posting in the normal log channel`);
@@ -83,7 +87,8 @@ async function usableForum(guild, forumId) {
     }
     const me = guild.members?.me;
     const perms = me ? forum.permissionsFor?.(me) : null;
-    if (!perms || !perms.has(FORUM_PERMS)) {
+    // A log with files (transcripts) also needs Attach Files, else it would be posted without them.
+    if (!perms || !perms.has(files ? [...FORUM_PERMS, PermissionFlagsBits.AttachFiles] : FORUM_PERMS)) {
         warnOnce(guild.id, forumId, `Mewvo lacks permissions in log forum ${forumId} (guild ${guild.id}); posting in the normal log channel`);
         return null;
     }
@@ -123,7 +128,7 @@ const isLimit = (error) => Number(error?.code) === MAX_ACTIVE_THREADS || Number(
 export async function sendToLogForum({ guild, forumId, subject = null, payload }) {
     try {
         if (!guild || !forumId) return null;
-        const forum = await usableForum(guild, forumId);
+        const forum = await usableForum(guild, forumId, { files: Boolean(payload?.files?.length) });
         if (!forum) return null;
         if ((pausedUntil.get(`${guild.id}:${forum.id}`) || 0) > Date.now()) return null;
         const who = subject?.id && SNOWFLAKE.test(String(subject.id)) ? String(subject.id) : SERVER_SUBJECT;
@@ -170,6 +175,18 @@ export async function sendToLogForum({ guild, forumId, subject = null, payload }
         warnOnce(guild?.id, forumId, `Log forum ${forumId} failed (${error.message}); posting in the normal log channel`);
         return null;
     }
+}
+
+/**
+ * Where a sendToLogForum result is found again to edit it later: { channelId, messageId }, or null.
+ * A new post is the thread itself; in a forum its first message has the thread's id. Pure.
+ */
+export function logForumMessageRef(posted) {
+    if (!posted?.id) return null;
+    const isThread = typeof posted.isThread === 'function' ? posted.isThread() : !posted.channelId;
+    return isThread
+        ? { channelId: String(posted.id), messageId: String(posted.id) }
+        : { channelId: String(posted.channelId), messageId: String(posted.id) };
 }
 
 /** Forum ids of this config that are in use (any kind), for checks such as the tamper guard. Pure. */
