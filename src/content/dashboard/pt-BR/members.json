@@ -286,5 +286,26 @@
     "tooShort": "Digite pelo menos 2 letras do nome.",
     "discordFailed": "O Discord não respondeu à busca, então só aparecem os membros que o Mewvo já conhece.",
     "bansFailed": "Não foi possível carregar a lista de banimentos, então os usuários banidos não aparecem."
+  },
+  "quarantine": {
+    "title": "Quarentena",
+    "help": "Tira todos os cargos (eles são salvos) e esconde todos os canais. A pessoa continua no servidor e recebe uma DM com o motivo e o seu convite do servidor de suporte. A administração principal é mencionada no canal de alertas.",
+    "reason": "Motivo (enviado à pessoa)",
+    "reasonHint": "Obrigatório. Aparece na DM, no alerta e no registro de moderação.",
+    "submit": "Colocar em quarentena",
+    "confirm": "Colocar {name} em quarentena? A pessoa perde todos os cargos e não vê nenhum canal até ser liberada.",
+    "active": "Em quarentena desde {date}. Motivo: {reason}",
+    "release": "Liberar da quarentena",
+    "releaseConfirm": "Liberar {name}? Os cargos salvos voltam.",
+    "notSet": "A quarentena precisa de um cargo de quarentena que o Mewvo possa dar.",
+    "setLink": "Defina em Punições e recursos → Cargos.",
+    "unreadable": "Não foi possível ler agora se este membro está em quarentena (o banco de dados não responde).",
+    "notDecider": "Só o dono do servidor e os cargos que decidem (Punições e recursos → Cargos) podem decidir o que acontece agora.",
+    "keep": "Manter em quarentena (revisado)",
+    "kick": "Expulsar",
+    "kickConfirm": "Expulsar {name}? A pessoa recebe antes uma DM e um convite de uso único para voltar.",
+    "ban": "Banir",
+    "banReason": "Motivo do banimento (enviado à pessoa)",
+    "banConfirm": "Banir {name}? A pessoa recebe antes uma DM."
   }
 }

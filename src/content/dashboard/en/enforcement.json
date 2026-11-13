@@ -69,7 +69,22 @@
     "warn1": "Role at 1 warning",
     "warn2": "Role at 2 warnings",
     "warn3": "Role at 3 or more warnings",
-    "warnRoleN": "Warning role {number}"
+    "warnRoleN": "Warning role {number}",
+    "quarantine": "Quarantine role",
+    "quarantineHelp": "Given instead of all other roles when someone is quarantined: by a raid, by the staff guard, or by hand on a member page. Mewvo hides every channel from it. Not set: raids kick and the staff guard removes staff roles, as before.",
+    "quarantineHasPerms": "The quarantine role has permissions of its own. Give it none: it should only take access away.",
+    "quarantinePing": "Head admin roles to ping when someone is quarantined (up to {max})",
+    "quarantinePingShort": "Ping role",
+    "quarantinePingHelp": "The quarantine alert in the alerts channel mentions these roles, and nobody else. Hold Ctrl (Cmd on a Mac) to choose more than one.",
+    "quarantineInfo": "Quarantine info channel (quarantined members see only this, read-only)",
+    "quarantineInfoHelp": "Quarantined members can read this one channel but not post or react there. Not set: they see no channel at all.",
+    "quarantineInfoPost": "Post the quarantine info message",
+    "quarantineInfoPostHelp": "Posts a message from Mewvo in the quarantine info channel that explains the quarantine to them (in the server language). Posting again replaces the old message.",
+    "quarantineRefusePerms": "The quarantine role must have no permissions of its own (every quarantined member would get them). Pick a role without any, or remove them in Discord first.",
+    "quarantineRefuseHeld": "Members already have this role ({count}): Mewvo hides every channel from it, so they would all lose access. Make a new empty role for quarantine.",
+    "quarantineDeciders": "Who can decide on quarantined members (up to {max} roles)",
+    "quarantineDecidersShort": "Decider role",
+    "quarantineDecidersHelp": "Holders of these roles (and the server owner) choose Release, Kick, Ban or Keep for a quarantined member, on the alert or the member page. Other Administrators can quarantine but not decide. The ping roles above are separate."
   },
   "timings": {
     "title": "Appeals and reports",
@@ -188,7 +203,10 @@
     "transparencyOn": "The transparency report is on: /transparency is public.",
     "transparencyOff": "The transparency report is off: /transparency is gone from the website.",
     "trustOn": "The trust card is on: /trust is public.",
-    "trustOff": "The trust card is off: /trust is gone from the website."
+    "trustOff": "The trust card is off: /trust is gone from the website.",
+    "quarantineInfoNoChannel": "Set a quarantine info channel (a text channel Mewvo can post in) first.",
+    "quarantineInfoPosted": "The quarantine info message is posted in #{channel}.",
+    "quarantineInfoReplaced": "The quarantine info message is posted in #{channel}; the old one was removed."
   },
   "appealsHome": {
     "title": "Where members appeal",

@@ -281,5 +281,26 @@
     "tooShort": "Gib mindestens 2 Buchstaben des Namens ein.",
     "discordFailed": "Discord hat auf die Suche nicht geantwortet, daher werden nur Mitglieder angezeigt, die Mewvo schon kennt.",
     "bansFailed": "Die Bannliste konnte nicht geladen werden, daher werden gebannte Nutzer nicht angezeigt."
+  },
+  "quarantine": {
+    "title": "Quarantäne",
+    "help": "Nimmt alle Rollen weg (sie werden gespeichert) und verbirgt alle Kanäle. Das Mitglied bleibt auf dem Server und bekommt eine DM mit dem Grund und deinem Support-Server-Link. Leitende Admins werden im Meldungskanal erwähnt.",
+    "reason": "Grund (wird dem Mitglied geschickt)",
+    "reasonHint": "Pflichtfeld. Steht in der DM, in der Meldung und im Mod-Log.",
+    "submit": "Unter Quarantäne stellen",
+    "confirm": "{name} unter Quarantäne stellen? Das Mitglied verliert alle Rollen und sieht keinen Kanal, bis es freigegeben wird.",
+    "active": "Unter Quarantäne seit {date}. Grund: {reason}",
+    "release": "Aus der Quarantäne freigeben",
+    "releaseConfirm": "{name} freigeben? Die gespeicherten Rollen kommen zurück.",
+    "notSet": "Für die Quarantäne braucht es eine Quarantäne-Rolle, die Mewvo vergeben kann.",
+    "setLink": "Lege sie unter Strafen & Einsprüche → Rollen fest.",
+    "unreadable": "Ob dieses Mitglied unter Quarantäne ist, kann gerade nicht gelesen werden (Datenbank antwortet nicht).",
+    "notDecider": "Nur der Serverbesitzer und die Entscheider-Rollen (Strafen & Einsprüche → Rollen) können entscheiden, wie es weitergeht.",
+    "keep": "In Quarantäne lassen (geprüft)",
+    "kick": "Kicken",
+    "kickConfirm": "{name} kicken? Das Mitglied bekommt zuerst eine DM und eine einmalige Einladung zum Zurückkommen.",
+    "ban": "Bannen",
+    "banReason": "Bann-Grund (wird dem Mitglied geschickt)",
+    "banConfirm": "{name} bannen? Das Mitglied bekommt zuerst eine DM."
   }
 }

@@ -342,3 +342,52 @@ test('texts: no "main server" wording left in the automod and commands module te
     }
     assert.ok(!/main server/i.test(getModule('automod').help));
 });
+
+test('support invite card: another server edits its own appealsInvite (may clear it), never Mewvo\'s; home edits the Support invite (required)', async () => {
+    const module = getModule('support');
+    const other = ctxFor(OTHER, { registry: { appealsHome: 'mewvo' } });
+    const page = String(module.render(other, await module.load(other)));
+    assert.ok(page.includes('name="appealsInvite"'), 'the card is there in another server');
+    assert.ok(!page.includes('name="supportServerInvite"'));
+    assert.match(page, /sent to Mewvo’s support server/, 'appealsHome mewvo: the note says where members go now');
+    await run('support', 'support-invite', other, { appealsInvite: 'https://discord.gg/ours' });
+    assert.deepEqual(other.calls.at(-1), { name: 'updateSettings', guildId: OTHER, patch: { appealsInvite: 'https://discord.gg/ours' } });
+    await run('support', 'support-invite', other, { appealsInvite: '' });
+    assert.deepEqual(other.calls.at(-1).patch, { appealsInvite: null }, 'cleared');
+    await assert.rejects(run('support', 'support-invite', other, { appealsInvite: 'https://evil.example/x' }), /not a Discord invite link/);
+    assert.ok(getAction(module, 'support-invite').admin, 'Administrator only');
+
+    const main = ctxFor(MAIN);
+    await assert.rejects(run('support', 'support-invite', main, { supportServerInvite: '' }), /cannot be empty/);
+    await run('support', 'support-invite', main, { supportServerInvite: 'https://discord.gg/newone' });
+    assert.deepEqual(main.calls.at(-1).patch, { supportServerInvite: 'https://discord.gg/newone' });
+});
+
+test('enforcement roles: quarantine role and up to 5 ping roles saved; the hidden marker lets an empty list clear them; a form without them changes nothing', async () => {
+    const R1 = '600000000000000001';
+    const R2 = '600000000000000002';
+    const ctx = ctxFor(OTHER, { registry: { quarantinePingRoleIds: [R2] } });
+    for (const id of [R1, R2]) ctx.guild.roles.cache.set(id, { id, name: `r${id.slice(-1)}`, position: 1, managed: false });
+    await run('enforcement', 'roles', ctx, { quarantineRoleId: R1, quarantinePingRoleIds: [R1, R2], quarantinePingSent: '1' });
+    assert.deepEqual(ctx.calls.at(-1).patch, { quarantineRoleId: R1, quarantinePingRoleIds: [R1, R2] });
+    await run('enforcement', 'roles', ctx, { quarantinePingSent: '1' });
+    assert.deepEqual(ctx.calls.at(-1).patch, { quarantinePingRoleIds: [] }, 'nothing selected: cleared');
+    const before = ctx.calls.length;
+    await run('enforcement', 'roles', ctx, { mutedRoleId: '' });
+    assert.equal(ctx.calls.length, before, 'Setup step by step (only the Muted role): the quarantine settings stay');
+    const six = Array.from({ length: 6 }, (_, i) => `60000000000000010${i}`);
+    await assert.rejects(run('enforcement', 'roles', ctx, { quarantinePingRoleIds: six, quarantinePingSent: '1' }), /at most 5|5/);
+});
+
+test('enforcement roles: a new quarantine role with permissions, or one members already hold, is refused (control: an empty role saves)', async () => {
+    const ctx = ctxFor(OTHER);
+    const roleWith = (id, { bits = 0n, holders = 0 } = {}) => ({ id, name: `r${id.slice(-1)}`, position: 1, managed: false, permissions: { bitfield: bits }, members: { size: holders } });
+    ctx.guild.roles.cache.set('600000000000000011', roleWith('600000000000000011', { bits: 8n }));
+    ctx.guild.roles.cache.set('600000000000000012', roleWith('600000000000000012', { holders: 40 }));
+    ctx.guild.roles.cache.set('600000000000000013', roleWith('600000000000000013'));
+    await assert.rejects(run('enforcement', 'roles', ctx, { quarantineRoleId: '600000000000000011' }), /no permissions of its own/);
+    await assert.rejects(run('enforcement', 'roles', ctx, { quarantineRoleId: '600000000000000012' }), /already have this role \(40\)/);
+    assert.equal(ctx.calls.length, 0);
+    await run('enforcement', 'roles', ctx, { quarantineRoleId: '600000000000000013' });
+    assert.deepEqual(ctx.calls.at(-1).patch, { quarantineRoleId: '600000000000000013' });
+});

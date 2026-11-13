@@ -85,7 +85,12 @@
     "timeoutRemoved": "Exclusion temporaire de {name} retirée.",
     "timedOut": "{name} est exclu temporairement pour {length}.",
     "notVerified": "{name} n’a pas le rôle de vérification.",
-    "unverified": "Vérification retirée à {name}."
+    "unverified": "Vérification retirée à {name}.",
+    "quarantineReason": "Écris une raison : elle est envoyée au membre.",
+    "quarantineBlocked": "La limite de sécurité a mis en pause tes actions de modération, donc tu ne peux pas mettre en quarantaine pour l’instant.",
+    "quarantined": "{name} est en quarantaine. Le MP a été remis.",
+    "quarantinedNoDm": "{name} est en quarantaine. Le MP n’a pas pu être remis (MP fermés).",
+    "released": "Libéré de la quarantaine. Rôles rendus : {roles}."
   },
   "bulk": {
     "action": {

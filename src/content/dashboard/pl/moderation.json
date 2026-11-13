@@ -85,7 +85,12 @@
     "timeoutRemoved": "Przerwa dla {name} zdjęta.",
     "timedOut": "{name} ma przerwę na {length}.",
     "notVerified": "{name} nie ma roli zweryfikowanego.",
-    "unverified": "Weryfikacja zdjęta z {name}."
+    "unverified": "Weryfikacja zdjęta z {name}.",
+    "quarantineReason": "Wpisz powód: zostanie wysłany członkowi.",
+    "quarantineBlocked": "Limit bezpieczeństwa wstrzymał twoje działania moderacyjne, więc teraz nie możesz nikogo objąć kwarantanną.",
+    "quarantined": "{name} jest na kwarantannie. DM dostarczono.",
+    "quarantinedNoDm": "{name} jest na kwarantannie. Nie udało się dostarczyć DM (zamknięte DM).",
+    "released": "Zwolniono z kwarantanny. Oddane role: {roles}."
   },
   "bulk": {
     "action": {

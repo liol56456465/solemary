@@ -85,7 +85,12 @@
     "timeoutRemoved": "Castigo de {name} removido.",
     "timedOut": "{name} está de castigo por {length}.",
     "notVerified": "{name} não tem o cargo de verificado.",
-    "unverified": "Verificação removida de {name}."
+    "unverified": "Verificação removida de {name}.",
+    "quarantineReason": "Escreva um motivo: ele é enviado ao membro.",
+    "quarantineBlocked": "O limite de segurança pausou suas ações de moderação, então você não pode colocar ninguém em quarentena agora.",
+    "quarantined": "{name} está em quarentena. A DM foi entregue.",
+    "quarantinedNoDm": "{name} está em quarentena. Não foi possível entregar a DM (DMs fechadas).",
+    "released": "Liberado da quarentena. Cargos devolvidos: {roles}."
   },
   "bulk": {
     "action": {

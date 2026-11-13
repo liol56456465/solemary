@@ -12,5 +12,17 @@
   "appealsCategory": "Categoria de apelações de banimento e expulsão",
   "appealsCategoryHelp": "Uma categoria é uma pasta de canais. Cada apelação de banimento ou expulsão ganha aqui um canal onde o membro pode falar com a equipe. A equipe decide em um canal só da equipe no servidor principal. Não definida: as apelações abrem no servidor principal, só para a equipe.",
   "invite": "Link de convite enviado aos membros banidos: {invite}. Você pode {change}.",
-  "changeLink": "mudar isso em Punições e apelações"
+  "changeLink": "mudar isso em Punições e apelações",
+  "notConnectedOther": "Nenhum servidor de suporte está conectado aqui: um segundo servidor para membros banidos (cargo de banido, canais de recurso) é só para os servidores do Mewvo por enquanto. Os membros recebem o seu convite do servidor de suporte acima.",
+  "yourInvite": {
+    "title": "Seu convite do servidor de suporte",
+    "cardHelp": "As DMs de punição e de quarentena dizem aos membros para entrar neste servidor para conversar.",
+    "label": "Seu convite do servidor de suporte",
+    "help": "Um convite permanente para o seu próprio servidor de suporte (discord.gg/…). É a mesma configuração que “Seu convite de recurso” em Punições e recursos. Vazio: as DMs não têm linha de convite.",
+    "helpHome": "O servidor de suporte do Mewvo: o convite que as DMs de punição e de quarentena citam. Também em Punições e recursos → Canais.",
+    "mewvoNote": "Por enquanto seus membros são enviados ao servidor de suporte do Mewvo, não a este convite. Você pode mudar isso em {link}.",
+    "mewvoLink": "Onde os membros recorrem",
+    "bad": "Isso não é um link de convite do Discord (https://discord.gg/…).",
+    "required": "O convite do servidor de suporte não pode ficar vazio aqui."
+  }
 }

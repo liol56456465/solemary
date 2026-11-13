@@ -437,6 +437,28 @@ function noContactEndedDmText(order, other, { early = false, serverName: name, l
 }
 
 /**
+ * A quarantine reason made safe for a DM line (it sits inside **bold**): one line, at most 300
+ * characters, markdown escaped, @ and < broken so it can never render as a mention.
+ */
+export function safeDmReason(reason) {
+    const flat = String(reason ?? '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300);
+    return escapeMarkdown(flat, { maskedLink: true }).replace(/@/g, '@\u200b').replace(/</g, '<\u200b');
+}
+
+/**
+ * The quarantine DM (enforcement/quarantineService.js): "You have been quarantined in **{server}**
+ * for **{reason}**." and, when the server has a support invite (appealInvite), "To talk this out,
+ * join {invite}." `serverName`: the Discord name (made safe here; home servers say Mewvo).
+ */
+function quarantineDmText({ guildId = null, serverName: name = '', reason = '', invite = null } = {}, { lang } = {}) {
+    const tr = textOf(lang);
+    const server = dmServerName(guildId, name, tr.t('enforcement.dm.thisServer'));
+    const lines = [tr.t('enforcement.quarantine.dm.body', { server, reason: safeDmReason(reason) || tr.t('enforcement.quarantine.dm.noReason') })];
+    if (invite) lines.push(tr.t('enforcement.quarantine.dm.invite', { invite }));
+    return lines.join('\n');
+}
+
+/**
  * The "Contest this" button under an automod DM whose message was deleted
  * (automodContest.js), in the DM's language. DM buttons work without a shared server.
  * customId carries the case code: amcontest:open:<code> (unchanged in every language).
@@ -478,3 +500,4 @@ export const muteEndedDm = englishOnError('muteEndedDm', muteEndedDmText);
 export const caseVoidedDm = englishOnError('caseVoidedDm', caseVoidedDmText);
 export const noContactStartedDm = englishOnError('noContactStartedDm', noContactStartedDmText);
 export const noContactEndedDm = englishOnError('noContactEndedDm', noContactEndedDmText);
+export const quarantineDm = englishOnError('quarantineDm', quarantineDmText);

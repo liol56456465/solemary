@@ -12,5 +12,17 @@
   "appealsCategory": "Kategoria odwołań od bana i wyrzucenia",
   "appealsCategoryHelp": "Kategoria to folder kanałów. Każde odwołanie od bana lub wyrzucenia dostaje tu kanał, na którym członek może porozmawiać z ekipą. Ekipa decyduje na kanale tylko dla ekipy na głównym serwerze. Nie ustawiono: odwołania otwierają się na głównym serwerze, widoczne tylko dla ekipy.",
   "invite": "Link z zaproszeniem wysyłany zbanowanym: {invite}. Możesz go {change}.",
-  "changeLink": "zmienić w sekcji Kary i odwołania"
+  "changeLink": "zmienić w sekcji Kary i odwołania",
+  "notConnectedOther": "Nie podłączono tu serwera wsparcia: drugi serwer dla zbanowanych członków (rola bana, kanały odwołań) jest na razie tylko dla serwerów Mewvo. Członkowie dostają twoje zaproszenie na serwer wsparcia powyżej.",
+  "yourInvite": {
+    "title": "Twoje zaproszenie na serwer wsparcia",
+    "cardHelp": "Wiadomości DM o karach i kwarantannie mówią członkom, aby dołączyli do tego serwera i to wyjaśnili.",
+    "label": "Twoje zaproszenie na serwer wsparcia",
+    "help": "Stałe zaproszenie na twój własny serwer wsparcia (discord.gg/…). To to samo ustawienie co „Twoje zaproszenie do odwołań” w Karach i odwołaniach. Puste: w DM nie ma linii z zaproszeniem.",
+    "helpHome": "Serwer wsparcia Mewvo: zaproszenie podawane w DM o karach i kwarantannie. Także w Kary i odwołania → Kanały.",
+    "mewvoNote": "Na razie twoi członkowie są kierowani na serwer wsparcia Mewvo, nie na to zaproszenie. Możesz to zmienić w {link}.",
+    "mewvoLink": "Gdzie członkowie się odwołują",
+    "bad": "To nie jest link zaproszenia Discord (https://discord.gg/…).",
+    "required": "Zaproszenie na serwer wsparcia nie może być tu puste."
+  }
 }

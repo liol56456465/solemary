@@ -12,5 +12,17 @@
   "appealsCategory": "Ban and kick appeals category",
   "appealsCategoryHelp": "A category is a folder of channels. Each ban or kick appeal gets a channel here where the member can talk to staff. Staff decide in a staff-only channel in the main server. Not set: appeals open staff-only in the main server.",
   "invite": "Invite link sent to banned members: {invite}. You can {change}.",
-  "changeLink": "change it on Enforcement & appeals"
+  "changeLink": "change it on Enforcement & appeals",
+  "notConnectedOther": "No support server is connected here: a second server for banned members (banned role, appeal channels) is only for Mewvo’s own servers for now. Your support server invite above is what members are sent.",
+  "yourInvite": {
+    "title": "Your support server invite",
+    "cardHelp": "Punishment and quarantine DMs tell members to join this server to talk things out.",
+    "label": "Your support server invite",
+    "help": "A permanent invite to your own support server (discord.gg/…). It is the same setting as “Your appeal invite” on Enforcement & appeals. Empty: the DMs have no invite line.",
+    "helpHome": "Mewvo’s Support server: the invite punishment and quarantine DMs name. Also on Enforcement & appeals → Channels.",
+    "mewvoNote": "Your members are sent to Mewvo’s support server for now, not this invite. You can change that under {link}.",
+    "mewvoLink": "Where members appeal",
+    "bad": "That is not a Discord invite link (https://discord.gg/…).",
+    "required": "The support server invite cannot be empty here."
+  }
 }

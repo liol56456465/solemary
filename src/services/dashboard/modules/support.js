@@ -3,11 +3,18 @@
 // their ban/kick appeal channels open in (they are added; staff use a private thread).
 // Stored in guild_settings on the support server's row (settings service).
 // Words: src/content/dashboard/<lang>/support.json.
+//
+// "Your support server invite" (every server): the invite that punishment and quarantine DMs
+// name (dmTemplates.appealInvite). Mewvo's own servers: Mewvo's Support server invite
+// (supportServerInvite, also on Enforcement -> Channels). Any other server: its own invite
+// (appealsInvite, also on Enforcement -> Where members appeal): one setting, two places to edit it.
 
 import { html, path } from '../html.js';
-import { InputError, PERMS, channelField, channelPicker, postForm, roleField, rolePicker } from '../forms.js';
-import { registryGuildId, registryValue, saveRegistry, section, slug } from './common.js';
+import { InputError, PERMS, channelField, channelPicker, postForm, roleField, rolePicker, text, textInput } from '../forms.js';
+import { changedOnly, registryGuildId, registryValue, saveRegistry, section, slug } from './common.js';
 import { textFor } from '../language.js';
+import { isHomeScope } from './serverScope.js';
+import { inviteOrNull } from '../../site/shell.js';
 
 /** "Nothing changed." in the page language. */
 const nothing = (ctx) => ({ changes: [], message: textFor(ctx).t('errors.nothingChanged') });
@@ -36,7 +43,10 @@ export default {
 
     async load(ctx) {
         const { supportGuildId, supportGuild } = supportGuildOf(ctx, 'bannedRoleId');
-        if (!supportGuildId) return { supportGuildId: null, supportGuild: null };
+        if (!isHomeScope(ctx)) {
+            return { supportGuildId: null, supportGuild: null, ownInvite: registryValue(ctx, 'appealsInvite'), appealsHome: registryValue(ctx, 'appealsHome') };
+        }
+        if (!supportGuildId) return { supportGuildId: null, supportGuild: null, invite: registryValue(ctx, 'supportServerInvite') };
         return {
             supportGuildId,
             supportGuild,
@@ -48,8 +58,17 @@ export default {
 
     render(ctx, d) {
         const tr = textFor(ctx);
+        const home = isHomeScope(ctx);
+        // Every server: the support invite DMs name (the Administrator edits it; Manage Server only sees it).
+        const inviteForm = postForm(ctx, 'support', 'support-invite', textInput(home ? 'supportServerInvite' : 'appealsInvite', (home ? d.invite : d.ownInvite) || '', {
+            label: tr.t('support.yourInvite.label'), max: 200, placeholder: 'https://discord.gg/…',
+            help: home ? tr.t('support.yourInvite.helpHome') : tr.t('support.yourInvite.help'),
+        }), { canEdit: ctx.canEdit && ctx.canAct });
+        const mewvoNote = !home && d.appealsHome === 'mewvo'
+            ? html`<p class="notice">${tr.tx('support.yourInvite.mewvoNote', { link: html`<a href="${path('/enforcement')}">${tr.t('support.yourInvite.mewvoLink')}</a>` })}</p>` : '';
+        const inviteCard = section(tr.t('support.yourInvite.title'), html`${inviteForm}${mewvoNote}`, tr.t('support.yourInvite.cardHelp'), { key: 'your-support-server-invite' });
         // Card ids: the slug of the English title, as before.
-        if (!d.supportGuildId) return section(tr.t('support.title'), html`<p class="warn">${tr.t('support.notConnected')}</p>`, '', { key: 'support-server' });
+        if (!d.supportGuildId) return html`${inviteCard}${section(tr.t('support.title'), html`<p class="warn">${tr.t(home ? 'support.notConnected' : 'support.notConnectedOther')}</p>`, '', { key: 'support-server' })}`;
         const form = d.supportGuild
             ? postForm(ctx, 'support', 'banned-role', rolePicker(d.supportGuild, 'bannedRoleId', d.bannedRoleId, { label: tr.t('support.bannedRole'), help: tr.t('support.bannedRoleHelp') }), { canEdit: ctx.canEdit && ctx.canAct })
             : html`<p class="warn">${tr.t('support.cannotSee')}</p>`;
@@ -62,11 +81,28 @@ export default {
         const title = d.supportGuild ? tr.t('support.titleNamed', { name: d.supportGuild.name }) : tr.t('support.title');
         const key = slug(d.supportGuild ? `Support server · ${d.supportGuild.name}` : 'Support server');
         const change = html`<a href="${path('/enforcement')}">${tr.t('support.changeLink')}</a>`;
-        return html`${section(title, html`${form}${appeals}
+        return html`${inviteCard}${section(title, html`${form}${appeals}
 <p class="muted">${tr.tx('support.invite', { invite: d.invite || tr.t('forms.notSet'), change })}</p>`, '', { key })}`;
     },
 
     actions: {
+        // Administrator only: a link the bot sends to punished and quarantined members.
+        // Home: Mewvo's Support invite (required, like Enforcement -> Channels); other servers: their own (may be cleared).
+        'support-invite': {
+            admin: true,
+            async run(ctx, form) {
+                const tr = textFor(ctx);
+                const home = isHomeScope(ctx);
+                const name = home ? 'supportServerInvite' : 'appealsInvite';
+                const typed = text(form, name, 200);
+                const invite = typed ? inviteOrNull(typed) : null;
+                if (typed && !invite) throw new InputError(tr.t('support.yourInvite.bad'), 400, name);
+                if (home && !invite) throw new InputError(tr.t('support.yourInvite.required'), 400, name);
+                const patch = changedOnly({ [name]: invite }, { [name]: registryValue(ctx, name) });
+                if (!Object.keys(patch).length) return nothing(ctx);
+                return saveRegistry(ctx, patch, 'support');
+            },
+        },
         // Administrator only (a role setting).
         'banned-role': {
             admin: true,

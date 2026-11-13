@@ -286,5 +286,26 @@
     "tooShort": "Tapez au moins 2 lettres du nom.",
     "discordFailed": "Discord n’a pas répondu à la recherche : seuls les membres que Mewvo connaît déjà sont listés.",
     "bansFailed": "La liste des bannissements n’a pas pu être chargée : les utilisateurs bannis ne sont pas listés."
+  },
+  "quarantine": {
+    "title": "Quarantaine",
+    "help": "Retire tous ses rôles (ils sont enregistrés) et lui cache tous les salons. Il reste sur le serveur et reçoit un MP avec la raison et ton invitation au serveur d’assistance. Les administrateurs principaux sont mentionnés dans le salon des alertes.",
+    "reason": "Raison (envoyée au membre)",
+    "reasonHint": "Obligatoire. Affichée dans son MP, dans l’alerte et dans le journal de modération.",
+    "submit": "Mettre en quarantaine",
+    "confirm": "Mettre {name} en quarantaine ? Il perd tous ses rôles et ne voit aucun salon jusqu’à sa libération.",
+    "active": "En quarantaine depuis le {date}. Raison : {reason}",
+    "release": "Libérer de la quarantaine",
+    "releaseConfirm": "Libérer {name} ? Ses rôles enregistrés reviennent.",
+    "notSet": "La quarantaine a besoin d’un rôle de quarantaine que Mewvo peut donner.",
+    "setLink": "Définis-le dans Sanctions et appels → Rôles.",
+    "unreadable": "Impossible de savoir pour l’instant si ce membre est en quarantaine (la base de données ne répond pas).",
+    "notDecider": "Seuls le propriétaire du serveur et les rôles décideurs (Sanctions et appels → Rôles) peuvent décider de la suite.",
+    "keep": "Garder en quarantaine (examiné)",
+    "kick": "Expulser",
+    "kickConfirm": "Expulser {name} ? Il reçoit d’abord un MP et une invitation à usage unique pour revenir.",
+    "ban": "Bannir",
+    "banReason": "Raison du bannissement (envoyée au membre)",
+    "banConfirm": "Bannir {name} ? Il reçoit d’abord un MP."
   }
 }

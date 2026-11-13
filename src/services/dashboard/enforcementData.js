@@ -30,6 +30,7 @@ import { getGuildConfig } from '../config/guildConfig.js';
 import { removeVerification } from '../verificationService.js';
 import { isBotOwner } from '../../config/bot.js';
 import { hasOwnerPower } from '../../utils/ownerPower.js';
+import { decideQuarantine, getQuarantine, isQuarantineDecider, quarantineMember, quarantineReady, releaseQuarantine } from '../enforcement/quarantineService.js';
 
 export const defaultEnforcement = {
     // members and standing
@@ -52,4 +53,6 @@ export const defaultEnforcement = {
     // OWNER_IDS override per server: only in Mewvo's own servers (utils/ownerPower.js)
     hasOwnerPower: (userId, guildId) => hasOwnerPower(userId, guildId),
     staffActivityForWeek, giveStaffWarning, listStaffWarnings, restoreStaffRoles, listRemovedStaffRoles,
+    // quarantine (member page): the same service as the raid and staff guard triggers and the alert's Release
+    getQuarantine, quarantineMember, quarantineReady, releaseQuarantine, decideQuarantine, isQuarantineDecider,
 };

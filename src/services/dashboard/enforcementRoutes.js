@@ -7,6 +7,8 @@
 //   POST /dashboard/users/:id/action/execute     single-use token → executeAction → flash + 303
 //   POST /dashboard/users/:id/notes/add|remove   staff notes
 //   POST /dashboard/users/:id/unverify          removeVerification (like /verification remove)
+//   POST /dashboard/users/:id/quarantine         quarantineService (reason required; Administrator)
+//   POST /dashboard/users/:id/quarantine/decide  release | kick | ban | keep (deciders only, as on the alert)
 //   POST /dashboard/cases/:code/edit|void        caseEditService
 //   POST /dashboard/cases/:code/evidence/add|upload|remove   links, or an uploaded image (re-hosted)
 //   GET  /dashboard/appeals/:code                appeal dossier
@@ -58,6 +60,9 @@ import { currentLanguage, currentText, dashboardText } from './language.js';
 import { parseUserRef } from './memberSearch.js';
 import { MODERATOR, MODERATOR_OUTSIDE_HOME, mayRun, moderatorActionTypes, requiredLevel } from './permissions.js';
 import { memberHasConfiguredModeratorRole } from '../../utils/permissionGuard.js';
+import { botText } from '../../utils/botText.js';
+import { DECISIONS, decideText, isQuarantineDecider, refusalText, releaseRefusal, releaseText, tooHighRoles } from '../enforcement/quarantineService.js';
+import { isRecentOffender } from '../automod/staffGuardService.js';
 import { fetchAllMembers } from '../../utils/memberFetchGate.js';
 import { caseActions as caseActionForms } from './enforcementPages.js';
 import { normalizeTags } from '../enforcement/caseNotesService.js';
@@ -435,6 +440,12 @@ export function createEnforcementHandlers(core) {
                 removable: new Set([...(member.roles?.cache?.values?.() || [])].filter((r) => !roleProblem({ ...ctx, role: r })).map((r) => r.id)),
                 timeoutUntil: until > Date.now() ? new Date(until) : null,
                 tempRoles: new Map((await e.listTempRoles(guildId, userId)).map((row) => [row.role_id, new Date(row.expires_at)])),
+                // Quarantine (quarantineService.js): the record (null = none; undefined = could not be read)
+                // and whether this server has a quarantine role Mewvo can give.
+                quarantine: e.getQuarantine ? await e.getQuarantine(guildId, userId).catch(() => undefined) : null,
+                quarantineReady: Boolean(e.quarantineReady?.(guild)),
+                // Only deciders (owner, OWNER_IDS here, decider roles) see the decision forms.
+                quarantineDecider: Boolean(actorMember && (e.isQuarantineDecider || isQuarantineDecider)({ guild, userId: req.dashboard.session.userId, staffMember: actorMember })),
             };
         }
         return {
@@ -634,6 +645,74 @@ export function createEnforcementHandlers(core) {
         await flash(req, textOf(req).t('moderation.members.unverified', { name: ctx.target.user.username }));
         return res.redirect(303, path(`/users/${ctx.userId}`));
     }, { rerender: rerenderUser, perm: 'member.unverify' });
+
+    // ── Quarantine (enforcement/quarantineService.js): Administrator only, reason required ──
+
+    const quarantine = guardedPost(async (req, res) => {
+        const tr = textOf(req);
+        // A moderator blocked by the mass-action guard cannot quarantine either (OWNER_IDS here are exempt, like the guard).
+        if (!ownerPower(req.dashboard.session.userId, guildId)) {
+            const block = await e.getMassActionBlock(guildId, req.dashboard.session.userId);
+            if (block) throw new InputError(tr.t('moderation.members.quarantineBlocked'), 403);
+        }
+        const ctx = await memberContext(req);
+        const reason = text(req.body, 'reason', REASON_MAX);
+        if (!reason) throw new InputError(tr.t('moderation.members.quarantineReason'), 400, 'reason');
+        const by = { id: req.dashboard.session.userId, username: req.dashboard.session.username };
+        const result = await e.quarantineMember(ctx.target, reason, { by, trigger: 'manual' });
+        if (!result.ok) throw new InputError(refusalText(result.code, botText(tr.lang)), result.code === 'database' ? 503 : 400);
+        await audit(req, 'members', [{ key: `quarantine:${ctx.userId}`, old: null, new: { reason, roles: result.removed.map((role) => `@${role.name}`) } }]);
+        await flash(req, tr.t(result.dmDelivered ? 'moderation.members.quarantined' : 'moderation.members.quarantinedNoDm', { name: ctx.target.user.username }));
+        return res.redirect(303, path(`/users/${ctx.userId}`));
+    }, { rerender: rerenderUser, perm: 'member.quarantine' });
+
+    // Release / Kick / Ban / Keep: deciders only (the server owner, OWNER_IDS here, decider roles),
+    // like the alert's buttons; the route itself is Administrator (permissions.js member.quarantine).
+    const quarantineDecide = guardedPost(async (req, res) => {
+        const userId = userIdParam(req);
+        if (!userId) throw new InputError(textOf(req).t('moderation.members.notUserId'));
+        const tr = textOf(req);
+        const bt = botText(tr.lang);
+        const guild = guildOf();
+        const decision = text(req.body, 'decision', 10);
+        if (!DECISIONS.includes(decision)) throw new InputError(tr.t('moderation.members.unknownAction'));
+        const actorMember = await freshModerator(req);
+        const actorId = req.dashboard.session.userId;
+        const decider = (e.isQuarantineDecider || isQuarantineDecider)({ guild, userId: actorId, staffMember: actorMember });
+        if (!decider) throw new InputError(decideText('notDecider', bt), 403);
+        if (decider !== 'owner' && isRecentOffender(guildId, actorId)) throw new InputError(releaseText('offender', bt), 403);
+        // (freshModerator above already required Administrator for this route.)
+        const record = await e.getQuarantine(guildId, userId);
+        if (decision === 'release') {
+            const refusal = releaseRefusal({ guild, record, targetId: userId, actorId, actorMember, isOwner: decider === 'owner', home: isHomeServer() });
+            if (refusal === 'tooHigh') {
+                throw new InputError(releaseText('tooHigh', bt, { roles: tooHighRoles(guild, record, actorMember).map((role) => role.name).join(', ') }), 403);
+            }
+            if (refusal) throw new InputError(releaseText(refusal, bt), refusal === 'none' ? 400 : 403);
+        } else {
+            if (!record) throw new InputError(releaseText('none', bt));
+            if (actorId === userId) throw new InputError(releaseText('notYourself', bt), 403);
+        }
+        const reason = text(req.body, 'reason', 500);
+        if (decision === 'ban' && !reason) throw new InputError(decideText('banNeedsReason', bt), 400, 'reason');
+        const by = { id: actorId, username: req.dashboard.session.username };
+        let result;
+        try {
+            result = await e.decideQuarantine(guild, userId, { decision, by, moderator: actorMember, reason, lang: tr.lang });
+        } catch (error) {
+            if (isExpectedError(error)) throw error;
+            logger.warn(`Dashboard quarantine ${decision} of ${userId} failed: ${error.message}`);
+            throw new InputError(releaseText(error.partial ? 'partial' : 'failed', bt, { error: String(error.message || 'unknown error').slice(0, 300) }), 500);
+        }
+        if (!result.ok) throw new InputError(refusalText(result.code, bt));
+        await audit(req, 'members', [{ key: `quarantine:${userId}`, old: { reason: record.reason }, new: decision === 'keep' ? { reviewed: true } : { decision } }]);
+        if (decision === 'ban' || decision === 'kick') banCache.invalidate(guildId);
+        if (result.recordCleared === false) logger.warn(`Dashboard quarantine ${decision} of ${userId}: record not cleared`);
+        await flash(req, decision === 'release'
+            ? (result.left ? releaseText('left', bt) : tr.t('moderation.members.released', { roles: result.restored.map((role) => role.name).join(', ') || '-' }))
+            : decideText(`reply.${decision}`, bt, { name: userId, code: result.result?.record?.case_code || '-' }));
+        return res.redirect(303, path(`/users/${userId}`));
+    }, { rerender: rerenderUser, perm: 'member.quarantine' });
 
     // ── Bulk: one action on many members (preview → confirm → background job) ──
 
@@ -1268,7 +1347,7 @@ export function createEnforcementHandlers(core) {
     }, { rerender: rerenderStaff, need: 'owner', perm: 'staff.manage' });
 
     return {
-        users, bans, userPage: userPageHandler, actionPreview, actionExecute, roleAdd, roleRemove, nickname, timeout, unverify, bulkPreview, bulkExecute, bulkJob, noteAdd, noteRemove,
+        users, bans, userPage: userPageHandler, actionPreview, actionExecute, roleAdd, roleRemove, nickname, timeout, unverify, quarantine, quarantineDecide, bulkPreview, bulkExecute, bulkJob, noteAdd, noteRemove,
         caseEdit, caseVoid, caseBulk, caseBulkVoid, evidenceAdd, evidenceUpload, evidenceRemove, caseNote, caseTags, caseActionForms: (args) => caseActionForms(args),
         appealDetail, appealPreview, appealDecide,
         noContact, noContactAdd, noContactEnd, watchlistEnd,

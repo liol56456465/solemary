@@ -82,6 +82,7 @@ export const PERMISSIONS = Object.freeze({
     'member.roles': ADMIN,
     'member.nickname': ADMIN,
     'member.unverify': ADMIN,
+    'member.quarantine': ADMIN, // quarantine and release (enforcement/quarantineService.js)
     'member.notes': ADMIN,
     'member.bulk': ADMIN,
     'member.search': ADMIN, // Find a member (results page + type-ahead JSON) for the ID fields of Administrator forms
@@ -133,6 +134,8 @@ export const ROUTES = [
     ['POST', '/users/:id/nickname', 'member.nickname'],
     ['POST', '/users/:id/timeout', 'member.timeout'],
     ['POST', '/users/:id/unverify', 'member.unverify'],
+    ['POST', '/users/:id/quarantine', 'member.quarantine'],
+    ['POST', '/users/:id/quarantine/decide', 'member.quarantine'],
     ['POST', '/users/:id/notes/add', 'member.notes'],
     ['POST', '/users/:id/notes/remove', 'member.notes'],
     ['POST', '/cases/bulk', 'case.edit'],

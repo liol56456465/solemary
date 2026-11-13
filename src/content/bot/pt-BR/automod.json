@@ -41,7 +41,8 @@
             "kick": "Expulsar",
             "mute": "Silenciar {duration}",
             "ban": "Banir {duration}",
-            "permanentBan": "Banimento permanente"
+            "permanentBan": "Banimento permanente",
+            "quarantine": "Quarentena"
         },
         "verb": {
             "act": "agir",
@@ -49,21 +50,24 @@
             "kick": "expulsar",
             "mute": "silenciar {duration}",
             "ban": "banir {duration}",
-            "permanentBan": "banir para sempre"
+            "permanentBan": "banir para sempre",
+            "quarantine": "colocar em quarentena"
         },
         "outcome": {
             "warn": "Advertido",
             "kick": "Expulso",
             "mute": "Silenciado {duration}",
             "ban": "Banido {duration}",
-            "permanentBan": "Banido para sempre"
+            "permanentBan": "Banido para sempre",
+            "quarantine": "Em quarentena"
         },
         "outcomeShort": {
             "warn": "advertido",
             "kick": "expulso",
             "mute": "silenciado {duration}",
             "ban": "banido {duration}",
-            "permanentBan": "banido para sempre"
+            "permanentBan": "banido para sempre",
+            "quarantine": "colocado em quarentena"
         },
         "memberReport": "Denúncia de membro",
         "unknownUser": "desconhecido",
@@ -98,7 +102,8 @@
                 "one": "{count} minuto",
                 "many": "{count} minutos",
                 "other": "{count} minutos"
-            }
+            },
+            "raidQuarantined": "A pessoa entrou durante um bloqueio de raid, então foi colocada em quarentena em vez da punição de sempre (Liberar no alerta de quarentena a deixa voltar)."
         },
         "field": {
             "message": "Mensagem",

@@ -1643,6 +1643,8 @@ function addGuildRoutes(router, d) {
     router.post('/users/:id/nickname', form, user, safe(en.nickname));
     router.post('/users/:id/timeout', form, user, safe(en.timeout));
     router.post('/users/:id/unverify', form, user, safe(en.unverify));
+    router.post('/users/:id/quarantine', form, user, safe(en.quarantine));
+    router.post('/users/:id/quarantine/decide', form, user, safe(en.quarantineDecide));
     router.post('/users/:id/notes/add', form, user, safe(en.noteAdd));
     router.post('/users/:id/notes/remove', form, user, safe(en.noteRemove));
     router.post('/cases/bulk', form, user, safe(en.caseBulk));

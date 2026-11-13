@@ -85,7 +85,12 @@
     "timeoutRemoved": "Timeout di {name} rimosso.",
     "timedOut": "{name} è in timeout per {length}.",
     "notVerified": "{name} non ha il ruolo di verifica.",
-    "unverified": "Verifica tolta a {name}."
+    "unverified": "Verifica tolta a {name}.",
+    "quarantineReason": "Scrivi un motivo: viene inviato al membro.",
+    "quarantineBlocked": "Il limite di sicurezza ha messo in pausa le tue azioni di moderazione, quindi ora non puoi mettere in quarantena.",
+    "quarantined": "{name} è in quarantena. Il DM è stato consegnato.",
+    "quarantinedNoDm": "{name} è in quarantena. Il DM non è stato consegnato (DM chiusi).",
+    "released": "Rilasciato dalla quarantena. Ruoli restituiti: {roles}."
   },
   "bulk": {
     "action": {

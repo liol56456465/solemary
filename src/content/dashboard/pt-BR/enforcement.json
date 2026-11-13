@@ -73,7 +73,22 @@
     "warn1": "Cargo com 1 aviso",
     "warn2": "Cargo com 2 avisos",
     "warn3": "Cargo com 3 ou mais avisos",
-    "warnRoleN": "Cargo de aviso {number}"
+    "warnRoleN": "Cargo de aviso {number}",
+    "quarantine": "Cargo de quarentena",
+    "quarantineHelp": "Dado no lugar de todos os outros cargos quando alguém entra em quarentena: por um raid, pela proteção da equipe ou manualmente na página de um membro. O Mewvo esconde todos os canais dele. Sem cargo: raids expulsam e a proteção da equipe tira os cargos da equipe, como antes.",
+    "quarantineHasPerms": "O cargo de quarentena tem permissões próprias. Não dê nenhuma: ele só deve tirar acesso.",
+    "quarantinePing": "Cargos da administração principal a mencionar quando alguém entra em quarentena (até {max})",
+    "quarantinePingShort": "Cargo mencionado",
+    "quarantinePingHelp": "O alerta de quarentena no canal de alertas menciona estes cargos e ninguém mais. Segure Ctrl (Cmd no Mac) para escolher mais de um.",
+    "quarantineInfo": "Canal de informação da quarentena (membros em quarentena só veem este, somente leitura)",
+    "quarantineInfoHelp": "Membros em quarentena podem ler este único canal, mas não escrever nem reagir nele. Sem canal: eles não veem canal nenhum.",
+    "quarantineInfoPost": "Publicar a mensagem de informação da quarentena",
+    "quarantineInfoPostHelp": "Publica no canal de informação da quarentena uma mensagem do Mewvo que explica a quarentena (no idioma do servidor). Publicar de novo substitui a mensagem antiga.",
+    "quarantineRefusePerms": "O cargo de quarentena não pode ter permissões próprias (todo membro em quarentena as receberia). Escolha um cargo sem permissões ou remova-as antes no Discord.",
+    "quarantineRefuseHeld": "Já há membros com este cargo ({count}): o Mewvo esconde todos os canais dele, então todos perderiam o acesso. Crie um cargo novo e vazio para a quarentena.",
+    "quarantineDeciders": "Quem decide sobre membros em quarentena (até {max} cargos)",
+    "quarantineDecidersShort": "Cargo que decide",
+    "quarantineDecidersHelp": "Quem tem estes cargos (e o dono do servidor) escolhe Liberar, Expulsar, Banir ou Manter para um membro em quarentena, no alerta ou na página do membro. Outros administradores podem colocar em quarentena, mas não decidir. Os cargos mencionados acima são outra coisa."
   },
   "timings": {
     "title": "Apelações e denúncias",
@@ -192,7 +207,10 @@
     "transparencyOn": "O relatório de transparência está ativado: /transparency é público.",
     "transparencyOff": "O relatório de transparência está desativado: /transparency saiu do site.",
     "trustOn": "O cartão de confiança está ativado: /trust é público.",
-    "trustOff": "O cartão de confiança está desativado: /trust saiu do site."
+    "trustOff": "O cartão de confiança está desativado: /trust saiu do site.",
+    "quarantineInfoNoChannel": "Defina primeiro um canal de informação da quarentena (um canal de texto onde o Mewvo possa publicar).",
+    "quarantineInfoPosted": "A mensagem de informação da quarentena foi publicada em #{channel}.",
+    "quarantineInfoReplaced": "A mensagem de informação da quarentena foi publicada em #{channel}; a antiga foi removida."
   },
   "appealsHome": {
     "title": "Onde os membros recorrem",

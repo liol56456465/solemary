@@ -77,7 +77,22 @@
     "warn1": "Rola przy 1 ostrzeżeniu",
     "warn2": "Rola przy 2 ostrzeżeniach",
     "warn3": "Rola przy 3 i więcej ostrzeżeniach",
-    "warnRoleN": "Rola ostrzeżenia {number}"
+    "warnRoleN": "Rola ostrzeżenia {number}",
+    "quarantine": "Rola kwarantanny",
+    "quarantineHelp": "Nadawana zamiast wszystkich innych ról, gdy ktoś trafia na kwarantannę: przez rajd, przez ochronę przed ekipą albo ręcznie na stronie członka. Mewvo ukrywa przed nią wszystkie kanały. Nieustawiona: rajdy wyrzucają, a ochrona przed ekipą zabiera role ekipy, jak dotąd.",
+    "quarantineHasPerms": "Rola kwarantanny ma własne uprawnienia. Nie dawaj jej żadnych: ma tylko odbierać dostęp.",
+    "quarantinePing": "Role głównych administratorów oznaczane przy kwarantannie (do {max})",
+    "quarantinePingShort": "Oznaczana rola",
+    "quarantinePingHelp": "Alert o kwarantannie na kanale alertów oznacza te role i nikogo więcej. Przytrzymaj Ctrl (Cmd na Macu), aby wybrać kilka.",
+    "quarantineInfo": "Kanał informacyjny kwarantanny (osoby na kwarantannie widzą tylko ten, tylko do odczytu)",
+    "quarantineInfoHelp": "Osoby na kwarantannie mogą czytać ten jeden kanał, ale nie mogą w nim pisać ani reagować. Nieustawiony: nie widzą żadnego kanału.",
+    "quarantineInfoPost": "Opublikuj wiadomość o kwarantannie",
+    "quarantineInfoPostHelp": "Publikuje na kanale informacyjnym kwarantanny wiadomość od Mewvo, która wyjaśnia im kwarantannę (w języku serwera). Ponowna publikacja zastępuje starą wiadomość.",
+    "quarantineRefusePerms": "Rola kwarantanny nie może mieć własnych uprawnień (każda osoba na kwarantannie by je dostała). Wybierz rolę bez uprawnień albo najpierw usuń je w Discordzie.",
+    "quarantineRefuseHeld": "Członkowie mają już tę rolę ({count}): Mewvo ukrywa przed nią wszystkie kanały, więc wszyscy straciliby dostęp. Utwórz nową, pustą rolę do kwarantanny.",
+    "quarantineDeciders": "Kto decyduje o osobach na kwarantannie (do {max} ról)",
+    "quarantineDecidersShort": "Rola decydująca",
+    "quarantineDecidersHelp": "Osoby z tymi rolami (i właściciel serwera) wybierają Zwolnij, Wyrzuć, Zbanuj lub Zostaw dla osoby na kwarantannie, w alercie lub na stronie członka. Inni administratorzy mogą nałożyć kwarantannę, ale nie decydować. Oznaczane role powyżej to coś innego."
   },
   "timings": {
     "title": "Odwołania i zgłoszenia",
@@ -196,7 +211,10 @@
     "transparencyOn": "Raport przejrzystości jest włączony: /transparency jest publiczny.",
     "transparencyOff": "Raport przejrzystości jest wyłączony: /transparency zniknął ze strony.",
     "trustOn": "Karta zaufania jest włączona: /trust jest publiczna.",
-    "trustOff": "Karta zaufania jest wyłączona: /trust zniknęła ze strony."
+    "trustOff": "Karta zaufania jest wyłączona: /trust zniknęła ze strony.",
+    "quarantineInfoNoChannel": "Najpierw ustaw kanał informacyjny kwarantanny (kanał tekstowy, na którym Mewvo może pisać).",
+    "quarantineInfoPosted": "Wiadomość o kwarantannie jest opublikowana na #{channel}.",
+    "quarantineInfoReplaced": "Wiadomość o kwarantannie jest opublikowana na #{channel}; starą usunięto."
   },
   "appealsHome": {
     "title": "Gdzie członkowie składają odwołania",

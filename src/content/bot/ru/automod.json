@@ -41,7 +41,8 @@
             "kick": "Кик",
             "mute": "Мут: {duration}",
             "ban": "Бан: {duration}",
-            "permanentBan": "Бан навсегда"
+            "permanentBan": "Бан навсегда",
+            "quarantine": "Карантин"
         },
         "verb": {
             "act": "принять меры",
@@ -49,21 +50,24 @@
             "kick": "кикнуть",
             "mute": "выдать мут ({duration})",
             "ban": "забанить ({duration})",
-            "permanentBan": "забанить навсегда"
+            "permanentBan": "забанить навсегда",
+            "quarantine": "поместить в карантин"
         },
         "outcome": {
             "warn": "Предупреждение выдано",
             "kick": "Кикнут",
             "mute": "Мут: {duration}",
             "ban": "Бан: {duration}",
-            "permanentBan": "Забанен навсегда"
+            "permanentBan": "Забанен навсегда",
+            "quarantine": "В карантине"
         },
         "outcomeShort": {
             "warn": "предупреждение",
             "kick": "кикнут",
             "mute": "мут: {duration}",
             "ban": "бан: {duration}",
-            "permanentBan": "бан навсегда"
+            "permanentBan": "бан навсегда",
+            "quarantine": "помещён в карантин"
         },
         "memberReport": "Жалоба участника",
         "unknownUser": "неизвестно",
@@ -100,7 +104,8 @@
                 "few": "{count} минуты",
                 "many": "{count} минут",
                 "other": "{count} минуты"
-            }
+            },
+            "raidQuarantined": "Участник зашёл во время блокировки рейда, поэтому вместо обычного наказания он помещён в карантин («Освободить» в оповещении о карантине вернёт его)."
         },
         "field": {
             "message": "Сообщение",

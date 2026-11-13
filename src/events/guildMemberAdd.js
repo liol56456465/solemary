@@ -11,6 +11,7 @@ import { refreshCountersOnMemberChange } from '../services/serverstatsService.js
 import { setBirthday as dbSetBirthday } from '../utils/database.js';
 import { logger } from '../utils/logger.js';
 import { reapplyMuteOnJoin } from '../services/enforcement/enforcementService.js';
+import { checkQuarantineOnJoin } from '../services/enforcement/quarantineService.js';
 import { reapplyTempRolesOnJoin } from '../services/members/tempRoleService.js';
 import { syncPremiumRole } from '../services/billing/premiumEffects.js';
 import { syncBannedRoleQuietly } from '../services/enforcement/bannedRoleService.js';
@@ -82,9 +83,15 @@ export default {
             });
         }
 
+        // Leaving and rejoining must not shake off a quarantine (quarantineService.js): the
+        // quarantine role comes back first, and no step below gives any other role back. Fails
+        // closed: when the state cannot be read (database down, read error) no join role is given
+        // either (logged; staff alerted where a quarantine role is set).
+        const quarantined = user.bot ? false : (await checkQuarantineOnJoin(member)) !== 'clear';
+
         // Joining the support or database server: the roles their main-server roles give
         // (home-server role mirror; no database needed, never throws).
-        void mirrorRolesOnJoin(member);
+        if (!quarantined) void mirrorRolesOnJoin(member);
 
         // Leaving and rejoining must not shake off an active mute; runs first so
         // nothing later in the join pipeline can skip it.
@@ -98,14 +105,14 @@ export default {
             }
             // Rejoining (e.g. after a temporary ban) restores the warning role, in any server
             // (its own warnRoleIds; none set up there → nothing to do).
-            await syncWarnRolesQuietly(guild, member.id);
+            if (!quarantined) await syncWarnRolesQuietly(guild, member.id);
             // Joins per day for the dashboard's Members → Insights, per server.
             await recordMemberEvent(guild.id, member.id, 'join').catch((error) => logger.warn(`Join of ${member.id} not recorded: ${error.message}`));
             // Temporary roles of this server that have not ended yet come back on rejoin.
-            await reapplyTempRolesOnJoin(member).catch((error) => logger.warn(`Temporary roles not given back to ${member.id}: ${error.message}`));
+            if (!quarantined) await reapplyTempRolesOnJoin(member).catch((error) => logger.warn(`Temporary roles not given back to ${member.id}: ${error.message}`));
             if (guild.id === enforcementConfig.mainGuildId) {
                 // An active plan gives its supporter role back (the supporter role lives in the main server).
-                await syncPremiumRole(member.client, member.id).catch((error) => logger.warn(`Supporter role not given back to ${member.id}: ${error.message}`));
+                if (!quarantined) await syncPremiumRole(member.client, member.id).catch((error) => logger.warn(`Supporter role not given back to ${member.id}: ${error.message}`));
             }
             // Automod on joins, in every server (multi-server B1): each check returns at once
             // where automod is off (the default outside the main server). Same order as before.
@@ -125,13 +132,13 @@ export default {
             // Back after a ban that ended recently: automod extra-watch period (/automod extrawatch).
             await startProbationOnJoin(member).catch((error) => logger.warn(`Probation check failed for ${member.id}: ${error.message}`));
             // Role rules of this server (dashboard Members): e.g. "days in the server: 0" gives its role now.
-            await applyRoleRulesToMember(member).catch((error) => logger.warn(`Role rules not applied to ${member.id}: ${error.message}`));
+            if (!quarantined) await applyRoleRulesToMember(member).catch((error) => logger.warn(`Role rules not applied to ${member.id}: ${error.message}`));
         }
 
         // Rejoin: level data is kept when a member leaves (guildMemberRemove), so give back the
         // level reward roles they earned (by reward mode). New members have no level data and get
         // nothing. Hierarchy and missing permissions are logged and skipped inside; a DB error only logs here.
-        if (!user.bot) {
+        if (!user.bot && !quarantined) {
             await syncLevelRolesForMember(member.client, member, { reason: 'Level reward (rejoined)' }).catch((error) => {
                 logger.warn(`Level reward roles not given back to ${member.id}: ${error.message}`);
             });
@@ -214,7 +221,8 @@ export default {
             logger.warn(`Could not send welcome message in guild ${guild.id}: ${error.message}`);
         }
         
-        if (welcomeConfig?.roleIds && welcomeConfig.roleIds.length > 0) {
+        // A quarantined member gets no join role and no automatic verification (quarantineService.js).
+        if (!quarantined && welcomeConfig?.roleIds && welcomeConfig.roleIds.length > 0) {
             const delay = welcomeConfig.autoRoleDelay || 0;
             const singleRoleId = welcomeConfig.roleIds[0];
             
@@ -236,7 +244,7 @@ export default {
             }
         }
         
-        if (config?.verification?.enabled || config?.verification?.autoVerify?.enabled) {
+        if (!quarantined && (config?.verification?.enabled || config?.verification?.autoVerify?.enabled)) {
             await handleVerification(member, guild, config.verification, member.client);
         }
 

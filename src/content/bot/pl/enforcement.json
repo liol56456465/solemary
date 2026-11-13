@@ -113,5 +113,122 @@
     "uncounted": {
         "automod": "Ostrzeżenie automoda — nie liczy się do banów",
         "ladderOff": "Ostrzeżenie — nie liczy się do banów (drabinka ostrzeżeń wyłączona)"
+    },
+    "quarantine": {
+        "dm": {
+            "body": "Zostałeś objęty kwarantanną na **{server}** z powodu: **{reason}**.",
+            "invite": "Aby to wyjaśnić, dołącz do {invite}.",
+            "noReason": "nie podano powodu"
+        },
+        "alert": {
+            "title": "Członek objęty kwarantanną",
+            "ping": "**{name}** został objęty kwarantanną. Proszę, rzućcie okiem.",
+            "member": "Członek",
+            "reason": "Powód",
+            "trigger": "Co to wywołało",
+            "rolesRemoved": "Usunięte role",
+            "rolesKept": "Role, które zostają (zarządzane przez Discorda lub integrację)",
+            "dm": "DM",
+            "dmDelivered": "Dostarczono",
+            "dmFailed": "Nie dostarczono (zamknięte DM lub brak wspólnego serwera)",
+            "none": "Brak",
+            "release": "Zwolnij",
+            "releasedBy": "Zwolnił(a)",
+            "releasedValue": "{name} · {date}",
+            "channelsOpen": "Wciąż otwarte kanały",
+            "channelsOpenValue": "{count} kanał(y) odrzuciły ustawienie Mewvo (brak tam Zarządzania uprawnieniami): może nadal je widzieć."
+        },
+        "trigger": {
+            "raid": "Blokada rajdu: osoba, która dołączyła w rajdzie, złamała regułę automoda",
+            "staffGuard": "Ochrona przed ekipą (anti-nuke)",
+            "manual": "Ręcznie objęty kwarantanną przez {name}",
+            "automod": "Automod: przewinienie na poziomie bana (kwarantanna zamiast bana)"
+        },
+        "log": {
+            "releasedTitle": "Kwarantanna zdjęta",
+            "releasedBy": "Zwolnił(a)",
+            "rolesBack": "Oddane role",
+            "skipped": "Zapisane role, których nie oddano (usunięte, zarządzane lub powyżej Mewvo)",
+            "left": "Brak: nie ma go już na serwerze"
+        },
+        "refuse": {
+            "noRole": "Nie ustawiono roli kwarantanny (panel: Kary i odwołania → Role) albo już nie istnieje.",
+            "botNoManageRoles": "Mewvo potrzebuje uprawnienia Zarządzanie rolami, aby objąć kogoś kwarantanną.",
+            "roleManaged": "Rolą kwarantanny zarządza integracja, więc Mewvo nie może jej nadać.",
+            "roleAboveBot": "Rola kwarantanny nie jest poniżej najwyższej roli Mewvo, więc Mewvo nie może jej nadać.",
+            "owner": "Właściciela serwera nie można objąć kwarantanną.",
+            "bot": "Botów nie można objąć kwarantanną.",
+            "self": "Mewvo nie może objąć kwarantanną samego siebie.",
+            "aboveBot": "Najwyższa rola tego członka nie jest poniżej najwyższej roli Mewvo, więc Mewvo nie może objąć go kwarantanną.",
+            "notInServer": "Tego członka nie ma na serwerze.",
+            "already": "Ten członek jest już objęty kwarantanną.",
+            "database": "Baza danych nie odpowiada, więc nic nie zostało zmienione.",
+            "assignFailed": "Discord odrzucił zmianę ról, więc nic nie zostało zmienione.",
+            "failed": "Kwarantanna nie zadziałała, więc nic nie zostało zmienione.",
+            "roleHasPermissions": "Rola kwarantanny ma własne uprawnienia, więc Mewvo jej nie użyje (każda osoba na kwarantannie by je dostała). Nie dawaj jej żadnych uprawnień."
+        },
+        "release": {
+            "adminOnly": "Tylko administratorzy mogą zwolnić kogoś z kwarantanny.",
+            "otherServer": "Ten przycisk działa tylko na serwerze ekipy, na którym opublikowano alert.",
+            "none": "Ten członek nie jest już objęty kwarantanną.",
+            "notYourself": "Nie możesz zwolnić samego siebie.",
+            "offender": "Ochrona przed ekipą niedawno podjęła wobec ciebie działanie, więc nie możesz użyć tego przycisku.",
+            "ownerOnly": "Tę kwarantannę nałożyła ochrona przed ekipą, więc zdjąć ją może tylko właściciel serwera (jak /staff restore).",
+            "tooHigh": "Część zapisanych ról jest na poziomie twojej najwyższej roli lub wyżej ({roles}). Poproś właściciela serwera o zwolnienie.",
+            "done": "{name} został zwolniony. Oddane role: {roles}.",
+            "left": "Nie ma go już na serwerze. Wpis kwarantanny usunięto, więc po ponownym dołączeniu nie zostanie objęty kwarantanną.",
+            "failed": "Discord odrzucił zmianę ról, nic nie zostało zwolnione: {error}",
+            "partial": "Role zostały oddane, ale nie udało się usunąć roli kwarantanny lub jej wpisu. Naciśnij Zwolnij jeszcze raz: {error}"
+        },
+        "ownerDm": "Został objęty kwarantanną: wszystkie jego role zapisano i usunięto, i nie widzi żadnego kanału, dopóki ktoś nie naciśnie Zwolnij w alercie (albo nie użyjesz /staff restore).",
+        "info": {
+            "title": "Jesteś na kwarantannie",
+            "intro": "Twój dostęp do **{server}** jest wstrzymany. Nadal możesz czytać ten kanał, ale na razie nie widzisz innych kanałów i nie możesz w nich pisać.",
+            "whyTitle": "Dlaczego tak się dzieje",
+            "why": "Nasz system bezpieczeństwa lub ktoś z ekipy oznaczył twoje konto, na przykład podczas rajdu, za podejrzaną aktywność lub za łamanie zasad. Powód wysłaliśmy ci w DM.",
+            "doTitle": "Co możesz zrobić",
+            "wait": "Poczekać: ekipa sprawdza każdą kwarantannę i albo przywróci ci dostęp, albo wyjaśni kolejne kroki.",
+            "talk": "Porozmawiać z ekipą: dołącz do naszego serwera wsparcia {support} i podaj swoją nazwę użytkownika.",
+            "noAlts": "Prosimy, nie zakładaj nowych kont, aby obejść kwarantannę; to sprawi, że stanie się stała.",
+            "rolesSaved": "Twoje role zostały zapisane i wrócą do ciebie, jeśli kwarantanna zostanie zdjęta."
+        },
+        "decide": {
+            "button": {
+                "release": "Zwolnij",
+                "kick": "Wyrzuć",
+                "ban": "Zbanuj",
+                "keep": "Zostaw na kwarantannie"
+            },
+            "field": "Decyzja",
+            "value": "{decision}: {name} · {date}",
+            "done": {
+                "release": "Zwolniony",
+                "kick": "Wyrzucony",
+                "ban": "Zbanowany",
+                "keep": "Zostawiony na kwarantannie (sprawdzony)"
+            },
+            "case": "Sprawa",
+            "keptTitle": "Kwarantanna sprawdzona",
+            "notDecider": "Decydować tu mogą tylko właściciel serwera i role z „Kto decyduje o osobach na kwarantannie” (Kary i odwołania → Role).",
+            "notMember": "Nie jesteś członkiem serwera, na którym jest ta kwarantanna.",
+            "banTitle": "Zbanuj z kwarantanny",
+            "banReason": "Powód (wysyłany członkowi)",
+            "banNeedsReason": "Ban wymaga powodu.",
+            "kickAsk": "Wyrzucić {name}? Najpierw dostanie DM i jednorazowe zaproszenie do powrotu.",
+            "kickConfirm": "Wyrzuć",
+            "cancel": "Anuluj",
+            "cancelled": "Nic nie zrobiono.",
+            "reply": {
+                "kick": "{name} został wyrzucony (sprawa {code}).",
+                "ban": "{name} został zbanowany (sprawa {code}).",
+                "keep": "{name} zostaje na kwarantannie. Twoje sprawdzenie zapisano w alercie."
+            },
+            "needsAdmin": "To wymaga Administratora na serwerze kwarantanny (Wyrzuć i Zbanuj zawsze; rola decydująca przy każdym wyborze).",
+            "recordNotCleared": "Nie udało się usunąć wpisu kwarantanny (baza danych); zapisano to w logu bota."
+        },
+        "joinUnknown": {
+            "title": "Nieznany stan kwarantanny",
+            "text": "{member} dołączył, ale nie udało się sprawdzić, czy jest na kwarantannie (baza danych nie odpowiada). Nie dostał żadnych ról; sprawdźcie go, proszę."
+        }
     }
 }

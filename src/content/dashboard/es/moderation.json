@@ -85,7 +85,12 @@
     "timeoutRemoved": "Aislamiento de {name} quitado.",
     "timedOut": "{name} queda aislado temporalmente durante {length}.",
     "notVerified": "{name} no tiene el rol de verificado.",
-    "unverified": "Verificación quitada a {name}."
+    "unverified": "Verificación quitada a {name}.",
+    "quarantineReason": "Escribe un motivo: se le envía al miembro.",
+    "quarantineBlocked": "El límite de seguridad pausó tus acciones de moderación, así que ahora no puedes poner a nadie en cuarentena.",
+    "quarantined": "{name} está en cuarentena. El MD se entregó.",
+    "quarantinedNoDm": "{name} está en cuarentena. El MD no se pudo entregar (tiene los MD cerrados).",
+    "released": "Liberado de la cuarentena. Roles devueltos: {roles}."
   },
   "bulk": {
     "action": {

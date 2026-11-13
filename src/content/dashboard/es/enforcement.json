@@ -73,7 +73,22 @@
     "warn1": "Rol con 1 advertencia",
     "warn2": "Rol con 2 advertencias",
     "warn3": "Rol con 3 o más advertencias",
-    "warnRoleN": "Rol de advertencia {number}"
+    "warnRoleN": "Rol de advertencia {number}",
+    "quarantine": "Rol de cuarentena",
+    "quarantineHelp": "Se da en lugar de todos los demás roles cuando alguien entra en cuarentena: por un raid, por la protección del staff o a mano en la página de un miembro. Mewvo le oculta todos los canales. Sin configurar: los raids expulsan y la protección del staff quita los roles de staff, como antes.",
+    "quarantineHasPerms": "El rol de cuarentena tiene permisos propios. No le des ninguno: solo debe quitar acceso.",
+    "quarantinePing": "Roles de administración principal a mencionar cuando alguien entra en cuarentena (hasta {max})",
+    "quarantinePingShort": "Rol mencionado",
+    "quarantinePingHelp": "La alerta de cuarentena en el canal de alertas menciona estos roles y a nadie más. Mantén Ctrl (Cmd en Mac) para elegir varios.",
+    "quarantineInfo": "Canal de información de cuarentena (los miembros en cuarentena solo ven este, solo lectura)",
+    "quarantineInfoHelp": "Los miembros en cuarentena pueden leer este único canal, pero no escribir ni reaccionar en él. Sin configurar: no ven ningún canal.",
+    "quarantineInfoPost": "Publicar el mensaje de información de cuarentena",
+    "quarantineInfoPostHelp": "Publica en el canal de información de cuarentena un mensaje de Mewvo que les explica la cuarentena (en el idioma del servidor). Publicarlo otra vez reemplaza el mensaje anterior.",
+    "quarantineRefusePerms": "El rol de cuarentena no debe tener permisos propios (todos los miembros en cuarentena los recibirían). Elige un rol sin permisos o quítaselos antes en Discord.",
+    "quarantineRefuseHeld": "Ya hay miembros con este rol ({count}): Mewvo le oculta todos los canales, así que todos perderían el acceso. Crea un rol nuevo y vacío para la cuarentena.",
+    "quarantineDeciders": "Quién decide sobre los miembros en cuarentena (hasta {max} roles)",
+    "quarantineDecidersShort": "Rol que decide",
+    "quarantineDecidersHelp": "Quienes tienen estos roles (y el dueño del servidor) eligen Liberar, Expulsar, Banear o Mantener para un miembro en cuarentena, en la alerta o en la página del miembro. Otros administradores pueden poner en cuarentena pero no decidir. Los roles mencionados de arriba son aparte."
   },
   "timings": {
     "title": "Apelaciones y denuncias",
@@ -192,7 +207,10 @@
     "transparencyOn": "El informe de transparencia está activado: /transparency es público.",
     "transparencyOff": "El informe de transparencia está desactivado: /transparency ya no está en la web.",
     "trustOn": "La tarjeta de confianza está activada: /trust es pública.",
-    "trustOff": "La tarjeta de confianza está desactivada: /trust ya no está en la web."
+    "trustOff": "La tarjeta de confianza está desactivada: /trust ya no está en la web.",
+    "quarantineInfoNoChannel": "Primero configura un canal de información de cuarentena (un canal de texto donde Mewvo pueda publicar).",
+    "quarantineInfoPosted": "El mensaje de información de cuarentena está publicado en #{channel}.",
+    "quarantineInfoReplaced": "El mensaje de información de cuarentena está publicado en #{channel}; el anterior se quitó."
   },
   "appealsHome": {
     "title": "Dónde apelan los miembros",

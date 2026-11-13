@@ -1,5 +1,6 @@
 import { Events } from 'discord.js';
 import { applyMutedOverwrite, findMutedRole } from '../services/enforcement/muteService.js';
+import { applyQuarantineOverwriteToChannel } from '../services/enforcement/quarantineService.js';
 import { isEnforcementDbAvailable } from '../services/enforcement/db.js';
 import { logEvent, EVENT_TYPES } from '../services/loggingService.js';
 import { channelLines } from '../utils/logging/channelLogLines.js';
@@ -18,6 +19,10 @@ export default {
       eventType: EVENT_TYPES.CHANNEL_CREATE,
       data: { title: 'Channel created', headline: `${channel.toString()} was created`, lines: channelLines(channel), channelId: channel.id },
     }).catch((error) => logger.debug(`Channel create log failed: ${error.message}`));
+
+    // New channels get the quarantine role's View Channel deny (any server with a quarantine role;
+    // the setting is read from the settings cache, no database call). Never throws.
+    await applyQuarantineOverwriteToChannel(channel);
 
     // New channels get the muted-role deny overwrite so muted members stay muted there
     // (any server: findMutedRole only finds that server's own Muted role).

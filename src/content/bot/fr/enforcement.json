@@ -107,5 +107,122 @@
     "uncounted": {
         "automod": "Avertissement automod — ne compte pas pour les bannissements",
         "ladderOff": "Avertissement — ne compte pas pour les bannissements (échelle d'avertissements désactivée)"
+    },
+    "quarantine": {
+        "dm": {
+            "body": "Tu as été mis en quarantaine sur **{server}** pour **{reason}**.",
+            "invite": "Pour en discuter, rejoins {invite}.",
+            "noReason": "aucune raison donnée"
+        },
+        "alert": {
+            "title": "Membre mis en quarantaine",
+            "ping": "**{name}** a été mis en quarantaine. Merci de jeter un œil.",
+            "member": "Membre",
+            "reason": "Raison",
+            "trigger": "Ce qui l’a déclenché",
+            "rolesRemoved": "Rôles retirés",
+            "rolesKept": "Rôles qui restent (gérés par Discord ou une intégration)",
+            "dm": "MP",
+            "dmDelivered": "Remis",
+            "dmFailed": "Non remis (MP fermés ou aucun serveur en commun)",
+            "none": "Aucun",
+            "release": "Libérer",
+            "releasedBy": "Libéré par",
+            "releasedValue": "{name} · {date}",
+            "channelsOpen": "Salons encore ouverts",
+            "channelsOpenValue": "{count} salon(s) ont refusé le réglage de Mewvo (pas de Gérer les permissions là-bas) : il peut encore les voir."
+        },
+        "trigger": {
+            "raid": "Confinement anti-raid : un membre arrivé pendant le raid a enfreint une règle de l’automod",
+            "staffGuard": "Protection du staff (anti-nuke)",
+            "manual": "Mis en quarantaine à la main par {name}",
+            "automod": "Automod : une infraction de niveau bannissement (quarantaine au lieu du bannissement)"
+        },
+        "log": {
+            "releasedTitle": "Quarantaine levée",
+            "releasedBy": "Libéré par",
+            "rolesBack": "Rôles rendus",
+            "skipped": "Rôles enregistrés non rendus (supprimés, gérés ou au-dessus de Mewvo)",
+            "left": "Aucun : il n’est plus sur le serveur"
+        },
+        "refuse": {
+            "noRole": "Aucun rôle de quarantaine n’est défini (tableau de bord : Sanctions et appels → Rôles), ou il n’existe plus.",
+            "botNoManageRoles": "Mewvo a besoin de la permission Gérer les rôles pour mettre quelqu’un en quarantaine.",
+            "roleManaged": "Le rôle de quarantaine est géré par une intégration, donc Mewvo ne peut pas le donner.",
+            "roleAboveBot": "Le rôle de quarantaine n’est pas sous le rôle le plus haut de Mewvo, donc Mewvo ne peut pas le donner.",
+            "owner": "Le propriétaire du serveur ne peut pas être mis en quarantaine.",
+            "bot": "Les bots ne peuvent pas être mis en quarantaine.",
+            "self": "Mewvo ne peut pas se mettre lui-même en quarantaine.",
+            "aboveBot": "Le rôle le plus haut de ce membre n’est pas sous le rôle le plus haut de Mewvo, donc Mewvo ne peut pas le mettre en quarantaine.",
+            "notInServer": "Ce membre n’est pas sur le serveur.",
+            "already": "Ce membre est déjà en quarantaine.",
+            "database": "La base de données ne répond pas, donc rien n’a été changé.",
+            "assignFailed": "Discord a refusé le changement de rôles, donc rien n’a été changé.",
+            "failed": "La quarantaine n’a pas fonctionné, donc rien n’a été changé.",
+            "roleHasPermissions": "Le rôle de quarantaine a ses propres permissions, donc Mewvo ne l’utilisera pas (chaque membre en quarantaine les recevrait). Ne lui donne aucune permission."
+        },
+        "release": {
+            "adminOnly": "Seuls les administrateurs peuvent libérer quelqu’un de la quarantaine.",
+            "otherServer": "Ce bouton ne fonctionne que sur le serveur du staff où l’alerte a été publiée.",
+            "none": "Ce membre n’est plus en quarantaine.",
+            "notYourself": "Tu ne peux pas te libérer toi-même.",
+            "offender": "La protection du staff a agi contre toi récemment, donc tu ne peux pas utiliser ce bouton.",
+            "ownerOnly": "Cette quarantaine vient de la protection du staff, donc seul le propriétaire du serveur peut la lever (comme /staff restore).",
+            "tooHigh": "Certains de ses rôles enregistrés sont au niveau de ton rôle le plus haut ou au-dessus ({roles}). Demande au propriétaire du serveur de le libérer.",
+            "done": "{name} a été libéré. Rôles rendus : {roles}.",
+            "left": "Il n’est plus sur le serveur. L’enregistrement de quarantaine a été supprimé, donc s’il revient il ne sera pas mis en quarantaine.",
+            "failed": "Discord a refusé le changement de rôles, rien n’a été libéré : {error}",
+            "partial": "Les rôles ont été rendus, mais le rôle de quarantaine ou son enregistrement n’a pas pu être retiré. Appuie encore sur Libérer : {error}"
+        },
+        "ownerDm": "Il a été mis en quarantaine : tous ses rôles ont été enregistrés et retirés, et il ne voit aucun salon tant que personne n’appuie sur Libérer dans l’alerte (ou que tu n’utilises pas /staff restore).",
+        "info": {
+            "title": "Tu es en quarantaine",
+            "intro": "Ton accès à **{server}** est en pause. Tu peux toujours lire ce salon, mais pour l’instant tu ne peux ni voir ni écrire dans aucun autre salon.",
+            "whyTitle": "Pourquoi cela arrive",
+            "why": "Notre système de sécurité ou un membre du staff a signalé ton compte, par exemple pendant un raid, pour une activité suspecte ou pour non-respect des règles. La raison t’a été envoyée en MP.",
+            "doTitle": "Ce que tu peux faire",
+            "wait": "Attendre : le staff examine chaque quarantaine et te rendra ton accès ou t’expliquera la suite.",
+            "talk": "Parler au staff : rejoins notre serveur d’assistance {support} et donne-leur ton nom d’utilisateur.",
+            "noAlts": "Merci de ne pas créer de nouveaux comptes pour contourner la quarantaine ; cela la rend définitive.",
+            "rolesSaved": "Tes rôles ont été enregistrés et te seront rendus si la quarantaine est levée."
+        },
+        "decide": {
+            "button": {
+                "release": "Libérer",
+                "kick": "Expulser",
+                "ban": "Bannir",
+                "keep": "Garder en quarantaine"
+            },
+            "field": "Décision",
+            "value": "{decision} par {name} · {date}",
+            "done": {
+                "release": "Libéré",
+                "kick": "Expulsé",
+                "ban": "Banni",
+                "keep": "Gardé en quarantaine (examiné)"
+            },
+            "case": "Dossier",
+            "keptTitle": "Quarantaine examinée",
+            "notDecider": "Seuls le propriétaire du serveur et les rôles de « Qui décide pour les membres en quarantaine » (Sanctions et appels → Rôles) peuvent décider ici.",
+            "notMember": "Tu n’es pas membre du serveur où se trouve cette quarantaine.",
+            "banTitle": "Bannir depuis la quarantaine",
+            "banReason": "Raison (envoyée au membre)",
+            "banNeedsReason": "Un bannissement a besoin d’une raison.",
+            "kickAsk": "Expulser {name} ? Il reçoit d’abord un MP et une invitation à usage unique pour revenir.",
+            "kickConfirm": "Expulser",
+            "cancel": "Annuler",
+            "cancelled": "Rien n’a été fait.",
+            "reply": {
+                "kick": "{name} a été expulsé (dossier {code}).",
+                "ban": "{name} a été banni (dossier {code}).",
+                "keep": "{name} reste en quarantaine. Ton examen est noté sur l’alerte."
+            },
+            "needsAdmin": "Il faut être Administrateur sur le serveur de la quarantaine (toujours pour Expulser et Bannir ; un rôle décideur, pour chaque choix).",
+            "recordNotCleared": "L’enregistrement de quarantaine n’a pas pu être supprimé (base de données) ; c’est noté dans le journal du bot."
+        },
+        "joinUnknown": {
+            "title": "État de quarantaine inconnu",
+            "text": "{member} est arrivé, mais impossible de vérifier s’il est en quarantaine (la base de données ne répond pas). Il n’a reçu aucun rôle ; merci de vérifier."
+        }
     }
 }

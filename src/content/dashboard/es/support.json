@@ -12,5 +12,17 @@
   "appealsCategory": "Categoría de apelaciones de baneo y expulsión",
   "appealsCategoryHelp": "Una categoría es una carpeta de canales. Cada apelación de baneo o expulsión recibe aquí un canal donde el miembro puede hablar con el staff. El staff decide en un canal solo para el staff en el servidor principal. Sin configurar: las apelaciones se abren en el servidor principal, solo para el staff.",
   "invite": "Enlace de invitación que se envía a los baneados: {invite}. Puedes {change}.",
-  "changeLink": "cambiarlo en Sanciones y apelaciones"
+  "changeLink": "cambiarlo en Sanciones y apelaciones",
+  "notConnectedOther": "Aquí no hay ningún servidor de soporte conectado: un segundo servidor para miembros baneados (rol de baneado, canales de apelación) es solo para los servidores propios de Mewvo por ahora. Los miembros reciben tu invitación al servidor de soporte de arriba.",
+  "yourInvite": {
+    "title": "Tu invitación al servidor de soporte",
+    "cardHelp": "Los MD de sanciones y de cuarentena dicen a los miembros que entren en este servidor para hablarlo.",
+    "label": "Tu invitación al servidor de soporte",
+    "help": "Una invitación permanente a tu propio servidor de soporte (discord.gg/…). Es el mismo ajuste que “Tu invitación de apelación” en Sanciones y apelaciones. Vacío: los MD no tienen línea de invitación.",
+    "helpHome": "El servidor de soporte de Mewvo: la invitación que nombran los MD de sanciones y de cuarentena. También en Sanciones y apelaciones → Canales.",
+    "mewvoNote": "Por ahora tus miembros van al servidor de soporte de Mewvo, no a esta invitación. Puedes cambiarlo en {link}.",
+    "mewvoLink": "Dónde apelan los miembros",
+    "bad": "Eso no es un enlace de invitación de Discord (https://discord.gg/…).",
+    "required": "La invitación al servidor de soporte no puede estar vacía aquí."
+  }
 }

@@ -324,7 +324,7 @@ function memberEditSection(view, can, csrf, tr) {
     const roles = view.member.roles;
     const current = html`<div class="role-list">${roles.length ? roles.map((r) => html`<span class="role-chip role-chip-lg">@${r.name}${edit?.tempRoles?.has(r.id) ? html` <span class="muted">${t('members.edit.until', { date: dateIn(edit.tempRoles.get(r.id), tr) })}</span>` : ''}${canWrite && !edit?.problem && edit?.removable?.has(r.id)
         ? actionForm(csrf, `/users/${id}/roles/remove`, '', { submit: t('members.form.remove'), hidden: { roleId: r.id }, inline: true, secondary: true, className: 'chip-form' }) : ''}</span>`) : html`<span class="muted">${t('members.edit.noRoles')}</span>`}</div>`;
-    if (!can.roles && !can.nickname && !can.timeout && !can.unverify) return html`${current}<p class="muted">${t('members.edit.needsAdminEditing')}</p>`;
+    if (!can.roles && !can.nickname && !can.timeout && !can.unverify && !can.quarantine) return html`${current}<p class="muted">${t('members.edit.needsAdminEditing')}</p>`;
     if (edit?.problem) return html`${current}<p class="notice">${edit.problem}</p>`;
     const roleForm = edit.assignable.length
         ? actionForm(csrf, `/users/${id}/roles/add`, html`<div class="grid"><label>${t('members.edit.giveRole')}<select name="roleId" data-search required><option value="">${t('members.form.choose')}</option>${edit.assignable.map((r) => html`<option value="${r.id}">@${r.name}</option>`)}</select><span class="hint">${tx('members.edit.giveRoleHint')}</span></label>
@@ -338,7 +338,34 @@ ${actionForm(csrf, `/users/${id}/timeout`, html`<div class="grid"><label>${t('me
     const verifyForm = edit.verifiedRole
         ? html`<h3>${t('members.edit.verification')}</h3><p>${t('members.edit.verified', { role: edit.verifiedRole.name })}</p>${actionForm(csrf, `/users/${id}/unverify`, html`<div class="grid"><label>${t('members.edit.unverifyReason')}<input name="reason" maxlength="${REASON_MAX}"></label></div>`, { submit: t('members.edit.unverify'), secondary: true, confirm: t('members.edit.unverifyConfirm', { name: view.user.username, role: edit.verifiedRole.name }) })}`
         : '';
-    return html`${current}${can.roles ? roleForm : html`<p class="muted">${t('members.edit.needsAdmin')}</p>`}${can.nickname ? html`<h3>${t('members.profile.nickname')}</h3>${nickForm}` : ''}${can.timeout ? html`<h3>${t('members.edit.timeout')}</h3>${timeoutForm}` : ''}${can.unverify ? verifyForm : ''}`;
+    return html`${current}${can.roles ? roleForm : html`<p class="muted">${t('members.edit.needsAdmin')}</p>`}${can.nickname ? html`<h3>${t('members.profile.nickname')}</h3>${nickForm}` : ''}${can.timeout ? html`<h3>${t('members.edit.timeout')}</h3>${timeoutForm}` : ''}${can.unverify ? verifyForm : ''}${can.quarantine ? quarantineForm(view, csrf, tr) : ''}`;
+}
+
+/**
+ * Quarantine (enforcement/quarantineService.js): every role saved and removed, no channel
+ * visible, until released. Quarantined: since when, why, and Release; else a required reason and
+ * Quarantine (with a confirm). No quarantine role Mewvo can give: where to set one.
+ */
+function quarantineForm(view, csrf, tr) {
+    const { t } = tr;
+    const id = view.user.id;
+    const edit = view.memberEdit;
+    const record = edit?.quarantine;
+    const head = html`<h3>${t('members.quarantine.title')}</h3>`;
+    if (record === undefined) return html`${head}<p class="error" role="alert">${t('members.quarantine.unreadable')}</p>`;
+    if (record) {
+        const state = html`${head}<p class="notice">${t('members.quarantine.active', { date: dateIn(new Date(record.at), tr), reason: record.reason || '-' })}</p>`;
+        if (!edit.quarantineDecider) return html`${state}<p class="muted">${t('members.quarantine.notDecider')}</p>`;
+        const decide = (decision, fields, opts) => actionForm(csrf, `/users/${id}/quarantine/decide`, fields, { hidden: { decision }, ...opts });
+        return html`${state}
+${decide('release', '', { submit: t('members.quarantine.release'), secondary: true, confirm: t('members.quarantine.releaseConfirm', { name: view.user.username }) })}
+${decide('keep', '', { submit: t('members.quarantine.keep'), secondary: true })}
+${decide('kick', '', { submit: t('members.quarantine.kick'), danger: true, confirm: t('members.quarantine.kickConfirm', { name: view.user.username }) })}
+${decide('ban', html`<div class="grid"><label class="wide">${t('members.quarantine.banReason')}<input name="reason" maxlength="500" required></label></div>`, { submit: t('members.quarantine.ban'), danger: true, confirm: t('members.quarantine.banConfirm', { name: view.user.username }) })}`;
+    }
+    if (!edit?.quarantineReady) return html`${head}<p class="muted">${t('members.quarantine.notSet')} <a href="${path('/enforcement')}">${t('members.quarantine.setLink')}</a></p>`;
+    return html`${head}<p class="muted">${t('members.quarantine.help')}</p>
+${actionForm(csrf, `/users/${id}/quarantine`, html`<div class="grid"><label class="wide">${t('members.quarantine.reason')}<input name="reason" maxlength="${REASON_MAX}" required><span class="hint">${t('members.quarantine.reasonHint')}</span></label></div>`, { submit: t('members.quarantine.submit'), danger: true, confirm: t('members.quarantine.confirm', { name: view.user.username }) })}`;
 }
 
 function notesSection(view, canWrite, csrf, tr) {
@@ -427,7 +454,7 @@ export function userPage({ session, access = null, moduleStates = {}, view, canA
     // allow(key): permissions.js for this viewer (the Moderator level runs some actions); default canAct for everything.
     const may = (key) => Boolean(editEnabled && (allow ? allow(key) : canAct));
     const canWrite = canAct && editEnabled;
-    const can = { roles: may('member.roles'), nickname: may('member.nickname'), timeout: may('member.timeout'), unverify: may('member.unverify') };
+    const can = { roles: may('member.roles'), nickname: may('member.nickname'), timeout: may('member.timeout'), unverify: may('member.unverify'), quarantine: may('member.quarantine') };
     const actions = view.actions.filter((type) => may(`action:${type}`));
     const limited = !canAct && actions.length > 0;
     const body = html`<a class="back" href="${path('/users')}">${t('members.back')}</a>

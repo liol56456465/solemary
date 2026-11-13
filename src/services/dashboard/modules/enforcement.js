@@ -5,7 +5,7 @@
 import { ENFORCEMENT_REASONS, enforcementConfig } from '../../../config/enforcement.js';
 import { AUTOMOD_RULES } from '../../../config/automod.js';
 import { html, raw } from '../html.js';
-import { InputError, PERMS, boolField, channelField, channelPicker, checkbox, choiceField, numberInput, postForm, roleField, rolePicker, switchInput, text, textInput, toggleForm } from '../forms.js';
+import { InputError, PERMS, boolField, channelField, channelPicker, checkbox, choiceField, list, numberInput, postForm, roleField, rolePicker, switchInput, text, textInput, toggleForm } from '../forms.js';
 import { MAX_TEMPLATES, TEMPLATE_ACTIONS, TEMPLATE_ID, TEMPLATE_NAME_MAX, cleanTemplates, newTemplateId, withTemplateIds } from '../../enforcement/templateService.js';
 import { DAY, MINUTE, changedOnly, durationField, registryValue, saveRegistry, saveRegistryWith, section, table, topic } from './common.js';
 import { textFor } from '../language.js';
@@ -17,7 +17,7 @@ import { isHomeScope, adminOnlyActions } from './serverScope.js';
 
 const KEYS = [
     'adminRequestChannelId', 'modLogChannelId', 'evidenceChannelId', 'appealsCategoryId', 'reportsCategoryId', 'modmailCategoryId',
-    'openChannelCap', 'mutedRoleId', 'warnRoleIds',
+    'openChannelCap', 'mutedRoleId', 'warnRoleIds', 'quarantineRoleId', 'quarantinePingRoleIds', 'quarantineDeciderRoleIds', 'quarantineInfoChannelId',
     'appealWindowMs', 'appealCooldownMs', 'rejoinInviteMaxAgeSeconds', 'staleReportMs',
     'staleAppealReminderMs', 'independentAppealReview', 'massActionLimit', 'massMuteLimit', 'massActionWindowMs', 'massActionBlockMs',
     'enforcementTemplates', 'warnLadderEnabled', 'automodWarnsCountOnLadder',
@@ -41,6 +41,34 @@ export function appealsHomeForm(ctx, form) {
     const appealsInvite = typed ? inviteOrNull(typed) : null;
     if (typed && !appealsInvite) throw new InputError(tr.t('enforcement.appealsHome.badInvite'), 400, 'appealsInvite');
     return { appealsHome, appealsInvite };
+}
+
+/** Head admin roles the quarantine alert pings (enforcement/quarantineService.js MAX_PING_ROLES). */
+export const MAX_QUARANTINE_PING_ROLES = 5;
+
+/**
+ * The quarantine role should have no permissions of its own (it only takes access away) and
+ * must be below Mewvo's highest role (rolePicker already warns about that one). Pure.
+ */
+export function quarantineRoleHasPermissions(guild, roleId) {
+    const role = roleId ? guild?.roles?.cache?.get(roleId) : null;
+    const bits = role?.permissions?.bitfield;
+    return Boolean(role && bits !== undefined && BigInt(bits) !== 0n);
+}
+
+/**
+ * The chosen quarantine role, checked (a new choice only; the saved one is kept as it is): no
+ * permissions of its own (every quarantined member would get them), and nobody holding it yet
+ * (Mewvo hides every channel from it, so they would all lose access).
+ */
+function quarantineRoleField(ctx, form, tr) {
+    const g = ctx.guild;
+    const id = roleField(g, form, 'quarantineRoleId', { label: tr.t('enforcement.roles.quarantine') });
+    if (!id || id === registryValue(ctx, 'quarantineRoleId')) return id;
+    if (quarantineRoleHasPermissions(g, id)) throw new InputError(tr.t('enforcement.roles.quarantineRefusePerms'), 400, 'quarantineRoleId');
+    const holders = g.roles.cache.get(id)?.members?.size ?? 0;
+    if (holders > 0) throw new InputError(tr.t('enforcement.roles.quarantineRefuseHeld', { count: tr.fmtNumber(holders) }), 400, 'quarantineRoleId');
+    return id;
 }
 
 /** Radio buttons: one name, [value, label] choices. */
@@ -126,7 +154,16 @@ ${rolePicker(g, 'mutedRoleId', v.mutedRoleId, { label: t('enforcement.roles.mute
 ${rolePicker(g, 'warnRole1', warn[0] || null, { label: t('enforcement.roles.warn1') })}
 ${rolePicker(g, 'warnRole2', warn[1] || null, { label: t('enforcement.roles.warn2') })}
 ${rolePicker(g, 'warnRole3', warn[2] || null, { label: t('enforcement.roles.warn3') })}
+${rolePicker(g, 'quarantineRoleId', v.quarantineRoleId, { label: t('enforcement.roles.quarantine'), help: t('enforcement.roles.quarantineHelp') })}${quarantineRoleHasPermissions(g, v.quarantineRoleId) ? html`<p class="warn">${t('enforcement.roles.quarantineHasPerms')}</p>` : ''}
+${rolePicker(g, 'quarantinePingRoleIds', v.quarantinePingRoleIds || [], { label: t('enforcement.roles.quarantinePing', { max: tr.fmtNumber(MAX_QUARANTINE_PING_ROLES) }), assign: false, multiple: true, help: t('enforcement.roles.quarantinePingHelp') })}
+${rolePicker(g, 'quarantineDeciderRoleIds', v.quarantineDeciderRoleIds || [], { label: t('enforcement.roles.quarantineDeciders', { max: tr.fmtNumber(MAX_QUARANTINE_PING_ROLES) }), assign: false, multiple: true, help: t('enforcement.roles.quarantineDecidersHelp') })}
+${channelPicker(g, 'quarantineInfoChannelId', v.quarantineInfoChannelId, { label: t('enforcement.roles.quarantineInfo'), perms: PERMS.post, help: t('enforcement.roles.quarantineInfoHelp') })}
+<input type="hidden" name="quarantinePingSent" value="1">
 </div>`, { canEdit: adminEdit });
+        // The info message in that channel (Administrator): replaces the one posted before.
+        const quarantineInfoPost = v.quarantineInfoChannelId
+            ? postForm(ctx, 'enforcement', 'quarantine-info-post', html`<p class="muted">${t('enforcement.roles.quarantineInfoPostHelp')}</p>`, { submit: t('enforcement.roles.quarantineInfoPost'), canEdit: adminEdit })
+            : '';
         const timings = postForm(ctx, 'enforcement', 'timings', html`<div class="grid">
 ${numberInput('appealWindowDays', Math.round(v.appealWindowMs / DAY), { label: t('enforcement.timings.window'), min: 1, max: 365, help: t('enforcement.timings.windowHelp') })}
 ${numberInput('appealCooldownDays', Math.round(v.appealCooldownMs / DAY), { label: t('enforcement.timings.cooldown'), min: 0, max: 90, help: t('enforcement.timings.cooldownHelp') })}
@@ -189,7 +226,7 @@ ${switchInput('automodWarnsCountOnLadder', v.automodWarnsCountOnLadder === true,
         // v6: cards grouped by topic (common.js topic/section). Explicit keys: the ids stay the English slugs in every language.
         const adminOnly = ctx.canAct ? '' : t('enforcement.adminOnly');
         const where = topic(t('enforcement.topic.where'), t('enforcement.topic.whereLine'), html`${section(t('enforcement.channels.title'), channels, t('enforcement.channels.help'), { key: 'channels', size: 'wide' })}
-${section(t('enforcement.roles.title'), roles, `${t('enforcement.roles.help')}${adminOnly}`, { key: 'roles', size: 'full' })}`, { key: 'channels-and-roles' });
+${section(t('enforcement.roles.title'), html`${roles}${quarantineInfoPost}`, `${t('enforcement.roles.help')}${adminOnly}`, { key: 'roles', size: 'full' })}`, { key: 'channels-and-roles' });
         const appeals = topic(t('enforcement.topic.appeals'), t('enforcement.topic.appealsLine'), html`${section(home ? t('enforcement.panels.title') : t('enforcement.panels.titleServer'), appealPanels, `${home ? t('enforcement.panels.help') : t('enforcement.panels.helpServer')}${adminOnly}`, { key: 'appeal-panels' })}
 ${section(t('enforcement.appealsHome.title'), appealsHome, t('enforcement.appealsHome.help'), { key: 'where-members-appeal' })}
 ${section(t('enforcement.review.title'), review, `${t('enforcement.review.help')}${adminOnly}`, { key: 'independent-appeal-review' })}
@@ -334,12 +371,47 @@ ${section(t('enforcement.rules.stepsTitle'), steps, t('enforcement.rules.stepsHe
                 const warnNames = ['warnRole1', 'warnRole2', 'warnRole3'];
                 const warnSent = warnNames.some((name) => form[name] !== undefined);
                 const warn = warnSent ? warnNames.map((name, i) => roleField(g, form, name, { label: tr.t('enforcement.roles.warnRoleN', { number: i + 1 }) })).filter(Boolean) : null;
+                // The ping list is a multi-select: nothing chosen sends nothing, so the form's hidden
+                // marker says it was on the form (then an empty list clears it).
+                const pingLabel = tr.t('enforcement.roles.quarantinePingShort');
+                const ping = form.quarantinePingSent !== undefined || form.quarantinePingRoleIds !== undefined
+                    ? list(form, 'quarantinePingRoleIds', { max: MAX_QUARANTINE_PING_ROLES })
+                        .map((id, i) => roleField(g, { r: id }, 'r', { optional: false, label: `${pingLabel} ${i + 1}` }))
+                    : null;
+                const deciderLabel = tr.t('enforcement.roles.quarantineDecidersShort');
+                const deciders = form.quarantinePingSent !== undefined || form.quarantineDeciderRoleIds !== undefined
+                    ? list(form, 'quarantineDeciderRoleIds', { max: MAX_QUARANTINE_PING_ROLES })
+                        .map((id, i) => roleField(g, { r: id }, 'r', { optional: false, label: `${deciderLabel} ${i + 1}` }))
+                    : null;
                 const patch = changedOnly({
+                    ...(deciders ? { quarantineDeciderRoleIds: deciders } : {}),
                     ...(form.mutedRoleId !== undefined ? { mutedRoleId: roleField(g, form, 'mutedRoleId', { label: tr.t('enforcement.roles.muted') }) } : {}),
                     ...(warnSent ? { warnRoleIds: warn } : {}),
+                    ...(form.quarantineRoleId !== undefined ? { quarantineRoleId: quarantineRoleField(ctx, form, tr) } : {}),
+                    ...(ping ? { quarantinePingRoleIds: ping } : {}),
+                    ...(form.quarantineInfoChannelId !== undefined ? { quarantineInfoChannelId: channelField(g, form, 'quarantineInfoChannelId', { label: tr.t('enforcement.roles.quarantineInfo') }) } : {}),
                 }, current(ctx));
                 if (!Object.keys(patch).length) return nothing(ctx);
                 return saveRegistry(ctx, patch, 'enforcement');
+            },
+        },
+        // Posts the quarantine info message in the info channel (enforcement/quarantineService.js), replacing the old one.
+        'quarantine-info-post': {
+            admin: true,
+            async run(ctx) {
+                const tr = textFor(ctx);
+                if (!registryValue(ctx, 'quarantineInfoChannelId')) throw new InputError(tr.t('enforcement.result.quarantineInfoNoChannel'));
+                let posted;
+                try {
+                    posted = await ctx.services.postQuarantineInfo(ctx.guild);
+                } catch (error) {
+                    if (error?.code === 'noChannel' || error?.code === 'channelGone') throw new InputError(tr.t('enforcement.result.quarantineInfoNoChannel'));
+                    throw error;
+                }
+                return {
+                    changes: [{ key: 'quarantineInfoMessage', old: null, new: { channel: posted.channel.id, message: posted.message.id } }],
+                    message: tr.t(posted.replaced ? 'enforcement.result.quarantineInfoReplaced' : 'enforcement.result.quarantineInfoPosted', { channel: posted.channel.name }),
+                };
             },
         },
         async timings(ctx, form) {

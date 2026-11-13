@@ -9,6 +9,7 @@ test('refresh posted messages: every panel kind counted; one failing part never 
         tickets: async () => { throw new Error('Missing Access'); },
         appeals: async () => 2,
         reactionRoles: async () => 3,
+        quarantineInfo: async () => 1,
     });
-    assert.deepEqual(done, { verification: 1, tickets: 0, appeals: 2, reactionRoles: 3, total: 6 });
+    assert.deepEqual(done, { verification: 1, tickets: 0, appeals: 2, reactionRoles: 3, quarantineInfo: 1, total: 7 });
 });

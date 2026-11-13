@@ -85,7 +85,12 @@
     "timeoutRemoved": "Timeout von {name} aufgehoben.",
     "timedOut": "{name} hat einen Timeout für {length}.",
     "notVerified": "{name} hat die Verifiziert-Rolle nicht.",
-    "unverified": "Verifizierung von {name} entfernt."
+    "unverified": "Verifizierung von {name} entfernt.",
+    "quarantineReason": "Gib einen Grund an: er wird dem Mitglied geschickt.",
+    "quarantineBlocked": "Das Sicherheitslimit hat deine Strafaktionen pausiert, daher kannst du gerade niemanden unter Quarantäne stellen.",
+    "quarantined": "{name} ist unter Quarantäne. Die DM wurde zugestellt.",
+    "quarantinedNoDm": "{name} ist unter Quarantäne. Die DM konnte nicht zugestellt werden (DMs geschlossen).",
+    "released": "Aus der Quarantäne freigegeben. Zurückgegebene Rollen: {roles}."
   },
   "bulk": {
     "action": {

@@ -291,5 +291,26 @@
     "tooShort": "Wpisz co najmniej 2 litery nazwy.",
     "discordFailed": "Discord nie odpowiedział na wyszukiwanie, więc pokazano tylko członków, których Mewvo już zna.",
     "bansFailed": "Nie udało się wczytać listy banów, więc zbanowani użytkownicy nie są pokazani."
+  },
+  "quarantine": {
+    "title": "Kwarantanna",
+    "help": "Zabiera wszystkie role (są zapisywane) i ukrywa wszystkie kanały. Członek zostaje na serwerze i dostaje DM z powodem i twoim zaproszeniem na serwer wsparcia. Główni administratorzy są oznaczani na kanale alertów.",
+    "reason": "Powód (wysyłany członkowi)",
+    "reasonHint": "Wymagany. Widoczny w DM, w alercie i w logu moderacji.",
+    "submit": "Objęcie kwarantanną",
+    "confirm": "Objąć {name} kwarantanną? Traci wszystkie role i nie widzi żadnego kanału do zwolnienia.",
+    "active": "Na kwarantannie od {date}. Powód: {reason}",
+    "release": "Zwolnij z kwarantanny",
+    "releaseConfirm": "Zwolnić {name}? Zapisane role wrócą.",
+    "notSet": "Kwarantanna wymaga roli kwarantanny, którą Mewvo może nadać.",
+    "setLink": "Ustaw ją w Kary i odwołania → Role.",
+    "unreadable": "Nie da się teraz odczytać, czy ten członek jest na kwarantannie (baza danych nie odpowiada).",
+    "notDecider": "O tym, co dalej, decydują tylko właściciel serwera i role decydujące (Kary i odwołania → Role).",
+    "keep": "Zostaw na kwarantannie (sprawdzone)",
+    "kick": "Wyrzuć",
+    "kickConfirm": "Wyrzucić {name}? Najpierw dostanie DM i jednorazowe zaproszenie do powrotu.",
+    "ban": "Zbanuj",
+    "banReason": "Powód bana (wysyłany członkowi)",
+    "banConfirm": "Zbanować {name}? Najpierw dostanie DM."
   }
 }

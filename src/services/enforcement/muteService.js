@@ -50,21 +50,26 @@ export async function findMutedRole(guild) {
     return null;
 }
 
-function hasMutedOverwrite(channel, roleId) {
-    const overwrite = channel.permissionOverwrites?.cache?.get(roleId);
-    return Boolean(overwrite && MUTED_DENY.every((flag) => overwrite.deny.has(flag)));
-}
-
-export async function applyMutedOverwrite(channel, role) {
+/**
+ * The managed-role pattern (Muted role, Quarantine role): gives `role` a deny overwrite for the
+ * permissions named in `denyNames` (PermissionFlagsBits names) on `channel`, unless it has one
+ * already. Threads are skipped (they inherit from their parent). Returns true when it wrote one.
+ */
+export async function applyRoleDenyOverwrite(channel, role, denyNames, reason) {
     if (SKIP_TYPES.has(channel.type) || !channel.permissionOverwrites) {
         return false;
     }
-    if (hasMutedOverwrite(channel, role.id)) {
+    const overwrite = channel.permissionOverwrites?.cache?.get(role.id);
+    if (overwrite && denyNames.every((name) => overwrite.deny.has(PermissionFlagsBits[name]))) {
         return false;
     }
-    const deny = Object.fromEntries(MUTED_DENY_NAMES.map((name) => [name, false]));
-    await channel.permissionOverwrites.edit(role, deny, { reason: 'Muted role: deny chat, reactions and voice' });
+    const deny = Object.fromEntries(denyNames.map((name) => [name, false]));
+    await channel.permissionOverwrites.edit(role, deny, { reason });
     return true;
+}
+
+export async function applyMutedOverwrite(channel, role) {
+    return applyRoleDenyOverwrite(channel, role, MUTED_DENY_NAMES, 'Muted role: deny chat, reactions and voice');
 }
 
 /**
