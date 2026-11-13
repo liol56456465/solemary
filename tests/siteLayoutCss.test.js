@@ -60,6 +60,55 @@ test('top bar markup: picker short code with the full name kept, short labels ar
     assert.ok(en.includes('<a class="button" href="/dashboard">Dashboard</a>'));
 });
 
+test('phone menu (☰): hidden on wide screens; on phones the bar is one sticky row and the page links, picker move into it', () => {
+    assert.ok(CSS.includes('.nav-menu { display: none; }'), 'no ☰ above 760px');
+    const at = CSS.indexOf('/* ── Phone menu (2026-11-13)');
+    assert.ok(at > -1);
+    const phone = CSS.slice(at);
+    assert.match(phone, /@media \(max-width: 760px\) \{\n {4}\.topbar \{ position: sticky; \}/);
+    assert.ok(phone.includes('.topbar .topnav, .topbar-actions .lang-menu { display: none; }'));
+    assert.ok(phone.includes('.nav-menu { display: block; }'));
+    assert.match(phone, /@media \(max-width: 760px\) and \(max-height: 500px\) \{\n {4}\.topbar \{ position: relative; \}/, 'sideways phones: the bar scrolls away');
+    assert.match(rule('.nav-toggle'), /width: 44px; height: 44px;/);
+    assert.match(rule('.nav-pop'), /max-height: calc\(100dvh - 56px\); overflow-y: auto;/);
+    assert.match(rule('.nav-pop-links a'), /min-height: 48px/);
+    assert.match(rule('.nav-pop-langs a'), /min-height: 44px/);
+    // The ☰ rules come after the older phone rules (two rows, static bar) so they win.
+    assert.ok(at > CSS.indexOf('/* Very narrow phones (320px)'));
+});
+
+const menuOf = (markup) => {
+    const at = markup.indexOf('<details class="nav-menu">');
+    assert.ok(at > -1, 'phone menu present');
+    return markup.slice(at, markup.indexOf('</details>', at));
+};
+
+test('phone menu markup: labelled toggle, page links, languages; only what the bar hides on phones', () => {
+    // Public, logged out, with member accounts: the bar keeps Add to Discord; Log in, Sign up and Dashboard are in ☰.
+    const out = menuOf(page('de', { memberPortal: true, accounts: true }));
+    assert.match(out, /<summary class="nav-toggle"><span class="nav-toggle-bars" aria-hidden="true"><\/span><span class="visually-hidden">Menü<\/span><\/summary>/);
+    assert.match(out, /<nav class="nav-pop" aria-label="Menü">/);
+    assert.match(out, /<div class="nav-pop-account"><a class="button button-quiet" href="\/me">[^<]+<\/a><a class="button" href="\/me\/signup">/);
+    assert.ok(out.includes('href="/dashboard"'));
+    assert.ok(!out.includes('data-add-bot'), 'Add to Discord stays in the bar');
+    for (const p of ['/de/features', '/de/pricing', '/de/docs', '/de/commands', '/de/leaderboard', '/me']) assert.ok(out.includes(`href="${p}"`), p);
+    assert.match(out, /<a href="\/\?setlang=de" hreflang="de" lang="de" aria-current="true">Deutsch<\/a>/);
+    for (const { code } of LANGUAGES) assert.ok(out.includes(`hreflang="${code}"`), code);
+    // Logged in: the account chip stays in the bar, so Add to Discord moves into ☰ and there is no Log in.
+    const inside = menuOf(page('en', { memberPortal: true, accounts: true, viewer: { name: 'Ana', csrf: 'x' } }));
+    assert.ok(inside.includes('data-add-bot'));
+    assert.ok(!inside.includes('nav-pop-account'));
+    // Not public, no member portal: the dashboard stays in the bar, not repeated in ☰.
+    const plain = menuOf(page('en', { publicSite: false }));
+    assert.ok(!plain.includes('/dashboard'));
+    assert.ok(plain.includes('href="/features"'));
+    // The current page is marked in ☰ too.
+    const ctx = { ...translator('en', { href: (p) => p }), languageLink: (c) => `/?setlang=${c}` };
+    assert.match(menuOf(layout(ctx, { title: 'T', active: 'pricing', body: '' })), /<a href="\/pricing" aria-current="page">/);
+    // Every language has its own label.
+    for (const { code } of LANGUAGES) assert.doesNotMatch(menuOf(page(code)), /shell\.header\.menu/, code);
+});
+
 // Phones (2026-11-07): the browser check (scripts/site-layout-check.js, touch emulation) measures tap
 // targets, field text and fixed bars; these guard the rules that make it pass.
 const block = (media) => {

@@ -147,7 +147,7 @@ export const CSS_VERSION = createHash('sha256').update(STYLESHEET).digest('hex')
 export const CSS_PATH = `/site.css?v=${CSS_VERSION}`;
 
 // The one script (static/site.js): closes the header menus on an outside tap or Escape, keeps one
-// open at a time, scrolls the phone menu to the current page. Optional: pages work without it.
+// open at a time, closes a menu when one of its links is tapped. Optional: pages work without it.
 function buildScript() {
     try {
         return readFileSync(new URL('./static/site.js', import.meta.url), 'utf8');
@@ -268,6 +268,40 @@ function topButton(className, href, label, short, extra = '') {
     return html`<a class="${className}" href="${href}"${raw(extra)}><span class="label-long">${label}</span><span class="label-short" aria-hidden="true">${short}</span></a>`;
 }
 
+/**
+ * The phone menu (≤ 760px; hidden above, site.css): a ☰ button that opens a panel under the bar
+ * (details, no script needed). Phones keep the brand, one button and this menu in one row; the
+ * panel holds everything the bar hides there: the account buttons (Log in / Sign up), Dashboard,
+ * Add to Discord when the account chip took its place, the page links and the languages.
+ * What stays in the bar (topbarParts / memberActions) is not repeated here.
+ */
+function phoneMenu(ctx, here, active, { add, member }) {
+    const { t } = textOf(ctx);
+    const viewer = member ? ctx.viewer : null;
+    const loggedOut = member && !viewer;
+    // Phones show the first of: account chip, Add to Discord, Log in, Dashboard (the others are .topbar-more / .topbar-wide).
+    const showAdd = add && Boolean(viewer);
+    const showLogIn = loggedOut && add;
+    const showSignUp = loggedOut && Boolean(ctx.accounts);
+    const showDashboard = Boolean(ctx.dashboardEnabled) && (member || add);
+    const account = showLogIn || showSignUp
+        ? html`<div class="nav-pop-account">${showLogIn ? html`<a class="button button-quiet" href="/me">${t('shell.account.logIn')}</a>` : ''}${showSignUp ? html`<a class="button" href="/me/signup">${t('shell.account.signUp')}</a>` : ''}</div>`
+        : '';
+    const extras = [
+        showAdd ? html`<li><a href="${ctx.installUrl}" rel="noopener" data-add-bot>${t('shell.install.addToDiscord')}</a></li>` : '',
+        showDashboard ? html`<li><a href="${DASHBOARD_PATH}">${t('shell.links.dashboard')}</a></li>` : '',
+    ].filter(Boolean);
+    const langs = typeof ctx.languageLink === 'function'
+        ? (() => {
+            const code = ctx.urlLang || textOf(ctx).lang || DEFAULT_LANG;
+            const items = LANGUAGES.map((l) => html`<li><a href="${ctx.languageLink(l.code, here)}" hreflang="${l.code}" lang="${l.code}"${l.code === code ? raw(' aria-current="true"') : ''}>${l.name}</a></li>`);
+            return html`<p class="nav-pop-title">${t('shell.language.label')}</p><ul class="nav-pop-langs">${items}</ul>`;
+        })()
+        : '';
+    return html`<details class="nav-menu"><summary class="nav-toggle"><span class="nav-toggle-bars" aria-hidden="true"></span><span class="visually-hidden">${t('shell.header.menu')}</span></summary>
+<nav class="nav-pop" aria-label="${t('shell.header.menu')}">${account}${extras.length ? html`<ul class="nav-pop-links">${extras}</ul>` : ''}<ul class="nav-pop-links">${navLinks(ctx, active)}</ul>${langs}</nav></details>`;
+}
+
 // Rough widths (px) of the top-bar parts from the label lengths, in a wide system font (the layout
 // checker's Linux font is one of the widest; Segoe UI, SF and Roboto are narrower). Only used to pick
 // when the menu moves to its own row; scripts/site-layout-check.js checks the result in a browser.
@@ -281,13 +315,13 @@ const shortCode = (code) => code.slice(0, 2).toUpperCase();
  * The top bar's actions (picker, Add to Discord, Dashboard, member buttons) and the class that says
  * up to which width the menu sits on its own row below the brand: topbar-stack-1000 (one row above
  * 1000px), topbar-stack-1180 (one row above 1180px, where the picker shows its full name) or
- * topbar-stack-all (always two rows: long labels or many buttons). Phones (≤ 760px) always use two
- * rows and keep the picker and one button: the account chip when logged in, else Add to Discord,
- * else Log in, else the dashboard
- * (.topbar-more is hidden there). Next to the member buttons the dashboard only fits on wide
- * screens (.topbar-wide); it is in the footer too.
+ * topbar-stack-all (always two rows: long labels or many buttons). Phones (≤ 760px) use one row
+ * and keep one button: the account chip when logged in, else Add to Discord, else Log in, else
+ * the dashboard (.topbar-more is hidden there); the rest, the page links and the languages are in
+ * the ☰ menu (phoneMenu). Next to the member buttons the dashboard only fits on wide screens
+ * (.topbar-wide); on narrower ones it is in the ☰ menu and the footer.
  */
-function topbarParts(ctx, here, navLabels) {
+function topbarParts(ctx, here, active, navLabels) {
     const { t } = textOf(ctx);
     const member = Boolean(ctx.memberPortal);
     const add = Boolean(ctx.publicSite && ctx.installUrl);
@@ -298,7 +332,7 @@ function topbarParts(ctx, here, navLabels) {
     const addLink = add
         ? topButton(`button${member && ctx.viewer ? ' topbar-more' : ''}`, ctx.installUrl, t('shell.install.addToDiscord'), t('shell.short.addToDiscord'), ' rel="noopener" data-add-bot')
         : '';
-    const actions = html`${languagePicker(ctx, here, 'header')}${addLink}${dashboard}${memberActions(ctx, { addShown: add })}`;
+    const actions = html`${languagePicker(ctx, here, 'header')}${addLink}${dashboard}${memberActions(ctx, { addShown: add })}${phoneMenu(ctx, here, active, { add, member })}`;
 
     // The one-row estimate (without and with the wide-screen extras).
     const code = ctx.urlLang || textOf(ctx).lang || DEFAULT_LANG;
@@ -434,7 +468,7 @@ export function layout(ctx, { title, active = null, description = '', refresh = 
     const brand = t('common.brand');
     const here = typeof path === 'string' ? path : '/';
     const navLabels = ['features', 'pricing', 'docs', 'commands', 'leaderboard', ...(ctx.memberPortal ? ['myRecord'] : [])].map((key) => t(`shell.links.${key}`));
-    const bar = topbarParts(ctx, here, navLabels);
+    const bar = topbarParts(ctx, here, active, navLabels);
     return html`<!doctype html><html lang="${lang || 'en'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark"><meta name="theme-color" content="#1e1f22">${ctx.publicSite ? '' : html`<meta name="robots" content="${NOINDEX}">`}
 <title>${fullTitle(ctx, title, titleComplete)}</title>${refresh > 0 ? html`<meta http-equiv="refresh" content="${Math.floor(refresh)}">` : ''}${description ? html`<meta name="description" content="${description}">` : ''}${shareTags(ctx, { title, description, path, image, titleComplete })}

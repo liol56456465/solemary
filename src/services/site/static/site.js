@@ -1,7 +1,7 @@
 // Mewvo site script (CSP 'self'). Enhancement only: pages work without it.
 (() => {
     'use strict';
-    const MENUS = 'details.lang-menu, details.account-menu';
+    const MENUS = 'details.lang-menu, details.account-menu, details.nav-menu';
     const openMenus = () => [...document.querySelectorAll(MENUS)].filter((m) => m.open);
 
     // One menu open at a time (toggle does not bubble: capture).
@@ -16,6 +16,14 @@
         for (const menu of openMenus()) if (!menu.contains(e.target)) menu.open = false;
     });
 
+    // A tapped link in a menu closes it, and so does coming back with Back (the page from the cache).
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest?.('a[href]');
+        const menu = link?.closest(MENUS);
+        if (menu) menu.open = false;
+    });
+    addEventListener('pageshow', (e) => { if (e.persisted) for (const menu of openMenus()) menu.open = false; });
+
     // Escape closes, focus back on the toggle.
     document.addEventListener('keydown', (e) => {
         if (e.key !== 'Escape') return;
@@ -24,16 +32,6 @@
             menu.querySelector('summary')?.focus();
         }
     });
-
-    // Phone menu: show the current item (scrolls the menu, not the page).
-    const current = document.querySelector('.topnav a[aria-current="page"]');
-    const nav = current?.closest('.topnav');
-    if (nav && nav.scrollWidth > nav.clientWidth) {
-        const box = nav.getBoundingClientRect();
-        const item = current.getBoundingClientRect();
-        if (item.left < box.left) nav.scrollLeft -= box.left - item.left + 8;
-        else if (item.right > box.right) nav.scrollLeft += item.right - box.right + 8;
-    }
 
     // Wide tables: .can-scroll while more is to the right.
     const wraps = [...document.querySelectorAll('.table-wrap')], quiet = { passive: true };

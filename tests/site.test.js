@@ -123,7 +123,7 @@ test('the script is the site\'s own static file: versioned, JavaScript, cached, 
         // 4 KB since the command explorer's live filter (2026-11-09); 2 KB with the menus alone.
         assert.ok(Buffer.byteLength(SCRIPT) < 4096, 'under 4 KB');
         assert.ok(!/fetch\(|XMLHttpRequest|WebSocket|sendBeacon|EventSource|localStorage|sessionStorage|indexedDB|document\.cookie|import\(|eval\(|new Function|innerHTML/.test(SCRIPT), 'no network, storage, eval or HTML injection');
-        for (const selector of ['details.lang-menu', 'details.account-menu', '.topnav a[aria-current="page"]', '.table-wrap', '[data-cmd-explorer]']) assert.ok(SCRIPT.includes(selector), selector);
+        for (const selector of ['details.lang-menu', 'details.account-menu', 'details.nav-menu', '.table-wrap', '[data-cmd-explorer]']) assert.ok(SCRIPT.includes(selector), selector);
         assert.ok(STYLESHEET.includes('.table-wrap.can-scroll'), 'the scroll hint class has a style');
         const prefixed = await site.get('/de/site.js');
         assert.equal(prefixed.status, 404, 'only pages exist under a language prefix');

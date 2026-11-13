@@ -430,10 +430,11 @@ function inPageCheck({ mobileMax, phone }) {
     }
 
     // 7. The picker and account menus, opened: inside the screen, nothing cut off.
-    for (const menu of document.querySelectorAll('.lang-menu, .account-menu')) {
+    for (const menu of document.querySelectorAll('.lang-menu, .account-menu, .nav-menu')) {
         if (hiddenEl(menu)) continue;
         menu.open = true;
-        const pop = menu.querySelector('.lang-pop, .account-pop');
+        const pop = menu.querySelector('.lang-pop, .account-pop, .nav-pop');
+        if (menu.matches('.nav-menu') && pop.getBoundingClientRect().bottom > innerHeight + 0.5 && getComputedStyle(pop).overflowY !== 'auto') add('menu-offscreen', pop, 'the phone menu is taller than the screen and does not scroll');
         const r = pop.getBoundingClientRect();
         if (r.left < -0.5 || r.right > vw + 0.5) add('menu-offscreen', pop, `menu spans ${Math.round(r.left)}–${Math.round(r.right)}px of ${vw}px`);
         for (const item of pop.querySelectorAll('a, button')) {

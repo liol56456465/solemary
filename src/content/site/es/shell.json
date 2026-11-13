@@ -6,7 +6,8 @@
   },
   "header": {
     "skip": "Ir al contenido",
-    "navLabel": "Principal"
+    "navLabel": "Principal",
+    "menu": "Menú"
   },
   "links": {
     "features": "Funciones",
