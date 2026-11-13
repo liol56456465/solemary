@@ -212,7 +212,8 @@
     "confirmDelete": "Marca la casilla para confirmar que quieres eliminar tu cuenta.",
     "wrongDeleteWithCode": "La contraseña o el código son incorrectos. No se ha eliminado nada.",
     "wrongDelete": "La contraseña es incorrecta. No se ha eliminado nada.",
-    "languageNotSaved": "Ahora mismo no se pudo guardar tu idioma (la base de datos no responde). No se cambió nada."
+    "languageNotSaved": "Ahora mismo no se pudo guardar tu idioma (la base de datos no responde). No se cambió nada.",
+    "wrongSetupPassword": "La contraseña no es correcta. El inicio de sesión en dos pasos aún no está activado."
   },
   "flash": {
     "passwordReset": "Tu nueva contraseña se ha guardado. Se cerraron todas las demás sesiones.",

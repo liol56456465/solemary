@@ -209,7 +209,8 @@
     "confirmDelete": "Coche la case pour confirmer que tu veux supprimer ton compte.",
     "wrongDeleteWithCode": "Le mot de passe ou le code est incorrect. Rien n’a été supprimé.",
     "wrongDelete": "Le mot de passe est incorrect. Rien n’a été supprimé.",
-    "languageNotSaved": "Ta langue n’a pas pu être enregistrée pour le moment (la base de données ne répond pas). Rien n’a été modifié."
+    "languageNotSaved": "Ta langue n’a pas pu être enregistrée pour le moment (la base de données ne répond pas). Rien n’a été modifié.",
+    "wrongSetupPassword": "Le mot de passe est incorrect. La connexion en deux étapes n’est pas encore activée."
   },
   "flash": {
     "passwordReset": "Ton nouveau mot de passe est enregistré. Toutes les autres connexions ont été fermées.",

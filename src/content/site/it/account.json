@@ -212,7 +212,8 @@
     "confirmDelete": "Spunta la casella per confermare che vuoi eliminare il tuo account.",
     "wrongDeleteWithCode": "La password o il codice sono errati. Non è stato eliminato nulla.",
     "wrongDelete": "La password è errata. Non è stato eliminato nulla.",
-    "languageNotSaved": "Al momento non è stato possibile salvare la tua lingua (il database non risponde). Non è stato cambiato nulla."
+    "languageNotSaved": "Al momento non è stato possibile salvare la tua lingua (il database non risponde). Non è stato cambiato nulla.",
+    "wrongSetupPassword": "La password è sbagliata. L’accesso in due passaggi non è ancora attivo."
   },
   "flash": {
     "passwordReset": "La tua nuova password è salvata. Tutti gli altri accessi sono stati chiusi.",

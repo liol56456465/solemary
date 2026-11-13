@@ -589,6 +589,10 @@ export function createAccountHandlers(core) {
         const [owner, base32] = plain.split(':');
         if (owner !== String(me.account.id) || !base32) return notAllowed(res);
         const secret = base32Decode(base32);
+        // The current password first (like a password change or turning it off): a stolen login alone
+        // must not be able to put its own authenticator on the account and log the owner out everywhere.
+        const passwordOk = await verifyPassword(secretField(req.body?.password), me.account.password_hash);
+        if (!passwordOk) return page(res, 401, setupView(me, secret, t('account.errors.wrongSetupPassword')));
         const step = verifyTotp(secret, str(req.body?.code, 20));
         if (step === null) return page(res, 400, setupView(me, secret, t('account.errors.wrongSetupCode')));
         const codes = createRecoveryCodes();

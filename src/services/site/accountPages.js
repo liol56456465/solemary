@@ -160,6 +160,7 @@ ${notices({ error })}
 <li>${ti('account.totp.stepUri', { uri: html`<code class="key-link">${uri}</code>` })}</li></ol>
 <form class="form-stack" method="post" action="/me/account/2fa/enable">${csrfField(session.csrf)}<input type="hidden" name="pending" value="${pending}">
 ${field('ts-code', t('account.fields.codeFromApp'), html`<input id="ts-code" name="code" required maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code">`)}
+${field('ts-password', t('account.fields.password'), html`<input id="ts-password" name="password" type="password" required maxlength="${PASSWORD_MAX}" autocomplete="current-password">`)}
 <p class="form-actions"><button class="button" type="submit">${t('account.totp.submit')}</button><a href="/me/account">${t('account.common.cancel')}</a></p></form>`);
 }
 

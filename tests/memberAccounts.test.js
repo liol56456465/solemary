@@ -321,9 +321,13 @@ test('the whole flow: sign up, link Discord with 6 months of Pro, 1-letter name,
         assert.match(setup.body, /otpauth:\/\/totp\/Mewvo%3Aq\?secret=/);
         const pending = /name="pending" value="([^"]+)"/.exec(setup.body)[1];
         const secret = base32Decode(key);
-        const wrongCode = await b.request('/me/account/2fa/enable', { form: { pending, code: '000000' === totp(secret) ? '111111' : '000000' } });
+        // Correct code, wrong password: refused, two-step stays off (a stolen login alone cannot turn it on).
+        const wrongPassword = await b.request('/me/account/2fa/enable', { form: { pending, code: totp(secret), password: 'not the password' } });
+        assert.equal(wrongPassword.status, 401);
+        assert.match(wrongPassword.body, /The password is wrong\. Two-step login is not on yet\./);
+        const wrongCode = await b.request('/me/account/2fa/enable', { form: { pending, password: PASSWORD, code: '000000' === totp(secret) ? '111111' : '000000' } });
         assert.equal(wrongCode.status, 400);
-        const on = await b.request('/me/account/2fa/enable', { form: { pending, code: totp(secret) } });
+        const on = await b.request('/me/account/2fa/enable', { form: { pending, password: PASSWORD, code: totp(secret) } });
         assert.equal(on.status, 200);
         const codes = [...on.body.matchAll(/<li><code>([a-z0-9-]+)<\/code><\/li>/g)].map((m) => m[1]);
         assert.equal(codes.length, 8);

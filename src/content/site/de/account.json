@@ -209,7 +209,8 @@
     "confirmDelete": "Setz das Häkchen, um zu bestätigen, dass du dein Konto löschen möchtest.",
     "wrongDeleteWithCode": "Das Passwort oder der Code ist falsch. Es wurde nichts gelöscht.",
     "wrongDelete": "Das Passwort ist falsch. Es wurde nichts gelöscht.",
-    "languageNotSaved": "Deine Sprache konnte gerade nicht gespeichert werden (Datenbank antwortet nicht). Es wurde nichts geändert."
+    "languageNotSaved": "Deine Sprache konnte gerade nicht gespeichert werden (Datenbank antwortet nicht). Es wurde nichts geändert.",
+    "wrongSetupPassword": "Das Passwort ist falsch. Die Zwei-Schritt-Anmeldung ist noch nicht an."
   },
   "flash": {
     "passwordReset": "Dein neues Passwort ist gespeichert. Alle anderen Anmeldungen wurden beendet.",

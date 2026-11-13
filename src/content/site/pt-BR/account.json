@@ -215,7 +215,8 @@
     "confirmDelete": "Marque a caixa para confirmar que você quer excluir a sua conta.",
     "wrongDeleteWithCode": "A senha ou o código está errado. Nada foi excluído.",
     "wrongDelete": "A senha está errada. Nada foi excluído.",
-    "languageNotSaved": "Não foi possível salvar seu idioma agora (o banco de dados não responde). Nada foi alterado."
+    "languageNotSaved": "Não foi possível salvar seu idioma agora (o banco de dados não responde). Nada foi alterado.",
+    "wrongSetupPassword": "A senha está errada. O login em duas etapas ainda não está ligado."
   },
   "flash": {
     "passwordReset": "Sua nova senha foi salva. Todos os outros logins foram encerrados.",

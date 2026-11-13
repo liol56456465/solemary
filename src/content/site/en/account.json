@@ -209,7 +209,8 @@
     "confirmDelete": "Tick the box to confirm that you want to delete your account.",
     "wrongDeleteWithCode": "The password or the code is wrong. Nothing was deleted.",
     "wrongDelete": "The password is wrong. Nothing was deleted.",
-    "languageNotSaved": "Your language could not be saved right now (database not responding). Nothing was changed."
+    "languageNotSaved": "Your language could not be saved right now (database not responding). Nothing was changed.",
+    "wrongSetupPassword": "The password is wrong. Two-step login is not on yet."
   },
   "flash": {
     "passwordReset": "Your new password is saved. Every other login was ended.",

@@ -592,9 +592,13 @@ test('turning two-step login on ends the account\'s other logins (website and da
         // Control: a wrong code turns nothing on and ends nothing.
         const secret = base32Decode(key);
         const wrong = '000000' === totp(secret) ? '111111' : '000000';
-        await b.request('/me/account/2fa/enable', { form: { pending, code: wrong } });
+        await b.request('/me/account/2fa/enable', { form: { pending, password: PASSWORD, code: wrong } });
         assert.ok(app.memberSessions.size() >= 2, 'a refused code ends nothing');
-        const on = await b.request('/me/account/2fa/enable', { form: { pending, code: totp(secret) } });
+        // A stolen login without the password: refused, nothing ends (the owner is not locked out).
+        const noPassword = await b.request('/me/account/2fa/enable', { form: { pending, password: 'guess', code: totp(secret) } });
+        assert.equal(noPassword.status, 401);
+        assert.ok(app.memberSessions.size() >= 2 && app.dashSessions.size() >= 2, 'a wrong password ends nothing');
+        const on = await b.request('/me/account/2fa/enable', { form: { pending, password: PASSWORD, code: totp(secret) } });
         assert.equal(on.status, 200);
         assert.equal(app.memberSessions.size(), 1, 'only this website login is left');
         assert.ok(await app.memberSessions.get(b.jar.get(MEMBER_SESSION_COOKIE).split('.')[0]), 'this login stays');

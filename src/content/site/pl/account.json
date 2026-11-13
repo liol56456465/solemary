@@ -215,7 +215,8 @@
     "confirmDelete": "Zaznacz pole, aby potwierdzić, że chcesz usunąć konto.",
     "wrongDeleteWithCode": "Hasło lub kod jest nieprawidłowe. Nic nie zostało usunięte.",
     "wrongDelete": "Hasło jest nieprawidłowe. Nic nie zostało usunięte.",
-    "languageNotSaved": "Nie udało się teraz zapisać twojego języka (baza danych nie odpowiada). Nic nie zostało zmienione."
+    "languageNotSaved": "Nie udało się teraz zapisać twojego języka (baza danych nie odpowiada). Nic nie zostało zmienione.",
+    "wrongSetupPassword": "Hasło jest nieprawidłowe. Logowanie dwuetapowe nie jest jeszcze włączone."
   },
   "flash": {
     "passwordReset": "Nowe hasło zostało zapisane. Wszystkie inne logowania zostały zakończone.",
