@@ -31,7 +31,10 @@
 //                       + the stored dashboard server list
 //   log out everywhere  every website session of the account and of its Discord id, this one
 //                       too, + the dashboard sessions
-//   two-step on / off   nothing ends (unchanged)
+//   two-step on        the account's other website sessions and the Discord id's (this one stays)
+//                       + the Discord id's dashboard sessions (turning it on is what someone does
+//                       after a suspected password leak; security review 2026-11-13)
+//   two-step off        nothing ends (unchanged)
 //
 // Every POST: same origin + a CSRF token (the session's, or before login a signed
 // double-submit cookie, Path=/me). Rate limits per IP, per login name and per account.
@@ -590,7 +593,11 @@ export function createAccountHandlers(core) {
         if (step === null) return page(res, 400, setupView(me, secret, t('account.errors.wrongSetupCode')));
         const codes = createRecoveryCodes();
         await store.enableTotp(me.account.id, { secretEnc: encryptSecret(secret, totpKey), step, codeHashes: codes.map(hashRecoveryCode) });
-        logger.info(`Member account ${me.account.id}: two-step login turned on`);
+        // Every other login made with the password alone ends (this one stays), like a password change.
+        await sessions.destroyForAccount(me.account.id, me.session.id);
+        if (me.account.discord_user_id) await sessions.destroyForUser?.(String(me.account.discord_user_id), me.session.id);
+        await endDashboardSessions(me.account.discord_user_id);
+        logger.info(`Member account ${me.account.id}: two-step login turned on; other sessions ended`);
         return page(res, 200, recoveryCodesPage(ctx(), { codes }));
     }
 

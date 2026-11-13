@@ -21,6 +21,7 @@ import {
 import { defaultServices } from '../src/services/dashboard/services.js';
 import { createDashboardApp, dashboardSettings } from '../src/services/dashboard/routes.js';
 import { MEMBER_SESSION_COOKIE, registerMemberPortal } from '../src/services/site/memberPortal.js';
+import { base32Decode, totp } from '../src/services/accounts/accountCore.js';
 import { createMemoryAccountStore } from '../src/services/accounts/memoryAccountStore.js';
 import { OWNER_SESSION_MAX_AGE_MS, isSessionFresh } from '../src/services/dashboard/ownerRoutes.js';
 
@@ -564,6 +565,41 @@ test('account "Log out on all devices" ends the account\'s website sessions, its
         assert.equal((await discordOnly.request('/me')).body.includes('Log in with Discord'), true, 'the other device is logged out');
         assert.ok(app.dashSessions.hashes().every((h) => h === hashSessionId(otherDash.id)));
         assert.equal(app.kv.rows.has(guildListKey(ADMIN)), false, 'the stored dashboard server list is forgotten');
+    } finally {
+        await app.close();
+    }
+});
+
+test('turning two-step login on ends the account\'s other logins (website and dashboard); this one stays', async () => {
+    const app = await serve();
+    try {
+        const b = browser(app);
+        await b.request('/me/signup');
+        await b.request('/me/signup', { form: { username: 'safe_cat', password: PASSWORD, birth_date: '2000-05-05', accept: 'yes' } });
+        await b.request('/me/link');
+        const start = await b.request('/me/link', { form: {} });
+        await b.request(`/me/callback?code=c&state=${encodeURIComponent(new URL(start.location).searchParams.get('state'))}`);
+        await handoff(b); // a dashboard session made from this account
+        const discordOnly = browser(app);
+        await memberDiscordLogin(discordOnly); // the same Discord id on another device
+        const otherDash = await app.dashSessions.create({ userId: OTHER, username: 'o' });
+        assert.ok(app.memberSessions.size() >= 2 && app.dashSessions.size() >= 2);
+        await b.request('/me/account');
+        const setup = await b.request('/me/account/2fa/start', { form: {} });
+        assert.equal(setup.status, 200);
+        const key = /<code class="key-code">([A-Z2-7 ]+)<\/code>/.exec(setup.body)[1];
+        const pending = /name="pending" value="([^"]+)"/.exec(setup.body)[1];
+        // Control: a wrong code turns nothing on and ends nothing.
+        const secret = base32Decode(key);
+        const wrong = '000000' === totp(secret) ? '111111' : '000000';
+        await b.request('/me/account/2fa/enable', { form: { pending, code: wrong } });
+        assert.ok(app.memberSessions.size() >= 2, 'a refused code ends nothing');
+        const on = await b.request('/me/account/2fa/enable', { form: { pending, code: totp(secret) } });
+        assert.equal(on.status, 200);
+        assert.equal(app.memberSessions.size(), 1, 'only this website login is left');
+        assert.ok(await app.memberSessions.get(b.jar.get(MEMBER_SESSION_COOKIE).split('.')[0]), 'this login stays');
+        assert.equal(app.dashSessions.size(), 1, 'the Discord id\'s dashboard sessions ended');
+        assert.ok(await app.dashSessions.get(otherDash.id), 'another user stays');
     } finally {
         await app.close();
     }
