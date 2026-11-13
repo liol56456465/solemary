@@ -448,6 +448,10 @@ function makeServices() {
             if (s.noAppealsCategory) throw userErr('There is no ticket category to open appeals in.', 'configuration');
             return { mainChannel: { id: channel.id, name: channel.name }, supportChannel: { id: '710000000000000004', name: 'appeals' }, created: false };
         },
+        postQuarantineInfo: async (guild) => {
+            record('postQuarantineInfo', [guild.id]);
+            return { channel: { id: TEXT, name: 'quarantine' }, message: { id: '710000000000000009' }, replaced: false };
+        },
         refreshPostedMessages: async (c, guild) => { record('refreshPostedMessages', [guild.id]); return { verification: 1, tickets: 0, appeals: 0, reactionRoles: 0, total: 1 }; },
         createReactionRolePanel: async (c, guild, { channel, roleIds, title }) => {
             record('createReactionRolePanel', [channel.id, roleIds, title]);
@@ -836,6 +840,8 @@ const CASES = {
         'trust-card': { form: { enabled: 'true' }, service: 'updateSettings', admin: true, bad: { form: { enabled: 'maybe' }, message: /on or off/ } },
         'template-add': { admin: true, form: { name: 'Spam: short mute', action: 'mute', reasonKey: 'spam', duration: '1h' }, service: 'updateSettings',
             bad: { form: { name: 'No time', action: 'mute', reasonKey: 'spam', duration: '' }, message: /needs a duration/ } },
+        'quarantine-info-post': { admin: true, seed: (s) => { s.registry.quarantineInfoChannelId = TEXT; }, form: {}, service: 'postQuarantineInfo',
+            bad: { form: {}, message: /Set a quarantine info channel/ } },
         'template-remove': { admin: true, seed: (s) => { s.registry.enforcementTemplates = [{ name: 'Spam', action: 'warn', reasonKey: 'spam', duration: null }]; }, form: { id: derivedTemplateId('Spam') }, service: 'updateSettings',
             bad: { form: { id: 't0000000000' }, message: /gone already/ } },
     },
@@ -1089,6 +1095,9 @@ const CASES = {
     support: {
         'banned-role': { form: { bannedRoleId: SUPPORT_ROLE }, service: 'updateSettings', admin: true, bad: { form: { bannedRoleId: ROLE_OK }, message: /not in the server/ } },
         'appeals-category': { form: { supportAppealsCategoryId: SUPPORT_CAT }, service: 'updateSettings', bad: { form: { supportAppealsCategoryId: CAT }, message: /not in the server/ } },
+        // Home servers: Mewvo's Support invite (required); another server edits its own appealsInvite (B3 test).
+        'support-invite': { form: { supportServerInvite: 'https://discord.gg/newsupport' }, service: 'updateSettings', admin: true,
+            bad: { form: { supportServerInvite: 'https://example.com/x' }, message: /not a Discord invite link/ } },
     },
     rules: {
         'rule-add': { form: { title: 'No ads', text: 'Keep ads out.' }, service: 'updateSettings', bad: { form: { title: '   ', text: 'x' }, message: /needs a title/ } },

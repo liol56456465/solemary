@@ -101,5 +101,122 @@
     "uncounted": {
         "automod": "Automod warning. It doesn't count toward bans",
         "ladderOff": "Warning. It doesn't count toward bans (warn ladder off)"
+    },
+    "quarantine": {
+        "dm": {
+            "body": "You have been quarantined in **{server}** for **{reason}**.",
+            "invite": "To talk this out, join {invite}.",
+            "noReason": "no reason given"
+        },
+        "alert": {
+            "title": "Member quarantined",
+            "ping": "**{name}** was quarantined. Please take a look.",
+            "member": "Member",
+            "reason": "Reason",
+            "trigger": "What triggered it",
+            "rolesRemoved": "Roles removed",
+            "rolesKept": "Roles that stay (managed by Discord or an integration)",
+            "dm": "DM",
+            "dmDelivered": "Delivered",
+            "dmFailed": "Not delivered (DMs closed or no shared server)",
+            "none": "None",
+            "release": "Release",
+            "releasedBy": "Released by",
+            "releasedValue": "{name} · {date}",
+            "channelsOpen": "Channels still open",
+            "channelsOpenValue": "{count} channel(s) refused Mewvo's overwrite (no Manage Permissions there): they may still see those."
+        },
+        "trigger": {
+            "raid": "Raid lockdown: a raid joiner broke an automod rule",
+            "staffGuard": "Staff guard (anti-nuke)",
+            "manual": "Quarantined by hand by {name}",
+            "automod": "Automod: a ban-level offence (quarantined instead of the ban)"
+        },
+        "log": {
+            "releasedTitle": "Quarantine lifted",
+            "releasedBy": "Released by",
+            "rolesBack": "Roles given back",
+            "skipped": "Saved roles not given back (gone, managed or above Mewvo)",
+            "left": "None: they are no longer in the server"
+        },
+        "refuse": {
+            "noRole": "No quarantine role is set (dashboard: Enforcement & appeals → Roles), or it no longer exists.",
+            "botNoManageRoles": "Mewvo needs the Manage Roles permission to quarantine someone.",
+            "roleManaged": "The quarantine role is managed by an integration, so Mewvo cannot give it.",
+            "roleAboveBot": "The quarantine role is not below Mewvo's highest role, so Mewvo cannot give it.",
+            "owner": "The server owner cannot be quarantined.",
+            "bot": "Bots cannot be quarantined.",
+            "self": "Mewvo cannot quarantine itself.",
+            "aboveBot": "This member's highest role is not below Mewvo's highest role, so Mewvo cannot quarantine them.",
+            "notInServer": "This member is not in the server.",
+            "already": "This member is already quarantined.",
+            "database": "The database is not responding, so nothing was changed.",
+            "assignFailed": "Discord refused the role change, so nothing was changed.",
+            "failed": "The quarantine did not work, so nothing was changed.",
+            "roleHasPermissions": "The quarantine role has permissions of its own, so Mewvo will not use it (every quarantined member would get them). Give it no permissions."
+        },
+        "release": {
+            "adminOnly": "Only Administrators can release someone from quarantine.",
+            "otherServer": "This button only works in the staff server where the alert was posted.",
+            "none": "This member is not quarantined any more.",
+            "notYourself": "You cannot release yourself.",
+            "offender": "The staff guard acted on you recently, so you cannot use this button.",
+            "ownerOnly": "The staff guard made this quarantine, so only the server owner can release it (like /staff restore).",
+            "tooHigh": "Some of their saved roles are at or above your highest role ({roles}). Ask the server owner to release them.",
+            "done": "{name} was released. Roles given back: {roles}.",
+            "left": "They are no longer in the server. The quarantine record was removed, so a rejoin is not quarantined.",
+            "failed": "Discord refused the role change, nothing was released: {error}",
+            "partial": "The roles were given back, but the quarantine role or its record could not be removed. Press Release again: {error}"
+        },
+        "ownerDm": "They were quarantined: every role was saved and removed, and they can see no channel until someone presses Release on the alert (or you use /staff restore).",
+        "info": {
+            "title": "You are in quarantine",
+            "intro": "Your access to **{server}** is paused. You can still read this channel, but you can't see or post in any other channel for now.",
+            "whyTitle": "Why this happens",
+            "why": "Our safety system or a staff member flagged your account, for example during a raid, for suspicious activity, or for breaking the rules. The reason was sent to you in a DM.",
+            "doTitle": "What you can do",
+            "wait": "Wait: staff review every quarantine and will either restore your access or explain the next steps.",
+            "talk": "Talk to staff: join our support server {support} and tell them your username.",
+            "noAlts": "Please don't create new accounts to get around the quarantine; that makes it permanent.",
+            "rolesSaved": "Your roles were saved and will be given back if the quarantine is lifted."
+        },
+        "decide": {
+            "button": {
+                "release": "Release",
+                "kick": "Kick",
+                "ban": "Ban",
+                "keep": "Keep in quarantine"
+            },
+            "field": "Decision",
+            "value": "{decision} by {name} · {date}",
+            "done": {
+                "release": "Released",
+                "kick": "Kicked",
+                "ban": "Banned",
+                "keep": "Kept in quarantine (reviewed)"
+            },
+            "case": "Case",
+            "keptTitle": "Quarantine reviewed",
+            "notDecider": "Only the server owner and the roles set under “Who can decide on quarantined members” (Enforcement & appeals → Roles) can decide here.",
+            "notMember": "You are not a member of the server this quarantine is in.",
+            "banTitle": "Ban from quarantine",
+            "banReason": "Reason (sent to the member)",
+            "banNeedsReason": "A ban needs a reason.",
+            "kickAsk": "Kick {name}? They get a DM first, and a one-time invite to come back.",
+            "kickConfirm": "Kick",
+            "cancel": "Cancel",
+            "cancelled": "Nothing was done.",
+            "reply": {
+                "kick": "{name} was kicked (case {code}).",
+                "ban": "{name} was banned (case {code}).",
+                "keep": "{name} stays in quarantine. Your review is noted on the alert."
+            },
+            "needsAdmin": "This needs Administrator in the server the quarantine is in (Kick and Ban always do; a decider role needs it for every choice).",
+            "recordNotCleared": "The quarantine record could not be cleared (database); it is noted in the bot log."
+        },
+        "joinUnknown": {
+            "title": "Quarantine state unknown",
+            "text": "{member} joined, but whether they are quarantined could not be checked (database not responding). They were given no roles; please check them."
+        }
     }
 }

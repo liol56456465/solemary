@@ -41,7 +41,8 @@
             "kick": "Wyrzucenie",
             "mute": "Wyciszenie: {duration}",
             "ban": "Ban: {duration}",
-            "permanentBan": "Ban na stałe"
+            "permanentBan": "Ban na stałe",
+            "quarantine": "Kwarantanna"
         },
         "verb": {
             "act": "zadziałać",
@@ -49,21 +50,24 @@
             "kick": "wyrzucić",
             "mute": "wyciszyć ({duration})",
             "ban": "zbanować ({duration})",
-            "permanentBan": "zbanować na stałe"
+            "permanentBan": "zbanować na stałe",
+            "quarantine": "objąć kwarantanną"
         },
         "outcome": {
             "warn": "Ostrzeżony",
             "kick": "Wyrzucony",
             "mute": "Wyciszony: {duration}",
             "ban": "Zbanowany: {duration}",
-            "permanentBan": "Zbanowany na stałe"
+            "permanentBan": "Zbanowany na stałe",
+            "quarantine": "Objęty kwarantanną"
         },
         "outcomeShort": {
             "warn": "ostrzeżony",
             "kick": "wyrzucony",
             "mute": "wyciszony: {duration}",
             "ban": "zbanowany: {duration}",
-            "permanentBan": "zbanowany na stałe"
+            "permanentBan": "zbanowany na stałe",
+            "quarantine": "objęty kwarantanną"
         },
         "memberReport": "Zgłoszenie członka",
         "unknownUser": "nieznany",
@@ -100,7 +104,8 @@
                 "few": "{count} minuty",
                 "many": "{count} minut",
                 "other": "{count} minuty"
-            }
+            },
+            "raidQuarantined": "Dołączył podczas blokady rajdu, więc zamiast zwykłej kary objęto go kwarantanną (Zwolnij w alercie kwarantanny go wpuszcza)."
         },
         "field": {
             "message": "Wiadomość",

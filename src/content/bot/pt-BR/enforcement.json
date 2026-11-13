@@ -107,5 +107,122 @@
     "uncounted": {
         "automod": "Aviso do automod — não conta para banimentos",
         "ladderOff": "Aviso — não conta para banimentos (escada de avisos desligada)"
+    },
+    "quarantine": {
+        "dm": {
+            "body": "Você foi colocado em quarentena em **{server}** por **{reason}**.",
+            "invite": "Para conversar sobre isso, entre em {invite}.",
+            "noReason": "nenhum motivo informado"
+        },
+        "alert": {
+            "title": "Membro em quarentena",
+            "ping": "**{name}** foi colocado em quarentena. Deem uma olhada, por favor.",
+            "member": "Membro",
+            "reason": "Motivo",
+            "trigger": "O que causou",
+            "rolesRemoved": "Cargos removidos",
+            "rolesKept": "Cargos que ficam (gerenciados pelo Discord ou por uma integração)",
+            "dm": "DM",
+            "dmDelivered": "Entregue",
+            "dmFailed": "Não entregue (DMs fechadas ou nenhum servidor em comum)",
+            "none": "Nenhum",
+            "release": "Liberar",
+            "releasedBy": "Liberado por",
+            "releasedValue": "{name} · {date}",
+            "channelsOpen": "Canais ainda abertos",
+            "channelsOpenValue": "{count} canal(is) recusaram o ajuste do Mewvo (sem Gerenciar permissões lá): a pessoa ainda pode vê-los."
+        },
+        "trigger": {
+            "raid": "Bloqueio de raid: alguém que entrou no raid quebrou uma regra do automod",
+            "staffGuard": "Proteção da equipe (anti-nuke)",
+            "manual": "Colocado em quarentena manualmente por {name}",
+            "automod": "Automod: uma infração de nível de banimento (quarentena no lugar do banimento)"
+        },
+        "log": {
+            "releasedTitle": "Quarentena encerrada",
+            "releasedBy": "Liberado por",
+            "rolesBack": "Cargos devolvidos",
+            "skipped": "Cargos salvos não devolvidos (apagados, gerenciados ou acima do Mewvo)",
+            "left": "Nenhum: a pessoa não está mais no servidor"
+        },
+        "refuse": {
+            "noRole": "Nenhum cargo de quarentena foi definido (painel: Punições e recursos → Cargos), ou ele não existe mais.",
+            "botNoManageRoles": "O Mewvo precisa da permissão Gerenciar cargos para colocar alguém em quarentena.",
+            "roleManaged": "O cargo de quarentena é gerenciado por uma integração, então o Mewvo não pode dá-lo.",
+            "roleAboveBot": "O cargo de quarentena não está abaixo do cargo mais alto do Mewvo, então o Mewvo não pode dá-lo.",
+            "owner": "O dono do servidor não pode ser colocado em quarentena.",
+            "bot": "Bots não podem ser colocados em quarentena.",
+            "self": "O Mewvo não pode colocar a si mesmo em quarentena.",
+            "aboveBot": "O cargo mais alto deste membro não está abaixo do cargo mais alto do Mewvo, então o Mewvo não pode colocá-lo em quarentena.",
+            "notInServer": "Este membro não está no servidor.",
+            "already": "Este membro já está em quarentena.",
+            "database": "O banco de dados não está respondendo, então nada foi alterado.",
+            "assignFailed": "O Discord recusou a mudança de cargos, então nada foi alterado.",
+            "failed": "A quarentena não funcionou, então nada foi alterado.",
+            "roleHasPermissions": "O cargo de quarentena tem permissões próprias, então o Mewvo não vai usá-lo (todo membro em quarentena as receberia). Não dê nenhuma permissão a ele."
+        },
+        "release": {
+            "adminOnly": "Só administradores podem liberar alguém da quarentena.",
+            "otherServer": "Este botão só funciona no servidor da equipe onde o alerta foi publicado.",
+            "none": "Este membro não está mais em quarentena.",
+            "notYourself": "Você não pode liberar a si mesmo.",
+            "offender": "A proteção da equipe agiu contra você recentemente, então você não pode usar este botão.",
+            "ownerOnly": "Esta quarentena veio da proteção da equipe, então só o dono do servidor pode encerrá-la (como /staff restore).",
+            "tooHigh": "Alguns dos cargos salvos estão no nível do seu cargo mais alto ou acima ({roles}). Peça ao dono do servidor para liberar.",
+            "done": "{name} foi liberado. Cargos devolvidos: {roles}.",
+            "left": "A pessoa não está mais no servidor. O registro de quarentena foi removido, então se ela voltar não ficará em quarentena.",
+            "failed": "O Discord recusou a mudança de cargos, nada foi liberado: {error}",
+            "partial": "Os cargos foram devolvidos, mas não foi possível remover o cargo de quarentena ou o registro. Aperte Liberar de novo: {error}"
+        },
+        "ownerDm": "A pessoa foi colocada em quarentena: todos os cargos foram salvos e removidos, e ela não vê nenhum canal até alguém apertar Liberar no alerta (ou você usar /staff restore).",
+        "info": {
+            "title": "Você está em quarentena",
+            "intro": "Seu acesso a **{server}** está pausado. Você ainda pode ler este canal, mas por enquanto não pode ver nem escrever em nenhum outro canal.",
+            "whyTitle": "Por que isso acontece",
+            "why": "Nosso sistema de segurança ou alguém da equipe sinalizou sua conta, por exemplo durante um raid, por atividade suspeita ou por quebrar as regras. O motivo foi enviado para você por DM.",
+            "doTitle": "O que você pode fazer",
+            "wait": "Esperar: a equipe analisa cada quarentena e vai devolver seu acesso ou explicar os próximos passos.",
+            "talk": "Falar com a equipe: entre no nosso servidor de suporte {support} e diga seu nome de usuário.",
+            "noAlts": "Por favor, não crie contas novas para driblar a quarentena; isso a torna permanente.",
+            "rolesSaved": "Seus cargos foram salvos e serão devolvidos se a quarentena for encerrada."
+        },
+        "decide": {
+            "button": {
+                "release": "Liberar",
+                "kick": "Expulsar",
+                "ban": "Banir",
+                "keep": "Manter em quarentena"
+            },
+            "field": "Decisão",
+            "value": "{decision} por {name} · {date}",
+            "done": {
+                "release": "Liberado",
+                "kick": "Expulso",
+                "ban": "Banido",
+                "keep": "Mantido em quarentena (revisado)"
+            },
+            "case": "Caso",
+            "keptTitle": "Quarentena revisada",
+            "notDecider": "Só o dono do servidor e os cargos em “Quem decide sobre membros em quarentena” (Punições e recursos → Cargos) podem decidir aqui.",
+            "notMember": "Você não é membro do servidor onde está esta quarentena.",
+            "banTitle": "Banir da quarentena",
+            "banReason": "Motivo (enviado ao membro)",
+            "banNeedsReason": "Um banimento precisa de um motivo.",
+            "kickAsk": "Expulsar {name}? A pessoa recebe antes uma DM e um convite de uso único para voltar.",
+            "kickConfirm": "Expulsar",
+            "cancel": "Cancelar",
+            "cancelled": "Nada foi feito.",
+            "reply": {
+                "kick": "{name} foi expulso (caso {code}).",
+                "ban": "{name} foi banido (caso {code}).",
+                "keep": "{name} continua em quarentena. Sua revisão ficou anotada no alerta."
+            },
+            "needsAdmin": "Isto exige Administrador no servidor da quarentena (Expulsar e Banir sempre; um cargo que decide, para qualquer opção).",
+            "recordNotCleared": "Não foi possível apagar o registro de quarentena (banco de dados); isso ficou anotado no log do bot."
+        },
+        "joinUnknown": {
+            "title": "Estado de quarentena desconhecido",
+            "text": "{member} entrou, mas não foi possível verificar se está em quarentena (o banco de dados não responde). A pessoa não recebeu nenhum cargo; verifiquem, por favor."
+        }
     }
 }

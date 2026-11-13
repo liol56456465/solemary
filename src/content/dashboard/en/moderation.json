@@ -85,7 +85,12 @@
     "timeoutRemoved": "Timeout of {name} removed.",
     "timedOut": "{name} is timed out for {length}.",
     "notVerified": "{name} does not have the verified role.",
-    "unverified": "Verification removed from {name}."
+    "unverified": "Verification removed from {name}.",
+    "quarantineReason": "Write a reason: it is sent to the member.",
+    "quarantineBlocked": "The safety limit paused your enforcement actions, so you cannot quarantine right now.",
+    "quarantined": "{name} is quarantined. The DM was delivered.",
+    "quarantinedNoDm": "{name} is quarantined. The DM could not be delivered (their DMs are closed).",
+    "released": "Released from quarantine. Roles given back: {roles}."
   },
   "bulk": {
     "action": {

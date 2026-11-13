@@ -260,6 +260,8 @@ const MOD_LOG_TITLES = {
     removewarn: ['Warning removed', 'success'],
     nocontact: ['Keep apart', 'warning'],
     watch: ['Watchlist', 'warning'],
+    quarantine: ['Quarantine', 'warning'],
+    unquarantine: ['Quarantine lifted', 'success'],
     caseedit: ['Case edited', 'secondary'],
     casevoid: ['Case removed (a mistake)', 'secondary'],
     appeal: ['Appeal decided', 'primary'],

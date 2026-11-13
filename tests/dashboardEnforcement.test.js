@@ -1589,3 +1589,90 @@ test('D14: a bulk job makes one forced fetch per member (the moderator is checke
     assert.equal(perMember.length, 2, 'one fetch per member');
     assert.equal(fetches.filter((id) => id === ADMIN).length <= 1, true, 'the moderator is not fetched again for every member');
 });
+
+// ── member page: quarantine (enforcement/quarantineService.js) ────────────
+
+function quarantineOverrides(state) {
+    return {
+        quarantineReady: () => state.ready !== false,
+        getQuarantine: async () => state.record || null,
+        quarantineMember: async (member, reason, options) => {
+            state.calls.push({ fn: 'quarantine', member: member.id, reason, options });
+            return state.result || { ok: true, removed: [{ id: '600000000000000001', name: 'Member' }], kept: [], dmDelivered: true };
+        },
+        releaseQuarantine: async (guild, userId, options) => {
+            state.calls.push({ fn: 'release', userId, options });
+            return { ok: true, restored: [{ id: '600000000000000001', name: 'Member' }], skipped: [], left: false };
+        },
+    };
+}
+
+test('member page: Quarantine needs a reason, runs the service with the moderator, writes an audit row; a refusal changes nothing', async () => {
+    const state = { calls: [] };
+    const h = await setup({ overrides: quarantineOverrides(state) });
+    const page = await get(h, h.d.enforcement.userPage, { params: { id: TARGET } });
+    assert.ok(page.body.includes(`action="/dashboard/users/${TARGET}/quarantine"`), 'the form is on the member page');
+    const empty = await post(h, h.d.enforcement.quarantine, { params: { id: TARGET }, form: { reason: '  ' } });
+    assert.equal(empty.statusCode, 400);
+    assert.equal(state.calls.length, 0, 'no reason: nothing called');
+    const ok = await post(h, h.d.enforcement.quarantine, { params: { id: TARGET }, form: { reason: 'raid alt' } });
+    assert.equal(ok.statusCode, 303);
+    assert.deepEqual(state.calls[0], { fn: 'quarantine', member: TARGET, reason: 'raid alt', options: { by: { id: ADMIN, username: 'admin' }, trigger: 'manual' } });
+    assert.equal(h.auditRows.at(-1).key, `quarantine:${TARGET}`);
+    state.result = { ok: false, code: 'aboveBot' };
+    const refused = await post(h, h.d.enforcement.quarantine, { params: { id: TARGET }, form: { reason: 'x' } });
+    assert.equal(refused.statusCode, 400);
+    assert.match(refused.body, /not below Mewvo/);
+    // A moderator paused by the mass-action guard cannot quarantine (OTHER is blocked in this harness).
+    const blocked = await setup({ userId: OTHER, admins: new Set([OTHER]), overrides: quarantineOverrides(state) });
+    const before = state.calls.length;
+    const res = await post(blocked, blocked.d.enforcement.quarantine, { params: { id: TARGET }, form: { reason: 'x' } });
+    assert.equal(res.statusCode, 403);
+    assert.equal(state.calls.length, before);
+});
+
+test('member page: deciders release, keep, kick and ban (ban needs a reason); an Administrator who is not a decider is refused (control)', async () => {
+    const record = { roleId: '600000000000000002', roles: ['600000000000000001'], reason: 'raid', trigger: 'raid', at: new Date().toISOString() };
+    const state = { calls: [], record, deciders: new Set([ADMIN]) };
+    const overrides = {
+        ...quarantineOverrides(state),
+        isQuarantineDecider: ({ userId }) => (state.deciders.has(userId) ? 'role' : null),
+        decideQuarantine: async (guild, userId, options) => {
+            state.calls.push({ fn: 'decide', userId, decision: options.decision, reason: options.reason, by: options.by, moderator: options.moderator?.id });
+            return options.decision === 'release'
+                ? { ok: true, decision: 'release', restored: [{ id: '600000000000000001', name: 'Member' }], left: false }
+                : { ok: true, decision: options.decision, result: { record: { case_code: 'abc2345' } } };
+        },
+    };
+    const h = await setup({ overrides });
+    const page = await get(h, h.d.enforcement.userPage, { params: { id: TARGET } });
+    assert.ok(page.body.includes(`action="/dashboard/users/${TARGET}/quarantine/decide"`), 'a decider sees the decision forms');
+    for (const decision of ['release', 'keep', 'kick']) {
+        const res = await post(h, h.d.enforcement.quarantineDecide, { params: { id: TARGET }, form: { decision } });
+        assert.equal(res.statusCode, 303, decision);
+        assert.equal(state.calls.at(-1).decision, decision);
+        assert.equal(state.calls.at(-1).moderator, ADMIN, 'runs as the decider (executeAction re-checks Administrator, hierarchy, DM)');
+    }
+    const noReason = await post(h, h.d.enforcement.quarantineDecide, { params: { id: TARGET }, form: { decision: 'ban' } });
+    assert.equal(noReason.statusCode, 400);
+    const banned = await post(h, h.d.enforcement.quarantineDecide, { params: { id: TARGET }, form: { decision: 'ban', reason: 'raid bot' } });
+    assert.equal(banned.statusCode, 303);
+    assert.deepEqual([state.calls.at(-1).decision, state.calls.at(-1).reason], ['ban', 'raid bot']);
+    // An Administrator who is not a decider: the page shows the state only, the POST is refused.
+    state.deciders.clear();
+    const before = state.calls.length;
+    const view = await get(h, h.d.enforcement.userPage, { params: { id: TARGET } });
+    assert.ok(!view.body.includes('/quarantine/decide'), 'no decision forms for a non-decider');
+    const refused = await post(h, h.d.enforcement.quarantineDecide, { params: { id: TARGET }, form: { decision: 'release' } });
+    assert.equal(refused.statusCode, 403);
+    assert.match(refused.body, /Only the server owner/);
+    assert.equal(state.calls.length, before, 'nothing decided');
+    // Nothing to decide on.
+    state.deciders.add(ADMIN);
+    state.record = null;
+    const none = await post(h, h.d.enforcement.quarantineDecide, { params: { id: TARGET }, form: { decision: 'kick' } });
+    assert.equal(none.statusCode, 400);
+    const o = await setup({ userId: OWNER, overrides });
+    const owner = await post(o, o.d.enforcement.quarantine, { params: { id: TARGET }, form: { reason: 'x' } });
+    assert.equal(owner.statusCode, 403, 'OWNER_IDS without Administrator cannot act on the dashboard');
+});

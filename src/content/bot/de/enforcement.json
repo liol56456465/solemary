@@ -101,5 +101,122 @@
     "uncounted": {
         "automod": "Automod-Verwarnung — zählt nicht für Banns",
         "ladderOff": "Verwarnung — zählt nicht für Banns (Verwarnungsstufen aus)"
+    },
+    "quarantine": {
+        "dm": {
+            "body": "Du wurdest auf **{server}** unter Quarantäne gestellt. Grund: **{reason}**.",
+            "invite": "Um das zu klären, tritt {invite} bei.",
+            "noReason": "kein Grund angegeben"
+        },
+        "alert": {
+            "title": "Mitglied unter Quarantäne",
+            "ping": "**{name}** wurde unter Quarantäne gestellt. Bitte schaut es euch an.",
+            "member": "Mitglied",
+            "reason": "Grund",
+            "trigger": "Auslöser",
+            "rolesRemoved": "Entfernte Rollen",
+            "rolesKept": "Rollen, die bleiben (von Discord oder einer Integration verwaltet)",
+            "dm": "DM",
+            "dmDelivered": "Zugestellt",
+            "dmFailed": "Nicht zugestellt (DMs geschlossen oder kein gemeinsamer Server)",
+            "none": "Keine",
+            "release": "Freigeben",
+            "releasedBy": "Freigegeben von",
+            "releasedValue": "{name} · {date}",
+            "channelsOpen": "Noch offene Kanäle",
+            "channelsOpenValue": "{count} Kanal/Kanäle haben Mewvos Überschreibung abgelehnt (dort fehlt „Berechtigungen verwalten“): diese kann das Mitglied evtl. noch sehen."
+        },
+        "trigger": {
+            "raid": "Raid-Sperre: ein Raid-Beitritt hat eine Automod-Regel gebrochen",
+            "staffGuard": "Team-Schutz (Anti-Nuke)",
+            "manual": "Von {name} von Hand unter Quarantäne gestellt",
+            "automod": "Automod: ein Verstoß auf Bann-Niveau (Quarantäne statt Bann)"
+        },
+        "log": {
+            "releasedTitle": "Quarantäne aufgehoben",
+            "releasedBy": "Freigegeben von",
+            "rolesBack": "Zurückgegebene Rollen",
+            "skipped": "Gespeicherte Rollen, die nicht zurückgegeben wurden (gelöscht, verwaltet oder über Mewvo)",
+            "left": "Keine: das Mitglied ist nicht mehr auf dem Server"
+        },
+        "refuse": {
+            "noRole": "Es ist keine Quarantäne-Rolle festgelegt (Dashboard: Strafen & Einsprüche → Rollen), oder sie existiert nicht mehr.",
+            "botNoManageRoles": "Mewvo braucht die Berechtigung „Rollen verwalten“, um jemanden unter Quarantäne zu stellen.",
+            "roleManaged": "Die Quarantäne-Rolle wird von einer Integration verwaltet, daher kann Mewvo sie nicht vergeben.",
+            "roleAboveBot": "Die Quarantäne-Rolle liegt nicht unter Mewvos höchster Rolle, daher kann Mewvo sie nicht vergeben.",
+            "owner": "Der Serverbesitzer kann nicht unter Quarantäne gestellt werden.",
+            "bot": "Bots können nicht unter Quarantäne gestellt werden.",
+            "self": "Mewvo kann sich nicht selbst unter Quarantäne stellen.",
+            "aboveBot": "Die höchste Rolle dieses Mitglieds liegt nicht unter Mewvos höchster Rolle, daher kann Mewvo es nicht unter Quarantäne stellen.",
+            "notInServer": "Dieses Mitglied ist nicht auf dem Server.",
+            "already": "Dieses Mitglied ist bereits unter Quarantäne.",
+            "database": "Die Datenbank antwortet nicht, daher wurde nichts geändert.",
+            "assignFailed": "Discord hat die Rollenänderung abgelehnt, daher wurde nichts geändert.",
+            "failed": "Die Quarantäne hat nicht funktioniert, daher wurde nichts geändert.",
+            "roleHasPermissions": "Die Quarantäne-Rolle hat eigene Berechtigungen, daher verwendet Mewvo sie nicht (jedes Mitglied unter Quarantäne bekäme sie). Gib ihr keine Berechtigungen."
+        },
+        "release": {
+            "adminOnly": "Nur Administratoren können jemanden aus der Quarantäne freigeben.",
+            "otherServer": "Dieser Knopf funktioniert nur auf dem Team-Server, auf dem die Meldung gepostet wurde.",
+            "none": "Dieses Mitglied ist nicht mehr unter Quarantäne.",
+            "notYourself": "Du kannst dich nicht selbst freigeben.",
+            "offender": "Der Team-Schutz hat kürzlich gegen dich gehandelt, daher kannst du diesen Knopf nicht benutzen.",
+            "ownerOnly": "Diese Quarantäne kommt vom Team-Schutz, daher kann nur der Serverbesitzer sie aufheben (wie /staff restore).",
+            "tooHigh": "Einige der gespeicherten Rollen liegen auf oder über deiner höchsten Rolle ({roles}). Bitte den Serverbesitzer, das Mitglied freizugeben.",
+            "done": "{name} wurde freigegeben. Zurückgegebene Rollen: {roles}.",
+            "left": "Das Mitglied ist nicht mehr auf dem Server. Der Quarantäne-Eintrag wurde entfernt, ein erneuter Beitritt wird also nicht unter Quarantäne gestellt.",
+            "failed": "Discord hat die Rollenänderung abgelehnt, nichts wurde freigegeben: {error}",
+            "partial": "Die Rollen wurden zurückgegeben, aber die Quarantäne-Rolle oder ihr Eintrag konnte nicht entfernt werden. Drück noch einmal auf „Freigeben“: {error}"
+        },
+        "ownerDm": "Das Mitglied wurde unter Quarantäne gestellt: alle Rollen wurden gespeichert und entfernt, und es sieht keinen Kanal, bis jemand in der Meldung auf „Freigeben“ drückt (oder du /staff restore benutzt).",
+        "info": {
+            "title": "Du bist unter Quarantäne",
+            "intro": "Dein Zugang zu **{server}** ist pausiert. Diesen Kanal kannst du weiter lesen, aber andere Kanäle kannst du vorerst weder sehen noch darin schreiben.",
+            "whyTitle": "Warum das passiert",
+            "why": "Unser Sicherheitssystem oder ein Teammitglied hat dein Konto markiert, zum Beispiel während eines Raids, wegen verdächtiger Aktivität oder wegen Regelverstößen. Den Grund haben wir dir per DM geschickt.",
+            "doTitle": "Was du tun kannst",
+            "wait": "Warten: das Team prüft jede Quarantäne und gibt dir entweder deinen Zugang zurück oder erklärt die nächsten Schritte.",
+            "talk": "Mit dem Team sprechen: tritt unserem Support-Server {support} bei und nenne deinen Benutzernamen.",
+            "noAlts": "Bitte erstelle keine neuen Konten, um die Quarantäne zu umgehen; dadurch wird sie dauerhaft.",
+            "rolesSaved": "Deine Rollen wurden gespeichert und kommen zurück, wenn die Quarantäne aufgehoben wird."
+        },
+        "decide": {
+            "button": {
+                "release": "Freigeben",
+                "kick": "Kicken",
+                "ban": "Bannen",
+                "keep": "In Quarantäne lassen"
+            },
+            "field": "Entscheidung",
+            "value": "{decision} von {name} · {date}",
+            "done": {
+                "release": "Freigegeben",
+                "kick": "Gekickt",
+                "ban": "Gebannt",
+                "keep": "In Quarantäne gelassen (geprüft)"
+            },
+            "case": "Fall",
+            "keptTitle": "Quarantäne geprüft",
+            "notDecider": "Nur der Serverbesitzer und die Rollen unter „Wer über Mitglieder in Quarantäne entscheidet“ (Strafen & Einsprüche → Rollen) können hier entscheiden.",
+            "notMember": "Du bist kein Mitglied des Servers, auf dem diese Quarantäne ist.",
+            "banTitle": "Aus der Quarantäne bannen",
+            "banReason": "Grund (wird dem Mitglied geschickt)",
+            "banNeedsReason": "Ein Bann braucht einen Grund.",
+            "kickAsk": "{name} kicken? Das Mitglied bekommt zuerst eine DM und eine einmalige Einladung zum Zurückkommen.",
+            "kickConfirm": "Kicken",
+            "cancel": "Abbrechen",
+            "cancelled": "Es wurde nichts getan.",
+            "reply": {
+                "kick": "{name} wurde gekickt (Fall {code}).",
+                "ban": "{name} wurde gebannt (Fall {code}).",
+                "keep": "{name} bleibt in Quarantäne. Deine Prüfung ist in der Meldung vermerkt."
+            },
+            "needsAdmin": "Dafür brauchst du Administrator auf dem Server der Quarantäne (Kicken und Bannen immer; eine Entscheider-Rolle für jede Wahl).",
+            "recordNotCleared": "Der Quarantäne-Eintrag konnte nicht gelöscht werden (Datenbank); das steht im Bot-Log."
+        },
+        "joinUnknown": {
+            "title": "Quarantäne-Status unbekannt",
+            "text": "{member} ist beigetreten, aber ob das Mitglied unter Quarantäne steht, konnte nicht geprüft werden (Datenbank antwortet nicht). Es hat keine Rollen bekommen; bitte prüft es."
+        }
     }
 }

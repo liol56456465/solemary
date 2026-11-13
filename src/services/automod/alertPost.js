@@ -20,6 +20,9 @@ import { clearPostFailures, recordPostFailure, recordSendError } from './postFai
  */
 export async function postAlert(client, kind, {
     title, description = null, fields = [], color = 'error', components = [], guildId: sourceGuildId = enforcementConfig.mainGuildId,
+    // Message text above the embed and the role ids it may ping (allowedMentions: exactly these roles,
+    // never users, @everyone or @here). Used by the quarantine alert for the head admin roles.
+    content = null, mentionRoleIds = [],
 }) {
     const purpose = channelPurposeFor(kind);
     const guildId = staffGuildId(sourceGuildId);
@@ -38,10 +41,12 @@ export async function postAlert(client, kind, {
         recordPostFailure({ guildId, purpose, channelId, reason: channelId ? 'missing' : 'notSet' });
         return null;
     }
+    const roles = [...new Set((mentionRoleIds || []).filter((id) => /^\d{17,20}$/.test(String(id))))];
     return channel.send({
+        ...(content ? { content: String(content).slice(0, 2000) } : {}),
         embeds: [createEmbed({ title, description, fields, color, timestamp: true })],
         components,
-        allowedMentions: { parse: [] },
+        allowedMentions: roles.length ? { parse: [], roles } : { parse: [] },
     }).then((message) => {
         clearPostFailures(guildId, purpose);
         return message;

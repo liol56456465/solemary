@@ -78,7 +78,7 @@ export const wordKey = (term) => term.replace(/[^A-Za-z0-9]+/g, ' ').trim().spli
 
 export function glossaryPage({ session, access = null, moduleStates = {} }) {
     const tr = dashboardText(session?.lang);
-    // Home-only pages (homeOnly.js: /support, /backup) 404 in other servers: no "Open" link there.
+    // Home-only pages (homeOnly.js: /backup) 404 in other servers: no "Open" link there.
     const linkable = (target) => Boolean(target) && !(session?.isHomeServer === false && isHomeOnlyPage(target));
     const body = html`<header class="page-head"><h1>${tr.t('help.glossary.title')}</h1>
 <p>${tr.t('help.glossary.intro')}</p></header>

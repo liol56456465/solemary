@@ -41,7 +41,8 @@
             "kick": "Kicken",
             "mute": "Stummschalten: {duration}",
             "ban": "Bannen: {duration}",
-            "permanentBan": "Dauerhafter Bann"
+            "permanentBan": "Dauerhafter Bann",
+            "quarantine": "Quarantäne"
         },
         "verb": {
             "act": "handeln",
@@ -49,21 +50,24 @@
             "kick": "kicken",
             "mute": "stummschalten ({duration})",
             "ban": "bannen ({duration})",
-            "permanentBan": "dauerhaft bannen"
+            "permanentBan": "dauerhaft bannen",
+            "quarantine": "unter Quarantäne stellen"
         },
         "outcome": {
             "warn": "Verwarnt",
             "kick": "Gekickt",
             "mute": "Stummgeschaltet: {duration}",
             "ban": "Gebannt: {duration}",
-            "permanentBan": "Dauerhaft gebannt"
+            "permanentBan": "Dauerhaft gebannt",
+            "quarantine": "Unter Quarantäne"
         },
         "outcomeShort": {
             "warn": "verwarnt",
             "kick": "gekickt",
             "mute": "stummgeschaltet: {duration}",
             "ban": "gebannt: {duration}",
-            "permanentBan": "dauerhaft gebannt"
+            "permanentBan": "dauerhaft gebannt",
+            "quarantine": "unter Quarantäne gestellt"
         },
         "memberReport": "Meldung eines Mitglieds",
         "unknownUser": "unbekannt",
@@ -96,7 +100,8 @@
             "burstMinutes": {
                 "one": "{count} Minute",
                 "other": "{count} Minuten"
-            }
+            },
+            "raidQuarantined": "Das Mitglied ist während einer Raid-Sperre beigetreten und wurde daher statt der üblichen Strafe unter Quarantäne gestellt („Freigeben“ in der Quarantäne-Meldung lässt es wieder zu)."
         },
         "field": {
             "message": "Nachricht",

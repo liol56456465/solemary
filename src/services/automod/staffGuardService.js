@@ -22,6 +22,14 @@
 // Staff warnings: /staff warn (owner only) records a warning that expires after
 // staffWarnExpiryMs; at staffWarnLimit active warnings the staff roles are removed
 // the same way.
+//
+// Quarantine (enforcement/quarantineService.js): when the server has a quarantine role Mewvo can
+// give, an offender the guard catches (bans/kicks, deletes, webhooks, dangerous permissions) is
+// quarantined instead: every role saved and removed, the quarantine role given, head admins
+// pinged, a Release button on the alert (next to the nuke buttons). Refused (no role, offender at
+// or above Mewvo, a bot) or failed: the staff roles are stripped as before. Staff warnings never
+// quarantine (a warning limit is no attack). /staff restore (restoreStaffRoles) also lifts a
+// staff guard quarantine, so both restore paths keep working.
 
 import { AuditLogEvent, PermissionFlagsBits } from 'discord.js';
 import { automodConfig } from '../../config/automod.js';
@@ -36,6 +44,22 @@ import { durationIn } from '../enforcement/dmTemplates.js';
 import { botText, textForGuild } from '../../utils/botText.js';
 import { nukeAlertRow, postAlert } from './alertPost.js';
 import { snapshotIfStale } from '../structureBackupService.js';
+import { getQuarantine, listQuarantines, quarantineMember, quarantineReady, releaseQuarantine } from '../enforcement/quarantineService.js';
+
+// Quarantine (enforcement/quarantineService.js), replaceable in tests (setStaffGuardDepsForTest).
+const defaultGuardDeps = {
+    quarantineReady: (...args) => quarantineReady(...args),
+    quarantineMember: (...args) => quarantineMember(...args),
+    getQuarantine: (...args) => getQuarantine(...args),
+    listQuarantines: (...args) => listQuarantines(...args),
+    releaseQuarantine: (...args) => releaseQuarantine(...args),
+};
+let guardDeps = { ...defaultGuardDeps };
+
+/** Test hook: replace the quarantine calls (no argument restores them). */
+export function setStaffGuardDepsForTest(overrides = null) {
+    guardDeps = overrides ? { ...defaultGuardDeps, ...overrides } : { ...defaultGuardDeps };
+}
 
 const STAFF_ROLE_PERMISSIONS = [
     PermissionFlagsBits.Administrator,
@@ -168,19 +192,37 @@ export async function stripStaffRoles(member, reason) {
  */
 export async function savedStaffRoles(guild, userId) {
     const backup = await getFromDb(backupKey(guild.id, userId), null);
-    if (!backup?.roleIds?.length) return null;
-    return backup.roleIds.map((id) => guild.roles.cache.get(id)).filter(Boolean);
+    const quarantined = await guardQuarantine(guild.id, userId);
+    const roleIds = [...new Set([...(backup?.roleIds || []), ...(quarantined?.roles || [])])];
+    if (!backup?.roleIds?.length && !quarantined) return null;
+    return roleIds.map((id) => guild.roles.cache.get(id)).filter(Boolean);
+}
+
+/** The member's quarantine record when the staff guard made it, else null. Throws on a DB error. */
+async function guardQuarantine(guildId, userId) {
+    const record = await guardDeps.getQuarantine(guildId, userId);
+    return record?.trigger === 'staffGuard' ? record : null;
 }
 
 /** Gives back the roles removed by the guard or by staff warnings. Returns the restored roles. */
 export async function restoreStaffRoles(guild, userId, restoredBy) {
     const backup = await getFromDb(backupKey(guild.id, userId), null);
-    if (!backup?.roleIds?.length) return null;
+    const quarantined = await guardQuarantine(guild.id, userId);
+    if (!backup?.roleIds?.length && !quarantined) return null;
     const member = await guild.members.fetch(userId).catch(() => null);
     if (!member) return null;
-    const roles = backup.roleIds.map((id) => guild.roles.cache.get(id)).filter((role) => role?.editable);
-    if (roles.length) await member.roles.add(roles, `Staff roles restored by ${restoredBy.username}`);
-    await deleteFromDb(backupKey(guild.id, userId));
+    let roles = [];
+    if (quarantined) {
+        // A staff guard quarantine: released (all saved roles back, the quarantine role off).
+        const released = await guardDeps.releaseQuarantine(guild, userId, { by: { id: restoredBy.id, username: restoredBy.username } });
+        if (released?.ok) roles = released.restored || [];
+    }
+    if (backup?.roleIds?.length) {
+        const saved = backup.roleIds.map((id) => guild.roles.cache.get(id)).filter((role) => role?.editable && !roles.some((r) => r.id === role.id));
+        if (saved.length) await member.roles.add(saved, `Staff roles restored by ${restoredBy.username}`);
+        roles = [...roles, ...saved];
+        await deleteFromDb(backupKey(guild.id, userId));
+    }
     const tr = postText(guild);
     await postModLog(guild.client, 'staff', [
         { name: tr.t('automod.guard.field.staffMember'), value: `<@${userId}> ${member.user.username} (\`${userId}\`)` },
@@ -203,6 +245,13 @@ export async function listRemovedStaffRoles(guildId) {
         if (!/^\d{17,20}$/.test(userId)) continue;
         const backup = await getFromDb(backupKey(guildId, userId), null);
         if (backup?.roleIds?.length) out.push({ userId, roleIds: backup.roleIds, reason: backup.reason || null, at: backup.at || null });
+    }
+    // Staff guard quarantines: their saved roles come back with /staff restore too.
+    for (const record of await guardDeps.listQuarantines(guildId)) {
+        if (record.trigger !== 'staffGuard') continue;
+        const existing = out.find((row) => row.userId === record.userId);
+        if (existing) existing.roleIds = [...new Set([...existing.roleIds, ...(record.roles || [])])];
+        else out.push({ userId: record.userId, roleIds: record.roles || [], reason: record.reason || null, at: record.at || null });
     }
     return out.sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')));
 }
@@ -246,7 +295,24 @@ export function staffRemovedContent({ member, why, removedNames = '', keptNames 
     return { title: tr.t('automod.guard.title.removed'), fields, summary };
 }
 
-async function demote(guild, member, why, { nuke = false, at = Date.now() } = {}) {
+async function demote(guild, member, why, { nuke = false, at = Date.now(), quarantine = true } = {}) {
+    if (quarantine && guardDeps.quarantineReady(guild)) {
+        const quarantined = await guardDeps.quarantineMember(member, `Staff guard: ${why.en}`, {
+            automated: true, trigger: 'staffGuard', reasonText: why.text,
+            extraComponents: nuke ? [nukeAlertRow(at, guild.id, member.id)] : [],
+        }).catch((error) => ({ ok: false, code: 'error', error }));
+        if (quarantined.ok) {
+            const removedNames = quarantined.removed.map((role) => role.name).join(', ');
+            await alertOwner(guild, (dmTr) => [
+                dmTr.t('automod.guard.dm.header', { server: guild.name }),
+                staffRemovedContent({ member, why, nuke, removedNames }, { lang: dmTr.lang }).summary,
+                dmTr.t('enforcement.quarantine.ownerDm'),
+            ].join('\n'));
+            logger.warn(`Staff guard quarantined ${member.id}: ${why.en}`);
+            return;
+        }
+        logger.warn(`Staff guard: quarantine of ${member.id} not done (${quarantined.code}); removing staff roles instead`);
+    }
     const { removed, kept } = await stripStaffRoles(member, `Staff guard: ${why.en}`);
     const names = { removedNames: removed.map((role) => role.name).join(', '), keptNames: kept.map((role) => role.name).join(', ') };
     const { title, fields } = staffRemovedContent({ member, why, nuke, ...names }, { lang: postText(guild).lang });
@@ -445,7 +511,7 @@ export async function giveStaffWarning(guild, member, giver, reason) {
 
     let demoted = false;
     if (active >= automodConfig.staffWarnLimit) {
-        await demote(guild, member, guardWhy('staffWarnings', { count: active }));
+        await demote(guild, member, guardWhy('staffWarnings', { count: active }), { quarantine: false });
         demoted = true;
     }
     return { active, demoted };

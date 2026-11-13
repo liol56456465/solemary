@@ -107,5 +107,122 @@
     "uncounted": {
         "automod": "Advertencia de automod — no cuenta para baneos",
         "ladderOff": "Advertencia — no cuenta para baneos (escalera de advertencias desactivada)"
+    },
+    "quarantine": {
+        "dm": {
+            "body": "Has sido puesto en cuarentena en **{server}** por **{reason}**.",
+            "invite": "Para hablarlo, únete a {invite}.",
+            "noReason": "sin motivo indicado"
+        },
+        "alert": {
+            "title": "Miembro en cuarentena",
+            "ping": "**{name}** fue puesto en cuarentena. Echad un vistazo, por favor.",
+            "member": "Miembro",
+            "reason": "Motivo",
+            "trigger": "Qué lo activó",
+            "rolesRemoved": "Roles quitados",
+            "rolesKept": "Roles que se quedan (gestionados por Discord o una integración)",
+            "dm": "MD",
+            "dmDelivered": "Entregado",
+            "dmFailed": "No entregado (MD cerrados o ningún servidor en común)",
+            "none": "Ninguno",
+            "release": "Liberar",
+            "releasedBy": "Liberado por",
+            "releasedValue": "{name} · {date}",
+            "channelsOpen": "Canales todavía abiertos",
+            "channelsOpenValue": "{count} canal(es) rechazaron el ajuste de Mewvo (no tiene Gestionar permisos allí): es posible que aún los vea."
+        },
+        "trigger": {
+            "raid": "Bloqueo por raid: alguien que entró en el raid rompió una regla del automod",
+            "staffGuard": "Protección del staff (anti-nuke)",
+            "manual": "Puesto en cuarentena a mano por {name}",
+            "automod": "Automod: una infracción de nivel de baneo (cuarentena en lugar del baneo)"
+        },
+        "log": {
+            "releasedTitle": "Cuarentena levantada",
+            "releasedBy": "Liberado por",
+            "rolesBack": "Roles devueltos",
+            "skipped": "Roles guardados no devueltos (borrados, gestionados o por encima de Mewvo)",
+            "left": "Ninguno: ya no está en el servidor"
+        },
+        "refuse": {
+            "noRole": "No hay un rol de cuarentena configurado (panel: Sanciones y apelaciones → Roles), o ya no existe.",
+            "botNoManageRoles": "Mewvo necesita el permiso Gestionar roles para poner a alguien en cuarentena.",
+            "roleManaged": "El rol de cuarentena lo gestiona una integración, así que Mewvo no puede darlo.",
+            "roleAboveBot": "El rol de cuarentena no está por debajo del rol más alto de Mewvo, así que Mewvo no puede darlo.",
+            "owner": "El dueño del servidor no puede ser puesto en cuarentena.",
+            "bot": "Los bots no pueden ser puestos en cuarentena.",
+            "self": "Mewvo no puede ponerse en cuarentena a sí mismo.",
+            "aboveBot": "El rol más alto de este miembro no está por debajo del rol más alto de Mewvo, así que Mewvo no puede ponerlo en cuarentena.",
+            "notInServer": "Este miembro no está en el servidor.",
+            "already": "Este miembro ya está en cuarentena.",
+            "database": "La base de datos no responde, así que no se cambió nada.",
+            "assignFailed": "Discord rechazó el cambio de roles, así que no se cambió nada.",
+            "failed": "La cuarentena no funcionó, así que no se cambió nada.",
+            "roleHasPermissions": "El rol de cuarentena tiene permisos propios, así que Mewvo no lo usará (todos los miembros en cuarentena los recibirían). No le des ningún permiso."
+        },
+        "release": {
+            "adminOnly": "Solo los administradores pueden liberar a alguien de la cuarentena.",
+            "otherServer": "Este botón solo funciona en el servidor del staff donde se publicó la alerta.",
+            "none": "Este miembro ya no está en cuarentena.",
+            "notYourself": "No puedes liberarte a ti mismo.",
+            "offender": "La protección del staff actuó contra ti hace poco, así que no puedes usar este botón.",
+            "ownerOnly": "Esta cuarentena viene de la protección del staff, así que solo el dueño del servidor puede levantarla (como /staff restore).",
+            "tooHigh": "Algunos de sus roles guardados están al nivel de tu rol más alto o por encima ({roles}). Pide al dueño del servidor que lo libere.",
+            "done": "{name} fue liberado. Roles devueltos: {roles}.",
+            "left": "Ya no está en el servidor. Se borró el registro de cuarentena, así que si vuelve a entrar no quedará en cuarentena.",
+            "failed": "Discord rechazó el cambio de roles, no se liberó nada: {error}",
+            "partial": "Los roles se devolvieron, pero no se pudo quitar el rol de cuarentena o su registro. Pulsa Liberar otra vez: {error}"
+        },
+        "ownerDm": "Fue puesto en cuarentena: se guardaron y quitaron todos sus roles, y no ve ningún canal hasta que alguien pulse Liberar en la alerta (o uses /staff restore).",
+        "info": {
+            "title": "Estás en cuarentena",
+            "intro": "Tu acceso a **{server}** está en pausa. Puedes seguir leyendo este canal, pero por ahora no puedes ver ni escribir en ningún otro canal.",
+            "whyTitle": "Por qué pasa esto",
+            "why": "Nuestro sistema de seguridad o un miembro del staff marcó tu cuenta, por ejemplo durante un raid, por actividad sospechosa o por romper las reglas. Te enviamos el motivo por MD.",
+            "doTitle": "Qué puedes hacer",
+            "wait": "Esperar: el staff revisa cada cuarentena y te devolverá el acceso o te explicará los siguientes pasos.",
+            "talk": "Hablar con el staff: únete a nuestro servidor de soporte {support} y diles tu nombre de usuario.",
+            "noAlts": "Por favor, no crees cuentas nuevas para saltarte la cuarentena; eso la vuelve permanente.",
+            "rolesSaved": "Tus roles se guardaron y se te devolverán si se levanta la cuarentena."
+        },
+        "decide": {
+            "button": {
+                "release": "Liberar",
+                "kick": "Expulsar",
+                "ban": "Banear",
+                "keep": "Mantener en cuarentena"
+            },
+            "field": "Decisión",
+            "value": "{decision} por {name} · {date}",
+            "done": {
+                "release": "Liberado",
+                "kick": "Expulsado",
+                "ban": "Baneado",
+                "keep": "Sigue en cuarentena (revisado)"
+            },
+            "case": "Caso",
+            "keptTitle": "Cuarentena revisada",
+            "notDecider": "Solo el dueño del servidor y los roles de “Quién decide sobre los miembros en cuarentena” (Sanciones y apelaciones → Roles) pueden decidir aquí.",
+            "notMember": "No eres miembro del servidor donde está esta cuarentena.",
+            "banTitle": "Banear desde la cuarentena",
+            "banReason": "Motivo (se envía al miembro)",
+            "banNeedsReason": "Un baneo necesita un motivo.",
+            "kickAsk": "¿Expulsar a {name}? Primero recibe un MD y una invitación de un solo uso para volver.",
+            "kickConfirm": "Expulsar",
+            "cancel": "Cancelar",
+            "cancelled": "No se hizo nada.",
+            "reply": {
+                "kick": "{name} fue expulsado (caso {code}).",
+                "ban": "{name} fue baneado (caso {code}).",
+                "keep": "{name} sigue en cuarentena. Tu revisión queda anotada en la alerta."
+            },
+            "needsAdmin": "Esto necesita Administrador en el servidor de la cuarentena (Expulsar y Banear siempre; un rol que decide, para cualquier opción).",
+            "recordNotCleared": "No se pudo borrar el registro de cuarentena (base de datos); queda anotado en el registro del bot."
+        },
+        "joinUnknown": {
+            "title": "Estado de cuarentena desconocido",
+            "text": "{member} entró, pero no se pudo comprobar si está en cuarentena (la base de datos no responde). No recibió ningún rol; revisadlo, por favor."
+        }
     }
 }

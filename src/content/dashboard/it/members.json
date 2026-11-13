@@ -286,5 +286,26 @@
     "tooShort": "Scrivi almeno 2 lettere del nome.",
     "discordFailed": "Discord non ha risposto alla ricerca, quindi sono elencati solo i membri che Mewvo conosce già.",
     "bansFailed": "Non è stato possibile caricare l’elenco dei ban, quindi gli utenti bannati non sono elencati."
+  },
+  "quarantine": {
+    "title": "Quarantena",
+    "help": "Toglie tutti i suoi ruoli (vengono salvati) e gli nasconde tutti i canali. Resta nel server e riceve un DM con il motivo e il tuo invito al server di supporto. Gli amministratori principali vengono menzionati nel canale degli avvisi.",
+    "reason": "Motivo (gli viene inviato)",
+    "reasonHint": "Obbligatorio. Compare nel suo DM, nell’avviso e nel registro di moderazione.",
+    "submit": "Metti in quarantena",
+    "confirm": "Mettere {name} in quarantena? Perde tutti i ruoli e non vede nessun canale finché non viene rilasciato.",
+    "active": "In quarantena dal {date}. Motivo: {reason}",
+    "release": "Rilascia dalla quarantena",
+    "releaseConfirm": "Rilasciare {name}? I suoi ruoli salvati tornano.",
+    "notSet": "La quarantena ha bisogno di un ruolo di quarantena che Mewvo possa assegnare.",
+    "setLink": "Impostalo in Sanzioni e ricorsi → Ruoli.",
+    "unreadable": "Al momento non si riesce a leggere se questo membro è in quarantena (il database non risponde).",
+    "notDecider": "Solo il proprietario del server e i ruoli che decidono (Sanzioni e ricorsi → Ruoli) possono decidere cosa succede ora.",
+    "keep": "Tieni in quarantena (esaminato)",
+    "kick": "Espelli",
+    "kickConfirm": "Espellere {name}? Riceve prima un DM e un invito monouso per tornare.",
+    "ban": "Banna",
+    "banReason": "Motivo del ban (gli viene inviato)",
+    "banConfirm": "Bannare {name}? Riceve prima un DM."
   }
 }

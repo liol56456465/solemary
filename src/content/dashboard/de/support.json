@@ -12,5 +12,17 @@
   "appealsCategory": "Kategorie für Einsprüche gegen Bann und Kick",
   "appealsCategoryHelp": "Eine Kategorie ist ein Ordner mit Kanälen. Jeder Einspruch gegen einen Bann oder Kick bekommt hier einen Kanal, in dem das Mitglied mit dem Team sprechen kann. Das Team entscheidet in einem Team-Kanal im Hauptserver. Nicht gesetzt: Einsprüche werden nur fürs Team im Hauptserver geöffnet.",
   "invite": "Einladungslink für gebannte Mitglieder: {invite}. Du kannst ihn {change}.",
-  "changeLink": "unter Strafen & Einsprüche ändern"
+  "changeLink": "unter Strafen & Einsprüche ändern",
+  "notConnectedOther": "Hier ist kein Support-Server verbunden: ein zweiter Server für gebannte Mitglieder (Bann-Rolle, Einspruchskanäle) gibt es vorerst nur für Mewvos eigene Server. Mitglieder bekommen deinen Support-Server-Link oben.",
+  "yourInvite": {
+    "title": "Dein Support-Server-Link",
+    "cardHelp": "Straf- und Quarantäne-DMs sagen Mitgliedern, dass sie diesem Server beitreten sollen, um die Sache zu klären.",
+    "label": "Dein Support-Server-Link",
+    "help": "Ein dauerhafter Einladungslink zu deinem eigenen Support-Server (discord.gg/…). Es ist dieselbe Einstellung wie „Dein Einspruchs-Link“ unter Strafen & Einsprüche. Leer: die DMs haben keine Einladungszeile.",
+    "helpHome": "Mewvos Support-Server: der Link, den Straf- und Quarantäne-DMs nennen. Auch unter Strafen & Einsprüche → Kanäle.",
+    "mewvoNote": "Deine Mitglieder werden vorerst zu Mewvos Support-Server geschickt, nicht zu diesem Link. Das kannst du unter {link} ändern.",
+    "mewvoLink": "Wo Mitglieder Einspruch einlegen",
+    "bad": "Das ist kein Discord-Einladungslink (https://discord.gg/…).",
+    "required": "Der Support-Server-Link darf hier nicht leer sein."
+  }
 }

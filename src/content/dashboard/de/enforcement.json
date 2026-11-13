@@ -69,7 +69,22 @@
     "warn1": "Rolle bei 1 Verwarnung",
     "warn2": "Rolle bei 2 Verwarnungen",
     "warn3": "Rolle ab 3 Verwarnungen",
-    "warnRoleN": "Verwarnungsrolle {number}"
+    "warnRoleN": "Verwarnungsrolle {number}",
+    "quarantine": "Quarantäne-Rolle",
+    "quarantineHelp": "Wird statt aller anderen Rollen vergeben, wenn jemand unter Quarantäne gestellt wird: durch einen Raid, durch den Team-Schutz oder von Hand auf einer Mitgliederseite. Mewvo verbirgt alle Kanäle vor ihr. Nicht gesetzt: Raids kicken und der Team-Schutz entfernt Team-Rollen, wie bisher.",
+    "quarantineHasPerms": "Die Quarantäne-Rolle hat eigene Berechtigungen. Gib ihr keine: sie soll nur Zugriff wegnehmen.",
+    "quarantinePing": "Leitende Admin-Rollen, die bei einer Quarantäne erwähnt werden (bis zu {max})",
+    "quarantinePingShort": "Erwähnte Rolle",
+    "quarantinePingHelp": "Die Quarantäne-Meldung im Meldungskanal erwähnt diese Rollen und sonst niemanden. Halte Strg (auf dem Mac Cmd), um mehrere auszuwählen.",
+    "quarantineInfo": "Quarantäne-Infokanal (Mitglieder unter Quarantäne sehen nur diesen, nur lesend)",
+    "quarantineInfoHelp": "Mitglieder unter Quarantäne können diesen einen Kanal lesen, aber dort nicht schreiben oder reagieren. Nicht gesetzt: sie sehen gar keinen Kanal.",
+    "quarantineInfoPost": "Quarantäne-Infonachricht posten",
+    "quarantineInfoPostHelp": "Postet eine Nachricht von Mewvo im Quarantäne-Infokanal, die ihnen die Quarantäne erklärt (in der Sprache des Servers). Erneutes Posten ersetzt die alte Nachricht.",
+    "quarantineRefusePerms": "Die Quarantäne-Rolle darf keine eigenen Berechtigungen haben (jedes Mitglied unter Quarantäne bekäme sie). Wähle eine Rolle ohne Berechtigungen oder entferne sie zuerst in Discord.",
+    "quarantineRefuseHeld": "Mitglieder haben diese Rolle schon ({count}): Mewvo verbirgt alle Kanäle vor ihr, sie würden also alle den Zugang verlieren. Lege eine neue, leere Rolle für die Quarantäne an.",
+    "quarantineDeciders": "Wer über Mitglieder in Quarantäne entscheidet (bis zu {max} Rollen)",
+    "quarantineDecidersShort": "Entscheider-Rolle",
+    "quarantineDecidersHelp": "Inhaber dieser Rollen (und der Serverbesitzer) wählen für ein Mitglied in Quarantäne Freigeben, Kicken, Bannen oder Behalten, in der Meldung oder auf der Mitgliederseite. Andere Administratoren können unter Quarantäne stellen, aber nicht entscheiden. Die erwähnten Rollen oben sind davon getrennt."
   },
   "timings": {
     "title": "Einsprüche und Meldungen",
@@ -188,7 +203,10 @@
     "transparencyOn": "Der Transparenzbericht ist an: /transparency ist öffentlich.",
     "transparencyOff": "Der Transparenzbericht ist aus: /transparency ist nicht mehr auf der Website.",
     "trustOn": "Die Vertrauenskarte ist an: /trust ist öffentlich.",
-    "trustOff": "Die Vertrauenskarte ist aus: /trust ist nicht mehr auf der Website."
+    "trustOff": "Die Vertrauenskarte ist aus: /trust ist nicht mehr auf der Website.",
+    "quarantineInfoNoChannel": "Lege zuerst einen Quarantäne-Infokanal fest (einen Textkanal, in dem Mewvo posten kann).",
+    "quarantineInfoPosted": "Die Quarantäne-Infonachricht ist in #{channel} gepostet.",
+    "quarantineInfoReplaced": "Die Quarantäne-Infonachricht ist in #{channel} gepostet; die alte wurde entfernt."
   },
   "appealsHome": {
     "title": "Wo Mitglieder Einspruch einlegen",

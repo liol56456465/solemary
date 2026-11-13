@@ -41,7 +41,8 @@
             "kick": "Kick",
             "mute": "Mute {duration}",
             "ban": "Ban {duration}",
-            "permanentBan": "Permanent ban"
+            "permanentBan": "Permanent ban",
+            "quarantine": "Quarantine"
         },
         "verb": {
             "act": "act",
@@ -49,21 +50,24 @@
             "kick": "kick",
             "mute": "mute {duration}",
             "ban": "ban {duration}",
-            "permanentBan": "ban permanently"
+            "permanentBan": "ban permanently",
+            "quarantine": "quarantine"
         },
         "outcome": {
             "warn": "Warned",
             "kick": "Kicked",
             "mute": "Muted {duration}",
             "ban": "Banned {duration}",
-            "permanentBan": "Permanently banned"
+            "permanentBan": "Permanently banned",
+            "quarantine": "Quarantined"
         },
         "outcomeShort": {
             "warn": "warned",
             "kick": "kicked",
             "mute": "muted {duration}",
             "ban": "banned {duration}",
-            "permanentBan": "permanently banned"
+            "permanentBan": "permanently banned",
+            "quarantine": "quarantined"
         },
         "memberReport": "Member report",
         "unknownUser": "unknown",
@@ -96,7 +100,8 @@
             "burstMinutes": {
                 "one": "{count} minute",
                 "other": "{count} minutes"
-            }
+            },
+            "raidQuarantined": "They joined during a raid lockdown, so they were quarantined instead of the usual punishment (Release on the quarantine alert lets them back)."
         },
         "field": {
             "message": "Message",

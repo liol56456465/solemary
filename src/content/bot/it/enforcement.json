@@ -107,5 +107,122 @@
     "uncounted": {
         "automod": "Avvertimento automod — non conta per i ban",
         "ladderOff": "Avvertimento — non conta per i ban (scala degli avvertimenti disattivata)"
+    },
+    "quarantine": {
+        "dm": {
+            "body": "Sei stato messo in quarantena su **{server}** per **{reason}**.",
+            "invite": "Per parlarne, entra in {invite}.",
+            "noReason": "nessun motivo indicato"
+        },
+        "alert": {
+            "title": "Membro in quarantena",
+            "ping": "**{name}** è stato messo in quarantena. Dateci un’occhiata, per favore.",
+            "member": "Membro",
+            "reason": "Motivo",
+            "trigger": "Cosa l’ha attivata",
+            "rolesRemoved": "Ruoli rimossi",
+            "rolesKept": "Ruoli che restano (gestiti da Discord o da un’integrazione)",
+            "dm": "DM",
+            "dmDelivered": "Consegnato",
+            "dmFailed": "Non consegnato (DM chiusi o nessun server in comune)",
+            "none": "Nessuno",
+            "release": "Rilascia",
+            "releasedBy": "Rilasciato da",
+            "releasedValue": "{name} · {date}",
+            "channelsOpen": "Canali ancora aperti",
+            "channelsOpenValue": "{count} canale/i hanno rifiutato l’impostazione di Mewvo (manca Gestire i permessi lì): potrebbe ancora vederli."
+        },
+        "trigger": {
+            "raid": "Blocco raid: un utente entrato durante il raid ha violato una regola dell’automod",
+            "staffGuard": "Protezione dello staff (anti-nuke)",
+            "manual": "Messo in quarantena a mano da {name}",
+            "automod": "Automod: una violazione da ban (quarantena al posto del ban)"
+        },
+        "log": {
+            "releasedTitle": "Quarantena revocata",
+            "releasedBy": "Rilasciato da",
+            "rolesBack": "Ruoli restituiti",
+            "skipped": "Ruoli salvati non restituiti (eliminati, gestiti o sopra Mewvo)",
+            "left": "Nessuno: non è più nel server"
+        },
+        "refuse": {
+            "noRole": "Non è impostato nessun ruolo di quarantena (pannello: Sanzioni e ricorsi → Ruoli), oppure non esiste più.",
+            "botNoManageRoles": "Mewvo ha bisogno del permesso Gestire i ruoli per mettere qualcuno in quarantena.",
+            "roleManaged": "Il ruolo di quarantena è gestito da un’integrazione, quindi Mewvo non può assegnarlo.",
+            "roleAboveBot": "Il ruolo di quarantena non è sotto il ruolo più alto di Mewvo, quindi Mewvo non può assegnarlo.",
+            "owner": "Il proprietario del server non può essere messo in quarantena.",
+            "bot": "I bot non possono essere messi in quarantena.",
+            "self": "Mewvo non può mettere in quarantena sé stesso.",
+            "aboveBot": "Il ruolo più alto di questo membro non è sotto il ruolo più alto di Mewvo, quindi Mewvo non può metterlo in quarantena.",
+            "notInServer": "Questo membro non è nel server.",
+            "already": "Questo membro è già in quarantena.",
+            "database": "Il database non risponde, quindi non è stato cambiato nulla.",
+            "assignFailed": "Discord ha rifiutato la modifica dei ruoli, quindi non è stato cambiato nulla.",
+            "failed": "La quarantena non ha funzionato, quindi non è stato cambiato nulla.",
+            "roleHasPermissions": "Il ruolo di quarantena ha permessi propri, quindi Mewvo non lo userà (ogni membro in quarantena li riceverebbe). Non dargli nessun permesso."
+        },
+        "release": {
+            "adminOnly": "Solo gli amministratori possono rilasciare qualcuno dalla quarantena.",
+            "otherServer": "Questo pulsante funziona solo nel server dello staff dove è stato pubblicato l’avviso.",
+            "none": "Questo membro non è più in quarantena.",
+            "notYourself": "Non puoi rilasciare te stesso.",
+            "offender": "La protezione dello staff ha agito contro di te di recente, quindi non puoi usare questo pulsante.",
+            "ownerOnly": "Questa quarantena viene dalla protezione dello staff, quindi solo il proprietario del server può revocarla (come /staff restore).",
+            "tooHigh": "Alcuni dei suoi ruoli salvati sono pari o superiori al tuo ruolo più alto ({roles}). Chiedi al proprietario del server di rilasciarlo.",
+            "done": "{name} è stato rilasciato. Ruoli restituiti: {roles}.",
+            "left": "Non è più nel server. Il registro di quarantena è stato rimosso, quindi se rientra non verrà messo in quarantena.",
+            "failed": "Discord ha rifiutato la modifica dei ruoli, non è stato rilasciato nulla: {error}",
+            "partial": "I ruoli sono stati restituiti, ma non è stato possibile rimuovere il ruolo di quarantena o il suo registro. Premi di nuovo Rilascia: {error}"
+        },
+        "ownerDm": "È stato messo in quarantena: tutti i suoi ruoli sono stati salvati e rimossi, e non vede nessun canale finché qualcuno non preme Rilascia nell’avviso (o usi /staff restore).",
+        "info": {
+            "title": "Sei in quarantena",
+            "intro": "Il tuo accesso a **{server}** è in pausa. Puoi ancora leggere questo canale, ma per ora non puoi vedere né scrivere in nessun altro canale.",
+            "whyTitle": "Perché succede",
+            "why": "Il nostro sistema di sicurezza o un membro dello staff ha segnalato il tuo account, per esempio durante un raid, per attività sospette o per aver violato le regole. Il motivo ti è stato inviato in DM.",
+            "doTitle": "Cosa puoi fare",
+            "wait": "Aspettare: lo staff esamina ogni quarantena e ti restituirà l’accesso o ti spiegherà i prossimi passi.",
+            "talk": "Parlare con lo staff: entra nel nostro server di supporto {support} e dì loro il tuo nome utente.",
+            "noAlts": "Per favore non creare nuovi account per aggirare la quarantena: la renderebbe permanente.",
+            "rolesSaved": "I tuoi ruoli sono stati salvati e ti verranno restituiti se la quarantena viene revocata."
+        },
+        "decide": {
+            "button": {
+                "release": "Rilascia",
+                "kick": "Espelli",
+                "ban": "Banna",
+                "keep": "Tieni in quarantena"
+            },
+            "field": "Decisione",
+            "value": "{decision} da {name} · {date}",
+            "done": {
+                "release": "Rilasciato",
+                "kick": "Espulso",
+                "ban": "Bannato",
+                "keep": "Tenuto in quarantena (esaminato)"
+            },
+            "case": "Caso",
+            "keptTitle": "Quarantena esaminata",
+            "notDecider": "Solo il proprietario del server e i ruoli di “Chi decide sui membri in quarantena” (Sanzioni e ricorsi → Ruoli) possono decidere qui.",
+            "notMember": "Non sei membro del server in cui si trova questa quarantena.",
+            "banTitle": "Banna dalla quarantena",
+            "banReason": "Motivo (inviato al membro)",
+            "banNeedsReason": "Un ban richiede un motivo.",
+            "kickAsk": "Espellere {name}? Riceve prima un DM e un invito monouso per tornare.",
+            "kickConfirm": "Espelli",
+            "cancel": "Annulla",
+            "cancelled": "Non è stato fatto nulla.",
+            "reply": {
+                "kick": "{name} è stato espulso (caso {code}).",
+                "ban": "{name} è stato bannato (caso {code}).",
+                "keep": "{name} resta in quarantena. La tua revisione è annotata nell’avviso."
+            },
+            "needsAdmin": "Serve Amministratore nel server della quarantena (sempre per Espelli e Banna; un ruolo che decide, per ogni scelta).",
+            "recordNotCleared": "Non è stato possibile eliminare il registro di quarantena (database); è annotato nel log del bot."
+        },
+        "joinUnknown": {
+            "title": "Stato di quarantena sconosciuto",
+            "text": "{member} è entrato, ma non è stato possibile verificare se è in quarantena (il database non risponde). Non ha ricevuto nessun ruolo; controllatelo, per favore."
+        }
     }
 }

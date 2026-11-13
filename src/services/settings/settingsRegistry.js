@@ -183,6 +183,33 @@ export const SETTINGS = Object.freeze([
         prodFallbackEmpty: [], schema: idList,
     },
     {
+        // Quarantine (enforcement/quarantineService.js): the role a raid joiner, an anti-nuke
+        // offender or a member quarantined by hand gets instead of all their roles. The bot denies
+        // it View Channel in every channel. Not set: raids kick and the staff guard strips staff roles, as before.
+        key: 'quarantineRoleId', module: 'enforcement', kind: 'role', guild: 'main',
+        label: 'Quarantine role', env: null, fallback: null, schema: optionalId,
+    },
+    {
+        // The head admin roles the quarantine alert pings (allowedMentions limited to exactly these).
+        key: 'quarantinePingRoleIds', module: 'enforcement', kind: 'list', itemKind: 'role', guild: 'main',
+        label: 'Roles pinged when someone is quarantined', env: null, fallback: [],
+        schema: z.array(snowflake).max(5, 'at most 5 roles'),
+    },
+    {
+        // Who decides on a quarantined member (Release, Kick, Ban, Keep on the alert and the member
+        // page): these roles, plus the server owner and OWNER_IDS in Mewvo's servers. Ordinary
+        // Administrators can quarantine by hand but not decide (owner, 2026-11-13).
+        key: 'quarantineDeciderRoleIds', module: 'enforcement', kind: 'list', itemKind: 'role', guild: 'main',
+        label: 'Who can decide on quarantined members', env: null, fallback: [],
+        schema: z.array(snowflake).max(5, 'at most 5 roles'),
+    },
+    {
+        // The one channel a quarantined member still sees, read-only (the quarantine role is allowed
+        // View Channel + Read Message History there, denied posting). Not set: every channel stays hidden.
+        key: 'quarantineInfoChannelId', module: 'enforcement', kind: 'channel', guild: 'main',
+        label: 'Quarantine info channel (quarantined members see only this, read-only)', env: null, fallback: null, schema: optionalId,
+    },
+    {
         key: 'massActionLimit', module: 'enforcement', kind: 'number', guild: 'main',
         label: 'Safety limit: bans/kicks allowed in the window', env: 'MASS_ACTION_LIMIT',
         fallback: 5, schema: int(1, 100),

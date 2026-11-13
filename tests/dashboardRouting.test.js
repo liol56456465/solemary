@@ -129,10 +129,10 @@ test('guildSegment: snowflakes are servers; digit-like bad ids are invalid; lowe
     assert.deepEqual(guildSegment('reaction-roles'), { guildId: null, invalid: false });
 });
 
-test('homeOnly: support and backup by sidebar key, route key and path, any case', () => {
-    assert.deepEqual([...HOME_ONLY_PAGES], ['support', 'backup']);
-    for (const key of ['support', 'page:support', '/support', '/support/save', '/Support', '//support', 'backup', '/backup/download', 'page:backup']) assert.equal(isHomeOnlyPage(key), true, key);
-    for (const key of ['supporter', '/cases', 'page:rules', '', null, '/owner/backup']) assert.equal(isHomeOnlyPage(key), false, String(key));
+test('homeOnly: backup by sidebar key, route key and path, any case; the Support page is open to every server (its invite card)', () => {
+    assert.deepEqual([...HOME_ONLY_PAGES], ['backup']);
+    for (const key of ['backup', '/backup/download', 'page:backup', '/Backup', '//backup']) assert.equal(isHomeOnlyPage(key), true, key);
+    for (const key of ['support', 'page:support', '/support', '/support/save', 'supporter', '/cases', 'page:rules', '', null, '/owner/backup']) assert.equal(isHomeOnlyPage(key), false, String(key));
 });
 
 test('confirm tokens are scoped per server: a token from A is refused in B', () => {
@@ -237,7 +237,7 @@ test('[I2] /dashboard/<id>/… reaches that server\'s instance with the suffix a
         // The navigation (sidebar + phone sheet); the glossary text on /help has its own links (pages, not nav).
         const nav = [...res.body.matchAll(/<nav class="(?:side-nav|tabbar)"[\s\S]*?<\/nav>/g)].map((m) => m[0]).join('');
         assert.ok(nav.includes(`href="/dashboard/${A}/rules"`), 'nav found');
-        assert.ok(!nav.includes(`href="/dashboard/${A}/support"`), 'home-only Support module hidden in A');
+        assert.ok(nav.includes(`href="/dashboard/${A}/support"`), 'the Support page (its invite card) is open to every server');
         assert.ok(!nav.includes(`href="/dashboard/${A}/backup"`), 'home-only Backup hidden in A');
         assert.equal(res.headers.get('content-security-policy').includes("script-src 'self'"), true);
         const root = await h.request(`/dashboard/${A}`, { cookie });

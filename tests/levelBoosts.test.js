@@ -12,6 +12,7 @@ import {
     getLevelingConfig, saveUserLevelData, setLevelBoost, updateLevelingConfig, saveLevelingConfig,
 } from '../src/services/leveling/leveling.js';
 import guildMemberAdd from '../src/events/guildMemberAdd.js';
+import { setQuarantineDepsForTest } from '../src/services/enforcement/quarantineService.js';
 import { resetMemberFetchGate } from '../src/utils/memberFetchGate.js';
 
 // Each test starts with a fresh member fetch gate (the 60 s gap is per guild id).
@@ -263,6 +264,8 @@ test('sync: removeUnearned (an admin lowered the level) takes off reward roles a
 });
 
 test('rejoin: guildMemberAdd gives back the earned reward roles (by reward mode)', async () => {
+    // The quarantine check read fine and found no record (it fails closed otherwise: no roles at all).
+    setQuarantineDepsForTest({ dbAvailable: () => true, getFromDb: async (key, fallback = null) => fallback });
     const client = fakeClient();
     await seed(client, { rewardMode: 'highest', level: 25 });
     const guild = fakeGuild();
@@ -277,6 +280,15 @@ test('rejoin: guildMemberAdd gives back the earned reward roles (by reward mode)
     const keepMember = fakeMember(keepGuild, keepClient);
     await guildMemberAdd.execute(keepMember);
     assert.deepEqual(keepMember.roles.added.map((a) => a.id).sort(), [ROLE_A, ROLE_B].sort());
+
+    // Fails closed: the quarantine state cannot be read → no reward role on rejoin.
+    setQuarantineDepsForTest({ dbAvailable: () => true, getFromDb: async () => { throw new Error('db down'); } });
+    const heldClient = fakeClient();
+    await seed(heldClient, { level: 12 });
+    const heldMember = fakeMember(fakeGuild(), heldClient);
+    await guildMemberAdd.execute(heldMember);
+    assert.deepEqual(heldMember.roles.added, [], 'no role while the quarantine state is unknown');
+    setQuarantineDepsForTest(null);
 });
 
 test('rejoin: a role the bot cannot give does not stop the join pipeline', async () => {

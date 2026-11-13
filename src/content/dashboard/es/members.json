@@ -286,5 +286,26 @@
     "tooShort": "Escribe al menos 2 letras del nombre.",
     "discordFailed": "Discord no respondió a la búsqueda, así que solo aparecen los miembros que Mewvo ya conoce.",
     "bansFailed": "No se pudo cargar la lista de baneos, así que los usuarios baneados no aparecen."
+  },
+  "quarantine": {
+    "title": "Cuarentena",
+    "help": "Le quita todos los roles (se guardan) y le oculta todos los canales. Se queda en el servidor y recibe un MD con el motivo y tu invitación al servidor de soporte. Se menciona a la administración principal en el canal de alertas.",
+    "reason": "Motivo (se le envía)",
+    "reasonHint": "Obligatorio. Aparece en su MD, en la alerta y en el registro de moderación.",
+    "submit": "Poner en cuarentena",
+    "confirm": "¿Poner a {name} en cuarentena? Pierde todos los roles y no ve ningún canal hasta que se le libere.",
+    "active": "En cuarentena desde {date}. Motivo: {reason}",
+    "release": "Liberar de la cuarentena",
+    "releaseConfirm": "¿Liberar a {name}? Sus roles guardados vuelven.",
+    "notSet": "La cuarentena necesita un rol de cuarentena que Mewvo pueda dar.",
+    "setLink": "Configúralo en Sanciones y apelaciones → Roles.",
+    "unreadable": "Ahora mismo no se puede leer si este miembro está en cuarentena (la base de datos no responde).",
+    "notDecider": "Solo el dueño del servidor y los roles que deciden (Sanciones y apelaciones → Roles) pueden decidir qué pasa ahora.",
+    "keep": "Mantener en cuarentena (revisado)",
+    "kick": "Expulsar",
+    "kickConfirm": "¿Expulsar a {name}? Primero recibe un MD y una invitación de un solo uso para volver.",
+    "ban": "Banear",
+    "banReason": "Motivo del baneo (se le envía)",
+    "banConfirm": "¿Banear a {name}? Primero recibe un MD."
   }
 }

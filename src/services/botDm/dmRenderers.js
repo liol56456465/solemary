@@ -13,6 +13,7 @@
 //   enf.banEnded / enf.muteEnded                      enforcementService.js notifyPunishmentEnded
 //   enf.appealAccepted / enf.appealDenied             appealService.js
 //   enf.caseVoided                                    caseEditService.js (/case remove)
+//   enf.quarantine                                    quarantineService.js (raid, staff guard, by hand)
 //   ticket.closed / ticket.feedback / ticket.transcript  services/ticket.js (ticket.feedback also
 //                                                     modmailService.js, kind 'modmail'; on close the
 //                                                     transcript rides on ticket.closed, transcript: true)
@@ -27,7 +28,7 @@
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import {
-    appealAcceptedDm, appealDeniedDm, banDm, banEndedDm, caseVoidedDm, kickDm, muteDm, muteEndedDm, warnDm, contestComponents } from '../enforcement/dmTemplates.js';
+    appealAcceptedDm, appealDeniedDm, banDm, banEndedDm, caseVoidedDm, kickDm, muteDm, muteEndedDm, quarantineDm, warnDm, contestComponents } from '../enforcement/dmTemplates.js';
 import { botText } from '../../utils/botText.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { getApplicationStatusColor } from '../../config/bot.js';
@@ -96,6 +97,8 @@ export const DM_RENDERERS = Object.freeze({
     'enf.appealAccepted': { render: (p, lang) => ({ content: appealAcceptedDm(p.adminUsername, p.invite ?? null, opts(p, lang, { rec: p.rec ?? null })) }) },
     'enf.appealDenied': { render: (p, lang) => ({ content: appealDeniedDm({ guildId: p.guildId ?? undefined, lang }) }) },
     'enf.caseVoided': { render: (p, lang) => ({ content: caseVoidedDm(p.rec, p.reason, p.invite ?? null, opts(p, lang)) }) },
+    // { guildId, serverName, reason, invite }: the reason is the staff's (or the system's) text, kept as sent.
+    'enf.quarantine': { render: (p, lang) => ({ content: quarantineDm({ guildId: p.guildId ?? null, serverName: p.serverName ?? '', reason: p.reason ?? '', invite: p.invite ?? null }, { lang }) }) },
 
     'ticket.closed': {
         render: (p, lang) => {

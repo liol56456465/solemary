@@ -73,7 +73,22 @@
     "warn1": "Rôle à 1 avertissement",
     "warn2": "Rôle à 2 avertissements",
     "warn3": "Rôle à 3 avertissements ou plus",
-    "warnRoleN": "Rôle d’avertissement {number}"
+    "warnRoleN": "Rôle d’avertissement {number}",
+    "quarantine": "Rôle de quarantaine",
+    "quarantineHelp": "Donné à la place de tous les autres rôles quand quelqu’un est mis en quarantaine : par un raid, par la protection du staff ou à la main sur la page d’un membre. Mewvo lui cache tous les salons. Non défini : les raids expulsent et la protection du staff retire les rôles du staff, comme avant.",
+    "quarantineHasPerms": "Le rôle de quarantaine a ses propres permissions. Ne lui en donne aucune : il doit seulement retirer des accès.",
+    "quarantinePing": "Rôles des administrateurs principaux à mentionner lors d’une quarantaine (jusqu’à {max})",
+    "quarantinePingShort": "Rôle mentionné",
+    "quarantinePingHelp": "L’alerte de quarantaine dans le salon des alertes mentionne ces rôles, et personne d’autre. Maintiens Ctrl (Cmd sur Mac) pour en choisir plusieurs.",
+    "quarantineInfo": "Salon d’information de quarantaine (les membres en quarantaine ne voient que celui-ci, en lecture seule)",
+    "quarantineInfoHelp": "Les membres en quarantaine peuvent lire ce seul salon, mais pas y écrire ni réagir. Non défini : ils ne voient aucun salon.",
+    "quarantineInfoPost": "Publier le message d’information de quarantaine",
+    "quarantineInfoPostHelp": "Publie dans le salon d’information de quarantaine un message de Mewvo qui leur explique la quarantaine (dans la langue du serveur). Publier à nouveau remplace l’ancien message.",
+    "quarantineRefusePerms": "Le rôle de quarantaine ne doit avoir aucune permission propre (chaque membre en quarantaine les recevrait). Choisis un rôle sans permission ou retire-les d’abord dans Discord.",
+    "quarantineRefuseHeld": "Des membres ont déjà ce rôle ({count}) : Mewvo lui cache tous les salons, ils perdraient donc tous l’accès. Crée un nouveau rôle vide pour la quarantaine.",
+    "quarantineDeciders": "Qui décide pour les membres en quarantaine (jusqu’à {max} rôles)",
+    "quarantineDecidersShort": "Rôle décideur",
+    "quarantineDecidersHelp": "Les membres ayant ces rôles (et le propriétaire du serveur) choisissent Libérer, Expulser, Bannir ou Garder pour un membre en quarantaine, sur l’alerte ou la page du membre. Les autres administrateurs peuvent mettre en quarantaine mais pas décider. Les rôles mentionnés ci-dessus sont à part."
   },
   "timings": {
     "title": "Appels et signalements",
@@ -192,7 +207,10 @@
     "transparencyOn": "Le rapport de transparence est activé : /transparency est public.",
     "transparencyOff": "Le rapport de transparence est désactivé : /transparency a disparu du site.",
     "trustOn": "La carte de confiance est activée : /trust est public.",
-    "trustOff": "La carte de confiance est désactivée : /trust a disparu du site."
+    "trustOff": "La carte de confiance est désactivée : /trust a disparu du site.",
+    "quarantineInfoNoChannel": "Définis d’abord un salon d’information de quarantaine (un salon textuel où Mewvo peut publier).",
+    "quarantineInfoPosted": "Le message d’information de quarantaine est publié dans #{channel}.",
+    "quarantineInfoReplaced": "Le message d’information de quarantaine est publié dans #{channel} ; l’ancien a été retiré."
   },
   "appealsHome": {
     "title": "Où les membres font appel",

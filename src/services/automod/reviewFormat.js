@@ -123,6 +123,7 @@ export function describeStep(step, { lang = 'en' } = {}) {
     const tr = botText(lang);
     if (step.type === 'warn') return tr.t('automod.review.step.warn');
     if (step.type === 'kick') return tr.t('automod.review.step.kick');
+    if (step.type === 'quarantine') return tr.t('automod.review.step.quarantine');
     if (step.type === 'mute') return tr.t('automod.review.step.mute', { duration: durationText(step.durationMs, lang) });
     return step.durationMs
         ? tr.t('automod.review.step.ban', { duration: durationText(step.durationMs, lang) })
@@ -135,6 +136,7 @@ export function stepVerb(step, { lang = 'en' } = {}) {
     if (!step) return tr.t('automod.review.verb.act');
     if (step.type === 'warn') return tr.t('automod.review.verb.warn');
     if (step.type === 'kick') return tr.t('automod.review.verb.kick');
+    if (step.type === 'quarantine') return tr.t('automod.review.verb.quarantine');
     if (step.type === 'mute') return tr.t('automod.review.verb.mute', { duration: durationText(step.durationMs, lang) });
     return step.durationMs
         ? tr.t('automod.review.verb.ban', { duration: durationText(step.durationMs, lang) })
@@ -146,6 +148,7 @@ export function outcomeLabel(step, { lang = 'en' } = {}) {
     const tr = botText(lang);
     if (step.type === 'warn') return tr.t('automod.review.outcome.warn');
     if (step.type === 'kick') return tr.t('automod.review.outcome.kick');
+    if (step.type === 'quarantine') return tr.t('automod.review.outcome.quarantine');
     if (step.type === 'mute') return tr.t('automod.review.outcome.mute', { duration: durationText(step.durationMs, lang) });
     return step.durationMs
         ? tr.t('automod.review.outcome.ban', { duration: durationText(step.durationMs, lang) })
@@ -157,6 +160,7 @@ function outcomeShort(step, lang) {
     const tr = botText(lang);
     if (step.type === 'warn') return tr.t('automod.review.outcomeShort.warn');
     if (step.type === 'kick') return tr.t('automod.review.outcomeShort.kick');
+    if (step.type === 'quarantine') return tr.t('automod.review.outcomeShort.quarantine');
     if (step.type === 'mute') return tr.t('automod.review.outcomeShort.mute', { duration: durationText(step.durationMs, lang) });
     return step.durationMs
         ? tr.t('automod.review.outcomeShort.ban', { duration: durationText(step.durationMs, lang) })
@@ -307,8 +311,8 @@ export function cardDescription(entry, { lang = 'en' } = {}) {
         lines.push(tr.t('automod.review.card.monitorNothing'));
     } else {
         if (entry.offence) lines.push(offence());
-        if (entry.raid) lines.push(tr.t('automod.review.card.raidKicked'));
         const action = latestAction(entry);
+        if (entry.raid) lines.push(tr.t(action?.step?.type === 'quarantine' ? 'automod.review.card.raidQuarantined' : 'automod.review.card.raidKicked'));
         if (action?.failed) lines.push(tr.t('automod.review.card.notApplied', { error: action.failed }));
         if (action?.limitBanCode) lines.push(tr.t('automod.review.card.limitBan', { code: action.limitBanCode }));
         const earlier = (entry.actions || []).slice(0, -1).filter((a) => a.caseCode);

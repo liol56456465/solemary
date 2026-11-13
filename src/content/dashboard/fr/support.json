@@ -12,5 +12,17 @@
   "appealsCategory": "Catégorie des appels de bannissement et d’expulsion",
   "appealsCategoryHelp": "Une catégorie est un dossier de salons. Chaque appel de bannissement ou d’expulsion y reçoit un salon où le membre peut parler à l’équipe. L’équipe décide dans un salon réservé à l’équipe sur le serveur principal. Non défini : les appels s’ouvrent sur le serveur principal, visibles par l’équipe seulement.",
   "invite": "Lien d’invitation envoyé aux membres bannis : {invite}. Tu peux le {change}.",
-  "changeLink": "modifier dans Sanctions et appels"
+  "changeLink": "modifier dans Sanctions et appels",
+  "notConnectedOther": "Aucun serveur d’assistance n’est connecté ici : un deuxième serveur pour les membres bannis (rôle banni, salons d’appel) est réservé aux serveurs de Mewvo pour l’instant. Les membres reçoivent ton invitation au serveur d’assistance ci-dessus.",
+  "yourInvite": {
+    "title": "Ton invitation au serveur d’assistance",
+    "cardHelp": "Les MP de sanction et de quarantaine disent aux membres de rejoindre ce serveur pour en discuter.",
+    "label": "Ton invitation au serveur d’assistance",
+    "help": "Une invitation permanente vers ton propre serveur d’assistance (discord.gg/…). C’est le même réglage que « Ton invitation d’appel » dans Sanctions et appels. Vide : les MP n’ont pas de ligne d’invitation.",
+    "helpHome": "Le serveur d’assistance de Mewvo : l’invitation que citent les MP de sanction et de quarantaine. Aussi dans Sanctions et appels → Salons.",
+    "mewvoNote": "Pour l’instant, tes membres sont envoyés vers le serveur d’assistance de Mewvo, pas vers cette invitation. Tu peux le changer dans {link}.",
+    "mewvoLink": "Où les membres font appel",
+    "bad": "Ce n’est pas un lien d’invitation Discord (https://discord.gg/…).",
+    "required": "L’invitation au serveur d’assistance ne peut pas être vide ici."
+  }
 }

@@ -41,7 +41,8 @@
             "kick": "Expulser",
             "mute": "Rendre muet {duration}",
             "ban": "Bannir {duration}",
-            "permanentBan": "Bannissement définitif"
+            "permanentBan": "Bannissement définitif",
+            "quarantine": "Quarantaine"
         },
         "verb": {
             "act": "agir",
@@ -49,21 +50,24 @@
             "kick": "expulser",
             "mute": "rendre muet {duration}",
             "ban": "bannir {duration}",
-            "permanentBan": "bannir définitivement"
+            "permanentBan": "bannir définitivement",
+            "quarantine": "mettre en quarantaine"
         },
         "outcome": {
             "warn": "Averti",
             "kick": "Expulsé",
             "mute": "Rendu muet {duration}",
             "ban": "Banni {duration}",
-            "permanentBan": "Banni définitivement"
+            "permanentBan": "Banni définitivement",
+            "quarantine": "Mis en quarantaine"
         },
         "outcomeShort": {
             "warn": "averti",
             "kick": "expulsé",
             "mute": "rendu muet {duration}",
             "ban": "banni {duration}",
-            "permanentBan": "banni définitivement"
+            "permanentBan": "banni définitivement",
+            "quarantine": "mis en quarantaine"
         },
         "memberReport": "Signalement d'un membre",
         "unknownUser": "inconnu",
@@ -98,7 +102,8 @@
                 "one": "{count} minute",
                 "many": "{count} minutes",
                 "other": "{count} minutes"
-            }
+            },
+            "raidQuarantined": "Il est arrivé pendant un confinement anti-raid, donc il a été mis en quarantaine au lieu de la sanction habituelle (Libérer dans l’alerte de quarantaine le laisse revenir)."
         },
         "field": {
             "message": "Message",

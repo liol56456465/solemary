@@ -31,6 +31,7 @@ import { executeSystemAction, isAdministrator, postModLog } from '../enforcement
 import { getAutomodSettings, isChannelExempt, isImmuneMember } from './automodSettings.js';
 import { featureAvailable } from '../../config/intents.js';
 import { isRaidJoiner, noteIncidentEvent } from './raidService.js';
+import { quarantineMember, quarantineReady } from '../enforcement/quarantineService.js';
 import { getProbation } from './probationService.js';
 import { noteMoodSignals } from './moodService.js';
 import { getUserLevelData } from '../leveling/leveling.js';
@@ -488,6 +489,8 @@ const defaultDeps = {
     giveHeadsUp: (...args) => giveHeadsUp(...args),
     getAutomodSettings: (...args) => getAutomodSettings(...args),
     getProbation: (...args) => getProbation(...args),
+    quarantineReady: (...args) => quarantineReady(...args),
+    quarantineMember: (...args) => quarantineMember(...args),
 };
 let deps = { ...defaultDeps };
 
@@ -563,6 +566,22 @@ export async function actOn(message, member, hit, settings, probation = null, { 
     // Read-only decision: on a database error treat them as an ordinary member.
     if (await deps.isRaidJoiner(guild.id, targetUser.id).catch(() => false)) {
         if (!rule.deleteMessage) await deps.deleteQuietly(message);
+        // A quarantine role is set (and Mewvo can give it): quarantine instead of the kick, so staff
+        // can look at them and release them (quarantineService.js). Refused or failed: the kick.
+        if (deps.quarantineReady(guild)) {
+            const target = member || await guild.members?.fetch?.(targetUser.id).catch(() => null);
+            const quarantined = target
+                ? await deps.quarantineMember(target, `Automod: ${rule.label} during a join raid`, { automated: true, trigger: 'raid' })
+                    .catch((error) => ({ ok: false, code: 'error', error }))
+                : { ok: false, code: 'notInServer' };
+            // Already quarantined (an earlier hit): nothing more to do, never a kick on top.
+            if (quarantined.ok || quarantined.code === 'already') {
+                noteIncident(guild.id, targetUser.id, `${hit.ruleLabel || rule.label}: message deleted, raid joiner quarantined`);
+                await deps.postReviewCard({ ...card, step: { type: 'quarantine' }, result: {}, raid: true, deleted: true });
+                return true;
+            }
+            logger.warn(`Automod: quarantine of raid joiner ${targetUser.id} not done (${quarantined.code}${quarantined.error ? `: ${quarantined.error.message}` : ''}); kicking instead`);
+        }
         const step = { type: 'kick' };
         const result = await deps.applyStep({ guild, targetUser, step, rule: hit.rule, group, reason: `Automod: ${rule.label} during a join raid` })
             .catch((error) => ({ error }));
@@ -582,6 +601,22 @@ export async function actOn(message, member, hit, settings, probation = null, { 
     const offences = await deps.countOffences(guild.id, targetUser.id, group);
     if (await deps.giveSecondChance(message, hit, { settings, offences, card, probation })) return rule.deleteMessage;
     const step = stepFor(offences);
+    // Serious offences (owner, 2026-11-13): a step that would ban quarantines instead when the server
+    // has a quarantine role, and the deciders (owner / co-owner roles) choose on the alert. Lighter
+    // steps (warn, mute, delete) stay as they are. Refused or failed: the ban, as before.
+    if (step.type === 'ban' && deps.quarantineReady(guild)) {
+        const target = member || await guild.members?.fetch?.(targetUser.id).catch(() => null);
+        const quarantined = target
+            ? await deps.quarantineMember(target, `Automod: ${rule.label} (a ban-level offence)`, { automated: true, trigger: 'automod' })
+                .catch((error) => ({ ok: false, code: 'error', error }))
+            : { ok: false, code: 'notInServer' };
+        if (quarantined.ok || quarantined.code === 'already') {
+            noteIncident(guild.id, targetUser.id, `${hit.ruleLabel || rule.label}: ${rule.deleteMessage ? 'message deleted, ' : ''}quarantined instead of a ban`);
+            await deps.postReviewCard({ ...card, step: { type: 'quarantine' }, result: {}, offence: offences + 1, deleted: Boolean(rule.deleteMessage) });
+            return rule.deleteMessage;
+        }
+        logger.warn(`Automod: quarantine of ${targetUser.id} instead of a ban not done (${quarantined.code}${quarantined.error ? `: ${quarantined.error.message}` : ''}); banning instead`);
+    }
     const result = await deps.applyStep({
         guild, targetUser, step, rule: hit.rule, group, reason: `Automod: ${rule.label}`, contestable: Boolean(rule.deleteMessage),
     })

@@ -30,7 +30,7 @@ const { MAX_ADDABLE_GUILDS, createGuildListCache, guildListFrom } = await import
 const { createDashboardApp, dashboardSettings } = await import('../src/services/dashboard/routes.js');
 const { createAuditStore } = await import('../src/services/dashboard/audit.js');
 const { hasOwnerPower } = await import('../src/utils/ownerPower.js');
-const { setSettingsCacheForTests } = await import('../src/services/settings/guildSettings.js');
+const { resolveSetting, setSettingsCacheForTests } = await import('../src/services/settings/guildSettings.js');
 
 const SECRET = 'x'.repeat(64);
 const A = '110000000000000011';
@@ -252,6 +252,8 @@ async function serve({ owners = [OWNER], bMembers = {}, mainMembers = {}, cases 
         // Messages page (home-only announcement templates).
         listScheduledMessages: async () => [], openPollsFor: async () => ({ polls: [], partial: false }),
         getSetting: async () => 'en',
+        // Another server's settings (Support page: its own appeal invite): the real cache (rows set above).
+        resolveSetting: (gid, key, env) => resolveSetting(gid, key, env),
         postBotMessage: async () => ({ message: { id: '790000000000000001' } }),
     }, log);
     const data = spyDeps('data', {
@@ -853,16 +855,18 @@ test("A's channel or role id posted to B's module → 400, nothing saved; B's ow
     }
 });
 
-test('Words explained: the Support server link only in the home servers (the page 404s elsewhere)', async () => {
+test('Words explained: the Support server link in every server (its invite card), the Backup link only at home', async () => {
     const h = await serve();
     try {
         const { cookie } = await h.loginAs(ADMIN);
         const inA = await h.request(`/dashboard/${A}/help`, { cookie });
         assert.equal(inA.status, 200);
-        assert.ok(!inA.body.includes(`/dashboard/${A}/support`), 'no link to a page that 404s in A');
-        assert.ok(!inA.body.includes(`/dashboard/${A}/backup`));
+        assert.ok(!inA.body.includes(`/dashboard/${A}/backup`), 'no link to a page that 404s in A');
         assert.ok(inA.body.includes(`href="/dashboard/${A}/inbox"`), 'the other words keep their links');
-        assert.equal((await h.request(`/dashboard/${A}/support`, { cookie })).status, 404);
+        const support = await h.request(`/dashboard/${A}/support`, { cookie });
+        assert.equal(support.status, 200, 'the Support page is open in every server since quarantine');
+        assert.ok(support.body.includes('name="appealsInvite"'), 'another server edits its own invite there');
+        assert.ok(!support.body.includes('name="supportServerInvite"'), "never Mewvo's Support invite");
         const inMain = await h.request(`/dashboard/${MAIN}/help`, { cookie });
         assert.ok(inMain.body.includes(`href="/dashboard/${MAIN}/support"`));
     } finally {

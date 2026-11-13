@@ -281,5 +281,26 @@
     "tooShort": "Type at least 2 letters of the name.",
     "discordFailed": "Discord did not answer the search, so only members Mewvo already knows are listed.",
     "bansFailed": "The ban list could not be loaded, so banned users are not listed."
+  },
+  "quarantine": {
+    "title": "Quarantine",
+    "help": "Takes all their roles away (they are saved) and hides every channel from them. They stay in the server and get a DM with the reason and your support server invite. Head admins are pinged in the alerts channel.",
+    "reason": "Reason (sent to them)",
+    "reasonHint": "Required. Shown in their DM, the alert and the mod log.",
+    "submit": "Quarantine",
+    "confirm": "Quarantine {name}? They lose every role and see no channel until released.",
+    "active": "Quarantined since {date}. Reason: {reason}",
+    "release": "Release from quarantine",
+    "releaseConfirm": "Release {name}? Their saved roles come back.",
+    "notSet": "Quarantine needs a quarantine role that Mewvo can give.",
+    "setLink": "Set it on Enforcement & appeals → Roles.",
+    "unreadable": "Whether this member is quarantined could not be read right now (database not responding).",
+    "notDecider": "Only the server owner and the decider roles (Enforcement & appeals → Roles) can decide what happens next.",
+    "keep": "Keep in quarantine (reviewed)",
+    "kick": "Kick",
+    "kickConfirm": "Kick {name}? They get a DM first and a one-time invite to come back.",
+    "ban": "Ban",
+    "banReason": "Ban reason (sent to them)",
+    "banConfirm": "Ban {name}? They get a DM first."
   }
 }

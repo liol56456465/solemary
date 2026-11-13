@@ -12,5 +12,17 @@
   "appealsCategory": "Categoria dei ricorsi per ban ed espulsioni",
   "appealsCategoryHelp": "Una categoria è una cartella di canali. Ogni ricorso contro un ban o un'espulsione ha qui un canale dove il membro può parlare con lo staff. Lo staff decide in un canale riservato nel server principale. Non impostata: i ricorsi si aprono nel server principale, visibili solo allo staff.",
   "invite": "Link d'invito inviato ai membri bannati: {invite}. Puoi {change}.",
-  "changeLink": "cambiarlo in Sanzioni e ricorsi"
+  "changeLink": "cambiarlo in Sanzioni e ricorsi",
+  "notConnectedOther": "Qui non è collegato nessun server di supporto: un secondo server per i membri bannati (ruolo bannato, canali di ricorso) per ora è solo per i server di Mewvo. I membri ricevono il tuo invito al server di supporto qui sopra.",
+  "yourInvite": {
+    "title": "Il tuo invito al server di supporto",
+    "cardHelp": "I DM di sanzione e di quarantena dicono ai membri di entrare in questo server per parlarne.",
+    "label": "Il tuo invito al server di supporto",
+    "help": "Un invito permanente al tuo server di supporto (discord.gg/…). È la stessa impostazione di “Il tuo invito per i ricorsi” in Sanzioni e ricorsi. Vuoto: i DM non hanno la riga dell’invito.",
+    "helpHome": "Il server di supporto di Mewvo: l’invito che nominano i DM di sanzione e di quarantena. Anche in Sanzioni e ricorsi → Canali.",
+    "mewvoNote": "Per ora i tuoi membri vengono mandati al server di supporto di Mewvo, non a questo invito. Puoi cambiarlo in {link}.",
+    "mewvoLink": "Dove i membri fanno ricorso",
+    "bad": "Questo non è un link di invito Discord (https://discord.gg/…).",
+    "required": "L’invito al server di supporto non può essere vuoto qui."
+  }
 }

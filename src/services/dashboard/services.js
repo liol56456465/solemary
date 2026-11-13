@@ -78,6 +78,7 @@ import { postModLog } from '../enforcement/enforcementService.js';
 import { publishTicketPanel, setupTicketSystem } from '../ticketPanelService.js';
 import { publishVerificationPanel, setupVerification } from '../verificationPanelService.js';
 import { postAppealPanels, postServerAppealPanel } from '../enforcement/appealPanelService.js';
+import { postQuarantineInfo } from '../enforcement/quarantineService.js';
 import { createReactionRolePanel } from '../reactionRoleService.js';
 import { refreshPostedMessages } from '../postedMessagesRefresh.js';
 import { createNativePoll, createPoll, endPoll, postBotMessage, startCountdownMessage } from '../botMessageService.js';
@@ -130,7 +131,7 @@ export const defaultServices = {
     disableCategory, disableCommand, enableCategory, enableCommand, getCommandAccessSnapshot, resolveCommandTarget, getCategoryRegistry,
     purgeChannelMessages, lockChannel, unlockChannel, fixBotChannelPermissions,
     postModLog,
-    publishTicketPanel, setupTicketSystem, publishVerificationPanel, setupVerification, postAppealPanels, postServerAppealPanel,
+    publishTicketPanel, setupTicketSystem, publishVerificationPanel, setupVerification, postAppealPanels, postServerAppealPanel, postQuarantineInfo,
     createReactionRolePanel, refreshPostedMessages, createGiveaway, deleteGiveawayNow, createServerCounter, setupJoinToCreate, editTag,
     createApplicationRole, deleteApplicationRole, listApplicationRoles, updateApplicationRole,
     postBotMessage, createPoll, createNativePoll, endPoll, openPollsFor, startCountdownMessage, postRulesMessages, updateRulesMessages,

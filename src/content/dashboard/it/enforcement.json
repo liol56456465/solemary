@@ -73,7 +73,22 @@
     "warn1": "Ruolo a 1 avvertimento",
     "warn2": "Ruolo a 2 avvertimenti",
     "warn3": "Ruolo a 3 o più avvertimenti",
-    "warnRoleN": "Ruolo di avvertimento {number}"
+    "warnRoleN": "Ruolo di avvertimento {number}",
+    "quarantine": "Ruolo di quarantena",
+    "quarantineHelp": "Dato al posto di tutti gli altri ruoli quando qualcuno viene messo in quarantena: da un raid, dalla protezione dello staff o a mano dalla pagina di un membro. Mewvo gli nasconde tutti i canali. Non impostato: i raid espellono e la protezione dello staff toglie i ruoli dello staff, come prima.",
+    "quarantineHasPerms": "Il ruolo di quarantena ha dei permessi propri. Non dargliene nessuno: deve solo togliere accesso.",
+    "quarantinePing": "Ruoli degli amministratori principali da menzionare in caso di quarantena (fino a {max})",
+    "quarantinePingShort": "Ruolo menzionato",
+    "quarantinePingHelp": "L’avviso di quarantena nel canale degli avvisi menziona questi ruoli e nessun altro. Tieni premuto Ctrl (Cmd su Mac) per sceglierne più di uno.",
+    "quarantineInfo": "Canale informativo di quarantena (i membri in quarantena vedono solo questo, in sola lettura)",
+    "quarantineInfoHelp": "I membri in quarantena possono leggere questo solo canale, ma non scrivere né reagire. Non impostato: non vedono nessun canale.",
+    "quarantineInfoPost": "Pubblica il messaggio informativo di quarantena",
+    "quarantineInfoPostHelp": "Pubblica nel canale informativo di quarantena un messaggio di Mewvo che spiega loro la quarantena (nella lingua del server). Pubblicarlo di nuovo sostituisce il vecchio messaggio.",
+    "quarantineRefusePerms": "Il ruolo di quarantena non deve avere permessi propri (ogni membro in quarantena li riceverebbe). Scegli un ruolo senza permessi o toglili prima su Discord.",
+    "quarantineRefuseHeld": "Alcuni membri hanno già questo ruolo ({count}): Mewvo gli nasconde tutti i canali, quindi perderebbero tutti l’accesso. Crea un nuovo ruolo vuoto per la quarantena.",
+    "quarantineDeciders": "Chi decide sui membri in quarantena (fino a {max} ruoli)",
+    "quarantineDecidersShort": "Ruolo che decide",
+    "quarantineDecidersHelp": "Chi ha questi ruoli (e il proprietario del server) sceglie Rilascia, Espelli, Banna o Tieni per un membro in quarantena, nell’avviso o nella pagina del membro. Gli altri amministratori possono mettere in quarantena ma non decidere. I ruoli menzionati sopra sono separati."
   },
   "timings": {
     "title": "Ricorsi e segnalazioni",
@@ -192,7 +207,10 @@
     "transparencyOn": "Il rapporto di trasparenza è attivo: /transparency è pubblico.",
     "transparencyOff": "Il rapporto di trasparenza è disattivato: /transparency non è più sul sito.",
     "trustOn": "La scheda di fiducia è attiva: /trust è pubblica.",
-    "trustOff": "La scheda di fiducia è disattivata: /trust non è più sul sito."
+    "trustOff": "La scheda di fiducia è disattivata: /trust non è più sul sito.",
+    "quarantineInfoNoChannel": "Imposta prima un canale informativo di quarantena (un canale testuale dove Mewvo può scrivere).",
+    "quarantineInfoPosted": "Il messaggio informativo di quarantena è pubblicato in #{channel}.",
+    "quarantineInfoReplaced": "Il messaggio informativo di quarantena è pubblicato in #{channel}; quello vecchio è stato rimosso."
   },
   "appealsHome": {
     "title": "Dove i membri fanno ricorso",
