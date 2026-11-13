@@ -41,6 +41,8 @@
     "logChannelHelp": "El staff recibe aquí una línea corta cuando un ticket se abre, se asume, se cierra o se elimina.",
     "transcriptChannel": "Canal de transcripciones",
     "transcriptChannelHelp": "Una transcripción es un archivo con todos los mensajes de un ticket. Mewvo la publica aquí cuando se cierra el ticket.",
+    "advancedLogs": "¿Quieres las transcripciones y valoraciones de cada miembro en una sola publicación de un foro? Elige {link} en la página Registros.",
+    "advancedLogsLink": "Registros avanzados",
     "buttonText": "Texto del botón",
     "buttonTextHelp": "Las palabras del botón que pulsan los miembros para abrir un ticket.",
     "panelMessage": "Mensaje del panel",

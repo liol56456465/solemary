@@ -52,6 +52,12 @@ export async function editTranscriptLogRating(client, row, { loadTicket = getTic
         if (!ref?.channelId || !ref?.messageId) return false;
         const channel = await client.channels.fetch(ref.channelId).catch(() => null);
         if (!channel?.messages || channel.guildId !== row.guild_id) return false;
+        // Advanced logs: the transcript is in a forum post, archived an hour after its last log;
+        // Discord refuses edits in an archived post, so an unlocked one is reopened first.
+        if (channel.isThread?.() && channel.archived && !channel.locked) {
+            await channel.setArchived(false, 'Mewvo: add a ticket rating to its transcript log').catch((error) =>
+                logger.warn(`Ticket rating: transcript post ${channel.id} not reopened: ${error.message}`));
+        }
         const message = await channel.messages.fetch(ref.messageId).catch(() => null);
         const embed = message?.embeds?.[0];
         if (!embed) return false;

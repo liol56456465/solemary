@@ -32,6 +32,7 @@
     "submit": "Enregistrer les journaux avancés",
     "saved": "Journaux avancés enregistrés.",
     "modlog": "Sanctions (journal de modération)",
+    "tickets": "Tickets (transcriptions et avis, un post par membre)",
     "tip": {
       "title": "Comment fonctionnent les journaux avancés",
       "step1": "Crée un salon forum dans Discord et laisse Mewvo le voir, créer des posts et envoyer des messages dans les posts.",

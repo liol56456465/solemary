@@ -32,6 +32,7 @@
     "submit": "Erweiterte Logs speichern",
     "saved": "Erweiterte Logs gespeichert.",
     "modlog": "Strafen (Mod-Log)",
+    "tickets": "Tickets (Transkripte und Bewertungen, ein Beitrag pro Mitglied)",
     "tip": {
       "title": "So funktionieren erweiterte Logs",
       "step1": "Erstelle in Discord einen Forumkanal und erlaube Mewvo, ihn zu sehen, Beiträge zu erstellen und in Beiträgen zu schreiben.",

@@ -32,6 +32,7 @@
     "submit": "Zapisz zaawansowane logi",
     "saved": "Zaawansowane logi zapisane.",
     "modlog": "Kary (log moderacji)",
+    "tickets": "Tickety (transkrypcje i oceny, jeden post na członka)",
     "tip": {
       "title": "Jak działają zaawansowane logi",
       "step1": "Utwórz kanał forum w Discordzie i pozwól Mewvo go widzieć, tworzyć posty i pisać w postach.",

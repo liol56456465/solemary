@@ -41,6 +41,8 @@
     "logChannelHelp": "Staff get a short line here when a ticket is opened, claimed, closed or deleted.",
     "transcriptChannel": "Transcript channel",
     "transcriptChannelHelp": "A transcript is a file with every message from a ticket. Mewvo posts it here when the ticket closes.",
+    "advancedLogs": "Want each member's transcripts and reviews in one forum post? Pick {link} on the Logging page.",
+    "advancedLogsLink": "Advanced logs",
     "buttonText": "Button text",
     "buttonTextHelp": "The words on the button members press to open a ticket.",
     "panelMessage": "Panel message",

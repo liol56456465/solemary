@@ -34,6 +34,7 @@ import { getGuildConfig } from './config/guildConfig.js';
 import { onGuildConfigSaved, updateGuildConfigAtomic } from '../utils/database/guildConfigStorage.js';
 import { GUILD_SQL, guildIdsFromSql } from './scheduling/guildScan.js';
 import { generateTranscript } from './ticket.js';
+import { logForumId, sendToLogForum } from './logForum.js';
 import { checkRateLimit } from '../utils/rateLimiter.js';
 import { logger } from '../utils/logger.js';
 import { botText, resolveBotLanguage, textForGuild } from '../utils/botText.js';
@@ -631,27 +632,48 @@ export async function closeModmail(channel, closer, reason = '') {
     // Rating (off by default; modmailRatingsEnabled): the row before the channel goes.
     await promptModmailRating(channel, user, userId, closer);
 
-    try {
-        const config = await getGuildConfig(client, channel.guild.id);
-        const transcriptChannel = config.ticketTranscriptChannelId
-            ? await client.channels.fetch(config.ticketTranscriptChannelId).catch(() => null)
-            : null;
-        const transcript = isOwnTranscriptChannel(transcriptChannel, channel.guild.id) ? await generateTranscript(channel) : null;
-        if (transcript) {
-            const tr = staffChannelText(channel.guild.id);
-            await transcriptChannel.send({
-                content: `${tr.t('staff.modmail.transcript', { userId, closer: String(closer) })}${reason ? `\n${tr.t('staff.modmail.transcriptReason', { reason })}` : ''}`,
-                files: [new AttachmentBuilder(transcript.buffer, { name: `modmail-${userId}.html` })],
-                allowedMentions: NO_MENTIONS,
-            });
-        }
-    } catch (error) {
-        logger.warn(`Modmail transcript for ${channel.id} failed: ${error.message}`);
-    }
+    await fileModmailTranscript(channel, { userId, user, closer, reason });
 
     // Unlink first so a DM arriving during deletion isn't copied into a dying channel.
     await unlinkModmailChannel(channel.id);
     await channel.delete(`Modmail closed by ${closer.tag ?? closer.id}`);
     logger.info(`Modmail for ${userId} closed by ${closer.id}`);
     return true;
+}
+
+/**
+ * Files a closing conversation's transcript: the tickets forum (Advanced logs, the member's post)
+ * or, when that is off or fails, the server's transcript channel. Returns 'forum', 'channel' or null
+ * (not filed). Never throws (the close goes on).
+ */
+export async function fileModmailTranscript(channel, { userId, user = null, closer, reason = '' }) {
+    const client = channel.client;
+    try {
+        const config = await getGuildConfig(client, channel.guild.id);
+        // Advanced tickets log (logForum.js): the member's post; else / on failure the transcript channel.
+        const forumId = logForumId(config, 'tickets');
+        const transcriptChannel = config.ticketTranscriptChannelId
+            ? await client.channels.fetch(config.ticketTranscriptChannelId).catch(() => null)
+            : null;
+        const ownChannel = isOwnTranscriptChannel(transcriptChannel, channel.guild.id);
+        const transcript = forumId || ownChannel ? await generateTranscript(channel) : null;
+        if (transcript) {
+            const tr = staffChannelText(channel.guild.id);
+            const payload = () => ({
+                content: `${tr.t('staff.modmail.transcript', { userId, closer: String(closer) })}${reason ? `\n${tr.t('staff.modmail.transcriptReason', { reason })}` : ''}`,
+                files: [new AttachmentBuilder(transcript.buffer, { name: `modmail-${userId}.html` })],
+            });
+            const posted = forumId
+                ? await sendToLogForum({ guild: channel.guild, forumId, subject: { id: String(userId), username: user?.username || null }, payload: payload() })
+                : null;
+            if (posted) return 'forum';
+            if (ownChannel) {
+                await transcriptChannel.send({ ...payload(), allowedMentions: NO_MENTIONS });
+                return 'channel';
+            }
+        }
+    } catch (error) {
+        logger.warn(`Modmail transcript for ${channel.id} failed: ${error.message}`);
+    }
+    return null;
 }

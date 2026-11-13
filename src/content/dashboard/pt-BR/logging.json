@@ -32,6 +32,7 @@
     "submit": "Salvar registros avançados",
     "saved": "Registros avançados salvos.",
     "modlog": "Punições (registro de moderação)",
+    "tickets": "Tickets (transcrições e avaliações, uma publicação por membro)",
     "tip": {
       "title": "Como os registros avançados funcionam",
       "step1": "Crie um canal de fórum no Discord e deixe o Mewvo vê-lo, criar postagens e enviar mensagens nas postagens.",

@@ -2869,6 +2869,19 @@ test('Advanced logs how-to: hidden until Advanced is picked, open while a kind i
     assert.match(missing.body, /pick a channel/);
 });
 
+test('Advanced logs for tickets: one Tickets row with its own label; the Tickets page links to the card', async () => {
+    const h = await setup();
+    const card = forumsCard((await get(h, 'logging')).body);
+    assert.match(card, /name="mode:tickets"/);
+    assert.match(card, /name="forum:tickets"/);
+    assert.doesNotMatch(card, /name="mode:transcripts"/, 'one kind for tickets, not two');
+    assert.match(card, /Tickets \(transcripts and reviews, one post per member\)/);
+    assert.equal((await post(h, 'logging', 'forums', { 'mode:tickets': 'advanced', 'forum:tickets': FORUM })).statusCode, 303);
+    assert.deepEqual(h.auditRows.map((r) => [r.key, r.new]), [['logging.forums.tickets', FORUM]]);
+    const tickets = (await get(h, 'tickets')).body;
+    assert.match(tickets, /href="\/dashboard\/logging#s-advanced-logs">Advanced logs<\/a>/);
+});
+
 // ── Automod immune members (owner, 2026-11-13) ──
 
 const immuneCard = (body) => body.slice(body.indexOf('id="s-immune-members"'), body.indexOf('</section>', body.indexOf('id="s-immune-members"')));
