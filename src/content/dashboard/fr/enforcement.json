@@ -88,7 +88,9 @@
     "quarantineRefuseHeld": "Des membres ont déjà ce rôle ({count}) : Mewvo lui cache tous les salons, ils perdraient donc tous l’accès. Crée un nouveau rôle vide pour la quarantaine.",
     "quarantineDeciders": "Qui décide pour les membres en quarantaine (jusqu’à {max} rôles)",
     "quarantineDecidersShort": "Rôle décideur",
-    "quarantineDecidersHelp": "Les membres ayant ces rôles (et le propriétaire du serveur) choisissent Libérer, Expulser, Bannir ou Garder pour un membre en quarantaine, sur l’alerte ou la page du membre. Les autres administrateurs peuvent mettre en quarantaine mais pas décider. Les rôles mentionnés ci-dessus sont à part."
+    "quarantineDecidersHelp": "Les membres ayant ces rôles (et le propriétaire du serveur) choisissent Libérer, Expulser, Bannir ou Garder pour un membre en quarantaine, sur l’alerte ou la page du membre. Les autres administrateurs peuvent mettre en quarantaine mais pas décider. Les rôles mentionnés ci-dessus sont à part.",
+    "quarantineDecidersNone": "Aucun pour l’instant : seul le propriétaire du serveur décide.",
+    "quarantineDecidersOwnerOnly": "Seul le propriétaire du serveur (ou le propriétaire du bot sur les serveurs de Mewvo) peut changer qui décide."
   },
   "timings": {
     "title": "Appels et signalements",

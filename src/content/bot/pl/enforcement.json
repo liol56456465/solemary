@@ -165,7 +165,9 @@
             "database": "Baza danych nie odpowiada, więc nic nie zostało zmienione.",
             "assignFailed": "Discord odrzucił zmianę ról, więc nic nie zostało zmienione.",
             "failed": "Kwarantanna nie zadziałała, więc nic nie zostało zmienione.",
-            "roleHasPermissions": "Rola kwarantanny ma własne uprawnienia, więc Mewvo jej nie użyje (każda osoba na kwarantannie by je dostała). Nie dawaj jej żadnych uprawnień."
+            "roleHasPermissions": "Rola kwarantanny ma własne uprawnienia, więc Mewvo jej nie użyje (każda osoba na kwarantannie by je dostała). Nie dawaj jej żadnych uprawnień.",
+            "yourself": "Nie możesz objąć kwarantanną samego siebie.",
+            "aboveActor": "Najwyższa rola tego członka jest na poziomie twojej lub wyżej."
         },
         "release": {
             "adminOnly": "Tylko administratorzy mogą zwolnić kogoś z kwarantanny.",

@@ -153,7 +153,9 @@
             "database": "The database is not responding, so nothing was changed.",
             "assignFailed": "Discord refused the role change, so nothing was changed.",
             "failed": "The quarantine did not work, so nothing was changed.",
-            "roleHasPermissions": "The quarantine role has permissions of its own, so Mewvo will not use it (every quarantined member would get them). Give it no permissions."
+            "roleHasPermissions": "The quarantine role has permissions of its own, so Mewvo will not use it (every quarantined member would get them). Give it no permissions.",
+            "yourself": "You cannot quarantine yourself.",
+            "aboveActor": "This member's highest role is at or above yours."
         },
         "release": {
             "adminOnly": "Only Administrators can release someone from quarantine.",

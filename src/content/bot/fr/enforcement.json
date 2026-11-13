@@ -159,7 +159,9 @@
             "database": "La base de données ne répond pas, donc rien n’a été changé.",
             "assignFailed": "Discord a refusé le changement de rôles, donc rien n’a été changé.",
             "failed": "La quarantaine n’a pas fonctionné, donc rien n’a été changé.",
-            "roleHasPermissions": "Le rôle de quarantaine a ses propres permissions, donc Mewvo ne l’utilisera pas (chaque membre en quarantaine les recevrait). Ne lui donne aucune permission."
+            "roleHasPermissions": "Le rôle de quarantaine a ses propres permissions, donc Mewvo ne l’utilisera pas (chaque membre en quarantaine les recevrait). Ne lui donne aucune permission.",
+            "yourself": "Tu ne peux pas te mettre toi-même en quarantaine.",
+            "aboveActor": "Le rôle le plus haut de ce membre est au niveau du tien ou au-dessus."
         },
         "release": {
             "adminOnly": "Seuls les administrateurs peuvent libérer quelqu’un de la quarantaine.",

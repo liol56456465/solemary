@@ -87,7 +87,8 @@ import { activityPage, analyticsSection } from './activityPage.js';
 import { casesCsv, exportCases, exportWindowDays } from '../enforcement/caseExport.js';
 import { guildPlan } from '../billing/premiumEffects.js';
 import { backupPage, backupPreviewPage } from './backupPages.js';
-import { BACKUP_MAX_BYTES, applyBackup, exportSettings, planBackup } from '../settings/settingsBackup.js';
+import { BACKUP_MAX_BYTES, applyBackup, exportSettings, planBackup, planHasOwnerOnly } from '../settings/settingsBackup.js';
+import { hasOwnerPower } from '../../utils/ownerPower.js';
 import { createHash, randomBytes } from 'node:crypto';
 import { listEvidence, resolveImageUrls } from '../enforcement/evidenceService.js';
 import { listPendingAppeals } from '../enforcement/appealService.js';
@@ -909,6 +910,14 @@ export function createDashboard({
     const BACKUP_PLAN_TTL_MS = 10 * 60 * 1000;
     const canWriteSettings = (req) => Boolean(settings.editEnabled && req.dashboard.access.canAct);
     /** The same checks as every settings form; returns an error page or null. */
+    /** The live server owner of this dashboard's server, or OWNER_IDS with owner power here. */
+    function isServerOwnerOrBotOwner(req) {
+        const userId = req.dashboard?.session?.userId;
+        if (!userId) return false;
+        const guild = client.guilds?.cache?.get(guildId);
+        return Boolean((guild?.ownerId && guild.ownerId === userId) || hasOwnerPower(userId, guildId));
+    }
+
     function backupGuard(req, res) {
         if (!postLimiter.allow(req.dashboard.session.idHash)) { res.set('Retry-After', '60'); return failT(res, 429, 'slowDown', 'tooManyChanges', req); }
         if (!checkPost(req)) return failT(res, 403, 'notAllowed', 'csrf', req);
@@ -933,7 +942,8 @@ export function createDashboard({
         if (refused) return refused;
         const file = req.upload?.file;
         if (!file) return backup(req, res, 400, textOfReq(req).t('backups.route.chooseFile'));
-        const plan = planBackup(file.data.toString('utf8'), { env });
+        // Owner-only settings in the file are loaded only for the live server owner / OWNER_IDS here.
+        const plan = planBackup(file.data.toString('utf8'), { env, ownerSettings: isServerOwnerOrBotOwner(req) });
         if (!plan.ok) return backup(req, res, 400, plan.error);
         const now = Date.now();
         for (const [t, v] of backupPlans) if (now - v.at > BACKUP_PLAN_TTL_MS) backupPlans.delete(t);
@@ -951,6 +961,10 @@ export function createDashboard({
         // Another admin's token is refused without spending it; a token being applied cannot run twice.
         if (!entry || entry.userId !== req.dashboard.session.userId || Date.now() - entry.at > BACKUP_PLAN_TTL_MS || entry.applying) {
             return backup(req, res, 400, textOfReq(req).t('backups.route.expired'));
+        }
+        // The plan was made for this user; owner-only keys in it need the owner still (checked again live).
+        if (!isServerOwnerOrBotOwner(req) && planHasOwnerOnly(entry.plan)) {
+            return backup(req, res, 403, textOfReq(req).t('backups.route.expired'));
         }
         entry.applying = true;
         let changed;

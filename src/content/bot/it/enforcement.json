@@ -159,7 +159,9 @@
             "database": "Il database non risponde, quindi non è stato cambiato nulla.",
             "assignFailed": "Discord ha rifiutato la modifica dei ruoli, quindi non è stato cambiato nulla.",
             "failed": "La quarantena non ha funzionato, quindi non è stato cambiato nulla.",
-            "roleHasPermissions": "Il ruolo di quarantena ha permessi propri, quindi Mewvo non lo userà (ogni membro in quarantena li riceverebbe). Non dargli nessun permesso."
+            "roleHasPermissions": "Il ruolo di quarantena ha permessi propri, quindi Mewvo non lo userà (ogni membro in quarantena li riceverebbe). Non dargli nessun permesso.",
+            "yourself": "Non puoi mettere in quarantena te stesso.",
+            "aboveActor": "Il ruolo più alto di questo membro è pari o superiore al tuo."
         },
         "release": {
             "adminOnly": "Solo gli amministratori possono rilasciare qualcuno dalla quarantena.",

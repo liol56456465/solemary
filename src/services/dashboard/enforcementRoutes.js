@@ -655,14 +655,23 @@ export function createEnforcementHandlers(core) {
             const block = await e.getMassActionBlock(guildId, req.dashboard.session.userId);
             if (block) throw new InputError(tr.t('moderation.members.quarantineBlocked'), 403);
         }
+        // memberContext refuses yourself and targets at or above you (targetProblem); the service
+        // checks the same again (actorMember) and counts the quarantine for the mass-action guard.
         const ctx = await memberContext(req);
         const reason = text(req.body, 'reason', REASON_MAX);
         if (!reason) throw new InputError(tr.t('moderation.members.quarantineReason'), 400, 'reason');
         const by = { id: req.dashboard.session.userId, username: req.dashboard.session.username };
-        const result = await e.quarantineMember(ctx.target, reason, { by, trigger: 'manual' });
-        if (!result.ok) throw new InputError(refusalText(result.code, botText(tr.lang)), result.code === 'database' ? 503 : 400);
+        const result = await e.quarantineMember(ctx.target, reason, { by, trigger: 'manual', actorMember: ctx.actorMember, lang: tr.lang });
+        if (!result.ok) {
+            // The actor's own hierarchy: the same words as every other member action.
+            if (result.code === 'aboveActor') throw new InputError(tr.t('memberActions.problem.aboveYou', { name: ctx.target.user.username }), 403);
+            if (result.code === 'yourself') throw new InputError(tr.t('memberActions.problem.yourself'), 403);
+            throw new InputError(refusalText(result.code, botText(tr.lang)), result.code === 'database' ? 503 : 400);
+        }
         await audit(req, 'members', [{ key: `quarantine:${ctx.userId}`, old: null, new: { reason, roles: result.removed.map((role) => `@${role.name}`) } }]);
-        await flash(req, tr.t(result.dmDelivered ? 'moderation.members.quarantined' : 'moderation.members.quarantinedNoDm', { name: ctx.target.user.username }));
+        const done = tr.t(result.dmDelivered ? 'moderation.members.quarantined' : 'moderation.members.quarantinedNoDm', { name: ctx.target.user.username });
+        // The mass-action guard's "one more pauses you" heads-up, as for bans and kicks.
+        await flash(req, result.warning ? `${done} ${plainText(result.warning)}` : done);
         return res.redirect(303, path(`/users/${ctx.userId}`));
     }, { rerender: rerenderUser, perm: 'member.quarantine' });
 
@@ -698,12 +707,14 @@ export function createEnforcementHandlers(core) {
         const by = { id: actorId, username: req.dashboard.session.username };
         let result;
         try {
-            result = await e.decideQuarantine(guild, userId, { decision, by, moderator: actorMember, reason, lang: tr.lang });
+            result = await e.decideQuarantine(guild, userId, { decision, by, moderator: actorMember, reason, lang: tr.lang, actorIsOwner: decider === 'owner' });
         } catch (error) {
             if (isExpectedError(error)) throw error;
             logger.warn(`Dashboard quarantine ${decision} of ${userId} failed: ${error.message}`);
             throw new InputError(releaseText(error.partial ? 'partial' : 'failed', bt, { error: String(error.message || 'unknown error').slice(0, 300) }), 500);
         }
+        if (result.code === 'tooHigh') throw new InputError(releaseText('tooHigh', bt, { roles: result.roles.map((role) => role.name).join(', ') }), 403);
+        if (result.code === 'ownerOnly') throw new InputError(releaseText('ownerOnly', bt), 403);
         if (!result.ok) throw new InputError(refusalText(result.code, bt));
         await audit(req, 'members', [{ key: `quarantine:${userId}`, old: { reason: record.reason }, new: decision === 'keep' ? { reviewed: true } : { decision } }]);
         if (decision === 'ban' || decision === 'kick') banCache.invalidate(guildId);

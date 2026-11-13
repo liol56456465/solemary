@@ -38,7 +38,7 @@ const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
  * { ok: true, changes: [{ guild, key, label, old, new }], problems: [text], patches: { main: {}, support: {} } }.
  * Problems (an unknown key, a value that fails its check) are listed and skipped; the rest can be applied.
  */
-export function planBackup(textInput, { env = process.env, read = getSetting } = {}) {
+export function planBackup(textInput, { env = process.env, read = getSetting, ownerSettings = false } = {}) {
     const text = String(textInput ?? '');
     if (!text.trim()) return { ok: false, error: 'The file is empty.' };
     if (Buffer.byteLength(text, 'utf8') > BACKUP_MAX_BYTES) return { ok: false, error: 'The file is too big for a settings backup.' };
@@ -65,6 +65,8 @@ export function planBackup(textInput, { env = process.env, read = getSetting } =
             if (!entry) { problems.push(`Unknown setting "${String(key).slice(0, 60)}" skipped.`); continue; }
             if (entry.guild !== guild) { problems.push(`${entry.label} belongs to the ${entry.guild} server; skipped.`); continue; }
             if (!exportable(entry)) { problems.push(`${entry.label} is never loaded from a file; skipped.`); continue; }
+            // Owner-only settings (who decides on quarantines): only the server owner / OWNER_IDS may load them.
+            if (entry.ownerOnly && !ownerSettings) { problems.push(`${entry.label} can only be changed by the server owner; skipped.`); continue; }
             const check = validateSetting(key, value);
             if (!check.ok) { problems.push(`${check.error}; skipped.`); continue; }
             const old = read(guildId, key, env);
@@ -74,6 +76,11 @@ export function planBackup(textInput, { env = process.env, read = getSetting } =
         }
     }
     return { ok: true, changes, problems, patches };
+}
+
+/** True when a plan would change an owner-only setting (applied only for the server owner / OWNER_IDS). */
+export function planHasOwnerOnly(plan) {
+    return (plan?.changes || []).some((change) => getSettingEntry(change.key)?.ownerOnly);
 }
 
 /**

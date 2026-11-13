@@ -84,7 +84,9 @@
     "quarantineRefuseHeld": "Mitglieder haben diese Rolle schon ({count}): Mewvo verbirgt alle Kanäle vor ihr, sie würden also alle den Zugang verlieren. Lege eine neue, leere Rolle für die Quarantäne an.",
     "quarantineDeciders": "Wer über Mitglieder in Quarantäne entscheidet (bis zu {max} Rollen)",
     "quarantineDecidersShort": "Entscheider-Rolle",
-    "quarantineDecidersHelp": "Inhaber dieser Rollen (und der Serverbesitzer) wählen für ein Mitglied in Quarantäne Freigeben, Kicken, Bannen oder Behalten, in der Meldung oder auf der Mitgliederseite. Andere Administratoren können unter Quarantäne stellen, aber nicht entscheiden. Die erwähnten Rollen oben sind davon getrennt."
+    "quarantineDecidersHelp": "Inhaber dieser Rollen (und der Serverbesitzer) wählen für ein Mitglied in Quarantäne Freigeben, Kicken, Bannen oder Behalten, in der Meldung oder auf der Mitgliederseite. Andere Administratoren können unter Quarantäne stellen, aber nicht entscheiden. Die erwähnten Rollen oben sind davon getrennt.",
+    "quarantineDecidersNone": "Noch keine festgelegt: nur der Serverbesitzer entscheidet.",
+    "quarantineDecidersOwnerOnly": "Nur der Serverbesitzer (oder der Bot-Besitzer auf Mewvos Servern) kann ändern, wer entscheidet."
   },
   "timings": {
     "title": "Einsprüche und Meldungen",

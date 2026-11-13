@@ -159,7 +159,9 @@
             "database": "La base de datos no responde, así que no se cambió nada.",
             "assignFailed": "Discord rechazó el cambio de roles, así que no se cambió nada.",
             "failed": "La cuarentena no funcionó, así que no se cambió nada.",
-            "roleHasPermissions": "El rol de cuarentena tiene permisos propios, así que Mewvo no lo usará (todos los miembros en cuarentena los recibirían). No le des ningún permiso."
+            "roleHasPermissions": "El rol de cuarentena tiene permisos propios, así que Mewvo no lo usará (todos los miembros en cuarentena los recibirían). No le des ningún permiso.",
+            "yourself": "No puedes ponerte en cuarentena a ti mismo.",
+            "aboveActor": "El rol más alto de este miembro está al nivel del tuyo o por encima."
         },
         "release": {
             "adminOnly": "Solo los administradores pueden liberar a alguien de la cuarentena.",
