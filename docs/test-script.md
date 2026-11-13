@@ -445,3 +445,39 @@ the clean-up from "Before testing in Discord".
 | 32.8 | How-to: Close | Box hides; comes back on the next visit |
 | 32.9 | How-to: Don't show again | Box gone for good for you (other admins still see it) |
 | 32.10 | Take Mewvo's Send Messages in Posts away in the forum, warn the alt | Warning appears in the normal mod log channel instead |
+
+## 33. Automod log (staff-only mod log) (2026-11-13)
+| # | Step | Expected |
+|---|---|---|
+| 33.1 | Logging → Channels: set "Automod (everything automod did)" to a channel | Saved, audit row |
+| 33.2 | Alt posts a blocked link | Automod log: record with the rule, deleted, case code; review card still in the review channel |
+| 33.3 | Same rule again within the burst | No second automod-log record (only a new one when a new case is made) |
+| 33.4 | Staff warns the alt with /enforcements | Mod log entry; nothing in the automod log |
+| 33.5 | Clear the Automod log channel, alt breaks a rule | The automatic case goes to the mod log as before |
+| 33.6 | Advanced (forum) for Automod | Records in "altname logs <id>" |
+
+## 34. Tickets in Advanced mode (2026-11-13)
+| # | Step | Expected |
+|---|---|---|
+| 34.1 | Logging → Advanced logs → Tickets → Advanced + forum (Mewvo: View, Send, Send in Threads, Embed Links, Read History, Attach Files) | Saved |
+| 34.2 | Alt opens a ticket, staff claim it | Nothing in the forum or the ticket log channel |
+| 34.3 | Close with a reason | Post "<alt> logs <id>": "Ticket closed" summary + .html transcript |
+| 34.4 | Alt rates 1 star with a comment | Review in the same post, "Low rating"; Rating field added to the summary |
+| 34.5 | Modmail from the alt, then close it | Modmail transcript in the same post |
+| 34.6 | Remove Attach Files in the forum, close another ticket | Summary + file go to the transcript channel instead |
+| 34.7 | Tickets back to Normal | Log and transcript channels exactly as before |
+
+## 35. Quarantine (2026-11-13; set first: Enforcement → Roles: quarantine role (no permissions, below Mewvo), ping roles, decider roles (owner only), info channel; Support tab: invite)
+| # | Step | Expected |
+|---|---|---|
+| 35.1 | Post the quarantine info message | Embed in the info channel; re-posting replaces it |
+| 35.2 | Dashboard → test member → Quarantine, reason "test" | Alt loses roles, sees only the info channel (read-only); DM with the invite; alert pings only the head roles with Release / Kick / Ban / Keep; mod log entry |
+| 35.3 | A plain admin presses Release | Refused (ephemeral), nothing changes |
+| 35.4 | An admin tries to change the decider roles | 403, nothing saved (owner only) |
+| 35.5 | Decider presses Keep | "Kept in quarantine" line, buttons stay |
+| 35.6 | Alt leaves and rejoins | Quarantine role back, no other roles given |
+| 35.7 | Decider presses Release | Roles back; alert shows who; buttons disabled |
+| 35.8 | Quarantine again → Kick → confirm | Kick DM, case code, record gone |
+| 35.9 | Quarantine again → Ban → reason | Ban DM before the ban, case |
+| 35.10 | Alt posts a scam link (role set) | Quarantined instead of banned; without the role setting: banned; a spam first offence still warns |
+| 35.11 | An admin quarantines 6 members within 10 minutes | The 6th is blocked (mass-action guard) |
