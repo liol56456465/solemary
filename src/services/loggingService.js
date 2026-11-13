@@ -3,6 +3,7 @@
 import { ChannelType } from 'discord.js';
 import { getGuildConfig } from './config/guildConfig.js';
 import { updateGuildConfigAtomic } from '../utils/database/guildConfigStorage.js';
+import { LOG_CHANNEL_KEYS } from '../utils/schemas.js';
 import { logger } from '../utils/logger.js';
 import { BoundedMap } from '../utils/boundedMap.js';
 import {
@@ -15,7 +16,8 @@ import {
 
 // Owner (2026-11-10): a channel per kind of log. Not set: the main log channel (audit).
 // 'dashboard' = web dashboard / website changes (postModLog kind 'dashboard', else the mod log).
-const LOG_DESTINATIONS = ['audit', 'moderation', 'members', 'messages', 'server', 'community', 'dashboard', 'applications', 'reports'];
+// One list with the config schema (schemas.js), so a destination can never be saved and then dropped.
+const LOG_DESTINATIONS = LOG_CHANNEL_KEYS;
 
 const EVENT_TYPES = {
   MODERATION_BAN: 'moderation.ban',

@@ -12,12 +12,14 @@ export const LogIgnoreSchema = z
   })
   .default({ users: [], channels: [], roles: [] });
 
+// Every log channel a server can set (loggingService LOG_DESTINATIONS uses this list): the main
+// log (audit) and one per kind (owner, 2026-11-10). Bug fixed 2026-11-13: the schema and the
+// migration below knew only audit/applications/reports, so every per-kind channel was dropped on
+// save and on read and its logs kept going to the main log (tests/logDestinations.test.js).
+export const LOG_CHANNEL_KEYS = Object.freeze(['audit', 'moderation', 'members', 'messages', 'server', 'community', 'dashboard', 'applications', 'reports']);
+
 export const LoggingChannelsSchema = z
-  .object({
-    audit: z.string().nullable().optional(),
-    applications: z.string().nullable().optional(),
-    reports: z.string().nullable().optional(),
-  })
+  .object(Object.fromEntries(LOG_CHANNEL_KEYS.map((key) => [key, z.string().nullable().optional()])))
   .default({ audit: null, applications: null, reports: null });
 
 export const LoggingConfigSchema = z
@@ -178,12 +180,18 @@ function migrateLoggingConfig(raw = {}, legacy = {}) {
 
   const { channelId: _legacyChannelId, ignore: _ignore, channels: _channels, ...rest } = base;
 
+  // The per-kind channels as stored (null when unset); audit / reports keep their legacy fallbacks.
+  const perKind = Object.fromEntries(LOG_CHANNEL_KEYS
+    .filter((key) => !['audit', 'applications', 'reports'].includes(key))
+    .map((key) => [key, base.channels?.[key] ?? null]));
+
   return {
     ...DEFAULT_LOGGING,
     ...rest,
     enabled,
     channels: {
       audit: auditChannel,
+      ...perKind,
       applications: applicationsChannel,
       reports: reportsChannel,
     },
