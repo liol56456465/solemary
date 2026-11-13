@@ -97,7 +97,7 @@ async function runDecision(interaction, client, { guild, decider, decision, user
     let result;
     try {
         result = await decideQuarantine(guild, userId, {
-            decision, reason, ownerOverride, moderator, lang: tr.lang,
+            decision, reason, ownerOverride, moderator, lang: tr.lang, actorIsOwner: decider === 'owner',
             by: { id: interaction.user.id, username: interaction.user.username }, message: alertMessage,
         });
     } catch (error) {
@@ -106,6 +106,8 @@ async function runDecision(interaction, client, { guild, decider, decision, user
         if (error.partial) return answer(releaseText('partial', tr, { error: truncate(error.message || 'unknown error', 300) }));
         return answer(releaseText('failed', tr, { error: truncate(error.message || 'unknown error', 300) }));
     }
+    if (result.code === 'tooHigh') return answer(releaseText('tooHigh', tr, { roles: truncate(result.roles.map((r) => r.name).join(', '), 1000) }));
+    if (result.code === 'ownerOnly') return answer(releaseText('ownerOnly', tr));
     if (!result.ok) return answer(refusalText(result.code, tr));
     if (ownerOverride) {
         noteOwnerOverride({ client, guildId: guild.id, userId: interaction.user.id, username: interaction.user.username, action: `quarantine ${decision} of ${userId}`, via: 'button' });

@@ -391,3 +391,21 @@ test('enforcement roles: a new quarantine role with permissions, or one members 
     await run('enforcement', 'roles', ctx, { quarantineRoleId: '600000000000000013' });
     assert.deepEqual(ctx.calls.at(-1).patch, { quarantineRoleId: '600000000000000013' });
 });
+
+test('enforcement roles: only the server owner changes who decides on quarantines (Administrator → 403, nothing saved; read-only list); the owner saves (control)', async () => {
+    const R1 = '600000000000000021';
+    const admin = ctxFor(OTHER, { registry: { quarantineDeciderRoleIds: [R1] } });
+    admin.guild.roles.cache.set(R1, { id: R1, name: 'Co-owner', position: 3, managed: false });
+    await assert.rejects(run('enforcement', 'roles', admin, { quarantineDeciderRoleIds: [R1], quarantineDeciderSent: '1' }),
+        (error) => error instanceof InputError && error.status === 403 && /Only the server owner/.test(error.message));
+    await assert.rejects(run('enforcement', 'roles', admin, { quarantineDeciderSent: '1', mutedRoleId: '' }), (error) => error.status === 403, 'not even inside the shared roles form');
+    assert.equal(admin.calls.length, 0, 'nothing saved');
+    const page = String(getModule('enforcement').render(admin, await getModule('enforcement').load(admin)));
+    assert.ok(!page.includes('name="quarantineDeciderRoleIds"'), 'read-only for an Administrator');
+    assert.ok(page.includes('@Co-owner'), 'the current deciders are shown');
+    const owner = ctxFor(OTHER, { userId: OWNER_OF_OTHER });
+    owner.guild.roles.cache.set(R1, { id: R1, name: 'Co-owner', position: 3, managed: false });
+    await run('enforcement', 'roles', owner, { quarantineDeciderRoleIds: [R1], quarantineDeciderSent: '1' });
+    assert.deepEqual(owner.calls.at(-1).patch, { quarantineDeciderRoleIds: [R1] });
+    assert.ok(String(getModule('enforcement').render(owner, await getModule('enforcement').load(owner))).includes('name="quarantineDeciderRoleIds"'));
+});

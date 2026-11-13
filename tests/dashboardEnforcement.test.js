@@ -1617,7 +1617,9 @@ test('member page: Quarantine needs a reason, runs the service with the moderato
     assert.equal(state.calls.length, 0, 'no reason: nothing called');
     const ok = await post(h, h.d.enforcement.quarantine, { params: { id: TARGET }, form: { reason: 'raid alt' } });
     assert.equal(ok.statusCode, 303);
-    assert.deepEqual(state.calls[0], { fn: 'quarantine', member: TARGET, reason: 'raid alt', options: { by: { id: ADMIN, username: 'admin' }, trigger: 'manual' } });
+    const { actorMember, ...options } = state.calls[0].options;
+    assert.deepEqual({ ...state.calls[0], options }, { fn: 'quarantine', member: TARGET, reason: 'raid alt', options: { by: { id: ADMIN, username: 'admin' }, trigger: 'manual', lang: 'en' } });
+    assert.equal(actorMember.id, ADMIN, 'the service gets the moderator (hierarchy + mass-action guard)');
     assert.equal(h.auditRows.at(-1).key, `quarantine:${TARGET}`);
     state.result = { ok: false, code: 'aboveBot' };
     const refused = await post(h, h.d.enforcement.quarantine, { params: { id: TARGET }, form: { reason: 'x' } });

@@ -88,7 +88,9 @@
     "quarantineRefuseHeld": "Alcuni membri hanno già questo ruolo ({count}): Mewvo gli nasconde tutti i canali, quindi perderebbero tutti l’accesso. Crea un nuovo ruolo vuoto per la quarantena.",
     "quarantineDeciders": "Chi decide sui membri in quarantena (fino a {max} ruoli)",
     "quarantineDecidersShort": "Ruolo che decide",
-    "quarantineDecidersHelp": "Chi ha questi ruoli (e il proprietario del server) sceglie Rilascia, Espelli, Banna o Tieni per un membro in quarantena, nell’avviso o nella pagina del membro. Gli altri amministratori possono mettere in quarantena ma non decidere. I ruoli menzionati sopra sono separati."
+    "quarantineDecidersHelp": "Chi ha questi ruoli (e il proprietario del server) sceglie Rilascia, Espelli, Banna o Tieni per un membro in quarantena, nell’avviso o nella pagina del membro. Gli altri amministratori possono mettere in quarantena ma non decidere. I ruoli menzionati sopra sono separati.",
+    "quarantineDecidersNone": "Nessuno ancora: decide solo il proprietario del server.",
+    "quarantineDecidersOwnerOnly": "Solo il proprietario del server (o il proprietario del bot nei server di Mewvo) può cambiare chi decide."
   },
   "timings": {
     "title": "Ricorsi e segnalazioni",

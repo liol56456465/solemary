@@ -88,7 +88,9 @@
     "quarantineRefuseHeld": "Já há membros com este cargo ({count}): o Mewvo esconde todos os canais dele, então todos perderiam o acesso. Crie um cargo novo e vazio para a quarentena.",
     "quarantineDeciders": "Quem decide sobre membros em quarentena (até {max} cargos)",
     "quarantineDecidersShort": "Cargo que decide",
-    "quarantineDecidersHelp": "Quem tem estes cargos (e o dono do servidor) escolhe Liberar, Expulsar, Banir ou Manter para um membro em quarentena, no alerta ou na página do membro. Outros administradores podem colocar em quarentena, mas não decidir. Os cargos mencionados acima são outra coisa."
+    "quarantineDecidersHelp": "Quem tem estes cargos (e o dono do servidor) escolhe Liberar, Expulsar, Banir ou Manter para um membro em quarentena, no alerta ou na página do membro. Outros administradores podem colocar em quarentena, mas não decidir. Os cargos mencionados acima são outra coisa.",
+    "quarantineDecidersNone": "Nenhum ainda: só o dono do servidor decide.",
+    "quarantineDecidersOwnerOnly": "Só o dono do servidor (ou o dono do bot nos servidores do Mewvo) pode mudar quem decide."
   },
   "timings": {
     "title": "Apelações e denúncias",

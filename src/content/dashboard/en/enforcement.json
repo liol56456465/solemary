@@ -84,7 +84,9 @@
     "quarantineRefuseHeld": "Members already have this role ({count}): Mewvo hides every channel from it, so they would all lose access. Make a new empty role for quarantine.",
     "quarantineDeciders": "Who can decide on quarantined members (up to {max} roles)",
     "quarantineDecidersShort": "Decider role",
-    "quarantineDecidersHelp": "Holders of these roles (and the server owner) choose Release, Kick, Ban or Keep for a quarantined member, on the alert or the member page. Other Administrators can quarantine but not decide. The ping roles above are separate."
+    "quarantineDecidersHelp": "Holders of these roles (and the server owner) choose Release, Kick, Ban or Keep for a quarantined member, on the alert or the member page. Other Administrators can quarantine but not decide. The ping roles above are separate.",
+    "quarantineDecidersNone": "None set yet: only the server owner decides.",
+    "quarantineDecidersOwnerOnly": "Only the server owner (or the bot owner in Mewvo’s servers) can change who decides."
   },
   "timings": {
     "title": "Appeals and reports",

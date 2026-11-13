@@ -11,6 +11,8 @@ import { DAY, MINUTE, changedOnly, durationField, registryValue, saveRegistry, s
 import { textFor } from '../language.js';
 import { inviteOrNull } from '../../site/shell.js';
 import { isHomeScope, adminOnlyActions } from './serverScope.js';
+// The live server owner or OWNER_IDS with owner power here (the immune-list rule, automod.js).
+import { canManageImmunity as isOwnerOfServer } from './automod.js';
 
 // Words: src/content/dashboard/<lang>/enforcement.json. Reason labels (config/enforcement.js) and
 // automod rule names (config/automod.js) come from the config and stay as they are.
@@ -156,7 +158,9 @@ ${rolePicker(g, 'warnRole2', warn[1] || null, { label: t('enforcement.roles.warn
 ${rolePicker(g, 'warnRole3', warn[2] || null, { label: t('enforcement.roles.warn3') })}
 ${rolePicker(g, 'quarantineRoleId', v.quarantineRoleId, { label: t('enforcement.roles.quarantine'), help: t('enforcement.roles.quarantineHelp') })}${quarantineRoleHasPermissions(g, v.quarantineRoleId) ? html`<p class="warn">${t('enforcement.roles.quarantineHasPerms')}</p>` : ''}
 ${rolePicker(g, 'quarantinePingRoleIds', v.quarantinePingRoleIds || [], { label: t('enforcement.roles.quarantinePing', { max: tr.fmtNumber(MAX_QUARANTINE_PING_ROLES) }), assign: false, multiple: true, help: t('enforcement.roles.quarantinePingHelp') })}
-${rolePicker(g, 'quarantineDeciderRoleIds', v.quarantineDeciderRoleIds || [], { label: t('enforcement.roles.quarantineDeciders', { max: tr.fmtNumber(MAX_QUARANTINE_PING_ROLES) }), assign: false, multiple: true, help: t('enforcement.roles.quarantineDecidersHelp') })}
+${isOwnerOfServer(ctx)
+        ? html`${rolePicker(g, 'quarantineDeciderRoleIds', v.quarantineDeciderRoleIds || [], { label: t('enforcement.roles.quarantineDeciders', { max: tr.fmtNumber(MAX_QUARANTINE_PING_ROLES) }), assign: false, multiple: true, help: t('enforcement.roles.quarantineDecidersHelp') })}<input type="hidden" name="quarantineDeciderSent" value="1">`
+        : html`<div><p><strong>${t('enforcement.roles.quarantineDeciders', { max: tr.fmtNumber(MAX_QUARANTINE_PING_ROLES) })}</strong></p><p>${(v.quarantineDeciderRoleIds || []).map((id) => `@${g.roles?.cache?.get(id)?.name || id}`).join(', ') || t('enforcement.roles.quarantineDecidersNone')}</p><p class="muted">${t('enforcement.roles.quarantineDecidersOwnerOnly')}</p></div>`}
 ${channelPicker(g, 'quarantineInfoChannelId', v.quarantineInfoChannelId, { label: t('enforcement.roles.quarantineInfo'), perms: PERMS.post, help: t('enforcement.roles.quarantineInfoHelp') })}
 <input type="hidden" name="quarantinePingSent" value="1">
 </div>`, { canEdit: adminEdit });
@@ -379,7 +383,11 @@ ${section(t('enforcement.rules.stepsTitle'), steps, t('enforcement.rules.stepsHe
                         .map((id, i) => roleField(g, { r: id }, 'r', { optional: false, label: `${pingLabel} ${i + 1}` }))
                     : null;
                 const deciderLabel = tr.t('enforcement.roles.quarantineDecidersShort');
-                const deciders = form.quarantinePingSent !== undefined || form.quarantineDeciderRoleIds !== undefined
+                // Who decides on quarantined members: the live server owner / OWNER_IDS only (owner,
+                // 2026-11-13). Anyone else sending the field is refused before anything is saved.
+                const decidersSent = form.quarantineDeciderSent !== undefined || form.quarantineDeciderRoleIds !== undefined;
+                if (decidersSent && !isOwnerOfServer(ctx)) throw new InputError(tr.t('enforcement.roles.quarantineDecidersOwnerOnly'), 403, 'quarantineDeciderRoleIds');
+                const deciders = decidersSent
                     ? list(form, 'quarantineDeciderRoleIds', { max: MAX_QUARANTINE_PING_ROLES })
                         .map((id, i) => roleField(g, { r: id }, 'r', { optional: false, label: `${deciderLabel} ${i + 1}` }))
                     : null;

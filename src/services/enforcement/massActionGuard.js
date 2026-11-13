@@ -25,6 +25,37 @@ import { resolveSetting } from '../settings/guildSettings.js';
 
 
 const blockKey = (guildId, moderatorId) => `enforcement:massguard:${guildId}:${moderatorId}`;
+// Manual quarantines (no case, so the case count never sees them): their times per moderator, kept
+// for the window (security review 2026-11-13: a rogue admin must not quarantine the whole server).
+const quarantineTimesKey = (guildId, moderatorId) => `enforcement:massguard:quarantines:${guildId}:${moderatorId}`;
+
+// The case-count query, replaceable in tests (setMassGuardDepsForTest).
+const defaultGuardDeps = { recentBanKickCount: (...args) => recentBanKickCount(...args) };
+let guardDeps = { ...defaultGuardDeps };
+/** Test hook (no argument restores the real query). */
+export function setMassGuardDepsForTest(overrides = null) {
+    guardDeps = overrides ? { ...defaultGuardDeps, ...overrides } : { ...defaultGuardDeps };
+}
+
+/** Manual quarantines this moderator made within the window (key-value store). Throws on a DB error. */
+export async function recentQuarantineCount(guildId, moderatorId, windowMs = resolveSetting(guildId, 'massActionWindowMs'), now = Date.now()) {
+    const times = await db.get(quarantineTimesKey(guildId, moderatorId), null);
+    return (Array.isArray(times) ? times : []).filter((at) => now - Number(at) < windowMs).length;
+}
+
+/**
+ * Records one manual quarantine for the guard, before it is applied (a failed write stops the
+ * quarantine: the count never silently misses one). One locked read-modify-write (db.update).
+ * Throws on a DB error.
+ */
+export async function noteManualQuarantine(guildId, moderatorId, now = Date.now()) {
+    const windowMs = resolveSetting(guildId, 'massActionWindowMs');
+    await db.update(quarantineTimesKey(guildId, moderatorId), (current) => {
+        const times = (Array.isArray(current) ? current : []).filter((at) => now - Number(at) < windowMs);
+        times.push(now);
+        return times.slice(-500);
+    }, []);
+}
 
 /** Undo actions: never refused by the guard, also while blocked (audit 1.4). */
 export const ALWAYS_ALLOWED_ACTIONS = Object.freeze(new Set(['unban', 'unmute']));
@@ -165,7 +196,7 @@ async function blockModerator(guild, moderator, count, attempted) {
     const summaryParams = { name, id: moderator.id, count, minutes: windowMinutes };
     const localSummary = mutes
         ? tr.t('staff.staff.massGuard.summaryMutes', summaryParams)
-        : (attempted === 'kick' ? tr.t('staff.staff.massGuard.summaryKick', summaryParams) : tr.t('staff.staff.massGuard.summaryBan', summaryParams));
+        : (attempted === 'kick' || attempted === 'quarantine' ? tr.t('staff.staff.massGuard.summaryKick', summaryParams) : tr.t('staff.staff.massGuard.summaryBan', summaryParams));
     const untilStamp = Math.floor(Date.parse(until) / 1000);
     // Imported lazily: enforcementService imports this module.
     const { postModLog } = await import('./enforcementService.js');
@@ -217,8 +248,9 @@ export async function enforceMassActionGuard(guild, moderator, actionType, { lan
     if (existing) throw blockedError(existing, guild.id, lang);
     let count;
     let limit;
-    if (actionType === 'ban' || actionType === 'kick') {
-        count = await recentBanKickCount(guild.id, moderator.id);
+    if (actionType === 'ban' || actionType === 'kick' || actionType === 'quarantine') {
+        // Manual quarantines count like kicks (same limit, same window, one combined count).
+        count = await guardDeps.recentBanKickCount(guild.id, moderator.id) + await recentQuarantineCount(guild.id, moderator.id);
         limit = resolveSetting(guild.id, 'massActionLimit');
     } else if (actionType === 'mute') {
         count = await recentMuteCount(guild.id, moderator.id);

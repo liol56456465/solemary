@@ -18,6 +18,8 @@
 //   otherFallback  the default in a server that is NOT one of Mewvo's home servers, when it
 //              differs from `fallback` (neutralValue)
 //   sensitive  never shown in full on a page or in the audit log
+//   ownerOnly  only the live server owner / OWNER_IDS here may change it (also not through a
+//              settings backup file)
 //   schema     zod schema every new value must pass
 //
 // Pure: no database, no Discord. ENFORCEMENT_REASONS, the warn ladder and the automod
@@ -199,7 +201,7 @@ export const SETTINGS = Object.freeze([
         // Who decides on a quarantined member (Release, Kick, Ban, Keep on the alert and the member
         // page): these roles, plus the server owner and OWNER_IDS in Mewvo's servers. Ordinary
         // Administrators can quarantine by hand but not decide (owner, 2026-11-13).
-        key: 'quarantineDeciderRoleIds', module: 'enforcement', kind: 'list', itemKind: 'role', guild: 'main',
+        key: 'quarantineDeciderRoleIds', module: 'enforcement', kind: 'list', itemKind: 'role', guild: 'main', ownerOnly: true,
         label: 'Who can decide on quarantined members', env: null, fallback: [],
         schema: z.array(snowflake).max(5, 'at most 5 roles'),
     },

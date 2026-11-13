@@ -153,7 +153,9 @@
             "database": "Die Datenbank antwortet nicht, daher wurde nichts geändert.",
             "assignFailed": "Discord hat die Rollenänderung abgelehnt, daher wurde nichts geändert.",
             "failed": "Die Quarantäne hat nicht funktioniert, daher wurde nichts geändert.",
-            "roleHasPermissions": "Die Quarantäne-Rolle hat eigene Berechtigungen, daher verwendet Mewvo sie nicht (jedes Mitglied unter Quarantäne bekäme sie). Gib ihr keine Berechtigungen."
+            "roleHasPermissions": "Die Quarantäne-Rolle hat eigene Berechtigungen, daher verwendet Mewvo sie nicht (jedes Mitglied unter Quarantäne bekäme sie). Gib ihr keine Berechtigungen.",
+            "yourself": "Du kannst dich nicht selbst unter Quarantäne stellen.",
+            "aboveActor": "Die höchste Rolle dieses Mitglieds liegt auf oder über deiner."
         },
         "release": {
             "adminOnly": "Nur Administratoren können jemanden aus der Quarantäne freigeben.",

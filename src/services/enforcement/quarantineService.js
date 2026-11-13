@@ -51,6 +51,7 @@ import { CUSTOM_REASON_KEY } from '../../config/enforcement.js';
 import { startFlow } from './flowBuilder.js';
 import { executeAction } from './enforcementService.js';
 import { Mutex } from '../../utils/mutex.js';
+import { enforceMassActionGuard, noteManualQuarantine } from './massActionGuard.js';
 
 export const QUARANTINE_DENY_NAMES = Object.freeze(['ViewChannel']);
 // The info channel: readable, never writable.
@@ -83,6 +84,8 @@ const defaultDeps = {
     postAlert: (...args) => postAlert(...args),
     postModLog: (...args) => postModLog(...args),
     executeAction: (...args) => executeAction(...args),
+    enforceMassActionGuard: (...args) => enforceMassActionGuard(...args),
+    noteManualQuarantine: (...args) => noteManualQuarantine(...args),
     hasOwnerPower: (...args) => hasOwnerPower(...args),
 };
 let deps = { ...defaultDeps };
@@ -159,8 +162,13 @@ export function quarantineReady(guild) {
     return Boolean(guild && quarantineRoleProblem(guild, quarantineRoleOf(guild)) === null);
 }
 
-/** Why `member` may not be quarantined (a refusal code), or null: the owner, Mewvo, bots, at/above Mewvo. */
-export function targetRefusal(guild, member) {
+/**
+ * Why `member` may not be quarantined (a refusal code), or null: the owner, Mewvo, bots, at/above
+ * Mewvo. A manual quarantine passes `actorMember` (the moderator): never themselves, never someone
+ * whose highest role is at or above theirs, unless they are the live server owner or OWNER_IDS
+ * with owner power here (`actorIsOwner`), like every other moderation action.
+ */
+export function targetRefusal(guild, member, { actorMember = null, actorIsOwner = false } = {}) {
     if (!member) return 'notInServer';
     const id = member.id || member.user?.id;
     if (id === guild.ownerId) return 'owner';
@@ -168,7 +176,16 @@ export function targetRefusal(guild, member) {
     if (id === me?.id || id === guild.client?.user?.id) return 'self';
     if (member.user?.bot) return 'bot';
     if (highest(member) >= highest(me)) return 'aboveBot';
+    if (actorMember && !actorIsOwner) {
+        if (id === actorMember.id) return 'yourself';
+        if (highest(member) >= highest(actorMember)) return 'aboveActor';
+    }
     return null;
+}
+
+/** True when `userId` is the live server owner or OWNER_IDS with owner power in `guild`. */
+export function isOwnerHere(guild, userId) {
+    return Boolean(userId && (guild?.ownerId === userId || deps.hasOwnerPower(userId, guild?.id)));
 }
 
 /** The text for a refusal code, in `tr`'s language. */
@@ -376,14 +393,24 @@ async function sendQuarantineDm(member, reason) {
  * Returns { ok: true, removed, kept, dmDelivered, alertPosted } or { ok: false, code } (nothing
  * changed). A database error on the record write throws (nothing changed).
  */
-export async function quarantineMember(member, reason, { by = null, automated = false, trigger = 'manual', extraComponents = [], reasonText = null } = {}) {
+export async function quarantineMember(member, reason, options = {}) {
+    // A manual quarantine: one at a time per moderator, so parallel requests cannot all pass the
+    // mass-action guard on the same count.
+    const actor = options.actorMember;
+    if (actor && member?.guild) return Mutex.runExclusive(`massguard:q:${member.guild.id}:${actor.id}`, () => quarantineUnlocked(member, reason, options));
+    return quarantineUnlocked(member, reason, options);
+}
+
+async function quarantineUnlocked(member, reason, { by = null, automated = false, trigger = 'manual', extraComponents = [], reasonText = null, actorMember = null, lang = 'en' } = {}) {
     const guild = member?.guild;
     if (!guild) return { ok: false, code: 'notInServer' };
     if (!deps.dbAvailable()) return { ok: false, code: 'database' };
     const role = quarantineRoleOf(guild);
     const roleProblem = quarantineRoleProblem(guild, role);
     if (roleProblem) return { ok: false, code: roleProblem };
-    const refusal = targetRefusal(guild, member);
+    // A manual quarantine (`actorMember`): the moderator's hierarchy and the mass-action guard apply.
+    const actorIsOwner = Boolean(actorMember && isOwnerHere(guild, actorMember.id));
+    const refusal = targetRefusal(guild, member, { actorMember, actorIsOwner });
     if (refusal) return { ok: false, code: refusal };
 
     const key = quarantineKey(guild.id, member.id);
@@ -391,6 +418,14 @@ export async function quarantineMember(member, reason, { by = null, automated = 
         // Already quarantined (e.g. a second raid hit): make sure the role is on, change nothing else.
         if (!member.roles.cache.has(role.id)) await member.roles.add(role, 'Quarantine (already recorded)').catch(() => {});
         return { ok: false, code: 'already' };
+    }
+
+    // Counted like a kick (throws the guard's refusal when blocked or over the limit; OWNER_IDS at home
+    // exempt), and recorded before it is applied: a failed write stops it (fail closed).
+    let warning = null;
+    if (actorMember) {
+        warning = (await deps.enforceMassActionGuard(guild, actorMember, 'quarantine', { lang }))?.warning ?? null;
+        await deps.noteManualQuarantine(guild.id, actorMember.id);
     }
 
     const cleanReason = oneLine(reason).slice(0, REASON_MAX) || 'No reason given';
@@ -455,7 +490,7 @@ export async function quarantineMember(member, reason, { by = null, automated = 
         guildId: guild.id, title: alert.title, subject: { id: member.id, username: member.user?.username || member.id }, automated: Boolean(automated),
     }).catch((error) => logger.warn(`Quarantine mod log for ${member.id} failed: ${error.message}`));
 
-    return { ok: true, removed: take, kept: keep, dmDelivered, alertPosted: Boolean(message), record };
+    return { ok: true, removed: take, kept: keep, dmDelivered, alertPosted: Boolean(message), record, warning };
 }
 
 /**
@@ -748,9 +783,32 @@ export async function decideQuarantine(guild, userId, options = {}) {
     return Mutex.runExclusive(`quarantine:${guild.id}:${userId}`, () => decideUnlocked(guild, userId, options));
 }
 
-async function decideUnlocked(guild, userId, { decision, by, moderator = null, reason = '', ownerOverride = false, message = null, lang = 'en' } = {}) {
+/**
+ * The gates Release, Kick and Ban share (security review 2026-11-13), or null. Pure. Not for the
+ * live server owner / OWNER_IDS here: a staff guard quarantine in Mewvo's own servers is
+ * owner-only (like /staff restore), and no decider may act on someone whose SAVED roles reach
+ * their own highest role (while quarantined the target holds only the quarantine role, so the
+ * live hierarchy check of executeAction would let a demoted senior be kicked or banned).
+ * Returns { code: 'ownerOnly' } | { code: 'tooHigh', roles } | null.
+ */
+export function decisionGate(guild, record, { actorIsOwner = false, moderator = null, home = isMewvoServer(guild?.id) } = {}) {
+    if (!record || actorIsOwner) return null;
+    if (record.trigger === 'staffGuard' && home) return { code: 'ownerOnly' };
+    const roles = tooHighRoles(guild, record, moderator);
+    return roles.length ? { code: 'tooHigh', roles } : null;
+}
+
+async function decideUnlocked(guild, userId, { decision, by, moderator = null, reason = '', ownerOverride = false, message = null, lang = 'en', actorIsOwner = null } = {}) {
     const key = quarantineKey(guild.id, userId);
     const byName = `${by?.username || '?'}${ownerOverride ? ' (owner override)' : ''}`;
+    // Who the decider is, checked here so every caller gets the gates (Discord buttons, dashboard).
+    const ownerHere = actorIsOwner ?? isOwnerHere(guild, by?.id || moderator?.id);
+    if (decision !== 'keep') {
+        const current = await deps.getFromDb(key, null);
+        if (!current) return { ok: false, code: 'none' };
+        const gate = decisionGate(guild, current, { actorIsOwner: ownerHere, moderator });
+        if (gate) return { ok: false, ...gate };
+    }
     if (decision === 'release') {
         const released = await releaseUnlocked(guild, userId, { by, ownerOverride, message });
         return released.ok ? { ...released, decision } : released;

@@ -92,7 +92,9 @@
     "quarantineRefuseHeld": "Członkowie mają już tę rolę ({count}): Mewvo ukrywa przed nią wszystkie kanały, więc wszyscy straciliby dostęp. Utwórz nową, pustą rolę do kwarantanny.",
     "quarantineDeciders": "Kto decyduje o osobach na kwarantannie (do {max} ról)",
     "quarantineDecidersShort": "Rola decydująca",
-    "quarantineDecidersHelp": "Osoby z tymi rolami (i właściciel serwera) wybierają Zwolnij, Wyrzuć, Zbanuj lub Zostaw dla osoby na kwarantannie, w alercie lub na stronie członka. Inni administratorzy mogą nałożyć kwarantannę, ale nie decydować. Oznaczane role powyżej to coś innego."
+    "quarantineDecidersHelp": "Osoby z tymi rolami (i właściciel serwera) wybierają Zwolnij, Wyrzuć, Zbanuj lub Zostaw dla osoby na kwarantannie, w alercie lub na stronie członka. Inni administratorzy mogą nałożyć kwarantannę, ale nie decydować. Oznaczane role powyżej to coś innego.",
+    "quarantineDecidersNone": "Jeszcze nie ustawiono: decyduje tylko właściciel serwera.",
+    "quarantineDecidersOwnerOnly": "Tylko właściciel serwera (lub właściciel bota na serwerach Mewvo) może zmienić, kto decyduje."
   },
   "timings": {
     "title": "Odwołania i zgłoszenia",

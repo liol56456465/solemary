@@ -119,7 +119,7 @@ function addMember(guild, id, roleIds, { bot = false, highest = null, admin = fa
     return member;
 }
 
-function fakeDeps({ settings = {}, store = new Map(), failSet = false, dbUp = true } = {}) {
+function fakeDeps({ settings = {}, store = new Map(), failSet = false, dbUp = true, realGuard = false } = {}) {
     const log = { dms: [], alerts: [], modLog: [] };
     q.setQuarantineDepsForTest({
         getFromDb: async (key, fallback = null) => (store.has(key) ? structuredClone(store.get(key)) : fallback),
@@ -134,6 +134,8 @@ function fakeDeps({ settings = {}, store = new Map(), failSet = false, dbUp = tr
         postModLog: async (client, kind, fields, o) => { log.modLog.push({ kind, fields, ...o }); return true; },
         executeAction: async (o) => { log.actions = [...(log.actions || []), o]; return { record: { case_code: 'abc2345' } }; },
         hasOwnerPower: (userId) => userId === '300000000000000099',
+        // The mass-action guard needs the case table; tests that check it pass realGuard (KV only).
+        ...(realGuard ? {} : { enforceMassActionGuard: async () => undefined, noteManualQuarantine: async () => {} }),
     });
     return { store, log };
 }
@@ -734,4 +736,111 @@ test('decisions run one at a time per member: a Keep racing a Ban never writes t
     assert.equal(ban.ok, true);
     assert.deepEqual(keep, { ok: false, code: 'none' });
     assert.equal(store.size, 0, 'the ban removed the record and nothing brought it back');
+});
+
+// ── security review fixes (2026-11-13) ───────────────────────────────────
+
+const { setMassGuardDepsForTest } = await import('../src/services/enforcement/massActionGuard.js');
+
+test('manual quarantine: never yourself, never someone at or above you (nothing changed); the server owner may (control)', async () => {
+    setSettingsCacheForTests(G, {});
+    const guild = makeWorld();
+    const { store } = fakeDeps({ settings: { quarantineRoleId: Q_ROLE } });
+    const admin = addMember(guild, MOD, [HELPER_ROLE], { admin: true });
+    const senior = addMember(guild, '300000000000000030', [HEAD_B], { admin: true });
+    assert.deepEqual(await q.quarantineMember(senior, 'x', { actorMember: admin }), { ok: false, code: 'aboveActor' });
+    assert.deepEqual(await q.quarantineMember(admin, 'x', { actorMember: admin }), { ok: false, code: 'yourself' });
+    assert.equal(store.size, 0);
+    assert.equal(guild.calls.length, 0, 'nothing changed');
+    const owner = addMember(guild, OWNER, [MEMBER_ROLE], { admin: true });
+    assert.equal(targetIsOk(q.targetRefusal(guild, senior, { actorMember: owner, actorIsOwner: true })), true);
+    const ok = await q.quarantineMember(senior, 'x', { actorMember: owner });
+    assert.equal(ok.ok, true, 'the live server owner is above the hierarchy');
+});
+const targetIsOk = (code) => code === null;
+
+test('mass-action guard: the 6th manual quarantine within the window is blocked; automatic quarantines do not count (control)', async () => {
+    memoryDb();
+    setSettingsCacheForTests(G, {});
+    setMassGuardDepsForTest({ recentBanKickCount: async () => 0 });
+    try {
+        const guild = makeWorld();
+        guild.client.users = { fetch: async () => null };
+        const store = new Map();
+        fakeDeps({ settings: { quarantineRoleId: Q_ROLE }, store, realGuard: true });
+        // The real guard and counter (its case query stubbed to 0 above).
+        const moderator = addMember(guild, MOD, [HEAD_B], { admin: true });
+        const targets = Array.from({ length: 6 }, (_, i) => addMember(guild, `30000000000000005${i}`, [MEMBER_ROLE]));
+        for (const target of targets.slice(0, 5)) assert.equal((await q.quarantineMember(target, 'x', { actorMember: moderator })).ok, true);
+        await assert.rejects(q.quarantineMember(targets[5], 'x', { actorMember: moderator }), (error) => /paused|blocked|Safety|limit/i.test(error.userMessage || error.message));
+        assert.ok(!store.has(q.quarantineKey(G, targets[5].id)), 'the 6th was not quarantined');
+        // Control: automatic quarantines (no moderator) are the bot's own and never counted.
+        const more = Array.from({ length: 6 }, (_, i) => addMember(guild, `30000000000000006${i}`, [MEMBER_ROLE]));
+        for (const target of more) assert.equal((await q.quarantineMember(target, 'raid', { automated: true, trigger: 'raid' })).ok, true);
+    } finally {
+        setMassGuardDepsForTest(null);
+    }
+});
+
+test('decisions: a decider below the SAVED roles is refused for release, kick and ban; a home staff-guard quarantine is owner-only; the owner may (control)', async () => {
+    setSettingsCacheForTests(G, {});
+    const guild = makeWorld();
+    const { store, log } = fakeDeps({ settings: { quarantineRoleId: Q_ROLE } });
+    addMember(guild, TARGET, [Q_ROLE]);
+    const decider = addMember(guild, '300000000000000020', [HEAD_B], { admin: true }); // position 7
+    const record = { roleId: Q_ROLE, roles: [HEAD_A], reason: 'demoted senior', trigger: 'raid' }; // HEAD_A: position 8
+    for (const decision of ['release', 'kick', 'ban']) {
+        store.set(q.quarantineKey(G, TARGET), structuredClone(record));
+        const res = await q.decideQuarantine(guild, TARGET, { decision, by: { id: decider.id, username: 'co' }, moderator: decider, reason: 'r' });
+        assert.equal(res.code, 'tooHigh', decision);
+        assert.ok(store.has(q.quarantineKey(G, TARGET)), `${decision}: nothing changed`);
+    }
+    assert.equal((log.actions || []).length, 0, 'no kick or ban ran');
+    // Control: the live server owner may.
+    const owner = addMember(guild, OWNER, [MEMBER_ROLE], { admin: true });
+    const kicked = await q.decideQuarantine(guild, TARGET, { decision: 'kick', by: { id: OWNER, username: 'owner' }, moderator: owner });
+    assert.equal(kicked.ok, true);
+
+    // A staff guard quarantine in Mewvo's own servers: owner only, also for kick and ban.
+    const home = makeWorld({ guildId: MAIN });
+    addMember(home, TARGET, [Q_ROLE]);
+    const co = addMember(home, '300000000000000020', [HEAD_A], { admin: true });
+    const homeDeps = fakeDeps({ settings: { quarantineRoleId: Q_ROLE } });
+    homeDeps.store.set(q.quarantineKey(MAIN, TARGET), { roleId: Q_ROLE, roles: [MEMBER_ROLE], reason: 'x', trigger: 'staffGuard' });
+    const refused = await q.decideQuarantine(home, TARGET, { decision: 'ban', by: { id: co.id, username: 'co' }, moderator: co, reason: 'r' });
+    assert.equal(refused.code, 'ownerOnly');
+});
+
+test('mass-action guard: six manual quarantines sent at once still block the 6th (one at a time per moderator)', async () => {
+    memoryDb();
+    setSettingsCacheForTests(G, {});
+    setMassGuardDepsForTest({ recentBanKickCount: async () => 0 });
+    try {
+        const guild = makeWorld();
+        guild.client.users = { fetch: async () => null };
+        const store = new Map();
+        fakeDeps({ settings: { quarantineRoleId: Q_ROLE }, store, realGuard: true });
+        const moderator = addMember(guild, '300000000000000040', [HEAD_B], { admin: true });
+        const targets = Array.from({ length: 6 }, (_, i) => addMember(guild, `30000000000000007${i}`, [MEMBER_ROLE]));
+        const results = await Promise.allSettled(targets.map((t) => q.quarantineMember(t, 'x', { actorMember: moderator })));
+        assert.equal(results.filter((r) => r.status === 'fulfilled' && r.value.ok).length, 5);
+        assert.equal(results.filter((r) => r.status === 'rejected').length, 1);
+    } finally {
+        setMassGuardDepsForTest(null);
+    }
+});
+
+test('settings backup: who decides on quarantines is skipped for a non-owner and loaded for the owner (control)', async () => {
+    const { planBackup, planHasOwnerOnly } = await import('../src/services/settings/settingsBackup.js');
+    const env = { MAIN_GUILD_ID: MAIN, SUPPORT_GUILD_ID: '100000000000000002', NODE_ENV: 'test' };
+    const file = JSON.stringify({ format: 'mewvo-settings-v1', guilds: { main: { settings: { quarantineDeciderRoleIds: [HEAD_A] } } } });
+    const read = () => [];
+    const admin = planBackup(file, { env, read });
+    if (!admin.ok) return assert.fail(admin.error);
+    assert.equal(admin.changes.length, 0);
+    assert.ok(admin.problems.some((p) => /only be changed by the server owner/.test(p)));
+    const owner = planBackup(file, { env, read, ownerSettings: true });
+    assert.deepEqual(owner.changes.map((c) => c.key), ['quarantineDeciderRoleIds']);
+    assert.equal(planHasOwnerOnly(owner), true);
+    assert.equal(planHasOwnerOnly(admin), false);
 });

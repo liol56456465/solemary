@@ -159,7 +159,9 @@
             "database": "O banco de dados não está respondendo, então nada foi alterado.",
             "assignFailed": "O Discord recusou a mudança de cargos, então nada foi alterado.",
             "failed": "A quarentena não funcionou, então nada foi alterado.",
-            "roleHasPermissions": "O cargo de quarentena tem permissões próprias, então o Mewvo não vai usá-lo (todo membro em quarentena as receberia). Não dê nenhuma permissão a ele."
+            "roleHasPermissions": "O cargo de quarentena tem permissões próprias, então o Mewvo não vai usá-lo (todo membro em quarentena as receberia). Não dê nenhuma permissão a ele.",
+            "yourself": "Você não pode colocar a si mesmo em quarentena.",
+            "aboveActor": "O cargo mais alto deste membro está no nível do seu ou acima."
         },
         "release": {
             "adminOnly": "Só administradores podem liberar alguém da quarentena.",
