@@ -41,6 +41,7 @@ import {
 import { dueHeadsUps, finishHeadsUp, giveHeadsUp, peekHeadsUp, pendingHeadsUpRule, takeHeadsUp } from './headsUp.js';
 import { getFromDb, setInDb } from '../../utils/database.js';
 import { noteRepeatHit, postReviewCard } from './reviewCards.js';
+import { logAutomod, memberLine, shouldLogHit } from './automodLog.js';
 import * as reasons from './reasons.js';
 import { customRuleDefinition, customRuleKey, findCustomRuleHit, resetCustomRulesCache, ruleDefinition } from './customRules.js';
 import { markOwnDelete } from '../logTamperService.js';
@@ -406,6 +407,18 @@ export async function handleAdminHits(message, hits, { deleteQuietly: remove = d
         { name: 'Channel', value: `<#${message.channel.id}>` },
         { name: 'Action', value: enforced ? 'Message removed (no warn, mute or ban for administrators)' : 'Only reported (rule is in watch mode)' },
     ], { guildId: message.guild.id }).catch((error) => logger.warn(`Automod admin report failed: ${error.message}`));
+    void logAutomod(message.client, message.guild.id, {
+        type: 'flag',
+        title: 'Automod: administrator message',
+        subject: { id: message.author.id, username: message.author.username },
+        channelId: message.channel.id,
+        fields: [
+            { name: 'Member', value: memberLine(message.author) },
+            { name: 'Rule', value: String(rules) || 'unknown' },
+            { name: 'Channel', value: `<#${message.channel.id}>` },
+            { name: 'Done', value: enforced ? 'Message removed (no warn, mute or ban for administrators)' : 'Only reported (rule is in watch mode)' },
+        ],
+    });
     return true;
 }
 
@@ -427,7 +440,7 @@ export async function handleImmuneHits(message, hits, { postReviewCard: post = p
             guild: message.guild, rule: hit.rule, evidence: hit.evidence, detail: hit.detail, targetUser: message.author,
             channelId: message.channelId, messageUrl: message.url, content: excerpt(message),
             ...(hit.ruleLabel ? { ruleLabel: hit.ruleLabel } : {}),
-            note: { title: '🛡 Immune member, message kept', link: true }, deleted: false,
+            note: { title: '🛡 Immune member, message kept', link: true }, deleted: false, logKind: 'flag',
         }).catch((error) => logger.warn(`Automod immune report failed: ${error.message}`));
     }
     return true;
@@ -471,7 +484,7 @@ async function giveSecondChance(message, hit, { settings, offences, card, probat
         allowedMentions: { users: [author.id] },
     }).catch(() => null);
     if (notice) setTimeout(() => { markOwnDelete(notice.id); notice.delete().catch(() => {}); }, automodConfig.secondChanceNoticeMs).unref?.();
-    await postReviewCard({ ...card, note: { title: 'Friendly notice (first small offence)' }, deleted });
+    await postReviewCard({ ...card, note: { title: 'Friendly notice (first small offence)' }, deleted, logKind: 'notice' });
     return true;
 }
 
@@ -617,6 +630,20 @@ async function applyNewMemberLimits(message, member, now) {
         allowedMentions: { users: [message.author.id] },
     }).catch(() => null);
     if (notice) setTimeout(() => { markOwnDelete(notice.id); notice.delete().catch(() => {}); }, 8000).unref?.();
+    // The Automod log: one record per member per burst window, not one per message.
+    if (shouldLogHit(`newmember:${message.guildId}:${message.author.id}`, null, now)) {
+        void logAutomod(message.client, message.guildId, {
+            type: 'action',
+            title: 'Automod: new member limits',
+            subject: { id: message.author.id, username: message.author.username },
+            channelId: message.channelId,
+            fields: [
+                { name: 'Member', value: memberLine(message.author) },
+                { name: 'Channel', value: `<#${message.channelId}>` },
+                { name: 'Done', value: `Message deleted: ${reason}` },
+            ],
+        });
+    }
     return true;
 }
 

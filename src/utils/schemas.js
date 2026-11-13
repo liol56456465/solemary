@@ -16,7 +16,7 @@ export const LogIgnoreSchema = z
 // log (audit) and one per kind (owner, 2026-11-10). Bug fixed 2026-11-13: the schema and the
 // migration below knew only audit/applications/reports, so every per-kind channel was dropped on
 // save and on read and its logs kept going to the main log (tests/logDestinations.test.js).
-export const LOG_CHANNEL_KEYS = Object.freeze(['audit', 'moderation', 'members', 'messages', 'server', 'community', 'dashboard', 'applications', 'reports']);
+export const LOG_CHANNEL_KEYS = Object.freeze(['audit', 'moderation', 'members', 'messages', 'server', 'community', 'dashboard', 'automod', 'applications', 'reports']);
 
 export const LoggingChannelsSchema = z
   .object(Object.fromEntries(LOG_CHANNEL_KEYS.map((key) => [key, z.string().nullable().optional()])))

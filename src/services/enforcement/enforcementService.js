@@ -5,7 +5,7 @@
 import { ChannelType, PermissionFlagsBits } from 'discord.js';
 import { enforcementConfig } from '../../config/enforcement.js';
 import { ModerationService } from '../moderation/moderationService.js';
-import { logEvent, EVENT_TYPES, resolveLogChannel } from '../loggingService.js';
+import { logEvent, EVENT_TYPES, hasAutomodLog, postToLogDestination, resolveLogChannel } from '../loggingService.js';
 import { logForumId, sendToLogForum } from '../logForum.js';
 import { getGuildConfig } from '../config/guildConfig.js';
 import { Mutex } from '../../utils/mutex.js';
@@ -304,17 +304,24 @@ export async function postModLog(client, action, fields, {
     // { id, username } of the member the entry is about (the punished member, the dashboard user):
     // picks their post when this kind is "Advanced" (logForum.js); without it the "Server logs" post.
     subject = null,
+    // Made by automod or another automatic system, not by a staff member (owner, 2026-11-13: "the
+    // moderation will only be when a staff himself does it"): goes to the Automod log (Logging page,
+    // a channel or a forum) when the staff server has one; without one, or when that post fails,
+    // where this kind goes as before (nothing disappears). Any kind.
+    automated = false,
 } = {}) {
     const purpose = channelPurposeFor(action);
     let channelId;
     let forumId = null;
+    let automodLogConfig = null;
     try {
         channelId = resolveChannelId(sourceGuildId, purpose);
         // Records in the mod log (punishments, case edits, appeals) and dashboard/website changes may
         // be "Advanced" (a forum, one post per member; Logging page). A config read error keeps the normal channel.
         const forumKind = action === 'dashboard' ? 'dashboard' : purpose === 'modlog' ? 'modlog' : null;
-        if (forumKind) {
+        if (forumKind || automated) {
             const config = await getGuildConfig(client, staffGuildId(sourceGuildId)).catch(() => null);
+            if (automated && config && hasAutomodLog(config)) automodLogConfig = config;
             // Dashboard/website changes: their own log channel when one is set (Logging page).
             if (action === 'dashboard') {
                 const own = config ? resolveLogChannel(config, 'dashboard') : null;
@@ -334,6 +341,11 @@ export async function postModLog(client, action, fields, {
     const embed = ACTION_KINDS.has(action) && !title
         ? createEmbed({ description: formatModLogLine(action, fields), color, timestamp: true })
         : createEmbed({ title: title || defaultTitle, description, fields, color, footer, timestamp: true });
+    if (automodLogConfig) {
+        const posted = await postToLogDestination(client, guildId, 'automod', { embeds: [embed], files }, { subject: about, config: automodLogConfig });
+        if (posted) return true;
+        logger.warn(`Automod log post (${action}) failed in guild ${guildId}; posting where it went before`);
+    }
     if (forumId) {
         const forumGuild = client.guilds?.cache?.get(guildId);
         const posted = forumGuild ? await sendToLogForum({ guild: forumGuild, forumId, subject: about, payload: { embeds: [embed], files } }) : null;
@@ -369,7 +381,12 @@ export async function postModLog(client, action, fields, {
     });
 }
 
-export async function logEnforcement(client, guildId, action, { record = null, target, moderatorLabel, extra = [] }) {
+/**
+ * The record of one enforcement action. `automated`: made by the bot itself (automod, a ladder ban
+ * after an automod warn): the Automod log when the server has one (postModLog `automated`); staff
+ * actions always stay in the mod log.
+ */
+export async function logEnforcement(client, guildId, action, { record = null, target, moderatorLabel, extra = [], automated = false }) {
     const fields = [
         { name: 'User', value: `${target.username} (${target.id})` },
         { name: 'Moderator', value: moderatorLabel },
@@ -402,14 +419,16 @@ export async function logEnforcement(client, guildId, action, { record = null, t
     } catch {
         hasModLog = false;
     }
-    // An "Advanced" mod log (a forum, Logging page) counts as a mod log too.
+    // An "Advanced" mod log (a forum, Logging page) counts as a mod log too, and for an automated
+    // record (automod, owner 2026-11-13) the Automod log, where postModLog then puts it.
     if (!hasModLog) {
-        hasModLog = Boolean(logForumId(await getGuildConfig(client, staffGuildId(guildId)).catch(() => null), 'modlog'));
+        const config = await getGuildConfig(client, staffGuildId(guildId)).catch(() => null);
+        hasModLog = Boolean(logForumId(config, 'modlog')) || (automated && Boolean(config) && hasAutomodLog(config));
     }
     // The member's post when the mod log is "Advanced" (logForum.js).
     const subject = { id: target.id, username: target.username };
-    // Posted in the mod log: done. Not posted (channel gone, no access): the general log copy.
-    if (hasModLog && !record?.is_test && await postModLog(client, action, fields, { guildId, subject })) return;
+    // Posted in the mod log (or the Automod log): done. Not posted (channel gone, no access): the general log copy.
+    if (hasModLog && !record?.is_test && await postModLog(client, action, fields, { guildId, subject, automated })) return;
     await logEvent({
         client,
         guildId,
@@ -417,7 +436,15 @@ export async function logEnforcement(client, guildId, action, { record = null, t
         data: { userId: target.id, username: target.username, fields },
     }).catch((error) => logger.warn(`Enforcement log failed: ${error.message}`));
     if (record?.is_test) return;
+    // The Automod log was already tried above (when set): this last attempt is the mod log only, so a
+    // record never lands in both the general log and the Automod log.
     await postModLog(client, action, fields, { guildId, subject });
+}
+
+/** True when the bot itself is the moderator (executeSystemAction: automod and other automatic actions). */
+function isSystemModerator(guild, moderator) {
+    const botId = guild?.client?.user?.id || guild?.members?.me?.id;
+    return Boolean(botId && moderator?.id && String(moderator.id) === String(botId));
 }
 
 function moderatorFields(moderator) {
@@ -612,7 +639,7 @@ async function doBan({ guild, moderator, targetUser, targetMember = null, flow, 
         auditReason: `${record.case_code}: ${record.reason} (by ${moderator.user.username})`,
         dmComponents: dmComponentsFor(flow, record),
     });
-    await logEnforcement(guild.client, guild.id, 'ban', { record, target: targetUser, moderatorLabel: moderatorLabel(moderator) });
+    await logEnforcement(guild.client, guild.id, 'ban', { record, target: targetUser, moderatorLabel: moderatorLabel(moderator), automated: isSystemModerator(guild, moderator) });
     return { record, dmDelivered: record.dm_delivered, notes: [] };
 }
 
@@ -646,7 +673,7 @@ async function doKick({ guild, moderator, targetUser, targetMember, flow, lang =
     // A kicked member gets no temporary role back when they rejoin.
     await endTempRoles(guild.id, targetUser.id).catch((error) => logger.warn(`Temporary roles not ended after kick ${record.case_code}: ${error.message}`));
     const notes = invite ? [] : [tr.t('staff.enfCheck.note.noInvite')];
-    await logEnforcement(guild.client, guild.id, 'kick', { record, target: targetUser, moderatorLabel: moderatorLabel(moderator) });
+    await logEnforcement(guild.client, guild.id, 'kick', { record, target: targetUser, moderatorLabel: moderatorLabel(moderator), automated: isSystemModerator(guild, moderator) });
     return { record, dmDelivered, notes };
 }
 
@@ -680,7 +707,7 @@ async function doMute({ guild, moderator, targetUser, targetMember, flow, lang =
     const dmDelivered = await sendCaseDm(targetUser, 'enf.mute', record, { guild, member: targetMember, components: dmComponentsFor(flow, record) });
     await setDmDelivered(record.id, dmDelivered);
     record = { ...record, dm_delivered: dmDelivered };
-    await logEnforcement(guild.client, guild.id, 'mute', { record, target: targetUser, moderatorLabel: moderatorLabel(moderator) });
+    await logEnforcement(guild.client, guild.id, 'mute', { record, target: targetUser, moderatorLabel: moderatorLabel(moderator), automated: isSystemModerator(guild, moderator) });
     // Where the Muted role cannot stop them (a role allow on a channel, Administrator): told, not refused.
     let notes = [];
     try {
@@ -814,7 +841,7 @@ async function doWarn({ guild, moderator, targetUser, targetMember, flow, lang =
         await setDmDelivered(warnRecord.id, dmDelivered);
         const record = { ...warnRecord, dm_delivered: dmDelivered };
         await syncWarnRolesQuietly(guild, targetUser.id);
-        await logEnforcement(guild.client, guild.id, 'warn', { record, target: targetUser, moderatorLabel: label });
+        await logEnforcement(guild.client, guild.id, 'warn', { record, target: targetUser, moderatorLabel: label, automated: isSystemModerator(guild, moderator) });
         if (preview.uncounted) notes.push(tr.t('staff.enfCheck.note.warnUncounted'));
         return { record, dmDelivered, notes, warnNumber: preview.warnNumber, countsOnLadder: !preview.uncounted };
     }
@@ -843,11 +870,13 @@ async function doWarn({ guild, moderator, targetUser, targetMember, flow, lang =
 
     // Only reaches members still in the server (the ban failed); banned users get it on rejoin.
     await syncWarnRolesQuietly(guild, targetUser.id);
-    await logEnforcement(guild.client, guild.id, 'warn', { record, target: targetUser, moderatorLabel: label });
+    await logEnforcement(guild.client, guild.id, 'warn', { record, target: targetUser, moderatorLabel: label, automated: isSystemModerator(guild, moderator) });
     if (ban) {
         await logEnforcement(guild.client, guild.id, 'ban', {
             record: ban, target: targetUser, moderatorLabel: `${botUser.username} (automatic, warn \`${warnRecord.case_code}\`)`,
             extra: [{ name: 'Warning stage', value: ladderStageShort(preview.nextLevel) }],
+            // A ladder ban follows its warn: automatic when automod gave the warn, else a staff action.
+            automated: isSystemModerator(guild, moderator),
         });
     }
     return { record, dmDelivered: record.dm_delivered, notes, warnNumber: preview.warnNumber, banRecord: ban };
@@ -898,7 +927,7 @@ async function doUnban({ guild, moderator, targetUser, flow, lang = 'en' }) {
     await syncBannedRoleQuietly(guild.client, targetUser.id);
     const endDm = await notifyPunishmentEnded(guild.client, guild, { type: 'ban', userId: targetUser.id, records: revoked, early: true });
     await logEnforcement(guild.client, guild.id, 'unban', {
-        target: targetUser, moderatorLabel: moderatorLabel(moderator),
+        target: targetUser, moderatorLabel: moderatorLabel(moderator), automated: isSystemModerator(guild, moderator),
         extra: [
             { name: 'Reason', value: flow.reason },
             ...(revoked.length ? [{ name: 'Lifted cases', value: revoked.map((r) => `\`${r.case_code}\``).join(', ') }] : []),
@@ -924,7 +953,7 @@ async function doUnmute({ guild, moderator, targetUser, flow, lang = 'en' }) {
     }
     const endDm = await notifyPunishmentEnded(guild.client, guild, { type: 'mute', userId: targetUser.id, records: revoked, early: true });
     await logEnforcement(guild.client, guild.id, 'unmute', {
-        target: targetUser, moderatorLabel: moderatorLabel(moderator),
+        target: targetUser, moderatorLabel: moderatorLabel(moderator), automated: isSystemModerator(guild, moderator),
         extra: [
             { name: 'Reason', value: flow.reason },
             ...(revoked.length ? [{ name: 'Lifted cases', value: revoked.map((r) => `\`${r.case_code}\``).join(', ') }] : []),
@@ -1028,7 +1057,7 @@ async function doRemoveWarn({ guild, moderator, targetUser, flow, lang = 'en' })
     const ladder = await getLadder(guild.id, targetUser.id);
     await syncWarnRolesQuietly(guild, targetUser.id);
     await logEnforcement(guild.client, guild.id, 'removewarn', {
-        target: targetUser, moderatorLabel: moderatorLabel(moderator),
+        target: targetUser, moderatorLabel: moderatorLabel(moderator), automated: isSystemModerator(guild, moderator),
         extra: [
             { name: 'Warning', value: `\`${result.case_code}\` · ${result.name}` },
             { name: 'Reason', value: flow.reason },

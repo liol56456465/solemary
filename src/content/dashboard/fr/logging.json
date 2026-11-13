@@ -20,7 +20,8 @@
     "messages": "Messages (modifications et suppressions)",
     "server": "Serveur (salons et rôles)",
     "community": "Communauté (niveaux, concours, compteurs, rôles par réaction)",
-    "dashboard": "Changements depuis le tableau de bord et le site"
+    "dashboard": "Changements depuis le tableau de bord et le site",
+    "automod": "Automod (tout ce que l’automod a fait)"
   },
   "forums": {
     "title": "Journaux avancés (forum)",

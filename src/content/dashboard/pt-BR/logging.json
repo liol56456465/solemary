@@ -20,7 +20,8 @@
     "messages": "Mensagens (edições e exclusões)",
     "server": "Servidor (canais e cargos)",
     "community": "Comunidade (níveis, sorteios, contadores, cargos por reação)",
-    "dashboard": "Mudanças pelo painel e pelo site"
+    "dashboard": "Mudanças pelo painel e pelo site",
+    "automod": "Automod (tudo o que o automod fez)"
   },
   "forums": {
     "title": "Registros avançados (fórum)",

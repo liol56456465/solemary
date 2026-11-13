@@ -38,6 +38,7 @@ import { restoreIfContested } from './automodContest.js';
 import { canGiveSecondOpinion, secondOpinionPayload, shouldAskSecondOpinion } from './secondOpinion.js';
 import { alertWatched } from '../enforcement/watchlistService.js';
 import { markOwnDelete } from '../logTamperService.js';
+import { logAutomodHit } from './automodLog.js';
 
 export { describeStep };
 
@@ -158,7 +159,9 @@ function alertWatchlistHit(p) {
  * targetUser, channelId, messageUrl, content, step?, result?, offence?, monitor?, suggested?,
  * raid?, report?: { reporter, messageId, removed }, deleted?, detail?, tier?, noGroup?,
  * note?: { emoji, title } (an information-only compact line), ruleLabel?,
- * probation?: { until } (the member's running probation: shown on the card) }.
+ * probation?: { until } (the member's running probation: shown on the card),
+ * logKind?: the Automod log record's type (automodLog.js; default from the hit) }.
+ * Every hit except member reports also gets an Automod log record (automodLog.logAutomodHit).
  * `evidence` is a plain-English phrase (reasons.js); `detail` goes to the log only.
  * Returns the card message, or null.
  */
@@ -167,6 +170,8 @@ export async function postReviewCard(p) {
     if (!p.report) recordHit({ rule: p.rule, channelId: p.channelId, monitor: Boolean(p.monitor), guildId: p.guild?.id || null });
     alertWatchlistHit(p);
     const key = entryFrom(p).key;
+    // The Automod log record (automodLog.js): one per burst or per new action; not awaited, never throws.
+    void logAutomodHit(p, { key });
     const run = async () => {
         const now = Date.now();
         const open = findOpenBurst(key, now);

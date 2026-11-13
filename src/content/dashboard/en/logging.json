@@ -20,7 +20,8 @@
     "messages": "Messages (edits and deletes)",
     "server": "Server (channels and roles)",
     "community": "Community (levels, giveaways, counters, reaction roles)",
-    "dashboard": "Dashboard and website changes"
+    "dashboard": "Dashboard and website changes",
+    "automod": "Automod (everything automod did)"
   },
   "forums": {
     "title": "Advanced logs (forum)",

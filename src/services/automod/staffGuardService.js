@@ -36,6 +36,7 @@ import { durationIn } from '../enforcement/dmTemplates.js';
 import { botText, textForGuild } from '../../utils/botText.js';
 import { nukeAlertRow, postAlert } from './alertPost.js';
 import { snapshotIfStale } from '../structureBackupService.js';
+import { logAutomod } from './automodLog.js';
 
 const STAFF_ROLE_PERMISSIONS = [
     PermissionFlagsBits.Administrator,
@@ -250,6 +251,12 @@ async function demote(guild, member, why, { nuke = false, at = Date.now() } = {}
     const { removed, kept } = await stripStaffRoles(member, `Staff guard: ${why.en}`);
     const names = { removedNames: removed.map((role) => role.name).join(', '), keptNames: kept.map((role) => role.name).join(', ') };
     const { title, fields } = staffRemovedContent({ member, why, nuke, ...names }, { lang: postText(guild).lang });
+    // The Automod log: English, like its other records (not awaited; never throws).
+    const logged = staffRemovedContent({ member, why, nuke, ...names }, { lang: 'en' });
+    void logAutomod(guild.client, guild.id, {
+        type: 'staffguard', title: `Staff guard: ${logged.title}`, fields: logged.fields,
+        subject: { id: member.id, username: member.user?.username || null },
+    });
     if (nuke) await postAlert(guild.client, 'staff', { guildId: guild.id, title, fields, components: [nukeAlertRow(at, guild.id, member.id)] });
     else await postModLog(guild.client, 'staff', fields, { guildId: guild.id, title });
     await alertOwner(guild, (dmTr) => `${dmTr.t('automod.guard.dm.header', { server: guild.name })}\n${staffRemovedContent({ member, why, nuke, ...names }, { lang: dmTr.lang }).summary}`);
@@ -295,6 +302,12 @@ export function nukeAlertContent(kind, d, { lang = 'en' } = {}) {
 /** `build(tr)` → { title, fields } in a language: the alert (server's) and the owner's DM. */
 async function alertNuke(guild, build, { offenderId, at }) {
     const { title, fields } = build(postText(guild));
+    // The Automod log, in the offender's post (English; not awaited; never throws).
+    const logged = build(botText('en'));
+    void logAutomod(guild.client, guild.id, {
+        type: 'staffguard', title: `Staff guard: ${logged.title}`, fields: logged.fields,
+        subject: { id: offenderId, username: guild.members?.cache?.get?.(offenderId)?.user?.username || null },
+    });
     await postAlert(guild.client, 'staff', { guildId: guild.id, title, fields, components: [nukeAlertRow(at, guild.id, offenderId)] });
     await alertOwner(guild, (tr) => {
         const dm = build(tr);

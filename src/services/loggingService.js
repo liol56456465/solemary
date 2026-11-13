@@ -17,6 +17,7 @@ import {
 
 // Owner (2026-11-10): a channel per kind of log. Not set: the main log channel (audit).
 // 'dashboard' = web dashboard / website changes (postModLog kind 'dashboard', else the mod log).
+// 'automod' = everything automod did (automod/automodLog.js; postModLog `automated` records).
 // One list with the config schema (schemas.js), so a destination can never be saved and then dropped.
 const LOG_DESTINATIONS = LOG_CHANNEL_KEYS;
 
@@ -99,6 +100,20 @@ const EVENT_TYPES = {
   AUTOMOD_RULE_CREATE: 'server.automodcreate',
   AUTOMOD_RULE_DELETE: 'server.automoddelete',
   AUTOMOD_RULE_UPDATE: 'server.automodupdate',
+
+  // The Automod log (owner, 2026-11-13; automod/automodLog.js): everything automod did, staff
+  // actions stay in the mod log. Destination 'automod'; not set = not posted (no main-log fallback).
+  AUTOMOD_ACTION: 'automod.action',
+  AUTOMOD_FLAG: 'automod.flag',
+  AUTOMOD_HEADSUP: 'automod.headsup',
+  AUTOMOD_NOTICE: 'automod.notice',
+  AUTOMOD_NATIVE: 'automod.native',
+  AUTOMOD_REPORT: 'automod.report',
+  AUTOMOD_JOINGATE: 'automod.joingate',
+  AUTOMOD_RAID: 'automod.raid',
+  AUTOMOD_STAFFGUARD: 'automod.staffguard',
+  AUTOMOD_SLOWMODE: 'automod.slowmode',
+  AUTOMOD_PROBATION: 'automod.probation',
 };
 
 const EVENT_COLORS = {
@@ -168,6 +183,17 @@ const EVENT_COLORS = {
   'server.automodcreate': 0x5865F2,
   'server.automoddelete': 0xe74c3c,
   'server.automodupdate': 0x5865F2,
+  'automod.action': 0xE67E22,
+  'automod.flag': 0x95a5a6,
+  'automod.headsup': 0xFEE75C,
+  'automod.notice': 0xFEE75C,
+  'automod.native': 0xE67E22,
+  'automod.report': 0xED4245,
+  'automod.joingate': 0xE67E22,
+  'automod.raid': 0x721919,
+  'automod.staffguard': 0x721919,
+  'automod.slowmode': 0x3498db,
+  'automod.probation': 0x5865F2,
 };
 
 // Default embed titles when a caller passes none. Plain sentence case, no emoji.
@@ -238,11 +264,26 @@ const EVENT_TITLES = {
   'server.automodcreate': 'AutoMod rule created',
   'server.automoddelete': 'AutoMod rule deleted',
   'server.automodupdate': 'AutoMod rule updated',
+  'automod.action': 'Automod action',
+  'automod.flag': 'Automod flag',
+  'automod.headsup': 'Automod heads-up',
+  'automod.notice': 'Automod friendly notice',
+  'automod.native': 'Discord AutoMod',
+  'automod.report': 'Report reactions',
+  'automod.joingate': 'Join gate',
+  'automod.raid': 'Raid lockdown',
+  'automod.staffguard': 'Staff guard',
+  'automod.slowmode': 'Automod slowmode',
+  'automod.probation': 'Extra-watch period',
 };
+
+// Destinations that never fall back to the main log when their channel is not set.
+const NO_FALLBACK_DESTINATIONS = new Set(['applications', 'reports', 'dashboard', 'automod']);
 
 const CATEGORY_DESTINATION = {
   application: 'applications',
   report: 'reports',
+  automod: 'automod',
   moderation: 'moderation',
   member: 'members',
   message: 'messages',
@@ -262,7 +303,7 @@ export function resolveLogChannel(config, destination) {
   if (destination === 'audit') {
     return channels.audit ?? config?.logging?.channelId ?? config?.logChannelId ?? null;
   }
-  if (destination === 'applications' || destination === 'reports' || destination === 'dashboard') {
+  if (NO_FALLBACK_DESTINATIONS.has(destination)) {
     return channels[destination] ?? null;
   }
   // A per-kind channel not set: the main log channel, as before.
@@ -446,40 +487,7 @@ export async function logEvent({
       return null;
     }
 
-    if (isLogChannelBackedOff(guildId, logChannelId)) {
-      return null;
-    }
-
-    // Only a confirmed refusal pauses posting (Unknown Channel, Missing Access, 401/403, or a channel
-    // of another server). A network error or Discord outage must not silence the logs (security review).
-    let fetchRefused = false;
-    const channel = guild.channels.cache.get(logChannelId) ||
-      await guild.channels.fetch(logChannelId).catch((error) => {
-        if (Number(error?.code) === UNKNOWN_CHANNEL || isForbiddenError(error) || error?.code === 'GuildChannelUnowned') fetchRefused = true;
-        return null;
-      });
-    if (!channel && !fetchRefused) {
-      warnThrottled(guildId, logChannelId, `logEvent: could not load log channel ${logChannelId} for guild ${guildId} (temporary error, not paused)`);
-      return null;
-    }
-
-    // Text and announcement channels (the dashboard and /logging channel allow both), and only
-    // channels of this server (a foreign channel id is a misconfiguration of this server only).
-    if (!channel || (channel.guildId && String(channel.guildId) !== String(guildId)) || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
-      backOffLogChannel(guildId, logChannelId, 'missing or not a text channel');
-      return null;
-    }
-
-    const permissions = channel.permissionsFor(guild.members.me);
-    if (!permissions || !permissions.has(['ViewChannel', 'SendMessages', 'EmbedLinks'])) {
-      // Checked locally (no request), so no pause: a fix works on the next event. Warned once per pause period.
-      warnThrottled(guildId, logChannelId, `logEvent: Missing permissions in channel ${logChannelId} for guild ${guildId}`);
-      return null;
-    }
-
-    const embed = createLogEmbed(guild, eventType, data);
-
-    const messageOptions = { embeds: [embed] };
+    const messageOptions = { embeds: [createLogEmbed(guild, eventType, data)] };
     if (content) {
       messageOptions.content = content;
     }
@@ -487,18 +495,92 @@ export async function logEvent({
       messageOptions.files = attachments;
     }
 
-    let sent;
-    try {
-      sent = await channel.send(messageOptions);
-    } catch (error) {
-      if (!isForbiddenError(error)) throw error;
-      backOffLogChannel(guildId, logChannelId, `Discord refused the post (${error.code || error.status})`);
-      return null;
-    }
-    logger.debug(`Event logged: ${eventType} in guild ${guildId}`);
+    const sent = await sendToLogChannel(guild, logChannelId, messageOptions);
+    if (sent) logger.debug(`Event logged: ${eventType} in guild ${guildId}`);
     return sent;
   } catch (error) {
     logger.error('Error in logEvent:', error);
+    return null;
+  }
+}
+
+/**
+ * Posts in one log text channel of this server, with the 403 backoff and permission checks of
+ * logEvent. Returns the message, or null when it could not be posted. Throws only on an
+ * unexpected send error (the callers catch it).
+ */
+async function sendToLogChannel(guild, logChannelId, messageOptions) {
+  const guildId = guild.id;
+  if (isLogChannelBackedOff(guildId, logChannelId)) {
+    return null;
+  }
+
+  // Only a confirmed refusal pauses posting (Unknown Channel, Missing Access, 401/403, or a channel
+  // of another server). A network error or Discord outage must not silence the logs (security review).
+  let fetchRefused = false;
+  const channel = guild.channels.cache.get(logChannelId) ||
+    await guild.channels.fetch(logChannelId).catch((error) => {
+      if (Number(error?.code) === UNKNOWN_CHANNEL || isForbiddenError(error) || error?.code === 'GuildChannelUnowned') fetchRefused = true;
+      return null;
+    });
+  if (!channel && !fetchRefused) {
+    warnThrottled(guildId, logChannelId, `logEvent: could not load log channel ${logChannelId} for guild ${guildId} (temporary error, not paused)`);
+    return null;
+  }
+
+  // Text and announcement channels (the dashboard and /logging channel allow both), and only
+  // channels of this server (a foreign channel id is a misconfiguration of this server only).
+  if (!channel || (channel.guildId && String(channel.guildId) !== String(guildId)) || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
+    backOffLogChannel(guildId, logChannelId, 'missing or not a text channel');
+    return null;
+  }
+
+  const permissions = channel.permissionsFor(guild.members.me);
+  if (!permissions || !permissions.has(['ViewChannel', 'SendMessages', 'EmbedLinks'])) {
+    // Checked locally (no request), so no pause: a fix works on the next event. Warned once per pause period.
+    warnThrottled(guildId, logChannelId, `logEvent: Missing permissions in channel ${logChannelId} for guild ${guildId}`);
+    return null;
+  }
+
+  try {
+    return await channel.send(messageOptions);
+  } catch (error) {
+    if (!isForbiddenError(error)) throw error;
+    backOffLogChannel(guildId, logChannelId, `Discord refused the post (${error.code || error.status})`);
+    return null;
+  }
+}
+
+/**
+ * True when this config has an Automod log in use: logging on and a channel or an Advanced forum
+ * (Logging page). Logging off: automatic punishments stay in the mod log, with nothing missing. Pure.
+ */
+export function hasAutomodLog(config) {
+  if (!config?.logging?.enabled) return false;
+  return Boolean(resolveLogChannel(config, 'automod') || logForumId(config, 'automod'));
+}
+
+/**
+ * Posts a ready payload ({ embeds, files? }) in a Logging page destination of `guildId`: its forum
+ * first when the kind is Advanced (the subject's post), else its channel (resolveLogChannel's
+ * fallbacks). No event toggles or ignore lists: for records that must not be filtered (the
+ * automated punishments of postModLog). Never pings. Returns the message, or null (never throws).
+ */
+export async function postToLogDestination(client, guildId, destination, payload, { subject = null, config = null } = {}) {
+  try {
+    const guild = client?.guilds?.cache?.get(guildId) || await client?.guilds?.fetch?.(guildId).catch(() => null);
+    if (!guild) return null;
+    const settings = config || await getGuildConfig(client, guildId);
+    const message = { ...payload, allowedMentions: { parse: [] } };
+    const forumId = logForumId(settings, destination);
+    if (forumId) {
+      const posted = await sendToLogForum({ guild, forumId, subject, payload: message });
+      if (posted) return posted;
+    }
+    const channelId = resolveLogChannel(settings, destination);
+    return channelId ? await sendToLogChannel(guild, channelId, message) : null;
+  } catch (error) {
+    logger.warn(`Log post to ${destination} failed in guild ${guildId}: ${error.message}`);
     return null;
   }
 }

@@ -20,7 +20,8 @@
     "messages": "Wiadomości (edycje i usunięcia)",
     "server": "Serwer (kanały i role)",
     "community": "Społeczność (poziomy, konkursy, liczniki, role za reakcje)",
-    "dashboard": "Zmiany z panelu i strony"
+    "dashboard": "Zmiany z panelu i strony",
+    "automod": "Automoderacja (wszystko, co zrobiła automoderacja)"
   },
   "forums": {
     "title": "Zaawansowane logi (forum)",

@@ -13,6 +13,7 @@ import { BoundedMap } from '../../utils/boundedMap.js';
 import { logger } from '../../utils/logger.js';
 import { query, T } from '../enforcement/db.js';
 import { postModLog } from '../enforcement/enforcementService.js';
+import { logAutomod, memberLine } from './automodLog.js';
 import { isProbationActive, shouldStartProbation } from './policy.js';
 import { getAutomodSettings, isLegacyAutomodGuild } from './automodSettings.js';
 
@@ -119,12 +120,18 @@ export async function startProbationOnJoin(member, now = Date.now()) {
     if (!shouldStartProbation({ ...ban, existing, now })) return null;
     const record = await startProbation(guild.id, member.id, ban.endedBan, now);
     logger.info(`Automod probation started for ${member.id} (ban ${ban.endedBan.caseCode} ${ban.endedBan.how})`);
-    await postModLog(member.client, 'automod', [
+    const fields = [
         { name: 'Member', value: `<@${member.id}> ${member.user?.username || ''} (${member.id})` },
         { name: 'Ban', value: `\`${ban.endedBan.caseCode}\` (${ban.endedBan.how}, ended <t:${Math.floor(new Date(ban.endedBan.endedAt).getTime() / 1000)}:R>)` },
         { name: 'Until', value: `<t:${Math.floor(record.until / 1000)}:F>` },
         { name: 'Effect', value: 'Automod uses the next step of the ladder for them; no friendly notice or trusted relaxing. End early with `/automod extrawatch`.' },
-    ], { guildId: guild.id, title: 'Extra-watch period after a ban started (they rejoined)' });
+    ];
+    void logAutomod(member.client, guild.id, {
+        type: 'probation', title: 'Automod: extra-watch period started (rejoined after a ban)',
+        fields: [{ name: 'Member', value: memberLine(member.user || { id: member.id }) }, ...fields.slice(1)],
+        subject: { id: member.id, username: member.user?.username || null },
+    });
+    await postModLog(member.client, 'automod', fields, { guildId: guild.id, title: 'Extra-watch period after a ban started (they rejoined)' });
     return record;
 }
 

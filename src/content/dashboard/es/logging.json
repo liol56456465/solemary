@@ -20,7 +20,8 @@
     "messages": "Mensajes (ediciones y borrados)",
     "server": "Servidor (canales y roles)",
     "community": "Comunidad (niveles, sorteos, contadores, roles por reacción)",
-    "dashboard": "Cambios desde el panel y la web"
+    "dashboard": "Cambios desde el panel y la web",
+    "automod": "Automod (todo lo que hizo el automod)"
   },
   "forums": {
     "title": "Registros avanzados (foro)",

@@ -29,6 +29,7 @@ import { botText, textForGuild } from '../../utils/botText.js';
 import { getAutomodSettings, isImmuneMember } from './automodSettings.js';
 import { reviewChannel } from './reviewCards.js';
 import { STATUS_COLORS } from './reviewFormat.js';
+import { logAutomod, memberLine } from './automodLog.js';
 
 const DAY = 24 * 60 * 60 * 1000;
 export const JOIN_GATE_ACTIONS = ['off', 'flag', 'kick'];
@@ -248,6 +249,20 @@ export function verificationScope(guildId) {
     return homeIds.includes(guildId) ? homeIds : [guildId];
 }
 
+/** The Automod log record of a join gate decision (exported for tests). */
+export function gateRecord(member, hits, done) {
+    return {
+        type: 'joingate',
+        title: 'Automod: join gate',
+        subject: { id: member.id, username: member.user?.username || null },
+        fields: [
+            { name: 'Member', value: memberLine({ id: member.id, username: member.user?.username }) },
+            { name: 'Checks', value: hits.map((hit) => `${JOIN_GATE_CHECKS[hit.check]?.label || hit.check}: ${hit.reason} (${hit.action})`).join('\n') },
+            { name: 'Done', value: done },
+        ],
+    };
+}
+
 /**
  * Runs the join gate for a new member of any server where automod is on. Never throws.
  * Returns 'kicked' | 'flagged' | null. onKick / onFlag(userId, hits) run after the kick or flag.
@@ -272,12 +287,15 @@ export async function checkJoinGate(member, { onKick = null, onFlag = null } = {
         if (action === 'kick') {
             const kicked = await kickWithNotice(member, hits, `Join gate: ${hits.filter((h) => h.action === 'kick').map((h) => h.reason).join('; ')}`);
             if (kicked) {
+                void logAutomod(member.client, guild.id, gateRecord(member, hits, 'Kicked (DM told them why and how to come back; no case)'));
                 await postGateLine(member, hits, 'kicked', STATUS_COLORS.kept, false);
                 await onKick?.(member.id, hits);
                 return 'kicked';
             }
             // Could not kick (role hierarchy, permissions): fall back to a flag for staff.
         }
+        void logAutomod(member.client, guild.id, gateRecord(member, hits,
+            action === 'kick' ? 'Could not kick (role order or permissions); flagged for staff' : 'Flagged for staff (Kick / Dismiss in the review channel)'));
         const message = await postGateLine(member, hits, action === 'kick' ? 'kickFailed' : 'flagged', STATUS_COLORS.waiting, true);
         if (message) {
             await setInDb(flagKey(guild.id, user.id), {
