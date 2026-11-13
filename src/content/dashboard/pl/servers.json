@@ -15,10 +15,14 @@
   "refresh": "Odśwież listę serwerów",
   "refreshHint": "Brakuje serwera?",
   "refreshTitle": "Lista serwerów niewczytana",
-  "refreshText": "Mewvo trzyma twoją listę serwerów tylko w pamięci, najwyżej 12 godzin. Odśwież ją, aby zobaczyć wszystkie swoje serwery.",
+  "refreshText": "Mewvo trzyma twoją listę serwerów najwyżej 30 dni (nigdy twojego tokenu logowania Discord). Odśwież ją, aby zobaczyć wszystkie swoje serwery.",
   "addTitle": "Dodaj Mewvo do serwera",
   "addIntro": "Serwery, którymi zarządzasz, a w których nie ma jeszcze Mewvo.",
   "add": "Dodaj Mewvo",
   "addLabel": "Dodaj Mewvo do {name}",
-  "ownerArea": "Strefa właściciela"
+  "ownerArea": "Strefa właściciela",
+  "fromBotTitle": "Serwery znalezione przez Mewvo",
+  "fromBotText": "Panel został otwarty przez logowanie na stronie, więc ta lista pokazuje tylko serwery z Mewvo, na których jesteś członkiem. Odśwież ją przez Discorda, aby zobaczyć wszystkie swoje serwery, także te, do których możesz dodać Mewvo.",
+  "refreshFromDiscord": "Odśwież listę serwerów przez Discorda",
+  "logoutAllHint": "„Wyloguj się ze wszystkich urządzeń” kończy każde logowanie do panelu na twoje konto Discord, także to."
 }

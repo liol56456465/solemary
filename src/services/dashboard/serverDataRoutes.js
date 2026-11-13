@@ -108,10 +108,12 @@ export function createServerDataHandlers(ctx) {
         return { id };
     }
 
-    const entryOf = (req, id) => (guildLists?.get?.(userOf(req)) || []).find((g) => g?.id === id) || null;
+    // The OAuth list (memory, else the key-value store after a restart: serverPicker.js createGuildListStore).
+    const listOf = async (req) => (typeof guildLists?.load === 'function' ? await guildLists.load(userOf(req)) : guildLists?.get?.(userOf(req)));
+    const entryOf = async (req, id) => ((await listOf(req)) || []).find((g) => g?.id === id && g?.fromBot !== true) || null;
 
     async function removedCheck(req, id) {
-        return d.check({ client, guildId: id, userId: userOf(req), oauthEntry: entryOf(req, id) });
+        return d.check({ client, guildId: id, userId: userOf(req), oauthEntry: await entryOf(req, id) });
     }
 
     async function removedPage(req, res) {
@@ -121,7 +123,7 @@ export function createServerDataHandlers(ctx) {
         const ok = await removedCheck(req, id);
         const lang = req.dashboard.lang;
         const theme = themeOf(req);
-        const name = entryOf(req, id)?.name || '';
+        const name = (await entryOf(req, id))?.name || '';
         if (ok.reason === 'stale') return sendHtml(res, 200, verifyOwnerPage({ lang, theme, guildId: id, guildName: name }));
         if (!ok.allowed) return refused(req, res, ok.reason);
         const record = await d.getRequest(id);
@@ -151,7 +153,7 @@ export function createServerDataHandlers(ctx) {
         if (!ok.allowed) return refused(req, res, ok.reason);
         const tr = textOfReq(req);
         if (action === 'request') {
-            const { record, created } = await d.request({ guildId: id, userId: userOf(req), removeBot: false, source: 'dashboard-removed', lang: tr.lang, guildName: entryOf(req, id)?.name || null });
+            const { record, created } = await d.request({ guildId: id, userId: userOf(req), removeBot: false, source: 'dashboard-removed', lang: tr.lang, guildName: (await entryOf(req, id))?.name || null });
             await flash(req, tr.t(created ? 'serverData.flash.scheduled' : 'serverData.flash.already', { date: dateOf(tr, record?.dueAt) }));
         } else {
             const { cancelled, record } = await d.cancel({ guildId: id, userId: userOf(req) });

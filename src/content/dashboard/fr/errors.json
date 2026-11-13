@@ -43,5 +43,7 @@
   "serverNotFound": "Serveur introuvable",
   "serverNotFoundText": "Serveur introuvable, ou tu ne peux pas le gérer. Choisis un serveur dans ta liste.",
   "blockedText": "Tu ne peux pas utiliser ce bot.",
-  "databaseDown": "La base de données ne répond pas pour le moment, rien n’a été modifié. Réessayez dans une minute."
+  "databaseDown": "La base de données ne répond pas pour le moment, rien n’a été modifié. Réessayez dans une minute.",
+  "ssoExpired": "Lien expiré",
+  "ssoExpiredText": "Ta connexion au site n’a pas pu ouvrir le tableau de bord : cette étape ne marche qu’une fois et pendant une minute. Ouvre à nouveau {base}."
 }

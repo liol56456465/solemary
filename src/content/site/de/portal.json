@@ -49,7 +49,7 @@
     "lead": "Sieh deine eigene Moderationsakte aus jedem Server, der Mewvo nutzt: deine Verwarnungen, deine Verwarnungsstufe, aktive Banns oder Stummschaltungen, deine Fälle und deine Einsprüche.",
     "withDiscord": "Mit Discord anmelden",
     "withAccount": "Mit einem Mewvo-Konto anmelden",
-    "note": "Mewvo fragt bei Discord nur, wer du bist (die Berechtigung identify): keine E-Mail, keine Server, sonst nichts. Du siehst immer nur deine eigene Akte. Die Anmeldung gilt eine Stunde.",
+    "note": "Mewvo fragt bei Discord nur, wer du bist (die Berechtigung identify): keine E-Mail, keine Server, sonst nichts. Du siehst immer nur deine eigene Akte. Die Anmeldung gilt bis zu 30 Tage und endet nach 7 Tagen ohne Nutzung oder wenn du dich abmeldest.",
     "signup": "Noch kein Mewvo-Konto? [Erstelle eins]({href}), um dich mit Benutzername und Passwort anzumelden.",
     "appealLead": "Melde dich mit Discord an, um gegen eine Strafe aus einem beliebigen Server mit Mewvo Einspruch einzulegen. Du siehst immer nur deine eigenen Fälle."
   },
@@ -170,6 +170,10 @@
     "appealsUnavailable": {
       "title": "Einsprüche nicht verfügbar",
       "message": "Deine Einsprüche konnten nicht geladen werden, weil die Datenbank nicht antwortet. Nichts wurde geändert: versuche es in ein paar Minuten erneut."
+    },
+    "handoffNotAllowed": {
+      "title": "Nicht geöffnet",
+      "message": "Das Dashboard wurde nicht geöffnet: Die Anfrage kam nicht von dieser Seite, oder du bist jetzt als jemand anderes angemeldet. Versuche es noch einmal über die Website."
     }
   },
   "viewer": {
@@ -270,5 +274,12 @@
       "logIn": "Erneut anmelden",
       "copyHint": "Nach der Anmeldung kommst du mit einem leeren Formular zu diesem Einspruch zurück."
     }
+  },
+  "dashboard": {
+    "title": "Dashboard öffnen",
+    "lead": "Du bist auf dieser Website als {name} angemeldet. Öffne das Dashboard mit dieser Anmeldung, ohne dich noch einmal mit Discord anzumelden.",
+    "continue": "Weiter als {name}",
+    "discord": "Stattdessen mit Discord anmelden",
+    "note": "Das Dashboard prüft deine Berechtigungen in jedem Server weiterhin auf jeder Seite. Deine Serverliste zeigt dann die Server mit Mewvo, in denen du Mitglied bist; dort kannst du sie über Discord aktualisieren."
   }
 }

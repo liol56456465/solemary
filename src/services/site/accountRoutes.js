@@ -12,13 +12,26 @@
 //   GET      /me/linked            the bonus result + the 1-letter claim
 //   POST     /me/letter[/decline]  claim or decline a 1-letter username
 //   GET      /me/account           settings; POST /me/account/{password,2fa/start,
-//                                  2fa/enable,2fa/disable,unlink,delete,language}
+//                                  2fa/enable,2fa/disable,unlink,delete,language,logout-all}
+//                                  (logout-all: "Log out on all devices", see endEverywhere)
 //                                  (language: the member's personal language for Mewvo's DMs,
 //                                  services/personalLanguage.js; no password needed)
 //
 // Linking Discord is required: until the account has a Discord id, every /me page except the
 // link step, the OAuth callback, logout and delete account redirects to /me/link
 // (memberPortal.js, forceLink).
+//
+// Sessions that end (the dashboard's too, because a website login can open the dashboard,
+// ssoHandoff.js; dashboard sessions have no account column, so the linked Discord id's dashboard
+// sessions end, whichever way they were made):
+//   password change     the account's other website sessions and the Discord id's (this one stays)
+//                       + the Discord id's dashboard sessions
+//   reset (Discord)     every website session of the account and of the Discord id + the dashboard sessions
+//   unlink, delete      every other website session of the account + the dashboard sessions
+//                       + the stored dashboard server list
+//   log out everywhere  every website session of the account and of its Discord id, this one
+//                       too, + the dashboard sessions
+//   two-step on / off   nothing ends (unchanged)
 //
 // Every POST: same origin + a CSRF token (the session's, or before login a signed
 // double-submit cookie, Path=/me). Rate limits per IP, per login name and per account.
@@ -33,7 +46,7 @@ import {
     normalizeLetter, normalizeRecoveryCode, otpauthUri, totpEncryptionKey, validatePassword, validateUsername,
     verifyAgainstDummy, verifyPassword, verifyTotp,
 } from '../accounts/accountCore.js';
-import { clearCookie, createRateLimiter, hmac, isSameOrigin, parseCookies, safeEqual, serializeCookie, signValue, verifySignedValue } from '../dashboard/security.js';
+import { clearCookie, createRateLimiter, hmac, isSameOrigin, parseCookies, safeEqual, serializeCookie, sessionCookieAge, signValue, verifySignedValue } from '../dashboard/security.js';
 import {
     accountErrorText, accountMessagePage, accountSettingsPage, bonusLength, deletedPage, doneLoginPage, forgotPage, linkDiscordPage, linkedPage, passwordLoginPage,
     recoveryCodesPage, resetPage, signupPage, totpSetupPage, twoStepPage,
@@ -101,14 +114,29 @@ export function bonusText(bonus, text = translator()) {
  * clientIp, cookieOptions, key, sessionCookie, cookieSessionId, readSession, startLink(req, res, accountId),
  * startReset(req, res) (a Discord login in reset mode), limits, hashParams (scrypt cost; tests
  * use a low one), after (premium follow-up), language ({ read, save, clear, afterChange(discordUserId) }:
- * the personal language store; afterChange re-edits recent DMs when the bot runs) }.
+ * the personal language store; afterChange re-edits recent DMs when the bot runs),
+ * dashboardSessions (the dashboard's session store, or null when the dashboard is off),
+ * clearHint(res) (drops the dashboard hint cookie, ssoHandoff.js), setSessionCookie(res, session) (the
+ * member cookie with the session's Max-Age, plus the dashboard hint) }.
  */
 export function createAccountHandlers(core) {
     const {
         settings, accountSettings, store, sessions, ctx, send, clientIp, cookieOptions, key, sessionCookie, cookieSessionId, readSession,
         startLink, startReset, limits = ACCOUNT_LIMITS, hashParams = SCRYPT_PARAMS, after = afterPremiumChange, sessionTtlMs,
-        language = {},
+        language = {}, dashboardSessions = null, clearHint = () => {}, setSessionCookie = null, guildLists = null,
     } = core;
+    // The member cookie lasts as long as its session (sliding expiry, sessionStore.js).
+    const cookieAge = (session) => (Number.isFinite(session?.expiresAt) ? sessionCookieAge(session) : sessionTtlMs);
+    const setCookie = setSessionCookie
+        || ((res, session) => res.append('Set-Cookie', serializeCookie(sessionCookie, signValue(session.id, key), { ...cookieOptions, maxAgeMs: cookieAge(session) })));
+    /** The dashboard sessions of this Discord id end (they may come from this account's login). */
+    async function endDashboardSessions(discordUserId, { forgetList = false } = {}) {
+        if (!dashboardSessions || !discordUserId) return 0;
+        const ended = await dashboardSessions.destroyForUser(String(discordUserId));
+        // The stored dashboard server list goes with the logins (privacy text: "deleted sooner when you log out").
+        if (forgetList) await guildLists?.forget?.(String(discordUserId));
+        return ended;
+    }
     const personal = {
         read: language.read || readPersonalLanguage,
         save: language.save || setPersonalLanguage,
@@ -153,7 +181,7 @@ export function createAccountHandlers(core) {
 
     async function startSession(req, res, account) {
         const session = await sessions.rotate(cookieSessionId(req), { userId: account.discord_user_id || null, username: account.username, accountId: account.id });
-        res.append('Set-Cookie', serializeCookie(sessionCookie, signValue(session.id, key), { ...cookieOptions, maxAgeMs: sessionTtlMs }));
+        setCookie(res, session);
         await store.recordLogin(account.id);
         logger.info(`Member account login: account ${account.id}`);
         return session;
@@ -379,7 +407,10 @@ export function createAccountHandlers(core) {
         res.append('Set-Cookie', clearCookie(RESET_COOKIE, cookieOptions));
         await store.setPassword(account.id, await hashPassword(password.value, hashParams));
         await sessions.destroyForAccount(account.id);
-        logger.info(`Member account ${account.id}: password reset through Discord, all sessions ended`);
+        // Discord-login website sessions of the same Discord id too (they can open the dashboard).
+        if (account.discord_user_id) await sessions.destroyForUser?.(String(account.discord_user_id));
+        await endDashboardSessions(account.discord_user_id);
+        logger.info(`Member account ${account.id}: password reset through Discord, all sessions ended (dashboard too)`);
         const session = await startSession(req, res, account);
         await sessions.setFlash?.(session.id, t('account.flash.passwordReset'));
         return res.redirect(303, '/me/account');
@@ -394,8 +425,8 @@ export function createAccountHandlers(core) {
         if (me.account.discord_user_id) {
             // Linked meanwhile (in another browser): this session gets the Discord id too.
             if (!me.session.userId) {
-                const fresh = await sessions.rotate(me.session.id, { userId: me.account.discord_user_id, username: me.account.username, accountId: me.account.id });
-                res.append('Set-Cookie', serializeCookie(sessionCookie, signValue(fresh.id, key), { ...cookieOptions, maxAgeMs: sessionTtlMs }));
+                const fresh = await sessions.rotate(me.session.id, { userId: me.account.discord_user_id, username: me.account.username, accountId: me.account.id, authAt: me.session.createdAt });
+                setCookie(res, fresh);
             }
             return res.redirect(303, '/me');
         }
@@ -428,7 +459,7 @@ export function createAccountHandlers(core) {
         const { account, bonus } = result;
         logger.info(`Member account ${account.id}: linked Discord ${account.discord_user_id} (${bonus.kind === 'new' ? `link #${bonus.linkNumber}${bonus.pro ? ', Pro bonus' : ''}${bonus.letter ? ', letter claim' : ''}` : 'linked before, no bonus'})`);
         const fresh = await sessions.rotate(session.id, { userId: account.discord_user_id, username: account.username, accountId: account.id });
-        res.append('Set-Cookie', serializeCookie(sessionCookie, signValue(fresh.id, key), { ...cookieOptions, maxAgeMs: sessionTtlMs }));
+        setCookie(res, fresh);
         await sessions.setFlash?.(fresh.id, bonusText(bonus, textOf(ctx())));
         return res.redirect(303, '/me/linked');
     }
@@ -457,8 +488,8 @@ export function createAccountHandlers(core) {
         try {
             const account = await store.claimLetter({ accountId: me.account.id, letter });
             logger.info(`Member account ${account.id}: claimed a 1-letter username`);
-            const fresh = await sessions.rotate(me.session.id, { userId: account.discord_user_id, username: account.username, accountId: account.id });
-            res.append('Set-Cookie', serializeCookie(sessionCookie, signValue(fresh.id, key), { ...cookieOptions, maxAgeMs: sessionTtlMs }));
+            const fresh = await sessions.rotate(me.session.id, { userId: account.discord_user_id, username: account.username, accountId: account.id, authAt: me.session.createdAt });
+            setCookie(res, fresh);
             await sessions.setFlash?.(fresh.id, t('account.flash.letterClaimed', { username: account.username }));
             return res.redirect(303, '/me/account');
         } catch (error) {
@@ -527,7 +558,9 @@ export function createAccountHandlers(core) {
         if (!next.ok) return renderSettings(res, me, 400, { error: errorText(next) });
         await store.setPassword(me.account.id, await hashPassword(next.value, hashParams));
         await sessions.destroyForAccount(me.account.id, me.session.id);
-        logger.info(`Member account ${me.account.id}: password changed, other sessions ended`);
+        if (me.account.discord_user_id) await sessions.destroyForUser?.(String(me.account.discord_user_id), me.session.id);
+        await endDashboardSessions(me.account.discord_user_id);
+        logger.info(`Member account ${me.account.id}: password changed, other sessions ended (dashboard too)`);
         return flashBack(res, me, t('account.flash.passwordChanged'));
     }
 
@@ -579,8 +612,10 @@ export function createAccountHandlers(core) {
         if (!me.account.discord_user_id) return res.redirect(303, '/me/link');
         await store.unlinkDiscord(me.account.id);
         await sessions.destroyForAccount(me.account.id, me.session.id);
-        const fresh = await sessions.rotate(me.session.id, { userId: null, username: me.account.username, accountId: me.account.id });
-        res.append('Set-Cookie', serializeCookie(sessionCookie, signValue(fresh.id, key), { ...cookieOptions, maxAgeMs: sessionTtlMs }));
+        await endDashboardSessions(me.account.discord_user_id, { forgetList: true });
+        clearHint(res);
+        const fresh = await sessions.rotate(me.session.id, { userId: null, username: me.account.username, accountId: me.account.id, authAt: me.session.createdAt });
+        setCookie(res, fresh);
         logger.info(`Member account ${me.account.id}: Discord unlinked`);
         await sessions.setFlash?.(fresh.id, t('account.flash.unlinked'));
         return res.redirect(303, '/me/link');
@@ -629,12 +664,36 @@ export function createAccountHandlers(core) {
         await store.deleteAccount(me.account.id);
         await sessions.destroyForAccount(me.account.id);
         await sessions.destroy(me.session.id);
+        await endDashboardSessions(me.account.discord_user_id, { forgetList: true });
         res.append('Set-Cookie', clearCookie(sessionCookie, cookieOptions));
+        clearHint(res);
         logger.info(`Member account ${me.account.id}: deleted by its owner`);
         return page(res, 200, deletedPage(ctx()));
     }
 
+    /**
+     * POST /me/account/logout-all: "Log out on all devices". Same origin + CSRF (no password: it
+     * only ends logins). Ends every website session of this account (this one too) and of its
+     * Discord id, and the Discord id's dashboard sessions; then a page that says so.
+     */
+    async function logoutAllPost(req, res) {
+        const me = await current(req);
+        if (!me) return toLogin(res);
+        if (!sessionOk(req, me.session)) return notAllowed(res);
+        const discordId = me.account.discord_user_id;
+        let ended = await sessions.destroyForAccount(me.account.id);
+        if (discordId && sessions.destroyForUser) ended += await sessions.destroyForUser(String(discordId));
+        await sessions.destroy(me.session.id);
+        const dashboard = await endDashboardSessions(discordId, { forgetList: true });
+        res.append('Set-Cookie', clearCookie(sessionCookie, cookieOptions));
+        clearHint(res);
+        logger.info(`Member account ${me.account.id}: logged out on all devices (${ended} website, ${dashboard} dashboard session(s) ended)`);
+        return page(res, 200, accountMessagePage(ctx(), t('account.logoutAll.doneTitle'), t('account.logoutAll.done'),
+            { href: '/me/login-password', label: t('account.logoutAll.logInAgain') }));
+    }
+
     return {
+        logoutAllPost,
         signupForm, signupPost, loginForm, loginPost, twoStepForm, twoStepPost, forgotForm, forgotPost, resetCallback, resetForm, resetPost,
         linkPage, linkPost, linkCallback, linked, letterPost, letterDecline, settingsPage, passwordPost, twoStepStart, twoStepEnable,
         twoStepDisable, unlinkPost, deletePost, languagePost, current, minAge: MIN_AGE,

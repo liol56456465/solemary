@@ -243,5 +243,13 @@
     "notEligible": "Ce compte ne peut pas obtenir de nom d’utilisateur d’un caractère.",
     "allClaimed": "Tous les noms d’utilisateur d’un caractère ont été pris.",
     "letterTaken": "Quelqu’un d’autre vient de prendre ce caractère. Choisis-en un autre."
+  },
+  "logoutAll": {
+    "heading": "Déconnexion",
+    "lead": "Déconnecte-toi ici, ou de tous les appareils : cela ferme chaque connexion de ce compte et de ton compte Discord lié, sur le site et dans le tableau de bord, celle-ci aussi.",
+    "submit": "Se déconnecter de tous les appareils",
+    "doneTitle": "Déconnecté partout",
+    "done": "Chaque connexion de ton compte sur ce site et dans le tableau de bord est fermée, sur tous les appareils.",
+    "logInAgain": "Me reconnecter"
   }
 }

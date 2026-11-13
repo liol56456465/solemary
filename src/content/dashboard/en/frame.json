@@ -118,7 +118,8 @@
       "moderator": "Moderator",
       "ownerView": "View and settings (bot owner)",
       "administrator": "Administrator"
-    }
+    },
+    "logoutAll": "Log out on all devices"
   },
   "message": {
     "backOverview": "Back to Overview",

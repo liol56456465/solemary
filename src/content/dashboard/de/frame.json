@@ -118,7 +118,8 @@
       "moderator": "Moderator",
       "ownerView": "Ansicht und Einstellungen (Bot-Inhaber)",
       "administrator": "Administrator"
-    }
+    },
+    "logoutAll": "Auf allen Geräten abmelden"
   },
   "message": {
     "backOverview": "Zurück zur Übersicht",

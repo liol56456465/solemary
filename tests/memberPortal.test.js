@@ -93,7 +93,7 @@ function fakeDiscord(me = { id: MEMBER, username: 'member', global_name: 'Member
 /** A bare app as in app.js: dashboard, member portal, then the site with its 404 catch-all. */
 async function serve({ env = ENV, data = fakeData().data, fetchImpl = fakeDiscord().fetchImpl, limits } = {}) {
     const app = express();
-    const memberSessions = createMemorySessionStore({ ttlMs: 3600 * 1000 });
+    const memberSessions = createMemorySessionStore(); // the real lifetime: 7 days idle, 30 days at most
     const dashSessions = createMemorySessionStore();
     const dashboardEnabled = registerDashboard(app, {}, env, { sessions: dashSessions });
     const memberPortalEnabled = registerMemberPortal(app, { env, dashboardEnabled, supportInvite: () => 'https://discord.gg/7Ckv9Bt577', sessions: memberSessions, data, fetchImpl, limits });
@@ -209,14 +209,14 @@ test('login: redirect to Discord with scope identify, the /me redirect URI and a
     }
 });
 
-test('callback: a member session cookie scoped to /me, 1 hour, HttpOnly, Secure; the access token is not kept', async () => {
+test('callback: a member session cookie scoped to /me, 7 days (sliding), HttpOnly, Secure; the access token is not kept', async () => {
     const discord = fakeDiscord();
     const app = await serve({ fetchImpl: discord.fetchImpl });
     try {
         const { res, value } = await login(app);
         assert.equal(res.status, 303);
         assert.equal(res.headers.get('location'), '/me');
-        assert.match(cookieLine(res.cookies, MEMBER_SESSION_COOKIE), /^mewvo_me=[^;]+; Path=\/me; HttpOnly; SameSite=Lax; Max-Age=3600; Secure$/);
+        assert.match(cookieLine(res.cookies, MEMBER_SESSION_COOKIE), /^mewvo_me=[^;]+; Path=\/me; HttpOnly; SameSite=Lax; Max-Age=604800; Secure$/);
         assert.ok(res.cookies.some((c) => c.startsWith(`${MEMBER_STATE_COOKIE}=;`) && c.includes('Max-Age=0')), 'state cookie cleared');
         assert.ok(!res.cookies.some((c) => c.startsWith(`${SESSION_COOKIE}=`)), 'no dashboard cookie');
         assert.equal(app.memberSessions.size(), 1);

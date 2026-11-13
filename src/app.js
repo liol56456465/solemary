@@ -63,7 +63,9 @@ import { registerDashboard } from './services/dashboard/routes.js';
 import { registerSite } from './services/site/site.js';
 import { loadSiteContent } from './services/site/siteContent.js';
 import { loadSiteImages } from './services/site/siteImages.js';
-import { memberAccountsOn, registerMemberPortal } from './services/site/memberPortal.js';
+import { memberAccountsOn, memberPortalSettings, registerMemberPortal } from './services/site/memberPortal.js';
+import { createHandoffStore } from './services/dashboard/ssoHandoff.js';
+import { createGuildListStore, dbGuildListKv } from './services/dashboard/serverPicker.js';
 import { premiumSettings, premiumStore } from './services/billing/premiumService.js';
 import { loadPremiumCache, runPremiumCron, setGuildOwnerResolver, setPremiumClient } from './services/billing/premiumEffects.js';
 import { finalErrorHandler } from './utils/finalErrorHandler.js';
@@ -285,7 +287,12 @@ class Mewvo extends Client {
     app.get('/ready', createReadyHandler(this, { schemaVersion: EXPECTED_SCHEMA_VERSION, schemaLabel: EXPECTED_SCHEMA_LABEL }));
 
     registerOAuthRoutes(app, this);
-    const dashboardEnabled = registerDashboard(app, this);
+    // Website login → dashboard without a second Discord login (ssoHandoff.js): one in-memory
+    // grant store shared by /me (issues) and /dashboard (consumes); only with the portal on.
+    const ssoHandoffs = memberPortalSettings().enabled ? createHandoffStore() : null;
+    // The dashboard's server lists (memory + temp_data), shared so deleting a website account forgets them.
+    const guildListStore = createGuildListStore({ kv: dbGuildListKv });
+    const dashboardEnabled = registerDashboard(app, this, process.env, { sso: ssoHandoffs, guildListStore });
 
     // The front website (Home, Commands, Leaderboard, About, Status, Privacy, Terms, robots.txt) at
     // the root, after every other route. Leaderboard and status read this client (site.js defaults).
@@ -298,7 +305,7 @@ class Mewvo extends Client {
     setGuildOwnerResolver((guildId) => this.guilds.cache.get(guildId)?.ownerId || null);
     // A server that never picked a bot language gets its Discord language (utils/botText.js serverLanguage).
     setGuildLocaleResolver((guildId) => this.guilds.cache.get(guildId)?.preferredLocale || null);
-    const memberPortalEnabled = registerMemberPortal(app, { dashboardEnabled, supportInvite: () => enforcementConfig.supportServerInvite, client: this });
+    const memberPortalEnabled = registerMemberPortal(app, { dashboardEnabled, supportInvite: () => enforcementConfig.supportServerInvite, client: this, sso: ssoHandoffs, guildLists: guildListStore });
     registerSite(app, this, { dashboardEnabled, memberPortalEnabled, memberAccountsEnabled: memberPortalEnabled && memberAccountsOn(), billingEnabled: premiumSettings().testCheckout, supportInvite: () => enforcementConfig.supportServerInvite });
 
     // Last: no stack traces in the browser, whatever NODE_ENV is.

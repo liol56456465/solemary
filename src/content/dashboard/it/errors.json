@@ -43,5 +43,7 @@
   "serverNotFound": "Server non trovato",
   "serverNotFoundText": "Server non trovato o non puoi gestirlo. Scegli un server dal tuo elenco.",
   "blockedText": "Non puoi usare questo bot.",
-  "databaseDown": "Il database al momento non risponde, quindi non è cambiato nulla. Riprova tra un minuto."
+  "databaseDown": "Il database al momento non risponde, quindi non è cambiato nulla. Riprova tra un minuto.",
+  "ssoExpired": "Link scaduto",
+  "ssoExpiredText": "Il tuo accesso al sito non ha potuto aprire la dashboard: questo passaggio funziona una sola volta e per un minuto. Apri di nuovo {base}."
 }

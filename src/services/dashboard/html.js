@@ -325,7 +325,7 @@ function tabBar(active, theme, back, session, access, tr) {
 <details class="more menu-wrap"><summary${current && !main.some((sec) => sec.key === current.key) ? raw(' class="on"') : ''}>${icon('menu')}<span>${tr.t('frame.tabbar.more')}</span></summary><div class="more-sheet">
 ${sections(visibleNavGroups(session, access, active)).map((sec) => html`<p class="more-group">${groupLabel(sec.label, tr)}</p>${sec.items.map((item) => html`<a href="${navHref(item.key)}"${item.key === active ? raw(' aria-current="page"') : ''}>${navLabel(item, tr)}</a>`)}`)}
 ${navSwitch(session, access, active, back, tr)}
-${themePicker(theme, back, 'sheet', tr)}<div class="more-foot"><a href="/">${icon('home')}${tr.t('frame.tabbar.website')}</a><form method="post" action="${rootPath('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}${tr.t('frame.user.logout')}</button></form></div></div></details></nav>`;
+${themePicker(theme, back, 'sheet', tr)}<div class="more-foot"><a href="/">${icon('home')}${tr.t('frame.tabbar.website')}</a><form method="post" action="${rootPath('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}${tr.t('frame.user.logout')}</button></form><form method="post" action="${rootPath('/logout-all')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="ghost">${icon('logout')}${tr.t('frame.user.logoutAll')}</button></form></div></div></details></nav>`;
 }
 
 // Themes (same tokens and layout, ten palettes): "system" follows the device (Paper or Graphite).
@@ -375,7 +375,7 @@ function userMenu(session, access, theme = 'system', back = path('/overview'), t
     const level = levelLabel(access);
     return html`<details class="user-menu menu-wrap"><summary aria-label="${tr.t('frame.user.label', { name: session.username })}"><span class="user-name">${session.username}</span></summary>
 <div class="menu"><p class="menu-meta"><strong>${session.username}</strong><br><span class="muted">${LEVEL_KEY[level] ? tr.t(LEVEL_KEY[level]) : level}</span></p>
-${themePicker(theme, back, 'menu', tr)}<a class="menu-item menu-link" href="/">${icon('home')}${tr.t('frame.nav.website')}</a><form method="post" action="${rootPath('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}${tr.t('frame.user.logout')}</button></form></div></details>`;
+${themePicker(theme, back, 'menu', tr)}<a class="menu-item menu-link" href="/">${icon('home')}${tr.t('frame.nav.website')}</a><form method="post" action="${rootPath('/logout')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}${tr.t('frame.user.logout')}</button></form><form method="post" action="${rootPath('/logout-all')}"><input type="hidden" name="csrf" value="${session.csrf}"><button type="submit" class="menu-item">${icon('logout')}${tr.t('frame.user.logoutAll')}</button></form></div></details>`;
 }
 
 /**

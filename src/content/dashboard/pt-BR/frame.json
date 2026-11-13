@@ -120,7 +120,8 @@
       "moderator": "Moderador",
       "ownerView": "Visualização e configurações (dono do bot)",
       "administrator": "Administrador"
-    }
+    },
+    "logoutAll": "Sair de todos os dispositivos"
   },
   "message": {
     "backOverview": "Voltar para a Visão geral",

@@ -269,7 +269,9 @@ ${twoStep ? field('da-code', t('account.fields.codeOrRecovery'), code('da-code')
 <div class="form-check"><input id="da-sure" name="sure" type="checkbox" value="yes" required><label for="da-sure">${t('account.delete.confirm')}</label></div>
 <p class="form-actions"><button class="button button-danger" type="submit">${t('account.delete.submit')}</button></p></form></section>
 
-<section class="account-section"><form method="post" action="/me/logout">${csrfField(session.csrf)}<button class="button button-quiet" type="submit">${t('account.common.logOut')}</button></form></section></div></div>`,
+<section class="account-section"><h2>${t('account.logoutAll.heading')}</h2>
+<p>${t('account.logoutAll.lead')}</p>
+<div class="form-actions"><form method="post" action="/me/logout">${csrfField(session.csrf)}<button class="button button-quiet" type="submit">${t('account.common.logOut')}</button></form><form method="post" action="/me/account/logout-all">${csrfField(session.csrf)}<button class="button button-quiet" type="submit">${t('account.logoutAll.submit')}</button></form></div></section></div></div>`,
     });
 }
 

@@ -15,10 +15,14 @@
   "refresh": "Actualiser la liste des serveurs",
   "refreshHint": "Un serveur manque ?",
   "refreshTitle": "Liste des serveurs non chargée",
-  "refreshText": "Mewvo garde ta liste de serveurs seulement en mémoire, 12 heures au plus. Actualise-la pour voir tous tes serveurs.",
+  "refreshText": "Mewvo garde ta liste de serveurs 30 jours au plus (jamais ton jeton de connexion Discord). Actualise-la pour voir tous tes serveurs.",
   "addTitle": "Ajouter Mewvo à un serveur",
   "addIntro": "Serveurs que tu gères où Mewvo n'est pas encore ajouté.",
   "add": "Ajouter Mewvo",
   "addLabel": "Ajouter Mewvo à {name}",
-  "ownerArea": "Espace propriétaire"
+  "ownerArea": "Espace propriétaire",
+  "fromBotTitle": "Serveurs trouvés grâce à Mewvo",
+  "fromBotText": "Tu as ouvert le tableau de bord avec ta connexion au site, donc cette liste ne montre que les serveurs qui ont Mewvo et dont tu es membre. Actualise-la depuis Discord pour voir tous tes serveurs, y compris ceux où tu peux ajouter Mewvo.",
+  "refreshFromDiscord": "Actualiser la liste des serveurs depuis Discord",
+  "logoutAllHint": "« Se déconnecter de tous les appareils » ferme chaque connexion au tableau de bord de ton compte Discord, celle-ci aussi."
 }

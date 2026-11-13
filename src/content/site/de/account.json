@@ -243,5 +243,13 @@
     "notEligible": "Dieses Konto kann keinen Benutzernamen mit 1 Zeichen bekommen.",
     "allClaimed": "Alle Benutzernamen mit 1 Zeichen sind schon vergeben.",
     "letterTaken": "Jemand anderes hat dieses Zeichen gerade genommen. Wähle ein anderes."
+  },
+  "logoutAll": {
+    "heading": "Abmelden",
+    "lead": "Melde dich hier ab oder auf allen Geräten: Das beendet jede Anmeldung dieses Kontos und deines verknüpften Discord-Kontos, auf der Website und im Dashboard, auch diese.",
+    "submit": "Auf allen Geräten abmelden",
+    "doneTitle": "Überall abgemeldet",
+    "done": "Jede Anmeldung deines Kontos auf dieser Website und im Dashboard ist beendet, auf jedem Gerät.",
+    "logInAgain": "Wieder anmelden"
   }
 }

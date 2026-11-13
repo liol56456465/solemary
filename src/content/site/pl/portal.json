@@ -51,7 +51,7 @@
     "lead": "Zobacz własną historię moderacji ze wszystkich serwerów, które używają Mewvo: ostrzeżenia, poziom ostrzeżeń, aktywny ban lub wyciszenie, swoje sprawy i odwołania.",
     "withDiscord": "Zaloguj się przez Discorda",
     "withAccount": "Zaloguj się kontem Mewvo",
-    "note": "Mewvo pyta Discorda tylko o to, kim jesteś (uprawnienie identify): bez e-maila, bez serwerów, nic więcej. Widzisz zawsze tylko własną historię. Logowanie trwa godzinę.",
+    "note": "Mewvo pyta Discorda tylko o to, kim jesteś (uprawnienie identify): bez e-maila, bez serwerów, nic więcej. Widzisz zawsze tylko własną historię. Logowanie trwa do 30 dni i kończy się po 7 dniach bez użycia albo po wylogowaniu.",
     "signup": "Nie masz jeszcze konta Mewvo? [Załóż je]({href}), aby logować się nazwą użytkownika i hasłem.",
     "appealLead": "Zaloguj się przez Discord, aby odwołać się od kary z dowolnego serwera, który używa Mewvo. Widzisz tylko własne sprawy."
   },
@@ -174,6 +174,10 @@
     "appealsUnavailable": {
       "title": "Odwołania niedostępne",
       "message": "Nie udało się wczytać twoich odwołań, bo baza danych nie odpowiada. Nic nie zostało zmienione: spróbuj ponownie za kilka minut."
+    },
+    "handoffNotAllowed": {
+      "title": "Nie otwarto",
+      "message": "Panel nie został otwarty: żądanie nie pochodziło z tej strony albo jesteś teraz zalogowany jako ktoś inny. Spróbuj ponownie ze strony."
     }
   },
   "viewer": {
@@ -284,5 +288,12 @@
       "logIn": "Zaloguj się ponownie",
       "copyHint": "Po zalogowaniu wrócisz do tego odwołania z pustym formularzem."
     }
+  },
+  "dashboard": {
+    "title": "Otwórz panel",
+    "lead": "Jesteś zalogowany na tej stronie jako {name}. Otwórz panel z tym logowaniem, bez ponownego logowania przez Discorda.",
+    "continue": "Kontynuuj jako {name}",
+    "discord": "Zaloguj się zamiast tego przez Discorda",
+    "note": "Panel nadal sprawdza twoje uprawnienia na każdym serwerze, na każdej stronie. Lista serwerów pokaże wtedy serwery z Mewvo, na których jesteś członkiem; tam możesz ją odświeżyć przez Discorda."
   }
 }

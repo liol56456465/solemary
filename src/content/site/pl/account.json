@@ -249,5 +249,13 @@
     "notEligible": "To konto nie może dostać jednoliterowej nazwy użytkownika.",
     "allClaimed": "Wszystkie jednoliterowe nazwy użytkownika zostały już zajęte.",
     "letterTaken": "Ktoś inny właśnie zajął tę literę. Wybierz inną."
+  },
+  "logoutAll": {
+    "heading": "Wylogowanie",
+    "lead": "Wyloguj się tutaj albo ze wszystkich urządzeń: to kończy każde logowanie tego konta i połączonego konta Discord, na stronie i w panelu, także to.",
+    "submit": "Wyloguj się ze wszystkich urządzeń",
+    "doneTitle": "Wylogowano wszędzie",
+    "done": "Każde logowanie twojego konta na tej stronie i w panelu zostało zakończone, na każdym urządzeniu.",
+    "logInAgain": "Zaloguj się ponownie"
   }
 }

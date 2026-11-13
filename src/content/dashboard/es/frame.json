@@ -119,7 +119,8 @@
       "moderator": "Moderador",
       "ownerView": "Ver y ajustes (propietario del bot)",
       "administrator": "Administrador"
-    }
+    },
+    "logoutAll": "Cerrar sesión en todos los dispositivos"
   },
   "message": {
     "backOverview": "Volver a Vista general",

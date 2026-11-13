@@ -246,5 +246,13 @@
     "notEligible": "Questo account non può ottenere un nome utente di 1 lettera.",
     "allClaimed": "Tutti i nomi utente di 1 lettera sono già stati presi.",
     "letterTaken": "Qualcun altro ha appena preso quella lettera. Scegline un'altra."
+  },
+  "logoutAll": {
+    "heading": "Esci",
+    "lead": "Esci qui, oppure da tutti i dispositivi: così si chiude ogni accesso di questo account e del tuo account Discord collegato, sul sito e nella dashboard, anche questo.",
+    "submit": "Esci da tutti i dispositivi",
+    "doneTitle": "Uscito ovunque",
+    "done": "Ogni accesso del tuo account a questo sito e alla dashboard è stato chiuso, su ogni dispositivo.",
+    "logInAgain": "Accedi di nuovo"
   }
 }

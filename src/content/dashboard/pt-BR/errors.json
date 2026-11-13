@@ -43,5 +43,7 @@
   "serverNotFound": "Servidor não encontrado",
   "serverNotFoundText": "Servidor não encontrado ou você não pode gerenciá-lo. Escolha um servidor da sua lista.",
   "blockedText": "Você não pode usar este bot.",
-  "databaseDown": "O banco de dados não está respondendo agora, então nada foi alterado. Tente de novo em um minuto."
+  "databaseDown": "O banco de dados não está respondendo agora, então nada foi alterado. Tente de novo em um minuto.",
+  "ssoExpired": "Link expirado",
+  "ssoExpiredText": "Seu login do site não conseguiu abrir o painel: esta etapa funciona uma vez só e por um minuto. Abra {base} de novo."
 }

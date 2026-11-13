@@ -119,7 +119,8 @@
       "moderator": "Modérateur",
       "ownerView": "Consultation et paramètres (propriétaire du bot)",
       "administrator": "Administrateur"
-    }
+    },
+    "logoutAll": "Se déconnecter de tous les appareils"
   },
   "message": {
     "backOverview": "Retour à la vue d’ensemble",

@@ -119,7 +119,8 @@
       "moderator": "Moderatore",
       "ownerView": "Visualizzazione e impostazioni (proprietario del bot)",
       "administrator": "Amministratore"
-    }
+    },
+    "logoutAll": "Esci da tutti i dispositivi"
   },
   "message": {
     "backOverview": "Torna alla Panoramica",
