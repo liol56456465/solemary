@@ -60,6 +60,10 @@ const DEFAULT_SETTINGS = Object.freeze({
     inviteAllowlist: [],
     // Staff guard / anti-nuke (staffGuardService.js). Main server: on (as before); others: off.
     staffGuard: true,
+    // Immune members (owner, 2026-11-13): their messages are still checked, never deleted or
+    // punished; each hit is a "message kept" line in the review channel (automodService.js).
+    // Only the server owner or OWNER_IDS at home may change it (dashboard Automod page).
+    immune: { roleIds: [], userIds: [] },
     // ms timestamps (see the header): first time automod was on; when the mode became 'monitor'.
     firstEnabledAt: null,
     monitorSince: null,
@@ -72,6 +76,8 @@ export const MONITOR_NUDGE_MS = 24 * 60 * 60 * 1000;
 // non-English community the moment automod is turned on).
 export const DEFAULT_OFF_RULES = Object.freeze(['english', 'characters']);
 export const INVITE_ALLOWLIST_MAX = 50;
+export const IMMUNE_ROLES_MAX = 10;
+export const IMMUNE_USERS_MAX = 50;
 
 /** True for the server whose automod existed before multi-server: it keeps the old defaults. */
 export function isLegacyAutomodGuild(guildId) {
@@ -111,6 +117,7 @@ export function normalizeSettings(stored, guildId = null) {
         : [];
     value.defaultOffRules = isLegacyAutomodGuild(guildId) ? [] : [...DEFAULT_OFF_RULES];
     value.exemptChannelIds = Array.isArray(value.exemptChannelIds) ? [...value.exemptChannelIds] : [];
+    value.immune = normalizeImmune(value.immune);
     value.ruleModes = value.ruleModes && typeof value.ruleModes === 'object' ? { ...value.ruleModes } : {};
     value.channelRules = value.channelRules && typeof value.channelRules === 'object'
         ? Object.fromEntries(Object.entries(value.channelRules).map(([id, rules]) => [id, { ...rules }]))
@@ -127,6 +134,25 @@ export function normalizeSettings(stored, guildId = null) {
     value.firstEnabledAt = timestampOrNull(value.firstEnabledAt);
     value.monitorSince = value.mode === 'monitor' ? timestampOrNull(value.monitorSince) : null;
     return value;
+}
+
+/** Stored immune lists → { roleIds, userIds }: ids only, no duplicates, capped. */
+function normalizeImmune(stored) {
+    const ids = (list, max) => (Array.isArray(list) ? [...new Set(list.map(String).filter((id) => SNOWFLAKE_ID.test(id)))].slice(0, max) : []);
+    const value = stored && typeof stored === 'object' ? stored : {};
+    return { roleIds: ids(value.roleIds, IMMUNE_ROLES_MAX), userIds: ids(value.userIds, IMMUNE_USERS_MAX) };
+}
+
+/**
+ * Whether automod treats this member as immune (pure): listed by user id, or holding a listed
+ * role. `member` is a GuildMember (roles.cache) or anything with an id.
+ */
+export function isImmuneMember(member, settings) {
+    const immune = settings?.immune;
+    if (!member?.id || !immune) return false;
+    if (immune.userIds?.includes(member.id)) return true;
+    const roles = member.roles?.cache;
+    return Boolean(roles && immune.roleIds?.some((id) => roles.has(id)));
 }
 
 function timestampOrNull(value) {
@@ -438,6 +464,30 @@ export async function setInviteAllowlist(guildId, action, entry = null) {
         }
         return { ...current, inviteAllowlist: [...list] };
     });
+}
+
+/**
+ * Adds (true) or removes (false) one immune role or user, decided under the lock. Who may do
+ * this (the server owner, OWNER_IDS at home) is checked by the caller. @everyone (the guild's
+ * own id) is refused: it would make the whole server immune. Resolves { settings, changed }.
+ */
+export async function setImmuneEntry(guildId, kind, id, immune) {
+    if (kind !== 'role' && kind !== 'user') throw userError('Unknown immune kind.');
+    requireSnowflake(id, kind);
+    requireBoolean(immune, 'Immune');
+    if (kind === 'role' && id === String(guildId)) throw userError('@everyone cannot be immune: that would switch automod off for the whole server.');
+    const field = kind === 'role' ? 'roleIds' : 'userIds';
+    const max = kind === 'role' ? IMMUNE_ROLES_MAX : IMMUNE_USERS_MAX;
+    let changed = false;
+    const settings = await updateAutomodSettings(guildId, (current) => {
+        const list = current.immune[field];
+        if (immune === list.includes(id)) return current;
+        if (immune && list.length >= max) throw userError(`At most ${max} immune ${kind === 'role' ? 'roles' : 'users'}. Remove one first.`);
+        changed = true;
+        const next = immune ? [...list, id] : list.filter((x) => x !== id);
+        return { ...current, immune: { ...current.immune, [field]: next } };
+    });
+    return { settings, changed };
 }
 
 /**

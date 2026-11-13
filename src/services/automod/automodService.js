@@ -4,7 +4,8 @@
 // (reviewCards.js: a compact line for light hits, a full card for serious ones,
 // grouped per member and rule during a burst).
 //
-// Order for one message: skip (bots, exempt channels, administrators) → filters →
+// Order for one message: skip (bots, exempt channels) → filters → immune members (only a
+// "message kept" line) and administrators (delete + alert) stop here →
 // each hit gets its rule's mode (policy.js: on / monitor / off; off hits are dropped) →
 // the most severe remaining hit is acted on: raid joiners during a lockdown are kicked,
 // everyone else gets the next step of that rule's ladder (or, when the rule is in
@@ -27,7 +28,7 @@ import { BoundedMap, BoundedSet } from '../../utils/boundedMap.js';
 import { logger } from '../../utils/logger.js';
 import { query, T, isEnforcementDbAvailable } from '../enforcement/db.js';
 import { executeSystemAction, isAdministrator, postModLog } from '../enforcement/enforcementService.js';
-import { getAutomodSettings, isChannelExempt } from './automodSettings.js';
+import { getAutomodSettings, isChannelExempt, isImmuneMember } from './automodSettings.js';
 import { featureAvailable } from '../../config/intents.js';
 import { isRaidJoiner, noteIncidentEvent } from './raidService.js';
 import { getProbation } from './probationService.js';
@@ -408,6 +409,30 @@ export async function handleAdminHits(message, hits, { deleteQuietly: remove = d
     return true;
 }
 
+/**
+ * An immune member's message broke a rule (owner, 2026-11-13): it stays, nothing else happens
+ * (no warn, mute, ban, heads-up, second chance or new-member limit), and each rule hit is an
+ * information line in the review channel. Repeats of the same rule by the same member are
+ * counted on that line (reviewCards.js burst grouping), so a spamming immune member is one line
+ * with "N messages", not one post each. Returns true when there was a hit to report.
+ */
+export async function handleImmuneHits(message, hits, { postReviewCard: post = postReviewCard } = {}) {
+    if (!hits.length) return false;
+    handledMessages.add(message.id);
+    const seen = new Set();
+    for (const hit of hits) {
+        if (seen.has(hit.rule)) continue;
+        seen.add(hit.rule);
+        await post({
+            guild: message.guild, rule: hit.rule, evidence: hit.evidence, detail: hit.detail, targetUser: message.author,
+            channelId: message.channelId, messageUrl: message.url, content: excerpt(message),
+            ...(hit.ruleLabel ? { ruleLabel: hit.ruleLabel } : {}),
+            note: { title: '🛡 Immune member, message kept', link: true }, deleted: false,
+        }).catch((error) => logger.warn(`Automod immune report failed: ${error.message}`));
+    }
+    return true;
+}
+
 async function deleteQuietly(message) {
     await message.delete().catch((error) => {
         if (error?.code !== 10008) logger.warn(`Automod could not delete message ${message.id}: ${error.message}`);
@@ -693,6 +718,13 @@ export async function moderateMessage(message, { edited = false } = {}) {
             if (detected === null) return false;
         }
         let hits = applyRuleModes(detected, settings, message.channel);
+        // Immune members (owner-picked roles / users): reported, never removed; before the
+        // administrator rule, so an immune administrator's message stays too. The message was
+        // not removed, so commands and XP go on (false).
+        if (isImmuneMember(member, settings)) {
+            await handleImmuneHits(message, hits, deps);
+            return false;
+        }
         if (admin) return await handleAdminHits(message, hits, deps);
         // Channel mood from the same hits (in memory, no extra reads); runs alongside.
         if (!edited && hits.length) {
@@ -810,6 +842,8 @@ async function checkDueHeadsUp(client, { guildId, messageId }) {
     const member = await guild.members.fetch(record.userId).catch(() => null);
     if (member && isAdministrator(member)) return dropHeadsUp(client, guildId, messageId, 'the member is an administrator now');
     const settings = await deps.getAutomodSettings(guildId);
+    // Not fetchable (left, API error): the listed user id still counts.
+    if (isImmuneMember(member || { id: record.userId }, settings)) return dropHeadsUp(client, guildId, messageId, 'the member is immune to automod now');
     const [moded] = settings.enabled ? applyRuleModes([hit], settings, channel) : [];
     // Claim it before acting, so an edit or delete at the same moment cannot resolve it too.
     const taken = await takeHeadsUp(guildId, messageId);

@@ -26,7 +26,7 @@ import { hasVerifiedIn } from '../oauthVerification.js';
 import { formatDuration } from '../enforcement/format.js';
 import { durationIn } from '../enforcement/dmTemplates.js';
 import { botText, textForGuild } from '../../utils/botText.js';
-import { getAutomodSettings } from './automodSettings.js';
+import { getAutomodSettings, isImmuneMember } from './automodSettings.js';
 import { reviewChannel } from './reviewCards.js';
 import { STATUS_COLORS } from './reviewFormat.js';
 
@@ -258,6 +258,8 @@ export async function checkJoinGate(member, { onKick = null, onFlag = null } = {
         if (!guild?.id || user.bot) return null;
         const settings = await getAutomodSettings(guild.id);
         if (!settings.enabled) return null;
+        // Immune members (a listed user id; roles only if the member already has them): never kicked or flagged.
+        if (isImmuneMember(member, settings)) return null;
         const { action, hits } = evaluateJoinGate(user, settings.joinGate);
         if (action === 'off') return null;
         // Verified with "Verify with Discord" before: already passed the verification guard. Only a

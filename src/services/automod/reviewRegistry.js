@@ -24,7 +24,9 @@ export const startedAt = Date.now();
  */
 export function burstKey(p) {
     if (!p.userId || !p.rule || p.kind === 'report' || p.noGroup) return null;
-    return `${p.guildId || ''}:${p.userId}:${p.rule}:${p.kind || 'action'}`;
+    // Notes group per title: an "immune, message kept" line never folds into a second-chance line.
+    const note = p.kind === 'note' && p.note?.title ? `:${p.note.title}` : '';
+    return `${p.guildId || ''}:${p.userId}:${p.rule}:${p.kind || 'action'}${note}`;
 }
 
 /** The open card for this burst, if its last hit is within the window. */

@@ -192,6 +192,24 @@
     "minLevel": "Lub od poziomu",
     "minLevelHelp": "Członkowie z tym poziomem lub wyższym też są zaufani. 0 to wyłącza."
   },
+  "immune": {
+    "title": "Członkowie z immunitetem",
+    "help": "Automoderacja nadal sprawdza wiadomości tych ról i członków, ale nigdy ich nie usuwa i nigdy nie ostrzega, nie wycisza ani nie banuje. Każde zgłoszenie trafia na kanał przeglądu automoderacji z linkiem do wiadomości. Tylko właściciel serwera może zmienić tę listę.",
+    "role": "Rola z immunitetem",
+    "user": "Członek z immunitetem",
+    "noRoles": "Brak ról z immunitetem.",
+    "noUsers": "Brak członków z immunitetem.",
+    "notInServer": "(nie ma go na serwerze)",
+    "addRoleLabel": "Dodaj rolę",
+    "addRoleHelp": "Członkowie z tą rolą dostają immunitet. Maksymalnie {max} ról.",
+    "addUserLabel": "Dodaj członka po ID użytkownika",
+    "addUserHelp": "W Discordzie kliknij członka prawym przyciskiem i wybierz Kopiuj ID użytkownika (wymaga trybu dewelopera). Maksymalnie {max} członków.",
+    "add": "Dodaj",
+    "rolesFull": "Wszystkie {max} miejsca na role z immunitetem są zajęte. Usuń jedną, aby dodać inną.",
+    "usersFull": "Wszystkie {max} miejsca na członków z immunitetem są zajęte. Usuń jednego, aby dodać innego.",
+    "ownerOnly": "Tylko właściciel serwera może zmienić tę listę.",
+    "nativeNote": "Własne reguły AutoMod Discorda nadal blokują wiadomości tych członków, bo Discord robi to, zanim Mewvo je zobaczy. W takich przypadkach Mewvo tylko to zapisuje i nigdy nie ostrzega."
+  },
   "exceptions": {
     "title": "Wyjątki dla kanałów",
     "help": "Wyłącz jedną regułę albo ustaw ją na „tylko zgłaszanie (bez usuwania)” na jednym kanale. Na przykład pozwól na linki na kanale z linkami.",
@@ -422,7 +440,10 @@
     "ignoredChannel": "Automoderacja ignoruje #{channel}, więc test nic tam nie znajdzie. Wybierz inny kanał.",
     "offNeedsAdmin": "Aby wyłączyć automoderację, potrzebujesz uprawnienia Administrator na tym serwerze. Nic nie zostało zmienione.",
     "staffGuardOwnerOnly": "Tylko właściciel serwera może wyłączyć automoderację, gdy ochrona przed ekipą jest włączona (wyłączenie automoderacji zatrzymuje też tę ochronę). Nic nie zostało zmienione.",
-    "needReviewChannel": "Najpierw wybierz kanał na karty przeglądu automoda (kanał kart przeglądu poniżej albo kanał logów moderacji na stronie Kary)."
+    "needReviewChannel": "Najpierw wybierz kanał na karty przeglądu automoda (kanał kart przeglądu poniżej albo kanał logów moderacji na stronie Kary).",
+    "immuneOwnerOnly": "Tylko właściciel serwera może zmienić, kto ma immunitet na automoderację. Nic nie zostało zmienione.",
+    "immuneRolesFull": "Maksymalnie {max} ról z immunitetem. Najpierw usuń jedną. Nic nie zostało zmienione.",
+    "immuneUsersFull": "Maksymalnie {max} członków z immunitetem. Najpierw usuń jednego. Nic nie zostało zmienione."
   },
   "action": {
     "automodOn": "Automoderacja jest teraz włączona.",
@@ -456,7 +477,9 @@
     "lockdownEnded": "Blokada zakończona. Poziom weryfikacji wrócił do poprzedniego, a wstrzymane zaproszenia i wiadomości prywatne znów działają.",
     "probationEnded": "Wzmożona obserwacja dla {member} zakończona wcześniej.",
     "testRunStarted": "Test uruchomiony. Odśwież stronę za chwilę, aby zobaczyć postęp.",
-    "startedMonitor": "Zaczyna w trybie Tylko zgłaszanie: Mewvo publikuje kartę przeglądu z przyciskiem Zastosuj i niczego nie usuwa. Przełącz na Włączone, gdy karty będą wyglądać dobrze."
+    "startedMonitor": "Zaczyna w trybie Tylko zgłaszanie: Mewvo publikuje kartę przeglądu z przyciskiem Zastosuj i niczego nie usuwa. Przełącz na Włączone, gdy karty będą wyglądać dobrze.",
+    "immuneAdded": "{name} ma teraz immunitet na automoderację. Oznaczone wiadomości zostają i są tylko zapisywane.",
+    "immuneRemoved": "{name} nie ma już immunitetu na automoderację."
   },
   "notice": {
     "title": "Zanim zaufasz automodowi",

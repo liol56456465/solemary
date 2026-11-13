@@ -180,6 +180,24 @@
     "minLevel": "Oder ab Level",
     "minLevelHelp": "Mitglieder ab diesem Level im Levelsystem gelten auch als vertrauenswürdig. 0 schaltet das aus."
   },
+  "immune": {
+    "title": "Immune Mitglieder",
+    "help": "Automod prüft Nachrichten dieser Rollen und Mitglieder weiter, löscht sie aber nie und verwarnt, stummt oder bannt nie. Jeder Treffer wird mit einem Link zur Nachricht im Automod-Prüfkanal gepostet. Nur der Serverinhaber kann diese Liste ändern.",
+    "role": "Immune Rolle",
+    "user": "Immunes Mitglied",
+    "noRoles": "Keine immunen Rollen.",
+    "noUsers": "Keine immunen Mitglieder.",
+    "notInServer": "(nicht auf dem Server)",
+    "addRoleLabel": "Rolle hinzufügen",
+    "addRoleHelp": "Mitglieder mit dieser Rolle werden immun. Bis zu {max} Rollen.",
+    "addUserLabel": "Mitglied per Nutzer-ID hinzufügen",
+    "addUserHelp": "Klicke in Discord mit rechts auf das Mitglied und wähle Nutzer-ID kopieren (braucht den Entwicklermodus). Bis zu {max} Mitglieder.",
+    "add": "Hinzufügen",
+    "rolesFull": "Alle {max} Plätze für immune Rollen sind belegt. Entferne eine, um eine andere hinzuzufügen.",
+    "usersFull": "Alle {max} Plätze für immune Mitglieder sind belegt. Entferne eins, um ein anderes hinzuzufügen.",
+    "ownerOnly": "Nur der Serverinhaber kann diese Liste ändern.",
+    "nativeNote": "Discords eigene AutoMod-Regeln blockieren die Nachrichten dieser Mitglieder weiterhin, weil Discord das tut, bevor Mewvo sie sieht. Dafür protokolliert Mewvo nur und verwarnt nie."
+  },
   "exceptions": {
     "title": "Kanalausnahmen",
     "help": "Eine Regel in einem Kanal ausschalten oder auf „nur melden (nicht löschen)“ stellen. Zum Beispiel Links in einem Link-Kanal erlauben.",
@@ -390,7 +408,10 @@
     "ignoredChannel": "Automod ignoriert #{channel}, ein Testlauf findet dort also nichts. Wähle einen anderen Kanal.",
     "offNeedsAdmin": "Um Automod auszuschalten, brauchst du die Berechtigung Administrator auf diesem Server. Es wurde nichts geändert.",
     "staffGuardOwnerOnly": "Nur der Serverinhaber kann Automod ausschalten, solange der Team-Schutz an ist (Automod auszuschalten stoppt auch den Team-Schutz). Es wurde nichts geändert.",
-    "needReviewChannel": "Wähle zuerst einen Kanal für die Automod-Prüfkarten (Kanal für Prüfkarten unten oder einen Mod-Log-Kanal auf der Seite Durchsetzung)."
+    "needReviewChannel": "Wähle zuerst einen Kanal für die Automod-Prüfkarten (Kanal für Prüfkarten unten oder einen Mod-Log-Kanal auf der Seite Durchsetzung).",
+    "immuneOwnerOnly": "Nur der Serverinhaber kann ändern, wer gegen Automod immun ist. Es wurde nichts geändert.",
+    "immuneRolesFull": "Höchstens {max} immune Rollen. Entferne zuerst eine. Es wurde nichts geändert.",
+    "immuneUsersFull": "Höchstens {max} immune Mitglieder. Entferne zuerst eins. Es wurde nichts geändert."
   },
   "action": {
     "automodOn": "Automod ist jetzt an.",
@@ -424,7 +445,9 @@
     "lockdownEnded": "Sperre beendet. Die Verifizierungsstufe ist wieder wie vorher, und pausierte Einladungen und Direktnachrichten laufen wieder.",
     "probationEnded": "Extra-Beobachtung für {member} vorzeitig beendet.",
     "testRunStarted": "Testlauf gestartet. Lade die Seite gleich neu, um den Fortschritt zu sehen.",
-    "startedMonitor": "Er startet im Modus Nur melden: Mewvo postet eine Prüfkarte mit einem Anwenden-Knopf und löscht nichts. Schalte auf Ein, wenn die Karten passen."
+    "startedMonitor": "Er startet im Modus Nur melden: Mewvo postet eine Prüfkarte mit einem Anwenden-Knopf und löscht nichts. Schalte auf Ein, wenn die Karten passen.",
+    "immuneAdded": "{name} ist jetzt immun gegen Automod. Markierte Nachrichten bleiben stehen und werden nur protokolliert.",
+    "immuneRemoved": "{name} ist nicht mehr immun gegen Automod."
   },
   "notice": {
     "title": "Bevor du dich auf Automod verlässt",

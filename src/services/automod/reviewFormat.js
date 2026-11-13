@@ -7,7 +7,8 @@
 //   entry = {
 //     rule, kind: 'action' | 'monitor' | 'report' | 'note', userId, username, channelId,
 //     ruleLabel,             // label for rules outside AUTOMOD_RULES (native AutoMod)
-//     note: { emoji, title }, // kind 'note': an information-only compact line (second chance…)
+//     note: { emoji, title, link? }, // kind 'note': an information-only compact line (second chance…);
+//                                    // link: true adds a jump link to the latest message (it was kept)
 //     evidence,              // plain-English verb phrase (reasons.js)
 //     offence, raid, count, firstAt, lastAt,
 //     latest: { content, messageUrl, deleted },
@@ -368,6 +369,8 @@ export function compactLine(entry, { lang = 'en' } = {}) {
             entry.channelId ? `<#${entry.channelId}>` : null,
             messages,
             probationText(entry, { lang }),
+            // note.link: the message stayed (immune members), so the line links to the latest one.
+            entry.note?.link && entry.latest?.messageUrl ? tr.t('automod.review.field.jump', { url: entry.latest.messageUrl }) : null,
         ].filter(Boolean).join(' · ');
     }
     const action = latestAction(entry);

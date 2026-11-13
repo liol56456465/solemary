@@ -180,6 +180,24 @@
     "minLevel": "Or from level",
     "minLevelHelp": "Members at this leveling level or higher are trusted too. 0 turns this off."
   },
+  "immune": {
+    "title": "Immune members",
+    "help": "Automod still checks messages from these roles and members, but never deletes them and never warns, mutes or bans. Each flag is posted in the automod review channel with a link to the message. Only the server owner can change this list.",
+    "role": "Immune role",
+    "user": "Immune member",
+    "noRoles": "No immune roles.",
+    "noUsers": "No immune members.",
+    "notInServer": "(not in the server)",
+    "addRoleLabel": "Add a role",
+    "addRoleHelp": "Members with this role become immune. Up to {max} roles.",
+    "addUserLabel": "Add a member by user ID",
+    "addUserHelp": "In Discord, right-click the member and pick Copy User ID (needs Developer Mode). Up to {max} members.",
+    "add": "Add",
+    "rolesFull": "All {max} immune role slots are used. Remove one to add another.",
+    "usersFull": "All {max} immune member slots are used. Remove one to add another.",
+    "ownerOnly": "Only the server owner can change this list.",
+    "nativeNote": "Discord's own AutoMod rules still block these members' messages, because Discord does that before Mewvo sees them. For those, Mewvo only logs and never warns."
+  },
   "exceptions": {
     "title": "Channel exceptions",
     "help": "Turn one rule off, or to report only (don't delete), in one channel. For example, allow links in a links channel.",
@@ -390,7 +408,10 @@
     "ignoredChannel": "Automod ignores #{channel}, so a test run there finds nothing. Pick another channel.",
     "offNeedsAdmin": "To turn automod off you need the Administrator permission in this server. Nothing was changed.",
     "staffGuardOwnerOnly": "Only the server owner can turn automod off while the staff guard is on (turning automod off also stops the staff guard). Nothing was changed.",
-    "needReviewChannel": "Pick a channel for automod review cards first (Review cards channel below, or a mod log channel on the Enforcement page)."
+    "needReviewChannel": "Pick a channel for automod review cards first (Review cards channel below, or a mod log channel on the Enforcement page).",
+    "immuneOwnerOnly": "Only the server owner can change who is immune to automod. Nothing was changed.",
+    "immuneRolesFull": "At most {max} immune roles. Remove one first. Nothing was changed.",
+    "immuneUsersFull": "At most {max} immune members. Remove one first. Nothing was changed."
   },
   "action": {
     "automodOn": "Automod is now on.",
@@ -424,7 +445,9 @@
     "lockdownEnded": "Lockdown ended. The verification level is back to what it was, and paused invites and DMs are resumed.",
     "probationEnded": "Extra-watch period for {member} ended early.",
     "testRunStarted": "Test run started. Reload the page in a moment to see the progress.",
-    "startedMonitor": "It starts in Report only: Mewvo posts a review card with an Apply button and deletes nothing. Switch to On when the cards look right."
+    "startedMonitor": "It starts in Report only: Mewvo posts a review card with an Apply button and deletes nothing. Switch to On when the cards look right.",
+    "immuneAdded": "{name} is now immune to automod. Their flagged messages stay and are only logged.",
+    "immuneRemoved": "{name} is no longer immune to automod."
   },
   "notice": {
     "title": "Before you rely on automod",

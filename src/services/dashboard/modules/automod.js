@@ -15,6 +15,11 @@
 // audit keys as the Rule modes form, the rule key re-checked on every click), custom-toggle
 // for a custom rule, and custom-add for the draft rule (plan limit and validation as usual).
 //
+// Immune members (owner, 2026-11-13): roles (up to 10) and user ids (up to 50) whose messages
+// automod checks but never deletes or punishes (automodService.js handleImmuneHits). Every
+// Administrator sees the list; changing it needs Administrator (like every automod action) and
+// being the server owner or OWNER_IDS with owner power here (canManageImmunity, on every save).
+//
 // Review cards are decided on the card in Discord: their buttons (keep, undo, change,
 // apply, dismiss, delete) act on the card message and the select menu of that
 // interaction (reviewCards.js handleReviewAction), so the queue here links to each card.
@@ -28,7 +33,7 @@ import { NATIVE_POLICIES, policyFor } from '../../automod/nativeBridge.js';
 import { html, path, queryString, raw, timeTag } from '../html.js';
 import {
     InputError, PERMS, boolField, buttonForm, channelField, channelListField, channelName, channelPicker, checkbox, checkboxInput, switchInput, choiceField,
-    intField, list, numberInput, plainText, postForm, roleField, rolePicker, selectInput, text, textArea, textInput, toggleForm, userIdField,
+    intField, list, numberInput, plainText, postForm, roleField, roleName, rolePicker, selectInput, text, textArea, textInput, toggleForm, userIdField,
 } from '../forms.js';
 import { diffSnapshots } from '../audit.js';
 import { changedOnly, registryValue, saveRegistry, saveRegistryWith, section, table, topic } from './common.js';
@@ -44,7 +49,8 @@ import {
 import { guildPlan as defaultGuildPlan } from '../../billing/premiumEffects.js';
 import { planName } from '../../billing/premiumService.js';
 import { textFor } from '../language.js';
-import { isLegacyAutomodGuild, shouldNudgeToEnforce } from '../../automod/automodSettings.js';
+import { IMMUNE_ROLES_MAX, IMMUNE_USERS_MAX, isLegacyAutomodGuild, shouldNudgeToEnforce } from '../../automod/automodSettings.js';
+import { hasOwnerPower } from '../../../utils/ownerPower.js';
 import { requireCanAct, adminOnlyActions } from './serverScope.js';
 
 // Words: src/content/dashboard/<lang>/automod.json. English rule, join-gate check and policy names
@@ -199,6 +205,90 @@ async function attempt(run, fallback) {
 
 const isDiscordUrl = (url) => /^https:\/\/(?:[a-z]+\.)?discord\.com\/channels\/\d+\/\d+\/\d+$/.test(String(url || ''));
 const memberName = (guild, id) => guild?.members?.cache?.get(id)?.user?.username || null;
+
+/** Who may change the immune list: the server owner (live), or OWNER_IDS with owner power here (ctx.services.hasOwnerPower in tests). */
+export function canManageImmunity(ctx) {
+    const userId = ctx.actor?.userId;
+    if (!userId) return false;
+    if (ctx.guild?.ownerId && String(ctx.guild.ownerId) === String(userId)) return true;
+    const power = typeof ctx.services?.hasOwnerPower === 'function' ? ctx.services.hasOwnerPower : hasOwnerPower;
+    return Boolean(power(String(userId), ctx.guildId));
+}
+
+const immuneField = (kind) => (kind === 'role' ? 'roleIds' : 'userIds');
+/** The immune lists of loaded settings (always present from getAutomodSettings; older stores and fakes may lack them). */
+const immuneOf = (settings) => ({ roleIds: settings?.immune?.roleIds || [], userIds: settings?.immune?.userIds || [] });
+
+/** One immune entry as audit / mod-log text: "@Mods (id)" or "name (id)". */
+function immuneEntryText(guild, kind, id) {
+    const name = kind === 'role' ? guild?.roles?.cache?.get(id)?.name && `@${guild.roles.cache.get(id).name}` : memberName(guild, id);
+    return name ? `${name} (${id})` : id;
+}
+
+/** The Immune members card: two lists, and the add forms for the owner only. */
+function immuneSection(ctx, settings) {
+    const tr = textFor(ctx);
+    const g = ctx.guild;
+    const canEdit = Boolean(ctx.canEdit && ctx.canAct && canManageImmunity(ctx));
+    const remove = tr.t('automod.common.remove');
+    const removeButton = (kind, id) => (canEdit ? buttonForm(ctx, 'automod', 'immune-remove', remove, { kind, id }, { canEdit }) : '');
+    const userCell = (id) => {
+        const name = memberName(g, id);
+        return name ? html`${name} <span class="muted">(${id})</span>` : html`${id} <span class="muted">${tr.t('automod.immune.notInServer')}</span>`;
+    };
+    const { roleIds, userIds } = immuneOf(settings);
+    const roles = table([tr.t('automod.immune.role'), ''], roleIds.map((id) => [roleName(g, id), removeButton('role', id)]), tr.t('automod.immune.noRoles'));
+    const users = table([tr.t('automod.immune.user'), ''], userIds.map((id) => [userCell(id), removeButton('user', id)]), tr.t('automod.immune.noUsers'));
+    const forms = canEdit
+        ? html`${roleIds.length < IMMUNE_ROLES_MAX ? postForm(ctx, 'automod', 'immune-add', rolePicker(g, 'roleId', null, { label: tr.t('automod.immune.addRoleLabel'), assign: false, optional: false, help: tr.t('automod.immune.addRoleHelp', { max: IMMUNE_ROLES_MAX }) }), { submit: tr.t('automod.immune.add'), hidden: { kind: 'role' }, inline: true, canEdit }) : html`<p class="muted">${tr.t('automod.immune.rolesFull', { max: IMMUNE_ROLES_MAX })}</p>`}
+${userIds.length < IMMUNE_USERS_MAX ? postForm(ctx, 'automod', 'immune-add', textInput('userId', '', { label: tr.t('automod.immune.addUserLabel'), max: 40, help: tr.t('automod.immune.addUserHelp', { max: IMMUNE_USERS_MAX }) }), { submit: tr.t('automod.immune.add'), hidden: { kind: 'user' }, inline: true, canEdit }) : html`<p class="muted">${tr.t('automod.immune.usersFull', { max: IMMUNE_USERS_MAX })}</p>`}`
+        : html`<p class="muted">${tr.t('automod.immune.ownerOnly')}</p>`;
+    return html`${roles}${users}${forms}<p class="muted">${tr.t('automod.immune.nativeNote')}</p>`;
+}
+
+/** Owner check + one add/remove through the service; the change as readable audit text. */
+async function changeImmune(ctx, kind, id, immune) {
+    const tr = textFor(ctx);
+    if (!canManageImmunity(ctx)) throw new InputError(tr.t('automod.error.immuneOwnerOnly'), 403);
+    const before = await ctx.services.getAutomodSettings(ctx.guildId);
+    const list = immuneOf(before)[immuneField(kind)];
+    if (immune && !list.includes(id)) {
+        const max = kind === 'role' ? IMMUNE_ROLES_MAX : IMMUNE_USERS_MAX;
+        if (list.length >= max) throw new InputError(tr.t(kind === 'role' ? 'automod.error.immuneRolesFull' : 'automod.error.immuneUsersFull', { max }));
+    }
+    const { settings } = await ctx.services.setImmuneEntry(ctx.guildId, kind, id, immune);
+    const after = immuneOf(settings)[immuneField(kind)];
+    const asText = (ids) => (ids.length ? ids.map((x) => immuneEntryText(ctx.guild, kind, x)).join(', ') : null);
+    const key = kind === 'role' ? 'immune.roles' : 'immune.users';
+    const changes = diffSnapshots({ [key]: asText(list) }, { [key]: asText(after) }, [key]);
+    const who = immuneEntryText(ctx.guild, kind, id);
+    return { changes, message: changes.length ? tr.t(immune ? 'automod.action.immuneAdded' : 'automod.action.immuneRemoved', { name: who }) : tr.t('errors.nothingChanged') };
+}
+
+// Immune members: Administrator (adminOnlyActions, the routes gate) and canManageImmunity, on every save.
+const immuneActions = {
+    'immune-add': {
+        async run(ctx, form) {
+            const tr = textFor(ctx);
+            if (!canManageImmunity(ctx)) throw new InputError(tr.t('automod.error.immuneOwnerOnly'), 403);
+            const kind = choiceField(form, 'kind', ['role', 'user'], tr.t('automod.immune.title'));
+            const id = kind === 'role'
+                ? roleField(ctx.guild, form, 'roleId', { optional: false, label: tr.t('automod.immune.addRoleLabel') })
+                : userIdField(form, 'userId', tr.t('automod.immune.addUserLabel'));
+            return changeImmune(ctx, kind, id, true);
+        },
+    },
+    'immune-remove': {
+        async run(ctx, form) {
+            const tr = textFor(ctx);
+            if (!canManageImmunity(ctx)) throw new InputError(tr.t('automod.error.immuneOwnerOnly'), 403);
+            const kind = choiceField(form, 'kind', ['role', 'user'], tr.t('automod.immune.title'));
+            const id = text(form, 'id', 25);
+            if (!/^\d{17,20}$/.test(id)) throw new InputError(tr.t('forms.error.userId', { label: tr.t('automod.immune.title') }));
+            return changeImmune(ctx, kind, id, false);
+        },
+    },
+};
 
 /** before/after snapshot diff of the automod settings, as audit changes. */
 function settingsChanges(before, after, keys) {
@@ -571,6 +661,7 @@ ${section(tr.t('automod.native.title'), native, tr.t('automod.native.help'), { k
         const leniency = topic(tr.t('automod.topics.leniency'), tr.t('automod.topics.leniencyLine'), html`${section(tr.t('automod.secondChance.title'), secondChance, tr.t('automod.secondChance.help'), { key: 'friendly-notice-for-a-first-small-offence' })}
 ${section(tr.t('automod.mood.title'), mood, tr.t('automod.mood.help'), { key: 'mood' })}
 ${section(tr.t('automod.trusted.title'), trusted, tr.t('automod.trusted.help'), { key: 'trusted-members' })}
+${section(tr.t('automod.immune.title'), immuneSection(ctx, s), tr.t('automod.immune.help'), { key: 'immune-members' })}
 ${section(tr.t('automod.exceptions.title'), exceptions, tr.t('automod.exceptions.help'), { key: 'channel-exceptions' })}
 ${section(tr.t('automod.exempt.title'), exempt, tr.t('automod.exempt.help'), { key: 'ignored-channels' })}`, { key: 'exceptions-and-leniency' });
         const raids = topic(tr.t('automod.topics.raids'), tr.t('automod.topics.raidsLine'), html`${section(tr.t('automod.gate.title'), joinGate, tr.t('automod.gate.help'), { key: 'join-gate' })}
@@ -876,5 +967,7 @@ ${section(tr.t('automod.testRun.title'), testRunSection(ctx, data.backtest, data
             if (!Object.keys(patch).length) return nothing(tr);
             return saveRegistry(ctx, patch, 'automod');
         },
+        // Administrator (like every automod action) and the server owner or OWNER_IDS (checked inside).
+        ...immuneActions,
     }),
 };

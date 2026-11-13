@@ -186,6 +186,24 @@
     "minLevel": "O desde el nivel",
     "minLevelHelp": "Los miembros con este nivel o más también son de confianza. 0 lo desactiva."
   },
+  "immune": {
+    "title": "Miembros inmunes",
+    "help": "El automod sigue revisando los mensajes de estos roles y miembros, pero nunca los borra ni advierte, silencia o banea. Cada aviso se publica en el canal de revisión del automod con un enlace al mensaje. Solo el propietario del servidor puede cambiar esta lista.",
+    "role": "Rol inmune",
+    "user": "Miembro inmune",
+    "noRoles": "No hay roles inmunes.",
+    "noUsers": "No hay miembros inmunes.",
+    "notInServer": "(no está en el servidor)",
+    "addRoleLabel": "Añadir un rol",
+    "addRoleHelp": "Los miembros con este rol pasan a ser inmunes. Hasta {max} roles.",
+    "addUserLabel": "Añadir un miembro por ID de usuario",
+    "addUserHelp": "En Discord, haz clic derecho en el miembro y elige Copiar ID de usuario (necesita el modo desarrollador). Hasta {max} miembros.",
+    "add": "Añadir",
+    "rolesFull": "Los {max} huecos de roles inmunes están ocupados. Quita uno para añadir otro.",
+    "usersFull": "Los {max} huecos de miembros inmunes están ocupados. Quita uno para añadir otro.",
+    "ownerOnly": "Solo el propietario del servidor puede cambiar esta lista.",
+    "nativeNote": "Las reglas de AutoMod propias de Discord siguen bloqueando los mensajes de estos miembros, porque Discord lo hace antes de que Mewvo los vea. En esos casos Mewvo solo lo registra y nunca advierte."
+  },
   "exceptions": {
     "title": "Excepciones por canal",
     "help": "Desactiva una regla, o ponla en «solo avisar (no borrar)», en un canal. Por ejemplo, permite enlaces en un canal de enlaces.",
@@ -406,7 +424,10 @@
     "ignoredChannel": "Automod ignora #{channel}, así que una prueba allí no encuentra nada. Elige otro canal.",
     "offNeedsAdmin": "Para desactivar el automod necesitas el permiso de Administrador en este servidor. No se ha cambiado nada.",
     "staffGuardOwnerOnly": "Solo el propietario del servidor puede desactivar el automod mientras la protección del staff está activada (desactivar el automod también detiene esa protección). No se ha cambiado nada.",
-    "needReviewChannel": "Primero elige un canal para las tarjetas de revisión de automod (el canal de tarjetas de revisión abajo, o un canal de registro de moderación en la página de Sanciones)."
+    "needReviewChannel": "Primero elige un canal para las tarjetas de revisión de automod (el canal de tarjetas de revisión abajo, o un canal de registro de moderación en la página de Sanciones).",
+    "immuneOwnerOnly": "Solo el propietario del servidor puede cambiar quién es inmune al automod. No se ha cambiado nada.",
+    "immuneRolesFull": "Como máximo {max} roles inmunes. Quita uno primero. No se ha cambiado nada.",
+    "immuneUsersFull": "Como máximo {max} miembros inmunes. Quita uno primero. No se ha cambiado nada."
   },
   "action": {
     "automodOn": "Automod está activado.",
@@ -440,7 +461,9 @@
     "lockdownEnded": "Bloqueo terminado. El nivel de verificación ha vuelto a como estaba y las invitaciones y mensajes directos pausados se han reanudado.",
     "probationEnded": "La vigilancia extra de {member} terminó antes de tiempo.",
     "testRunStarted": "Prueba iniciada. Recarga la página en un momento para ver el progreso.",
-    "startedMonitor": "Empieza en Solo informar: Mewvo publica una tarjeta de revisión con un botón Aplicar y no borra nada. Cambia a Activado cuando las tarjetas se vean bien."
+    "startedMonitor": "Empieza en Solo informar: Mewvo publica una tarjeta de revisión con un botón Aplicar y no borra nada. Cambia a Activado cuando las tarjetas se vean bien.",
+    "immuneAdded": "{name} ahora es inmune al automod. Sus mensajes marcados se quedan y solo se registran.",
+    "immuneRemoved": "{name} ya no es inmune al automod."
   },
   "notice": {
     "title": "Antes de confiar en automod",

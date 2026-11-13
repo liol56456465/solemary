@@ -186,6 +186,24 @@
     "minLevel": "Ou à partir du niveau",
     "minLevelHelp": "Les membres à ce niveau ou au-dessus sont aussi de confiance. 0 désactive cette option."
   },
+  "immune": {
+    "title": "Membres immunisés",
+    "help": "L’automod vérifie toujours les messages de ces rôles et membres, mais ne les supprime jamais et n’avertit, ne rend muet ni ne bannit jamais. Chaque signalement est publié dans le salon de revue de l’automod avec un lien vers le message. Seul le propriétaire du serveur peut modifier cette liste.",
+    "role": "Rôle immunisé",
+    "user": "Membre immunisé",
+    "noRoles": "Aucun rôle immunisé.",
+    "noUsers": "Aucun membre immunisé.",
+    "notInServer": "(pas sur le serveur)",
+    "addRoleLabel": "Ajouter un rôle",
+    "addRoleHelp": "Les membres avec ce rôle deviennent immunisés. Jusqu’à {max} rôles.",
+    "addUserLabel": "Ajouter un membre par ID utilisateur",
+    "addUserHelp": "Dans Discord, fais un clic droit sur le membre et choisis Copier l’identifiant de l’utilisateur (mode développeur requis). Jusqu’à {max} membres.",
+    "add": "Ajouter",
+    "rolesFull": "Les {max} places de rôles immunisés sont prises. Retires-en un pour en ajouter un autre.",
+    "usersFull": "Les {max} places de membres immunisés sont prises. Retires-en un pour en ajouter un autre.",
+    "ownerOnly": "Seul le propriétaire du serveur peut modifier cette liste.",
+    "nativeNote": "Les règles AutoMod de Discord bloquent toujours les messages de ces membres, car Discord le fait avant que Mewvo ne les voie. Dans ce cas, Mewvo se contente de les consigner et n’avertit jamais."
+  },
   "exceptions": {
     "title": "Exceptions par salon",
     "help": "Désactive une règle, ou passe-la en « signaler seulement (ne pas supprimer) », dans un salon. Par exemple, autorise les liens dans un salon de liens.",
@@ -406,7 +424,10 @@
     "ignoredChannel": "Automod ignore #{channel}, donc un essai n’y trouvera rien. Choisis un autre salon.",
     "offNeedsAdmin": "Pour désactiver l’automod, il te faut la permission Administrateur sur ce serveur. Rien n’a été modifié.",
     "staffGuardOwnerOnly": "Seul le propriétaire du serveur peut désactiver l’automod tant que la protection de l’équipe est active (désactiver l’automod arrête aussi cette protection). Rien n’a été modifié.",
-    "needReviewChannel": "Choisis d'abord un salon pour les cartes de vérification d'automod (le salon des cartes de vérification ci-dessous, ou un salon de journal de modération sur la page Sanctions)."
+    "needReviewChannel": "Choisis d'abord un salon pour les cartes de vérification d'automod (le salon des cartes de vérification ci-dessous, ou un salon de journal de modération sur la page Sanctions).",
+    "immuneOwnerOnly": "Seul le propriétaire du serveur peut changer qui est immunisé contre l’automod. Rien n’a été modifié.",
+    "immuneRolesFull": "{max} rôles immunisés au maximum. Retires-en un d’abord. Rien n’a été modifié.",
+    "immuneUsersFull": "{max} membres immunisés au maximum. Retires-en un d’abord. Rien n’a été modifié."
   },
   "action": {
     "automodOn": "Automod est maintenant activé.",
@@ -440,7 +461,9 @@
     "lockdownEnded": "Verrouillage levé. Le niveau de vérification est revenu à ce qu’il était, et les invitations et messages privés suspendus ont repris.",
     "probationEnded": "Surveillance renforcée de {member} arrêtée plus tôt.",
     "testRunStarted": "Essai lancé. Recharge la page dans un moment pour voir l’avancement.",
-    "startedMonitor": "Il démarre en Signaler seulement : Mewvo publie une carte de vérification avec un bouton Appliquer et ne supprime rien. Passe sur Activé quand les cartes te semblent justes."
+    "startedMonitor": "Il démarre en Signaler seulement : Mewvo publie une carte de vérification avec un bouton Appliquer et ne supprime rien. Passe sur Activé quand les cartes te semblent justes.",
+    "immuneAdded": "{name} est maintenant immunisé contre l’automod. Ses messages signalés restent et sont seulement consignés.",
+    "immuneRemoved": "{name} n’est plus immunisé contre l’automod."
   },
   "notice": {
     "title": "Avant de compter sur automod",

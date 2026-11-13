@@ -19,7 +19,7 @@ import { logger } from '../../utils/logger.js';
 import { BoundedMap } from '../../utils/boundedMap.js';
 import { query, T, isEnforcementDbAvailable } from '../enforcement/db.js';
 import { executeSystemAction } from '../enforcement/enforcementService.js';
-import { getAutomodSettings } from './automodSettings.js';
+import { getAutomodSettings, isImmuneMember } from './automodSettings.js';
 import { getProbation } from './probationService.js';
 import { noteRepeatHit, postReviewCard } from './reviewCards.js';
 import { spoilerExcerpt } from './reviewFormat.js';
@@ -107,7 +107,10 @@ function pruneLastActed(now) {
     for (const [key, at] of lastActed) if (now - at > 24 * 60 * 60 * 1000) lastActed.delete(key);
 }
 
-/** autoModerationActionExecution, in any server where automod is on (off by default outside the main server). */
+/**
+ * autoModerationActionExecution, in any server where automod is on (off by default outside the main
+ * server). An immune member's "warn" is only logged (the immune list does not reach Discord's rules).
+ */
 export async function handleNativeExecution(execution) {
     const { guild } = execution;
     if (!guild || !isBridgedAction(execution.action)) return;
@@ -119,11 +122,21 @@ export async function handleNativeExecution(execution) {
         logger.warn(`Native AutoMod policies unavailable (${error.message}); logging only`);
         return null;
     });
-    const { policy, dedupeMinutes } = policyFor(rules, execution.ruleId);
-    if (policy === 'ignore') return;
+    const { policy: rulePolicy, dedupeMinutes } = policyFor(rules, execution.ruleId);
+    if (rulePolicy === 'ignore') return;
 
     const targetUser = execution.user || await guild.client.users.fetch(execution.userId).catch(() => null);
     if (!targetUser || targetUser.bot) return;
+    // Immune members (automodSettings.immune): Discord already blocked the message (Mewvo cannot
+    // undo that), but Mewvo never warns them: a "warn" rule is only logged for them.
+    let policy = rulePolicy;
+    if (policy === 'warn') {
+        const member = execution.member || await guild.members.fetch(targetUser.id).catch(() => null);
+        // Roles unknown (fetch failed) while some roles are immune: log only rather than risk warning
+        // an immune member; the listed user ids still count either way.
+        const unsure = !member && settings.immune?.roleIds?.length > 0;
+        if (unsure || isImmuneMember(member || { id: targetUser.id }, settings)) policy = 'log';
+    }
     const name = await ruleName(execution);
     const probation = await getProbation(guild.id, targetUser.id).catch(() => null);
     const card = {

@@ -10,7 +10,7 @@ import { applyBackup as applySettingsBackup } from '../settings/settingsBackup.j
 // Automod
 import {
     getAutomodSettings, getTrustedRoleProblem, setAutomodEnabled, setAutomodMode, setChannelRuleMode, setExemptChannel,
-    setHeadsUp, setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted,
+    setHeadsUp, setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted, setImmuneEntry,
 } from '../automod/automodSettings.js';
 import { headsUpStats } from '../automod/headsUp.js';
 import { loadNativePolicies, setNativePolicy } from '../automod/nativeBridge.js';
@@ -107,7 +107,7 @@ function updateConfigSetting(client, guildId, key, value, actorId) {
 export const defaultServices = {
     getGuildConfig, updateGuildConfig, getSetting, updateSettings, applySettingsBackup,
     getAutomodSettings, getTrustedRoleProblem, setAutomodEnabled, setAutomodMode, setChannelRuleMode, setExemptChannel,
-    setHeadsUp, setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted,
+    setHeadsUp, setJoinGateCheck, setMoodAlerts, setPanic, setRuleMode, setSecondChance, setTrusted, setImmuneEntry,
     loadNativePolicies, setNativePolicy, automodStats, automodRuleStats, headsUpStats,
     endLockdown, getLockdownState, collectOpenReviews, endProbation, listProbations,
     startAutomodBacktest, getAutomodBacktest,

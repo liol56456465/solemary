@@ -8,7 +8,7 @@ import { logger } from '../../utils/logger.js';
 import { BoundedMap, BoundedSet } from '../../utils/boundedMap.js';
 import { isEnforcementDbAvailable } from '../enforcement/db.js';
 import { isAdministrator } from '../enforcement/enforcementService.js';
-import { getAutomodSettings, isChannelExempt, isLegacyAutomodGuild } from './automodSettings.js';
+import { getAutomodSettings, isChannelExempt, isImmuneMember, isLegacyAutomodGuild } from './automodSettings.js';
 import { resolveRuleMode } from './policy.js';
 import { applyStep, isStaff } from './automodService.js';
 import { findForbiddenCharacters, findImpersonation, plainName } from './filters.js';
@@ -36,6 +36,8 @@ export async function checkImpersonation(member) {
         if (isStaff(member) || isAdministrator(member)) return;
         const settings = await getAutomodSettings(guild.id);
         if (!settings.enabled) return;
+        // Immune members (owner-picked roles / users): no rename, no case.
+        if (isImmuneMember(member, settings)) return;
 
         // English only, names included: a styled or non-English display name is reset to
         // plain letters. Not a punishment, so no case. Other servers: only while their
@@ -124,7 +126,10 @@ export async function handleReportReaction(reaction, user) {
         if (reporters.length < automodConfig.reportReactions) return;
 
         reportedMessages.add(message.id);
-        await message.delete().catch(() => {});
+        // An immune author's message is never removed by automod: staff get the card (with its
+        // Delete button) and decide themselves.
+        const immune = isImmuneMember(author || { id: message.author.id }, await getAutomodSettings(message.guild.id));
+        if (!immune) await message.delete().catch(() => {});
         await postReviewCard({
             guild: message.guild,
             rule: 'report',
@@ -133,7 +138,7 @@ export async function handleReportReaction(reaction, user) {
             channelId: message.channelId,
             messageUrl: null,
             content: message.content || '',
-            report: { reporter: reporters.map((u) => u.username).join(', '), messageId: message.id, removed: true },
+            report: { reporter: reporters.map((u) => u.username).join(', '), messageId: message.id, removed: !immune },
         });
     } catch (error) {
         logger.warn(`Report reaction failed: ${error.message}`);

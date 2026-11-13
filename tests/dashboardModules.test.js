@@ -124,6 +124,7 @@ function makeServices() {
     const record = (name, args) => calls.push({ name, args });
     const s = {
         registry: {},
+        immuneManagers: new Set([ADMIN]),
         logEvents: [],
         lockStore: createMemoryLockStore(),
         automod: { enabled: true, mode: 'enforce', ruleModes: {}, channelRules: {}, exemptChannelIds: [TEXT2], trusted: { roleId: null, minLevel: 0 }, secondChance: true, moodAlerts: true, panic: { enabled: true, hours: 2 }, joinGate: {} },
@@ -617,6 +618,18 @@ function makeServices() {
         }),
         setTrusted: automodSet('setTrusted', ({ roleId, minLevel, clear }) => { s.automod.trusted = clear ? { roleId: null, minLevel: 0 } : { roleId: roleId ?? null, minLevel: minLevel ?? 0 }; }),
         setSecondChance: automodSet('setSecondChance', (v) => { s.automod.secondChance = v; }),
+        // Immune members: { settings, changed } like automodSettings.setImmuneEntry; who may change it is
+        // s.immuneManagers (the dashboard's canManageImmunity asks hasOwnerPower; the fake guild has no owner).
+        setImmuneEntry: async (guildId, kind, id, immune) => {
+            record('setImmuneEntry', [kind, id, immune]);
+            const field = kind === 'role' ? 'roleIds' : 'userIds';
+            const current = { roleIds: [], userIds: [], ...(s.automod.immune || {}) };
+            const changed = immune !== current[field].includes(id);
+            if (changed) current[field] = immune ? [...current[field], id] : current[field].filter((x) => x !== id);
+            s.automod.immune = current;
+            return { settings: clone(s.automod), changed };
+        },
+        hasOwnerPower: (userId) => s.immuneManagers.has(userId),
         setHeadsUp: automodSet('setHeadsUp', (rule, v) => { s.automod.headsUp = { ...(s.automod.headsUp || {}), [rule]: v }; }),
         headsUpStats: async (guildId, opts) => { s.headsUpDays = opts?.days; if (s.headsUpStatsFail) throw new Error('db down'); return { days: opts?.days, sent: 7, fixed: 5, acted: 2 }; },
         setMoodAlerts: automodSet('setMoodAlerts', (v) => { s.automod.moodAlerts = v; }),
@@ -845,6 +858,10 @@ const CASES = {
         'exempt-remove': { admin: true, form: { channel: TEXT2 }, service: 'setExemptChannel', bad: { form: { channel: '1' }, message: /not a channel ID/ } },
         trusted: { form: { roleId: ROLE_OK, minLevel: '5' }, service: 'setTrusted', admin: true, bad: { form: { roleId: ROLE_MANAGED, minLevel: '5' }, message: /managed/ } },
         'second-chance': { admin: true, form: { enabled: 'false' }, service: 'setSecondChance', bad: { form: {}, message: /on or off/ } },
+        // Immune members: Administrator and the server owner / OWNER_IDS (s.immuneManagers here).
+        'immune-add': { admin: true, form: { kind: 'role', roleId: ROLE_OK }, service: 'setImmuneEntry', bad: { form: { kind: 'role', roleId: ROLE_MANAGED }, message: /managed/ } },
+        'immune-remove': { admin: true, seed: (s) => { s.automod.immune = { roleIds: [], userIds: [MEMBER] }; }, form: { kind: 'user', id: MEMBER }, service: 'setImmuneEntry',
+            bad: { form: { kind: 'user', id: 'x' }, message: /Discord user ID/ } },
         mood: { admin: true, form: { enabled: 'false' }, service: 'setMoodAlerts', bad: { form: { enabled: '' }, message: /on or off/ } },
         panic: { admin: true, form: { hours: '5', enabled: '1' }, service: 'setPanic', bad: { form: { hours: '99' }, message: /between 1 and 24/ } },
         'join-gate': { admin: true, form: { 'gate:avatar': 'flag', 'gate:links': 'off', 'gate:botname': 'off', 'gate:age': 'off', ageDays: '7' }, service: 'setJoinGateCheck',
@@ -2784,6 +2801,69 @@ test('Automod probation end: ends it early (audited); a member not on probation 
     assert.equal(h.auditRows.length, 1);
     const owner = await setup({ userId: OWNER });
     assert.equal((await post(owner, 'automod', 'probation-end', { user: MEMBER })).statusCode, 403);
+});
+
+// ── Automod immune members (owner, 2026-11-13) ──
+
+const immuneCard = (body) => body.slice(body.indexOf('id="s-immune-members"'), body.indexOf('</section>', body.indexOf('id="s-immune-members"')));
+
+test('Automod immune members: only the server owner / OWNER_IDS may change the list (Administrator alone → 403, nothing saved)', async () => {
+    const h = await setup();
+    h.state.immuneManagers = new Set();
+    const refused = await post(h, 'automod', 'immune-add', { kind: 'user', userId: MEMBER });
+    assert.equal(refused.statusCode, 403);
+    assert.match(refused.body, /Only the server owner can change who is immune/);
+    assert.ok(!h.calls.some((c) => c.name === 'setImmuneEntry'), 'nothing saved');
+    assert.equal(h.auditRows.length, 0);
+    h.state.automod.immune = { roleIds: [ROLE_OK], userIds: [] };
+    assert.equal((await post(h, 'automod', 'immune-remove', { kind: 'role', id: ROLE_OK })).statusCode, 403);
+    assert.deepEqual(h.state.automod.immune.roleIds, [ROLE_OK], 'removing is owner-only too');
+    // OWNER_IDS without Administrator: the Administrator gate refuses first (every automod action is admin: true).
+    const owner = await setup({ userId: OWNER });
+    owner.state.immuneManagers = new Set([OWNER]);
+    assert.equal((await post(owner, 'automod', 'immune-add', { kind: 'user', userId: MEMBER })).statusCode, 403);
+    assert.ok(!owner.calls.some((c) => c.name === 'setImmuneEntry'));
+});
+
+test('Automod immune members: the owner adds and removes a role and a user; readable audit rows; @everyone and full lists refused', async () => {
+    const h = await setup();
+    assert.equal((await post(h, 'automod', 'immune-add', { kind: 'role', roleId: ROLE_OK })).statusCode, 303);
+    assert.equal((await post(h, 'automod', 'immune-add', { kind: 'user', userId: `<@${MEMBER}>` })).statusCode, 303);
+    assert.deepEqual(h.state.automod.immune, { roleIds: [ROLE_OK], userIds: [MEMBER] });
+    assert.deepEqual(h.auditRows.map((r) => [r.key, r.old, r.new]), [
+        ['immune.roles', null, `@Member (${ROLE_OK})`],
+        ['immune.users', null, MEMBER],
+    ]);
+    assert.match((await h.sessions.get(h.session.id)).flash, new RegExp(`${MEMBER} is now immune to automod`));
+    // The same again: nothing changed, no audit row.
+    await post(h, 'automod', 'immune-add', { kind: 'role', roleId: ROLE_OK });
+    assert.equal(h.auditRows.length, 2);
+    assert.equal((await post(h, 'automod', 'immune-remove', { kind: 'role', id: ROLE_OK })).statusCode, 303);
+    assert.deepEqual(h.state.automod.immune.roleIds, []);
+    assert.deepEqual([h.auditRows[2].key, h.auditRows[2].old, h.auditRows[2].new], ['immune.roles', `@Member (${ROLE_OK})`, null]);
+    const everyone = await post(h, 'automod', 'immune-add', { kind: 'role', roleId: GUILD });
+    assert.equal(everyone.statusCode, 400);
+    h.state.automod.immune = { roleIds: Array.from({ length: 10 }, (_, i) => `6100000000000000${String(i).padStart(2, '0')}`), userIds: [] };
+    const full = await post(h, 'automod', 'immune-add', { kind: 'role', roleId: ROLE_OK2 });
+    assert.equal(full.statusCode, 400);
+    assert.match(full.body, /At most 10 immune roles/);
+    assert.ok(!h.state.automod.immune.roleIds.includes(ROLE_OK2));
+});
+
+test('Automod immune members card: every admin sees the list; only the owner gets the add forms and Remove buttons', async () => {
+    const h = await setup();
+    h.state.automod.immune = { roleIds: [ROLE_OK], userIds: [MEMBER] };
+    const ownerCard = immuneCard((await get(h, 'automod')).body);
+    assert.match(ownerCard, /@Member/);
+    assert.ok(ownerCard.includes(MEMBER));
+    assert.match(ownerCard, /action="\/dashboard\/automod\/immune-add"/);
+    assert.match(ownerCard, /action="\/dashboard\/automod\/immune-remove"/);
+    assert.match(ownerCard, /Discord&#39;s own AutoMod rules still block|Discord's own AutoMod rules still block/);
+    h.state.immuneManagers = new Set();
+    const adminCard = immuneCard((await get(h, 'automod')).body);
+    assert.match(adminCard, /@Member/);
+    assert.match(adminCard, /Only the server owner can change this list/);
+    assert.doesNotMatch(adminCard, /immune-add|immune-remove/);
 });
 
 // ── Automod test run (backtest) ──
